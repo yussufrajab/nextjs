@@ -1,0 +1,35 @@
+Database Restoration Instructions for mfumo3
+==========================================
+
+Prerequisites:
+- PostgreSQL installed on the new VPS
+- Node.js and npm installed
+- Access to PostgreSQL with superuser privileges
+
+Restoration Steps:
+
+1. Create the database:
+   createdb -U postgres mfumo3
+
+2. Restore the database dump:
+   psql -U postgres -d mfumo3 < mfumo3_backup.sql
+
+3. Install project dependencies:
+   cd /path/to/your/project
+   npm install
+
+4. Set up Prisma:
+   npx prisma generate
+
+5. Update .env file with new database credentials:
+   DATABASE_URL="postgresql://YOUR_USER:YOUR_PASSWORD@localhost:5432/mfumo3?schema=public"
+
+6. Verify database connection:
+   npx prisma db pull
+
+Files in this backup:
+- mfumo3_backup.sql: Complete database dump
+- prisma/: Prisma schema and migrations folder
+- restore_instructions.txt: This file
+
+Note: Make sure to update the database connection string in your .env file to match your new VPS PostgreSQL configuration.

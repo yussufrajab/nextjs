@@ -1,0 +1,863 @@
+All Requirements of Civil Service Management System (CSMS):
+We need an application namely "Civil Service Management System (CSMS)" to manage HR processes for the Civil Service Commission- Zanzibar, overseeing employees across all government ministries. The system must include modules for Employee Profiles, Employment Confirmation, Leave Without Pay, Termination and Dismissal, Complaints, Promotions, Change of Cadre, Service Extensions, Retirement, Resignations, audit trail and Reports. 
+Use a three-tier architecture namely, frontend – next.js 15, backend-spring boot 3 with maven and PostgreSQL 15 database.
+1.	Tech stack:
+Frontend: next.js 15
+Backend: Spring Boot 3 with RESTful APIs.
+Database: PostgreSQL 15
+  UI & Styling:
+  - Tailwind CSS 3.4.1
+  - Radix UI components (various v1-2 versions)
+  - Lucide React 0.475.0 (icons)
+  - Class Variance Authority 0.7.1
+
+Define user roles, data structures, forms, workflows, and notifications as specified below.
+2. User Roles
+Configure the following user roles with specific permissions:
+The workflows for any module should adhere to the clarified user roles:
+•	1. HR Officer (HRO): Submits requests on behalf of employees for all modules except Complaints. This user is from institution other than the Civil Service Commission (csc), here deferent institution HROs will send the HR requests to csc where request will be rejected, confirmed or forwarded back to HR for rectification. HRO is only allowed to see what is related to his institution only.
+•	2. Head of HR Management (HHRMD): Approves or rejects requests for Confirmation, Promotion, LWOP, Change of Cadre, Retirement, Resignation, Approves or rejects Complaints, Termination, Dismissal requests and Service Extension; views reports and notifications. HHRMD is an internal user in csc and is allowed to view all data from different institutions.
+•	3. Human Resource management officer (HRMO): Approves or rejects requests for Confirmation, Promotion, LWOP, Change of Cadre, Retirement, Resignation and Service Extension; views reports and notifications. HRMO is an internal user in csc and is allowed to view all data (Related to modules he approves only) from different institutions.
+•	4. Disciplinary Officer (DO): Approves or rejects Complaints, Termination, and Dismissal requests; views reports and notifications. DO is an internal user in csc and is allowed to view all data (related to what he approves only) from different institutions.
+•	5. Employee (EMP): Submits Complaints, which will be handled by HHRMD or DO whoever attends first. Read-only access his profile and complains he submit only. Not allowed to see other employee’s data. See only his data.
+•	6. Planning Officer (PO): The Planning Officer is an internal user within the Civil Service Commission responsible for monitoring performance, workforce trends, and strategic HR data. Responsibilities and System Access: • View system-generated reports across all institutions. • Access dashboards and reports • Generate and analyze aggregated data to support strategic planning. • Export/download reports and visual analytics for presentation or external use. Access Level: • Read-only access to reports but not  dashboards across all CSMS modules. • No approval, submission, or modification privileges.
+•	7. Civil Service Commission Secretary (cscs): is the highest authority in the Commission. In the CSMS system, this user should be able to: View all actions performed by the Head of HR Management (HHRMD), HR Management Officer (HRMO), and Disciplinary Officer (DO), including their current status (e.g., Pending, Approved, Rejected).
+Access employee profiles across all public institutions.
+Use a dashboard and a left-side navigation menu that displays the status of tasks being carried out by HHRMDs, HRMOs, and DOs in each module (e.g., Pending, Completed).
+View and download institutional and system-wide reports from all modules.
+•	8. Human Resource Responsible Personnel (HRRP) : is a supervisory HR figure within a specific institution (such as a Director of Administration or HR Manager). This user supervises HRO. In CSMS, this user can: View a dashboard summarizing HR activities in their respective institution. Access employee profiles within their institution only. View and download reports related to their institution only.
+Track the status of requests submitted by their institution’s  HRO (e.g., Confirmation, Promotion, Leave Without Pay, etc.).
+Monitor how the requests are being processed by HHRMD, HRMO, and DO.
+9. admin: To oversee the technical and operational management of the system, including user accounts, access levels, module configurations, logs, and system health — ensuring that all users can perform their functions securely and efficiently.
+•	 User Management, Create, update, and deactivate user accounts. Reset user passwords and be able to search users based on their names, ZanID or institutions.
+•	Institution creation, add institution to the system eg. Wakala wa Vipimo Zanzibar , Wizara ya Elimu, wizara ya Afya, wizara ya Habari, wizara ya fedha etc.  each of these institution should be created by admin in his user interface after which admin will create the HRO for managing  hr request from those institutions. More examples with details are given  in the table below:
+•	Id	Name	Email	Address	Telephone	Vote Number	Vote Description
+1	Ofisi ya Msajili wa Hazina	info@trosmz.go.tz	Gymkhana Road	111111111111	F07	non
+2	Ofisi ya Mkuu wa Mkoa wa Kusini Unguja	info@southunguja.go.tz	Tunguu	0777433124	D08	none
+3	Wakala wa Vipimo Zanzibar	info@zawemasmz.go.tz	Malindi	0778586654	none	none
+4	WIZARA YA MAENDELEO YA JAMII,JINSIA,WAZEE NA WATOTO	info@jamiismz.go.tz	KINAZINI - MALAWI ROAD 46	+255242231413	H04	none
+5	KAMISHENI YA UTUMISHI WA UMMA	kamisheni.utumishi@zpsc.go.tz	MWANAKWEREKWE	+255242230872	E07	NONE
+6	WAKALA WA SERIKALI MTANDAO (eGAZ)					
+7	OFISI YA MKAGUZI MKUU WA NDANI WA SERIKALI	info@oiagsmz.go.tz	Michenzani Mall	255743600320	x06	none
+8	Kamisheni ya Ardhi Zanzibar	info@kamisheniardhi.go.tz	Forodhani	0774776619	N04	none
+9	Ofisi ya Mhasibu Mkuu wa Serikali	info@mofzanzibar.go.tz	vuga	024776666	F05	none
+10	TAASISI YA NYARAKA NA KUMBUKUMBU	info@ziar.go.tz	KILIMANI	11111111111	A10	none
+11	AFISI YA RAISI KAZI, UCHUMI NA UWEKEZAJI	info@arkuusmz.go.tz	Mwanakwerekwe	0242230061	A07	none
+12	KAMISHENI YA UTALII ZANZIBAR	info@zanzibartourism.go.tz	AMANI	+255 24 2233485	J02	NONE
+13	SEKRETARIETI YA AJIRA .	info@psrs.go.tz	Dodoma	1111111111	11	non
+14	TAASISI YA ELIMU YA ZANZIBAR	info@zie.go.tz	MAZIZINI	+255242230193	Z03	
+15	KAMISHENI YA KUKABILIANA NA MAAFA ZANZIBAR	zdmc@maafaznz.go.tz	MARUHUBI	+255242234755	Z02	
+16	WAKALA WA MAJENGO ZANZIBAR	info@zba.go.tz	AMANI	0242232695	Z01	
+17	OFISI YA RAIS, FEDHA NA MIPANGO	info@mofzanzibar.go.tz	VUGA	+255 2477666664/5	F01	
+18	WIZARA YA KILIMO UMWAGILIAJI MALIASILI NA MIFUGO	ps@kilimoznz.go.tz	MARUHUBI	0777868306	L01	
+19	WIZARA YA UJENZI MAWASILIANO NA UCHUKUZI	info@moic.go.tz	KISAUNI	0242941138	P01	
+20	OFISI YA MAKAMO WA KWANZA WA RAISI	info@omkr.go.tz	MIGOMBANI	+255 242232475	B01	
+21	WIZARA YA BIASHARA NA MAENDELEO YA VIWANDA	info@tradesmz.go.tz	KINAZINI - MALAWI ROAD 46	024-2941140	R01	
+22	SEKRETARIETI YA AJIRA	ajira@ajira.go.tz	Dodoma	1234567890	A011	non
+23	OFISI YA RAIS, TAWALA ZA MIKOA, SERIKALI ZA MITAA NA IDARA MAALUMU ZA SMZ	info@tamisemim.go.tz	VUGA	+255242230034	D01	
+24	OFISI YA RAIS - KATIBA SHERIA UTUMISHI NA UTAWALA BORA	info@utumishismz.go.tz	SHERIA HOUSE, MAZIZINI	+255242230034	G01	
+25	WIZARA YA HABARI, VIJANA, UTAMADUNI NA MICHEZO	info@habarismz.go.tz	MIGOMBANI	0242231202	J03	
+26	TUME YA UCHAGUZI YA ZANZIBAR	info@zec.go.tz	MAISARA	242231489	C03	
+27	OFISI YA MAKAMO WA PILI WA RAISI	info@ompr.go.tz	VUGA	0242231826	C01	
+28	WIZARA YA UCHUMI WA BULUU NA UVUVI	info@blueeconomy.go.tz	MAISARA-ZURA	242941195	L02	
+29	OFISI YA MUFTI MKUU WA ZANZIBAR	info@muftizanzibar.go.tz	MAZIZINI	0777483627	G14	
+30	MAMLAKA YA KUZUIA RUSHWA NA UHUJUMU WA UCHUMI ZANZIBAR	info@zaeca.go.tz	VUGA-MNAZIMMOJA	0774824242	E05	
+31	WIZARA YA ARDHI NA MAENDELEO YA MAKAAZI ZANZIBAR	info@ardhismz.go.tz	MAISARA-ZURA	0242941193	N02	
+32	WIZARA YA UTALII NA MAMBO YA KALE	info@utaliismz.go.tz	KIKWAJUNI	0242231250	J04	
+33	OFISI YA RAIS - IKULU	info@ikuluzanzibar.go.tz	VUGA	+2252230814#5	A01	
+34	MAMLAKA YA KUDHIBITI NA KUPAMBANA NA DAWA ZA KULEVYA ZANZIBAR	info@zdcea.go.tz	MIGOMBANI	+255242233403	C04	
+35	TUME YA MAADILI YA VIONGOZI WA UMMA	info@ethicscommission.go.tz	VUGA	+255242235535	G15	
+36	TUME YA UTUMISHI SERIKALINI	info@zanajira.go.tz	MAZIZINI, SHERIA HOUSE	0773101012	E08	
+37	AFISI YA MKURUGENZI WA MASHTAKA	dppznz@dppznz.go.tz	MIEMBENI ZANZIBAR	+255-24-2235564	G04	
+38	AFISI YA MWANASHERIA MKUU	info@agcz.go.tz	MAZIZINI	0242232502	G03	
+39	WIZARA YA MAJI NISHATI NA MADINI	info@majismz.go.tz	MAISARA, ZANZIBAR	0242232695	N03	
+40	WIZARA YA ELIMU NA MAFUNZO YA AMALI	info@moez.go.tz	MAZIZINI	+255777458878	K01	
+41	WIZARA YA AFYA	info@mohz.go.tz	MNAZI MMOJA	+255242231614	H01
+
+
+•	Assign or revoke roles (e.g., HRO, DO, HHRMD, HRMO, CSCS, Employee)
+•	Reset user passwords and Unlock locked accounts
+•	Monitor uptime, response time, and background jobs
+•	Receive alerts for critical failures (e.g., failed email delivery, database errors)
+
+
+Important Requirement: For any request reviewed by HHRMD, HRMO, or DO, the outcome is either "Approved" or "Rejected," with the system updating the request status (e.g., from "Pending" to "Approved" or "Rejected") and notifying the HRO. If rejected it should be accompanied by the reason why it is rejected allow HRO to modify the mistake for rejection and then resend the request.
+
+3. Database Structure
+Create a database with the following tables and fields to store employee and request data:
+In employee profile, there also should be Employee Documents which consist of 
+
+Employee Profile Table
+•	Fields:
+o	Full Name (Text)
+o	Profile Image (File)
+o	Date of Birth (Date)
+o	Place of Birth (Text)
+o	Region (Text)
+o	Country of Birth (Text)
+o	Payroll Number (Text, Unique)
+o	Zanzibar Identification Number (ZanID) (Text, Unique)
+o	Zanzibar Social Security (ZSSF) Number (Text, Unique)
+o	Rank (Text)
+o	Ministry (Text)
+o	Institution (Text)
+o	Department (Text)
+o	Appointment Type (Text)
+o	Contract Type (Text)
+o	Recent Title Date (Date)
+o	Current Reporting Office (Text)
+o	Current Workplace (Text)
+o	Employment Date (Date)
+o	Confirmation Date (Date, Nullable)
+o	Supporting Documents (Files: Ardhil-Hali, Confirmation Letter)
+o	Loan Guarantee Status (Boolean, Default: False)
+o	Retirement Status (Text: Active, Retired, Resigned, Terminated)
+o	Complaints (List of Complaint IDs, Linked to Complaints Table)
+o	Leave Without Pay Records (List of Leave Without Pay IDs, Linked to Leave Without Pay Table)
+o	Phone number
+o	Gender (Text)
+o	Contact Address (Text)
+o	Employee Documents – which consist of 4 types of documents namely ardhilhali, confirmation letter, Job contract and birth certificate.
+o	Employee Certificates – which consist of certificate, diploma, bachelor degree, master degree and Phd degree.
+Request Tables (One for Each Module)
+For each module (Confirmation, Leave Without Pay, Termination, Complaints, Promotion, Change of Cadre, Service Extension, Retirement, Resignation), create a table with:
+•	Common Fields:
+o	Request ID (Auto-generated, Unique)
+o	Employee ID (Linked to Employee Profile)
+o	Submitted By (User ID: HRO or Employee for Complaints)
+o	Submission Date (Date)
+o	Status (Text: Pending, Approved, Rejected)
+o	Approver (User ID: HHRMD, HRMO, or DO, Nullable)
+o	Approval/Rejection Date (Date, Nullable)
+o	Comments (Text, Nullable)
+o	Supporting Documents (Files, Specific to each module)
+Specific Fields per Module
+•	Confirmation:
+o	Probation Period Status (Text: Less than 12 months, 12-18 months, More than 18 months)
+o	Documents: Letter from Accounting Officer, IPA Certificate, Performance Appraisal
+•	Leave Without Pay:
+o	Reason (Text)
+o	Leave Start Date (Date)
+o	Leave End Date (Date)
+o	Documents: Letter from Accounting Officer
+
+•	Termination/Dismissal:
+o	Scenario (Text: Unconfirmed Out of Probation, Not Returning After Leave, Disciplinary)
+o	Documents (Unconfirmed): Application Letter, Probation Extension, Performance Appraisal
+o	Documents (Not Returning): Application Letter, Reminder Letter, Warning Letter, Media Announcement
+o	Documents (Disciplinary): Investigation Report, Evidence of Prior Disciplinary Actions
+o	Incident Date (Date, For Disciplinary)
+•	Complaints:
+o	Complaint Type (Text: Unconfirmed Employee, General Job-Related)
+o	Complainant Name (Text)
+o	Respondent Name (Text)
+o	Complaint Source (Text)
+o	Incident Date (Date)
+o	Documents (Unconfirmed): Employment Contract, Ardhil-Hali
+•	Contractual Employment:
+o	Employer Name (Text)
+o	Job Title (Text)
+o	Employment Start Date (Date)
+o	Employment Duration (Number, Months)
+o	End Date (Date, Auto-calculated)
+o	Documents: Official Letter
+•	Promotion:
+o	Promotion Type (Text: Educational, Performance)
+o	Current Rank (Text)
+o	Proposed Rank (Text)
+o	Education Completion Date (Date, For Educational)
+o	Documents (Educational): Educational Certificate, TCU Certificate (if foreign), Request Letter
+o	Documents (Performance): Request Letter, Appraisal Forms (3 years), Recommendation Form
+•	Change of Cadre:
+o	Current Cadre (Text)
+o	Proposed Cadre (Text)
+o	Documents: Request Letter, Educational Certificate
+•	Service Extension:
+o	Extension Duration (Number, Years)
+o	Documents: Request Letter, Employee Consent Letter
+•	Retirement:
+o	Retirement Type (Text: Compulsory, Voluntary, Illness)
+o	Documents (Compulsory/Voluntary): Request Letter, Ardhil-Hali, Birth Certificate
+o	Documents (Illness): Request Letter, Health Board Report, Sick Leave Records, Ardhil-Hali, Birth Certificate
+•	Resignation:
+o	Notice Type (Text: 3-Month Notice, 24-Hour Notice with Payment)
+o	Documents: Request Letter, Employee Resignation Letter, Payment Receipt (if 24-hour notice)
+Each workflow includes:
+•	Actors: Users involved (e.g., HRO, HHRMD, HRMO, DO, Employee).
+•	Steps: Sequential actions with system interactions.
+•	API Calls: Integration with RESTful APIs (Appendix B).
+•	UI Components: References to UI mockups (Appendix B).
+•	Audit Logging: Immutable logs for compliance (FR14.01–FR14.03).
+•	Error Handling: Validation and user feedback (NFR6.001).
+•	Text-Based Flow: ASCII representation of the process.
+•	PlantUML Code: Activity diagram renderable in PlantUML tools (e.g., PlantUML Online).
+4. Detailed workflow explanation with PlantUML and BPMN files 
+structure for process modeling:
+The workflows are designed to be intuitive (NFR6.001), secure (NFR2.002, AES-256 encryption), and scalable (NFR5.1, supporting 50,000+ employees). Sample data ensures consistency across modules.
+2. Workflow 1: Employee Confirmation
+Purpose: Automate confirmation after a 12-month probation period (FR8.01–FR8.03).
+Actors:
+•	HRO: Submits request (user_id: user3, username: ‘Khamis Mnyonge’).
+•	HHRMD : Approves/rejects (user_id: user2, username: ‘Safia Khamis’).
+•	HRMO : Approves/rejects (user_id: user4, username: ‘Fauzia Iddi’).
+•	Employee: Subject (emp1, ‘Ali Juma Ali’, zan_id: ‘221458232’).
+2.1 Steps
+1.	Login: HRO logs in via Login Screen (Appendix B, UI-001).
+o	API: POST /auth/login (Request: { "username": "Khamis Mnyonge", "password": "securepassword123" }, Response: { "status": "success", "data": { "token": "eyJhbGciOiJIUzI1Ni..." }, "message": "Login successful" }).
+o	Audit Log: log8, user3, “Login”.
+2.	Navigate: HRO selects “Confirmation” from Dashboard (Appendix B, UI-002, UI-004).
+3.	Submit Request: HRO searches emp1, fills probation_end_date (2019-09-10), uploads confirmation_letter.pdf (≤2MB).
+o	API: GET /employees?query=221458232, POST /confirmation (Request: { "employee_id": "emp1", "request_type": "Confirmation", "status": "Pending", "created_by": "user3", "details": { "probation_end_date": "2019-09-10" } }), POST /documents.
+o	Audit Log: log9, req1, user3, “Create Request”.
+4.	Review: HHRMD or HRMO logs in (whoever attends first), views req1 (API: GET /confirmation/req1).
+5.	Approve or Reject: HHRMD or HRMO selects “Approve” or “Reject”, uploads decision_letter.pdf if approved, or rejection_reason (“Incomplete probation”) if rejected (API: PUT /confirmation/req1/approve or PUT /confirmation/req1/reject).
+o	System: Updates req1 status to “Approved” or “Rejected”; if approved, updates emp1 status to “Confirmed”; notifies HRO (user3).
+o	Audit Log: log10, req1, user2, “Approve/Reject Request” (before_value: { "status": "Pending" }, after_value: { "status": "Approved" or "Rejected" }).
+6.	Error Handling: Invalid PDF (>2MB) or probation <12 months shows UI error (text-red-500: “Invalid input”).
+
+2.3 PlantUML Code for confirmation module.
+@startuml
+|HRO|
+start
+:HRO Login;
+:Navigate to Confirmation;
+:Submit Request;
+|HHRMD/HRMO|
+:HHRMD/HRMO Login;
+:Review Request;
+repeat
+  if (Decision?) then (Approve)
+    :Approve Request;
+    :Update Employee Status;
+    break
+  else (Reject)
+    :Reject Request;
+    :Update Request Status;
+    |HRO|
+    :Notify HRO with Rejection Reason;
+    :Rectify Request;
+    :Resubmit Request;
+    |HHRMD/HRMO|
+    :Review Resubmitted Request;
+  endif
+repeat while (Request Not Approved?)
+|HRO|
+:Notify HRO of Approval;
+stop
+@enduml
+
+
+
+3. Workflow 2: Leave Without Pay (LWOP)
+Purpose: Automate LWOP requests with payroll integration (FR5.01–FR5.04).
+Actors:
+•	HRO: Submits request (user_id: user3).
+•	HHRMD or HRMO: Approves/rejects (user_id: user2).
+•	Employee: Subject (emp3, ‘Fatma Said Omar’, zan_id: ‘334589123’).
+3.1 Steps
+1.	Login: HRO logs in (API: POST /auth/login).
+o	Audit Log: log11, user3, “Login”.
+2.	Navigate: HRO selects “LWOP” (Appendix B, UI-002, UI-004).
+3.	Submit Request: HRO fills start_date (2025-06-01), end_date (2025-12-01), reason (“Personal leave”), uploads lwop_request_letter.pdf.
+o	API: POST /lwop (Request: { "employee_id": "emp3", "request_type": "LWOP", "status": "Pending", "created_by": "user3", "details": { "start_date": "2025-06-01", "end_date": "2025-12-01", "reason": "Personal leave" } }), POST /documents.
+o	Audit Log: log12, req3, user3, “Create Request”.
+4.	Review: HHRMD/HRMO logs in, views req3 (API: GET /lwop/req3).
+5.	Approve or Reject: HHRMD/HRMO selects “Approve” or “Reject”, updates payroll if approved, or provides rejection_reason (“Insufficient justification”) if rejected (API: PUT /lwop/req3/approve or PUT /lwop/req3/reject).
+o	System: Updates req3 status to “Approved” or “Rejected”; if approved, updates payroll; notifies HRO (user3).
+o	Audit Log: log13, req3, user2, “Approve/Reject Request”.
+6.	Error Handling: Invalid dates or PDF size triggers UI error (text-red-500).
+
+3.3 PlantUML Code for leave without pay (LWOP)
+@startuml
+|HRO|
+start
+:HRO Login;
+:Navigate to LWOP;
+:Submit Request;
+|HHRMD/HRMO|
+:HHRMD/HRMO Login;
+
+repeat
+  :Review Request;
+  if (Decision?) then (Approve)
+    :Approve Request;
+    :Update Payroll;
+    break
+  else (Reject)
+    :Reject Request;
+    :Update Request Status;
+    |HRO|
+    :Notify HRO with Rejection Reason;
+    :Rectify Request;
+    :Resubmit Request;
+    |HHRMD/HRMO|
+  endif
+repeat while (Request Not Approved?)
+
+|HRO|
+:Notify HRO of Approval;
+stop
+@enduml
+
+
+4. Workflow 3: Promotion Module
+Purpose: Automate promotion based on education/performance (FR3.01–FR3.04).
+Actors:
+•	HRO: Submits request (user_id: user3).
+•	HHRMD or HRMO: Approves/rejects (user_id: user2).
+•	Employee: Subject (emp2, ‘Safia Juma Ali’, zan_id: ‘125468957’).
+4.1 Steps
+1.	Login: HRO logs in (API: POST /auth/login).
+o	Audit Log: log14, user3, “Login”.
+2.	Navigate: HRO selects “Promotion” (Appendix B, UI-002, UI-004).
+3.	Submit Request: HRO searches emp2, fills promotion_type (Education), new_cadre (‘Afisa Tehama’), uploads degree_certificate.pdf.
+o	API: GET /employees?query=125468957, POST /promotion, POST /documents.
+o	Audit Log: log15, req2, user3, “Create Request”.
+4.	Review: HHRMD/HRMO logs in, views req2 (API: GET /promotion/req2).
+5.	Approve or Reject: HHRMD/HRMO selects “Approve” or “Reject”, uploads promotion_letter.pdf if approved, or rejection_reason (“Ineligible qualifications”) if rejected (API: PUT /promotion/req2/approve or PUT /promotion/req2/reject).
+o	System: Updates req2 status to “Approved” or “Rejected”; if approved, updates emp2 cadre; notifies HRO (user3).
+o	Audit Log: log16, req2, user2, “Approve/Reject Request”.
+6.	Error Handling: Missing credentials or invalid PDF triggers UI error.
+
+4.3 PlantUML Code for Promotion Module
+@startuml
+|HRO|
+start
+:HRO Login;
+:Navigate to Promotion;
+:Submit Promotion Request;
+|HHRMD/HRMO|
+:HHRMD/HRMO Login;
+
+repeat
+  :Review Promotion Request;
+  if (Decision?) then (Approve)
+    :Approve Promotion;
+    :Update Employee Promotion Record;
+    break
+  else (Reject)
+    :Reject Promotion Request;
+    :Update Request Status;
+    |HRO|
+    :Notify HRO with Rejection Reason;
+    :Rectify Promotion Request;
+    :Resubmit Promotion Request;
+    |HHRMD/HRMO|
+  endif
+repeat while (Request Not Approved?)
+
+|HRO|
+:Notify HRO of Approval;
+stop
+@enduml
+
+5. Workflow 4: Complaints module
+Purpose: Manage employee complaints with resolution (FR7.001–FR7.009).
+Actors:
+•	Employee: Submits complaint (emp3, user_id: user7, username: ‘hmohamed’).
+•	HHRMD or DO: Resolves (user_id: user5, username: ‘kabdul’).
+5.1 Steps
+1.	Login: Employee logs in (API: POST /auth/login).
+o	Audit Log: log17, user7, “Login”.
+2.	Navigate: Employee selects “Complaints” (Appendix B, UI-002, UI-005).
+3.	Submit Complaint: Employee selects category (‘Unconfirmed Employees’), enters description (“Delayed confirmation”), uploads evidence.pdf.
+o	API: POST /complaints (Request: { "employee_id": "emp3", "category": "Unconfirmed Employees", "status": "Pending", "details": { "description": "Delayed confirmation" } }), POST /documents.
+o	Audit Log: log18, comp3, user7, “Create Complaint”.
+4.	Review: HHRMD/DO logs in, views comp3 (API: GET /complaints/comp3).
+5.	Approve or Reject: HHRMD/DO selects “Approve” (resolves with action, e.g., “Confirmation expedited”) or “Reject” (with rejection_reason, e.g., “Invalid claim”), updates status (API: PUT /complaints/comp3/approve or PUT /complaints/comp3/reject).
+o	System: Updates comp3 status to “Approved” or “Rejected”; notifies HRO (user3) and Employee (user7).
+o	Audit Log: log19, comp3, user5, “Approve/Reject Complaint”.
+6.	Error Handling: Empty category or invalid PDF triggers UI error.
+
+5.3 PlantUML Code for Complaints module
+@startuml
+start
+:Employee Login;
+:Navigate to Complaints;
+:Submit Complaint;
+:HHRMD/DO Login;
+:Review Complaint;
+if (Decision?) then (Approve)
+  :Approve Complaint;
+else (Reject)
+  :Reject Complaint;
+endif
+:Update Complaint Status;
+:Notify HRO, Employee;
+stop
+@enduml
+6. Workflow 5: Change of Cadre module
+Purpose: Update employee cadre based on qualifications (FR9.01–FR9.04).
+Actors:
+•	HRO: Submits request (user_id: user3).
+•	HHRMD or HRMO: Approves/rejects (user_id: user2).
+•	Employee: Subject (emp4, ‘Hassan Mzee Juma’, zan_id: ‘445678234’).
+6.1 Steps
+1.	Login: HRO logs in (API: POST /auth/login).
+o	Audit Log: log20, user3, “Login”.
+2.	Navigate: HRO selects “Change of Cadre” (Appendix B, UI-002, UI-004).
+3.	Submit Request: HRO searches emp4, fills current_cadre (‘Mhasibu’), proposed_cadre (‘Afisa Fedha’), uploads tcu_verification.pdf.
+o	API: GET /employees?query=445678234, POST /cadre-change, POST /documents.
+o	Audit Log: log21, req5, user3, “Create Request”.
+4.	Review: HHRMD/HRMO logs in, views req5 (API: GET /cadre-change/req5).
+5.	Approve or Reject: HHRMD/HRMO selects “Approve” or “Reject”, uploads approval_letter.pdf if approved, or rejection_reason (“Qualifications mismatch”) if rejected (API: PUT /cadre-change/req5/approve or PUT /cadre-change/req5/reject).
+o	System: Updates req5 status to “Approved” or “Rejected”; if approved, updates emp4 cadre; notifies HRO (user3).
+o	Audit Log: log22, req5, user2, “Approve/Reject Request”.
+6.	Error Handling: Missing education details or invalid PDF triggers UI error.
+
+6.3 PlantUML Code for Change of Cadre module
+@startuml
+|HRO|
+start
+:HRO Login;
+:Navigate to Cadre Change;
+:Submit Cadre Change Request;
+|HHRMD/HRMO|
+:HHRMD/HRMO Login;
+
+repeat
+  :Review Cadre Change Request;
+  if (Decision?) then (Approve)
+    :Approve Request;
+    :Update Employee Cadre;
+    break
+  else (Reject)
+    :Reject Request;
+    :Update Request Status;
+    |HRO|
+    :Notify HRO with Rejection Reason;
+    :Rectify Cadre Change Request;
+    :Resubmit Cadre Change Request;
+    |HHRMD/HRMO|
+  endif
+repeat while (Request Not Approved?)
+
+|HRO|
+:Notify HRO of Approval;
+stop
+@enduml
+
+
+
+
+7. Workflow 6: Retirement
+Purpose: Automate retirement processing with pension integration (FR10.01–FR10.04).
+Actors:
+•	HRO: Submits request (user_id: user3).
+•	HHRMD or HRMO: Approves/rejects (user_id: user2).
+•	Employee: Subject (emp5, ‘Zainab Ali Khamis’, zan_id: ‘556789345’).
+7.1 Steps
+1.	Login: HRO logs in (API: POST /auth/login).
+o	Audit Log: log23, user3, “Login”.
+2.	Navigate: HRO selects “Retirement” (Appendix B, UI-002, UI-004).
+3.	Submit Request: HRO searches emp5, fills retirement_date (2025-12-31), uploads retirement_form.pdf.
+o	API: GET /employees?query=556789345, POST /retirement, POST /documents.
+o	Audit Log: log24, req6, user3, “Create Request”.
+4.	Review: HHRMD/HRMO logs in, views req6 (API: GET /retirement/req6).
+5.	Approve or Reject: HHRMD/HRMO selects “Approve” or “Reject”, integrates with pension system if approved, or provides rejection_reason (“Early retirement”) if rejected (API: PUT /retirement/req6/approve or PUT /retirement/req6/reject).
+o	System: Updates req6 status to “Approved” or “Rejected”; if approved, updates emp5 status to “Retired”; notifies HRO (user3).
+o	Audit Log: log25, req6, user2, “Approve/Reject Request”.
+6.	Error Handling: Invalid retirement date or PDF size triggers UI error.
+
+7.3 PlantUML Code for retirement module
+@startuml
+|HRO|
+start
+:HRO Login;
+:Navigate to Retirement;
+:Submit Retirement Request;
+|HHRMD/HRMO|
+:HHRMD/HRMO Login;
+
+repeat
+  :Review Retirement Request;
+  if (Decision?) then (Approve)
+    :Approve Request;
+    :Update Employee Status, Pension;
+    break
+  else (Reject)
+    :Reject Request;
+    :Update Request Status;
+    |HRO|
+    :Notify HRO with Rejection Reason;
+    :Rectify Retirement Request;
+    :Resubmit Retirement Request;
+    |HHRMD/HRMO|
+  endif
+repeat while (Request Not Approved?)
+
+|HRO|
+:Notify HRO of Approval;
+stop
+@enduml
+
+8. Workflow 7: Resignation Module
+Purpose: Process employee resignations with exit procedures (FR11.01–FR11.04).
+Actors:
+•	HRO: Submits request (user_id: user3).
+•	HHRMD or HRMO: Approves/rejects (user_id: user2).
+•	Employee: Subject (emp3, ‘Fatma Said Omar’, zan_id: ‘334589123’).
+8.1 Steps
+1.	Login: HRO logs in (API: POST /auth/login).
+o	Audit Log: log26, user3, “Login”.
+2.	Navigate: HRO selects “Resignation” (Appendix B, UI-002, UI-004).
+3.	Submit Request: HRO fills resignation_date (2025-07-31), reason (“New opportunity”), uploads resignation_letter.pdf.
+o	API: POST /resignation, POST /documents.
+o	Audit Log: log27, req7, user3, “Create Request”.
+4.	Review: HHRMD/HRMO logs in, views req7 (API: GET /resignation/req7).
+5.	Approve or Reject: HHRMD/HRMO selects “Approve” or “Reject”, updates exit procedures if approved, or provides rejection_reason (“Notice period issue”) if rejected (API: PUT /resignation/req7/approve or PUT /resignation/req7/reject).
+o	System: Updates req7 status to “Approved” or “Rejected”; if approved, updates emp3 status; notifies HRO (user3).
+o	Audit Log: log28, req7, user2, “Approve/Reject Request”.
+6.	Error Handling: Invalid date or PDF size triggers UI error.
+
+8.3 PlantUML Code
+@startuml
+|HRO|
+start
+:HRO Login;
+:Navigate to Resignation;
+:Submit Resignation Request;
+|HHRMD/HRMO|
+:HHRMD/HRMO Login;
+
+repeat
+  :Review Resignation Request;
+  if (Decision?) then (Approve)
+    :Approve Request;
+    :Update Employee Status;
+    break
+  else (Reject)
+    :Reject Request;
+    :Update Request Status;
+    |HRO|
+    :Notify HRO with Rejection Reason;
+    :Rectify Resignation Request;
+    :Resubmit Resignation Request;
+    |HHRMD/HRMO|
+  endif
+repeat while (Request Not Approved?)
+
+|HRO|
+:Notify HRO of Approval;
+stop
+@enduml
+
+
+9. Workflow 8: Service Extension
+Purpose: Extend employee service beyond retirement age (FR12.01–FR12.04).
+Actors:
+•	HRO: Submits request (user_id: user3).
+•	HHRMD or HRMO: Approves/rejects (user_id: user2).
+•	Employee: Subject (emp5, ‘Zainab Ali Khamis’, zan_id: ‘556789345’).
+9.1 Steps
+1.	Login: HRO logs in (API: POST /auth/login).
+o	Audit Log: log29, user3, “Login”.
+2.	Navigate: HRO selects “Service Extension” (Appendix B, UI-002, UI-004).
+3.	Submit Request: HRO searches emp5, fills extension_period (6 months), uploads justification.pdf.
+o	API: GET /employees?query=556789345, POST /service-extension, POST /documents.
+o	Audit Log: log30, req8, user3, “Create Request”.
+4.	Review: HHRMD/HRMO logs in, views req8 (API: GET /service-extension/req8).
+5.	Approve or Reject: HHRMD/HRMO selects “Approve” or “Reject”, updates retirement_date if approved, or provides rejection_reason (“No justification”) if rejected (API: PUT /service-extension/req8/approve or PUT /service-extension/req8/reject).
+o	System: Updates req8 status to “Approved” or “Rejected”; if approved, updates emp5 retirement_date; notifies HRO (user3).
+o	Audit Log: log31, req8, user2, “Approve/Reject Request”.
+6.	Error Handling: Invalid period or PDF size triggers UI error.
+
+9.3 PlantUML Code for service extension module
+@startuml
+|HRO|
+start
+:HRO Login;
+:Navigate to Service Extension;
+:Submit Service Extension Request;
+|HHRMD/HRMO|
+:HHRMD/HRMO Login;
+
+repeat
+  :Review Service Extension Request;
+  if (Decision?) then (Approve)
+    :Approve Request;
+    :Update Retirement Date;
+    break
+  else (Reject)
+    :Reject Request;
+    :Update Request Status;
+    |HRO|
+    :Notify HRO with Rejection Reason;
+    :Rectify Service Extension Request;
+    :Resubmit Service Extension Request;
+    |HHRMD/HRMO|
+  endif
+repeat while (Request Not Approved?)
+
+|HRO|
+:Notify HRO of Approval;
+stop
+@enduml
+
+10. Workflow 9: Termination module
+Purpose: Process employee termination due to misconduct or other reasons (FR2.01–FR2.04).
+Actors:
+•	HRO: Initiates request (user_id: user5).
+•	HHRMD or DO: Approves/rejects (user_id: user2).
+•	Employee: Subject (emp4, ‘Hassan Mzee Juma’, zan_id: ‘445678234’).
+10.1 Steps
+1.	Login: HRO logs in (API: POST /auth/login).
+o	Audit Log: log32, user5, “Login”.
+2.	Navigate: HRO selects “Termination” (Appendix B, UI-002, UI-004).
+3.	Submit Request: HRO searches emp4, fills reason (“Misconduct”), uploads evidence_report.pdf.
+o	API: GET /employees?query=445678234, POST /termination, POST /documents.
+o	Audit Log: log33, req9, user5, “Create Request”.
+4.	Review: HHRMD or DO logs in, views req9 (API: GET /termination/req9).
+5.	Approve or Reject: HHRMD/DO selects “Approve” or “Reject”, updates emp4 status if approved, or provides rejection_reason (“Insufficient evidence”) if rejected (API: PUT /termination/req9/approve or PUT /termination/req9/reject).
+o	System: Updates req9 status to “Approved” or “Rejected”; if approved, updates emp4 status to “Terminated”; notifies HRO (user3).
+o	Audit Log: log34, req9, user2, “Approve/Reject Request”.
+6.	Error Handling: Missing evidence or invalid PDF triggers UI error.
+
+10.3 PlantUML Code  for termination module
+@startuml
+|HRO|
+start
+:HRO Login;
+:Navigate to Termination;
+:Submit Termination Request;
+|HHRMD/DO|
+:HHRMD/DO Login;
+
+repeat
+  :Review Termination Request;
+  if (Decision?) then (Approve)
+    :Approve Request;
+    :Update Employee Status;
+    break
+  else (Reject)
+    :Reject Request;
+    :Update Request Status;
+    |HRO|
+    :Notify HRO with Rejection Reason;
+    :Rectify Termination Request;
+    :Resubmit Termination Request;
+    |HHRMD/DO|
+  endif
+repeat while (Request Not Approved?)
+
+|HRO|
+:Notify HRO of Approval;
+stop
+@enduml
+
+11. Workflow 10: Dismissal Module
+Purpose: Process employee dismissal due to severe misconduct (FR2.001–FR2.004).
+Actors:
+•	HRO: Initiates request (user_id: user5).
+•	HHRMD or DO: Approves/rejects (user_id: user2).
+•	Employee: Subject (emp6, ‘Juma Omar Ali’, zan_id: ‘667890456’).
+11.1 Steps
+1.	Login: HRO logs in (API: POST /auth/login).
+o	Audit Log: log35, user5, “Login”.
+2.	Navigate: HRO selects “Dismissal” (Appendix B, UI-002, UI-004).
+3.	Submit Request: HRO searches emp6, fills reason (“Gross misconduct”), uploads disciplinary_report.pdf.
+o	API: GET /employees?query=667890456, POST /dismissal, POST /documents.
+o	Audit Log: log36, req10, user5, “Create Request”.
+4.	Review: HHRMD/DO logs in, views req10 (API: GET /dismissal/req10).
+5.	Approve or Reject: HHRMD/DO selects “Approve” or “Reject”, updates emp6 status if approved, or provides rejection_reason (“Lack of evidence”) if rejected (API: PUT /dismissal/req10/approve or PUT /dismissal/req10/reject).
+o	System: Updates req10 status to “Approved” or “Rejected”; if approved, updates emp6 status to “Dismissed”; notifies HRO (user3).
+o	Audit Log: log37, req10, user2, “Approve/Reject Request”.
+6.	Error Handling: Missing evidence or invalid PDF triggers UI error.
+
+11.3 PlantUML Code for dismissal
+@startuml
+|HRO|
+start
+:HRO Login;
+:Navigate to Dismissal;
+:Submit Dismissal Request;
+|HHRMD/DO|
+:HHRMD/DO Login;
+
+repeat
+  :Review Dismissal Request;
+  if (Decision?) then (Approve)
+    :Approve Request;
+    :Update Employee Status;
+    break
+  else (Reject)
+    :Reject Request;
+    :Update Request Status;
+    |HRO|
+    :Notify HRO with Rejection Reason;
+    :Rectify Dismissal Request;
+    :Resubmit Dismissal Request;
+    |HHRMD/DO|
+  endif
+repeat while (Request Not Approved?)
+
+|HRO|
+:Notify HRO of Approval;
+stop
+@enduml
+12. Design Principles
+•	Automation: Minimizes manual steps with automatic routing and notifications (FR4.03–FR12.03).
+•	Security: JWT-based RBAC (NFR2.002), AES-256 encrypted documents (NFR3.002), immutable logs (FR14.01).
+•	Usability: Clear UI feedback with error messages and success alerts (NFR6.001).
+•	Scalability: Pagination and indexing for 50,000+ records (NFR5.1).
+•	Traceability: Actions logged with before/after values (FR14.01).
+13. Implementation Notes
+•	Backend: Spring Boot 3 microservices (SDD Section 3.1) for APIs (Appendix B).
+•	Frontend: node.js 15
+•	Database: PostgreSQL 15 with SQL schema (e.g., employee, request, complaint).
+•	External Integration: LWOP and Retirement integrate with HRIMS systems (FR5.04, FR10.04).
+•	Testing: Validate during UAT (November 4, 2025, Inception Report Section 12).
+9.	Sample Data Table
+Use the data in this table to seed the database and creating sample data of the system.
+
+
+
+15. Notes
+•	Scope: Covers all SRS HR modules with clarified roles, explicit approval/rejection outcomes, and HRO notifications.
+•	Sample Data: Uses emp1–emp6, user1–user7, req1–req10, comp3, log8–log37.
+•	PlantUML: Diagrams include branching for “Approve” or “Reject” to reflect the new requirement. Render using PlantUML or IDE plugins (e.g., VS Code).
+•	Visuals: Text-based flows and PlantUML code replace graphical diagrams. For enhanced visuals, render PlantUML output in Lucidchart or draw.io.
+•	Termination only for employee in probation while Dismissal is for confirmed employee.
+
+SRS – Software System Requirements:
+4. System Features
+4.1 Authentication & Authorization
+Functional Requirements:
+•	FR1.1: System shall enforce username/password login with strong password. (at least 8 characters with mix of letters, number and special character)
+•	FR1.2: System shall provide password recovery via registered email with time-limited OTP (60 minutes)
+•	FR1.3: System shall implement RBAC with predefined roles
+•	FR1.4: System shall automatically log out inactive sessions after 10 minutes
+•	FR1.5: The system shall allow authorized administrators to create, edit, activate, deactivate, and delete user accounts.
+•	FR1.6: The system shall restrict access to modules and data based on user roles, ensuring users can only perform actions permitted by their assigned role
+
+
+4.2 Dashboard
+Functional Requirements:
+•	FR2.1: The system shall display a personalized dashboard based on the user's role (e.g., HR Personnel, HRMO, HHRMD, Administrator)
+•	FR2.2 System shall display real-time counts of pending requests per category
+•	FR2.3: System shall provide role-based quick access links (or widgets) to commonly used modules or functions based on the user's permissions.
+•	FR2.4: System shall display urgent alerts for pending actions nearing SLA deadlines
+
+4.3 Employee Profile Module
+Functional Requirements:
+•	FR3.1: System shall allow CRUD operations on employee profiles (admin only)
+•	FR3.2: System shall require mandatory fields: employee ID, full name, cadre, date of appointment and all employee details.
+•	FR3.3: System shall support document uploads (PDF only) with 2MB file size limit
+•	FR3.4: The system shall provide search and filter functionality to locate employee records by various fields (e.g., name, employee ID, department).
+•	
+4.4 Confirmation of Employment Module
+Functional Requirements:
+•	FR4.1: The system shall validate that an employee has completed a minimum of 12 months of probation before allowing confirmation processing.
+•	FR4.2: The system shall allow HR personnel to submit employment confirmation requests for eligible employees.
+•	FR4.3: The system shall require the upload of mandatory documents, including the confirmation letter, IPA certificate, and performance appraisal form, as part of the request submission.
+•	FR4.4: The system shall automatically route submitted confirmation requests to the Human Resource Management Office (HRMO) or Head of HR Management Department (HHRMD) for review and approval.
+•	FR4.5: Upon approval or rejection, the system shall allow the HHRMD or HRMO to upload a signed Confirmation or Non-Confirmation Letter, which shall be viewable and downloadable by HR personnel.
+•	FR4.6: The system shall update the employee's status in the profile to “Confirmed” or “Not Confirmed” based on the final decision.
+
+4.5 Leave Without Pay Module (LWOP)
+Functional Requirements:
+•	FR5.1: The system shall validate that the requested leave without pay duration falls between 1 month and 3 years and that no more than two LWOP periods have been previously taken by the employee.
+•	FR5.2: The system shall provide a checkbox for HR personnel to confirm that the employee has no active bank loan guarantees prior to submission.
+•	FR5.3: The system shall allow HR personnel to initiate and submit Leave Without Pay (LWOP) requests on behalf of employees and citing the reasons for requesting LWOP. The reasons must not be among the following:
+o	Employment in internal organizations
+o	Spouse relocation for work or transfer.
+o	Engagement in politics.
+o	Funeral or mourning ceremonies outside Zanzibar.
+o	Caring for a sick family member.
+o	Spouse studying abroad.
+o	Spouse living outside Zanzibar.
+o	Spouse of high-ranking officials (President/Vice President).
+•	FR5.4: The LWOP request form shall capture essential details, including: Employee name and ID, Leave start and end dates, Reason for leave
+•	FR5.6: The system shall allow HR personnel to attach supporting documents to each LWOP request, such as: Letter of request from the employer
+•	FR5.7: The system shall enforce an approval workflow that includes review and final decision by the Head of the Human Resource Management Division (HHRMD) or HRMO.
+•	FR5.8: Upon approval or rejection, the system shall allow the HHRMD or designated HRMO to upload a signed approval/disapproval letter, viewable and downloadable by HR personnel.
+•	FR5.9: The system shall update the employee’s profile to reflect the LWOP period and keep record for LWOP taken accordingly.
+
+4.6 Termination and Dismissal Module
+Functional Requirements:
+•	FR6.1: The system shall allow HR personnel to submit termination requests for confirmed employees, with mandatory supporting documents including:
+o	Requesting letter for termination
+o	Verbal warning letters
+o	Written warning letters
+o	Investigation Committee Report
+o	Summons Letter
+o	Any other related attachments
+•	FR6.2: The system shall allow HR personnel to submit dismissal requests for unconfirmed employees, with optional supporting documents such as:
+o	Requesting letter for dismissal
+o	Any other related attachments
+•	FR6.3: The system shall enforce an approval or rejection workflow for all termination and dismissal requests, requiring actions from either DO or HHRMD.
+•	FR6.4: Upon final approval or rejection, the system shall allow the DO or HHRMD to upload a signed Response Letter and comments, which will be visible to HR personnel.
+
+4.7 Complaints Module
+Functional Requirements:
+•	FR1 – The system shall allow employees to submit complaints only after correctly entering a valid combination of their ZAN-ID, payroll number, and ZSSF number.
+•	FR2 – The system shall require users to classify their complaints under one of the following categories: Unconfirmed Employees, Job-Related, or Other.
+•	FR3 – The system shall automatically assign a unique complaint ID to each submitted complaint.
+•	FR4 – The system shall allow only authorized personnel, specifically the Disciplinary Officer (DO), to access and respond to submitted complaints.
+•	FR5 – The system shall allow complainants to attach supporting documents to their complaints, limited to common file types (e.g., PDF, image) and a maximum size of 1MB per file.
+•	FR6 – The system shall track the status of each complaint through predefined stages: Pending, Under Review, Resolved, and Rejected.
+•	FR7 – The system shall send notifications to the complainant via email or in-system alerts whenever the status of their complaint changes.
+•	FR8 – The system shall provide functionality to escalate unresolved complaints to higher authorities, specifically the Head of Human Resource Management and Development (HHRMD).
+•	FR9 – The system shall record all actions performed on each complaint to maintain a complete audit trail.
+•	FR10 – The system shall enable authorized users to generate detailed reports analyzing complaint types, frequencies, and resolution statuses.
+
+
+4.8 Promotion Module
+Functional Requirements:
+•	FR8.1: The system shall allow HR personnel to submit promotion requests based on either educational advancement or performance appraisals.
+•	FR8.2: The system shall enforce the following document requirements based on promotion type:
+o	For education-based promotion:
+	Upload of education certificate
+	Upload of Tanzania Commission for Universities (TCU) verification for foreign qualifications (if applicable)
+o	For performance-based promotion:
+	Upload of three consecutive annual performance appraisal forms
+	Upload of the Civil Service Commission (CSC) Job Promotion Form
+•	FR8.3: The system shall validate that the employee has served a minimum of 2 years in their current position before allowing submission of a promotion request.
+•	FR8.4: The system shall maintain a complete, chronological promotion history for each employee, including promotion type, date, and justification.
+4.9 Cadre Change Module
+Functional Requirements:
+•	FR9.1: The system shall allow HR personnel to submit cadre change requests, which must include:
+o	A signed Letter of Cadre Change
+o	A completed built-in Cadre Change Form as shown below:
+o	Proposed new cadre
+o	Level of Education
+o	Year of completion of education.
+
+•	FR9.2: The system shall enforce mandatory approval from the Head of Human Resource Management Division (HHRMD) before any cadre change becomes effective.
+•	FR9.3: The system shall maintain a complete and chronological history of all cadre changes per employee, including the effective date, approving authority, and reason for change.
+4.10 Retirement Module
+Functional Requirements:
+•	FR10.1: The system shall allow HR personnel to submit retirement requests, which can be either compulsory, voluntarily or illness retirements.
+•	FR10.2: System shall allow HR personnel to attach supporting documents based on the retirement type.
+•	FR10.3: The system shall enforce mandatory approval from the Head of Human Resource Management Division (HHRMD) before any retirement becomes effective.
+•	FR10.4: Upon final approval or rejection, the system shall allow the HR Management Officer (HRMO) or HHRMD to upload a signed Response Letter, which will be visible to HR personnel.
+
+4.11 Resignation Module
+Functional Requirements:
+FR11.1: The system shall allow HR personnel to submit resignation requests on behalf of employees.
+FR11.2: The system shall allow HR personnel to attach supporting documents such as resignation letters, handover notes, and clearance forms.
+FR11.3: The system shall enforce mandatory approval by the Head of Human Resource Management Division (HHRMD) before a resignation is finalized.
+FR11.4: Upon final approval or rejection, the system shall allow the Human Resource Management Officer (HRMO) or HHRMD to upload a signed Response Letter, which shall be visible to HR personnel.
+
+4.12 Service Extension Module
+Functional Requirements:
+•	FR12.1: The system shall allow HR personnel to initiate and submit service extension requests for eligible employees nearing retirement or contract completion.
+•	FR12.2: The system shall allow HR personnel to upload and attach supporting documents to each service extension request, such as: Service extension request letter, employee consent document, 
+•	FR12.3: System shall automatically check retirement eligibility dates
+•	FR12.4: System shall notify HR 90 days prior to extension expiration
+•	FR12.5: The system shall enforce an approval workflow requiring mandatory review and approval by the Head of the Human Resource Management Division (HHRMD).
+•	FR12.6: Upon final approval or rejection, the system shall allow the HHRMD or designated Human Resource Management Officer (HRMO) to upload a signed Decision Letter, which shall be visible and downloadable by HR personnel.
+4.13 Reports & Analytics
+Functional Requirements:
+•	FR13.1: System shall generate standard reports in PDF/Excel formats
+•	FR13.2: System shall allow custom report building with drag-and-drop interface
+•	FR13.3: System shall provide real-time workforce analytics dashboard
+•	FR13.4: System shall support scheduled report distribution via email
+
+4.14 Audit Trail
+Functional Requirements:
+•	FR14.1: System shall log all user actions with timestamp and user ID
+•	FR14.2: System shall generate monthly audit reports for compliance officers
+•	FR14.3: System shall provide filtered views of audit data by date/user/action
+•	FR14.4: System shall alert admins to suspicious activity patterns
+

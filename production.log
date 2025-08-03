@@ -1,0 +1,21 @@
+
+> nextn@0.1.0 start
+> next start -p 9002
+
+   ▲ Next.js 15.2.3
+   - Local:        http://localhost:9002
+   - Network:      http://192.168.0.69:9002
+
+ ✓ Starting...
+ ✓ Ready in 350ms
+Employees API called with params: {
+  userRole: null,
+  userInstitutionId: null,
+  q: null,
+  status: null,
+  gender: null,
+  page: 1,
+  size: 200
+}
+No user role provided - showing ALL employees (default behavior)
+Found 174 employees out of 174 total
