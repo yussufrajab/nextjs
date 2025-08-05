@@ -82,13 +82,6 @@ export default function PromotionPage() {
   // Common file
   const [letterOfRequestFile, setLetterOfRequestFile] = useState<string>('');
 
-  // Debug file uploads
-  const handleFileUpload = (setter: (value: string) => void, fileName: string) => {
-    return (objectKey: string) => {
-      console.log(`File uploaded - ${fileName}:`, objectKey);
-      setter(objectKey);
-    };
-  };
 
   // File preview modal state
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
@@ -702,7 +695,7 @@ export default function PromotionPage() {
                                 <Label className="flex items-center mb-2"><Star className="mr-2 h-4 w-4 text-primary" />Upload Performance Appraisal Form (Year 1)</Label>
                                 <FileUpload
                                   value={performanceAppraisalFileY1}
-                                  onChange={handleFileUpload(setPerformanceAppraisalFileY1, 'Performance Appraisal Y1')}
+                                  onChange={setPerformanceAppraisalFileY1}
                                   folder="promotion/performance-appraisals"
                                   accept=".pdf"
                                   maxSize={2}
@@ -781,7 +774,7 @@ export default function PromotionPage() {
                             <Label className="flex items-center mb-2"><FileText className="mr-2 h-4 w-4 text-primary" />Upload Letter of Request</Label>
                             <FileUpload
                               value={letterOfRequestFile}
-                              onChange={handleFileUpload(setLetterOfRequestFile, 'Letter of Request')}
+                              onChange={setLetterOfRequestFile}
                               folder="promotion/letters"
                               accept=".pdf"
                               maxSize={2}

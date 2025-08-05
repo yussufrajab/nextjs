@@ -658,7 +658,7 @@ export default function LwopPage() {
                     description="Upload the official letter of request (PDF only)"
                     accept=".pdf"
                     value={letterOfRequestKey}
-                    onChange={(value) => setLetterOfRequestKey(value as string)}
+                    onChange={setLetterOfRequestKey}
                     folder="lwop/letters"
                     disabled={isSubmitting || isEmployeeOnProbation}
                     required
@@ -668,7 +668,7 @@ export default function LwopPage() {
                     description="Upload the employee's consent letter (PDF only)"
                     accept=".pdf"
                     value={employeeConsentLetterKey}
-                    onChange={(value) => setEmployeeConsentLetterKey(value as string)}
+                    onChange={setEmployeeConsentLetterKey}
                     folder="lwop/consents"
                     disabled={isSubmitting || isEmployeeOnProbation}
                     required
@@ -999,7 +999,7 @@ export default function LwopPage() {
               description="Upload the corrected letter of request"
               accept=".pdf"
               value={correctedLetterOfRequestKey}
-              onChange={(value) => setCorrectedLetterOfRequestKey(value as string)}
+              onChange={setCorrectedLetterOfRequestKey}
               folder="lwop/letters"
               required
             />
@@ -1008,7 +1008,7 @@ export default function LwopPage() {
               description="Upload the corrected consent letter"
               accept=".pdf"
               value={correctedEmployeeConsentLetterKey}
-              onChange={(value) => setCorrectedEmployeeConsentLetterKey(value as string)}
+              onChange={setCorrectedEmployeeConsentLetterKey}
               folder="lwop/consents"
               required
             />

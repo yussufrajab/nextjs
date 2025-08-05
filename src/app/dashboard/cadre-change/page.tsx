@@ -514,7 +514,7 @@ export default function CadreChangePage() {
                     description="Upload your qualification certificate (Optional)"
                     accept=".pdf"
                     value={certificateFile}
-                    onChange={(value) => setCertificateFile(value as string)}
+                    onChange={setCertificateFile}
                     folder="cadre-change"
                     disabled={isSubmitting || !!eligibilityError}
                   />
@@ -530,7 +530,7 @@ export default function CadreChangePage() {
                       description="TCU verification form is required for foreign studies"
                       accept=".pdf"
                       value={tcuFormFile}
-                      onChange={(value) => setTcuFormFile(value as string)}
+                      onChange={setTcuFormFile}
                       folder="cadre-change"
                       disabled={isSubmitting || !!eligibilityError}
                       required
@@ -541,7 +541,7 @@ export default function CadreChangePage() {
                     description="Official letter requesting cadre change (Required)"
                     accept=".pdf"
                     value={letterOfRequestFile}
-                    onChange={(value) => setLetterOfRequestFile(value as string)}
+                    onChange={setLetterOfRequestFile}
                     folder="cadre-change"
                     disabled={isSubmitting || !!eligibilityError}
                     required
@@ -963,7 +963,7 @@ export default function CadreChangePage() {
                   description="Upload your qualification certificate (Optional)"
                   accept=".pdf"
                   value={correctedCertificateFile}
-                  onChange={(value) => setCorrectedCertificateFile(value as string)}
+                  onChange={setCorrectedCertificateFile}
                   folder="cadre-change"
                 />
                 {correctedStudiedOutsideCountry && (
@@ -972,7 +972,7 @@ export default function CadreChangePage() {
                     description="TCU verification form is required for foreign studies"
                     accept=".pdf"
                     value={correctedTcuFormFile}
-                    onChange={(value) => setCorrectedTcuFormFile(value as string)}
+                    onChange={setCorrectedTcuFormFile}
                     folder="cadre-change"
                     required
                   />
@@ -982,7 +982,7 @@ export default function CadreChangePage() {
                   description="Official letter requesting cadre change (Required)"
                   accept=".pdf"
                   value={correctedLetterOfRequestFile}
-                  onChange={(value) => setCorrectedLetterOfRequestFile(value as string)}
+                  onChange={setCorrectedLetterOfRequestFile}
                   folder="cadre-change"
                   required
                 />

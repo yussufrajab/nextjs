@@ -891,7 +891,8 @@ export default function ComplaintsPage() {
                       <FormLabel className="flex items-center"><FileText className="mr-2 h-4 w-4 text-primary"/>Barua ya Lalamiko (PDF)</FormLabel>
                       <FormControl>
                         <FileUpload
-                          onUploadSuccess={(objectKey) => {
+                          value={complaintLetterFile}
+                          onChange={(objectKey) => {
                             setComplaintLetterFile(objectKey);
                             field.onChange(objectKey);
                           }}
@@ -915,7 +916,8 @@ export default function ComplaintsPage() {
                       <FormLabel>Pakia Vifungo vingine (Si Lazima, PDF)</FormLabel>
                       <FormControl>
                         <FileUpload
-                          onUploadSuccess={(objectKey) => {
+                          value={evidenceFile}
+                          onChange={(objectKey) => {
                             setEvidenceFile(objectKey);
                             field.onChange(objectKey);
                           }}
