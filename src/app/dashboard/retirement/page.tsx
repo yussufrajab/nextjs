@@ -789,7 +789,7 @@ export default function RetirementPage() {
                   <h3 className="font-semibold text-base">Retirement Request for: {request.employee.name} (ZanID: {request.employee.zanId})</h3>
                   <p className="text-sm text-muted-foreground">Type: {request.retirementType}</p>
                   <p className="text-sm text-muted-foreground">Proposed Date: {request.proposedDate ? format(parseISO(request.proposedDate), 'PPP') : 'N/A'}</p>
-                  <p className="text-sm text-muted-foreground">Submitted: {request.createdAt ? format(parseISO(request.createdAt), 'PPP') : 'N/A'} by {request.submittedBy.name}</p>
+                  <p className="text-sm text-muted-foreground">Submitted: {request.createdAt ? format(parseISO(request.createdAt), 'PPP') : 'N/A'} by {request.submittedBy?.name || 'N/A'}</p>
                   <p className="text-sm"><span className="font-medium">Status:</span> <span className="text-primary">{request.status}</span></p>
                   {request.rejectionReason && <p className="text-sm text-destructive"><span className="font-medium">Rejection Reason:</span> {request.rejectionReason}</p>}
                   <div className="mt-3 pt-3 border-t flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
@@ -900,7 +900,7 @@ export default function RetirementPage() {
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-2">
                         <Label className="text-right font-semibold">Submitted:</Label>
-                        <p className="col-span-2">{selectedRequest.createdAt ? format(parseISO(selectedRequest.createdAt), 'PPP') : 'N/A'} by {selectedRequest.submittedBy.name}</p>
+                        <p className="col-span-2">{selectedRequest.createdAt ? format(parseISO(selectedRequest.createdAt), 'PPP') : 'N/A'} by {selectedRequest.submittedBy?.name || 'N/A'}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-2">
                         <Label className="text-right font-semibold">Status:</Label>

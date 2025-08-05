@@ -87,10 +87,18 @@ export async function POST(req: Request) {
     console.log('Creating promotion request:', body);
 
     // Basic validation
-    if (!body.employeeId || !body.submittedById || !body.promotionType || !body.proposedCadre) {
+    if (!body.employeeId || !body.submittedById || !body.promotionType) {
       return NextResponse.json({ 
         success: false, 
-        message: 'Missing required fields: employeeId, submittedById, promotionType, proposedCadre' 
+        message: 'Missing required fields: employeeId, submittedById, promotionType' 
+      }, { status: 400 });
+    }
+
+    // For experience-based promotions, proposedCadre is required
+    if (body.promotionType === 'Experience' && !body.proposedCadre) {
+      return NextResponse.json({ 
+        success: false, 
+        message: 'Missing required field for experience-based promotion: proposedCadre' 
       }, { status: 400 });
     }
 
@@ -99,7 +107,7 @@ export async function POST(req: Request) {
         employeeId: body.employeeId,
         submittedById: body.submittedById,
         promotionType: body.promotionType,
-        proposedCadre: body.proposedCadre,
+        proposedCadre: body.proposedCadre || '', // Default to empty string for education-based promotions
         studiedOutsideCountry: body.studiedOutsideCountry || false,
         status: 'Pending HRMO/HHRMD Review',
         reviewStage: 'initial',

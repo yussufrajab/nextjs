@@ -841,7 +841,7 @@ export default function LwopPage() {
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-2">
                         <Label className="text-right font-semibold">Submitted:</Label>
-                        <p className="col-span-2">{selectedRequest.createdAt ? format(parseISO(selectedRequest.createdAt), 'PPP') : 'N/A'} by {selectedRequest.submittedBy.name}</p>
+                        <p className="col-span-2">{selectedRequest.createdAt ? format(parseISO(selectedRequest.createdAt), 'PPP') : 'N/A'} by {selectedRequest.submittedBy?.name || 'N/A'}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-2">
                         <Label className="text-right font-semibold">Status:</Label>

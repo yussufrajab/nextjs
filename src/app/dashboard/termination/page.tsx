@@ -786,7 +786,7 @@ export default function TerminationAndDismissalPage() {
                      <h4 className="font-semibold text-base text-foreground mb-2">Request Information</h4>
                      <div className="space-y-2">
                         <div><Label className="font-semibold">Reason Summary:</Label><p className="pl-2">{selectedRequest.reason}</p></div>
-                        <p><Label className="font-semibold">Submitted:</Label> {selectedRequest.createdAt ? format(parseISO(selectedRequest.createdAt), 'PPP') : 'N/A'} by {selectedRequest.submittedBy.name}</p>
+                        <p><Label className="font-semibold">Submitted:</Label> {selectedRequest.createdAt ? format(parseISO(selectedRequest.createdAt), 'PPP') : 'N/A'} by {selectedRequest.submittedBy?.name || 'N/A'}</p>
                         <p><Label className="font-semibold">Status:</Label> <span className="text-primary">{selectedRequest.status}</span></p>
                         {selectedRequest.rejectionReason && (
                            <div><Label className="font-semibold text-destructive">Rejection Reason:</Label><p className="pl-2 text-destructive">{selectedRequest.rejectionReason}</p></div>

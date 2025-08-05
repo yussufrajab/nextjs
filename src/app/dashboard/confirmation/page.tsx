@@ -640,7 +640,7 @@ export default function ConfirmationPage() {
                 <div key={request.id} className="mb-4 border p-4 rounded-md space-y-2 shadow-sm bg-background hover:shadow-md transition-shadow">
                   <h3 className="font-semibold text-base">Confirmation for: {request.employee.name} (ZanID: {request.employee.zanId})</h3>
                   <p className="text-sm text-muted-foreground">Department: {request.employee.department}</p>
-                  <p className="text-sm text-muted-foreground">Submitted: {format(parseISO(request.createdAt), 'PPP')} by {request.submittedBy.name}</p>
+                  <p className="text-sm text-muted-foreground">Submitted: {format(parseISO(request.createdAt), 'PPP')} by {request.submittedBy?.name || 'N/A'}</p>
                   {request.decisionDate && <p className="text-sm text-muted-foreground">Initial Review Date: {format(parseISO(request.decisionDate), 'PPP')}</p>}
                   {request.commissionDecisionDate && <p className="text-sm text-muted-foreground">Commission Decision Date: {format(parseISO(request.commissionDecisionDate), 'PPP')}</p>}
                   <p className="text-sm"><span className="font-medium">Status:</span> <span className="text-primary">
@@ -713,7 +713,7 @@ export default function ConfirmationPage() {
 
                 <div className="space-y-1">
                     <h4 className="font-semibold text-base text-foreground mb-2">Request Information</h4>
-                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-2"><Label className="text-right font-semibold">Submitted:</Label><p className="col-span-2">{format(parseISO(selectedRequest.createdAt), 'PPP')} by {selectedRequest.submittedBy.name}</p></div>
+                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-2"><Label className="text-right font-semibold">Submitted:</Label><p className="col-span-2">{format(parseISO(selectedRequest.createdAt), 'PPP')} by {selectedRequest.submittedBy?.name || 'N/A'}</p></div>
                      {selectedRequest.decisionDate && <div className="grid grid-cols-3 items-center gap-x-4 gap-y-2"><Label className="text-right font-semibold">Initial Review:</Label><p className="col-span-2">{format(parseISO(selectedRequest.decisionDate), 'PPP')}</p></div>}
                     {selectedRequest.commissionDecisionDate && <div className="grid grid-cols-3 items-center gap-x-4 gap-y-2"><Label className="text-right font-semibold">Commission Date:</Label><p className="col-span-2">{format(parseISO(typeof selectedRequest.commissionDecisionDate === 'string' ? selectedRequest.commissionDecisionDate : selectedRequest.commissionDecisionDate.toISOString()), 'PPP')}</p></div>}
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-2"><Label className="text-right font-semibold">Status:</Label><p className="col-span-2 text-primary">{selectedRequest.status}</p></div>

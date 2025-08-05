@@ -8,7 +8,7 @@ export async function GET(req: Request) {
     const requestType = searchParams.get('requestType');
     const status = searchParams.get('status');
     const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
+    const limit = parseInt(searchParams.get('limit') || '100');
 
     console.log('Track requests API called with:', { institutionName, requestType, status, page, limit });
 

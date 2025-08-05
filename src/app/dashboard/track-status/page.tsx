@@ -60,7 +60,7 @@ export default function TrackStatusPage() {
   const [searchAttempted, setSearchAttempted] = useState(false);
   
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 20;
 
   const [allRequests, setAllRequests] = useState<TrackedRequest[]>([]);
   const [filteredRequests, setFilteredRequests] = useState<TrackedRequest[]>([]);
@@ -80,6 +80,10 @@ export default function TrackStatusPage() {
   const fetchRequests = useCallback(async (params: URLSearchParams = new URLSearchParams()) => {
     setIsSearching(true);
     try {
+        // Ensure we request 100 latest requests for table view
+        if (isTableView && !params.has('limit')) {
+            params.set('limit', '100');
+        }
         const response = await fetch(`/api/requests/track?${params.toString()}`);
         if (!response.ok) {
             throw new Error('Failed to fetch requests');
@@ -114,6 +118,7 @@ export default function TrackStatusPage() {
   useEffect(() => {
     if (isTableView) {
       let params = new URLSearchParams();
+      params.set('limit', '100'); // Always get 100 latest requests
       if (role === ROLES.HRO && user?.institution?.name) {
           params.append('institutionName', user.institution.name);
           setInstitutionFilter(user.institution.name);
@@ -139,6 +144,11 @@ export default function TrackStatusPage() {
     if(zanIdFilter.trim()) params.append('zanId', zanIdFilter.trim());
     if(institutionFilter && institutionFilter !== ALL_INSTITUTIONS_FILTER_VALUE) params.append('institutionName', institutionFilter);
     if(statusFilter && statusFilter !== ALL_STATUSES_FILTER_VALUE) params.append('status', statusFilter);
+    
+    // Always request 100 latest requests for table view
+    if (isTableView) {
+        params.set('limit', '100');
+    }
     
     if (role === ROLES.HRO && user?.institution?.name) {
       params.set('institutionName', user.institution.name);
@@ -210,7 +220,7 @@ export default function TrackStatusPage() {
               <CardTitle>{isTableView ? "All Submitted Requests" : "Search Employee Requests"}</CardTitle>
               <CardDescription>
                 {isTableView
-                  ? (role === ROLES.HRO ? "View all requests submitted within your institution. Use filters to refine the list." : "View and filter all submitted requests. Click on a request to see details.")
+                  ? (role === ROLES.HRO ? "View the 100 latest requests submitted within your institution. Use filters to refine the list." : "View and filter the 100 latest submitted requests. Click on a request to see details.")
                   : "Enter an employee's ZanID to view the status of their submitted requests."}
               </CardDescription>
             </CardHeader>
@@ -292,7 +302,7 @@ export default function TrackStatusPage() {
                     {isTableView ? "Requests List" : `Request Status for ZanID: ${zanIdInput}`}
                     </CardTitle>
                     <CardDescription>
-                    {isTableView && `Displaying ${filteredRequests.length} matching requests.`}
+                    {isTableView && `Displaying ${filteredRequests.length} of the latest 100 requests matching your criteria.`}
                     </CardDescription>
                 </div>
                 {filteredRequests.length > 0 && (
@@ -311,7 +321,7 @@ export default function TrackStatusPage() {
                   <>
                   <Table>
                     <TableCaption>
-                      {isTableView ? "Overview of submitted requests." : `A list of recent requests for ZanID: ${zanIdInput}.`}
+                      {isTableView ? "Overview of the 100 latest submitted requests." : `A list of recent requests for ZanID: ${zanIdInput}.`}
                     </TableCaption>
                     <TableHeader>
                       <TableRow>

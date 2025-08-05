@@ -238,3 +238,915 @@ Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allow
  GET / 200 in 74ms
  GET /wp-json/wc/store/products/collection-data?calculate_attribute_counts[][taxonomy]=%252522%252529%252520union%252520all%252520select%2525201%25252Ctable%25255fname%252520from%252520information%25255fschema%25252etables%25253B%252500 404 in 66ms
  GET / 200 in 80ms
+ GET /.env 404 in 311ms
+ GET /admin/assets/js/views/login.js 404 in 101ms
+ GET / 200 in 393ms
+ ○ Compiling /login ...
+ ✓ Compiled /favicon.ico in 7.8s (1121 modules)
+ GET /favicon.ico 200 in 9674ms
+ GET /login 200 in 10230ms
+ GET /login 200 in 277ms
+ ○ Compiling /api/auth/login ...
+ ✓ Compiled /api/auth/login in 776ms (566 modules)
+Login attempt for username: kmnyonge
+Login successful for user: kmnyonge
+ POST /api/auth/login 200 in 1494ms
+ ○ Compiling /dashboard ...
+ ✓ Compiled /dashboard in 1270ms (1287 modules)
+ GET /dashboard 200 in 1530ms
+ ✓ Compiled /api/test in 215ms (719 modules)
+ ✓ Compiled (721 modules)
+=== TEST API CALLED ===
+ GET /api/test 200 in 579ms
+ GET /api/notifications?userId=cmd06nnbn000le67wtg41s3su 200 in 626ms
+ ✓ Compiled /api/dashboard/metrics in 198ms (723 modules)
+=== Dashboard metrics API called ===
+Total employees: 174
+Pending confirmations: 0
+Pending promotions: 0
+Employees on LWOP: 2
+Pending terminations: 0
+Open complaints: 16
+Pending cadre changes: 23
+Pending retirements: 18
+Pending resignations: 17
+Pending service extensions: 13
+=== Dashboard metrics calculated === {
+  totalEmployees: 174,
+  pendingConfirmations: 12,
+  pendingPromotions: 8,
+  employeesOnLwop: 2,
+  pendingTerminations: 3,
+  openComplaints: 16,
+  pendingCadreChanges: 23,
+  pendingRetirements: 18,
+  pendingResignations: 17,
+  pendingServiceExtensions: 13
+}
+=== Recent activities count === 5
+=== Final API response === {
+  "success": true,
+  "data": {
+    "stats": {
+      "totalEmployees": 174,
+      "pendingConfirmations": 12,
+      "pendingPromotions": 8,
+      "employeesOnLwop": 2,
+      "pendingTerminations": 3,
+      "openComplaints": 16,
+      "pendingCadreChanges": 23,
+      "pendingRetirements": 18,
+      "pendingResignations": 17,
+      "pendingServiceExtensions": 13
+    },
+    "recentActivities": [
+      {
+        "id": "cmdyf42zy000h2b41v5humh4r",
+        "type": "Promotion",
+        "employee": "Mwalimu Hassan Khamis",
+        "status": "Request Received – Awaiting Commission Decision",
+        "updatedAt": "2025-08-05T11:10:01.454Z",
+        "href": "/dashboard/promotion"
+      },
+      {
+        "id": "cmdyepb9i000f2b418y9bolks",
+        "type": "Retirement",
+        "employee": "Zainab Hamad Ali",
+        "status": "Approved by Commission",
+        "updatedAt": "2025-08-05T10:42:34.168Z",
+        "href": "/dashboard/retirement"
+      },
+      {
+        "id": "cmdyeel5v000d2b41hjyrv61z",
+        "type": "Retirement",
+        "employee": "Zubeda Mohammed Khamis",
+        "status": "Approved by Commission",
+        "updatedAt": "2025-08-05T10:34:05.875Z",
+        "href": "/dashboard/retirement"
+      },
+      {
+        "id": "cmdye5x6y000b2b41ebhw25xi",
+        "type": "Change of Cadre",
+        "employee": "Zubeda Mohammed Khamis",
+        "status": "Approved by Commission",
+        "updatedAt": "2025-08-05T10:24:23.231Z",
+        "href": "/dashboard/cadre-change"
+      },
+      {
+        "id": "cmdye0kuj00092b41kmfbhlh7",
+        "type": "Change of Cadre",
+        "employee": "Zubeda Mohammed Khamis",
+        "status": "Rejected by Commission - Request Concluded",
+        "updatedAt": "2025-08-05T10:22:09.334Z",
+        "href": "/dashboard/cadre-change"
+      }
+    ]
+  }
+}
+ GET /api/dashboard/metrics 200 in 393ms
+ ○ Compiling /dashboard/promotion ...
+ ✓ Compiled /dashboard/promotion in 2.4s (1371 modules)
+ GET /dashboard/promotion 200 in 2535ms
+ ✓ Compiled /api/promotions in 343ms (1374 modules)
+Promotions API called with: {
+  userId: 'cmd06nnbn000le67wtg41s3su',
+  userRole: 'HRO',
+  userInstitutionId: 'cmd06nn7n0001e67w2h5rf86x'
+}
+Applying institution filter for role HRO with institutionId cmd06nn7n0001e67w2h5rf86x
+Found 20 promotion requests
+ GET /api/promotions?userId=cmd06nnbn000le67wtg41s3su&userRole=HRO&userInstitutionId=cmd06nn7n0001e67w2h5rf86x 200 in 411ms
+ ✓ Compiled /api/employees/search in 313ms (791 modules)
+Employee search API called with: { zanId: '1905770903', q: null }
+Found 1 employees matching search criteria
+ GET /api/employees/search?zanId=1905770903 200 in 387ms
+ ○ Compiling /api/files/upload ...
+ ✓ Compiled /api/files/upload in 981ms (1469 modules)
+MinIO credentials check: {
+  accessKey: 'csmsapp',
+  secretKey: '[HARDCODED]',
+  NODE_ENV: 'development'
+}
+ POST /api/files/upload 200 in 1710ms
+ POST /api/files/upload 200 in 53ms
+Creating promotion request: {
+  employeeId: 'ofisi_emp_005',
+  submittedById: 'cmd06nnbn000le67wtg41s3su',
+  status: 'Pending HRMO/HHRMD Review',
+  reviewStage: 'initial',
+  proposedCadre: '',
+  promotionType: 'EducationAdvancement',
+  documents: [
+    'promotion/letters/1754402810374_0xpvw6_Employee_Profile_Analysis.pdf',
+    'promotion/certificates/1754402800552_8un9ye_mfano.pdf'
+  ],
+  studiedOutsideCountry: false,
+  rejectionReason: null
+}
+ POST /api/promotions 400 in 18ms
+ GET /api/notifications?userId=cmd06nnbn000le67wtg41s3su 200 in 22ms
+ GET /api/notifications?userId=cmd06nnbn000le67wtg41s3su 200 in 28ms
+ ✓ Compiled in 1218ms (726 modules)
+ ✓ Compiled in 289ms (594 modules)
+ GET /api/notifications?userId=cmd06nnbn000le67wtg41s3su 200 in 255ms
+ ○ Compiling /api/promotions ...
+ ✓ Compiled /api/promotions in 1115ms (135 modules)
+Creating promotion request: {
+  employeeId: 'ofisi_emp_005',
+  submittedById: 'cmd06nnbn000le67wtg41s3su',
+  status: 'Pending HRMO/HHRMD Review',
+  reviewStage: 'initial',
+  proposedCadre: '',
+  promotionType: 'EducationAdvancement',
+  documents: [
+    'promotion/letters/1754402810374_0xpvw6_Employee_Profile_Analysis.pdf',
+    'promotion/certificates/1754402800552_8un9ye_mfano.pdf'
+  ],
+  studiedOutsideCountry: false,
+  rejectionReason: null
+}
+Created promotion request: cmdymalck00012bgh9yppnjw1
+ POST /api/promotions 200 in 1202ms
+Promotions API called with: {
+  userId: 'cmd06nnbn000le67wtg41s3su',
+  userRole: 'HRO',
+  userInstitutionId: 'cmd06nn7n0001e67w2h5rf86x'
+}
+Applying institution filter for role HRO with institutionId cmd06nn7n0001e67w2h5rf86x
+Found 21 promotion requests
+ GET /api/promotions?userId=cmd06nnbn000le67wtg41s3su&userRole=HRO&userInstitutionId=cmd06nn7n0001e67w2h5rf86x 200 in 28ms
+ ✓ Compiled / in 294ms (480 modules)
+ GET / 200 in 670ms
+ ✓ Compiled /login in 420ms (563 modules)
+ GET /login 200 in 650ms
+ ✓ Compiled /api/auth/login in 435ms (567 modules)
+Login attempt for username: kmnyonge
+Login successful for user: kmnyonge
+ POST /api/auth/login 200 in 699ms
+ ○ Compiling /dashboard ...
+ ✓ Compiled /dashboard in 689ms (718 modules)
+ GET /dashboard 200 in 806ms
+ ✓ Compiled /api/test in 159ms (720 modules)
+ ✓ Compiled (722 modules)
+=== TEST API CALLED ===
+ GET /api/test 200 in 447ms
+ GET /api/notifications?userId=cmd06nnbn000le67wtg41s3su 200 in 458ms
+ ✓ Compiled /api/dashboard/metrics in 197ms (724 modules)
+=== Dashboard metrics API called ===
+Total employees: 174
+Pending confirmations: 0
+Pending promotions: 0
+Employees on LWOP: 2
+Pending terminations: 0
+Open complaints: 16
+Pending cadre changes: 23
+Pending retirements: 18
+Pending resignations: 17
+Pending service extensions: 13
+=== Dashboard metrics calculated === {
+  totalEmployees: 174,
+  pendingConfirmations: 12,
+  pendingPromotions: 8,
+  employeesOnLwop: 2,
+  pendingTerminations: 3,
+  openComplaints: 16,
+  pendingCadreChanges: 23,
+  pendingRetirements: 18,
+  pendingResignations: 17,
+  pendingServiceExtensions: 13
+}
+=== Recent activities count === 5
+=== Final API response === {
+  "success": true,
+  "data": {
+    "stats": {
+      "totalEmployees": 174,
+      "pendingConfirmations": 12,
+      "pendingPromotions": 8,
+      "employeesOnLwop": 2,
+      "pendingTerminations": 3,
+      "openComplaints": 16,
+      "pendingCadreChanges": 23,
+      "pendingRetirements": 18,
+      "pendingResignations": 17,
+      "pendingServiceExtensions": 13
+    },
+    "recentActivities": [
+      {
+        "id": "cmdymalck00012bgh9yppnjw1",
+        "type": "Promotion",
+        "employee": "Mwinyi Hamad Vuai",
+        "status": "Pending HRMO/HHRMD Review",
+        "updatedAt": "2025-08-05T14:11:16.244Z",
+        "href": "/dashboard/promotion"
+      },
+      {
+        "id": "cmdyf42zy000h2b41v5humh4r",
+        "type": "Promotion",
+        "employee": "Mwalimu Hassan Khamis",
+        "status": "Request Received – Awaiting Commission Decision",
+        "updatedAt": "2025-08-05T11:10:01.454Z",
+        "href": "/dashboard/promotion"
+      },
+      {
+        "id": "cmdyepb9i000f2b418y9bolks",
+        "type": "Retirement",
+        "employee": "Zainab Hamad Ali",
+        "status": "Approved by Commission",
+        "updatedAt": "2025-08-05T10:42:34.168Z",
+        "href": "/dashboard/retirement"
+      },
+      {
+        "id": "cmdyeel5v000d2b41hjyrv61z",
+        "type": "Retirement",
+        "employee": "Zubeda Mohammed Khamis",
+        "status": "Approved by Commission",
+        "updatedAt": "2025-08-05T10:34:05.875Z",
+        "href": "/dashboard/retirement"
+      },
+      {
+        "id": "cmdye5x6y000b2b41ebhw25xi",
+        "type": "Change of Cadre",
+        "employee": "Zubeda Mohammed Khamis",
+        "status": "Approved by Commission",
+        "updatedAt": "2025-08-05T10:24:23.231Z",
+        "href": "/dashboard/cadre-change"
+      }
+    ]
+  }
+}
+ GET /api/dashboard/metrics 200 in 302ms
+ ○ Compiling /dashboard/promotion ...
+ ✓ Compiled /dashboard/promotion in 740ms (792 modules)
+ GET /dashboard/promotion 200 in 835ms
+ ✓ Compiled /api/employees/search in 214ms (794 modules)
+Employee search API called with: { zanId: '1905850030', q: null }
+Found 1 employees matching search criteria
+ GET /api/employees/search?zanId=1905850030 200 in 265ms
+ ○ Compiling /api/files/upload ...
+ ✓ Compiled /api/files/upload in 580ms (922 modules)
+MinIO credentials check: {
+  accessKey: 'csmsapp',
+  secretKey: '[HARDCODED]',
+  NODE_ENV: 'development'
+}
+ POST /api/files/upload 200 in 869ms
+ POST /api/files/upload 200 in 30ms
+Creating promotion request: {
+  employeeId: 'emp_003',
+  submittedById: 'cmd06nnbn000le67wtg41s3su',
+  status: 'Pending HRMO/HHRMD Review',
+  reviewStage: 'initial',
+  proposedCadre: '',
+  promotionType: 'EducationAdvancement',
+  documents: [
+    'promotion/letters/1754403133334_0koo3s_sababu.pdf',
+    'promotion/certificates/1754403129220_bq91hk_Employee_Profile_Analysis.pdf'
+  ],
+  studiedOutsideCountry: false,
+  rejectionReason: null
+}
+Created promotion request: cmdymbuym00032bghh6eo28ja
+ POST /api/promotions 200 in 27ms
+ ✓ Compiled in 1263ms (594 modules)
+ ✓ Compiled in 606ms (594 modules)
+ ✓ Compiled in 427ms (594 modules)
+ ✓ Compiled /dashboard in 492ms (660 modules)
+ GET /dashboard 200 in 1133ms
+ ✓ Compiled /api/test in 233ms (676 modules)
+ ✓ Compiled (684 modules)
+=== TEST API CALLED ===
+ GET /api/notifications?userId=cmd06nnbn000le67wtg41s3su 200 in 474ms
+ GET /api/test 200 in 499ms
+ GET /favicon.ico 200 in 730ms
+ ✓ Compiled /api/dashboard/metrics in 275ms (686 modules)
+=== Dashboard metrics API called ===
+Total employees: 174
+Pending confirmations: 0
+Pending promotions: 0
+Employees on LWOP: 2
+Pending terminations: 0
+Open complaints: 16
+Pending cadre changes: 23
+Pending retirements: 18
+Pending resignations: 17
+Pending service extensions: 13
+=== Dashboard metrics calculated === {
+  totalEmployees: 174,
+  pendingConfirmations: 12,
+  pendingPromotions: 8,
+  employeesOnLwop: 2,
+  pendingTerminations: 3,
+  openComplaints: 16,
+  pendingCadreChanges: 23,
+  pendingRetirements: 18,
+  pendingResignations: 17,
+  pendingServiceExtensions: 13
+}
+=== Recent activities count === 5
+=== Final API response === {
+  "success": true,
+  "data": {
+    "stats": {
+      "totalEmployees": 174,
+      "pendingConfirmations": 12,
+      "pendingPromotions": 8,
+      "employeesOnLwop": 2,
+      "pendingTerminations": 3,
+      "openComplaints": 16,
+      "pendingCadreChanges": 23,
+      "pendingRetirements": 18,
+      "pendingResignations": 17,
+      "pendingServiceExtensions": 13
+    },
+    "recentActivities": [
+      {
+        "id": "cmdymbuym00032bghh6eo28ja",
+        "type": "Promotion",
+        "employee": "Said Juma Nassor",
+        "status": "Pending HRMO/HHRMD Review",
+        "updatedAt": "2025-08-05T14:12:15.358Z",
+        "href": "/dashboard/promotion"
+      },
+      {
+        "id": "cmdymalck00012bgh9yppnjw1",
+        "type": "Promotion",
+        "employee": "Mwinyi Hamad Vuai",
+        "status": "Pending HRMO/HHRMD Review",
+        "updatedAt": "2025-08-05T14:11:16.244Z",
+        "href": "/dashboard/promotion"
+      },
+      {
+        "id": "cmdyf42zy000h2b41v5humh4r",
+        "type": "Promotion",
+        "employee": "Mwalimu Hassan Khamis",
+        "status": "Request Received – Awaiting Commission Decision",
+        "updatedAt": "2025-08-05T11:10:01.454Z",
+        "href": "/dashboard/promotion"
+      },
+      {
+        "id": "cmdyepb9i000f2b418y9bolks",
+        "type": "Retirement",
+        "employee": "Zainab Hamad Ali",
+        "status": "Approved by Commission",
+        "updatedAt": "2025-08-05T10:42:34.168Z",
+        "href": "/dashboard/retirement"
+      },
+      {
+        "id": "cmdyeel5v000d2b41hjyrv61z",
+        "type": "Retirement",
+        "employee": "Zubeda Mohammed Khamis",
+        "status": "Approved by Commission",
+        "updatedAt": "2025-08-05T10:34:05.875Z",
+        "href": "/dashboard/retirement"
+      }
+    ]
+  }
+}
+ GET /api/dashboard/metrics 200 in 448ms
+ ○ Compiling /dashboard/promotion ...
+ ✓ Compiled /dashboard/promotion in 1133ms (757 modules)
+ GET /dashboard/promotion 200 in 1285ms
+ ○ Compiling /api/promotions ...
+ ✓ Compiled /api/promotions in 546ms (760 modules)
+Promotions API called with: {
+  userId: 'cmd06nnbn000le67wtg41s3su',
+  userRole: 'HRO',
+  userInstitutionId: 'cmd06nn7n0001e67w2h5rf86x'
+}
+Applying institution filter for role HRO with institutionId cmd06nn7n0001e67w2h5rf86x
+Found 22 promotion requests
+ GET /api/promotions?userId=cmd06nnbn000le67wtg41s3su&userRole=HRO&userInstitutionId=cmd06nn7n0001e67w2h5rf86x 200 in 602ms
+ ✓ Compiled /api/employees/search in 183ms (762 modules)
+Employee search API called with: { zanId: '1908920060', q: null }
+Found 1 employees matching search criteria
+ GET /api/employees/search?zanId=1908920060 200 in 226ms
+ ○ Compiling /api/files/upload ...
+ ✓ Compiled /api/files/upload in 683ms (891 modules)
+MinIO credentials check: {
+  accessKey: 'csmsapp',
+  secretKey: '[HARDCODED]',
+  NODE_ENV: 'development'
+}
+ POST /api/files/upload 200 in 935ms
+ POST /api/files/upload 200 in 30ms
+Creating promotion request: {
+  employeeId: 'emp_006',
+  submittedById: 'cmd06nnbn000le67wtg41s3su',
+  status: 'Pending HRMO/HHRMD Review',
+  reviewStage: 'initial',
+  proposedCadre: '',
+  promotionType: 'EducationAdvancement',
+  documents: [
+    'promotion/letters/1754403409126_uo1o19_sababu.pdf',
+    'promotion/certificates/1754403408864_8f2228_Employee_Profile_Analysis.pdf'
+  ],
+  studiedOutsideCountry: false,
+  rejectionReason: null
+}
+Created promotion request: cmdymhs0n00052bgh1yx3x8as
+ POST /api/promotions 200 in 28ms
+Promotions API called with: {
+  userId: 'cmd06nnbn000le67wtg41s3su',
+  userRole: 'HRO',
+  userInstitutionId: 'cmd06nn7n0001e67w2h5rf86x'
+}
+Applying institution filter for role HRO with institutionId cmd06nn7n0001e67w2h5rf86x
+Found 23 promotion requests
+ GET /api/promotions?userId=cmd06nnbn000le67wtg41s3su&userRole=HRO&userInstitutionId=cmd06nn7n0001e67w2h5rf86x&_t=1754403421756 200 in 26ms
+ ✓ Compiled /api/files/preview/[...objectKey] in 479ms (1459 modules)
+MinIO credentials check: {
+  accessKey: 'csmsapp',
+  secretKey: '[HARDCODED]',
+  NODE_ENV: 'development'
+}
+MinIO credentials check: {
+  accessKey: 'csmsapp',
+  secretKey: '[HARDCODED]',
+  NODE_ENV: 'development'
+}
+Error: Route "/api/files/preview/[...objectKey]" used `params.objectKey`. `params` should be awaited before using its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+    at GET (src/app/api/files/preview/[...objectKey]/route.ts:10:48)
+   8 |   try {
+   9 |     // Reconstruct the object key from the dynamic route segments
+> 10 |     const objectKey = decodeURIComponent(params.objectKey.join('/'));
+     |                                                ^
+  11 |     
+  12 |     console.log('Preview API - Object key segments:', params.objectKey);
+  13 |     console.log('Preview API - Reconstructed object key:', objectKey);
+Error: Route "/api/files/preview/[...objectKey]" used `params.objectKey`. `params` should be awaited before using its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+    at GET (src/app/api/files/preview/[...objectKey]/route.ts:12:61)
+  10 |     const objectKey = decodeURIComponent(params.objectKey.join('/'));
+  11 |     
+> 12 |     console.log('Preview API - Object key segments:', params.objectKey);
+     |                                                             ^
+  13 |     console.log('Preview API - Reconstructed object key:', objectKey);
+  14 |     
+  15 |     // Get query parameters
+Preview API - Object key segments: [ 'promotion/letters/1754403409126_uo1o19_sababu.pdf' ]
+Preview API - Reconstructed object key: promotion/letters/1754403409126_uo1o19_sababu.pdf
+ GET /api/files/preview/promotion%2Fletters%2F1754403409126_uo1o19_sababu.pdf 200 in 2250ms
+Error: Route "/api/files/preview/[...objectKey]" used `params.objectKey`. `params` should be awaited before using its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+    at GET (src/app/api/files/preview/[...objectKey]/route.ts:10:48)
+   8 |   try {
+   9 |     // Reconstruct the object key from the dynamic route segments
+> 10 |     const objectKey = decodeURIComponent(params.objectKey.join('/'));
+     |                                                ^
+  11 |     
+  12 |     console.log('Preview API - Object key segments:', params.objectKey);
+  13 |     console.log('Preview API - Reconstructed object key:', objectKey);
+Error: Route "/api/files/preview/[...objectKey]" used `params.objectKey`. `params` should be awaited before using its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+    at GET (src/app/api/files/preview/[...objectKey]/route.ts:12:61)
+  10 |     const objectKey = decodeURIComponent(params.objectKey.join('/'));
+  11 |     
+> 12 |     console.log('Preview API - Object key segments:', params.objectKey);
+     |                                                             ^
+  13 |     console.log('Preview API - Reconstructed object key:', objectKey);
+  14 |     
+  15 |     // Get query parameters
+Preview API - Object key segments: [
+  'promotion/certificates/1754403408864_8f2228_Employee_Profile_Analysis.pdf'
+]
+Preview API - Reconstructed object key: promotion/certificates/1754403408864_8f2228_Employee_Profile_Analysis.pdf
+ GET /api/files/preview/promotion%2Fcertificates%2F1754403408864_8f2228_Employee_Profile_Analysis.pdf 200 in 177ms
+MinIO credentials check: {
+  accessKey: 'csmsapp',
+  secretKey: '[HARDCODED]',
+  NODE_ENV: 'development'
+}
+ ✓ Compiled / in 152ms (607 modules)
+ GET / 200 in 364ms
+ ✓ Compiled /favicon.ico in 113ms (609 modules)
+ GET /favicon.ico 200 in 372ms
+ ✓ Compiled /login in 379ms (692 modules)
+ GET /login 200 in 614ms
+ GET /login 200 in 614ms
+ GET /favicon.ico 200 in 351ms
+ ✓ Compiled /api/notifications in 171ms (691 modules)
+ GET /api/notifications?userId=cmd06nnbn000le67wtg41s3su 200 in 253ms
+ ✓ Compiled /api/auth/login in 230ms (696 modules)
+Login attempt for username: skhamis
+Login successful for user: skhamis
+ POST /api/auth/login 200 in 459ms
+ ✓ Compiled /dashboard in 482ms (847 modules)
+ GET /dashboard 200 in 594ms
+ GET /api/notifications?userId=cmd059ir10002e6d86l802ljc 200 in 29ms
+ ✓ Compiled /api/test in 230ms (849 modules)
+ GET /api/notifications?userId=cmd059ir10002e6d86l802ljc 200 in 485ms
+=== TEST API CALLED ===
+ GET /api/test 200 in 498ms
+ GET /favicon.ico 200 in 258ms
+ ✓ Compiled /api/dashboard/metrics in 203ms (851 modules)
+=== Dashboard metrics API called ===
+Total employees: 174
+Pending confirmations: 0
+Pending promotions: 0
+Employees on LWOP: 2
+Pending terminations: 0
+Open complaints: 16
+Pending cadre changes: 23
+Pending retirements: 18
+Pending resignations: 17
+Pending service extensions: 13
+=== Dashboard metrics calculated === {
+  totalEmployees: 174,
+  pendingConfirmations: 12,
+  pendingPromotions: 8,
+  employeesOnLwop: 2,
+  pendingTerminations: 3,
+  openComplaints: 16,
+  pendingCadreChanges: 23,
+  pendingRetirements: 18,
+  pendingResignations: 17,
+  pendingServiceExtensions: 13
+}
+=== Recent activities count === 5
+=== Final API response === {
+  "success": true,
+  "data": {
+    "stats": {
+      "totalEmployees": 174,
+      "pendingConfirmations": 12,
+      "pendingPromotions": 8,
+      "employeesOnLwop": 2,
+      "pendingTerminations": 3,
+      "openComplaints": 16,
+      "pendingCadreChanges": 23,
+      "pendingRetirements": 18,
+      "pendingResignations": 17,
+      "pendingServiceExtensions": 13
+    },
+    "recentActivities": [
+      {
+        "id": "cmdymhs0n00052bgh1yx3x8as",
+        "type": "Promotion",
+        "employee": "Zeinab Mohammed Ali",
+        "status": "Pending HRMO/HHRMD Review",
+        "updatedAt": "2025-08-05T14:16:51.478Z",
+        "href": "/dashboard/promotion"
+      },
+      {
+        "id": "cmdymbuym00032bghh6eo28ja",
+        "type": "Promotion",
+        "employee": "Said Juma Nassor",
+        "status": "Pending HRMO/HHRMD Review",
+        "updatedAt": "2025-08-05T14:12:15.358Z",
+        "href": "/dashboard/promotion"
+      },
+      {
+        "id": "cmdymalck00012bgh9yppnjw1",
+        "type": "Promotion",
+        "employee": "Mwinyi Hamad Vuai",
+        "status": "Pending HRMO/HHRMD Review",
+        "updatedAt": "2025-08-05T14:11:16.244Z",
+        "href": "/dashboard/promotion"
+      },
+      {
+        "id": "cmdyf42zy000h2b41v5humh4r",
+        "type": "Promotion",
+        "employee": "Mwalimu Hassan Khamis",
+        "status": "Request Received – Awaiting Commission Decision",
+        "updatedAt": "2025-08-05T11:10:01.454Z",
+        "href": "/dashboard/promotion"
+      },
+      {
+        "id": "cmdyepb9i000f2b418y9bolks",
+        "type": "Retirement",
+        "employee": "Zainab Hamad Ali",
+        "status": "Approved by Commission",
+        "updatedAt": "2025-08-05T10:42:34.168Z",
+        "href": "/dashboard/retirement"
+      }
+    ]
+  }
+}
+ GET /api/dashboard/metrics 200 in 286ms
+ ✓ Compiled /dashboard/promotion in 253ms (919 modules)
+ GET /dashboard/promotion 200 in 366ms
+ ✓ Compiled /api/promotions in 222ms (922 modules)
+Promotions API called with: {
+  userId: 'cmd059ir10002e6d86l802ljc',
+  userRole: 'HHRMD',
+  userInstitutionId: 'cmd059ion0000e6d85kexfukl'
+}
+Role HHRMD is a CSC role - showing all promotion data across institutions
+Promotions API called with: {
+  userId: 'cmd059ir10002e6d86l802ljc',
+  userRole: 'HHRMD',
+  userInstitutionId: 'cmd059ion0000e6d85kexfukl'
+}
+Role HHRMD is a CSC role - showing all promotion data across institutions
+Found 32 promotion requests
+ GET /api/promotions?userId=cmd059ir10002e6d86l802ljc&userRole=HHRMD&userInstitutionId=cmd059ion0000e6d85kexfukl 200 in 290ms
+Found 32 promotion requests
+ GET /api/promotions?userId=cmd059ir10002e6d86l802ljc&userRole=HHRMD&userInstitutionId=cmd059ion0000e6d85kexfukl 200 in 293ms
+ GET /favicon.ico 200 in 223ms
+MinIO credentials check: {
+  accessKey: 'csmsapp',
+  secretKey: '[HARDCODED]',
+  NODE_ENV: 'development'
+}
+Error: Route "/api/files/preview/[...objectKey]" used `params.objectKey`. `params` should be awaited before using its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+    at GET (src/app/api/files/preview/[...objectKey]/route.ts:10:48)
+   8 |   try {
+   9 |     // Reconstruct the object key from the dynamic route segments
+> 10 |     const objectKey = decodeURIComponent(params.objectKey.join('/'));
+     |                                                ^
+  11 |     
+  12 |     console.log('Preview API - Object key segments:', params.objectKey);
+  13 |     console.log('Preview API - Reconstructed object key:', objectKey);
+Error: Route "/api/files/preview/[...objectKey]" used `params.objectKey`. `params` should be awaited before using its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+    at GET (src/app/api/files/preview/[...objectKey]/route.ts:12:61)
+  10 |     const objectKey = decodeURIComponent(params.objectKey.join('/'));
+  11 |     
+> 12 |     console.log('Preview API - Object key segments:', params.objectKey);
+     |                                                             ^
+  13 |     console.log('Preview API - Reconstructed object key:', objectKey);
+  14 |     
+  15 |     // Get query parameters
+Preview API - Object key segments: [
+  'promotion/certificates/1754403408864_8f2228_Employee_Profile_Analysis.pdf'
+]
+Preview API - Reconstructed object key: promotion/certificates/1754403408864_8f2228_Employee_Profile_Analysis.pdf
+ GET /api/files/preview/promotion%2Fcertificates%2F1754403408864_8f2228_Employee_Profile_Analysis.pdf 200 in 234ms
+MinIO credentials check: {
+  accessKey: 'csmsapp',
+  secretKey: '[HARDCODED]',
+  NODE_ENV: 'development'
+}
+ ✓ Compiled /api/files/download/[...objectKey] in 474ms (1504 modules)
+MinIO credentials check: {
+  accessKey: 'csmsapp',
+  secretKey: '[HARDCODED]',
+  NODE_ENV: 'development'
+}
+MinIO credentials check: {
+  accessKey: 'csmsapp',
+  secretKey: '[HARDCODED]',
+  NODE_ENV: 'development'
+}
+Error: Route "/api/files/download/[...objectKey]" used `params.objectKey`. `params` should be awaited before using its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+    at GET (src/app/api/files/download/[...objectKey]/route.ts:11:48)
+   9 |   try {
+  10 |     // Reconstruct the object key from the dynamic route segments
+> 11 |     const objectKey = decodeURIComponent(params.objectKey.join('/'));
+     |                                                ^
+  12 |     
+  13 |     console.log('Download API - Object key segments:', params.objectKey);
+  14 |     console.log('Download API - Reconstructed object key:', objectKey);
+Error: Route "/api/files/download/[...objectKey]" used `params.objectKey`. `params` should be awaited before using its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+    at GET (src/app/api/files/download/[...objectKey]/route.ts:13:62)
+  11 |     const objectKey = decodeURIComponent(params.objectKey.join('/'));
+  12 |     
+> 13 |     console.log('Download API - Object key segments:', params.objectKey);
+     |                                                              ^
+  14 |     console.log('Download API - Reconstructed object key:', objectKey);
+  15 |     
+  16 |     // Get file metadata first to validate existence
+Download API - Object key segments: [
+  'promotion/certificates/1754403408864_8f2228_Employee_Profile_Analysis.pdf'
+]
+Download API - Reconstructed object key: promotion/certificates/1754403408864_8f2228_Employee_Profile_Analysis.pdf
+ GET /api/files/download/promotion%2Fcertificates%2F1754403408864_8f2228_Employee_Profile_Analysis.pdf 200 in 1608ms
+ GET / 200 in 144ms
+ GET /api/notifications?userId=cmd059ir10002e6d86l802ljc 200 in 73ms
+ GET /api/notifications?userId=cmd06nnbn000le67wtg41s3su 200 in 22ms
+ GET /dashboard/promotion 200 in 284ms
+ GET /favicon.ico 200 in 220ms
+Promotions API called with: {
+  userId: 'cmd059ir10002e6d86l802ljc',
+  userRole: 'HHRMD',
+  userInstitutionId: 'cmd059ion0000e6d85kexfukl'
+}
+Role HHRMD is a CSC role - showing all promotion data across institutions
+Found 32 promotion requests
+ GET /api/promotions?userId=cmd059ir10002e6d86l802ljc&userRole=HHRMD&userInstitutionId=cmd059ion0000e6d85kexfukl 200 in 35ms
+ GET /api/notifications?userId=cmd06nnbn000le67wtg41s3su 200 in 15ms
+ GET /api/notifications?userId=cmd059ir10002e6d86l802ljc 200 in 27ms
+ PATCH /api/promotions 200 in 29ms
+Promotions API called with: {
+  userId: 'cmd059ir10002e6d86l802ljc',
+  userRole: 'HHRMD',
+  userInstitutionId: 'cmd059ion0000e6d85kexfukl'
+}
+Role HHRMD is a CSC role - showing all promotion data across institutions
+Found 32 promotion requests
+ GET /api/promotions?userId=cmd059ir10002e6d86l802ljc&userRole=HHRMD&userInstitutionId=cmd059ion0000e6d85kexfukl 200 in 32ms
+Promotions API called with: {
+  userId: 'cmd06nnbn000le67wtg41s3su',
+  userRole: 'HRO',
+  userInstitutionId: 'cmd06nn7n0001e67w2h5rf86x'
+}
+Applying institution filter for role HRO with institutionId cmd06nn7n0001e67w2h5rf86x
+Found 23 promotion requests
+ GET /api/promotions?userId=cmd06nnbn000le67wtg41s3su&userRole=HRO&userInstitutionId=cmd06nn7n0001e67w2h5rf86x&_t=1754405312483 200 in 28ms
+ GET /api/notifications?userId=cmd059ir10002e6d86l802ljc 200 in 24ms
+ ○ Compiling /api/files/upload ...
+ ✓ Compiled /api/files/upload in 630ms (267 modules)
+MinIO credentials check: {
+  accessKey: 'csmsapp',
+  secretKey: '[HARDCODED]',
+  NODE_ENV: 'development'
+}
+ POST /api/files/upload 200 in 925ms
+ GET /api/notifications?userId=cmd06nnbn000le67wtg41s3su 200 in 17ms
+ PATCH /api/promotions 200 in 26ms
+Promotions API called with: {
+  userId: 'cmd06nnbn000le67wtg41s3su',
+  userRole: 'HRO',
+  userInstitutionId: 'cmd06nn7n0001e67w2h5rf86x'
+}
+Applying institution filter for role HRO with institutionId cmd06nn7n0001e67w2h5rf86x
+Found 23 promotion requests
+ GET /api/promotions?userId=cmd06nnbn000le67wtg41s3su&userRole=HRO&userInstitutionId=cmd06nn7n0001e67w2h5rf86x 200 in 26ms
+Promotions API called with: {
+  userId: 'cmd06nnbn000le67wtg41s3su',
+  userRole: 'HRO',
+  userInstitutionId: 'cmd06nn7n0001e67w2h5rf86x'
+}
+Applying institution filter for role HRO with institutionId cmd06nn7n0001e67w2h5rf86x
+Found 23 promotion requests
+ GET /api/promotions?userId=cmd06nnbn000le67wtg41s3su&userRole=HRO&userInstitutionId=cmd06nn7n0001e67w2h5rf86x&_t=1754405370991 200 in 24ms
+ GET /api/notifications?userId=cmd059ir10002e6d86l802ljc 200 in 22ms
+ GET /api/notifications?userId=cmd059ir10002e6d86l802ljc 200 in 56ms
+ GET /api/notifications?userId=cmd06nnbn000le67wtg41s3su 200 in 17ms
+ GET /api/notifications?userId=cmd059ir10002e6d86l802ljc 200 in 22ms
+ GET /api/notifications?userId=cmd06nnbn000le67wtg41s3su 200 in 20ms
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 885ms (1033 modules)
+ GET /actuator/health 404 in 1099ms
+ GET /api/notifications?userId=cmd06nnbn000le67wtg41s3su 200 in 28ms
+ GET /api/notifications?userId=cmd059ir10002e6d86l802ljc 200 in 16ms
+ ✓ Compiled in 628ms (594 modules)
+ ✓ Compiled in 357ms (594 modules)
+ GET /api/notifications?userId=cmd06nnbn000le67wtg41s3su 200 in 52ms
+ ✓ Compiled in 407ms (594 modules)
+ GET /api/notifications?userId=cmd059ir10002e6d86l802ljc 200 in 21ms
+ GET /api/notifications?userId=cmd06nnbn000le67wtg41s3su 200 in 58ms
+ GET /api/notifications?userId=cmd059ir10002e6d86l802ljc 200 in 16ms
+ GET /api/notifications?userId=cmd06nnbn000le67wtg41s3su 200 in 18ms
+ ✓ Compiled /api/promotions in 414ms (135 modules)
+ ⨯ Error: Cannot find module './4447.js'
+Require stack:
+- /www/wwwroot/nexxt/.next/server/webpack-runtime.js
+- /www/wwwroot/nexxt/.next/server/app/api/promotions/route.js
+- /www/wwwroot/nexxt/node_modules/next/dist/server/require.js
+- /www/wwwroot/nexxt/node_modules/next/dist/server/load-components.js
+- /www/wwwroot/nexxt/node_modules/next/dist/build/utils.js
+- /www/wwwroot/nexxt/node_modules/next/dist/build/swc/options.js
+- /www/wwwroot/nexxt/node_modules/next/dist/build/swc/index.js
+- /www/wwwroot/nexxt/node_modules/next/dist/build/next-config-ts/transpile-config.js
+- /www/wwwroot/nexxt/node_modules/next/dist/server/config.js
+- /www/wwwroot/nexxt/node_modules/next/dist/server/next.js
+- /www/wwwroot/nexxt/node_modules/next/dist/server/lib/start-server.js
+    at __webpack_require__.f.require (.next/server/webpack-runtime.js:156:28)
+    at <unknown> (.next/server/webpack-runtime.js:83:40)
+    at Array.reduce (<anonymous>)
+    at __webpack_require__.e (.next/server/webpack-runtime.js:82:67)
+    at Array.map (<anonymous>)
+    at __webpack_require__.X (.next/server/webpack-runtime.js:120:22)
+    at <unknown> (.next/server/app/api/promotions/route.js:1:4904)
+    at Object.<anonymous> (.next/server/app/api/promotions/route.js:1:4951) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array],
+  page: '/api/promotions'
+}
+ ○ Compiling /_error ...
+ ✓ Compiled /_error in 802ms (1043 modules)
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at ShadowPortal (/www/wwwroot/nexxt/node_modules/next/src/client/components/react-dev-overlay/ui/components/shadow-portal.tsx:5:32)
+    at DevOverlay (/www/wwwroot/nexxt/node_modules/next/src/client/components/react-dev-overlay/ui/dev-overlay.tsx:14:3)
+    at ReactDevOverlay (/www/wwwroot/nexxt/node_modules/next/src/server/dev/next-dev-server.ts:82:10)
+    at div
+    at Body (webpack://next/dist/src/server/render.tsx:1263:19)
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at ShadowPortal (/www/wwwroot/nexxt/node_modules/next/src/client/components/react-dev-overlay/ui/components/shadow-portal.tsx:5:32)
+    at DevOverlay (/www/wwwroot/nexxt/node_modules/next/src/client/components/react-dev-overlay/ui/dev-overlay.tsx:14:3)
+    at ReactDevOverlay (/www/wwwroot/nexxt/node_modules/next/src/server/dev/next-dev-server.ts:82:10)
+    at div
+    at Body (webpack://next/dist/src/server/render.tsx:1263:19)
+ GET /api/promotions?userId=cmd059ir10002e6d86l802ljc&userRole=HHRMD&userInstitutionId=cmd059ion0000e6d85kexfukl&_t=1754406032759 500 in 1846ms
+ ⨯ Error: Cannot find module './4447.js'
+Require stack:
+- /www/wwwroot/nexxt/.next/server/webpack-runtime.js
+- /www/wwwroot/nexxt/.next/server/pages/_document.js
+- /www/wwwroot/nexxt/node_modules/next/dist/server/require.js
+- /www/wwwroot/nexxt/node_modules/next/dist/server/load-components.js
+- /www/wwwroot/nexxt/node_modules/next/dist/build/utils.js
+- /www/wwwroot/nexxt/node_modules/next/dist/build/swc/options.js
+- /www/wwwroot/nexxt/node_modules/next/dist/build/swc/index.js
+- /www/wwwroot/nexxt/node_modules/next/dist/build/next-config-ts/transpile-config.js
+- /www/wwwroot/nexxt/node_modules/next/dist/server/config.js
+- /www/wwwroot/nexxt/node_modules/next/dist/server/next.js
+- /www/wwwroot/nexxt/node_modules/next/dist/server/lib/start-server.js
+    at __webpack_require__.f.require (.next/server/webpack-runtime.js:156:28)
+    at <unknown> (.next/server/webpack-runtime.js:83:40)
+    at Array.reduce (<anonymous>)
+    at __webpack_require__.e (.next/server/webpack-runtime.js:82:67)
+    at Array.map (<anonymous>)
+    at __webpack_require__.X (.next/server/webpack-runtime.js:120:22)
+    at <unknown> (.next/server/app/api/promotions/route.js:1:4904)
+    at Object.<anonymous> (.next/server/app/api/promotions/route.js:1:4951) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array],
+  page: '/api/promotions'
+}
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at ShadowPortal (/www/wwwroot/nexxt/node_modules/next/src/client/components/react-dev-overlay/ui/components/shadow-portal.tsx:5:32)
+    at DevOverlay (/www/wwwroot/nexxt/node_modules/next/src/client/components/react-dev-overlay/ui/dev-overlay.tsx:14:3)
+    at ReactDevOverlay (/www/wwwroot/nexxt/node_modules/next/src/server/dev/next-dev-server.ts:82:10)
+    at div
+    at Body (webpack://next/dist/src/server/render.tsx:1263:19)
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at ShadowPortal (/www/wwwroot/nexxt/node_modules/next/src/client/components/react-dev-overlay/ui/components/shadow-portal.tsx:5:32)
+    at DevOverlay (/www/wwwroot/nexxt/node_modules/next/src/client/components/react-dev-overlay/ui/dev-overlay.tsx:14:3)
+    at ReactDevOverlay (/www/wwwroot/nexxt/node_modules/next/src/server/dev/next-dev-server.ts:82:10)
+    at div
+    at Body (webpack://next/dist/src/server/render.tsx:1263:19)
+ GET /api/promotions?userId=cmd06nnbn000le67wtg41s3su&userRole=HRO&userInstitutionId=cmd06nn7n0001e67w2h5rf86x&_t=1754406046404 500 in 275ms
+ ✓ Compiled /api/auth/logout in 116ms (226 modules)
+ POST /api/auth/logout 200 in 195ms
+ ○ Compiling /login ...
+ ✓ Compiled /login in 813ms (648 modules)
+ GET /login 200 in 1072ms
+ ✓ Compiled /_not-found in 411ms (1471 modules)
+ GET /_next/static/chunks/app/(auth)/login/page.js 404 in 574ms
+ ⨯ Error: Cannot find module './4447.js'
+Require stack:
+- /www/wwwroot/nexxt/.next/server/webpack-runtime.js
+- /www/wwwroot/nexxt/.next/server/app/_not-found/page.js
+- /www/wwwroot/nexxt/node_modules/next/dist/server/require.js
+- /www/wwwroot/nexxt/node_modules/next/dist/server/load-components.js
+- /www/wwwroot/nexxt/node_modules/next/dist/build/utils.js
+- /www/wwwroot/nexxt/node_modules/next/dist/build/swc/options.js
+- /www/wwwroot/nexxt/node_modules/next/dist/build/swc/index.js
+- /www/wwwroot/nexxt/node_modules/next/dist/build/next-config-ts/transpile-config.js
+- /www/wwwroot/nexxt/node_modules/next/dist/server/config.js
+- /www/wwwroot/nexxt/node_modules/next/dist/server/next.js
+- /www/wwwroot/nexxt/node_modules/next/dist/server/lib/start-server.js
+    at __webpack_require__.f.require (.next/server/webpack-runtime.js:203:28)
+    at <unknown> (.next/server/webpack-runtime.js:116:40)
+    at Array.reduce (<anonymous>)
+    at __webpack_require__.e (.next/server/webpack-runtime.js:115:67)
+    at Array.map (<anonymous>)
+    at __webpack_require__.X (.next/server/webpack-runtime.js:167:22)
+    at <unknown> (.next/server/app/api/notifications/route.js:1:2403)
+    at Object.<anonymous> (.next/server/app/api/notifications/route.js:1:2450) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array],
+  page: '/api/notifications'
+}
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at ShadowPortal (/www/wwwroot/nexxt/node_modules/next/src/client/components/react-dev-overlay/ui/components/shadow-portal.tsx:5:32)
+    at DevOverlay (/www/wwwroot/nexxt/node_modules/next/src/client/components/react-dev-overlay/ui/dev-overlay.tsx:14:3)
+    at ReactDevOverlay (/www/wwwroot/nexxt/node_modules/next/src/server/dev/next-dev-server.ts:82:10)
+    at div
+    at Body (webpack://next/dist/src/server/render.tsx:1263:19)
+Warning: useLayoutEffect does nothing on the server, because its effect cannot be encoded into the server renderer's output format. This will lead to a mismatch between the initial, non-hydrated UI and the intended UI. To avoid this, useLayoutEffect should only be used in components that render exclusively on the client. See https://reactjs.org/link/uselayouteffect-ssr for common fixes.
+    at ShadowPortal (/www/wwwroot/nexxt/node_modules/next/src/client/components/react-dev-overlay/ui/components/shadow-portal.tsx:5:32)
+    at DevOverlay (/www/wwwroot/nexxt/node_modules/next/src/client/components/react-dev-overlay/ui/dev-overlay.tsx:14:3)
+    at ReactDevOverlay (/www/wwwroot/nexxt/node_modules/next/src/server/dev/next-dev-server.ts:82:10)
+    at div
+    at Body (webpack://next/dist/src/server/render.tsx:1263:19)
+ GET /api/notifications?userId=cmd059ir10002e6d86l802ljc 500 in 300ms
+[?25h

@@ -788,7 +788,7 @@ export default function ServiceExtensionPage() {
                   <h3 className="font-semibold text-base">Service Extension for: {request.employee.name} (ZanID: {request.employee.zanId})</h3>
                   <p className="text-sm text-muted-foreground">Current Retirement: {request.currentRetirementDate ? format(parseISO(request.currentRetirementDate), 'PPP') : 'N/A'}</p>
                   <p className="text-sm text-muted-foreground">Extension Requested: {request.requestedExtensionPeriod}</p>
-                  <p className="text-sm text-muted-foreground">Submitted: {request.createdAt ? format(parseISO(request.createdAt), 'PPP') : 'N/A'} by {request.submittedBy.name}</p>
+                  <p className="text-sm text-muted-foreground">Submitted: {request.createdAt ? format(parseISO(request.createdAt), 'PPP') : 'N/A'} by {request.submittedBy?.name || 'N/A'}</p>
                   <div className="flex items-center space-x-2">
                     <p className="text-sm"><span className="font-medium">Status:</span></p>
                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
@@ -924,7 +924,7 @@ export default function ServiceExtensionPage() {
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-2">
                         <Label className="text-right font-semibold">Submitted:</Label>
-                        <p className="col-span-2">{selectedRequest.createdAt ? format(parseISO(selectedRequest.createdAt), 'PPP') : 'N/A'} by {selectedRequest.submittedBy.name}</p>
+                        <p className="col-span-2">{selectedRequest.createdAt ? format(parseISO(selectedRequest.createdAt), 'PPP') : 'N/A'} by {selectedRequest.submittedBy?.name || 'N/A'}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-2">
                         <Label className="text-right font-semibold">Status:</Label>

@@ -412,52 +412,24 @@ export default function PromotionPage() {
     // Basic validation
     const basicValidation = !!eligibilityError || isSubmitting || !employeeDetails || !promotionRequestType || letterOfRequestFile === '';
     if (basicValidation) {
-      console.log('Basic validation failed:', { eligibilityError, isSubmitting, hasEmployee: !!employeeDetails, promotionRequestType, letterOfRequestFile });
       return true;
     }
     
     // Experience-based validation
     if (promotionRequestType === 'experience') {
       const experienceValidation = !proposedCadre || performanceAppraisalFileY1 === '' || performanceAppraisalFileY2 === '' || performanceAppraisalFileY3 === '' || cscPromotionFormFile === '';
-      console.log('Experience validation:', { proposedCadre, performanceAppraisalFileY1, performanceAppraisalFileY2, performanceAppraisalFileY3, cscPromotionFormFile, failed: experienceValidation });
       return experienceValidation;
     }
     
     // Education-based validation
     if (promotionRequestType === 'education') {
       const educationValidation = certificateFile === '' || (studiedOutsideCountry && tcuFormFile === '');
-      console.log('Education validation:', { certificateFile, studiedOutsideCountry, tcuFormFile, failed: educationValidation });
       return educationValidation;
     }
     
-    console.log('All validations passed, button should be enabled');
     return false; 
   };
 
-  // Debug logging for button state
-  console.log('Promotion submit button state:', {
-    hasEmployee: !!employeeDetails,
-    promotionRequestType,
-    proposedCadre,
-    letterOfRequestFile,
-    letterOfRequestFileLength: letterOfRequestFile.length,
-    performanceAppraisalFileY1,
-    performanceAppraisalFileY1Length: performanceAppraisalFileY1.length,
-    performanceAppraisalFileY2,
-    performanceAppraisalFileY2Length: performanceAppraisalFileY2.length,
-    performanceAppraisalFileY3,
-    performanceAppraisalFileY3Length: performanceAppraisalFileY3.length,
-    cscPromotionFormFile,
-    cscPromotionFormFileLength: cscPromotionFormFile.length,
-    certificateFile,
-    certificateFileLength: certificateFile.length,
-    tcuFormFile,
-    tcuFormFileLength: tcuFormFile.length,
-    studiedOutsideCountry,
-    eligibilityError,
-    isSubmitting,
-    isDisabled: isSubmitDisabled()
-  });
 
   const handleInitialAction = async (requestId: string, action: 'forward' | 'reject') => {
     const request = pendingRequests.find(req => req.id === requestId);
@@ -543,7 +515,9 @@ export default function PromotionPage() {
     setRequestToCorrect(request);
     setZanId(request.employee.zanId || '');
     setEmployeeDetails(request.employee as Employee);
-    setPromotionRequestType(request.promotionType.toLowerCase() as 'experience' | 'education' | '');
+    // Properly map the promotionType from the database values to our form values
+    const mappedType = request.promotionType === 'EducationAdvancement' ? 'education' : 'experience';
+    setPromotionRequestType(mappedType);
     setCorrectedProposedCadre(request.proposedCadre);
     setStudiedOutsideCountry(request.studiedOutsideCountry || false);
     
@@ -851,7 +825,7 @@ export default function PromotionPage() {
                 <h3 className="font-semibold text-base">Promotion Request for: {request.employee.name} (ZanID: {request.employee.zanId})</h3>
                 <p className="text-sm text-muted-foreground">Proposed Cadre: {request.proposedCadre}</p>
                 <p className="text-sm text-muted-foreground">Type: {request.promotionType}</p>
-                <p className="text-sm text-muted-foreground">Submitted: {request.createdAt ? format(parseISO(request.createdAt), 'PPP') : 'N/A'} by {request.submittedBy.name}</p>
+                <p className="text-sm text-muted-foreground">Submitted: {request.createdAt ? format(parseISO(request.createdAt), 'PPP') : 'N/A'} by {request.submittedBy?.name || 'N/A'}</p>
                 <p className="text-sm"><span className="font-medium">Status:</span> <span className="text-primary">{request.status}</span></p>
                 {request.rejectionReason && <p className="text-sm text-destructive"><span className="font-medium">Rejection Reason:</span> {request.rejectionReason}</p>}
                 <div className="mt-3 pt-3 border-t flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
@@ -961,7 +935,7 @@ export default function PromotionPage() {
                     )}
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-2">
                         <Label className="text-right font-semibold">Submitted:</Label>
-                        <p className="col-span-2">{format(parseISO(selectedRequest.createdAt), 'PPP')} by {selectedRequest.submittedBy.name}</p>
+                        <p className="col-span-2">{format(parseISO(selectedRequest.createdAt), 'PPP')} by {selectedRequest.submittedBy?.name || 'N/A'}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-2">
                         <Label className="text-right font-semibold">Status:</Label>
@@ -1172,6 +1146,18 @@ export default function PromotionPage() {
                         maxSize={2}
                       />
                     </div>
+                    <div>
+                      <Label className="flex items-center mb-2">
+                        <FileText className="mr-2 h-4 w-4 text-primary" />
+                        Upload Letter of Request
+                      </Label>
+                      <FileUpload
+                        onChange={setLetterOfRequestFile}
+                        folder="promotion/letters"
+                        accept=".pdf"
+                        maxSize={2}
+                      />
+                    </div>
                   </>
                 )}
 
@@ -1213,21 +1199,20 @@ export default function PromotionPage() {
                         />
                       </div>
                     )}
+                    <div>
+                      <Label className="flex items-center mb-2">
+                        <FileText className="mr-2 h-4 w-4 text-primary" />
+                        Upload Letter of Request
+                      </Label>
+                      <FileUpload
+                        onChange={setLetterOfRequestFile}
+                        folder="promotion/letters"
+                        accept=".pdf"  
+                        maxSize={2}
+                      />
+                    </div>
                   </>
                 )}
-
-                <div>
-                  <Label className="flex items-center mb-2">
-                    <FileText className="mr-2 h-4 w-4 text-primary" />
-                    Upload Letter of Request
-                  </Label>
-                  <FileUpload
-                    onChange={setLetterOfRequestFile}
-                    folder="promotion/letters"
-                    accept=".pdf"
-                    maxSize={2}
-                  />
-                </div>
               </div>
             </div>
             <DialogFooter className="flex flex-col sm:flex-row gap-2">
