@@ -46,7 +46,11 @@
       "Bash(find:*)",
       "Bash(kill:*)",
       "Bash(mc admin user add:*)",
-      "Bash(mc alias set:*)"
+      "Bash(mc alias set:*)",
+      "Bash(for:*)",
+      "Bash(do echo \"=== $file ===\")",
+      "Bash(done)",
+      "Bash(sudo netstat:*)"
     ],
     "deny": []
   }

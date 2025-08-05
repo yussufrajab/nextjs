@@ -701,6 +701,7 @@ export default function PromotionPage() {
                                 <div>
                                 <Label className="flex items-center mb-2"><Star className="mr-2 h-4 w-4 text-primary" />Upload Performance Appraisal Form (Year 1)</Label>
                                 <FileUpload
+                                  value={performanceAppraisalFileY1}
                                   onChange={handleFileUpload(setPerformanceAppraisalFileY1, 'Performance Appraisal Y1')}
                                   folder="promotion/performance-appraisals"
                                   accept=".pdf"
@@ -711,6 +712,7 @@ export default function PromotionPage() {
                                 <div>
                                 <Label className="flex items-center mb-2"><Star className="mr-2 h-4 w-4 text-primary" />Upload Performance Appraisal Form (Year 2)</Label>
                                 <FileUpload
+                                  value={performanceAppraisalFileY2}
                                   onChange={setPerformanceAppraisalFileY2}
                                   folder="promotion/performance-appraisals"
                                   accept=".pdf"
@@ -721,6 +723,7 @@ export default function PromotionPage() {
                                 <div>
                                 <Label className="flex items-center mb-2"><Star className="mr-2 h-4 w-4 text-primary" />Upload Performance Appraisal Form (Year 3)</Label>
                                 <FileUpload
+                                  value={performanceAppraisalFileY3}
                                   onChange={setPerformanceAppraisalFileY3}
                                   folder="promotion/performance-appraisals"
                                   accept=".pdf"
@@ -731,6 +734,7 @@ export default function PromotionPage() {
                                 <div>
                                 <Label className="flex items-center mb-2"><FileText className="mr-2 h-4 w-4 text-primary" />Upload Civil Service Commission Promotion Form (Tume ya Utumishi)</Label>
                                 <FileUpload
+                                  value={cscPromotionFormFile}
                                   onChange={setCscPromotionFormFile}
                                   folder="promotion/csc-forms"
                                   accept=".pdf"
@@ -746,6 +750,7 @@ export default function PromotionPage() {
                                 <div>
                                 <Label className="flex items-center mb-2"><Award className="mr-2 h-4 w-4 text-primary" />Upload Academic Certificate</Label>
                                 <FileUpload
+                                  value={certificateFile}
                                   onChange={setCertificateFile}
                                   folder="promotion/certificates"
                                   accept=".pdf"
@@ -761,6 +766,7 @@ export default function PromotionPage() {
                                 <div>
                                     <Label className="flex items-center mb-2"><ChevronsUpDown className="mr-2 h-4 w-4 text-primary" />Upload TCU Form</Label>
                                     <FileUpload
+                                      value={tcuFormFile}
                                       onChange={setTcuFormFile}
                                       folder="promotion/tcu-forms"
                                       accept=".pdf"
@@ -774,6 +780,7 @@ export default function PromotionPage() {
                         <div>
                             <Label className="flex items-center mb-2"><FileText className="mr-2 h-4 w-4 text-primary" />Upload Letter of Request</Label>
                             <FileUpload
+                              value={letterOfRequestFile}
                               onChange={handleFileUpload(setLetterOfRequestFile, 'Letter of Request')}
                               folder="promotion/letters"
                               accept=".pdf"
@@ -1104,6 +1111,7 @@ export default function PromotionPage() {
                         Upload Performance Appraisal Form (Year 1)
                       </Label>
                       <FileUpload
+                        value={performanceAppraisalFileY1}
                         onChange={setPerformanceAppraisalFileY1}
                         folder="promotion/performance-appraisals"
                         accept=".pdf"
@@ -1116,6 +1124,7 @@ export default function PromotionPage() {
                         Upload Performance Appraisal Form (Year 2)
                       </Label>
                       <FileUpload
+                        value={performanceAppraisalFileY2}
                         onChange={setPerformanceAppraisalFileY2}
                         folder="promotion/performance-appraisals"
                         accept=".pdf"
@@ -1128,6 +1137,7 @@ export default function PromotionPage() {
                         Upload Performance Appraisal Form (Year 3)
                       </Label>
                       <FileUpload
+                        value={performanceAppraisalFileY3}
                         onChange={setPerformanceAppraisalFileY3}
                         folder="promotion/performance-appraisals"
                         accept=".pdf"
@@ -1140,6 +1150,7 @@ export default function PromotionPage() {
                         Upload Civil Service Commission Promotion Form
                       </Label>
                       <FileUpload
+                        value={cscPromotionFormFile}
                         onChange={setCscPromotionFormFile}
                         folder="promotion/csc-forms"
                         accept=".pdf"
@@ -1152,6 +1163,7 @@ export default function PromotionPage() {
                         Upload Letter of Request
                       </Label>
                       <FileUpload
+                        value={letterOfRequestFile}
                         onChange={setLetterOfRequestFile}
                         folder="promotion/letters"
                         accept=".pdf"
@@ -1169,6 +1181,7 @@ export default function PromotionPage() {
                         Upload Academic Certificate
                       </Label>
                       <FileUpload
+                        value={certificateFile}
                         onChange={setCertificateFile}
                         folder="promotion/certificates"
                         accept=".pdf"
@@ -1192,6 +1205,7 @@ export default function PromotionPage() {
                           Upload TCU Form
                         </Label>
                         <FileUpload
+                          value={tcuFormFile}
                           onChange={setTcuFormFile}
                           folder="promotion/tcu-forms"
                           accept=".pdf"
@@ -1205,6 +1219,7 @@ export default function PromotionPage() {
                         Upload Letter of Request
                       </Label>
                       <FileUpload
+                        value={letterOfRequestFile}
                         onChange={setLetterOfRequestFile}
                         folder="promotion/letters"
                         accept=".pdf"  

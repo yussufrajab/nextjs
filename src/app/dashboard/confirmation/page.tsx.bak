@@ -565,7 +565,6 @@ export default function ConfirmationPage() {
                   <div>
                     <Label className="flex items-center mb-2"><FileText className="mr-2 h-4 w-4 text-primary" />Upload Evaluation Form</Label>
                     <FileUpload
-                      value={evaluationFormFile}
                       onChange={setEvaluationFormFile}
                       folder="confirmation/evaluation-forms"
                       accept=".pdf"
@@ -577,7 +576,6 @@ export default function ConfirmationPage() {
                     <div>
                         <Label className="flex items-center mb-2"><Award className="mr-2 h-4 w-4 text-primary" />Upload IPA Certificate</Label>
                         <FileUpload
-                          value={ipaCertificateFile}
                           onChange={setIpaCertificateFile}
                           folder="confirmation/ipa-certificates"
                           accept=".pdf"
@@ -589,7 +587,6 @@ export default function ConfirmationPage() {
                   <div>
                     <Label className="flex items-center mb-2"><CheckCircle className="mr-2 h-4 w-4 text-primary" />Upload Letter of Request</Label>
                     <FileUpload
-                      value={letterOfRequestFile}
                       onChange={setLetterOfRequestFile}
                       folder="confirmation/letters"
                       accept=".pdf"
@@ -829,7 +826,6 @@ export default function ConfirmationPage() {
               <div>
                 <Label className="flex items-center mb-2"><FileText className="mr-2 h-4 w-4 text-primary" />Upload Corrected Evaluation Form</Label>
                 <FileUpload
-                  value={correctedEvaluationFormFile}
                   onChange={setCorrectedEvaluationFormFile}
                   folder="confirmation/evaluation-forms"
                   accept=".pdf"
@@ -841,7 +837,6 @@ export default function ConfirmationPage() {
                 <div>
                   <Label className="flex items-center mb-2"><Award className="mr-2 h-4 w-4 text-primary" />Upload Corrected IPA Certificate</Label>
                   <FileUpload
-                    value={correctedIpaCertificateFile}
                     onChange={setCorrectedIpaCertificateFile}
                     folder="confirmation/ipa-certificates"
                     accept=".pdf"
@@ -852,7 +847,6 @@ export default function ConfirmationPage() {
               <div>
                 <Label className="flex items-center mb-2"><CheckCircle className="mr-2 h-4 w-4 text-primary" />Upload Corrected Letter of Request</Label>
                 <FileUpload
-                  value={correctedLetterOfRequestFile}
                   onChange={setCorrectedLetterOfRequestFile}
                   folder="confirmation/letters"
                   accept=".pdf"
