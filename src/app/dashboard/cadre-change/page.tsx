@@ -12,7 +12,7 @@ import { ROLES } from '@/lib/constants';
 import React, { useState, useEffect } from 'react';
 import type { Employee, User, Role } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
-import { Loader2, Search, FileText, Award, ChevronsUpDown, AlertTriangle } from 'lucide-react';
+import { Loader2, Search, FileText, Award, ChevronsUpDown, AlertTriangle, RefreshCw } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { format, parseISO, differenceInYears } from 'date-fns';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -46,6 +46,7 @@ export default function CadreChangePage() {
   const [isFetchingEmployee, setIsFetchingEmployee] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const [newCadre, setNewCadre] = useState('');
   const [reasonCadreChange, setReasonCadreChange] = useState('');
@@ -86,20 +87,60 @@ export default function CadreChangePage() {
     setIsPreviewModalOpen(true);
   };
 
-  const fetchRequests = async () => {
+  // Helper function to shorten document names for better display
+  const getShortDocumentName = (fullPath: string): string => {
+    // Extract the original filename from the path
+    const fileName = fullPath.split('/').pop() || fullPath;
+    
+    // Remove timestamp and random string patterns
+    const cleanName = fileName
+      .replace(/^\d+_[a-zA-Z0-9]+_/, '') // Remove timestamp_randomString_ pattern
+      .replace(/^[a-zA-Z0-9]+_/, ''); // Remove any remaining prefix_
+    
+    // If name is still too long, truncate it
+    if (cleanName.length > 25) {
+      const extension = cleanName.split('.').pop();
+      const nameWithoutExt = cleanName.replace(/\.[^/.]+$/, '');
+      return `${nameWithoutExt.substring(0, 20)}...${extension ? '.' + extension : ''}`;
+    }
+    
+    return cleanName;
+  };
+
+  const fetchRequests = async (isRefresh = false) => {
     if (!user || !role) return;
-    setIsLoading(true);
+    if (isRefresh) {
+      setIsRefreshing(true);
+    } else {
+      setIsLoading(true);
+    }
     try {
-        const response = await fetch(`/api/cadre-change?userId=${user.id}&userRole=${role}&userInstitutionId=${user.institutionId || ''}`);
+        // Add cache-busting parameter and headers for refresh
+        const cacheBuster = isRefresh ? `&_t=${Date.now()}` : '';
+        const response = await fetch(`/api/cadre-change?userId=${user.id}&userRole=${role}&userInstitutionId=${user.institutionId || ''}${cacheBuster}`, {
+          method: 'GET',
+          headers: {
+            'Cache-Control': isRefresh ? 'no-cache, no-store, must-revalidate' : 'default',
+            'Pragma': isRefresh ? 'no-cache' : 'default',
+            'Expires': isRefresh ? '0' : 'default'
+          }
+        });
         if (!response.ok) throw new Error('Failed to fetch cadre change requests');
         const result = await response.json();
         console.log('Cadre change API result:', result);
         console.log('result.data type:', typeof result.data, 'isArray:', Array.isArray(result.data));
         setPendingRequests(Array.isArray(result.data) ? result.data : []);
+        if (isRefresh) {
+          toast({ title: "Refreshed", description: "Cadre change requests have been updated.", duration: 2000 });
+        }
     } catch (error) {
         toast({ title: "Error", description: "Could not load cadre change requests.", variant: "destructive" });
     } finally {
-        setIsLoading(false);
+        if (isRefresh) {
+          setIsRefreshing(false);
+        } else {
+          setIsLoading(false);
+        }
     }
   };
 
@@ -204,6 +245,30 @@ export default function CadreChangePage() {
     if (certificateFile) documents.push(certificateFile);
     if (studiedOutsideCountry && tcuFormFile) documents.push(tcuFormFile);
     
+    // Create optimistic request for immediate UI feedback
+    const optimisticRequest: CadreChangeRequest = {
+      id: `temp-${Date.now()}`,
+      employee: employeeDetails,
+      submittedBy: user,
+      status: 'Pending HRMO/HHRMD Review',
+      reviewStage: 'initial',
+      newCadre,
+      reason: reasonCadreChange,
+      documents,
+      studiedOutsideCountry,
+      createdAt: new Date().toISOString(),
+    };
+    
+    // Add optimistic request to state for immediate feedback
+    setPendingRequests(prev => [optimisticRequest, ...prev]);
+    
+    // Show immediate success feedback
+    toast({ 
+      title: "Cadre Change Request Submitted", 
+      description: `Request for ${employeeDetails.name} submitted successfully. Status: Pending HRMO/HHRMD Review`,
+      duration: 4000
+    });
+    
     const payload = {
       employeeId: employeeDetails.id,
       submittedById: user.id,
@@ -222,19 +287,53 @@ export default function CadreChangePage() {
         });
         if (!response.ok) throw new Error('Failed to submit request');
         
-        await fetchRequests(); // Refresh list
-        toast({ title: "Cadre Change Request Submitted", description: `Request for ${employeeDetails.name} submitted successfully.` });
+        const result = await response.json();
+        
+        // Replace optimistic request with real server response
+        if (result.success && result.data) {
+          setPendingRequests(prev => prev.map(req => 
+            req.id === optimisticRequest.id ? result.data : req
+          ));
+        }
+        
+        // Force refresh to ensure data consistency
+        setTimeout(async () => {
+          await fetchRequests();
+        }, 1000);
+        
         setZanId('');
         setEmployeeDetails(null);
         resetFormFields();
     } catch(error) {
+        // Remove optimistic request on error
+        setPendingRequests(prev => prev.filter(req => req.id !== optimisticRequest.id));
         toast({ title: "Submission Failed", description: "Could not submit the cadre change request.", variant: "destructive" });
     } finally {
         setIsSubmitting(false);
     }
   };
 
-  const handleUpdateRequest = async (requestId: string, payload: any) => {
+  const handleUpdateRequest = async (requestId: string, payload: any, actionDescription?: string) => {
+      // Get request info for immediate feedback
+      const request = pendingRequests.find(req => req.id === requestId);
+      
+      // Optimistic update - immediately show new status
+      const optimisticUpdate = pendingRequests.map(req => 
+        req.id === requestId 
+          ? { ...req, ...payload, updatedAt: new Date().toISOString() }
+          : req
+      );
+      setPendingRequests(optimisticUpdate);
+
+      // Show immediate success feedback
+      if (actionDescription && request) {
+        toast({ 
+          title: "Status Updated", 
+          description: `${actionDescription} for ${request.employee.name}. Status: ${payload.status}`,
+          duration: 3000 
+        });
+      }
+
       try {
           const response = await fetch(`/api/cadre-change`, {
               method: 'PATCH',
@@ -242,9 +341,13 @@ export default function CadreChangePage() {
               body: JSON.stringify({ id: requestId, ...payload, reviewedById: user?.id })
           });
           if (!response.ok) throw new Error('Failed to update request');
+          
+          // Force immediate refresh to get accurate data from server
           await fetchRequests();
           return true;
       } catch (error) {
+          // Revert optimistic update on error
+          await fetchRequests();
           toast({ title: "Update Failed", description: "Could not update the request.", variant: "destructive" });
           return false;
       }
@@ -261,12 +364,9 @@ export default function CadreChangePage() {
     } else if (action === 'forward') {
       // Both HRMO and HHRMD forward directly to Commission (parallel workflow)
       const payload = { status: "Request Received – Awaiting Commission Decision", reviewStage: 'commission_review' };
+      const roleName = role === ROLES.HRMO ? 'HRMO' : 'HHRMD';
       
-      const success = await handleUpdateRequest(requestId, payload);
-      if (success) {
-        const roleName = role === ROLES.HRMO ? 'HRMO' : 'HHRMD';
-        toast({ title: "Request Forwarded", description: `Request for ${request.employee.name} approved by ${roleName} and forwarded to Commission.` });
-      }
+      await handleUpdateRequest(requestId, payload, `Request approved by ${roleName} and forwarded to Commission`);
     }
   };
 
@@ -277,9 +377,10 @@ export default function CadreChangePage() {
         rejectionReason: rejectionReasonInput, 
         reviewStage: 'initial'
     };
-    const success = await handleUpdateRequest(currentRequestToAction.id, payload);
+    const actionDescription = "Request rejected and returned to HRO";
+    
+    const success = await handleUpdateRequest(currentRequestToAction.id, payload, actionDescription);
     if (success) {
-      toast({ title: "Request Rejected", description: `Request for ${currentRequestToAction.employee.name} rejected.`, variant: 'destructive' });
       setIsRejectionModalOpen(false);
       setCurrentRequestToAction(null);
       setRejectionReasonInput('');
@@ -287,12 +388,16 @@ export default function CadreChangePage() {
   };
 
   const handleCommissionDecision = async (requestId: string, decision: 'approved' | 'rejected') => {
+    const request = pendingRequests.find(req => req.id === requestId);
+    if (!request) return;
+    
     const finalStatus = decision === 'approved' ? "Approved by Commission" : "Rejected by Commission - Request Concluded";
     const payload = { status: finalStatus, reviewStage: 'completed' };
-    const success = await handleUpdateRequest(requestId, payload);
-    if (success) {
-        toast({ title: `Commission Decision: ${decision === 'approved' ? 'Approved' : 'Rejected'}`, description: `Request ${requestId} has been updated.` });
-    }
+    const actionDescription = decision === 'approved' 
+      ? `Cadre change approved by Commission. Employee ${request.employee.name} cadre updated to "${request.newCadre}".`
+      : `Cadre change rejected by Commission`;
+    
+    await handleUpdateRequest(requestId, payload, actionDescription);
   };
 
   const handleResubmit = (request: CadreChangeRequest) => {
@@ -314,40 +419,26 @@ export default function CadreChangePage() {
       return;
     }
 
-    try {
-      let documents = [correctedLetterOfRequestFile]; // Store actual file keys
-      if (correctedCertificateFile) documents.push(correctedCertificateFile);
-      if (correctedStudiedOutsideCountry && correctedTcuFormFile) documents.push(correctedTcuFormFile);
+    let documents = [correctedLetterOfRequestFile]; // Store actual file keys
+    if (correctedCertificateFile) documents.push(correctedCertificateFile);
+    if (correctedStudiedOutsideCountry && correctedTcuFormFile) documents.push(correctedTcuFormFile);
 
-      const response = await fetch(`/api/cadre-change`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          id: request.id,
-          status: 'Pending HRMO/HHRMD Review',
-          reviewStage: 'initial',
-          newCadre: correctedNewCadre,
-          reason: correctedReasonCadreChange,
-          studiedOutsideCountry: correctedStudiedOutsideCountry,
-          documents: documents,
-          rejectionReason: null,
-          reviewedById: user.id
-        }),
-      });
+    const payload = {
+      status: 'Pending HRMO/HHRMD Review',
+      reviewStage: 'initial',
+      newCadre: correctedNewCadre,
+      reason: correctedReasonCadreChange,
+      studiedOutsideCountry: correctedStudiedOutsideCountry,
+      documents: documents,
+      rejectionReason: null,
+    };
 
-      if (!response.ok) {
-        throw new Error('Failed to resubmit cadre change request');
-      }
-
-      toast({ title: "Success", description: `Cadre change request for ${request.employee.name} resubmitted successfully.` });
+    // Use the optimistic update pattern
+    const success = await handleUpdateRequest(request.id, payload, `Cadre change request corrected and resubmitted`);
+    
+    if (success) {
       setIsCorrectionModalOpen(false);
       setRequestToCorrect(null);
-      await fetchRequests();
-    } catch (error) {
-      console.error("[RESUBMIT_CADRE_CHANGE]", error);
-      toast({ title: "Error", description: "Failed to resubmit cadre change request.", variant: "destructive" });
     }
   };
 
@@ -482,8 +573,22 @@ export default function CadreChangePage() {
       {role === ROLES.HRO && Array.isArray(pendingRequests) && pendingRequests.length > 0 && (
         <Card className="mb-6 shadow-lg">
           <CardHeader>
-            <CardTitle>Your Submitted Cadre Change Requests</CardTitle>
-            <CardDescription>Track the status of cadre change requests you have submitted.</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Your Submitted Cadre Change Requests</CardTitle>
+                <CardDescription>Track the status of cadre change requests you have submitted.</CardDescription>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => fetchRequests(true)}
+                disabled={isRefreshing}
+                className="flex items-center gap-2"
+              >
+                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             {paginatedRequests.map((request) => (
@@ -518,8 +623,22 @@ export default function CadreChangePage() {
       {(role === ROLES.HHRMD || role === ROLES.HRMO) && ( 
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle>Review Cadre Change Requests</CardTitle>
-            <CardDescription>Review, approve, or reject pending cadre change requests.</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Review Cadre Change Requests</CardTitle>
+                <CardDescription>Review, approve, or reject pending cadre change requests.</CardDescription>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => fetchRequests(true)}
+                disabled={isRefreshing}
+                className="flex items-center gap-2"
+              >
+                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
              {isLoading ? (
@@ -571,7 +690,7 @@ export default function CadreChangePage() {
 
       {selectedRequest && (
         <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
-          <DialogContent className="sm:max-w-lg">
+          <DialogContent className="sm:max-w-3xl">
             <DialogHeader>
               <DialogTitle>Request Details: {selectedRequest.id}</DialogTitle>
               <DialogDescription>
@@ -652,16 +771,54 @@ export default function CadreChangePage() {
                     <div className="mt-2 space-y-2">
                     {selectedRequest.documents && selectedRequest.documents.length > 0 ? (
                         selectedRequest.documents.map((objectKey, index) => {
-                            const fileName = objectKey.split('/').pop() || objectKey;
+                            const shortName = getShortDocumentName(objectKey);
                             return (
                                 <div key={index} className="flex items-center justify-between p-2 rounded-md border bg-secondary/50 text-sm">
                                     <div className="flex items-center gap-2">
                                         <FileText className="h-4 w-4 text-muted-foreground" />
-                                        <span className="font-medium text-foreground truncate" title={fileName}>{fileName}</span>
+                                        <span className="font-medium text-foreground" title={objectKey}>{shortName}</span>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <Button variant="link" size="sm" className="h-auto p-0" onClick={() => handlePreviewFile(objectKey)}>
+                                    <div className="flex gap-1 flex-shrink-0">
+                                        <Button variant="outline" size="sm" className="h-8 px-2 text-xs" onClick={() => handlePreviewFile(objectKey)}>
                                             Preview
+                                        </Button>
+                                        <Button 
+                                          variant="outline" 
+                                          size="sm" 
+                                          className="h-8 px-2 text-xs"
+                                          onClick={async () => {
+                                            try {
+                                              const response = await fetch(`/api/files/download/${objectKey}`, {
+                                                credentials: 'include'
+                                              });
+                                              if (response.ok) {
+                                                const blob = await response.blob();
+                                                const url = window.URL.createObjectURL(blob);
+                                                const a = document.createElement('a');
+                                                a.href = url;
+                                                a.download = shortName;
+                                                document.body.appendChild(a);
+                                                a.click();
+                                                window.URL.revokeObjectURL(url);
+                                                document.body.removeChild(a);
+                                              } else {
+                                                toast({
+                                                  title: 'Download Failed',
+                                                  description: 'Could not download the file. Please try again.',
+                                                  variant: 'destructive'
+                                                });
+                                              }
+                                            } catch (error) {
+                                              console.error('Download failed:', error);
+                                              toast({
+                                                title: 'Download Failed',
+                                                description: 'Could not download the file. Please try again.',
+                                                variant: 'destructive'
+                                              });
+                                            }
+                                          }}
+                                        >
+                                          Download
                                         </Button>
                                         <Button variant="link" size="sm" className="h-auto p-0" onClick={() => {
                                             const token = localStorage.getItem('accessToken');
@@ -727,7 +884,7 @@ export default function CadreChangePage() {
 
       {currentRequestToAction && (
         <Dialog open={isRejectionModalOpen} onOpenChange={setIsRejectionModalOpen}>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-lg">
                 <DialogHeader>
                     <DialogTitle>Reject Cadre Change Request: {currentRequestToAction.id}</DialogTitle>
                     <DialogDescription>
@@ -752,7 +909,7 @@ export default function CadreChangePage() {
 
       {requestToCorrect && (
         <Dialog open={isCorrectionModalOpen} onOpenChange={setIsCorrectionModalOpen}>
-          <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Correct & Resubmit Cadre Change Request</DialogTitle>
               <DialogDescription>

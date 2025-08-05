@@ -17,7 +17,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { toast } from '@/hooks/use-toast';
-import { Loader2, Eye, Edit3, Send, CheckCircle, XCircle, Info, MessageSquarePlus, Edit, Filter, Phone, Users, FileText } from 'lucide-react';
+import { Loader2, Eye, Edit3, Send, CheckCircle, XCircle, Info, MessageSquarePlus, Edit, Filter, Phone, Users, FileText, RefreshCw } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FileUpload } from '@/components/ui/file-upload';
@@ -82,6 +82,7 @@ export default function ComplaintsPage() {
   const [isRewriting, setIsRewriting] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // File preview state
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
@@ -139,23 +140,44 @@ export default function ComplaintsPage() {
     setIsPreviewModalOpen(true);
   };
   
-  useEffect(() => {
-    const fetchComplaints = async () => {
-        if (!user || !role) return;
-        setIsLoading(true);
-        try {
-            const response = await fetch(`/api/complaints?userId=${user.id}&userRole=${role}`);
-            if (!response.ok) {
-                throw new Error('Failed to fetch complaints');
-            }
-            const data = await response.json();
-            setComplaints(data);
-        } catch (error) {
-            toast({ title: "Hitilafu", description: "Imeshindwa kupakia malalamiko.", variant: "destructive" });
-        } finally {
-            setIsLoading(false);
+  const fetchComplaints = async (isRefresh = false) => {
+    if (!user || !role) return;
+    if (isRefresh) {
+      setIsRefreshing(true);
+    } else {
+      setIsLoading(true);
+    }
+    try {
+        // Add cache-busting parameter and headers for refresh
+        const cacheBuster = isRefresh ? `&_t=${Date.now()}` : '';
+        const response = await fetch(`/api/complaints?userId=${user.id}&userRole=${role}${cacheBuster}`, {
+          method: 'GET',
+          headers: {
+            'Cache-Control': isRefresh ? 'no-cache, no-store, must-revalidate' : 'default',
+            'Pragma': isRefresh ? 'no-cache' : 'default',
+            'Expires': isRefresh ? '0' : 'default'
+          }
+        });
+        if (!response.ok) {
+            throw new Error('Failed to fetch complaints');
         }
-    };
+        const data = await response.json();
+        setComplaints(data);
+        if (isRefresh) {
+          toast({ title: "Imesasishwa", description: "Malalamiko yamesasishwa.", duration: 2000 });
+        }
+    } catch (error) {
+        toast({ title: "Hitilafu", description: "Imeshindwa kupakia malalamiko.", variant: "destructive" });
+    } finally {
+        if (isRefresh) {
+          setIsRefreshing(false);
+        } else {
+          setIsLoading(false);
+        }
+    }
+  };
+
+  useEffect(() => {
     fetchComplaints();
   }, [user, role]);
 
@@ -193,6 +215,42 @@ export default function ComplaintsPage() {
     if (complaintLetterFile) documentObjectKeys.push(complaintLetterFile);
     if (evidenceFile) documentObjectKeys.push(evidenceFile);
     
+    // Create optimistic complaint for immediate UI feedback
+    const optimisticComplaint: SubmittedComplaint = {
+      id: `temp-${Date.now()}`,
+      employeeId: user.employeeId,
+      employeeName: user.name || 'Unknown',
+      zanId: null,
+      department: null,
+      cadre: null,
+      complaintType: data.complaintType,
+      subject: data.subject,
+      details: data.complaintText,
+      complainantPhoneNumber: data.complainantPhoneNumber,
+      nextOfKinPhoneNumber: data.nextOfKinPhoneNumber,
+      submissionDate: new Date().toISOString(),
+      status: 'Submitted',
+      attachments: documentObjectKeys,
+      officerComments: null,
+      internalNotes: null,
+      assignedOfficerRole: null,
+      reviewStage: 'initial',
+      rejectionReason: null,
+      reviewedBy: null
+    };
+
+    // Add optimistic complaint to state for immediate feedback
+    setComplaints(prev => [optimisticComplaint, ...prev]);
+    
+    // Reset form and show immediate success feedback
+    form.reset();
+    setRewrittenComplaint(null);
+    setComplaintLetterFile('');
+    setEvidenceFile('');
+    setIsSubmitting(false);
+    
+    toast({ title: "Lalamiko Limewasilishwa", description: "Lalamiko lako limewasilishwa kwa mafanikio." });
+    
     try {
         const response = await fetch('/api/complaints', {
             method: 'POST',
@@ -206,16 +264,16 @@ export default function ComplaintsPage() {
 
         const newComplaint = await response.json();
         
-        setComplaints(prev => [newComplaint, ...prev]);
-        toast({ title: "Lalamiko Limewasilishwa", description: "Lalamiko lako limewasilishwa kwa mafanikio." });
-        form.reset();
-        setRewrittenComplaint(null);
-        setComplaintLetterFile('');
-        setEvidenceFile('');
+        // Replace optimistic complaint with real server response
+        setComplaints(prev => 
+          prev.map(c => 
+            c.id === optimisticComplaint.id ? newComplaint : c
+          )
+        );
     } catch (error) {
+        // Remove optimistic complaint on error
+        setComplaints(prev => prev.filter(c => c.id !== optimisticComplaint.id));
         toast({ title: "Kuwasilisha Kumeshindikana", description: "Hitilafu imetokea wakati wa kuwasilisha lalamiko lako.", variant: "destructive" });
-    } finally {
-        setIsSubmitting(false);
     }
   };
   
@@ -232,10 +290,10 @@ export default function ComplaintsPage() {
           });
           if (!response.ok) throw new Error('Failed to update complaint');
           const updatedComplaint = await response.json();
-          updateComplaintState(updatedComplaint);
+          // Note: We no longer update state here since we're using optimistic updates
           return updatedComplaint;
       } catch (error) {
-          toast({ title: "Kusasisha Kumeshindikana", description: "Imeshindwa kusasisha lalamiko.", variant: "destructive" });
+          console.error('Error updating complaint:', error);
           return null;
       }
   };
@@ -260,19 +318,48 @@ export default function ComplaintsPage() {
     const { id, employeeName } = currentRequestToAction;
     const rejectedByRole = role === ROLES.DO ? "DO" : "HHRMD";
 
+    const newStatus = `Rejected by ${rejectedByRole} – Waiting submitter reaction`;
+    
+    // Optimistic update
+    const optimisticUpdate = complaints.map(c => 
+      c.id === id 
+        ? { 
+            ...c, 
+            status: newStatus,
+            rejectionReason: rejectionReasonInput,
+            reviewStage: 'initial',
+            reviewedBy: role
+          }
+        : c
+    );
+    setComplaints(optimisticUpdate);
+
+    // Close modal immediately for better UX
+    setIsRejectionModalOpen(false);
+    setCurrentRequestToAction(null);
+    setRejectionReasonInput('');
+
+    // Show immediate feedback
+    toast({ title: "Lalamiko Limekataliwa", description: `Lalamiko ${id} la ${employeeName} limekataliwa.`, variant: 'destructive' });
+
     const payload = {
-        status: `Rejected by ${rejectedByRole} – Waiting submitter reaction`,
+        status: newStatus,
         rejectionReason: rejectionReasonInput,
         reviewStage: 'initial',
         reviewedById: user?.id
     };
 
-    const updated = await handleUpdateComplaint(id, payload);
-    if (updated) {
-        toast({ title: "Lalamiko Limekataliwa", description: `Lalamiko ${id} la ${employeeName} limekataliwa.`, variant: 'destructive' });
-        setIsRejectionModalOpen(false);
-        setCurrentRequestToAction(null);
-        setRejectionReasonInput('');
+    try {
+      const updated = await handleUpdateComplaint(id, payload);
+      if (!updated) {
+        // Revert optimistic update on failure
+        setComplaints(complaints);
+        toast({ title: "Hitilafu", description: "Imeshindwa kukataa lalamiko.", variant: "destructive" });
+      }
+    } catch (error) {
+      // Revert optimistic update on error
+      setComplaints(complaints);
+      toast({ title: "Hitilafu", description: "Imeshindwa kukataa lalamiko.", variant: "destructive" });
     }
   };
 
@@ -302,6 +389,32 @@ export default function ComplaintsPage() {
       toastMessage = `Maelezo zaidi yameombwa kwa lalamiko ${selectedComplaint.id}.`;
     }
     
+    // Optimistic update
+    const optimisticUpdate = complaints.map(c => 
+      c.id === selectedComplaint.id 
+        ? { 
+            ...c, 
+            status: newStatus,
+            officerComments: officerActionComment,
+            internalNotes: officerInternalNote,
+            assignedOfficerRole: role,
+            reviewStage: 'completed',
+            reviewedBy: role
+          }
+        : c
+    );
+    setComplaints(optimisticUpdate);
+
+    // Close modal immediately for better UX
+    setIsActionModalOpen(false);
+    setSelectedComplaint(null);
+    setOfficerActionComment('');
+    setOfficerInternalNote('');
+    setActionType(null);
+
+    // Show immediate feedback
+    toast({ title: "Hatua Imechukuliwa", description: toastMessage });
+
     const payload = {
         status: newStatus,
         officerComments: officerActionComment,
@@ -311,23 +424,45 @@ export default function ComplaintsPage() {
         reviewedById: user?.id
     };
 
-    const updated = await handleUpdateComplaint(selectedComplaint.id, payload);
-
-    if (updated) {
-      toast({ title: "Hatua Imechukuliwa", description: toastMessage });
-      setIsActionModalOpen(false);
-      setSelectedComplaint(null);
-      setOfficerActionComment('');
-      setOfficerInternalNote('');
-      setActionType(null);
+    try {
+      const updated = await handleUpdateComplaint(selectedComplaint.id, payload);
+      if (!updated) {
+        // Revert optimistic update on failure
+        setComplaints(complaints);
+        toast({ title: "Hitilafu", description: "Imeshindwa kuchukua hatua.", variant: "destructive" });
+      }
+    } catch (error) {
+      // Revert optimistic update on error
+      setComplaints(complaints);
+      toast({ title: "Hitilafu", description: "Imeshindwa kuchukua hatua.", variant: "destructive" });
     }
   };
 
   const handleEmployeeConfirmOutcome = async (complaintId: string) => {
+    // Optimistic update
+    const optimisticUpdate = complaints.map(c => 
+      c.id === complaintId 
+        ? { ...c, status: "Mtumishi ameridhika na hatua" }
+        : c
+    );
+    setComplaints(optimisticUpdate);
+
+    // Show immediate feedback
+    toast({title: "Thibitisho Limekamilika", description: "Asante kwa kuthibitisha. Lalamiko limekamilika."});
+
     const payload = { status: "Mtumishi ameridhika na hatua" };
-    const updated = await handleUpdateComplaint(complaintId, payload);
-    if (updated) {
-      toast({title: "Thibitisho Limekamilika", description: "Asante kwa kuthibitisha. Lalamiko limekamilika."});
+    
+    try {
+      const updated = await handleUpdateComplaint(complaintId, payload);
+      if (!updated) {
+        // Revert optimistic update on failure
+        setComplaints(complaints);
+        toast({title: "Hitilafu", description: "Imeshindwa kuthibitisha.", variant: "destructive"});
+      }
+    } catch (error) {
+      // Revert optimistic update on error
+      setComplaints(complaints);
+      toast({title: "Hitilafu", description: "Imeshindwa kuthibitisha.", variant: "destructive"});
     }
   };
 
@@ -356,19 +491,46 @@ export default function ComplaintsPage() {
       return;
     }
 
-    // Update the complaint with additional information and change status back to "Under Review"
+    const newOfficerComments = `${selectedComplaintForInfo.officerComments || ''}\n\n--- Additional Information from Employee ---\n${additionalInfo}`;
+    
+    // Optimistic update
+    const optimisticUpdate = complaints.map(c => 
+      c.id === selectedComplaintForInfo.id 
+        ? { 
+            ...c, 
+            status: "Under Review - Additional Information Provided",
+            officerComments: newOfficerComments,
+            reviewStage: 'initial'
+          }
+        : c
+    );
+    setComplaints(optimisticUpdate);
+
+    // Close modal immediately for better UX
+    setIsProvideInfoModalOpen(false);
+    setSelectedComplaintForInfo(null);
+    setAdditionalInfo('');
+
+    // Show immediate feedback
+    toast({title: "Maelezo Yametolewa", description: "Maelezo yako ya ziada yamewasilishwa kwa ukaguzi."});
+
     const payload = {
       status: "Under Review - Additional Information Provided",
-      officerComments: `${selectedComplaintForInfo.officerComments || ''}\n\n--- Additional Information from Employee ---\n${additionalInfo}`,
+      officerComments: newOfficerComments,
       reviewStage: 'initial'
     };
 
-    const updated = await handleUpdateComplaint(selectedComplaintForInfo.id, payload);
-    if (updated) {
-      toast({title: "Maelezo Yametolewa", description: "Maelezo yako ya ziada yamewasilishwa kwa ukaguzi."});
-      setIsProvideInfoModalOpen(false);
-      setSelectedComplaintForInfo(null);
-      setAdditionalInfo('');
+    try {
+      const updated = await handleUpdateComplaint(selectedComplaintForInfo.id, payload);
+      if (!updated) {
+        // Revert optimistic update on failure
+        setComplaints(complaints);
+        toast({title: "Hitilafu", description: "Imeshindwa kutoa maelezo.", variant: "destructive"});
+      }
+    } catch (error) {
+      // Revert optimistic update on error
+      setComplaints(complaints);
+      toast({title: "Hitilafu", description: "Imeshindwa kutoa maelezo.", variant: "destructive"});
     }
   };
 
@@ -376,8 +538,36 @@ export default function ComplaintsPage() {
     if (!selectedComplaintForResubmission) return;
 
     setIsSubmitting(true);
+    
+    // Optimistic update
+    const optimisticUpdate = complaints.map(c => 
+      c.id === selectedComplaintForResubmission.id 
+        ? { 
+            ...c,
+            complaintType: data.complaintType,
+            subject: data.subject,
+            details: data.complaintText,
+            complainantPhoneNumber: data.complainantPhoneNumber,
+            nextOfKinPhoneNumber: data.nextOfKinPhoneNumber,
+            status: 'Submitted',
+            rejectionReason: null,
+            reviewStage: 'initial'
+          }
+        : c
+    );
+    setComplaints(optimisticUpdate);
+
+    // Close modal immediately for better UX
+    setIsResubmissionModalOpen(false);
+    setSelectedComplaintForResubmission(null);
+    form.reset();
+    setRewrittenComplaint(null);
+    setIsSubmitting(false);
+
+    // Show immediate feedback
+    toast({title: "Lalamiko Limewasilishwa Upya", description: "Lalamiko lako limerekebihwa na kuwasilishwa upya kwa ukaguzi."});
+
     try {
-      // Update the existing complaint with new data and reset status
       const payload = {
         complaintType: data.complaintType,
         subject: data.subject,
@@ -385,22 +575,20 @@ export default function ComplaintsPage() {
         complainantPhoneNumber: data.complainantPhoneNumber,
         nextOfKinPhoneNumber: data.nextOfKinPhoneNumber,
         status: 'Submitted',
-        rejectionReason: null, // Clear rejection reason
+        rejectionReason: null,
         reviewStage: 'initial'
       };
 
       const updated = await handleUpdateComplaint(selectedComplaintForResubmission.id, payload);
-      if (updated) {
-        toast({title: "Lalamiko Limewasilishwa Upya", description: "Lalamiko lako limerekebihwa na kuwasilishwa upya kwa ukaguzi."});
-        setIsResubmissionModalOpen(false);
-        setSelectedComplaintForResubmission(null);
-        form.reset();
-        setRewrittenComplaint(null);
+      if (!updated) {
+        // Revert optimistic update on failure
+        setComplaints(complaints);
+        toast({title: "Kushindwa Kuwasilisha", description: "Imeshindwa kuwasilisha upya lalamiko.", variant: "destructive"});
       }
     } catch (error) {
+      // Revert optimistic update on error
+      setComplaints(complaints);
       toast({title: "Kushindwa Kuwasilisha", description: "Imeshindwa kuwasilisha upya lalamiko.", variant: "destructive"});
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -425,6 +613,38 @@ export default function ComplaintsPage() {
     }
 
     setIsSubmitting(true);
+    
+    const finalStatus = commissionDecisionType === 'resolved' 
+      ? 'Closed - Commission Decision (Resolved)' 
+      : 'Closed - Commission Decision (Rejected)';
+    
+    // Optimistic update
+    const optimisticUpdate = complaints.map(c => 
+      c.id === selectedComplaintForCommissionDecision.id 
+        ? { 
+            ...c,
+            status: finalStatus,
+            officerComments: commissionDecision,
+            reviewStage: 'final_decision',
+            reviewedBy: role
+          }
+        : c
+    );
+    setComplaints(optimisticUpdate);
+
+    // Close modal immediately for better UX
+    setIsCommissionDecisionModalOpen(false);
+    setSelectedComplaintForCommissionDecision(null);
+    setCommissionDecision('');
+    setCommissionLetter(null);
+    setIsSubmitting(false);
+
+    // Show immediate feedback
+    toast({
+      title: "Maamuzi ya Tume Yamewekwa", 
+      description: `Lalamiko limefungwa rasmi. Hakuna uwezekano wa kuliwasilisha upya.`
+    });
+
     try {
       let commissionLetterUrl = null;
       
@@ -438,10 +658,6 @@ export default function ComplaintsPage() {
         commissionLetterUrl = `uploads/commission-letters/${commissionLetter.name}`;
       }
 
-      const finalStatus = commissionDecisionType === 'resolved' 
-        ? 'Closed - Commission Decision (Resolved)' 
-        : 'Closed - Commission Decision (Rejected)';
-
       const payload = {
         status: finalStatus,
         officerComments: commissionDecision,
@@ -454,20 +670,15 @@ export default function ComplaintsPage() {
       };
 
       const updated = await handleUpdateComplaint(selectedComplaintForCommissionDecision.id, payload);
-      if (updated) {
-        toast({
-          title: "Maamuzi ya Tume Yamewekwa", 
-          description: `Lalamiko limefungwa rasmi. Hakuna uwezekano wa kuliwasilisha upya.`
-        });
-        setIsCommissionDecisionModalOpen(false);
-        setSelectedComplaintForCommissionDecision(null);
-        setCommissionDecision('');
-        setCommissionLetter(null);
+      if (!updated) {
+        // Revert optimistic update on failure
+        setComplaints(complaints);
+        toast({title: "Kushindwa", description: "Imeshindwa kuweka maamuzi ya tume.", variant: "destructive"});
       }
     } catch (error) {
+      // Revert optimistic update on error
+      setComplaints(complaints);
       toast({title: "Kushindwa", description: "Imeshindwa kuweka maamuzi ya tume.", variant: "destructive"});
-    } finally {
-      setIsSubmitting(false);
     }
   };
   
@@ -486,8 +697,22 @@ export default function ComplaintsPage() {
         <>
         <Card className="shadow-lg mb-8">
             <CardHeader>
-                <CardTitle>Malalamiko Yangu Niliyowasilisha</CardTitle>
-                <CardDescription>Fuatilia hali ya malalamiko uliyowasilisha.</CardDescription>
+                <div className="flex items-center justify-between">
+                    <div>
+                        <CardTitle>Malalamiko Yangu Niliyowasilisha</CardTitle>
+                        <CardDescription>Fuatilia hali ya malalamiko uliyowasilisha.</CardDescription>
+                    </div>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => fetchComplaints(true)}
+                        disabled={isRefreshing}
+                        className="flex items-center gap-2"
+                    >
+                        <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                        Sasisha
+                    </Button>
+                </div>
             </CardHeader>
             <CardContent>
                 {isLoading ? (
@@ -734,8 +959,22 @@ export default function ComplaintsPage() {
       {(role === ROLES.DO || role === ROLES.HHRMD) && (
          <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle>Kagua Malalamiko Yaliyowasilishwa</CardTitle>
-            <CardDescription>Kagua, chukua hatua, au omba maelezo zaidi kuhusu malalamiko ya wafanyakazi yaliyokabidhiwa kwako.</CardDescription>
+            <div className="flex items-center justify-between">
+                <div>
+                    <CardTitle>Kagua Malalamiko Yaliyowasilishwa</CardTitle>
+                    <CardDescription>Kagua, chukua hatua, au omba maelezo zaidi kuhusu malalamiko ya wafanyakazi yaliyokabidhiwa kwako.</CardDescription>
+                </div>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fetchComplaints(true)}
+                    disabled={isRefreshing}
+                    className="flex items-center gap-2"
+                >
+                    <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                    Sasisha
+                </Button>
+            </div>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -774,6 +1013,16 @@ export default function ComplaintsPage() {
                         // Update status when DO/HHRMD views complaint details
                         if ((user?.role === 'DO' || user?.role === 'HHRMD') && 
                             complaint.status === 'Submitted') {
+                          
+                          // Optimistic update
+                          setComplaints(prev => 
+                            prev.map(c => 
+                              c.id === complaint.id 
+                                ? { ...c, status: 'lalamiko lako limepokelewa, linafanyiwa kazi' }
+                                : c
+                            )
+                          );
+                          
                           try {
                             const response = await fetch(`/api/complaints/${complaint.id}`, {
                               method: 'PUT',
@@ -783,18 +1032,26 @@ export default function ComplaintsPage() {
                               })
                             });
                             
-                            if (response.ok) {
-                              // Update the local complaint list
+                            if (!response.ok) {
+                              // Revert optimistic update on failure
                               setComplaints(prev => 
                                 prev.map(c => 
                                   c.id === complaint.id 
-                                    ? { ...c, status: 'lalamiko lako limepokelewa, linafanyiwa kazi' }
+                                    ? { ...c, status: 'Submitted' }
                                     : c
                                 )
                               );
                             }
                           } catch (error) {
                             console.error('Error updating complaint status:', error);
+                            // Revert optimistic update on error
+                            setComplaints(prev => 
+                              prev.map(c => 
+                                c.id === complaint.id 
+                                  ? { ...c, status: 'Submitted' }
+                                  : c
+                              )
+                            );
                           }
                         }
                       }}>

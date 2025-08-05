@@ -1,17 +1,31 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { shouldApplyInstitutionFilter } from '@/lib/role-utils';
 
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get('userId');
     const userRole = searchParams.get('userRole');
+    const userInstitutionId = searchParams.get('userInstitutionId');
 
-    console.log('Confirmations API called with:', { userId, userRole });
+    console.log('Confirmations API called with:', { userId, userRole, userInstitutionId });
 
-    // For now, return all confirmation requests
-    // The frontend will handle role-based filtering
+    // Build where clause based on user role and institution
+    let whereClause: any = {};
+
+    // Apply institution filtering based on role
+    if (shouldApplyInstitutionFilter(userRole, userInstitutionId)) {
+      console.log(`Applying institution filter for role ${userRole} with institutionId ${userInstitutionId}`);
+      whereClause.employee = {
+        institutionId: userInstitutionId
+      };
+    } else {
+      console.log(`Role ${userRole} is a CSC role - showing all confirmation data across institutions`);
+    }
+
     const requests = await db.confirmationRequest.findMany({
+      where: whereClause,
       include: {
         employee: {
           select: {
@@ -27,11 +41,15 @@ export async function GET(req: Request) {
             institution: { select: { id: true, name: true } }
           }
         },
-        submittedBy: { select: { id: true, name: true, username: true } },
-        reviewedBy: { select: { id: true, name: true, username: true } }
+        submittedBy: { 
+          select: { id: true, name: true, username: true } 
+        },
+        reviewedBy: { 
+          select: { id: true, name: true, username: true } 
+        }
       },
       orderBy: { createdAt: 'desc' }
-    }).catch(() => []);
+    });
 
     return NextResponse.json(requests);
   } catch (error) {

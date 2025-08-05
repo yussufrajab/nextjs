@@ -12,7 +12,7 @@ import { useAuthStore } from '@/store/auth-store';
 import React, { useState, useEffect } from 'react';
 import type { Employee, User, Role } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
-import { Loader2, Search, FileText, CalendarDays, Paperclip, ShieldAlert, FileWarning, PauseOctagon, Files, Ban } from 'lucide-react';
+import { Loader2, Search, FileText, CalendarDays, Paperclip, ShieldAlert, FileWarning, PauseOctagon, Files, Ban, RefreshCw } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Pagination } from '@/components/shared/pagination';
@@ -44,6 +44,7 @@ export default function TerminationAndDismissalPage() {
   const [isFetchingEmployee, setIsFetchingEmployee] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
   const [employeeStatus, setEmployeeStatus] = useState<'probation' | 'confirmed' | null>(null);
 
@@ -77,6 +78,26 @@ export default function TerminationAndDismissalPage() {
     setIsPreviewModalOpen(true);
   };
 
+  // Helper function to shorten document names for better display
+  const getShortDocumentName = (fullPath: string): string => {
+    // Extract the original filename from the path
+    const fileName = fullPath.split('/').pop() || fullPath;
+    
+    // Remove timestamp and random string patterns
+    const cleanName = fileName
+      .replace(/^\d+_[a-zA-Z0-9]+_/, '') // Remove timestamp_randomString_ pattern
+      .replace(/^[a-zA-Z0-9]+_/, ''); // Remove any remaining prefix_
+    
+    // If name is still too long, truncate it
+    if (cleanName.length > 25) {
+      const extension = cleanName.split('.').pop();
+      const nameWithoutExt = cleanName.replace(/\.[^/.]+$/, '');
+      return `${nameWithoutExt.substring(0, 20)}...${extension ? '.' + extension : ''}`;
+    }
+    
+    return cleanName;
+  };
+
   const [isRejectionModalOpen, setIsRejectionModalOpen] = useState(false);
   const [rejectionReasonInput, setRejectionReasonInput] = useState('');
   const [currentRequestToAction, setCurrentRequestToAction] = useState<SeparationRequest | null>(null);
@@ -89,19 +110,47 @@ export default function TerminationAndDismissalPage() {
   const [correctedReason, setCorrectedReason] = useState('');
   const [correctedLetterOfRequestFile, setCorrectedLetterOfRequestFile] = useState<string>('');
   const [correctedSupportingDocumentFile, setCorrectedSupportingDocumentFile] = useState<string>('');
+  
+  // Dismissal correction document states
+  const [correctedMisconductEvidenceFile, setCorrectedMisconductEvidenceFile] = useState<string>('');
+  const [correctedSummonNoticeFile, setCorrectedSummonNoticeFile] = useState<string>('');
+  const [correctedSuspensionLetterFile, setCorrectedSuspensionLetterFile] = useState<string>('');
+  const [correctedWarningLettersFile, setCorrectedWarningLettersFile] = useState<string>('');
+  const [correctedEmployeeExplanationLetterFile, setCorrectedEmployeeExplanationLetterFile] = useState<string>('');
+  const [correctedOtherAdditionalDocumentsFile, setCorrectedOtherAdditionalDocumentsFile] = useState<string>('');
 
-  const fetchRequests = async () => {
+  const fetchRequests = async (isRefresh = false) => {
     if (!user || !role) return;
-    setIsLoading(true);
+    if (isRefresh) {
+      setIsRefreshing(true);
+    } else {
+      setIsLoading(true);
+    }
     try {
-      const response = await fetch(`/api/termination?userId=${user.id}&userRole=${role}&userInstitutionId=${user.institutionId || ''}`);
+      // Add cache-busting parameter and headers for refresh
+      const cacheBuster = isRefresh ? `&_t=${Date.now()}` : '';
+      const response = await fetch(`/api/termination?userId=${user.id}&userRole=${role}&userInstitutionId=${user.institutionId || ''}${cacheBuster}`, {
+        method: 'GET',
+        headers: {
+          'Cache-Control': isRefresh ? 'no-cache, no-store, must-revalidate' : 'default',
+          'Pragma': isRefresh ? 'no-cache' : 'default',
+          'Expires': isRefresh ? '0' : 'default'
+        }
+      });
       if (!response.ok) throw new Error('Failed to fetch separation requests');
       const data = await response.json();
       setPendingRequests(data);
+      if (isRefresh) {
+        toast({ title: "Refreshed", description: "Request list has been updated.", duration: 2000 });
+      }
     } catch (error) {
       toast({ title: "Error", description: "Could not load separation requests.", variant: "destructive" });
     } finally {
-      setIsLoading(false);
+      if (isRefresh) {
+        setIsRefreshing(false);
+      } else {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -188,20 +237,44 @@ export default function TerminationAndDismissalPage() {
     }
   };
   
-  const handleUpdateRequest = async (requestId: string, payload: any) => {
-    try {
-        const response = await fetch(`/api/termination`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({id: requestId, ...payload, reviewedById: user?.id })
+  const handleUpdateRequest = async (requestId: string, payload: any, actionDescription?: string) => {
+      // Get request info for immediate feedback
+      const request = pendingRequests.find(req => req.id === requestId);
+      
+      // Optimistic update - immediately show new status
+      const optimisticUpdate = pendingRequests.map(req => 
+        req.id === requestId 
+          ? { ...req, ...payload, updatedAt: new Date().toISOString() }
+          : req
+      );
+      setPendingRequests(optimisticUpdate);
+
+      // Show immediate success feedback
+      if (actionDescription && request) {
+        toast({ 
+          title: "Status Updated", 
+          description: `${actionDescription} for ${request.employee.name}. Status: ${payload.status}`,
+          duration: 3000 
         });
-        if (!response.ok) throw new Error('Failed to update request');
-        await fetchRequests();
-        return true;
-    } catch (error) {
-        toast({ title: "Update Failed", description: "Could not update the request.", variant: "destructive" });
-        return false;
-    }
+      }
+
+      try {
+          const response = await fetch(`/api/termination`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({id: requestId, ...payload, reviewedById: user?.id })
+          });
+          if (!response.ok) throw new Error('Failed to update request');
+          
+          // Force immediate refresh to get accurate data from server
+          await fetchRequests();
+          return true;
+      } catch (error) {
+          // Revert optimistic update on error
+          await fetchRequests();
+          toast({ title: "Update Failed", description: "Could not update the request.", variant: "destructive" });
+          return false;
+      }
   };
 
   const handleSubmitRequest = async () => {
@@ -271,8 +344,7 @@ export default function TerminationAndDismissalPage() {
       setIsRejectionModalOpen(true);
     } else if (action === 'forward') {
       const payload = { status: "Request Received – Awaiting Commission Decision", reviewStage: 'commission_review' };
-      const success = await handleUpdateRequest(requestId, payload);
-      if (success) toast({ title: "Request Forwarded", description: `Request for ${request.employee.name} forwarded to Commission.` });
+      await handleUpdateRequest(requestId, payload, `Request verified and forwarded to Commission`);
     }
   };
 
@@ -283,9 +355,8 @@ export default function TerminationAndDismissalPage() {
         rejectionReason: rejectionReasonInput, 
         reviewStage: 'initial'
     };
-    const success = await handleUpdateRequest(currentRequestToAction.id, payload);
+    const success = await handleUpdateRequest(currentRequestToAction.id, payload, `Request rejected and returned to HRO`);
     if (success) {
-      toast({ title: "Request Rejected", description: `Request for ${currentRequestToAction.employee.name} rejected.`, variant: 'destructive' });
       setIsRejectionModalOpen(false);
       setCurrentRequestToAction(null);
       setRejectionReasonInput('');
@@ -296,14 +367,11 @@ export default function TerminationAndDismissalPage() {
     const request = pendingRequests.find(req => req.id === requestId);
     const finalStatus = decision === 'approved' ? "Approved by Commission" : "Rejected by Commission - Request Concluded";
     const payload = { status: finalStatus, reviewStage: 'completed' };
-    const success = await handleUpdateRequest(requestId, payload);
-    if (success) {
-        const title = `Commission Decision: ${decision === 'approved' ? 'Approved' : 'Rejected'}`;
-        const description = decision === 'approved' 
-            ? `${request?.type || 'Separation'} request approved. Employee status will be updated accordingly.`
-            : `Request ${requestId} has been rejected by commission.`;
-        toast({ title, description });
-    }
+    const actionDescription = decision === 'approved' 
+      ? `${request?.type || 'Separation'} approved by Commission`
+      : `${request?.type || 'Separation'} rejected by Commission`;
+    
+    await handleUpdateRequest(requestId, payload, actionDescription);
   };
 
   const handleCorrection = (request: SeparationRequest) => {
@@ -311,6 +379,14 @@ export default function TerminationAndDismissalPage() {
     setCorrectedReason(request.reason || '');
     setCorrectedLetterOfRequestFile('');
     setCorrectedSupportingDocumentFile('');
+    
+    // Reset dismissal document states
+    setCorrectedMisconductEvidenceFile('');
+    setCorrectedSummonNoticeFile('');
+    setCorrectedSuspensionLetterFile('');
+    setCorrectedWarningLettersFile('');
+    setCorrectedEmployeeExplanationLetterFile('');
+    setCorrectedOtherAdditionalDocumentsFile('');
     
     const fileInputs = document.querySelectorAll('input[type="file"]');
     fileInputs.forEach(input => (input as HTMLInputElement).value = '');
@@ -324,14 +400,64 @@ export default function TerminationAndDismissalPage() {
       return;
     }
 
+    // Validation based on request type
     if (!correctedReason || !correctedLetterOfRequestFile) {
       toast({ title: "Validation Error", description: "Please fill all required fields and upload required documents.", variant: "destructive" });
       return;
     }
 
-    let documentsList: string[] = ['Letter of Request'];
-    if (correctedSupportingDocumentFile) {
-      documentsList.push(request.type === 'TERMINATION' ? 'Supporting Document' : 'Misconduct Evidence');
+    // Additional validation for dismissal requests
+    if (request.type === 'DISMISSAL') {
+      if (!correctedMisconductEvidenceFile || !correctedSummonNoticeFile || !correctedSuspensionLetterFile) {
+        toast({ title: "Validation Error", description: "For dismissal requests, please upload all required documents: Misconduct Evidence, Summon Notice, and Suspension Letter.", variant: "destructive" });
+        return;
+      }
+    }
+
+    // Optimistic update to immediately hide the "Correct & Resubmit" button and show new status
+    const optimisticUpdate = pendingRequests.map(req => 
+      req.id === request.id 
+        ? { 
+            ...req, 
+            status: 'Pending DO/HHRMD Review',
+            reviewStage: 'initial',
+            rejectionReason: null,
+            reason: correctedReason,
+            updatedAt: new Date().toISOString()
+          }
+        : req
+    );
+    setPendingRequests(optimisticUpdate);
+
+    // Show immediate success feedback
+    toast({ 
+      title: "Request Corrected & Resubmitted", 
+      description: `${request.type} request for ${request.employee.name} has been corrected and resubmitted. Status: Pending DO/HHRMD Review`,
+      duration: 4000
+    });
+
+    // Close modal immediately for better UX
+    setIsCorrectionModalOpen(false);
+    setRequestToCorrect(null);
+
+    const documentsList: string[] = [];
+    // Add the actual file object keys from uploads
+    if (correctedLetterOfRequestFile) documentsList.push(correctedLetterOfRequestFile);
+    
+    // Add documents based on request type
+    if (request.type === 'DISMISSAL') {
+      // Required dismissal documents
+      if (correctedMisconductEvidenceFile) documentsList.push(correctedMisconductEvidenceFile);
+      if (correctedSummonNoticeFile) documentsList.push(correctedSummonNoticeFile);
+      if (correctedSuspensionLetterFile) documentsList.push(correctedSuspensionLetterFile);
+      
+      // Optional dismissal documents
+      if (correctedWarningLettersFile) documentsList.push(correctedWarningLettersFile);
+      if (correctedEmployeeExplanationLetterFile) documentsList.push(correctedEmployeeExplanationLetterFile);
+      if (correctedOtherAdditionalDocumentsFile) documentsList.push(correctedOtherAdditionalDocumentsFile);
+    } else {
+      // For termination requests
+      if (correctedSupportingDocumentFile) documentsList.push(correctedSupportingDocumentFile);
     }
 
     try {
@@ -351,11 +477,12 @@ export default function TerminationAndDismissalPage() {
 
       if (!response.ok) throw new Error('Failed to update request');
 
+      // Force refresh to get accurate server data
       await fetchRequests();
-      toast({ title: "Request Corrected", description: `${request.type} request for ${request.employee.name} has been corrected and resubmitted.` });
-      setIsCorrectionModalOpen(false);
-      setRequestToCorrect(null);
     } catch (error) {
+      // Revert optimistic update on error and show error feedback
+      await fetchRequests();
+      console.error("[RESUBMIT_TERMINATION]", error);
       toast({ title: "Update Failed", description: "Could not update the request.", variant: "destructive" });
     }
   };
@@ -530,8 +657,22 @@ export default function TerminationAndDismissalPage() {
       {role === ROLES.HRO && (
         <Card className="mb-6 shadow-lg">
           <CardHeader>
-            <CardTitle>Your Submitted Termination & Dismissal Requests</CardTitle>
-            <CardDescription>Track the status of termination and dismissal requests you have submitted.</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Your Submitted Termination & Dismissal Requests</CardTitle>
+                <CardDescription>Track the status of termination and dismissal requests you have submitted.</CardDescription>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => fetchRequests(true)}
+                disabled={isRefreshing}
+                className="flex items-center gap-2"
+              >
+                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -564,8 +705,22 @@ export default function TerminationAndDismissalPage() {
       {(role === ROLES.DO || role === ROLES.HHRMD ) && (
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle>Review Termination &amp; Dismissal Requests</CardTitle>
-            <CardDescription>Review, approve, or reject pending requests.</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Review Termination &amp; Dismissal Requests</CardTitle>
+                <CardDescription>Review, approve, or reject pending requests.</CardDescription>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => fetchRequests(true)}
+                disabled={isRefreshing}
+                className="flex items-center gap-2"
+              >
+                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -610,7 +765,7 @@ export default function TerminationAndDismissalPage() {
 
       {selectedRequest && (
         <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
-          <DialogContent className="sm:max-w-lg">
+          <DialogContent className="sm:max-w-3xl">
             <DialogHeader>
               <DialogTitle>{selectedRequest.type} Request Details: {selectedRequest.id}</DialogTitle>
               <DialogDescription>
@@ -643,16 +798,16 @@ export default function TerminationAndDismissalPage() {
                     <div className="mt-2 space-y-2">
                     {selectedRequest.documents && selectedRequest.documents.length > 0 ? (
                         selectedRequest.documents.map((objectKey, index) => {
-                          const fileName = objectKey.split('/').pop() || objectKey;
+                          const shortName = getShortDocumentName(objectKey);
                           return (
                             <div key={index} className="flex items-center justify-between p-2 rounded-md border bg-secondary/50 text-sm">
                                 <div className="flex items-center gap-2">
                                     <FileText className="h-4 w-4 text-muted-foreground" />
-                                    <span className="font-medium text-foreground truncate" title={fileName}>{fileName}</span>
+                                    <span className="font-medium text-foreground" title={objectKey}>{shortName}</span>
                                 </div>
-                                <div className="flex gap-1">
+                                <div className="flex gap-1 flex-shrink-0">
                                   <Button
-                                    variant="ghost"
+                                    variant="outline"
                                     size="sm"
                                     onClick={() => handlePreviewFile(objectKey)}
                                     className="h-8 px-2 text-xs"
@@ -660,7 +815,7 @@ export default function TerminationAndDismissalPage() {
                                     Preview
                                   </Button>
                                   <Button
-                                    variant="ghost"
+                                    variant="outline"
                                     size="sm"
                                     onClick={async () => {
                                       try {
@@ -678,7 +833,7 @@ export default function TerminationAndDismissalPage() {
                                           const url = window.URL.createObjectURL(blob);
                                           const a = document.createElement('a');
                                           a.href = url;
-                                          a.download = fileName;
+                                          a.download = shortName;
                                           document.body.appendChild(a);
                                           a.click();
                                           window.URL.revokeObjectURL(url);
@@ -724,7 +879,7 @@ export default function TerminationAndDismissalPage() {
 
       {currentRequestToAction && (
         <Dialog open={isRejectionModalOpen} onOpenChange={setIsRejectionModalOpen}>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-lg">
                 <DialogHeader>
                     <DialogTitle>Reject Request: {currentRequestToAction.id}</DialogTitle>
                     <DialogDescription>
@@ -749,7 +904,7 @@ export default function TerminationAndDismissalPage() {
 
       {requestToCorrect && (
         <Dialog open={isCorrectionModalOpen} onOpenChange={setIsCorrectionModalOpen}>
-          <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogContent className="sm:max-w-3xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Correct {requestToCorrect.type} Request: {requestToCorrect.id}</DialogTitle>
               <DialogDescription>
@@ -768,6 +923,8 @@ export default function TerminationAndDismissalPage() {
                     rows={4}
                   />
                 </div>
+
+                {/* Common Document - Letter of Request */}
                 <div>
                   <Label htmlFor="correctedLetterOfRequest" className="flex items-center">
                     <FileText className="mr-2 h-4 w-4 text-primary" />
@@ -781,21 +938,106 @@ export default function TerminationAndDismissalPage() {
                     required
                   />
                 </div>
-                <div>
-                  <Label htmlFor="correctedSupportingDocument" className="flex items-center">
-                    <FileText className="mr-2 h-4 w-4 text-primary" />
-                    Upload Supporting Document (Optional, PDF Only)
-                  </Label>
-                  <FileUpload
-                    folder="termination"
-                    value={correctedSupportingDocumentFile}
-                    onChange={setCorrectedSupportingDocumentFile}
-                    onPreview={handlePreviewFile}
-                  />
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {requestToCorrect.type === 'TERMINATION' ? 'Supporting Document for termination' : 'Misconduct evidence, summon notice, or suspension letter'}
-                  </p>
-                </div>
+
+                {/* Dismissal Documents */}
+                {requestToCorrect.type === 'DISMISSAL' && (
+                  <>
+                    <h4 className="text-md font-medium text-foreground pt-2">Required Dismissal Documents (PDF Only)</h4>
+                    <div>
+                      <Label htmlFor="correctedMisconductEvidenceFile" className="flex items-center">
+                        <ShieldAlert className="mr-2 h-4 w-4 text-destructive" />
+                        Upload Misconduct Evidence &amp; Primary Investigation Report
+                      </Label>
+                      <FileUpload
+                        folder="termination"
+                        value={correctedMisconductEvidenceFile}
+                        onChange={setCorrectedMisconductEvidenceFile}
+                        onPreview={handlePreviewFile}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="correctedSummonNoticeFile" className="flex items-center">
+                        <FileText className="mr-2 h-4 w-4 text-primary" />
+                        Upload Summon Notice / Invitation Letter
+                      </Label>
+                      <FileUpload
+                        folder="termination"
+                        value={correctedSummonNoticeFile}
+                        onChange={setCorrectedSummonNoticeFile}
+                        onPreview={handlePreviewFile}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="correctedSuspensionLetterFile" className="flex items-center">
+                        <PauseOctagon className="mr-2 h-4 w-4 text-red-500" />
+                        Upload Suspension Letter
+                      </Label>
+                      <FileUpload
+                        folder="termination"
+                        value={correctedSuspensionLetterFile}
+                        onChange={setCorrectedSuspensionLetterFile}
+                        onPreview={handlePreviewFile}
+                        required
+                      />
+                    </div>
+
+                    <h4 className="text-md font-medium text-foreground pt-2">Optional Supporting Documents (PDF Only)</h4>
+                    <div>
+                      <Label htmlFor="correctedWarningLettersFile" className="flex items-center">
+                        <FileWarning className="mr-2 h-4 w-4 text-orange-500" />
+                        Upload Warning Letter(s)
+                      </Label>
+                      <FileUpload
+                        folder="termination"
+                        value={correctedWarningLettersFile}
+                        onChange={setCorrectedWarningLettersFile}
+                        onPreview={handlePreviewFile}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="correctedEmployeeExplanationLetterFile" className="flex items-center">
+                        <FileText className="mr-2 h-4 w-4 text-primary" />
+                        Upload Employee Explanation Letter
+                      </Label>
+                      <FileUpload
+                        folder="termination"
+                        value={correctedEmployeeExplanationLetterFile}
+                        onChange={setCorrectedEmployeeExplanationLetterFile}
+                        onPreview={handlePreviewFile}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="correctedOtherAdditionalDocumentsFile" className="flex items-center">
+                        <Files className="mr-2 h-4 w-4 text-primary" />
+                        Upload Other Additional Documents
+                      </Label>
+                      <FileUpload
+                        folder="termination"
+                        value={correctedOtherAdditionalDocumentsFile}
+                        onChange={setCorrectedOtherAdditionalDocumentsFile}
+                        onPreview={handlePreviewFile}
+                      />
+                    </div>
+                  </>
+                )}
+
+                {/* Termination Documents */}
+                {requestToCorrect.type === 'TERMINATION' && (
+                  <div>
+                    <Label htmlFor="correctedSupportingDocument" className="flex items-center">
+                      <Paperclip className="mr-2 h-4 w-4 text-primary" />
+                      Upload Supporting Document for Termination (Optional, PDF Only)
+                    </Label>
+                    <FileUpload
+                      folder="termination"
+                      value={correctedSupportingDocumentFile}
+                      onChange={setCorrectedSupportingDocumentFile}
+                      onPreview={handlePreviewFile}
+                    />
+                  </div>
+                )}
               </div>
             </div>
             <DialogFooter className="flex flex-col sm:flex-row gap-2">
@@ -810,7 +1052,15 @@ export default function TerminationAndDismissalPage() {
               </Button>
               <Button 
                 onClick={() => handleConfirmResubmit(requestToCorrect)}
-                disabled={!correctedReason || correctedLetterOfRequestFile === ''}
+                disabled={
+                  !correctedReason || 
+                  correctedLetterOfRequestFile === '' ||
+                  (requestToCorrect?.type === 'DISMISSAL' && (
+                    correctedMisconductEvidenceFile === '' ||
+                    correctedSummonNoticeFile === '' ||
+                    correctedSuspensionLetterFile === ''
+                  ))
+                }
                 className="bg-blue-600 hover:bg-blue-700 text-white"
               >
                 Resubmit Corrected Request

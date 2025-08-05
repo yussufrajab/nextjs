@@ -146,11 +146,48 @@ export async function PATCH(req: Request) {
             cadre: true,
             dateOfBirth: true,
             employmentDate: true,
+            retirementDate: true,
             institution: { select: { id: true, name: true } }
           }
         }
       }
     });
+
+    // Check if the service extension request was approved by commission
+    if (updateData.status === 'Approved by Commission') {
+      try {
+        // Calculate new retirement date based on the requested extension period
+        const currentRetirementDate = updatedRequest.currentRetirementDate;
+        const extensionPeriod = updatedRequest.requestedExtensionPeriod.toLowerCase();
+        
+        let newRetirementDate = new Date(currentRetirementDate);
+        
+        // Parse extension period and calculate new date
+        if (extensionPeriod.includes('year')) {
+          const years = parseInt(extensionPeriod.match(/\d+/)?.[0] || '1');
+          newRetirementDate.setFullYear(newRetirementDate.getFullYear() + years);
+        } else if (extensionPeriod.includes('month')) {
+          const months = parseInt(extensionPeriod.match(/\d+/)?.[0] || '6');
+          newRetirementDate.setMonth(newRetirementDate.getMonth() + months);
+        } else {
+          // Default to 1 year if parsing fails
+          newRetirementDate.setFullYear(newRetirementDate.getFullYear() + 1);
+        }
+
+        // Update employee's retirement date
+        await db.employee.update({
+          where: { id: updatedRequest.employeeId },
+          data: {
+            retirementDate: newRetirementDate
+          }
+        });
+
+        console.log(`Employee ${updatedRequest.employee.name} (${updatedRequest.employee.zanId}) retirement date updated from ${currentRetirementDate.toISOString().split('T')[0]} to ${newRetirementDate.toISOString().split('T')[0]} due to approved service extension`);
+      } catch (employeeUpdateError) {
+        console.error('Failed to update employee retirement date:', employeeUpdateError);
+        // Don't fail the entire request if employee update fails
+      }
+    }
 
     return NextResponse.json({
       success: true,

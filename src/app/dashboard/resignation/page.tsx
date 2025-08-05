@@ -11,7 +11,7 @@ import { ROLES, EMPLOYEES } from '@/lib/constants';
 import React, { useState, useEffect } from 'react';
 import type { Employee, User, Role } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
-import { Loader2, Search, FileText, CalendarDays, Paperclip } from 'lucide-react';
+import { Loader2, Search, FileText, CalendarDays, Paperclip, RefreshCw } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Pagination } from '@/components/shared/pagination';
@@ -43,6 +43,7 @@ export default function ResignationPage() {
   const [isFetchingEmployee, setIsFetchingEmployee] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const [effectiveDate, setEffectiveDate] = useState('');
   const [reason, setReason] = useState('');
@@ -63,6 +64,26 @@ export default function ResignationPage() {
     setPreviewObjectKey(objectKey);
     setIsPreviewModalOpen(true);
   };
+
+  // Helper function to shorten document names for better display
+  const getShortDocumentName = (fullPath: string): string => {
+    // Extract the original filename from the path
+    const fileName = fullPath.split('/').pop() || fullPath;
+    
+    // Remove timestamp and random string patterns
+    const cleanName = fileName
+      .replace(/^\d+_[a-zA-Z0-9]+_/, '') // Remove timestamp_randomString_ pattern
+      .replace(/^[a-zA-Z0-9]+_/, ''); // Remove any remaining prefix_
+    
+    // If name is still too long, truncate it
+    if (cleanName.length > 25) {
+      const extension = cleanName.split('.').pop();
+      const nameWithoutExt = cleanName.replace(/\.[^/.]+$/, '');
+      return `${nameWithoutExt.substring(0, 20)}...${extension ? '.' + extension : ''}`;
+    }
+    
+    return cleanName;
+  };
   
   const [isRejectionModalOpen, setIsRejectionModalOpen] = useState(false);
   const [rejectionReasonInput, setRejectionReasonInput] = useState('');
@@ -78,18 +99,38 @@ export default function ResignationPage() {
   const [correctedLetterOfRequestFile, setCorrectedLetterOfRequestFile] = useState<string>('');
   const [correctedNoticeOrReceiptFile, setCorrectedNoticeOrReceiptFile] = useState<string>('');
   
-  const fetchRequests = async () => {
+  const fetchRequests = async (isRefresh = false) => {
     if (!user || !role) return;
-    setIsLoading(true);
+    if (isRefresh) {
+      setIsRefreshing(true);
+    } else {
+      setIsLoading(true);
+    }
     try {
-      const response = await fetch(`/api/resignation?userId=${user.id}&userRole=${role}&userInstitutionId=${user.institutionId || ''}`);
+      // Add cache-busting parameter and headers for refresh
+      const cacheBuster = isRefresh ? `&_t=${Date.now()}` : '';
+      const response = await fetch(`/api/resignation?userId=${user.id}&userRole=${role}&userInstitutionId=${user.institutionId || ''}${cacheBuster}`, {
+        method: 'GET',
+        headers: {
+          'Cache-Control': isRefresh ? 'no-cache, no-store, must-revalidate' : 'default',
+          'Pragma': isRefresh ? 'no-cache' : 'default',
+          'Expires': isRefresh ? '0' : 'default'
+        }
+      });
       if (!response.ok) throw new Error('Failed to fetch resignation requests');
       const data = await response.json();
       setPendingRequests(data);
+      if (isRefresh) {
+        toast({ title: "Refreshed", description: "Resignation requests have been updated.", duration: 2000 });
+      }
     } catch (error) {
       toast({ title: "Error", description: "Could not load resignation requests.", variant: "destructive" });
     } finally {
-      setIsLoading(false);
+      if (isRefresh) {
+        setIsRefreshing(false);
+      } else {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -204,20 +245,44 @@ export default function ResignationPage() {
     }
   };
   
-  const handleUpdateRequest = async (requestId: string, payload: any) => {
-    try {
-        const response = await fetch(`/api/resignation`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({id: requestId, ...payload, reviewedById: user?.id })
+  const handleUpdateRequest = async (requestId: string, payload: any, actionDescription?: string) => {
+      // Get request info for immediate feedback
+      const request = pendingRequests.find(req => req.id === requestId);
+      
+      // Optimistic update - immediately show new status
+      const optimisticUpdate = pendingRequests.map(req => 
+        req.id === requestId 
+          ? { ...req, ...payload, updatedAt: new Date().toISOString() }
+          : req
+      );
+      setPendingRequests(optimisticUpdate);
+
+      // Show immediate success feedback
+      if (actionDescription && request) {
+        toast({ 
+          title: "Status Updated", 
+          description: `${actionDescription} for ${request.employee.name}. Status: ${payload.status}`,
+          duration: 3000 
         });
-        if (!response.ok) throw new Error('Failed to update request');
-        await fetchRequests();
-        return true;
-    } catch (error) {
-        toast({ title: "Update Failed", description: "Could not update the request.", variant: "destructive" });
-        return false;
-    }
+      }
+
+      try {
+          const response = await fetch(`/api/resignation`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({id: requestId, ...payload, reviewedById: user?.id })
+          });
+          if (!response.ok) throw new Error('Failed to update request');
+          
+          // Force immediate refresh to get accurate data from server
+          await fetchRequests();
+          return true;
+      } catch (error) {
+          // Revert optimistic update on error
+          await fetchRequests();
+          toast({ title: "Update Failed", description: "Could not update the request.", variant: "destructive" });
+          return false;
+      }
   };
 
   const handleInitialAction = async (requestId: string, action: 'forward' | 'reject') => {
@@ -231,12 +296,9 @@ export default function ResignationPage() {
     } else if (action === 'forward') {
       // Both HRMO and HHRMD forward directly to Commission (parallel workflow)
       const payload = { status: "Request Received – Awaiting Commission Decision", reviewStage: 'commission_review' };
+      const roleName = role === ROLES.HRMO ? 'HRMO' : 'HHRMD';
       
-      const success = await handleUpdateRequest(requestId, payload);
-      if (success) {
-        const roleName = role === ROLES.HRMO ? 'HRMO' : 'HHRMD';
-        toast({ title: "Request Forwarded", description: `Resignation request for ${request.employee.name} approved by ${roleName} and forwarded to Commission.` });
-      }
+      await handleUpdateRequest(requestId, payload, `Request approved by ${roleName} and forwarded to Commission`);
     }
   };
   
@@ -253,9 +315,8 @@ export default function ResignationPage() {
         rejectionReason: rejectionReasonInput,
         reviewStage: 'initial'
      };
-     const success = await handleUpdateRequest(currentRequestToAction.id, payload);
-     if(success) {
-        toast({ title: "Request Rejected", description: `Request for ${currentRequestToAction.employee.name} has been rejected.`, variant: "destructive" });
+     const success = await handleUpdateRequest(currentRequestToAction.id, payload, `Request rejected and returned to HRO`);
+     if (success) {
         setIsRejectionModalOpen(false);
         setCurrentRequestToAction(null);
      }
@@ -264,10 +325,11 @@ export default function ResignationPage() {
   const handleCommissionDecision = async (requestId: string, decision: 'approved' | 'rejected') => {
     const finalStatus = decision === 'approved' ? "Approved by Commission" : "Rejected by Commission - Request Concluded";
     const payload = { status: finalStatus, reviewStage: 'completed' };
-    const success = await handleUpdateRequest(requestId, payload);
-    if (success) {
-        toast({ title: `Commission Decision: ${decision === 'approved' ? 'Approved' : 'Rejected'}`, description: `Request ${requestId} has been updated.` });
-    }
+    const actionDescription = decision === 'approved' 
+      ? "Resignation approved by Commission"
+      : "Resignation rejected by Commission";
+    
+    await handleUpdateRequest(requestId, payload, actionDescription);
   };
 
   const handleCorrection = (request: ResignationRequest) => {
@@ -294,7 +356,36 @@ export default function ResignationPage() {
       return;
     }
 
-    const documentsList = ['Letter of Request', '3 Month Notice/Receipt'];
+    // Optimistic update to immediately hide the "Correct & Resubmit" button and show new status
+    const optimisticUpdate = pendingRequests.map(req => 
+      req.id === request.id 
+        ? { 
+            ...req, 
+            status: 'Pending HRMO/HHRMD Review',
+            reviewStage: 'initial',
+            rejectionReason: null,
+            effectiveDate: new Date(correctedEffectiveDate).toISOString(),
+            reason: correctedReason,
+            updatedAt: new Date().toISOString()
+          }
+        : req
+    );
+    setPendingRequests(optimisticUpdate);
+
+    // Show immediate success feedback
+    toast({ 
+      title: "Request Corrected & Resubmitted", 
+      description: `Resignation request for ${request.employee.name} has been corrected and resubmitted. Status: Pending HRMO/HHRMD Review`,
+      duration: 4000
+    });
+
+    // Close modal immediately for better UX
+    setIsCorrectionModalOpen(false);
+    setRequestToCorrect(null);
+
+    const documentsList: string[] = [];
+    if (correctedLetterOfRequestFile) documentsList.push(correctedLetterOfRequestFile);
+    if (correctedNoticeOrReceiptFile) documentsList.push(correctedNoticeOrReceiptFile);
 
     try {
       const response = await fetch(`/api/resignation`, {
@@ -314,11 +405,12 @@ export default function ResignationPage() {
 
       if (!response.ok) throw new Error('Failed to update request');
 
+      // Force refresh to get accurate server data
       await fetchRequests();
-      toast({ title: "Request Corrected", description: `Resignation request for ${request.employee.name} has been corrected and resubmitted.` });
-      setIsCorrectionModalOpen(false);
-      setRequestToCorrect(null);
     } catch (error) {
+      // Revert optimistic update on error and show error feedback
+      await fetchRequests();
+      console.error("[RESUBMIT_RESIGNATION]", error);
       toast({ title: "Update Failed", description: "Could not update the request.", variant: "destructive" });
     }
   };
@@ -433,8 +525,22 @@ export default function ResignationPage() {
       {role === ROLES.HRO && (
         <Card className="mb-6 shadow-lg">
           <CardHeader>
-            <CardTitle>Your Submitted Resignation Requests</CardTitle>
-            <CardDescription>Track the status of resignation requests you have submitted.</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Your Submitted Resignation Requests</CardTitle>
+                <CardDescription>Track the status of resignation requests you have submitted.</CardDescription>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => fetchRequests(true)}
+                disabled={isRefreshing}
+                className="flex items-center gap-2"
+              >
+                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -468,8 +574,22 @@ export default function ResignationPage() {
       {(role === ROLES.HHRMD || role === ROLES.HRMO) && ( 
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle>Review Resignation Requests</CardTitle>
-            <CardDescription>Acknowledge and process resignation requests.</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Review Resignation Requests</CardTitle>
+                <CardDescription>Acknowledge and process resignation requests.</CardDescription>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => fetchRequests(true)}
+                disabled={isRefreshing}
+                className="flex items-center gap-2"
+              >
+                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -517,7 +637,7 @@ export default function ResignationPage() {
 
       {selectedRequest && (
         <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
-          <DialogContent className="sm:max-w-lg">
+          <DialogContent className="sm:max-w-3xl">
             <DialogHeader>
               <DialogTitle>Request Details: {selectedRequest.id}</DialogTitle>
               <DialogDescription>
@@ -595,15 +715,16 @@ export default function ResignationPage() {
                     {selectedRequest.documents && selectedRequest.documents.length > 0 ? (
                         selectedRequest.documents.map((objectKey, index) => {
                           const fileName = objectKey.split('/').pop() || objectKey;
+                          const shortName = getShortDocumentName(objectKey);
                           return (
                             <div key={index} className="flex items-center justify-between p-2 rounded-md border bg-secondary/50 text-sm">
                                 <div className="flex items-center gap-2">
                                     <FileText className="h-4 w-4 text-muted-foreground" />
-                                    <span className="font-medium text-foreground truncate" title={fileName}>{fileName}</span>
+                                    <span className="font-medium text-foreground truncate" title={fileName}>{shortName}</span>
                                 </div>
-                                <div className="flex gap-1">
+                                <div className="flex gap-1 flex-shrink-0">
                                   <Button
-                                    variant="ghost"
+                                    variant="outline"
                                     size="sm"
                                     onClick={() => handlePreviewFile(objectKey)}
                                     className="h-8 px-2 text-xs"
@@ -611,7 +732,7 @@ export default function ResignationPage() {
                                     Preview
                                   </Button>
                                   <Button
-                                    variant="ghost"
+                                    variant="outline"
                                     size="sm"
                                     onClick={async () => {
                                       try {
@@ -629,7 +750,7 @@ export default function ResignationPage() {
                                           const url = window.URL.createObjectURL(blob);
                                           const a = document.createElement('a');
                                           a.href = url;
-                                          a.download = fileName;
+                                          a.download = shortName;
                                           document.body.appendChild(a);
                                           a.click();
                                           window.URL.revokeObjectURL(url);
@@ -675,7 +796,7 @@ export default function ResignationPage() {
       
        {currentRequestToAction && (
         <Dialog open={isRejectionModalOpen} onOpenChange={setIsRejectionModalOpen}>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-lg">
                 <DialogHeader>
                     <DialogTitle>Flag Issue on Request: {currentRequestToAction.id}</DialogTitle>
                     <DialogDescription>
@@ -700,7 +821,7 @@ export default function ResignationPage() {
 
       {requestToCorrect && (
         <Dialog open={isCorrectionModalOpen} onOpenChange={setIsCorrectionModalOpen}>
-          <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogContent className="sm:max-w-3xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Correct Resignation Request: {requestToCorrect.id}</DialogTitle>
               <DialogDescription>

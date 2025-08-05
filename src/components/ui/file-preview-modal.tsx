@@ -10,8 +10,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Loader2, Download, X, FileText, AlertCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { apiClient } from '@/lib/api-client';
-import { useAuthStore } from '@/store/auth-store';
 
 interface FilePreviewModalProps {
   open: boolean;
@@ -53,32 +51,30 @@ export function FilePreviewModal({
       console.log('ObjectKey type:', typeof objectKey);
       console.log('ObjectKey length:', objectKey.length);
       
-      // Use API client which handles authentication automatically
-      // Don't encode the objectKey as the backend will handle it
-      const result = await apiClient.request(`/files/preview/${objectKey}`);
-      console.log('Preview result:', result);
+      // The preview API streams the file directly, so we just need to construct the URL
+      // Use session-based authentication (cookies will be sent automatically)
+      const previewApiUrl = `/api/files/preview/${encodeURIComponent(objectKey)}`;
+      console.log('Preview API URL:', previewApiUrl);
       
-      if (result.success && result.data) {
-        console.log('Preview data:', result.data);
-        console.log('Preview data keys:', Object.keys(result.data));
-        
-        // Handle nested response structure from Next.js API route
-        let previewData = result.data;
-        if (result.data.data && typeof result.data.data === 'object') {
-          console.log('Using nested data structure');
-          previewData = result.data.data;
-        }
-        
-        console.log('Final preview data:', previewData);
-        console.log('Preview URL from data:', previewData.url);
-        console.log('Content type from data:', previewData.contentType);
-        
-        setPreviewUrl(previewData.url);
-        setContentType(previewData.contentType || 'application/pdf');
-      } else {
-        console.error('Preview failed:', result.message);
-        throw new Error(result.message || 'Failed to load preview');
+      // Test if the file exists by making a HEAD request first
+      const testResponse = await fetch(previewApiUrl, {
+        method: 'HEAD',
+        credentials: 'include' // Include cookies for session auth
+      });
+      
+      if (!testResponse.ok) {
+        throw new Error(`File not accessible: ${testResponse.status} ${testResponse.statusText}`);
       }
+      
+      // Get content type from headers
+      const responseContentType = testResponse.headers.get('content-type') || 'application/pdf';
+      console.log('Content type from headers:', responseContentType);
+      
+      // Set the preview URL directly to the API endpoint
+      setPreviewUrl(previewApiUrl);
+      setContentType(responseContentType);
+      
+      console.log('Preview URL set to:', previewApiUrl);
 
     } catch (error: any) {
       console.error('Preview error:', error);
@@ -93,54 +89,46 @@ export function FilePreviewModal({
     }
   };
 
-  const { accessToken } = useAuthStore();
-
   const handleDownload = () => {
     if (objectKey) {
-      // Use Next.js API route for download (which handles auth)
-      const token = accessToken || localStorage.getItem('accessToken');
-      
-      console.log('Download - Using token:', token ? 'present' : 'missing');
       console.log('Download - Object key:', objectKey);
       
-      if (token) {
-        // Use the Next.js API route which will proxy to backend
-        fetch(`/api/files/download/${objectKey}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        })
-        .then(response => {
-          if (!response.ok) {
-            throw new Error('Download failed');
-          }
-          return response.blob();
-        })
-        .then(blob => {
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = getFileName(objectKey);
-          document.body.appendChild(a);
-          a.click();
-          window.URL.revokeObjectURL(url);
-          document.body.removeChild(a);
-        })
-        .catch(error => {
-          console.error('Download error:', error);
-          toast({
-            title: 'Kosa la Kupakua',
-            description: 'Imeshindwa kupakia faili',
-            variant: 'destructive'
-          });
-        });
-      } else {
+      const downloadUrl = `/api/files/download/${encodeURIComponent(objectKey)}`;
+      console.log('Download URL:', downloadUrl);
+      
+      // Use session-based authentication (cookies will be sent automatically)
+      fetch(downloadUrl, {
+        credentials: 'include' // Include cookies for session auth
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`Download failed: ${response.status} ${response.statusText}`);
+        }
+        return response.blob();
+      })
+      .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = getFileName(objectKey);
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
         toast({
-          title: 'Kosa la Uthibitishaji',
-          description: 'Huna ruhusa ya kupakia faili',
+          title: 'Mafanikio',
+          description: 'Faili imepakuliwa kwa mafanikio',
+        });
+      })
+      .catch(error => {
+        console.error('Download error:', error);
+        toast({
+          title: 'Kosa la Kupakua',
+          description: `Imeshindwa kupakia faili: ${error.message}`,
           variant: 'destructive'
         });
-      }
+      });
     }
   };
 

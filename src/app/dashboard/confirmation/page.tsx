@@ -10,7 +10,7 @@ import { ROLES, EMPLOYEES } from '@/lib/constants';
 import React, { useState, useEffect } from 'react';
 import type { Employee, User, Role } from '@/lib/types';
 import { toast }  from '@/hooks/use-toast';
-import { Loader2, Search, FileText, CheckCircle, Award, AlertTriangle } from 'lucide-react';
+import { Loader2, Search, FileText, CheckCircle, Award, AlertTriangle, RefreshCw } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Textarea } from '@/components/ui/textarea';
@@ -45,6 +45,7 @@ export default function ConfirmationPage() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [isIpaRequired, setIsIpaRequired] = useState(false);
 
   const [pendingRequests, setPendingRequests] = useState<ConfirmationRequest[]>([]);
@@ -74,16 +75,49 @@ export default function ConfirmationPage() {
     setIsPreviewModalOpen(true);
   };
 
-  const fetchRequests = async () => {
+  // Helper function to shorten document names for better display
+  const getShortDocumentName = (fullPath: string): string => {
+    // Extract the original filename from the path
+    const fileName = fullPath.split('/').pop() || fullPath;
+    
+    // Remove timestamp and random string patterns
+    const cleanName = fileName
+      .replace(/^\d+_[a-zA-Z0-9]+_/, '') // Remove timestamp_randomString_ pattern
+      .replace(/^[a-zA-Z0-9]+_/, ''); // Remove any remaining prefix_
+    
+    // If name is still too long, truncate it
+    if (cleanName.length > 25) {
+      const extension = cleanName.split('.').pop();
+      const nameWithoutExt = cleanName.replace(/\.[^/.]+$/, '');
+      return `${nameWithoutExt.substring(0, 20)}...${extension ? '.' + extension : ''}`;
+    }
+    
+    return cleanName;
+  };
+
+  const fetchRequests = async (isRefresh = false) => {
     if (!user || !role) return;
-    setIsLoading(true);
+    if (isRefresh) {
+      setIsRefreshing(true);
+    } else {
+      setIsLoading(true);
+    }
     try {
       console.log('Fetching confirmation requests...');
       // The backend consistently requires userId and userRole. Send both always.
       // Client-side filtering will then handle role-specific display logic.
-      let url = `/api/confirmations?userId=${user.id}&userRole=${role}`;
+      // Add cache-busting parameter and headers for refresh
+      const cacheBuster = isRefresh ? `&_t=${Date.now()}` : '';
+      let url = `/api/confirmations?userId=${user.id}&userRole=${role}&userInstitutionId=${user.institutionId || ''}${cacheBuster}`;
 
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Cache-Control': isRefresh ? 'no-cache, no-store, must-revalidate' : 'default',
+          'Pragma': isRefresh ? 'no-cache' : 'default',
+          'Expires': isRefresh ? '0' : 'default'
+        }
+      });
       console.log('Response received:', response);
 
       if (!response.ok) {
@@ -123,11 +157,18 @@ export default function ConfirmationPage() {
         });
       }
       setPendingRequests(filteredData);
+      if (isRefresh) {
+        toast({ title: "Refreshed", description: "Confirmation requests have been updated.", duration: 2000 });
+      }
     } catch (error: any) {
       console.error('Error in fetchRequests:', error);
       toast({ title: "Error", description: `Could not load confirmation requests: ${error.message || error}`, variant: "destructive" });
     } finally {
-      setIsLoading(false);
+      if (isRefresh) {
+        setIsRefreshing(false);
+      } else {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -229,6 +270,30 @@ export default function ConfirmationPage() {
       status: 'Pending HRMO/HHRMD Review', // Both roles can review in parallel
       reviewStage: 'initial'
     };
+
+    // Create optimistic new request to show immediately
+    const optimisticRequest: ConfirmationRequest = {
+      id: `temp-${Date.now()}`, // Temporary ID until server responds
+      employee: {
+        ...employeeToConfirm,
+        institution: { name: typeof employeeToConfirm.institution === 'object' ? employeeToConfirm.institution.name : employeeToConfirm.institution || 'N/A' }
+      },
+      submittedBy: { name: user.name },
+      status: 'Pending HRMO/HHRMD Review',
+      reviewStage: 'initial',
+      documents: documentsList,
+      createdAt: new Date().toISOString()
+    };
+
+    // Immediately add optimistic request to show instant status
+    setPendingRequests(prev => [optimisticRequest, ...prev]);
+
+    // Show immediate success feedback
+    toast({ 
+      title: "Confirmation Request Submitted", 
+      description: `Confirmation request for ${employeeToConfirm.name} submitted successfully. Status: Pending HRMO/HHRMD Review`,
+      duration: 4000
+    });
     
     try {
       const response = await fetch('/api/confirmations', {
@@ -238,18 +303,52 @@ export default function ConfirmationPage() {
       });
       if (!response.ok) throw new Error('Failed to submit request');
       
-      await fetchRequests(); // Refresh the list
-      toast({ title: "Request Submitted", description: `Confirmation request for ${employeeToConfirm.name} submitted successfully.` });
+      const result = await response.json();
+      
+      // Replace optimistic request with real server response
+      if (result.success && result.data) {
+        setPendingRequests(prev => prev.map(req => 
+          req.id === optimisticRequest.id ? result.data : req
+        ));
+      }
+      
+      // Force refresh to ensure data consistency
+      setTimeout(async () => {
+        await fetchRequests();
+      }, 1000);
+      
       setZanId('');
       resetEmployeeAndForm();
     } catch(error) {
+      // Remove optimistic request on error
+      setPendingRequests(prev => prev.filter(req => req.id !== optimisticRequest.id));
       toast({ title: "Submission Failed", description: "Could not submit the confirmation request.", variant: "destructive" });
     } finally {
       setIsSubmitting(false);
     }
   };
   
-  const handleUpdateRequest = async (requestId: string, payload: any) => {
+  const handleUpdateRequest = async (requestId: string, payload: any, actionDescription?: string) => {
+      // Get request info for immediate feedback
+      const request = pendingRequests.find(req => req.id === requestId);
+      
+      // Optimistic update - immediately show new status
+      const optimisticUpdate = pendingRequests.map(req => 
+        req.id === requestId 
+          ? { ...req, ...payload, updatedAt: new Date().toISOString() }
+          : req
+      );
+      setPendingRequests(optimisticUpdate);
+
+      // Show immediate success feedback
+      if (actionDescription && request) {
+        toast({ 
+          title: "Status Updated", 
+          description: `${actionDescription} for ${request.employee.name}. Status: ${payload.status}`,
+          duration: 3000 
+        });
+      }
+
       try {
           const response = await fetch(`/api/confirmations`, {
               method: 'PATCH',
@@ -257,9 +356,13 @@ export default function ConfirmationPage() {
               body: JSON.stringify({id: requestId, ...payload, reviewedById: user?.id })
           });
           if (!response.ok) throw new Error('Failed to update request');
+          
+          // Force immediate refresh to get accurate data from server
           await fetchRequests();
           return true;
       } catch (error) {
+          // Revert optimistic update on error
+          await fetchRequests();
           toast({ title: "Update Failed", description: "Could not update the request.", variant: "destructive" });
           return false;
       }
@@ -277,12 +380,9 @@ export default function ConfirmationPage() {
     } else if (action === 'forward') {
       // Both HRMO and HHRMD forward directly to Commission (parallel workflow)
       const payload = { status: "Request Received – Awaiting Commission Decision", reviewStage: 'commission_review', decisionDate: new Date().toISOString() };
+      const roleName = role === ROLES.HRMO ? 'HRMO' : 'HHRMD';
       
-      const success = await handleUpdateRequest(requestId, payload);
-      if (success) {
-        const roleName = role === ROLES.HRMO ? 'HRMO' : 'HHRMD';
-        toast({ title: "Request Forwarded", description: `Request for ${request.employee.name} approved by ${roleName} and forwarded to Commission.` });
-      }
+      await handleUpdateRequest(requestId, payload, `Request approved by ${roleName} and forwarded to Commission`);
     }
   };
 
@@ -294,9 +394,8 @@ export default function ConfirmationPage() {
         reviewStage: 'initial',
         decisionDate: new Date().toISOString()
     };
-    const success = await handleUpdateRequest(currentRequestToAction.id, payload);
+    const success = await handleUpdateRequest(currentRequestToAction.id, payload, `Request rejected and returned to HRO`);
     if (success) {
-      toast({ title: "Request Rejected", description: `Request for ${currentRequestToAction.employee.name} rejected.`, variant: 'destructive' });
       setIsRejectionModalOpen(false);
       setCurrentRequestToAction(null);
       setRejectionReasonInput('');
@@ -307,14 +406,11 @@ export default function ConfirmationPage() {
     const request = pendingRequests.find(req => req.id === requestId);
     const finalStatus = decision === 'approved' ? "Approved by Commission" : "Rejected by Commission - Request Concluded";
     const payload = { status: finalStatus, reviewStage: 'completed', commissionDecisionDate: new Date().toISOString() };
-    const success = await handleUpdateRequest(requestId, payload);
-     if (success) {
-        const title = `Commission Decision: ${decision === 'approved' ? 'Approved' : 'Rejected'}`;
-        const description = decision === 'approved' 
-          ? `Request approved. Employee ${request?.employee.name} status updated to "Confirmed".`
-          : `Request ${requestId} has been rejected.`;
-        toast({ title, description });
-    }
+    const actionDescription = decision === 'approved' 
+      ? "Confirmation approved by Commission"
+      : "Confirmation rejected by Commission";
+    
+    await handleUpdateRequest(requestId, payload, actionDescription);
   };
 
   const handleResubmit = (request: ConfirmationRequest) => {
@@ -334,6 +430,31 @@ export default function ConfirmationPage() {
       toast({ title: "Submission Error", description: "All required documents must be attached.", variant: "destructive" });
       return;
     }
+
+    // Optimistic update to immediately hide the "Correct & Resubmit" button and show new status
+    const optimisticUpdate = pendingRequests.map(req => 
+      req.id === request.id 
+        ? { 
+            ...req, 
+            status: 'Pending HRMO/HHRMD Review',
+            reviewStage: 'initial',
+            rejectionReason: null,
+            updatedAt: new Date().toISOString()
+          }
+        : req
+    );
+    setPendingRequests(optimisticUpdate);
+
+    // Show immediate success feedback
+    toast({ 
+      title: "Request Corrected & Resubmitted", 
+      description: `Confirmation request for ${request.employee.name} has been corrected and resubmitted. Status: Pending HRMO/HHRMD Review`,
+      duration: 4000
+    });
+
+    // Close modal immediately for better UX
+    setIsCorrectionModalOpen(false);
+    setRequestToCorrect(null);
 
     try {
       const response = await fetch(`/api/confirmations`, {
@@ -358,11 +479,11 @@ export default function ConfirmationPage() {
         throw new Error('Failed to resubmit confirmation request');
       }
 
-      toast({ title: "Success", description: `Confirmation request ${request.id} resubmitted.` });
-      setIsCorrectionModalOpen(false);
-      setRequestToCorrect(null);
-      fetchRequests();
+      // Force refresh to get accurate server data
+      await fetchRequests();
     } catch (error) {
+      // Revert optimistic update on error and show error feedback
+      await fetchRequests();
       console.error("[RESUBMIT_CONFIRMATION]", error);
       toast({ title: "Error", description: "Failed to resubmit confirmation request.", variant: "destructive" });
     }
@@ -490,12 +611,26 @@ export default function ConfirmationPage() {
 
       <Card className="shadow-lg">
         <CardHeader>
-          <CardTitle>
-            {role === ROLES.HRO ? "My Confirmation Requests" : "Review Confirmation Requests"}
-          </CardTitle>
-          <CardDescription>
-            {role === ROLES.HRO ? "View and manage your submitted confirmation requests." : "Review, approve, or reject pending employee confirmation requests."}
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>
+                {role === ROLES.HRO ? "My Confirmation Requests" : "Review Confirmation Requests"}
+              </CardTitle>
+              <CardDescription>
+                {role === ROLES.HRO ? "View and manage your submitted confirmation requests." : "Review, approve, or reject pending employee confirmation requests."}
+              </CardDescription>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => fetchRequests(true)}
+              disabled={isRefreshing}
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+          </div>
         </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -555,7 +690,7 @@ export default function ConfirmationPage() {
 
       {selectedRequest && (
         <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
-          <DialogContent className="sm:max-w-lg">
+          <DialogContent className="sm:max-w-3xl">
             <DialogHeader>
               <DialogTitle>Request Details: {selectedRequest.id}</DialogTitle>
               <DialogDescription>
@@ -588,12 +723,60 @@ export default function ConfirmationPage() {
                     <Label className="font-semibold">Attached Documents</Label>
                     <div className="mt-2 space-y-2">
                     {selectedRequest.documents && selectedRequest.documents.length > 0 ? (
-                        selectedRequest.documents.map((doc, index) => (
+                        selectedRequest.documents.map((doc, index) => {
+                          const shortName = getShortDocumentName(doc);
+                          return (
                             <div key={index} className="flex items-center justify-between p-2 rounded-md border bg-secondary/50 text-sm">
-                                <div className="flex items-center gap-2"><FileText className="h-4 w-4 text-muted-foreground" /><span className="font-medium text-foreground truncate" title={doc}>{doc}</span></div>
-                                <Button variant="link" size="sm" className="h-auto p-0 flex-shrink-0" onClick={() => handlePreviewFile(doc)}>Preview</Button>
+                                <div className="flex items-center gap-2">
+                                  <FileText className="h-4 w-4 text-muted-foreground" />
+                                  <span className="font-medium text-foreground" title={doc}>{shortName}</span>
+                                </div>
+                                <div className="flex gap-1 flex-shrink-0">
+                                  <Button variant="outline" size="sm" className="h-8 px-2 text-xs" onClick={() => handlePreviewFile(doc)}>
+                                    Preview
+                                  </Button>
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    className="h-8 px-2 text-xs"
+                                    onClick={async () => {
+                                      try {
+                                        const response = await fetch(`/api/files/download/${doc}`, {
+                                          credentials: 'include'
+                                        });
+                                        if (response.ok) {
+                                          const blob = await response.blob();
+                                          const url = window.URL.createObjectURL(blob);
+                                          const a = document.createElement('a');
+                                          a.href = url;
+                                          a.download = shortName;
+                                          document.body.appendChild(a);
+                                          a.click();
+                                          window.URL.revokeObjectURL(url);
+                                          document.body.removeChild(a);
+                                        } else {
+                                          toast({
+                                            title: 'Download Failed',
+                                            description: 'Could not download the file. Please try again.',
+                                            variant: 'destructive'
+                                          });
+                                        }
+                                      } catch (error) {
+                                        console.error('Download failed:', error);
+                                        toast({
+                                          title: 'Download Failed',
+                                          description: 'Could not download the file. Please try again.',
+                                          variant: 'destructive'
+                                        });
+                                      }
+                                    }}
+                                  >
+                                    Download
+                                  </Button>
+                                </div>
                             </div>
-                        ))
+                          );
+                        })
                     ) : ( <p className="text-muted-foreground text-sm">No documents attached.</p> )}
                     </div>
                 </div>
@@ -607,7 +790,7 @@ export default function ConfirmationPage() {
 
       {currentRequestToAction && (
         <Dialog open={isRejectionModalOpen} onOpenChange={setIsRejectionModalOpen}>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-lg">
                 <DialogHeader>
                     <DialogTitle>Reject Confirmation: {currentRequestToAction.id}</DialogTitle>
                     <DialogDescription>Provide the reason for rejecting the confirmation for <strong>{currentRequestToAction.employee.name}</strong>.</DialogDescription>
@@ -625,7 +808,7 @@ export default function ConfirmationPage() {
 
       {requestToCorrect && (
         <Dialog open={isCorrectionModalOpen} onOpenChange={setIsCorrectionModalOpen}>
-          <DialogContent className="sm:max-w-lg">
+          <DialogContent className="sm:max-w-2xl">
             <DialogHeader>
               <DialogTitle>Correct & Resubmit Confirmation Request</DialogTitle>
               <DialogDescription>

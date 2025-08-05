@@ -11,7 +11,7 @@ import { ROLES, EMPLOYEES } from '@/lib/constants';
 import React, { useState, useEffect } from 'react';
 import type { Employee, User, Role } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
-import { Loader2, Search, FileText, CalendarDays, ListFilter, Stethoscope, ClipboardCheck, AlertTriangle } from 'lucide-react';
+import { Loader2, Search, FileText, CalendarDays, ListFilter, Stethoscope, ClipboardCheck, AlertTriangle, RefreshCw } from 'lucide-react';
 import { addMonths, format, isBefore, differenceInYears, parseISO } from 'date-fns';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -33,7 +33,7 @@ interface RetirementRequest {
   
   retirementType: string;
   illnessDescription?: string | null;
-  proposedDate: string;
+  proposedDate: string | null;
   delayReason?: string | null;
   documents: string[];
 }
@@ -49,6 +49,7 @@ export default function RetirementPage() {
   const [isFetchingEmployee, setIsFetchingEmployee] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const [retirementType, setRetirementType] = useState('');
   const [retirementDate, setRetirementDate] = useState('');
@@ -97,23 +98,63 @@ export default function RetirementPage() {
     setIsPreviewModalOpen(true);
   };
 
+  // Helper function to shorten document names for better display
+  const getShortDocumentName = (fullPath: string): string => {
+    // Extract the original filename from the path
+    const fileName = fullPath.split('/').pop() || fullPath;
+    
+    // Remove timestamp and random string patterns
+    const cleanName = fileName
+      .replace(/^\d+_[a-zA-Z0-9]+_/, '') // Remove timestamp_randomString_ pattern
+      .replace(/^[a-zA-Z0-9]+_/, ''); // Remove any remaining prefix_
+    
+    // If name is still too long, truncate it
+    if (cleanName.length > 25) {
+      const extension = cleanName.split('.').pop();
+      const nameWithoutExt = cleanName.replace(/\.[^/.]+$/, '');
+      return `${nameWithoutExt.substring(0, 20)}...${extension ? '.' + extension : ''}`;
+    }
+    
+    return cleanName;
+  };
+
   useEffect(() => {
     const sixMonthsFromNow = addMonths(new Date(), 6);
     setMinRetirementDate(format(sixMonthsFromNow, 'yyyy-MM-dd'));
   }, []);
 
-  const fetchRequests = async () => {
+  const fetchRequests = async (isRefresh = false) => {
     if (!user || !role) return;
-    setIsLoading(true);
+    if (isRefresh) {
+      setIsRefreshing(true);
+    } else {
+      setIsLoading(true);
+    }
     try {
-      const response = await fetch(`/api/retirement?userId=${user.id}&userRole=${role}&userInstitutionId=${user.institutionId || ''}`);
+      // Add cache-busting parameter and headers for refresh
+      const cacheBuster = isRefresh ? `&_t=${Date.now()}` : '';
+      const response = await fetch(`/api/retirement?userId=${user.id}&userRole=${role}&userInstitutionId=${user.institutionId || ''}${cacheBuster}`, {
+        method: 'GET',
+        headers: {
+          'Cache-Control': isRefresh ? 'no-cache, no-store, must-revalidate' : 'default',
+          'Pragma': isRefresh ? 'no-cache' : 'default',
+          'Expires': isRefresh ? '0' : 'default'
+        }
+      });
       if (!response.ok) throw new Error('Failed to fetch retirement requests');
       const data = await response.json();
       setPendingRequests(data);
+      if (isRefresh) {
+        toast({ title: "Refreshed", description: "Retirement requests have been updated.", duration: 2000 });
+      }
     } catch (error) {
       toast({ title: "Error", description: "Could not load retirement requests.", variant: "destructive" });
     } finally {
-      setIsLoading(false);
+      if (isRefresh) {
+        setIsRefreshing(false);
+      } else {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -247,7 +288,7 @@ export default function RetirementPage() {
       return;
     }
     
-    if (!retirementDate) {
+    if (!retirementDate && retirementType !== 'illness') {
       toast({ title: "Submission Error", description: "Please select a retirement date.", variant: "destructive" });
       return;
     }
@@ -292,7 +333,7 @@ export default function RetirementPage() {
       retirementType: retirementType,
       illnessDescription: retirementType === 'illness' ? illnessDescription : undefined,
       delayReason: showDelayFields ? delayReason : undefined,
-      proposedDate: new Date(retirementDate).toISOString(),
+      proposedDate: retirementDate ? new Date(retirementDate).toISOString() : null,
       documents: documentObjectKeys,
     };
     
@@ -322,14 +363,34 @@ export default function RetirementPage() {
   const isSubmitDisabled = 
     !employeeDetails || 
     !retirementType || 
-    !retirementDate || 
+    (retirementType !== 'illness' && !retirementDate) || 
     letterOfRequestFile === '' || 
     (retirementType === 'illness' && (medicalFormFile === '' || illnessLeaveLetterFile === '' || !illnessDescription)) || 
     (showDelayFields && (!delayReason.trim() || delayDocumentFile === '')) ||
     (ageEligibilityError && !showDelayFields) ||
     isSubmitting;
   
-  const handleUpdateRequest = async (requestId: string, payload: any) => {
+  const handleUpdateRequest = async (requestId: string, payload: any, actionDescription?: string) => {
+    // Get request info for immediate feedback
+    const request = pendingRequests.find(req => req.id === requestId);
+    
+    // Optimistic update - immediately show new status
+    const optimisticUpdate = pendingRequests.map(req => 
+      req.id === requestId 
+        ? { ...req, ...payload, updatedAt: new Date().toISOString() }
+        : req
+    );
+    setPendingRequests(optimisticUpdate);
+
+    // Show immediate success feedback
+    if (actionDescription && request) {
+      toast({ 
+        title: "Status Updated", 
+        description: `${actionDescription} for ${request.employee.name}. Status: ${payload.status}`,
+        duration: 3000 
+      });
+    }
+
     try {
         const response = await fetch(`/api/retirement`, {
             method: 'PATCH',
@@ -337,9 +398,14 @@ export default function RetirementPage() {
             body: JSON.stringify({id: requestId, ...payload, reviewedById: user?.id })
         });
         if (!response.ok) throw new Error('Failed to update request');
+        
+        // Force immediate refresh to get accurate data from server
         await fetchRequests();
+        
         return true;
     } catch (error) {
+        // Revert optimistic update on error
+        await fetchRequests();
         toast({ title: "Update Failed", description: "Could not update the request.", variant: "destructive" });
         return false;
     }
@@ -356,12 +422,9 @@ export default function RetirementPage() {
     } else if (action === 'forward') {
       // Both HRMO and HHRMD forward directly to Commission (parallel workflow)
       const payload = { status: "Request Received – Awaiting Commission Decision", reviewStage: 'commission_review' };
+      const roleName = role === ROLES.HRMO ? 'HRMO' : 'HHRMD';
       
-      const success = await handleUpdateRequest(requestId, payload);
-      if (success) {
-        const roleName = role === ROLES.HRMO ? 'HRMO' : 'HHRMD';
-        toast({ title: "Request Forwarded", description: `Request for ${request.employee.name} approved by ${roleName} and forwarded to Commission.` });
-      }
+      await handleUpdateRequest(requestId, payload, `Request approved by ${roleName} and forwarded to Commission`);
     }
   };
 
@@ -372,9 +435,9 @@ export default function RetirementPage() {
         rejectionReason: rejectionReasonInput, 
         reviewStage: 'initial'
     };
-    const success = await handleUpdateRequest(currentRequestToAction.id, payload);
+    
+    const success = await handleUpdateRequest(currentRequestToAction.id, payload, "Request rejected and returned to HRO");
     if (success) {
-      toast({ title: "Request Rejected", description: `Request for ${currentRequestToAction.employee.name} rejected.`, variant: 'destructive' });
       setIsRejectionModalOpen(false);
       setCurrentRequestToAction(null);
       setRejectionReasonInput('');
@@ -382,18 +445,22 @@ export default function RetirementPage() {
   };
 
   const handleCommissionDecision = async (requestId: string, decision: 'approved' | 'rejected') => {
+    const request = pendingRequests.find(req => req.id === requestId);
+    if (!request) return;
+    
     const finalStatus = decision === 'approved' ? "Approved by Commission" : "Rejected by Commission - Request Concluded";
     const payload = { status: finalStatus, reviewStage: 'completed' };
-    const success = await handleUpdateRequest(requestId, payload);
-    if (success) {
-        toast({ title: `Commission Decision: ${decision === 'approved' ? 'Approved' : 'Rejected'}`, description: `Request ${requestId} has been updated.` });
-    }
+    const actionDescription = decision === 'approved' 
+      ? `Retirement request approved by Commission for ${request.employee.name}`
+      : `Retirement request rejected by Commission for ${request.employee.name}`;
+    
+    await handleUpdateRequest(requestId, payload, actionDescription);
   };
 
   const handleResubmit = (request: RetirementRequest) => {
     setRequestToCorrect(request);
     setCorrectedRetirementType(request.retirementType);
-    setCorrectedRetirementDate(request.proposedDate);
+    setCorrectedRetirementDate(request.proposedDate || '');
     setCorrectedIllnessDescription(request.illnessDescription || '');
     setCorrectedDelayReason(request.delayReason || '');
     setCorrectedMedicalFormFile('');
@@ -407,7 +474,7 @@ export default function RetirementPage() {
     if (!request || !user) return;
 
     // Basic validation
-    if (!correctedRetirementType || !correctedRetirementDate || !correctedLetterOfRequestFile) {
+    if (!correctedRetirementType || (correctedRetirementType !== 'illness' && !correctedRetirementDate) || !correctedLetterOfRequestFile) {
       toast({ title: "Submission Error", description: "All required fields and documents must be provided.", variant: "destructive" });
       return;
     }
@@ -436,8 +503,8 @@ export default function RetirementPage() {
       
       if (correctedDelayDocumentFile) correctedDocumentObjectKeys.push(correctedDelayDocumentFile);
 
-      // Convert date string to ISO-8601 DateTime format
-      const proposedDateTime = new Date(correctedRetirementDate).toISOString();
+      // Convert date string to ISO-8601 DateTime format (null for illness retirement)
+      const proposedDateTime = correctedRetirementDate ? new Date(correctedRetirementDate).toISOString() : null;
       
       const payload = {
         status: 'Pending HRMO/HHRMD Review',
@@ -451,24 +518,13 @@ export default function RetirementPage() {
         reviewedById: user.id
       };
 
-      const response = await fetch(`/api/retirement`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({id: request.id, ...payload}),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.text();
-        console.error('Resubmit error:', errorData);
-        throw new Error('Failed to resubmit retirement request');
+      // Use the optimistic update pattern for consistency
+      const success = await handleUpdateRequest(request.id, payload, `Retirement request resubmitted for review`);
+      
+      if (success) {
+        setIsCorrectionModalOpen(false);
+        setRequestToCorrect(null);
       }
-
-      toast({ title: "Success", description: `Retirement request for ${request.employee.name} resubmitted successfully.` });
-      setIsCorrectionModalOpen(false);
-      setRequestToCorrect(null);
-      await fetchRequests();
     } catch (error) {
       console.error("[RESUBMIT_RETIREMENT]", error);
       toast({ title: "Error", description: "Failed to resubmit retirement request.", variant: "destructive" });
@@ -543,10 +599,12 @@ export default function RetirementPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div>
-                    <Label htmlFor="retirementDate" className="flex items-center"><CalendarDays className="mr-2 h-4 w-4 text-primary" />Proposed Retirement Date</Label>
-                    <Input id="retirementDate" type="date" value={retirementDate} onChange={(e) => setRetirementDate(e.target.value)} disabled={isSubmitting || (ageEligibilityError && !showDelayFields)} min={minRetirementDate} />
-                  </div>
+                  {retirementType !== 'illness' && (
+                    <div>
+                      <Label htmlFor="retirementDate" className="flex items-center"><CalendarDays className="mr-2 h-4 w-4 text-primary" />Proposed Retirement Date</Label>
+                      <Input id="retirementDate" type="date" value={retirementDate} onChange={(e) => setRetirementDate(e.target.value)} disabled={isSubmitting || (ageEligibilityError && !showDelayFields)} min={minRetirementDate} />
+                    </div>
+                  )}
                   
                   {retirementType === 'illness' && (
                     <>
@@ -655,8 +713,22 @@ export default function RetirementPage() {
       {role === ROLES.HRO && pendingRequests.length > 0 && (
         <Card className="mb-6 shadow-lg">
           <CardHeader>
-            <CardTitle>Your Submitted Retirement Requests</CardTitle>
-            <CardDescription>Track the status of retirement requests you have submitted.</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Your Submitted Retirement Requests</CardTitle>
+                <CardDescription>Track the status of retirement requests you have submitted.</CardDescription>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => fetchRequests(true)}
+                disabled={isRefreshing}
+                className="flex items-center gap-2"
+              >
+                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             {paginatedRequests.map((request) => (
@@ -691,8 +763,22 @@ export default function RetirementPage() {
       {(role === ROLES.HHRMD || role === ROLES.HRMO) && ( 
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle>Review Retirement Requests</CardTitle>
-            <CardDescription>Review, approve, or reject pending retirement requests.</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Review Retirement Requests</CardTitle>
+                <CardDescription>Review, approve, or reject pending retirement requests.</CardDescription>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => fetchRequests(true)}
+                disabled={isRefreshing}
+                className="flex items-center gap-2"
+              >
+                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
              {isLoading ? (
@@ -744,7 +830,7 @@ export default function RetirementPage() {
 
       {selectedRequest && (
         <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
-          <DialogContent className="sm:max-w-lg">
+          <DialogContent className="sm:max-w-3xl">
             <DialogHeader>
               <DialogTitle>Request Details: {selectedRequest.id}</DialogTitle>
               <DialogDescription>
@@ -833,15 +919,16 @@ export default function RetirementPage() {
                     {selectedRequest.documents && selectedRequest.documents.length > 0 ? (
                         selectedRequest.documents.map((objectKey, index) => {
                           const fileName = objectKey.split('/').pop() || objectKey;
+                          const shortName = getShortDocumentName(objectKey);
                           return (
                             <div key={index} className="flex items-center justify-between p-2 rounded-md border bg-secondary/50 text-sm">
                                 <div className="flex items-center gap-2">
                                     <FileText className="h-4 w-4 text-muted-foreground" />
-                                    <span className="font-medium text-foreground truncate" title={fileName}>{fileName}</span>
+                                    <span className="font-medium text-foreground truncate" title={fileName}>{shortName}</span>
                                 </div>
-                                <div className="flex gap-1">
+                                <div className="flex gap-1 flex-shrink-0">
                                   <Button
-                                    variant="ghost"
+                                    variant="outline"
                                     size="sm"
                                     onClick={() => handlePreviewFile(objectKey)}
                                     className="h-8 px-2 text-xs"
@@ -849,7 +936,7 @@ export default function RetirementPage() {
                                     Preview
                                   </Button>
                                   <Button
-                                    variant="ghost"
+                                    variant="outline"
                                     size="sm"
                                     onClick={async () => {
                                       try {
@@ -867,7 +954,7 @@ export default function RetirementPage() {
                                           const url = window.URL.createObjectURL(blob);
                                           const a = document.createElement('a');
                                           a.href = url;
-                                          a.download = fileName;
+                                          a.download = shortName;
                                           document.body.appendChild(a);
                                           a.click();
                                           window.URL.revokeObjectURL(url);
@@ -913,7 +1000,7 @@ export default function RetirementPage() {
 
       {currentRequestToAction && (
         <Dialog open={isRejectionModalOpen} onOpenChange={setIsRejectionModalOpen}>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-lg">
                 <DialogHeader>
                     <DialogTitle>Reject Retirement Request: {currentRequestToAction.id}</DialogTitle>
                     <DialogDescription>
@@ -938,7 +1025,7 @@ export default function RetirementPage() {
 
       {requestToCorrect && (
         <Dialog open={isCorrectionModalOpen} onOpenChange={setIsCorrectionModalOpen}>
-          <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Correct & Resubmit Retirement Request</DialogTitle>
               <DialogDescription>
@@ -969,16 +1056,18 @@ export default function RetirementPage() {
                   </Select>
                 </div>
                 
-                <div>
-                  <Label htmlFor="correctedRetirementDate">Proposed Retirement Date</Label>
-                  <Input 
-                    id="correctedRetirementDate" 
-                    type="date" 
-                    value={correctedRetirementDate} 
-                    onChange={(e) => setCorrectedRetirementDate(e.target.value)}
-                    min={minRetirementDate}
-                  />
-                </div>
+                {correctedRetirementType !== 'illness' && (
+                  <div>
+                    <Label htmlFor="correctedRetirementDate">Proposed Retirement Date</Label>
+                    <Input 
+                      id="correctedRetirementDate" 
+                      type="date" 
+                      value={correctedRetirementDate} 
+                      onChange={(e) => setCorrectedRetirementDate(e.target.value)}
+                      min={minRetirementDate}
+                    />
+                  </div>
+                )}
 
                 {correctedAgeEligibilityError && (
                   <Alert variant="destructive">
@@ -1018,35 +1107,57 @@ export default function RetirementPage() {
               <div className="space-y-4">
                 <h4 className="font-semibold text-base">Required Documents (PDF Only)</h4>
                 <div>
-                  <Label htmlFor="correctedLetterOfRequestFile" className="flex items-center mb-1">
+                  <Label className="flex items-center mb-2">
                     <FileText className="mr-2 h-4 w-4 text-primary" />Upload Letter of Request (Required)
                   </Label>
-                  <Input id="correctedLetterOfRequestFile" type="file" onChange={(e) => setCorrectedLetterOfRequestFile(e.target.files)} accept=".pdf" />
+                  <FileUpload
+                    folder="retirement"
+                    value={correctedLetterOfRequestFile}
+                    onChange={setCorrectedLetterOfRequestFile}
+                    onPreview={handlePreviewFile}
+                    required
+                  />
                 </div>
                 
                 {correctedRetirementType === 'illness' && (
                   <>
                     <div>
-                      <Label htmlFor="correctedMedicalFormFile" className="flex items-center mb-1">
+                      <Label className="flex items-center mb-2">
                         <Stethoscope className="mr-2 h-4 w-4 text-primary" />Upload Medical Form (Required)
                       </Label>
-                      <Input id="correctedMedicalFormFile" type="file" onChange={(e) => setCorrectedMedicalFormFile(e.target.files)} accept=".pdf" />
+                      <FileUpload
+                        folder="retirement"
+                        value={correctedMedicalFormFile}
+                        onChange={setCorrectedMedicalFormFile}
+                        onPreview={handlePreviewFile}
+                        required
+                      />
                     </div>
                     <div>
-                      <Label htmlFor="correctedIllnessLeaveLetterFile" className="flex items-center mb-1">
+                      <Label className="flex items-center mb-2">
                         <FileText className="mr-2 h-4 w-4 text-primary" />Upload Illness Leave Letter (Optional)
                       </Label>
-                      <Input id="correctedIllnessLeaveLetterFile" type="file" onChange={(e) => setCorrectedIllnessLeaveLetterFile(e.target.files)} accept=".pdf" />
+                      <FileUpload
+                        folder="retirement"
+                        value={correctedIllnessLeaveLetterFile}
+                        onChange={setCorrectedIllnessLeaveLetterFile}
+                        onPreview={handlePreviewFile}
+                      />
                     </div>
                   </>
                 )}
 
                 {showCorrectedDelayFields && (
                   <div>
-                    <Label htmlFor="correctedDelayDocumentFile" className="flex items-center mb-1">
+                    <Label className="flex items-center mb-2">
                       <ClipboardCheck className="mr-2 h-4 w-4 text-primary" />Upload Delay Document (Optional)
                     </Label>
-                    <Input id="correctedDelayDocumentFile" type="file" onChange={(e) => setCorrectedDelayDocumentFile(e.target.files)} accept=".pdf" />
+                    <FileUpload
+                      folder="retirement"
+                      value={correctedDelayDocumentFile}
+                      onChange={setCorrectedDelayDocumentFile}
+                      onPreview={handlePreviewFile}
+                    />
                   </div>
                 )}
               </div>

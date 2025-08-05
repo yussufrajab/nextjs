@@ -114,18 +114,11 @@ export function FileUpload({
           setUploadProgress(prev => Math.min(prev + 10, 90));
         }, 100);
 
-        // Use auth token from the hook
-        const token = accessToken;
-        console.log('FileUpload - Token from auth hook:', token ? 'YES' : 'NO');
+        // For session-based auth, no token needed - cookies handle authentication
+        console.log('FileUpload - Using session-based auth');
         console.log('FileUpload - User role from auth hook:', user?.role);
         
         const headers: HeadersInit = {};
-        if (token) {
-          headers['Authorization'] = `Bearer ${token}`;
-          console.log('FileUpload - Sending Authorization header with token');
-        } else {
-          console.error('FileUpload - No token found, request will fail');
-        }
 
         const response = await fetch('/api/files/upload', {
           method: 'POST',
@@ -266,7 +259,7 @@ export function FileUpload({
           Bofya au buruta faili hapa kupakia
         </p>
         <p className="text-xs text-muted-foreground">
-          Ukubwa wa juu: {maxSize}MB | Aina zilizoruhusiwa: {accept.replace(/\./g, '').toUpperCase()}
+          Ukubwa wa juu: {maxSize}MB | Aina zilizoruhusiwa: PDF tu
         </p>
         
         <Input

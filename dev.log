@@ -1,0 +1,240 @@
+
+> nextn@0.1.0 dev
+> next dev -p 9002
+
+   ▲ Next.js 15.2.3
+   - Local:        http://localhost:9002
+   - Network:      http://10.0.202.33:9002
+   - Environments: .env.local, .env
+
+ ✓ Starting...
+ ✓ Ready in 2.9s
+ ○ Compiling /api/auth/logout ...
+ ✓ Compiled /api/auth/logout in 1520ms (406 modules)
+ POST /api/auth/logout 200 in 1814ms
+ ○ Compiling /api/auth/login ...
+ ✓ Compiled /api/auth/login in 739ms (415 modules)
+Login attempt for username: kmnyonge
+Login successful for user: kmnyonge
+ POST /api/auth/login 200 in 1150ms
+ ✓ Compiled /api/test in 338ms (419 modules)
+=== TEST API CALLED ===
+ GET /api/test 200 in 384ms
+ GET /api/notifications?userId=cmd06nnbn000le67wtg41s3su 200 in 390ms
+ ✓ Compiled /api/dashboard/metrics in 152ms (421 modules)
+=== Dashboard metrics API called ===
+Total employees: 174
+Pending confirmations: 0
+Pending promotions: 0
+Employees on LWOP: 2
+Pending terminations: 0
+Open complaints: 16
+Pending cadre changes: 23
+Pending retirements: 18
+Pending resignations: 17
+Pending service extensions: 13
+=== Dashboard metrics calculated === {
+  totalEmployees: 174,
+  pendingConfirmations: 12,
+  pendingPromotions: 8,
+  employeesOnLwop: 2,
+  pendingTerminations: 3,
+  openComplaints: 16,
+  pendingCadreChanges: 23,
+  pendingRetirements: 18,
+  pendingResignations: 17,
+  pendingServiceExtensions: 13
+}
+=== Recent activities count === 5
+=== Final API response === {
+  "success": true,
+  "data": {
+    "stats": {
+      "totalEmployees": 174,
+      "pendingConfirmations": 12,
+      "pendingPromotions": 8,
+      "employeesOnLwop": 2,
+      "pendingTerminations": 3,
+      "openComplaints": 16,
+      "pendingCadreChanges": 23,
+      "pendingRetirements": 18,
+      "pendingResignations": 17,
+      "pendingServiceExtensions": 13
+    },
+    "recentActivities": [
+      {
+        "id": "cmdyf42zy000h2b41v5humh4r",
+        "type": "Promotion",
+        "employee": "Mwalimu Hassan Khamis",
+        "status": "Request Received – Awaiting Commission Decision",
+        "updatedAt": "2025-08-05T11:10:01.454Z",
+        "href": "/dashboard/promotion"
+      },
+      {
+        "id": "cmdyepb9i000f2b418y9bolks",
+        "type": "Retirement",
+        "employee": "Zainab Hamad Ali",
+        "status": "Approved by Commission",
+        "updatedAt": "2025-08-05T10:42:34.168Z",
+        "href": "/dashboard/retirement"
+      },
+      {
+        "id": "cmdyeel5v000d2b41hjyrv61z",
+        "type": "Retirement",
+        "employee": "Zubeda Mohammed Khamis",
+        "status": "Approved by Commission",
+        "updatedAt": "2025-08-05T10:34:05.875Z",
+        "href": "/dashboard/retirement"
+      },
+      {
+        "id": "cmdye5x6y000b2b41ebhw25xi",
+        "type": "Change of Cadre",
+        "employee": "Zubeda Mohammed Khamis",
+        "status": "Approved by Commission",
+        "updatedAt": "2025-08-05T10:24:23.231Z",
+        "href": "/dashboard/cadre-change"
+      },
+      {
+        "id": "cmdye0kuj00092b41kmfbhlh7",
+        "type": "Change of Cadre",
+        "employee": "Zubeda Mohammed Khamis",
+        "status": "Rejected by Commission - Request Concluded",
+        "updatedAt": "2025-08-05T10:22:09.334Z",
+        "href": "/dashboard/cadre-change"
+      }
+    ]
+  }
+}
+ GET /api/dashboard/metrics 200 in 257ms
+Login attempt for username: kmnyonge
+Login successful for user: kmnyonge
+ POST /api/auth/login 200 in 238ms
+=== TEST API CALLED ===
+ GET /api/notifications?userId=cmd06nnbn000le67wtg41s3su 200 in 33ms
+ GET /api/test 200 in 33ms
+=== Dashboard metrics API called ===
+Total employees: 174
+Pending confirmations: 0
+Pending promotions: 0
+Employees on LWOP: 2
+Pending terminations: 0
+Open complaints: 16
+Pending cadre changes: 23
+Pending retirements: 18
+Pending resignations: 17
+Pending service extensions: 13
+=== Dashboard metrics calculated === {
+  totalEmployees: 174,
+  pendingConfirmations: 12,
+  pendingPromotions: 8,
+  employeesOnLwop: 2,
+  pendingTerminations: 3,
+  openComplaints: 16,
+  pendingCadreChanges: 23,
+  pendingRetirements: 18,
+  pendingResignations: 17,
+  pendingServiceExtensions: 13
+}
+=== Recent activities count === 5
+=== Final API response === {
+  "success": true,
+  "data": {
+    "stats": {
+      "totalEmployees": 174,
+      "pendingConfirmations": 12,
+      "pendingPromotions": 8,
+      "employeesOnLwop": 2,
+      "pendingTerminations": 3,
+      "openComplaints": 16,
+      "pendingCadreChanges": 23,
+      "pendingRetirements": 18,
+      "pendingResignations": 17,
+      "pendingServiceExtensions": 13
+    },
+    "recentActivities": [
+      {
+        "id": "cmdyf42zy000h2b41v5humh4r",
+        "type": "Promotion",
+        "employee": "Mwalimu Hassan Khamis",
+        "status": "Request Received – Awaiting Commission Decision",
+        "updatedAt": "2025-08-05T11:10:01.454Z",
+        "href": "/dashboard/promotion"
+      },
+      {
+        "id": "cmdyepb9i000f2b418y9bolks",
+        "type": "Retirement",
+        "employee": "Zainab Hamad Ali",
+        "status": "Approved by Commission",
+        "updatedAt": "2025-08-05T10:42:34.168Z",
+        "href": "/dashboard/retirement"
+      },
+      {
+        "id": "cmdyeel5v000d2b41hjyrv61z",
+        "type": "Retirement",
+        "employee": "Zubeda Mohammed Khamis",
+        "status": "Approved by Commission",
+        "updatedAt": "2025-08-05T10:34:05.875Z",
+        "href": "/dashboard/retirement"
+      },
+      {
+        "id": "cmdye5x6y000b2b41ebhw25xi",
+        "type": "Change of Cadre",
+        "employee": "Zubeda Mohammed Khamis",
+        "status": "Approved by Commission",
+        "updatedAt": "2025-08-05T10:24:23.231Z",
+        "href": "/dashboard/cadre-change"
+      },
+      {
+        "id": "cmdye0kuj00092b41kmfbhlh7",
+        "type": "Change of Cadre",
+        "employee": "Zubeda Mohammed Khamis",
+        "status": "Rejected by Commission - Request Concluded",
+        "updatedAt": "2025-08-05T10:22:09.334Z",
+        "href": "/dashboard/cadre-change"
+      }
+    ]
+  }
+}
+ GET /api/dashboard/metrics 200 in 72ms
+ ○ Compiling /api/resignation ...
+ ✓ Compiled /api/resignation in 658ms (422 modules)
+Resignation API called with: {
+  userId: 'cmd06nnbn000le67wtg41s3su',
+  userRole: 'HRO',
+  userInstitutionId: 'cmd06nn7n0001e67w2h5rf86x'
+}
+Applying institution filter for role HRO with institutionId cmd06nn7n0001e67w2h5rf86x
+ GET /api/resignation?userId=cmd06nnbn000le67wtg41s3su&userRole=HRO&userInstitutionId=cmd06nn7n0001e67w2h5rf86x 200 in 754ms
+ ✓ Compiled /api/employees/search in 365ms (408 modules)
+Employee search API called with: { zanId: '1905770903', q: null }
+Found 1 employees matching search criteria
+ GET /api/employees/search?zanId=1905770903 200 in 473ms
+ ✓ Compiled /api/retirement in 267ms (411 modules)
+Retirement API called with: {
+  userId: 'cmd06nnbn000le67wtg41s3su',
+  userRole: 'HRO',
+  userInstitutionId: 'cmd06nn7n0001e67w2h5rf86x'
+}
+Applying institution filter for role HRO with institutionId cmd06nn7n0001e67w2h5rf86x
+ GET /api/retirement?userId=cmd06nnbn000le67wtg41s3su&userRole=HRO&userInstitutionId=cmd06nn7n0001e67w2h5rf86x 200 in 322ms
+ ○ Compiling /dashboard/retirement ...
+ ✓ Compiled /dashboard/retirement in 4.5s (1313 modules)
+ GET /dashboard/retirement 200 in 5159ms
+ ✓ Compiled in 726ms (569 modules)
+ ⚠ Blocked cross-origin request from csms.zanajira.go.tz. To allow this, configure "allowedDevOrigins" in next.config
+Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+ ✓ Compiled /api/notifications in 418ms (746 modules)
+ GET /api/notifications?userId=cmd06nnbn000le67wtg41s3su 200 in 493ms
+ GET /api/notifications?userId=cmd06nnbn000le67wtg41s3su 200 in 526ms
+ ○ Compiling / ...
+ ✓ Compiled / in 747ms (1014 modules)
+ GET / 200 in 994ms
+ ✓ Compiled /favicon.ico in 241ms (473 modules)
+ GET /favicon.ico 200 in 548ms
+ ✓ Compiled /_not-found in 294ms (1034 modules)
+ GET /robots.txt 404 in 449ms
+ GET /sitemap.xml 404 in 36ms
+ GET /config.json 404 in 48ms
+ GET / 200 in 74ms
+ GET /wp-json/wc/store/products/collection-data?calculate_attribute_counts[][taxonomy]=%252522%252529%252520union%252520all%252520select%2525201%25252Ctable%25255fname%252520from%252520information%25255fschema%25252etables%25253B%252500 404 in 66ms
+ GET / 200 in 80ms

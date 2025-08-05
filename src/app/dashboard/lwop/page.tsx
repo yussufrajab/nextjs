@@ -12,7 +12,7 @@ import { ROLES, EMPLOYEES } from '@/lib/constants';
 import React, { useState, useEffect } from 'react';
 import type { Employee, User, Role } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
-import { Loader2, Search, FileText, AlertTriangle, CheckSquare, Eye, Download } from 'lucide-react';
+import { Loader2, Search, FileText, AlertTriangle, CheckSquare, Eye, Download, RefreshCw } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { format, parseISO } from 'date-fns';
 import { Pagination } from '@/components/shared/pagination';
@@ -64,6 +64,7 @@ export default function LwopPage() {
   const [isFetchingEmployee, setIsFetchingEmployee] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -95,6 +96,26 @@ export default function LwopPage() {
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
 
   const isEmployeeOnProbation = employeeDetails?.status === 'On Probation';
+
+  // Helper function to shorten document names for better display
+  const getShortDocumentName = (fullPath: string): string => {
+    // Extract the original filename from the path
+    const fileName = fullPath.split('/').pop() || fullPath;
+    
+    // Remove timestamp and random string patterns
+    const cleanName = fileName
+      .replace(/^\d+_[a-zA-Z0-9]+_/, '') // Remove timestamp_randomString_ pattern
+      .replace(/^[a-zA-Z0-9]+_/, ''); // Remove any remaining prefix_
+    
+    // If name is still too long, truncate it
+    if (cleanName.length > 25) {
+      const extension = cleanName.split('.').pop();
+      const nameWithoutExt = cleanName.replace(/\.[^/.]+$/, '');
+      return `${nameWithoutExt.substring(0, 20)}...${extension ? '.' + extension : ''}`;
+    }
+    
+    return cleanName;
+  };
   
   // Calculate duration when dates change
   useEffect(() => {
@@ -117,11 +138,24 @@ export default function LwopPage() {
     }
   }, [startDate, endDate]);
   
-  const fetchRequests = async () => {
+  const fetchRequests = async (isRefresh = false) => {
     if (!user || !role) return;
-    setIsLoading(true);
+    if (isRefresh) {
+      setIsRefreshing(true);
+    } else {
+      setIsLoading(true);
+    }
     try {
-      const response = await fetch(`/api/lwop?userId=${user.id}&userRole=${role}&userInstitutionId=${user.institutionId || ''}`);
+      // Add cache-busting parameter and headers for refresh
+      const cacheBuster = isRefresh ? `&_t=${Date.now()}` : '';
+      const response = await fetch(`/api/lwop?userId=${user.id}&userRole=${role}&userInstitutionId=${user.institutionId || ''}${cacheBuster}`, {
+        method: 'GET',
+        headers: {
+          'Cache-Control': isRefresh ? 'no-cache, no-store, must-revalidate' : 'default',
+          'Pragma': isRefresh ? 'no-cache' : 'default',
+          'Expires': isRefresh ? '0' : 'default'
+        }
+      });
       if (!response.ok) throw new Error('Failed to fetch LWOP requests');
       const data = await response.json();
       console.log("[LWOP_FRONTEND] Data received from API:", data);
@@ -132,10 +166,17 @@ export default function LwopPage() {
         // Keep submittedBy as an object, don't overwrite it
       }));
       setPendingRequests(processedData);
+      if (isRefresh) {
+        toast({ title: "Refreshed", description: "LWOP requests have been updated.", duration: 2000 });
+      }
     } catch (error) {
       toast({ title: "Error", description: "Could not load LWOP requests.", variant: "destructive" });
     } finally {
-      setIsLoading(false);
+      if (isRefresh) {
+        setIsRefreshing(false);
+      } else {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -206,7 +247,10 @@ export default function LwopPage() {
   };
 
   const handleConfirmResubmit = async (request: LWOPRequest | null) => {
-    if (!request || !user) return;
+    if (!request || !user) {
+      toast({ title: "Error", description: "Request or user details are missing.", variant: "destructive" });
+      return;
+    }
 
     // Validation for corrected fields
     if (!correctedDuration) {
@@ -244,10 +288,35 @@ export default function LwopPage() {
         return;
     }
 
-    try {
-      // This is where you would handle the actual file upload to a storage service
-      // For now, we'll just update the status and reason
+    // Optimistic update to immediately hide the "Correct & Resubmit" button and show new status
+    const optimisticUpdate = pendingRequests.map(req => 
+      req.id === request.id 
+        ? { 
+            ...req, 
+            status: 'Pending HRMO/HHRMD Review',
+            reviewStage: 'initial',
+            rejectionReason: null,
+            duration: correctedDuration,
+            reason: correctedReason,
+            documents: [correctedLetterOfRequestKey, correctedEmployeeConsentLetterKey],
+            updatedAt: new Date().toISOString()
+          }
+        : req
+    );
+    setPendingRequests(optimisticUpdate);
 
+    // Show immediate success feedback
+    toast({ 
+      title: "Request Corrected & Resubmitted", 
+      description: `LWOP request for ${request.employee.name} has been corrected and resubmitted. Status: Pending HRMO/HHRMD Review`,
+      duration: 4000
+    });
+
+    // Close modal immediately for better UX
+    setIsCorrectionModalOpen(false);
+    setRequestToCorrect(null);
+
+    try {
       const response = await fetch(`/api/lwop`, {
         method: 'PATCH',
         headers: {
@@ -264,6 +333,7 @@ export default function LwopPage() {
             correctedEmployeeConsentLetterKey,
           ].filter(Boolean), // Filter out empty strings if no file is selected
           rejectionReason: null, // Clear rejection reason on resubmission
+          reviewedById: null // Reset reviewer to allow fresh review
         }),
       });
 
@@ -271,13 +341,12 @@ export default function LwopPage() {
         throw new Error('Failed to resubmit LWOP request');
       }
 
-      toast({ title: "Success", description: `LWOP request ${request.id} resubmitted.` });
-      setIsCorrectionModalOpen(false);
-      setRequestToCorrect(null);
-      fetchRequests(); // Refresh the list of requests
+      // Force refresh to get accurate server data
+      await fetchRequests();
     } catch (error) {
-      console.error("[RESUBMIT_LWOP]", error);
-      toast({ title: "Error", description: "Failed to resubmit LWOP request.", variant: "destructive" });
+      // Revert optimistic update on error and show error feedback
+      await fetchRequests();
+      toast({ title: "Update Failed", description: "Could not update the request.", variant: "destructive" });
     }
   };
 
@@ -359,6 +428,34 @@ export default function LwopPage() {
         reason,
     };
 
+    // Create optimistic new request to show immediately
+    const optimisticRequest: LWOPRequest = {
+      id: `temp-${Date.now()}`, // Temporary ID until server responds
+      employee: {
+        ...employeeDetails,
+        institution: { name: typeof employeeDetails.institution === 'object' ? employeeDetails.institution.name : employeeDetails.institution || 'N/A' }
+      },
+      submittedBy: { name: user.name },
+      status: 'Pending HRMO/HHRMD Review',
+      reviewStage: 'initial',
+      startDate,
+      endDate,
+      duration: durationStr,
+      reason,
+      documents: documentsList,
+      createdAt: new Date().toISOString()
+    };
+
+    // Immediately add optimistic request to show instant status
+    setPendingRequests(prev => [optimisticRequest, ...prev]);
+
+    // Show immediate success feedback
+    toast({ 
+      title: "LWOP Request Submitted", 
+      description: `Request for ${employeeDetails.name} submitted successfully. Status: Pending HRMO/HHRMD Review`,
+      duration: 4000
+    });
+
     try {
         const response = await fetch('/api/lwop', {
             method: 'POST',
@@ -367,8 +464,20 @@ export default function LwopPage() {
         });
         if (!response.ok) throw new Error('Failed to submit request');
         
-        await fetchRequests(); // Refresh list
-        toast({ title: "LWOP Request Submitted", description: `Request for ${employeeDetails.name} submitted successfully.` });
+        const result = await response.json();
+        
+        // Replace optimistic request with real server response
+        if (result.success && result.data) {
+          setPendingRequests(prev => prev.map(req => 
+            req.id === optimisticRequest.id ? result.data : req
+          ));
+        }
+        
+        // Force refresh to ensure data consistency
+        setTimeout(async () => {
+          await fetchRequests();
+        }, 1000);
+        
         setZanId('');
         setEmployeeDetails(null);
         setStartDate('');
@@ -378,13 +487,35 @@ export default function LwopPage() {
         setLetterOfRequestKey('');
         setEmployeeConsentLetterKey('');
     } catch(error) {
+        // Remove optimistic request on error
+        setPendingRequests(prev => prev.filter(req => req.id !== optimisticRequest.id));
         toast({ title: "Submission Failed", description: "Could not submit the LWOP request.", variant: "destructive" });
     } finally {
         setIsSubmitting(false);
     }
   };
   
-  const handleUpdateRequest = async (requestId: string, payload: any) => {
+  const handleUpdateRequest = async (requestId: string, payload: any, actionDescription?: string) => {
+      // Get request info for immediate feedback
+      const request = pendingRequests.find(req => req.id === requestId);
+      
+      // Optimistic update - immediately show new status
+      const optimisticUpdate = pendingRequests.map(req => 
+        req.id === requestId 
+          ? { ...req, ...payload, updatedAt: new Date().toISOString() }
+          : req
+      );
+      setPendingRequests(optimisticUpdate);
+
+      // Show immediate success feedback
+      if (actionDescription && request) {
+        toast({ 
+          title: "Status Updated", 
+          description: `${actionDescription} for ${request.employee.name}. Status: ${payload.status}`,
+          duration: 3000 
+        });
+      }
+
       try {
           const response = await fetch(`/api/lwop`, {
               method: 'PATCH',
@@ -392,9 +523,14 @@ export default function LwopPage() {
               body: JSON.stringify({ id: requestId, ...payload, reviewedById: user?.id })
           });
           if (!response.ok) throw new Error('Failed to update request');
+          
+          // Force immediate refresh to get accurate data from server
           await fetchRequests();
+          
           return true;
       } catch (error) {
+          // Revert optimistic update on error
+          await fetchRequests();
           toast({ title: "Update Failed", description: "Could not update the request.", variant: "destructive" });
           return false;
       }
@@ -412,11 +548,7 @@ export default function LwopPage() {
       // Both HRMO and HHRMD forward directly to Commission (parallel workflow)
       const payload = { status: "Request Received – Awaiting Commission Decision", reviewStage: 'commission_review' };
       
-      const success = await handleUpdateRequest(requestId, payload);
-      if (success) {
-        const roleName = role === ROLES.HRMO ? 'HRMO' : 'HHRMD';
-        toast({ title: "Request Forwarded", description: `Request for ${request.employee.name} approved by ${roleName} and forwarded to Commission.` });
-      }
+      await handleUpdateRequest(requestId, payload, "Request forwarded to Commission");
     }
   };
 
@@ -427,9 +559,8 @@ export default function LwopPage() {
         rejectionReason: rejectionReasonInput, 
         reviewStage: 'initial'
     };
-    const success = await handleUpdateRequest(currentRequestToAction.id, payload);
+    const success = await handleUpdateRequest(currentRequestToAction.id, payload, "Request rejected and returned to HRO");
     if (success) {
-      toast({ title: "Request Rejected", description: `Request for ${currentRequestToAction.employee.name} rejected.`, variant: 'destructive' });
       setIsRejectionModalOpen(false);
       setCurrentRequestToAction(null);
       setRejectionReasonInput('');
@@ -437,12 +568,16 @@ export default function LwopPage() {
   };
 
   const handleCommissionDecision = async (requestId: string, decision: 'approved' | 'rejected') => {
+    const request = pendingRequests.find(req => req.id === requestId);
+    if (!request) return;
+
     const finalStatus = decision === 'approved' ? "Approved by Commission" : "Rejected by Commission - Request Concluded";
     const payload = { status: finalStatus, reviewStage: 'completed' };
-    const success = await handleUpdateRequest(requestId, payload);
-    if (success) {
-        toast({ title: `Commission Decision: ${decision === 'approved' ? 'Approved' : 'Rejected'}`, description: `Request ${requestId} has been updated.` });
-    }
+    const actionDescription = decision === 'approved' 
+      ? "LWOP approved by Commission"
+      : "LWOP rejected by Commission";
+    
+    await handleUpdateRequest(requestId, payload, actionDescription);
   };
 
   const paginatedRequests = pendingRequests.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -556,8 +691,22 @@ export default function LwopPage() {
        {(role === ROLES.HHRMD || role === ROLES.HRMO || role === ROLES.HRO) && (
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle>Review LWOP Requests</CardTitle>
-            <CardDescription>Review, approve, or reject pending LWOP requests.</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Review LWOP Requests</CardTitle>
+                <CardDescription>Review, approve, or reject pending LWOP requests.</CardDescription>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => fetchRequests(true)}
+                disabled={isRefreshing}
+                className="flex items-center gap-2"
+              >
+                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -569,7 +718,18 @@ export default function LwopPage() {
                   <p className="text-sm text-muted-foreground">Duration: {request.duration}</p>
                   <p className="text-sm text-muted-foreground">Reason: {request.reason}</p>
                   <p className="text-sm text-muted-foreground">Submitted: {request.createdAt ? format(parseISO(request.createdAt), 'PPP') : 'N/A'} by {request.submittedBy?.name || 'N/A'}</p>
-                  <p className="text-sm"><span className="font-medium">Status:</span> <span className="text-primary">{request.status}</span></p>
+                  <div className="flex items-center space-x-2">
+                    <p className="text-sm"><span className="font-medium">Status:</span></p>
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                      request.status.includes('Approved') ? 'bg-green-100 text-green-800' :
+                      request.status.includes('Rejected') ? 'bg-red-100 text-red-800' :
+                      request.status.includes('Awaiting Commission') ? 'bg-blue-100 text-blue-800' :
+                      request.status.includes('Correction') ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {request.status}
+                    </span>
+                  </div>
                   {request.rejectionReason && <p className="text-sm text-destructive"><span className="font-medium">Rejection Reason:</span> {request.rejectionReason}</p>}
                   <div className="mt-3 pt-3 border-t flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                     <Button size="sm" variant="outline" onClick={() => { setSelectedRequest(request); setIsDetailsModalOpen(true); }}>View Details</Button>
@@ -609,7 +769,7 @@ export default function LwopPage() {
 
       {selectedRequest && (
         <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
-          <DialogContent className="sm:max-w-lg">
+          <DialogContent className="sm:max-w-3xl">
             <DialogHeader>
               <DialogTitle>Request Details: {selectedRequest.id}</DialogTitle>
               <DialogDescription>
@@ -699,7 +859,7 @@ export default function LwopPage() {
                     <div className="mt-2 space-y-2">
                     {selectedRequest.documents && selectedRequest.documents.length > 0 ? (
                         selectedRequest.documents.map((doc, index) => {
-                            const fileName = doc.split('/').pop() || doc;
+                            const shortName = getShortDocumentName(doc);
                             const isLetterOfRequest = index === 0;
                             const documentType = isLetterOfRequest ? 'Letter of Request' : 'Employee Consent Letter';
                             
@@ -708,19 +868,19 @@ export default function LwopPage() {
                                     <div className="flex items-center gap-2 flex-1 min-w-0">
                                         <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                                         <div className="min-w-0">
-                                            <p className="font-medium text-sm text-foreground truncate" title={fileName}>
+                                            <p className="font-medium text-sm text-foreground truncate" title={doc}>
                                                 {documentType}
                                             </p>
-                                            <p className="text-xs text-muted-foreground truncate" title={fileName}>
-                                                {fileName}
+                                            <p className="text-xs text-muted-foreground truncate" title={doc}>
+                                                {shortName}
                                             </p>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-1">
+                                    <div className="flex items-center gap-1 flex-shrink-0">
                                         <Button 
-                                            variant="ghost" 
+                                            variant="outline" 
                                             size="sm" 
-                                            className="h-8 px-2"
+                                            className="h-8 px-2 text-xs"
                                             onClick={() => {
                                                 setPreviewFileKey(doc);
                                                 setIsPreviewModalOpen(true);
@@ -730,9 +890,9 @@ export default function LwopPage() {
                                             View
                                         </Button>
                                         <Button 
-                                            variant="ghost" 
+                                            variant="outline" 
                                             size="sm" 
-                                            className="h-8 px-2"
+                                            className="h-8 px-2 text-xs"
                                             onClick={() => {
                                                 // Create a temporary link for download with auth headers
                                                 const token = localStorage.getItem('accessToken');
@@ -745,7 +905,7 @@ export default function LwopPage() {
                                                         const url = window.URL.createObjectURL(blob);
                                                         const a = document.createElement('a');
                                                         a.href = url;
-                                                        a.download = doc.split('/').pop() || 'download';
+                                                        a.download = shortName;
                                                         document.body.appendChild(a);
                                                         a.click();
                                                         window.URL.revokeObjectURL(url);
@@ -778,7 +938,7 @@ export default function LwopPage() {
 
       {currentRequestToAction && (
         <Dialog open={isRejectionModalOpen} onOpenChange={setIsRejectionModalOpen}>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-lg">
                 <DialogHeader>
                     <DialogTitle>Reject LWOP Request: {currentRequestToAction.id}</DialogTitle>
                     <DialogDescription>
@@ -803,7 +963,7 @@ export default function LwopPage() {
 
     {/* Correction Modal */}
     <Dialog open={isCorrectionModalOpen} onOpenChange={setIsCorrectionModalOpen}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Correct and Resubmit LWOP Request</DialogTitle>
           <DialogDescription>

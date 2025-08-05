@@ -17,7 +17,7 @@ import { ROLES } from '@/lib/constants';
 import React, { useState, useEffect, useMemo } from 'react';
 import type { Employee, User, Role } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
-import { Loader2, Search, FileText, Award, ChevronsUpDown, ListFilter, Star, AlertTriangle } from 'lucide-react';
+import { Loader2, Search, FileText, Award, ChevronsUpDown, ListFilter, Star, AlertTriangle, RefreshCw } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { format, parseISO, differenceInYears } from 'date-fns';
 
@@ -63,6 +63,7 @@ export default function PromotionPage() {
   const [isFetchingEmployee, setIsFetchingEmployee] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const [promotionRequestType, setPromotionRequestType] = useState<'experience' | 'education' | ''>('');
   const [proposedCadre, setProposedCadre] = useState('');
@@ -99,6 +100,26 @@ export default function PromotionPage() {
     setIsPreviewModalOpen(true);
   };
 
+  // Helper function to shorten document names for better display
+  const getShortDocumentName = (fullPath: string): string => {
+    // Extract the original filename from the path
+    const fileName = fullPath.split('/').pop() || fullPath;
+    
+    // Remove timestamp and random string patterns
+    const cleanName = fileName
+      .replace(/^\d+_[a-zA-Z0-9]+_/, '') // Remove timestamp_randomString_ pattern
+      .replace(/^[a-zA-Z0-9]+_/, ''); // Remove any remaining prefix_
+    
+    // If name is still too long, truncate it
+    if (cleanName.length > 25) {
+      const extension = cleanName.split('.').pop();
+      const nameWithoutExt = cleanName.replace(/\.[^/.]+$/, '');
+      return `${nameWithoutExt.substring(0, 20)}...${extension ? '.' + extension : ''}`;
+    }
+    
+    return cleanName;
+  };
+
 
 
 
@@ -111,33 +132,45 @@ export default function PromotionPage() {
   const [isCommissionRejection, setIsCommissionRejection] = useState(false);
 
   const [eligibilityError, setEligibilityError] = useState<string | null>(null);
+  const [isCorrectionModalOpen, setIsCorrectionModalOpen] = useState(false);
+  const [requestToCorrect, setRequestToCorrect] = useState<PromotionRequest | null>(null);
+  const [correctedProposedCadre, setCorrectedProposedCadre] = useState('');
 
 
 
-  const handleResubmitClick = (request: PromotionRequest) => {
-    setSelectedRequest(request);
-    setIsEditingExistingRequest(true);
-    setZanId(request.employee.zanId || '');
-    setEmployeeDetails(request.employee as Employee);
-    setPromotionRequestType(request.promotionType.toLowerCase() as 'experience' | 'education' | '');
-    setProposedCadre(request.proposedCadre);
-    setStudiedOutsideCountry(request.studiedOutsideCountry || false);
-    // Note: File inputs cannot be pre-filled for security reasons.
-    // The user will need to re-upload documents if changes are required.
-  };
 
-  const fetchRequests = async () => {
+  const fetchRequests = async (isRefresh = false) => {
     if (!user || !role) return;
-    setIsLoading(true);
+    if (isRefresh) {
+      setIsRefreshing(true);
+    } else {
+      setIsLoading(true);
+    }
     try {
-        const response = await fetch(`/api/promotions?userId=${user.id}&userRole=${role}&userInstitutionId=${user.institutionId || ''}`);
+        // Add cache-busting parameter and headers for refresh
+        const cacheBuster = isRefresh ? `&_t=${Date.now()}` : '';
+        const response = await fetch(`/api/promotions?userId=${user.id}&userRole=${role}&userInstitutionId=${user.institutionId || ''}${cacheBuster}`, {
+          method: 'GET',
+          headers: {
+            'Cache-Control': isRefresh ? 'no-cache, no-store, must-revalidate' : 'default',
+            'Pragma': isRefresh ? 'no-cache' : 'default',
+            'Expires': isRefresh ? '0' : 'default'
+          }
+        });
         if (!response.ok) throw new Error('Failed to fetch promotion requests');
         const result = await response.json();
         setPendingRequests(result.data || []);
+        if (isRefresh) {
+          toast({ title: "Refreshed", description: "Promotion requests have been updated.", duration: 2000 });
+        }
     } catch (error) {
         toast({ title: "Error", description: "Could not load promotion requests.", variant: "destructive" });
     } finally {
-        setIsLoading(false);
+        if (isRefresh) {
+          setIsRefreshing(false);
+        } else {
+          setIsLoading(false);
+        }
     }
   };
 
@@ -260,6 +293,35 @@ export default function PromotionPage() {
       studiedOutsideCountry: promotionRequestType === 'education' ? studiedOutsideCountry : undefined,
       rejectionReason: null, // Clear rejection reason on resubmission
     };
+
+    if (!isEditingExistingRequest) {
+      // Create optimistic new request to show immediately
+      const optimisticRequest: PromotionRequest = {
+        id: `temp-${Date.now()}`, // Temporary ID until server responds
+        employee: {
+          ...employeeDetails,
+          institution: { name: typeof employeeDetails.institution === 'object' ? employeeDetails.institution.name : employeeDetails.institution || 'N/A' }
+        },
+        submittedBy: { name: user.name },
+        status: 'Pending HRMO/HHRMD Review',
+        reviewStage: 'initial',
+        proposedCadre,
+        promotionType: promotionRequestType === 'experience' ? 'Experience' : 'EducationAdvancement',
+        documents: documentsList,
+        studiedOutsideCountry: promotionRequestType === 'education' ? studiedOutsideCountry : undefined,
+        createdAt: new Date().toISOString()
+      };
+
+      // Immediately add optimistic request to show instant status
+      setPendingRequests(prev => [optimisticRequest, ...prev]);
+
+      // Show immediate success feedback
+      toast({ 
+        title: "Promotion Request Submitted", 
+        description: `Request for ${employeeDetails.name} submitted successfully. Status: Pending HRMO/HHRMD Review`,
+        duration: 4000
+      });
+    }
     
     try {
         const response = await fetch(url, {
@@ -269,34 +331,81 @@ export default function PromotionPage() {
         });
         if (!response.ok) throw new Error('Failed to submit/update request');
         
-        await fetchRequests(); // Refresh list
-        toast({ title: "Promotion Request " + (isEditingExistingRequest ? "Updated" : "Submitted"), description: `Request for ${employeeDetails.name} ` + (isEditingExistingRequest ? "updated" : "submitted") + ` successfully.` });
+        const result = await response.json();
+        
+        if (!isEditingExistingRequest) {
+          // Replace optimistic request with real server response
+          const optimisticId = `temp-${Date.now()}`;
+          if (result.success && result.data) {
+            setPendingRequests(prev => prev.map(req => 
+              req.id.startsWith('temp-') ? result.data : req
+            ));
+          }
+          
+          // Force refresh to ensure data consistency
+          setTimeout(async () => {
+            await fetchRequests();
+          }, 1000);
+        } else {
+          await fetchRequests(); // Refresh list for edits
+          toast({ title: "Promotion Request Updated", description: `Request for ${employeeDetails.name} updated successfully.` });
+        }
+        
         setZanId('');
         setEmployeeDetails(null);
         resetFormFields();
         setIsEditingExistingRequest(false);
         setSelectedRequest(null);
     } catch(error) {
+        if (!isEditingExistingRequest) {
+          // Remove optimistic request on error
+          setPendingRequests(prev => prev.filter(req => !req.id.startsWith('temp-')));
+        }
         toast({ title: "Submission Failed", description: "Could not submit/update the promotion request.", variant: "destructive" });
     } finally {
         setIsSubmitting(false);
     }
   };
   
-  const handleUpdateRequest = async (requestId: string, payload: any) => {
-      try {
-          const response = await fetch(`/api/promotions`, {
-              method: 'PATCH',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ id: requestId, ...payload, reviewedById: user?.id })
-          });
-          if (!response.ok) throw new Error('Failed to update request');
-          await fetchRequests();
-          return true;
-      } catch (error) {
-          toast({ title: "Update Failed", description: "Could not update the request.", variant: "destructive" });
-          return false;
-      }
+  const handleUpdateRequest = async (requestId: string, payload: any, actionDescription?: string) => {
+    // Get request info for immediate feedback
+    const request = pendingRequests.find(req => req.id === requestId);
+    
+    // Optimistic update - immediately show new status
+    const optimisticUpdate = pendingRequests.map(req => 
+      req.id === requestId 
+        ? { ...req, ...payload, updatedAt: new Date().toISOString() }
+        : req
+    );
+    setPendingRequests(optimisticUpdate);
+
+    // Show immediate success feedback
+    if (actionDescription && request) {
+      toast({ 
+        title: "Status Updated", 
+        description: `${actionDescription} for ${request.employee.name}. Status: ${payload.status}`,
+        duration: 3000 
+      });
+    }
+
+    try {
+        const response = await fetch(`/api/promotions`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: requestId, ...payload, reviewedById: user?.id })
+        });
+        if (!response.ok) throw new Error('Failed to update request');
+        
+        // Force immediate refresh to get accurate data from server
+        await fetchRequests();
+        
+        return true;
+    } catch (error) {
+        // Revert optimistic update on error
+        await fetchRequests();
+        toast({ title: "Update Failed", description: "Could not update the request.", variant: "destructive" });
+        return false;
+    }
   };
 
   const isSubmitDisabled = () => {
@@ -361,12 +470,9 @@ export default function PromotionPage() {
     } else if (action === 'forward') {
       // Both HRMO and HHRMD forward directly to Commission (parallel workflow)
       const payload = { status: "Request Received – Awaiting Commission Decision", reviewStage: 'commission_review' };
+      const roleName = role === ROLES.HRMO ? 'HRMO' : 'HHRMD';
       
-      const success = await handleUpdateRequest(requestId, payload);
-      if (success) {
-        const roleName = role === ROLES.HRMO ? 'HRMO' : 'HHRMD';
-        toast({ title: "Request Forwarded", description: `Request for ${request.employee.name} approved by ${roleName} and forwarded to Commission.` });
-      }
+      await handleUpdateRequest(requestId, payload, `Request approved by ${roleName} and forwarded to Commission`);
     }
   };
 
@@ -374,6 +480,7 @@ export default function PromotionPage() {
     if (!currentRequestToAction || !rejectionReasonInput.trim() || !user) return;
     
     let payload;
+    let actionDescription;
     if (isCommissionRejection) {
       // Commission rejection - final, no corrections possible
       payload = { 
@@ -381,6 +488,7 @@ export default function PromotionPage() {
         reviewStage: 'completed',
         commissionDecisionReason: rejectionReasonInput
       };
+      actionDescription = "Promotion request rejected by Commission";
     } else {
       // HRMO/HHRMD rejection - allows HRO correction
       payload = { 
@@ -388,15 +496,11 @@ export default function PromotionPage() {
         rejectionReason: rejectionReasonInput, 
         reviewStage: 'initial'
       };
+      actionDescription = "Request rejected and returned to HRO";
     }
     
-    const success = await handleUpdateRequest(currentRequestToAction.id, payload);
+    const success = await handleUpdateRequest(currentRequestToAction.id, payload, actionDescription);
     if (success) {
-      const title = isCommissionRejection ? "Commission Decision: Rejected" : "Request Rejected";
-      const description = isCommissionRejection 
-        ? `Promotion request for ${currentRequestToAction.employee.name} has been rejected by the Commission.`
-        : `Request for ${currentRequestToAction.employee.name} rejected and returned for correction.`;
-      toast({ title, description, variant: 'destructive' });
       setIsRejectionModalOpen(false);
       setCurrentRequestToAction(null);
       setRejectionReasonInput('');
@@ -429,13 +533,122 @@ export default function PromotionPage() {
         reviewStage: 'completed',
         commissionDecisionReason: reason
       };
-      const success = await handleUpdateRequest(requestId, payload);
-      if (success) {
-        const title = `Commission Decision: Approved`;
-        const description = `Promotion approved. Employee ${request?.employee.name} rank updated to "${request?.proposedCadre}".`;
-        toast({ title, description });
+      const actionDescription = `Promotion approved by Commission. Employee ${request?.employee.name} rank updated to "${request?.proposedCadre}".`;
+      
+      await handleUpdateRequest(requestId, payload, actionDescription);
+    }
+  };
+
+  const handleCorrection = (request: PromotionRequest) => {
+    setRequestToCorrect(request);
+    setZanId(request.employee.zanId || '');
+    setEmployeeDetails(request.employee as Employee);
+    setPromotionRequestType(request.promotionType.toLowerCase() as 'experience' | 'education' | '');
+    setCorrectedProposedCadre(request.proposedCadre);
+    setStudiedOutsideCountry(request.studiedOutsideCountry || false);
+    
+    // Clear file inputs - they need to be re-uploaded
+    setPerformanceAppraisalFileY1('');
+    setPerformanceAppraisalFileY2('');
+    setPerformanceAppraisalFileY3('');
+    setCscPromotionFormFile('');
+    setCertificateFile('');
+    setTcuFormFile('');
+    setLetterOfRequestFile('');
+    
+    setIsCorrectionModalOpen(true);
+  };
+
+  const handleConfirmResubmit = async (request: PromotionRequest | null) => {
+    if (!request || !user) {
+      toast({ title: "Error", description: "Request or user details are missing.", variant: "destructive" });
+      return;
+    }
+
+    if (!correctedProposedCadre || letterOfRequestFile === '') {
+      toast({ title: "Validation Error", description: "Please fill required fields and upload documents.", variant: "destructive" });
+      return;
+    }
+
+    // Validate based on promotion type
+    if (promotionRequestType === 'experience') {
+      if (performanceAppraisalFileY1 === '' || performanceAppraisalFileY2 === '' || performanceAppraisalFileY3 === '' || cscPromotionFormFile === '') {
+        toast({ title: "Validation Error", description: "Please upload all required performance appraisal documents.", variant: "destructive" });
+        return;
+      }
+    } else if (promotionRequestType === 'education') {
+      if (certificateFile === '' || (studiedOutsideCountry && tcuFormFile === '')) {
+        toast({ title: "Validation Error", description: "Please upload certificate and TCU form if applicable.", variant: "destructive" });
+        return;
       }
     }
+
+    let documentsList: string[] = [letterOfRequestFile];
+    if (promotionRequestType === 'experience') {
+      documentsList.push(performanceAppraisalFileY1, performanceAppraisalFileY2, performanceAppraisalFileY3, cscPromotionFormFile);
+    } else if (promotionRequestType === 'education') {
+      documentsList.push(certificateFile);
+      if (studiedOutsideCountry && tcuFormFile) documentsList.push(tcuFormFile);
+    }
+
+    // Optimistic update to immediately hide the "Correct & Resubmit" button and show new status
+    const optimisticUpdate = pendingRequests.map(req => 
+      req.id === request.id 
+        ? { 
+            ...req, 
+            status: 'Pending HRMO/HHRMD Review',
+            reviewStage: 'initial',
+            proposedCadre: correctedProposedCadre,
+            rejectionReason: null,
+            updatedAt: new Date().toISOString()
+          }
+        : req
+    );
+    setPendingRequests(optimisticUpdate);
+
+    // Show immediate success feedback
+    toast({ 
+      title: "Request Corrected & Resubmitted", 
+      description: `Promotion request for ${request.employee.name} has been corrected and resubmitted. Status: Pending HRMO/HHRMD Review`,
+      duration: 4000
+    });
+
+    // Close modal immediately for better UX
+    setIsCorrectionModalOpen(false);
+    setRequestToCorrect(null);
+
+    try {
+      const response = await fetch(`/api/promotions`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: request.id,
+          status: 'Pending HRMO/HHRMD Review',
+          reviewStage: 'initial',
+          proposedCadre: correctedProposedCadre,
+          promotionType: promotionRequestType === 'experience' ? 'Experience' : 'EducationAdvancement',
+          documents: documentsList,
+          studiedOutsideCountry: promotionRequestType === 'education' ? studiedOutsideCountry : undefined,
+          rejectionReason: null,
+          reviewedById: user.id // Reset reviewer to allow fresh review
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to update request');
+
+      // Force refresh to get accurate server data
+      await fetchRequests();
+    } catch (error) {
+      // Revert optimistic update on error and show error feedback
+      await fetchRequests();
+      toast({ title: "Update Failed", description: "Could not update the request.", variant: "destructive" });
+    }
+
+    // Reset form
+    setZanId('');
+    setEmployeeDetails(null);
+    resetFormFields();
+    setCorrectedProposedCadre('');
   };
 
   return (
@@ -612,8 +825,22 @@ export default function PromotionPage() {
 
       <Card className="mb-6 shadow-lg">
         <CardHeader>
-          <CardTitle>Pending Promotion Requests</CardTitle>
-          <CardDescription>{pendingRequests.length} request(s) found.</CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Pending Promotion Requests</CardTitle>
+              <CardDescription>{pendingRequests.length} request(s) found.</CardDescription>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => fetchRequests(true)}
+              disabled={isRefreshing}
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -647,7 +874,9 @@ export default function PromotionPage() {
                   {(role === ROLES.HRO && 
                     (request.status === 'Rejected by HRMO - Awaiting HRO Correction' || 
                      request.status === 'Rejected by HHRMD - Awaiting HRO Correction')) && (
-                    <Button size="sm" onClick={() => handleResubmitClick(request)}>Resubmit</Button>
+                    <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white" onClick={() => handleCorrection(request)}>
+                      Correct & Resubmit
+                    </Button>
                   )}
                 </div>
               </div>
@@ -667,7 +896,7 @@ export default function PromotionPage() {
 
       {selectedRequest && (
         <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
-          <DialogContent className="sm:max-w-lg">
+          <DialogContent className="sm:max-w-3xl">
             <DialogHeader>
               <DialogTitle>Request Details: {selectedRequest.id}</DialogTitle>
               <DialogDescription>
@@ -755,17 +984,60 @@ export default function PromotionPage() {
                     <Label className="font-semibold">Attached Documents</Label>
                     <div className="mt-2 space-y-2">
                     {selectedRequest.documents && selectedRequest.documents.length > 0 ? (
-                        selectedRequest.documents.map((doc, index) => (
+                        selectedRequest.documents.map((doc, index) => {
+                          const shortName = getShortDocumentName(doc);
+                          return (
                             <div key={index} className="flex items-center justify-between p-2 rounded-md border bg-secondary/50 text-sm">
                                 <div className="flex items-center gap-2">
                                     <FileText className="h-4 w-4 text-muted-foreground" />
-                                    <span className="font-medium text-foreground truncate" title={doc}>{doc}</span>
+                                    <span className="font-medium text-foreground" title={doc}>{shortName}</span>
                                 </div>
-                                <Button variant="link" size="sm" className="h-auto p-0 flex-shrink-0" onClick={() => handlePreviewFile(doc)}>
-                                    Preview
-                                </Button>
+                                <div className="flex gap-1 flex-shrink-0">
+                                  <Button variant="outline" size="sm" className="h-8 px-2 text-xs" onClick={() => handlePreviewFile(doc)}>
+                                      Preview
+                                  </Button>
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    className="h-8 px-2 text-xs"
+                                    onClick={async () => {
+                                      try {
+                                        const response = await fetch(`/api/files/download/${doc}`, {
+                                          credentials: 'include'
+                                        });
+                                        if (response.ok) {
+                                          const blob = await response.blob();
+                                          const url = window.URL.createObjectURL(blob);
+                                          const a = document.createElement('a');
+                                          a.href = url;
+                                          a.download = shortName;
+                                          document.body.appendChild(a);
+                                          a.click();
+                                          window.URL.revokeObjectURL(url);
+                                          document.body.removeChild(a);
+                                        } else {
+                                          toast({
+                                            title: 'Download Failed',
+                                            description: 'Could not download the file. Please try again.',
+                                            variant: 'destructive'
+                                          });
+                                        }
+                                      } catch (error) {
+                                        console.error('Download failed:', error);
+                                        toast({
+                                          title: 'Download Failed',
+                                          description: 'Could not download the file. Please try again.',
+                                          variant: 'destructive'
+                                        });
+                                      }
+                                    }}
+                                  >
+                                    Download
+                                  </Button>
+                                </div>
                             </div>
-                        ))
+                          );
+                        })
                     ) : (
                         <p className="text-muted-foreground text-sm">No documents were attached to this request.</p>
                     )}
@@ -789,7 +1061,7 @@ export default function PromotionPage() {
               setIsCommissionRejection(false);
             }
           }}>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-lg">
                 <DialogHeader>
                     <DialogTitle>
                       {isCommissionRejection ? 'Commission Decision: Rejection' : `Reject Promotion Request: ${currentRequestToAction.id}`}
@@ -818,6 +1090,182 @@ export default function PromotionPage() {
                     </Button>
                 </DialogFooter>
             </DialogContent>
+        </Dialog>
+      )}
+
+      {requestToCorrect && (
+        <Dialog open={isCorrectionModalOpen} onOpenChange={setIsCorrectionModalOpen}>
+          <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Correct & Resubmit Promotion Request</DialogTitle>
+              <DialogDescription>
+                Address the rejection reasons and update the promotion request for <strong>{requestToCorrect.employee.name}</strong>. 
+                Make necessary corrections and upload updated documents before resubmitting for review.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-6 py-4">
+              {requestToCorrect.rejectionReason && (
+                <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-md">
+                  <h4 className="font-semibold text-destructive mb-2">Rejection Reason:</h4>
+                  <p className="text-sm text-destructive">{requestToCorrect.rejectionReason}</p>
+                </div>
+              )}
+              
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="correctedProposedCadre">Proposed New Grade</Label>
+                  <Input 
+                    id="correctedProposedCadre" 
+                    placeholder="e.g., Senior Officer Grade I" 
+                    value={correctedProposedCadre} 
+                    onChange={(e) => setCorrectedProposedCadre(e.target.value)} 
+                  />
+                </div>
+
+                {promotionRequestType === 'experience' && (
+                  <>
+                    <div>
+                      <Label className="flex items-center mb-2">
+                        <Star className="mr-2 h-4 w-4 text-primary" />
+                        Upload Performance Appraisal Form (Year 1)
+                      </Label>
+                      <FileUpload
+                        onChange={setPerformanceAppraisalFileY1}
+                        folder="promotion/performance-appraisals"
+                        accept=".pdf"
+                        maxSize={2}
+                      />
+                    </div>
+                    <div>
+                      <Label className="flex items-center mb-2">
+                        <Star className="mr-2 h-4 w-4 text-primary" />
+                        Upload Performance Appraisal Form (Year 2)
+                      </Label>
+                      <FileUpload
+                        onChange={setPerformanceAppraisalFileY2}
+                        folder="promotion/performance-appraisals"
+                        accept=".pdf"
+                        maxSize={2}
+                      />
+                    </div>
+                    <div>
+                      <Label className="flex items-center mb-2">
+                        <Star className="mr-2 h-4 w-4 text-primary" />
+                        Upload Performance Appraisal Form (Year 3)
+                      </Label>
+                      <FileUpload
+                        onChange={setPerformanceAppraisalFileY3}
+                        folder="promotion/performance-appraisals"
+                        accept=".pdf"
+                        maxSize={2}
+                      />
+                    </div>
+                    <div>
+                      <Label className="flex items-center mb-2">
+                        <FileText className="mr-2 h-4 w-4 text-primary" />
+                        Upload Civil Service Commission Promotion Form
+                      </Label>
+                      <FileUpload
+                        onChange={setCscPromotionFormFile}
+                        folder="promotion/csc-forms"
+                        accept=".pdf"
+                        maxSize={2}
+                      />
+                    </div>
+                  </>
+                )}
+
+                {promotionRequestType === 'education' && (
+                  <>
+                    <div>
+                      <Label className="flex items-center mb-2">
+                        <Award className="mr-2 h-4 w-4 text-primary" />
+                        Upload Academic Certificate
+                      </Label>
+                      <FileUpload
+                        onChange={setCertificateFile}
+                        folder="promotion/certificates"
+                        accept=".pdf"
+                        maxSize={2}
+                      />
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="correctedStudiedOutside" 
+                        checked={studiedOutsideCountry} 
+                        onCheckedChange={(checked) => setStudiedOutsideCountry(checked as boolean)} 
+                      />
+                      <Label htmlFor="correctedStudiedOutside" className="text-sm font-medium">
+                        Employee studied outside the country? (Requires TCU Form)
+                      </Label>
+                    </div>
+                    {studiedOutsideCountry && (
+                      <div>
+                        <Label className="flex items-center mb-2">
+                          <ChevronsUpDown className="mr-2 h-4 w-4 text-primary" />
+                          Upload TCU Form
+                        </Label>
+                        <FileUpload
+                          onChange={setTcuFormFile}
+                          folder="promotion/tcu-forms"
+                          accept=".pdf"
+                          maxSize={2}
+                        />
+                      </div>
+                    )}
+                  </>
+                )}
+
+                <div>
+                  <Label className="flex items-center mb-2">
+                    <FileText className="mr-2 h-4 w-4 text-primary" />
+                    Upload Letter of Request
+                  </Label>
+                  <FileUpload
+                    onChange={setLetterOfRequestFile}
+                    folder="promotion/letters"
+                    accept=".pdf"
+                    maxSize={2}
+                  />
+                </div>
+              </div>
+            </div>
+            <DialogFooter className="flex flex-col sm:flex-row gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => { 
+                  setIsCorrectionModalOpen(false); 
+                  setRequestToCorrect(null);
+                  setZanId('');
+                  setEmployeeDetails(null);
+                  resetFormFields();
+                  setCorrectedProposedCadre('');
+                }}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={() => handleConfirmResubmit(requestToCorrect)}
+                disabled={
+                  !correctedProposedCadre || 
+                  letterOfRequestFile === '' ||
+                  (promotionRequestType === 'experience' && (
+                    performanceAppraisalFileY1 === '' || 
+                    performanceAppraisalFileY2 === '' || 
+                    performanceAppraisalFileY3 === '' || 
+                    cscPromotionFormFile === ''
+                  )) ||
+                  (promotionRequestType === 'education' && (
+                    certificateFile === '' || 
+                    (studiedOutsideCountry && tcuFormFile === '')
+                  ))
+                }
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                Resubmit Corrected Request
+              </Button>
+            </DialogFooter>
+          </DialogContent>
         </Dialog>
       )}
 

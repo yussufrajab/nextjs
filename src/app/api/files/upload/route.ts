@@ -1,34 +1,68 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { uploadFile, generateObjectKey } from '@/lib/minio';
 
 export async function POST(request: NextRequest) {
   try {
     // Get the multipart form data
     const formData = await request.formData();
     
-    // Get authorization header
-    const authHeader = request.headers.get('authorization');
+    // Get the file from form data
+    const file = formData.get('file') as File;
+    const folder = formData.get('folder') as string || 'documents';
     
-    // Forward the request to the Spring Boot backend
-    const backendResponse = await fetch(
-      `http://localhost:8080/api/files/upload`,
-      {
-        method: 'POST',
-        headers: {
-          ...(authHeader ? { 'Authorization': authHeader } : {})
-        },
-        body: formData
+    if (!file) {
+      return NextResponse.json(
+        { success: false, message: 'No file provided' },
+        { status: 400 }
+      );
+    }
+
+    // Validate file type - only PDF files allowed
+    if (file.type !== 'application/pdf') {
+      return NextResponse.json(
+        { success: false, message: 'Only PDF files are allowed' },
+        { status: 400 }
+      );
+    }
+
+    // Validate file size (max 2MB)
+    const maxSize = 2 * 1024 * 1024; // 2MB
+    if (file.size > maxSize) {
+      return NextResponse.json(
+        { success: false, message: 'File size exceeds 2MB limit' },
+        { status: 400 }
+      );
+    }
+
+    // Generate unique object key
+    const objectKey = generateObjectKey(folder, file.name);
+    
+    // Convert file to buffer
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    
+    // Upload to MinIO
+    const uploadResult = await uploadFile(
+      buffer,
+      objectKey,
+      file.type || 'application/octet-stream'
+    );
+
+    return NextResponse.json({
+      success: true,
+      message: 'File uploaded successfully',
+      data: {
+        objectKey: uploadResult.objectKey,
+        originalName: file.name,
+        size: file.size,
+        contentType: file.type,
+        etag: uploadResult.etag,
+        bucketName: uploadResult.bucketName,
       }
-    );
-
-    const responseData = await backendResponse.json();
-
-    return NextResponse.json(
-      responseData,
-      { status: backendResponse.status }
-    );
+    });
 
   } catch (error) {
-    console.error('File upload proxy error:', error);
+    console.error('File upload error:', error);
     return NextResponse.json(
       { success: false, message: 'Internal server error' },
       { status: 500 }

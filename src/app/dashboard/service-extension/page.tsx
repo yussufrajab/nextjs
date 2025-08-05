@@ -11,7 +11,7 @@ import { ROLES, EMPLOYEES } from '@/lib/constants';
 import React, { useState, useEffect } from 'react';
 import type { Employee, User, Role } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
-import { Loader2, Search, FileText, CalendarDays, CheckSquare } from 'lucide-react';
+import { Loader2, Search, FileText, CalendarDays, CheckSquare, RefreshCw, Clock } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { format, parseISO } from 'date-fns';
 import { Pagination } from '@/components/shared/pagination';
@@ -43,6 +43,7 @@ export default function ServiceExtensionPage() {
   const [isFetchingEmployee, setIsFetchingEmployee] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const [currentRetirementDate, setCurrentRetirementDate] = useState('');
   const [requestedExtensionPeriod, setRequestedExtensionPeriod] = useState('');
@@ -64,12 +65,37 @@ export default function ServiceExtensionPage() {
     setIsPreviewModalOpen(true);
   };
 
+  // Helper function to shorten document names for better display
+  const getShortDocumentName = (fullPath: string): string => {
+    // Extract the original filename from the path
+    const fileName = fullPath.split('/').pop() || fullPath;
+    
+    // Remove timestamp and random string patterns
+    const cleanName = fileName
+      .replace(/^\d+_[a-zA-Z0-9]+_/, '') // Remove timestamp_randomString_ pattern
+      .replace(/^[a-zA-Z0-9]+_/, ''); // Remove any remaining prefix_
+    
+    // If name is still too long, truncate it
+    if (cleanName.length > 25) {
+      const extension = cleanName.split('.').pop();
+      const nameWithoutExt = cleanName.replace(/\.[^/.]+$/, '');
+      return `${nameWithoutExt.substring(0, 20)}...${extension ? '.' + extension : ''}`;
+    }
+    
+    return cleanName;
+  };
+
   const [isRejectionModalOpen, setIsRejectionModalOpen] = useState(false);
   const [rejectionReasonInput, setRejectionReasonInput] = useState('');
   const [currentRequestToAction, setCurrentRequestToAction] = useState<ServiceExtensionRequest | null>(null);
   
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  
+  // Auto-refresh state
+  const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+  const [isAutoRefreshEnabled, setIsAutoRefreshEnabled] = useState(true);
+  const [refreshInterval, setRefreshInterval] = useState<NodeJS.Timeout | null>(null);
 
   const [isCorrectionModalOpen, setIsCorrectionModalOpen] = useState(false);
   const [requestToCorrect, setRequestToCorrect] = useState<ServiceExtensionRequest | null>(null);
@@ -79,24 +105,98 @@ export default function ServiceExtensionPage() {
   const [correctedLetterOfRequestFile, setCorrectedLetterOfRequestFile] = useState<string>('');
   const [correctedEmployeeConsentLetterFile, setCorrectedEmployeeConsentLetterFile] = useState<string>('');
 
-  const fetchRequests = async () => {
+  const fetchRequests = async (showLoadingState = true, isRefresh = false) => {
     if (!user || !role) return;
-    setIsLoading(true);
+    if (isRefresh) {
+      setIsRefreshing(true);
+    } else if (showLoadingState) {
+      setIsLoading(true);
+    }
+    
     try {
-      const response = await fetch(`/api/service-extension?userId=${user.id}&userRole=${role}&userInstitutionId=${user.institutionId || ''}`);
+      // Add cache-busting parameter and headers for refresh
+      const cacheBuster = isRefresh ? `&_t=${Date.now()}` : '';
+      const response = await fetch(`/api/service-extension?userId=${user.id}&userRole=${role}&userInstitutionId=${user.institutionId || ''}${cacheBuster}`, {
+        method: 'GET',
+        headers: {
+          'Cache-Control': isRefresh ? 'no-cache, no-store, must-revalidate' : 'default',
+          'Pragma': isRefresh ? 'no-cache' : 'default',
+          'Expires': isRefresh ? '0' : 'default'
+        }
+      });
       if (!response.ok) throw new Error('Failed to fetch service extension requests');
       const data = await response.json();
+      
+      // Check for changes in status to show notifications
+      if (pendingRequests.length > 0) {
+        const changedRequests = data.filter((newReq: ServiceExtensionRequest) => {
+          const oldReq = pendingRequests.find(r => r.id === newReq.id);
+          return oldReq && oldReq.status !== newReq.status;
+        });
+        
+        changedRequests.forEach((req: ServiceExtensionRequest) => {
+          const oldReq = pendingRequests.find(r => r.id === req.id);
+          if (oldReq) {
+            toast({
+              title: "Status Update",
+              description: `Request for ${req.employee.name} status changed from "${oldReq.status}" to "${req.status}"`,
+              duration: 5000
+            });
+          }
+        });
+      }
+      
       setPendingRequests(data);
+      setLastRefresh(new Date());
+      
+      if (isRefresh) {
+        toast({ title: "Refreshed", description: "Service extension requests have been updated.", duration: 2000 });
+      }
     } catch (error) {
-      toast({ title: "Error", description: "Could not load service extension requests.", variant: "destructive" });
+      if (showLoadingState || isRefresh) {
+        toast({ title: "Error", description: "Could not load service extension requests.", variant: "destructive" });
+      }
     } finally {
-      setIsLoading(false);
+      if (isRefresh) {
+        setIsRefreshing(false);
+      } else if (showLoadingState) {
+        setIsLoading(false);
+      }
     }
   };
 
   useEffect(() => {
     fetchRequests();
   }, [user, role]);
+
+  // Auto-refresh effect
+  useEffect(() => {
+    if (isAutoRefreshEnabled && user && role) {
+      const interval = setInterval(() => {
+        fetchRequests(false); // Silent refresh without loading state
+      }, 30000); // Refresh every 30 seconds
+      
+      setRefreshInterval(interval);
+      
+      return () => {
+        if (interval) clearInterval(interval);
+      };
+    } else {
+      if (refreshInterval) {
+        clearInterval(refreshInterval);
+        setRefreshInterval(null);
+      }
+    }
+  }, [isAutoRefreshEnabled, user, role, pendingRequests]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (refreshInterval) {
+        clearInterval(refreshInterval);
+      }
+    };
+  }, []);
 
   const resetFormFields = () => {
     setCurrentRetirementDate('');
@@ -105,6 +205,12 @@ export default function ServiceExtensionPage() {
     setEmployeeConsentLetterFile('');
     setLetterOfRequestFile('');
   };
+
+  // Helper function to format refresh time
+  const formatRefreshTime = (date: Date): string => {
+    return format(date, 'HH:mm:ss');
+  };
+
 
   const handleFetchEmployeeDetails = async () => {
     if (!zanId) {
@@ -156,7 +262,27 @@ export default function ServiceExtensionPage() {
     }
   };
   
-  const handleUpdateRequest = async (requestId: string, payload: any) => {
+  const handleUpdateRequest = async (requestId: string, payload: any, actionDescription?: string) => {
+    // Get request info for immediate feedback
+    const request = pendingRequests.find(req => req.id === requestId);
+    
+    // Optimistic update - immediately show new status
+    const optimisticUpdate = pendingRequests.map(req => 
+      req.id === requestId 
+        ? { ...req, ...payload, updatedAt: new Date().toISOString() }
+        : req
+    );
+    setPendingRequests(optimisticUpdate);
+
+    // Show immediate success feedback
+    if (actionDescription && request) {
+      toast({ 
+        title: "Status Updated", 
+        description: `${actionDescription} for ${request.employee.name}. Status: ${payload.status}`,
+        duration: 3000 
+      });
+    }
+
     try {
         const response = await fetch(`/api/service-extension`, {
             method: 'PATCH',
@@ -164,9 +290,14 @@ export default function ServiceExtensionPage() {
             body: JSON.stringify({id: requestId, ...payload, reviewedById: user?.id })
         });
         if (!response.ok) throw new Error('Failed to update request');
-        await fetchRequests();
+        
+        // Force immediate refresh to get accurate data from server
+        await fetchRequests(false);
+        
         return true;
     } catch (error) {
+        // Revert optimistic update on error
+        await fetchRequests(false);
         toast({ title: "Update Failed", description: "Could not update the request.", variant: "destructive" });
         return false;
     }
@@ -199,6 +330,33 @@ export default function ServiceExtensionPage() {
         documents: documentObjectKeys
     };
 
+    // Create optimistic new request to show immediately
+    const optimisticRequest: ServiceExtensionRequest = {
+      id: `temp-${Date.now()}`, // Temporary ID until server responds
+      employee: {
+        ...employeeDetails,
+        institution: { name: typeof employeeDetails.institution === 'object' ? employeeDetails.institution.name : employeeDetails.institution || 'N/A' }
+      },
+      submittedBy: { name: user.name },
+      status: 'Pending HRMO/HHRMD Review',
+      reviewStage: 'initial',
+      currentRetirementDate: new Date(currentRetirementDate).toISOString(),
+      requestedExtensionPeriod,
+      justification,
+      documents: documentObjectKeys,
+      createdAt: new Date().toISOString()
+    };
+
+    // Immediately add optimistic request to show instant status
+    setPendingRequests(prev => [optimisticRequest, ...prev]);
+
+    // Show immediate success feedback
+    toast({ 
+      title: "Service Extension Request Submitted", 
+      description: `Request for ${employeeDetails.name} submitted successfully. Status: Pending HRMO/HHRMD Review`,
+      duration: 4000
+    });
+
     try {
       const response = await fetch('/api/service-extension', {
         method: 'POST',
@@ -207,12 +365,26 @@ export default function ServiceExtensionPage() {
       });
       if (!response.ok) throw new Error('Failed to submit request');
       
-      await fetchRequests(); // Refresh the list
-      toast({ title: "Service Extension Request Submitted", description: `Request for ${employeeDetails.name} submitted successfully.` });
+      const result = await response.json();
+      
+      // Replace optimistic request with real server response
+      if (result.success && result.data) {
+        setPendingRequests(prev => prev.map(req => 
+          req.id === optimisticRequest.id ? result.data : req
+        ));
+      }
+      
+      // Force refresh to ensure data consistency
+      setTimeout(async () => {
+        await fetchRequests(false);
+      }, 1000);
+      
       setZanId('');
       setEmployeeDetails(null);
       resetFormFields();
     } catch(error) {
+      // Remove optimistic request on error
+      setPendingRequests(prev => prev.filter(req => req.id !== optimisticRequest.id));
       toast({ title: "Submission Failed", description: "Could not submit the service extension request.", variant: "destructive" });
     } finally {
       setIsSubmitting(false);
@@ -220,17 +392,19 @@ export default function ServiceExtensionPage() {
   };
   
   const handleInitialAction = async (requestId: string, action: 'forward' | 'reject') => {
-    const request = pendingRequests.find(req => req.id === requestId);
-    if (!request) return;
-
     if (action === 'reject') {
+      const request = pendingRequests.find(req => req.id === requestId);
+      if (!request) return;
+      
       setCurrentRequestToAction(request);
-      setRejectionReasonInput('');
       setIsRejectionModalOpen(true);
-    } else if (action === 'forward') {
-      const payload = { status: "Request Received – Awaiting Commission Decision", reviewStage: 'commission_review' };
-      const success = await handleUpdateRequest(requestId, payload);
-      if (success) toast({ title: "Request Forwarded", description: `Request for ${request.employee.name} forwarded to Commission.` });
+    } else {
+      // Forward to Commission
+      const payload = { 
+        status: 'Request Received – Awaiting Commission Decision', 
+        reviewStage: 'commission_review' 
+      };
+      await handleUpdateRequest(requestId, payload, "Request verified and forwarded to Commission");
     }
   };
 
@@ -239,11 +413,10 @@ export default function ServiceExtensionPage() {
     const payload = { 
         status: `Rejected by ${role} - Awaiting HRO Correction`, 
         rejectionReason: rejectionReasonInput, 
-        reviewStage: 'initial'
+        reviewStage: 'hro_correction'
     };
-    const success = await handleUpdateRequest(currentRequestToAction.id, payload);
+    const success = await handleUpdateRequest(currentRequestToAction.id, payload, "Request rejected and returned to HRO");
     if (success) {
-      toast({ title: "Request Rejected", description: `Request for ${currentRequestToAction.employee.name} rejected.`, variant: 'destructive' });
       setIsRejectionModalOpen(false);
       setCurrentRequestToAction(null);
       setRejectionReasonInput('');
@@ -251,11 +424,45 @@ export default function ServiceExtensionPage() {
   };
 
   const handleCommissionDecision = async (requestId: string, decision: 'approved' | 'rejected') => {
+    const request = pendingRequests.find(req => req.id === requestId);
+    if (!request) return;
+
     const finalStatus = decision === 'approved' ? "Approved by Commission" : "Rejected by Commission - Request Concluded";
     const payload = { status: finalStatus, reviewStage: 'completed' };
-    const success = await handleUpdateRequest(requestId, payload);
-    if (success) {
-        toast({ title: `Commission Decision: ${decision === 'approved' ? 'Approved' : 'Rejected'}`, description: `Request ${requestId} has been updated.` });
+    
+    let actionDescription = '';
+    if (decision === 'approved') {
+      // Calculate new retirement date for notification
+      const currentDate = new Date(request.currentRetirementDate);
+      const extensionPeriod = request.requestedExtensionPeriod.toLowerCase();
+      let newDate = new Date(currentDate);
+      
+      if (extensionPeriod.includes('year')) {
+        const years = parseInt(extensionPeriod.match(/\d+/)?.[0] || '1');
+        newDate.setFullYear(newDate.getFullYear() + years);
+      } else if (extensionPeriod.includes('month')) {
+        const months = parseInt(extensionPeriod.match(/\d+/)?.[0] || '6');
+        newDate.setMonth(newDate.getMonth() + months);
+      } else {
+        newDate.setFullYear(newDate.getFullYear() + 1);
+      }
+      
+      actionDescription = `Service extension approved by Commission! Employee retirement date updated from ${format(currentDate, 'PPP')} to ${format(newDate, 'PPP')}`;
+    } else {
+      actionDescription = "Service extension rejected by Commission";
+    }
+    
+    const success = await handleUpdateRequest(requestId, payload, actionDescription);
+    
+    // Additional notification for approval with retirement date update
+    if (success && decision === 'approved') {
+      setTimeout(() => {
+        toast({
+          title: "✅ Retirement Date Updated",
+          description: `${request.employee.name}'s retirement date has been automatically updated in the system.`,
+          duration: 5000
+        });
+      }, 1000);
     }
   };
 
@@ -288,6 +495,31 @@ export default function ServiceExtensionPage() {
     if (correctedLetterOfRequestFile) correctedDocumentObjectKeys.push(correctedLetterOfRequestFile);
     if (correctedEmployeeConsentLetterFile) correctedDocumentObjectKeys.push(correctedEmployeeConsentLetterFile);
 
+    // Optimistic update to immediately hide the "Correct & Resubmit" button and show new status
+    const optimisticUpdate = pendingRequests.map(req => 
+      req.id === request.id 
+        ? { 
+            ...req, 
+            status: 'Pending HRMO/HHRMD Review',
+            reviewStage: 'initial',
+            rejectionReason: null,
+            updatedAt: new Date().toISOString()
+          }
+        : req
+    );
+    setPendingRequests(optimisticUpdate);
+
+    // Show immediate success feedback
+    toast({ 
+      title: "Request Corrected & Resubmitted", 
+      description: `Service extension request for ${request.employee.name} has been corrected and resubmitted. Status: Pending HRMO/HHRMD Review`,
+      duration: 4000
+    });
+
+    // Close modal immediately for better UX
+    setIsCorrectionModalOpen(false);
+    setRequestToCorrect(null);
+
     try {
       const response = await fetch(`/api/service-extension`, {
         method: 'PATCH',
@@ -301,17 +533,17 @@ export default function ServiceExtensionPage() {
           justification: correctedJustification,
           documents: correctedDocumentObjectKeys,
           rejectionReason: null,
-          reviewedById: user.id
+          reviewedById: null // Reset reviewer to allow fresh review
         }),
       });
 
       if (!response.ok) throw new Error('Failed to update request');
 
-      await fetchRequests();
-      toast({ title: "Request Corrected", description: `Service extension request for ${request.employee.name} has been corrected and resubmitted.` });
-      setIsCorrectionModalOpen(false);
-      setRequestToCorrect(null);
+      // Force refresh to get accurate server data
+      await fetchRequests(false);
     } catch (error) {
+      // Revert optimistic update on error and show error feedback
+      await fetchRequests(false);
       toast({ title: "Update Failed", description: "Could not update the request.", variant: "destructive" });
     }
   };
@@ -320,6 +552,11 @@ export default function ServiceExtensionPage() {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
+
+  // Manual refresh function
+  const handleManualRefresh = async () => {
+    await fetchRequests(true, true);
+  };
 
 
   return (
@@ -426,8 +663,28 @@ export default function ServiceExtensionPage() {
       {role === ROLES.HRO && (
         <Card className="mb-6 shadow-lg">
           <CardHeader>
-            <CardTitle>Your Submitted Service Extension Requests</CardTitle>
-            <CardDescription>Track the status of service extension requests you have submitted.</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Your Submitted Service Extension Requests</CardTitle>
+                <CardDescription>Track the status of service extension requests you have submitted.</CardDescription>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="flex items-center text-xs text-muted-foreground">
+                  <Clock className="h-3 w-3 mr-1" />
+                  Last: {formatRefreshTime(lastRefresh)}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleManualRefresh}
+                  disabled={isLoading}
+                  className="h-8"
+                >
+                  <RefreshCw className={`h-3 w-3 mr-1 ${isLoading ? 'animate-spin' : ''}`} />
+                  Refresh
+                </Button>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -439,11 +696,49 @@ export default function ServiceExtensionPage() {
                   <p className="text-sm text-muted-foreground">Current Retirement: {request.currentRetirementDate ? format(parseISO(request.currentRetirementDate), 'PPP') : 'N/A'}</p>
                   <p className="text-sm text-muted-foreground">Extension Requested: {request.requestedExtensionPeriod}</p>
                   <p className="text-sm text-muted-foreground">Submitted: {request.createdAt ? format(parseISO(request.createdAt), 'PPP') : 'N/A'}</p>
-                  <p className="text-sm"><span className="font-medium">Status:</span> <span className="text-primary">{request.status}</span></p>
+                  <div className="flex items-center space-x-2">
+                    <p className="text-sm"><span className="font-medium">Status:</span></p>
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                      request.status.includes('Approved by Commission') ? 'bg-green-100 text-green-800' :
+                      request.status.includes('Rejected by Commission') ? 'bg-red-100 text-red-800' :
+                      request.status.includes('Awaiting Commission') ? 'bg-blue-100 text-blue-800' :
+                      request.status.includes('Pending HRMO/HHRMD') ? 'bg-orange-100 text-orange-800' :
+                      request.status.includes('Awaiting HRO') ? 'bg-yellow-100 text-yellow-800' :
+                      request.status.includes('Correction') ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {request.status}
+                    </span>
+                  </div>
+                  {/* Workflow Progress Indicator */}
+                  <div className="flex items-center space-x-2 mt-2">
+                    <div className="flex items-center space-x-1 text-xs text-muted-foreground">
+                      <span>Workflow:</span>
+                      <div className="flex items-center space-x-1">
+                        <div className={`w-2 h-2 rounded-full ${
+                          ['Pending HRMO/HHRMD Review', 'Request Received – Awaiting Commission Decision', 'Approved by Commission', 'Rejected by Commission - Request Concluded'].includes(request.status) 
+                          ? 'bg-green-500' : 'bg-gray-300'
+                        }`}></div>
+                        <span className="text-[10px]">HRO Submit</span>
+                        <div className="w-3 h-px bg-gray-300"></div>
+                        <div className={`w-2 h-2 rounded-full ${
+                          ['Request Received – Awaiting Commission Decision', 'Approved by Commission', 'Rejected by Commission - Request Concluded'].includes(request.status) 
+                          ? 'bg-green-500' : request.status.includes('Pending HRMO/HHRMD') ? 'bg-orange-500' : 'bg-gray-300'
+                        }`}></div>
+                        <span className="text-[10px]">HRMO/HHRMD Review</span>
+                        <div className="w-3 h-px bg-gray-300"></div>
+                        <div className={`w-2 h-2 rounded-full ${
+                          ['Approved by Commission', 'Rejected by Commission - Request Concluded'].includes(request.status) 
+                          ? 'bg-green-500' : request.status.includes('Awaiting Commission') ? 'bg-blue-500' : 'bg-gray-300'
+                        }`}></div>
+                        <span className="text-[10px]">Commission Decision</span>
+                      </div>
+                    </div>
+                  </div>
                   {request.rejectionReason && <p className="text-sm text-destructive"><span className="font-medium">Rejection Reason:</span> {request.rejectionReason}</p>}
                   <div className="mt-3 pt-3 border-t flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                     <Button size="sm" variant="outline" onClick={() => { setSelectedRequest(request); setIsDetailsModalOpen(true); }}>View Details</Button>
-                    {request.status.includes('Rejected') && request.status.includes('Awaiting HRO') && (
+                    {((request.status.includes('Rejected') && request.status.includes('Awaiting HRO')) || request.reviewStage === 'hro_correction') && (
                       <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white" onClick={() => handleCorrection(request)}>
                         Correct & Resubmit
                       </Button>
@@ -461,8 +756,28 @@ export default function ServiceExtensionPage() {
       {(role === ROLES.HHRMD || role === ROLES.HRMO) && ( 
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle>Review Service Extension Requests</CardTitle>
-            <CardDescription>Review, approve, or reject pending service extension requests.</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Review Service Extension Requests</CardTitle>
+                <CardDescription>Review, approve, or reject pending service extension requests.</CardDescription>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="flex items-center text-xs text-muted-foreground">
+                  <Clock className="h-3 w-3 mr-1" />
+                  Last: {formatRefreshTime(lastRefresh)}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleManualRefresh}
+                  disabled={isLoading}
+                  className="h-8"
+                >
+                  <RefreshCw className={`h-3 w-3 mr-1 ${isLoading ? 'animate-spin' : ''}`} />
+                  Refresh
+                </Button>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
              {isLoading ? (
@@ -474,7 +789,45 @@ export default function ServiceExtensionPage() {
                   <p className="text-sm text-muted-foreground">Current Retirement: {request.currentRetirementDate ? format(parseISO(request.currentRetirementDate), 'PPP') : 'N/A'}</p>
                   <p className="text-sm text-muted-foreground">Extension Requested: {request.requestedExtensionPeriod}</p>
                   <p className="text-sm text-muted-foreground">Submitted: {request.createdAt ? format(parseISO(request.createdAt), 'PPP') : 'N/A'} by {request.submittedBy.name}</p>
-                  <p className="text-sm"><span className="font-medium">Status:</span> <span className="text-primary">{request.status}</span></p>
+                  <div className="flex items-center space-x-2">
+                    <p className="text-sm"><span className="font-medium">Status:</span></p>
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                      request.status.includes('Approved by Commission') ? 'bg-green-100 text-green-800' :
+                      request.status.includes('Rejected by Commission') ? 'bg-red-100 text-red-800' :
+                      request.status.includes('Awaiting Commission') ? 'bg-blue-100 text-blue-800' :
+                      request.status.includes('Pending HRMO/HHRMD') ? 'bg-orange-100 text-orange-800' :
+                      request.status.includes('Awaiting HRO') ? 'bg-yellow-100 text-yellow-800' :
+                      request.status.includes('Correction') ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {request.status}
+                    </span>
+                  </div>
+                  {/* Workflow Progress Indicator for Review Section */}
+                  <div className="flex items-center space-x-2 mt-2">
+                    <div className="flex items-center space-x-1 text-xs text-muted-foreground">
+                      <span>Workflow:</span>
+                      <div className="flex items-center space-x-1">
+                        <div className={`w-2 h-2 rounded-full ${
+                          ['Pending HRMO/HHRMD Review', 'Request Received – Awaiting Commission Decision', 'Approved by Commission', 'Rejected by Commission - Request Concluded'].includes(request.status) 
+                          ? 'bg-green-500' : 'bg-gray-300'
+                        }`}></div>
+                        <span className="text-[10px]">HRO Submit</span>
+                        <div className="w-3 h-px bg-gray-300"></div>
+                        <div className={`w-2 h-2 rounded-full ${
+                          ['Request Received – Awaiting Commission Decision', 'Approved by Commission', 'Rejected by Commission - Request Concluded'].includes(request.status) 
+                          ? 'bg-green-500' : request.status.includes('Pending HRMO/HHRMD') ? 'bg-orange-500' : 'bg-gray-300'
+                        }`}></div>
+                        <span className="text-[10px]">HRMO/HHRMD Review</span>
+                        <div className="w-3 h-px bg-gray-300"></div>
+                        <div className={`w-2 h-2 rounded-full ${
+                          ['Approved by Commission', 'Rejected by Commission - Request Concluded'].includes(request.status) 
+                          ? 'bg-green-500' : request.status.includes('Awaiting Commission') ? 'bg-blue-500' : 'bg-gray-300'
+                        }`}></div>
+                        <span className="text-[10px]">Commission Decision</span>
+                      </div>
+                    </div>
+                  </div>
                   {request.rejectionReason && <p className="text-sm text-destructive"><span className="font-medium">Rejection Reason:</span> {request.rejectionReason}</p>}
                   <div className="mt-3 pt-3 border-t flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                     <Button size="sm" variant="outline" onClick={() => { setSelectedRequest(request); setIsDetailsModalOpen(true); }}>View Details</Button>
@@ -509,7 +862,7 @@ export default function ServiceExtensionPage() {
 
       {selectedRequest && (
         <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
-          <DialogContent className="sm:max-w-lg">
+          <DialogContent className="sm:max-w-3xl">
             <DialogHeader>
               <DialogTitle>Request Details: {selectedRequest.id}</DialogTitle>
               <DialogDescription>
@@ -590,15 +943,16 @@ export default function ServiceExtensionPage() {
                     {selectedRequest.documents && selectedRequest.documents.length > 0 ? (
                         selectedRequest.documents.map((objectKey, index) => {
                           const fileName = objectKey.split('/').pop() || objectKey;
+                          const shortName = getShortDocumentName(objectKey);
                           return (
                             <div key={index} className="flex items-center justify-between p-2 rounded-md border bg-secondary/50 text-sm">
                                 <div className="flex items-center gap-2">
                                     <FileText className="h-4 w-4 text-muted-foreground" />
-                                    <span className="font-medium text-foreground truncate" title={fileName}>{fileName}</span>
+                                    <span className="font-medium text-foreground truncate" title={fileName}>{shortName}</span>
                                 </div>
-                                <div className="flex gap-1">
+                                <div className="flex gap-1 flex-shrink-0">
                                   <Button
-                                    variant="ghost"
+                                    variant="outline"
                                     size="sm"
                                     onClick={() => handlePreviewFile(objectKey)}
                                     className="h-8 px-2 text-xs"
@@ -606,7 +960,7 @@ export default function ServiceExtensionPage() {
                                     Preview
                                   </Button>
                                   <Button
-                                    variant="ghost"
+                                    variant="outline"
                                     size="sm"
                                     onClick={async () => {
                                       try {
@@ -624,7 +978,7 @@ export default function ServiceExtensionPage() {
                                           const url = window.URL.createObjectURL(blob);
                                           const a = document.createElement('a');
                                           a.href = url;
-                                          a.download = fileName;
+                                          a.download = shortName;
                                           document.body.appendChild(a);
                                           a.click();
                                           window.URL.revokeObjectURL(url);
@@ -670,7 +1024,7 @@ export default function ServiceExtensionPage() {
 
       {currentRequestToAction && (
         <Dialog open={isRejectionModalOpen} onOpenChange={setIsRejectionModalOpen}>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-lg">
                 <DialogHeader>
                     <DialogTitle>Reject Service Extension Request: {currentRequestToAction.id}</DialogTitle>
                     <DialogDescription>
@@ -695,14 +1049,21 @@ export default function ServiceExtensionPage() {
 
       {requestToCorrect && (
         <Dialog open={isCorrectionModalOpen} onOpenChange={setIsCorrectionModalOpen}>
-          <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogContent className="sm:max-w-3xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Correct Service Extension Request: {requestToCorrect.id}</DialogTitle>
+              <DialogTitle>Correct & Resubmit Service Extension Request</DialogTitle>
               <DialogDescription>
-                Update the details for <strong>{requestToCorrect.employee.name}</strong>'s service extension request and upload new documents.
+                Address the rejection reasons and update the service extension request for <strong>{requestToCorrect.employee.name}</strong>. 
+                Make necessary corrections and upload updated documents before resubmitting for review.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-6 py-4">
+              {requestToCorrect.rejectionReason && (
+                <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-md">
+                  <h4 className="font-semibold text-destructive mb-2">Rejection Reason:</h4>
+                  <p className="text-sm text-destructive">{requestToCorrect.rejectionReason}</p>
+                </div>
+              )}
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="correctedCurrentRetirementDate" className="flex items-center">
@@ -786,7 +1147,54 @@ export default function ServiceExtensionPage() {
         </Dialog>
       )}
 
-      {/* File Preview Modal */}
+      {/* Rejection Modal */}
+      {currentRequestToAction && (
+        <Dialog open={isRejectionModalOpen} onOpenChange={setIsRejectionModalOpen}>
+          <DialogContent className="sm:max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Reject Service Extension Request</DialogTitle>
+              <DialogDescription>
+                Provide a reason for rejecting the service extension request for <strong>{currentRequestToAction.employee.name}</strong>.
+                This will return the request to the HRO for correction.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div>
+                <Label htmlFor="rejectionReason">Rejection Reason (Required)</Label>
+                <Textarea
+                  id="rejectionReason"
+                  placeholder="Provide a clear reason for rejection and guidance for correction..."
+                  value={rejectionReasonInput}
+                  onChange={(e) => setRejectionReasonInput(e.target.value)}
+                  rows={4}
+                  className="mt-2"
+                />
+              </div>
+            </div>
+            <DialogFooter className="flex flex-col sm:flex-row gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setIsRejectionModalOpen(false);
+                  setCurrentRequestToAction(null);
+                  setRejectionReasonInput('');
+                }}
+              >
+                Cancel
+              </Button>
+              <Button 
+                variant="destructive"
+                onClick={handleRejectionSubmit}
+                disabled={!rejectionReasonInput.trim()}
+              >
+                Reject Request
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* File Preview Modal */}}
       <FilePreviewModal
         open={isPreviewModalOpen}
         onOpenChange={(open) => {

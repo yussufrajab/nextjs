@@ -11,7 +11,7 @@ import { ROLES } from '@/lib/constants';
 import React, { useState, useEffect } from 'react';
 import type { Employee } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
-import { Loader2, Search, FileText, CalendarDays, Paperclip, ClipboardCheck, AlertTriangle, FileWarning, PauseOctagon, Files } from 'lucide-react';
+import { Loader2, Search, FileText, CalendarDays, Paperclip, ClipboardCheck, AlertTriangle, FileWarning, PauseOctagon, Files, RefreshCw } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 
@@ -61,6 +61,7 @@ export default function DismissalPage() {
   const [employeeDetails, setEmployeeDetails] = useState<Employee | null>(null);
   const [isFetchingEmployee, setIsFetchingEmployee] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const [reasonDismissal, setReasonDismissal] = useState('');
   const [proposedDateDismissal, setProposedDateDismissal] = useState('');
@@ -89,6 +90,24 @@ export default function DismissalPage() {
   useEffect(() => {
     setMinProposedDate(format(new Date(), 'yyyy-MM-dd'));
   }, []);
+
+  const refreshRequests = async () => {
+    setIsRefreshing(true);
+    try {
+      // Simulate API call delay for mock data
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      // In a real implementation, this would fetch from API
+      // const response = await fetch('/api/dismissal?userId=${user.id}&userRole=${role}');
+      // const data = await response.json();
+      // setPendingRequests(data);
+      
+      toast({ title: "Refreshed", description: "Request list has been updated.", duration: 2000 });
+    } catch (error) {
+      toast({ title: "Error", description: "Could not refresh requests.", variant: "destructive" });
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   const isDismissalAllowed = employeeDetails && employeeDetails.status === 'On Probation';
 
@@ -431,8 +450,22 @@ export default function DismissalPage() {
       {(role === ROLES.DO || role === ROLES.HHRMD ) && (
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle>Review Dismissal Requests</CardTitle>
-            <CardDescription>Review, approve, or reject pending dismissal requests.</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Review Dismissal Requests</CardTitle>
+                <CardDescription>Review, approve, or reject pending dismissal requests.</CardDescription>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={refreshRequests}
+                disabled={isRefreshing}
+                className="flex items-center gap-2"
+              >
+                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             {pendingRequests.filter(req => 
