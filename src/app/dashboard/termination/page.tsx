@@ -12,7 +12,7 @@ import { useAuthStore } from '@/store/auth-store';
 import React, { useState, useEffect } from 'react';
 import type { Employee, User, Role } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
-import { Loader2, Search, FileText, CalendarDays, Paperclip, ShieldAlert, FileWarning, PauseOctagon, Files, Ban, RefreshCw } from 'lucide-react';
+import { Loader2, Search, FileText, CalendarDays, Paperclip, ShieldAlert, FileWarning, PauseOctagon, Files, Ban, RefreshCw, AlertTriangle } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Pagination } from '@/components/shared/pagination';
@@ -119,6 +119,11 @@ export default function TerminationAndDismissalPage() {
   const [correctedEmployeeExplanationLetterFile, setCorrectedEmployeeExplanationLetterFile] = useState<string>('');
   const [correctedOtherAdditionalDocumentsFile, setCorrectedOtherAdditionalDocumentsFile] = useState<string>('');
 
+  // Employee status validation
+  const isEmployeeTerminated = employeeDetails?.status === 'Terminated';
+  const isEmployeeDismissed = employeeDetails?.status === 'Dismissed';
+  const cannotSubmitTermination = isEmployeeTerminated || isEmployeeDismissed;
+
   const fetchRequests = async (isRefresh = false) => {
     if (!user || !role) return;
     if (isRefresh) {
@@ -173,7 +178,7 @@ export default function TerminationAndDismissalPage() {
   };
 
   const isSubmitButtonDisabled = () => {
-    if (!employeeDetails || !employeeStatus || !reason.trim() || letterOfRequestFile === '' || isSubmitting) {
+    if (!employeeDetails || !employeeStatus || !reason.trim() || letterOfRequestFile === '' || cannotSubmitTermination || isSubmitting) {
       return true;
     }
     
@@ -282,6 +287,21 @@ export default function TerminationAndDismissalPage() {
       toast({ title: "Submission Error", description: "Employee details are missing.", variant: "destructive" });
       return;
     }
+    
+    if (cannotSubmitTermination) {
+      const message = isEmployeeTerminated 
+        ? "Cannot request termination for employees who are already terminated."
+        : "Cannot request dismissal for employees who are already dismissed.";
+      
+      toast({ 
+        title: "Termination/Dismissal Not Applicable", 
+        description: message, 
+        variant: "destructive",
+        duration: 5000,
+      });
+      return;
+    }
+    
     // Validation checks...
 
     const documentObjectKeys: string[] = [];
@@ -529,16 +549,26 @@ export default function TerminationAndDismissalPage() {
                       <div><Label className="text-muted-foreground">Employment Date:</Label> <p className="font-semibold text-foreground">{employeeDetails.employmentDate ? format(parseISO(employeeDetails.employmentDate), 'MMMM do, yyyy') : 'N/A'}</p></div>
                       <div><Label className="text-muted-foreground">Date of Birth:</Label> <p className="font-semibold text-foreground">{employeeDetails.dateOfBirth ? format(parseISO(employeeDetails.dateOfBirth), 'MMMM do, yyyy') : 'N/A'}</p></div>
                       <div><Label className="text-muted-foreground">Institution:</Label> <p className="font-semibold text-foreground">{employeeDetails.institution?.name || 'N/A'}</p></div>
-                      <div className="md:col-span-2 lg:col-span-3"><Label className="text-muted-foreground">Current Status:</Label> <p className={`font-semibold ${employeeDetails.status === 'On Probation' ? 'text-orange-600' : 'text-green-600'}`}>{employeeDetails.status || 'N/A'}</p></div>
+                      <div className="md:col-span-2 lg:col-span-3"><Label className="text-muted-foreground">Current Status:</Label> <p className={`font-semibold ${cannotSubmitTermination ? 'text-destructive' : employeeDetails.status === 'On Probation' ? 'text-orange-600' : 'text-green-600'}`}>{employeeDetails.status || 'N/A'}</p></div>
                     </div>
                   </div>
                 </div>
 
-                <div className="space-y-4">
+                {cannotSubmitTermination && (
+                  <div className="flex items-center p-4 mt-2 text-sm text-destructive border border-destructive/50 rounded-md bg-destructive/10">
+                    <AlertTriangle className="h-5 w-5 mr-3 flex-shrink-0" />
+                    <span>
+                      {isEmployeeTerminated && "Cannot request termination for employees who are already terminated."}
+                      {isEmployeeDismissed && "Cannot request dismissal for employees who are already dismissed."}
+                    </span>
+                  </div>
+                )}
+
+                <div className={`space-y-4 ${cannotSubmitTermination ? 'opacity-50 cursor-not-allowed' : ''}`}>
                   <h3 className="text-lg font-medium text-foreground">More Details ...</h3>
                   <div>
                     <Label htmlFor="reason">Reason for Firing</Label>
-                    <Textarea id="reason" placeholder="Clearly state the grounds for firing..." value={reason} onChange={(e) => setReason(e.target.value)} disabled={isSubmitting} />
+                    <Textarea id="reason" placeholder="Clearly state the grounds for firing..." value={reason} onChange={(e) => setReason(e.target.value)} disabled={isSubmitting || cannotSubmitTermination} />
                   </div>
                   
                   {/* Common Document */}
@@ -549,7 +579,7 @@ export default function TerminationAndDismissalPage() {
                       value={letterOfRequestFile}
                       onChange={setLetterOfRequestFile}
                       onPreview={handlePreviewFile}
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || cannotSubmitTermination}
                       required
                     />
                   </div>
@@ -563,7 +593,7 @@ export default function TerminationAndDismissalPage() {
                         value={terminationSupportingDocFile}
                         onChange={setTerminationSupportingDocFile}
                         onPreview={handlePreviewFile}
-                        disabled={isSubmitting}
+                        disabled={isSubmitting || cannotSubmitTermination}
                         required
                       />
                     </div>
@@ -580,7 +610,7 @@ export default function TerminationAndDismissalPage() {
                           value={misconductEvidenceFile}
                           onChange={setMisconductEvidenceFile}
                           onPreview={handlePreviewFile}
-                          disabled={isSubmitting}
+                          disabled={isSubmitting || cannotSubmitTermination}
                           required
                         />
                       </div>
@@ -591,7 +621,7 @@ export default function TerminationAndDismissalPage() {
                           value={summonNoticeFile}
                           onChange={setSummonNoticeFile}
                           onPreview={handlePreviewFile}
-                          disabled={isSubmitting}
+                          disabled={isSubmitting || cannotSubmitTermination}
                           required
                         />
                       </div>
@@ -602,7 +632,7 @@ export default function TerminationAndDismissalPage() {
                           value={suspensionLetterFile}
                           onChange={setSuspensionLetterFile}
                           onPreview={handlePreviewFile}
-                          disabled={isSubmitting}
+                          disabled={isSubmitting || cannotSubmitTermination}
                           required
                         />
                       </div>
@@ -614,7 +644,7 @@ export default function TerminationAndDismissalPage() {
                           value={warningLettersFile}
                           onChange={setWarningLettersFile}
                           onPreview={handlePreviewFile}
-                          disabled={isSubmitting}
+                          disabled={isSubmitting || cannotSubmitTermination}
                         />
                       </div>
                       <div>
@@ -624,7 +654,7 @@ export default function TerminationAndDismissalPage() {
                           value={employeeExplanationLetterFile}
                           onChange={setEmployeeExplanationLetterFile}
                           onPreview={handlePreviewFile}
-                          disabled={isSubmitting}
+                          disabled={isSubmitting || cannotSubmitTermination}
                         />
                       </div>
                       <div>
@@ -634,7 +664,7 @@ export default function TerminationAndDismissalPage() {
                           value={otherAdditionalDocumentsFile}
                           onChange={setOtherAdditionalDocumentsFile}
                           onPreview={handlePreviewFile}
-                          disabled={isSubmitting}
+                          disabled={isSubmitting || cannotSubmitTermination}
                         />
                       </div>
                     </>

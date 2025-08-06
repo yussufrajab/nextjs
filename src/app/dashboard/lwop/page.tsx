@@ -96,6 +96,15 @@ export default function LwopPage() {
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
 
   const isEmployeeOnProbation = employeeDetails?.status === 'On Probation';
+  const isEmployeeOnLWOP = employeeDetails?.status === 'On LWOP' || employeeDetails?.status === 'LWOP';
+  
+  // Check for existing pending LWOP requests for this employee
+  const hasPendingLWOPRequest = employeeDetails ? pendingRequests.some(request => 
+    request.employee.id === employeeDetails.id && 
+    (request.status.includes('Pending') || request.status.includes('Awaiting'))
+  ) : false;
+  
+  const cannotSubmitLWOP = isEmployeeOnProbation || isEmployeeOnLWOP || hasPendingLWOPRequest;
 
   // Helper function to shorten document names for better display
   const getShortDocumentName = (fullPath: string): string => {
@@ -356,10 +365,19 @@ export default function LwopPage() {
       return;
     }
 
-    if (employeeDetails.status === 'On Probation') {
+    if (cannotSubmitLWOP) {
+      let message = "";
+      if (isEmployeeOnProbation) {
+        message = "This employee is currently 'On Probation' and cannot apply for LWOP.";
+      } else if (isEmployeeOnLWOP) {
+        message = "Cannot request LWOP for employees already on LWOP.";
+      } else if (hasPendingLWOPRequest) {
+        message = "This employee already has a pending LWOP request.";
+      }
+      
       toast({ 
         title: "LWOP Not Applicable", 
-        description: "This employee is currently 'On Probation' and cannot apply for LWOP.", 
+        description: message, 
         variant: "destructive",
         duration: 5000,
       });
@@ -623,22 +641,26 @@ export default function LwopPage() {
                   </div>
                 </div>
 
-                {isEmployeeOnProbation && (
+                {cannotSubmitLWOP && (
                   <div className="flex items-center p-4 mt-2 text-sm text-destructive border border-destructive/50 rounded-md bg-destructive/10">
                     <AlertTriangle className="h-5 w-5 mr-3 flex-shrink-0" />
-                    <span>LWOP is not applicable for employees currently 'On Probation'.</span>
+                    <span>
+                      {isEmployeeOnProbation && "LWOP is not applicable for employees currently 'On Probation'."}
+                      {isEmployeeOnLWOP && "Cannot request LWOP for employees already on LWOP."}
+                      {hasPendingLWOPRequest && "This employee already has a pending LWOP request."}
+                    </span>
                   </div>
                 )}
             
-                <div className={`space-y-4 ${isEmployeeOnProbation ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                <div className={`space-y-4 ${cannotSubmitLWOP ? 'opacity-50 cursor-not-allowed' : ''}`}>
                   <h3 className="text-lg font-medium text-foreground">LWOP Details</h3>
                   <div>
                     <Label htmlFor="startDateLwop">Start Date</Label>
-                    <Input id="startDateLwop" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} disabled={isSubmitting || isEmployeeOnProbation} min={new Date().toISOString().split('T')[0]} />
+                    <Input id="startDateLwop" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} disabled={isSubmitting || cannotSubmitLWOP} min={new Date().toISOString().split('T')[0]} />
                   </div>
                   <div>
                     <Label htmlFor="endDateLwop">End Date</Label>
-                    <Input id="endDateLwop" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} disabled={isSubmitting || isEmployeeOnProbation} min={startDate || new Date().toISOString().split('T')[0]} />
+                    <Input id="endDateLwop" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} disabled={isSubmitting || cannotSubmitLWOP} min={startDate || new Date().toISOString().split('T')[0]} />
                   </div>
                   {duration && (
                     <div className="p-3 bg-secondary rounded-md">
@@ -651,7 +673,7 @@ export default function LwopPage() {
                   )}
                   <div>
                     <Label htmlFor="reasonLwop">Reason for LWOP</Label>
-                    <Textarea id="reasonLwop" placeholder="State the reason for the leave request" value={reason} onChange={(e) => setReason(e.target.value)} disabled={isSubmitting || isEmployeeOnProbation} />
+                    <Textarea id="reasonLwop" placeholder="State the reason for the leave request" value={reason} onChange={(e) => setReason(e.target.value)} disabled={isSubmitting || cannotSubmitLWOP} />
                   </div>
                   <FileUpload
                     label="Letter of Request"
@@ -660,7 +682,7 @@ export default function LwopPage() {
                     value={letterOfRequestKey}
                     onChange={setLetterOfRequestKey}
                     folder="lwop/letters"
-                    disabled={isSubmitting || isEmployeeOnProbation}
+                    disabled={isSubmitting || cannotSubmitLWOP}
                     required
                   />
                   <FileUpload
@@ -670,7 +692,7 @@ export default function LwopPage() {
                     value={employeeConsentLetterKey}
                     onChange={setEmployeeConsentLetterKey}
                     folder="lwop/consents"
-                    disabled={isSubmitting || isEmployeeOnProbation}
+                    disabled={isSubmitting || cannotSubmitLWOP}
                     required
                   />
                 </div>
@@ -679,7 +701,7 @@ export default function LwopPage() {
           </CardContent>
           {employeeDetails && (
             <CardFooter className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2 pt-4 border-t">
-                <Button onClick={handleSubmitLwopRequest} disabled={!employeeDetails || !startDate || !endDate || !reason || !letterOfRequestKey || !employeeConsentLetterKey || isSubmitting || isEmployeeOnProbation}>
+                <Button onClick={handleSubmitLwopRequest} disabled={!employeeDetails || !startDate || !endDate || !reason || !letterOfRequestKey || !employeeConsentLetterKey || isSubmitting || cannotSubmitLWOP}>
                   {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Submit LWOP Request
                 </Button>

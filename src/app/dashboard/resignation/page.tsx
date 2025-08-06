@@ -11,7 +11,7 @@ import { ROLES, EMPLOYEES } from '@/lib/constants';
 import React, { useState, useEffect } from 'react';
 import type { Employee, User, Role } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
-import { Loader2, Search, FileText, CalendarDays, Paperclip, RefreshCw } from 'lucide-react';
+import { Loader2, Search, FileText, CalendarDays, Paperclip, RefreshCw, AlertTriangle } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Pagination } from '@/components/shared/pagination';
@@ -98,6 +98,10 @@ export default function ResignationPage() {
   const [correctedReason, setCorrectedReason] = useState('');
   const [correctedLetterOfRequestFile, setCorrectedLetterOfRequestFile] = useState<string>('');
   const [correctedNoticeOrReceiptFile, setCorrectedNoticeOrReceiptFile] = useState<string>('');
+
+  // Employee status validation
+  const isEmployeeResigned = employeeDetails?.status === 'Resigned';
+  const cannotSubmitResignation = isEmployeeResigned;
   
   const fetchRequests = async (isRefresh = false) => {
     if (!user || !role) return;
@@ -203,6 +207,17 @@ export default function ResignationPage() {
       toast({ title: "Submission Error", description: "Employee or user details are missing.", variant: "destructive" });
       return;
     }
+    
+    if (cannotSubmitResignation) {
+      toast({ 
+        title: "Resignation Not Applicable", 
+        description: "Cannot request resignation for employees who have already resigned.", 
+        variant: "destructive",
+        duration: 5000,
+      });
+      return;
+    }
+    
     // Validation
     if (!effectiveDate || letterOfRequestFile === '' || noticeOrReceiptFile === '') {
         toast({ title: "Submission Error", description: "Please fill all required fields and upload required documents.", variant: "destructive"});
@@ -463,19 +478,27 @@ export default function ResignationPage() {
                       <div><Label className="text-muted-foreground">Employment Date:</Label> <p className="font-semibold text-foreground">{employeeDetails.employmentDate ? format(parseISO(employeeDetails.employmentDate), 'PPP') : 'N/A'}</p></div>
                       <div><Label className="text-muted-foreground">Date of Birth:</Label> <p className="font-semibold text-foreground">{employeeDetails.dateOfBirth ? format(parseISO(employeeDetails.dateOfBirth), 'PPP') : 'N/A'}</p></div>
                       <div className="lg:col-span-1"><Label className="text-muted-foreground">Institution:</Label> <p className="font-semibold text-foreground">{typeof employeeDetails.institution === 'object' ? employeeDetails.institution?.name : employeeDetails.institution || 'N/A'}</p></div>
+                      <div className="md:col-span-2 lg:col-span-3"><Label className="text-muted-foreground">Current Status:</Label> <p className={`font-semibold ${cannotSubmitResignation ? 'text-destructive' : 'text-green-600'}`}>{employeeDetails.status || 'N/A'}</p></div>
                     </div>
                   </div>
                 </div>
 
-                <div className="space-y-4">
+                {cannotSubmitResignation && (
+                  <div className="flex items-center p-4 mt-2 text-sm text-destructive border border-destructive/50 rounded-md bg-destructive/10">
+                    <AlertTriangle className="h-5 w-5 mr-3 flex-shrink-0" />
+                    <span>Cannot request resignation for employees who have already resigned.</span>
+                  </div>
+                )}
+
+                <div className={`space-y-4 ${cannotSubmitResignation ? 'opacity-50 cursor-not-allowed' : ''}`}>
                   <h3 className="text-lg font-medium text-foreground">Resignation Details & Documents</h3>
                   <div>
                     <Label htmlFor="effectiveDate" className="flex items-center"><CalendarDays className="mr-2 h-4 w-4 text-primary" />Effective Date of Resignation</Label>
-                    <Input id="effectiveDate" type="date" value={effectiveDate} onChange={(e) => setEffectiveDate(e.target.value)} disabled={isSubmitting} min={minEffectiveDate} />
+                    <Input id="effectiveDate" type="date" value={effectiveDate} onChange={(e) => setEffectiveDate(e.target.value)} disabled={isSubmitting || cannotSubmitResignation} min={minEffectiveDate} />
                   </div>
                   <div>
                     <Label htmlFor="reasonResignation">Reason for Resignation (Optional)</Label>
-                    <Textarea id="reasonResignation" placeholder="Optional: Enter reason stated by employee" value={reason} onChange={(e) => setReason(e.target.value)} disabled={isSubmitting} />
+                    <Textarea id="reasonResignation" placeholder="Optional: Enter reason stated by employee" value={reason} onChange={(e) => setReason(e.target.value)} disabled={isSubmitting || cannotSubmitResignation} />
                   </div>
                   <div>
                     <Label htmlFor="letterOfRequestResignation" className="flex items-center"><FileText className="mr-2 h-4 w-4 text-primary" />Upload Letter of Request (Required, PDF Only)</Label>
@@ -484,7 +507,7 @@ export default function ResignationPage() {
                       value={letterOfRequestFile}
                       onChange={setLetterOfRequestFile}
                       onPreview={handlePreviewFile}
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || cannotSubmitResignation}
                       required
                     />
                   </div>
@@ -495,7 +518,7 @@ export default function ResignationPage() {
                       value={noticeOrReceiptFile}
                       onChange={setNoticeOrReceiptFile}
                       onPreview={handlePreviewFile}
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || cannotSubmitResignation}
                       required
                     />
                   </div>
@@ -512,6 +535,7 @@ export default function ResignationPage() {
                     !effectiveDate ||
                     !letterOfRequestFile || 
                     !noticeOrReceiptFile ||
+                    cannotSubmitResignation ||
                     isSubmitting 
                 }>
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

@@ -92,6 +92,10 @@ export default function RetirementPage() {
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [previewObjectKey, setPreviewObjectKey] = useState<string | null>(null);
 
+  // Employee status validation
+  const isEmployeeRetired = employeeDetails?.status === 'Retired';
+  const cannotSubmitRetirement = isEmployeeRetired;
+
   // Handle file preview
   const handlePreviewFile = (objectKey: string) => {
     setPreviewObjectKey(objectKey);
@@ -282,6 +286,16 @@ export default function RetirementPage() {
       return;
     }
     
+    if (cannotSubmitRetirement) {
+      toast({ 
+        title: "Retirement Not Applicable", 
+        description: "Cannot request retirement for employees who are already retired.", 
+        variant: "destructive",
+        duration: 5000,
+      });
+      return;
+    }
+    
     // Validation checks
     if (!retirementType) {
       toast({ title: "Submission Error", description: "Please select a retirement type.", variant: "destructive" });
@@ -368,6 +382,7 @@ export default function RetirementPage() {
     (retirementType === 'illness' && (medicalFormFile === '' || illnessLeaveLetterFile === '' || !illnessDescription)) || 
     (showDelayFields && (!delayReason.trim() || delayDocumentFile === '')) ||
     (ageEligibilityError && !showDelayFields) ||
+    cannotSubmitRetirement ||
     isSubmitting;
   
   const handleUpdateRequest = async (requestId: string, payload: any, actionDescription?: string) => {
@@ -572,9 +587,17 @@ export default function RetirementPage() {
                       <div><Label className="text-muted-foreground">Employment Date:</Label> <p className="font-semibold text-foreground">{employeeDetails.employmentDate ? format(parseISO(employeeDetails.employmentDate), 'PPP') : 'N/A'}</p></div>
                       <div><Label className="text-muted-foreground">Date of Birth:</Label> <p className="font-semibold text-foreground">{employeeDetails.dateOfBirth ? format(parseISO(employeeDetails.dateOfBirth), 'PPP') : 'N/A'}</p></div>
                       <div className="lg:col-span-1"><Label className="text-muted-foreground">Institution:</Label> <p className="font-semibold text-foreground">{typeof employeeDetails.institution === 'object' ? employeeDetails.institution?.name : employeeDetails.institution || 'N/A'}</p></div>
+                      <div className="md:col-span-2 lg:col-span-3"><Label className="text-muted-foreground">Current Status:</Label> <p className={`font-semibold ${cannotSubmitRetirement ? 'text-destructive' : 'text-green-600'}`}>{employeeDetails.status || 'N/A'}</p></div>
                     </div>
                   </div>
                 </div>
+
+                {cannotSubmitRetirement && (
+                  <div className="flex items-center p-4 mt-2 text-sm text-destructive border border-destructive/50 rounded-md bg-destructive/10">
+                    <AlertTriangle className="h-5 w-5 mr-3 flex-shrink-0" />
+                    <span>Cannot request retirement for employees who are already retired.</span>
+                  </div>
+                )}
 
                  {ageEligibilityError && (
                   <Alert variant="destructive">
@@ -584,11 +607,11 @@ export default function RetirementPage() {
                   </Alert>
                 )}
 
-                <div className={`space-y-4 ${ageEligibilityError && !showDelayFields ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                <div className={`space-y-4 ${(ageEligibilityError && !showDelayFields) || cannotSubmitRetirement ? 'opacity-50 cursor-not-allowed' : ''}`}>
                   <h3 className="text-lg font-medium text-foreground">Retirement Details &amp; Documents (PDF Only)</h3>
                   <div>
                     <Label htmlFor="retirementType" className="flex items-center"><ListFilter className="mr-2 h-4 w-4 text-primary" />Retirement Type</Label>
-                    <Select value={retirementType} onValueChange={setRetirementType} disabled={isSubmitting || (ageEligibilityError && !showDelayFields)}>
+                    <Select value={retirementType} onValueChange={setRetirementType} disabled={isSubmitting || (ageEligibilityError && !showDelayFields) || cannotSubmitRetirement}>
                       <SelectTrigger id="retirementTypeTrigger">
                         <SelectValue placeholder="Select retirement type" />
                       </SelectTrigger>
@@ -602,7 +625,7 @@ export default function RetirementPage() {
                   {retirementType !== 'illness' && (
                     <div>
                       <Label htmlFor="retirementDate" className="flex items-center"><CalendarDays className="mr-2 h-4 w-4 text-primary" />Proposed Retirement Date</Label>
-                      <Input id="retirementDate" type="date" value={retirementDate} onChange={(e) => setRetirementDate(e.target.value)} disabled={isSubmitting || (ageEligibilityError && !showDelayFields)} min={minRetirementDate} />
+                      <Input id="retirementDate" type="date" value={retirementDate} onChange={(e) => setRetirementDate(e.target.value)} disabled={isSubmitting || (ageEligibilityError && !showDelayFields) || cannotSubmitRetirement} min={minRetirementDate} />
                     </div>
                   )}
                   
@@ -615,7 +638,7 @@ export default function RetirementPage() {
                           placeholder="Describe the illness as per the medical report" 
                           value={illnessDescription} 
                           onChange={(e) => setIllnessDescription(e.target.value)} 
-                          disabled={isSubmitting || (ageEligibilityError && !showDelayFields)}
+                          disabled={isSubmitting || (ageEligibilityError && !showDelayFields) || cannotSubmitRetirement}
                         />
                       </div>
                       <div>
@@ -625,7 +648,7 @@ export default function RetirementPage() {
                           value={medicalFormFile}
                           onChange={setMedicalFormFile}
                           onPreview={handlePreviewFile}
-                          disabled={isSubmitting || (ageEligibilityError && !showDelayFields)}
+                          disabled={isSubmitting || (ageEligibilityError && !showDelayFields) || cannotSubmitRetirement}
                           required
                         />
                       </div>
@@ -636,7 +659,7 @@ export default function RetirementPage() {
                           value={illnessLeaveLetterFile}
                           onChange={setIllnessLeaveLetterFile}
                           onPreview={handlePreviewFile}
-                          disabled={isSubmitting || (ageEligibilityError && !showDelayFields)}
+                          disabled={isSubmitting || (ageEligibilityError && !showDelayFields) || cannotSubmitRetirement}
                           required
                         />
                       </div>
@@ -686,7 +709,7 @@ export default function RetirementPage() {
                       value={letterOfRequestFile}
                       onChange={setLetterOfRequestFile}
                       onPreview={handlePreviewFile}
-                      disabled={isSubmitting || (ageEligibilityError && !showDelayFields)}
+                      disabled={isSubmitting || (ageEligibilityError && !showDelayFields) || cannotSubmitRetirement}
                       required
                     />
                   </div>
