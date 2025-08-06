@@ -1194,7 +1194,7 @@ export default function ServiceExtensionPage() {
         </Dialog>
       )}
 
-      {/* File Preview Modal */}}
+      {/* File Preview Modal */}
       <FilePreviewModal
         open={isPreviewModalOpen}
         onOpenChange={(open) => {

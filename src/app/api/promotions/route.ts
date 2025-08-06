@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { shouldApplyInstitutionFilter } from '@/lib/role-utils';
+import { validateEmployeeStatusForRequest } from '@/lib/employee-status-validation';
 
 export async function GET(req: Request) {
   try {
@@ -100,6 +101,28 @@ export async function POST(req: Request) {
         success: false, 
         message: 'Missing required field for experience-based promotion: proposedCadre' 
       }, { status: 400 });
+    }
+
+    // Get employee details to check status
+    const employee = await db.employee.findUnique({
+      where: { id: body.employeeId },
+      select: { id: true, name: true, status: true }
+    });
+
+    if (!employee) {
+      return NextResponse.json({ 
+        success: false, 
+        message: 'Employee not found' 
+      }, { status: 404 });
+    }
+
+    // Validate employee status for promotion request
+    const statusValidation = validateEmployeeStatusForRequest(employee.status, 'promotion');
+    if (!statusValidation.isValid) {
+      return NextResponse.json({ 
+        success: false, 
+        message: statusValidation.message 
+      }, { status: 403 });
     }
 
     const promotionRequest = await db.promotionRequest.create({

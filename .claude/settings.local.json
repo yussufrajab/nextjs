@@ -50,7 +50,8 @@
       "Bash(for:*)",
       "Bash(do echo \"=== $file ===\")",
       "Bash(done)",
-      "Bash(sudo netstat:*)"
+      "Bash(sudo netstat:*)",
+      "Bash(npm run lint)"
     ],
     "deny": []
   }
