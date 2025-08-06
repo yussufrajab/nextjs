@@ -597,7 +597,45 @@ export default function CadreChangePage() {
                 <p className="text-sm text-muted-foreground">From Cadre: {request.employee.cadre}</p>
                 <p className="text-sm text-muted-foreground">To Cadre: {request.newCadre}</p>
                 <p className="text-sm text-muted-foreground">Submitted: {request.createdAt ? format(parseISO(request.createdAt), 'PPP') : 'N/A'}</p>
-                <p className="text-sm"><span className="font-medium">Status:</span> <span className="text-primary">{request.status}</span></p>
+                <div className="flex items-center space-x-2">
+                  <p className="text-sm"><span className="font-medium">Status:</span></p>
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    request.status.includes('Approved by Commission') ? 'bg-green-100 text-green-800' :
+                    request.status.includes('Rejected by Commission') ? 'bg-red-100 text-red-800' :
+                    request.status.includes('Awaiting Commission') ? 'bg-blue-100 text-blue-800' :
+                    request.status.includes('Pending HRMO/HHRMD') ? 'bg-orange-100 text-orange-800' :
+                    request.status.includes('Awaiting HRO') ? 'bg-yellow-100 text-yellow-800' :
+                    request.status.includes('Correction') ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    {request.status}
+                  </span>
+                </div>
+                {/* Workflow Progress Indicator */}
+                <div className="flex items-center space-x-2 mt-2">
+                  <div className="flex items-center space-x-1 text-xs text-muted-foreground">
+                    <span>Workflow:</span>
+                    <div className="flex items-center space-x-1">
+                      <div className={`w-2 h-2 rounded-full ${
+                        ['Pending HRMO/HHRMD Review', 'Request Received – Awaiting Commission Decision', 'Approved by Commission', 'Rejected by Commission - Request Concluded'].includes(request.status) 
+                        ? 'bg-green-500' : 'bg-gray-300'
+                      }`}></div>
+                      <span className="text-[10px]">HRO Submit</span>
+                      <div className="w-3 h-px bg-gray-300"></div>
+                      <div className={`w-2 h-2 rounded-full ${
+                        ['Request Received – Awaiting Commission Decision', 'Approved by Commission', 'Rejected by Commission - Request Concluded'].includes(request.status) 
+                        ? 'bg-green-500' : request.status.includes('Pending HRMO/HHRMD') ? 'bg-orange-500' : 'bg-gray-300'
+                      }`}></div>
+                      <span className="text-[10px]">HRMO/HHRMD Review</span>
+                      <div className="w-3 h-px bg-gray-300"></div>
+                      <div className={`w-2 h-2 rounded-full ${
+                        ['Approved by Commission', 'Rejected by Commission - Request Concluded'].includes(request.status) 
+                        ? 'bg-green-500' : request.status.includes('Awaiting Commission') ? 'bg-blue-500' : 'bg-gray-300'
+                      }`}></div>
+                      <span className="text-[10px]">Commission Decision</span>
+                    </div>
+                  </div>
+                </div>
                 {request.rejectionReason && <p className="text-sm text-destructive"><span className="font-medium">Rejection Reason:</span> {request.rejectionReason}</p>}
                 <div className="mt-3 pt-3 border-t flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                   <Button size="sm" variant="outline" onClick={() => { setSelectedRequest(request); setIsDetailsModalOpen(true); }}>View Details</Button>
@@ -650,7 +688,45 @@ export default function CadreChangePage() {
                   <p className="text-sm text-muted-foreground">From Cadre: {request.employee.cadre}</p>
                   <p className="text-sm text-muted-foreground">To Cadre: {request.newCadre}</p>
                   <p className="text-sm text-muted-foreground">Submitted: {request.createdAt ? format(parseISO(request.createdAt), 'PPP') : 'N/A'} by {request.submittedBy?.name || 'N/A'}</p>
-                  <p className="text-sm"><span className="font-medium">Status:</span> <span className="text-primary">{request.status}</span></p>
+                  <div className="flex items-center space-x-2">
+                    <p className="text-sm"><span className="font-medium">Status:</span></p>
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                      request.status.includes('Approved by Commission') ? 'bg-green-100 text-green-800' :
+                      request.status.includes('Rejected by Commission') ? 'bg-red-100 text-red-800' :
+                      request.status.includes('Awaiting Commission') ? 'bg-blue-100 text-blue-800' :
+                      request.status.includes('Pending HRMO/HHRMD') ? 'bg-orange-100 text-orange-800' :
+                      request.status.includes('Awaiting HRO') ? 'bg-yellow-100 text-yellow-800' :
+                      request.status.includes('Correction') ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {request.status}
+                    </span>
+                  </div>
+                  {/* Workflow Progress Indicator */}
+                  <div className="flex items-center space-x-2 mt-2">
+                    <div className="flex items-center space-x-1 text-xs text-muted-foreground">
+                      <span>Workflow:</span>
+                      <div className="flex items-center space-x-1">
+                        <div className={`w-2 h-2 rounded-full ${
+                          ['Pending HRMO/HHRMD Review', 'Request Received – Awaiting Commission Decision', 'Approved by Commission', 'Rejected by Commission - Request Concluded'].includes(request.status) 
+                          ? 'bg-green-500' : 'bg-gray-300'
+                        }`}></div>
+                        <span className="text-[10px]">HRO Submit</span>
+                        <div className="w-3 h-px bg-gray-300"></div>
+                        <div className={`w-2 h-2 rounded-full ${
+                          ['Request Received – Awaiting Commission Decision', 'Approved by Commission', 'Rejected by Commission - Request Concluded'].includes(request.status) 
+                          ? 'bg-green-500' : request.status.includes('Pending HRMO/HHRMD') ? 'bg-orange-500' : 'bg-gray-300'
+                        }`}></div>
+                        <span className="text-[10px]">HRMO/HHRMD Review</span>
+                        <div className="w-3 h-px bg-gray-300"></div>
+                        <div className={`w-2 h-2 rounded-full ${
+                          ['Approved by Commission', 'Rejected by Commission - Request Concluded'].includes(request.status) 
+                          ? 'bg-green-500' : request.status.includes('Awaiting Commission') ? 'bg-blue-500' : 'bg-gray-300'
+                        }`}></div>
+                        <span className="text-[10px]">Commission Decision</span>
+                      </div>
+                    </div>
+                  </div>
                   {request.rejectionReason && <p className="text-sm text-destructive"><span className="font-medium">Rejection Reason:</span> {request.rejectionReason}</p>}
                   <div className="mt-3 pt-3 border-t flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                     <Button size="sm" variant="outline" onClick={() => { setSelectedRequest(request); setIsDetailsModalOpen(true); }}>View Details</Button>

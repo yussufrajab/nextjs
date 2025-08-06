@@ -738,6 +738,31 @@ export default function ComplaintsPage() {
                                     "bg-gray-100 text-gray-700"
                                 }`}>{complaint.status}</span>
                             </div>
+                            {/* Workflow Progress Indicator for Complaints */}
+                            <div className="flex items-center space-x-2 mt-2">
+                                <div className="flex items-center space-x-1 text-xs text-muted-foreground">
+                                    <span>Workflow:</span>
+                                    <div className="flex items-center space-x-1">
+                                        <div className={`w-2 h-2 rounded-full ${
+                                            ['Submitted', 'lalamiko lako limepokelewa, linafanyiwa kazi', 'Awaiting More Information', 'Under Review - Additional Information Provided', 'Resolved - Pending Employee Confirmation', 'Rejected - Pending Employee Confirmation', 'Mtumishi ameridhika na hatua', 'Closed - Satisfied'].includes(complaint.status) || complaint.status.startsWith('Resolved') || complaint.status.startsWith('Rejected by') 
+                                            ? 'bg-green-500' : 'bg-gray-300'
+                                        }`}></div>
+                                        <span className="text-[10px]">Wasilisha</span>
+                                        <div className="w-3 h-px bg-gray-300"></div>
+                                        <div className={`w-2 h-2 rounded-full ${
+                                            ['lalamiko lako limepokelewa, linafanyiwa kazi', 'Under Review - Additional Information Provided', 'Resolved - Pending Employee Confirmation', 'Rejected - Pending Employee Confirmation', 'Mtumishi ameridhika na hatua', 'Closed - Satisfied'].includes(complaint.status) || complaint.status.startsWith('Resolved') || complaint.status.startsWith('Rejected by')
+                                            ? 'bg-green-500' : complaint.status === 'Awaiting More Information' ? 'bg-orange-500' : 'bg-gray-300'
+                                        }`}></div>
+                                        <span className="text-[10px]">Mkaguzi</span>
+                                        <div className="w-3 h-px bg-gray-300"></div>
+                                        <div className={`w-2 h-2 rounded-full ${
+                                            ['Mtumishi ameridhika na hatua', 'Closed - Satisfied'].includes(complaint.status)
+                                            ? 'bg-green-500' : (complaint.status === 'Resolved - Pending Employee Confirmation' || complaint.status === 'Rejected - Pending Employee Confirmation') ? 'bg-blue-500' : complaint.status.startsWith('Resolved') || complaint.status.startsWith('Rejected by') ? 'bg-orange-500' : 'bg-gray-300'
+                                        }`}></div>
+                                        <span className="text-[10px]">Malizika</span>
+                                    </div>
+                                </div>
+                            </div>
                             <p className="text-sm "><strong className="text-muted-foreground">Maelezo:</strong> {complaint.details.substring(0,150)}{complaint.details.length > 150 ? '...' : ''}</p>
                             {complaint.officerComments && (complaint.status.startsWith("Resolved") || complaint.status.startsWith("Rejected by") || complaint.status === "Awaiting More Information") && (
                                 <Card className="mt-2 bg-secondary/30">
@@ -999,6 +1024,31 @@ export default function ComplaintsPage() {
                         complaint.status.startsWith("Closed - Commission Decision") ? "bg-gray-100 text-gray-700" :
                         "bg-gray-100 text-gray-700"
                     }`}>{complaint.status}</span>
+                  </div>
+                  {/* Workflow Progress Indicator for Complaints */}
+                  <div className="flex items-center space-x-2 mt-2">
+                    <div className="flex items-center space-x-1 text-xs text-muted-foreground">
+                      <span>Workflow:</span>
+                      <div className="flex items-center space-x-1">
+                        <div className={`w-2 h-2 rounded-full ${
+                          ['Submitted', 'lalamiko lako limepokelewa, linafanyiwa kazi', 'Under Review', 'Under Review - Additional Information Provided', 'Resolved - Pending Employee Confirmation', 'Rejected - Pending Employee Confirmation', 'Mtumishi ameridhika na hatua', 'Closed - Satisfied'].includes(complaint.status) || complaint.status.startsWith('Resolved') || complaint.status.startsWith('Rejected by') || complaint.status.startsWith('Closed - Commission')
+                          ? 'bg-green-500' : 'bg-gray-300'
+                        }`}></div>
+                        <span className="text-[10px]">Wasilisha</span>
+                        <div className="w-3 h-px bg-gray-300"></div>
+                        <div className={`w-2 h-2 rounded-full ${
+                          ['lalamiko lako limepokelewa, linafanyiwa kazi', 'Under Review', 'Under Review - Additional Information Provided', 'Resolved - Pending Employee Confirmation', 'Rejected - Pending Employee Confirmation', 'Mtumishi ameridhika na hatua', 'Closed - Satisfied'].includes(complaint.status) || complaint.status.startsWith('Resolved') || complaint.status.startsWith('Rejected by') || complaint.status.startsWith('Closed - Commission')
+                          ? 'bg-green-500' : 'bg-gray-300'
+                        }`}></div>
+                        <span className="text-[10px]">Mkaguzi</span>
+                        <div className="w-3 h-px bg-gray-300"></div>
+                        <div className={`w-2 h-2 rounded-full ${
+                          ['Mtumishi ameridhika na hatua', 'Closed - Satisfied'].includes(complaint.status)
+                          ? 'bg-green-500' : (complaint.status === 'Resolved - Pending Employee Confirmation' || complaint.status === 'Rejected - Pending Employee Confirmation') ? 'bg-blue-500' : complaint.status.startsWith('Resolved') || complaint.status.startsWith('Rejected by') || complaint.status.startsWith('Closed - Commission') ? 'bg-orange-500' : 'bg-gray-300'
+                        }`}></div>
+                        <span className="text-[10px]">Malizika</span>
+                      </div>
+                    </div>
                   </div>
                   <p className="text-sm text-muted-foreground">
                     From: {complaint.employeeName} {complaint.zanId ? `(ZanID: ${complaint.zanId})` : ''}

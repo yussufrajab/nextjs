@@ -378,11 +378,16 @@ export default function ConfirmationPage() {
       setRejectionReasonInput('');
       setIsRejectionModalOpen(true);
     } else if (action === 'forward') {
-      // Both HRMO and HHRMD forward directly to Commission (parallel workflow)
-      const payload = { status: "Request Received – Awaiting Commission Decision", reviewStage: 'commission_review', decisionDate: new Date().toISOString() };
+      // Parallel workflow: First HRMO/HHRMD to approve wins - immediately forwards to Commission
       const roleName = role === ROLES.HRMO ? 'HRMO' : 'HHRMD';
+      const payload = { 
+        status: `Approved by ${roleName} – Awaiting Commission Decision`, 
+        reviewStage: 'commission_review', 
+        decisionDate: new Date().toISOString(),
+        reviewedById: user?.id
+      };
       
-      await handleUpdateRequest(requestId, payload, `Request approved by ${roleName} and forwarded to Commission`);
+      await handleUpdateRequest(requestId, payload, `Request approved by ${roleName} and forwarded to Commission (parallel workflow - first approval wins)`);
     }
   };
 
@@ -646,9 +651,49 @@ export default function ConfirmationPage() {
                   <p className="text-sm text-muted-foreground">Submitted: {format(parseISO(request.createdAt), 'PPP')} by {request.submittedBy?.name || 'N/A'}</p>
                   {request.decisionDate && <p className="text-sm text-muted-foreground">Initial Review Date: {format(parseISO(request.decisionDate), 'PPP')}</p>}
                   {request.commissionDecisionDate && <p className="text-sm text-muted-foreground">Commission Decision Date: {format(parseISO(request.commissionDecisionDate), 'PPP')}</p>}
-                  <p className="text-sm"><span className="font-medium">Status:</span> <span className="text-primary">
-                    {request.status}
-                  </span></p>
+                  <div className="flex items-center space-x-2">
+                    <p className="text-sm"><span className="font-medium">Status:</span></p>
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                      request.status.includes('Approved by Commission') ? 'bg-green-100 text-green-800' :
+                      request.status.includes('Rejected by Commission') ? 'bg-red-100 text-red-800' :
+                      request.status.includes('Awaiting Commission') ? 'bg-blue-100 text-blue-800' :
+                      request.status.includes('Pending HRMO/HHRMD') ? 'bg-orange-100 text-orange-800' :
+                      request.status.includes('Awaiting HRO') ? 'bg-yellow-100 text-yellow-800' :
+                      request.status.includes('Correction') ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {request.status}
+                    </span>
+                  </div>
+                  {/* Workflow Progress Indicator */}
+                  <div className="flex items-center space-x-2 mt-2">
+                    <div className="flex items-center space-x-1 text-xs text-muted-foreground">
+                      <span>Workflow:</span>
+                      <div className="flex items-center space-x-1">
+                        <div className={`w-2 h-2 rounded-full ${
+                          (request.status.includes('Pending HRMO/HHRMD Review') || request.status.includes('Awaiting Commission Decision') || ['Approved by Commission', 'Rejected by Commission - Request Concluded'].includes(request.status))
+                          ? 'bg-green-500' : 'bg-gray-300'
+                        }`}></div>
+                        <span className="text-[10px]">HRO Submit</span>
+                        <div className="w-3 h-px bg-gray-300"></div>
+                        <div className={`w-2 h-2 rounded-full ${
+                          (request.status.includes('Awaiting Commission Decision') || ['Approved by Commission', 'Rejected by Commission - Request Concluded'].includes(request.status))
+                          ? 'bg-green-500' : request.status.includes('Pending HRMO/HHRMD') ? 'bg-orange-500' : 'bg-gray-300'
+                        }`}></div>
+                        <span className="text-[10px]">
+                          {request.status.includes('Approved by HRMO') ? 'HRMO ✓' : 
+                           request.status.includes('Approved by HHRMD') ? 'HHRMD ✓' : 
+                           'HRMO/HHRMD Review'}
+                        </span>
+                        <div className="w-3 h-px bg-gray-300"></div>
+                        <div className={`w-2 h-2 rounded-full ${
+                          ['Approved by Commission', 'Rejected by Commission - Request Concluded'].includes(request.status) 
+                          ? 'bg-green-500' : request.status.includes('Awaiting Commission Decision') ? 'bg-blue-500' : 'bg-gray-300'
+                        }`}></div>
+                        <span className="text-[10px]">Commission Decision</span>
+                      </div>
+                    </div>
+                  </div>
                   {request.rejectionReason && <p className="text-sm text-destructive"><span className="font-medium">Rejection Reason:</span> {request.rejectionReason}</p>}
                   <div className="mt-3 pt-3 border-t flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                     <Button size="sm" variant="outline" onClick={() => { setSelectedRequest(request); setIsDetailsModalOpen(true); }}>View Details</Button>
@@ -659,10 +704,11 @@ export default function ConfirmationPage() {
                           <>
                             <Button size="sm" onClick={() => handleInitialAction(request.id, 'forward')}>Verify &amp; Forward to Commission</Button>
                             <Button size="sm" variant="destructive" onClick={() => handleInitialAction(request.id, 'reject')}>Reject &amp; Return to HRO</Button>
+                            <span className="text-xs text-muted-foreground italic">Parallel workflow: First approval wins</span>
                           </>
                         )}
-                        {/* HHRMD also handles commission decisions */}
-                        {role === ROLES.HHRMD && request.reviewStage === 'commission_review' && request.status === 'Request Received – Awaiting Commission Decision' && (
+                        {/* Both HHRMD and HRMO handle commission decisions */}
+                        {(role === ROLES.HHRMD || role === ROLES.HRMO) && request.reviewStage === 'commission_review' && request.status.includes('Awaiting Commission Decision') && (
                           <>
                               <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" onClick={() => handleCommissionDecision(request.id, 'approved')}>Approved by Commission</Button>
                               <Button size="sm" variant="destructive" onClick={() => handleCommissionDecision(request.id, 'rejected')}>Rejected by Commission</Button>

@@ -752,6 +752,31 @@ export default function LwopPage() {
                       {request.status}
                     </span>
                   </div>
+                  {/* Workflow Progress Indicator */}
+                  <div className="flex items-center space-x-2 mt-2">
+                    <div className="flex items-center space-x-1 text-xs text-muted-foreground">
+                      <span>Workflow:</span>
+                      <div className="flex items-center space-x-1">
+                        <div className={`w-2 h-2 rounded-full ${
+                          ['Pending HRMO/HHRMD Review', 'Request Received – Awaiting Commission Decision', 'Approved by Commission', 'Rejected by Commission - Request Concluded'].includes(request.status) 
+                          ? 'bg-green-500' : 'bg-gray-300'
+                        }`}></div>
+                        <span className="text-[10px]">HRO Submit</span>
+                        <div className="w-3 h-px bg-gray-300"></div>
+                        <div className={`w-2 h-2 rounded-full ${
+                          ['Request Received – Awaiting Commission Decision', 'Approved by Commission', 'Rejected by Commission - Request Concluded'].includes(request.status) 
+                          ? 'bg-green-500' : request.status.includes('Pending HRMO/HHRMD') ? 'bg-orange-500' : 'bg-gray-300'
+                        }`}></div>
+                        <span className="text-[10px]">HRMO/HHRMD Review</span>
+                        <div className="w-3 h-px bg-gray-300"></div>
+                        <div className={`w-2 h-2 rounded-full ${
+                          ['Approved by Commission', 'Rejected by Commission - Request Concluded'].includes(request.status) 
+                          ? 'bg-green-500' : request.status.includes('Awaiting Commission') ? 'bg-blue-500' : 'bg-gray-300'
+                        }`}></div>
+                        <span className="text-[10px]">Commission Decision</span>
+                      </div>
+                    </div>
+                  </div>
                   {request.rejectionReason && <p className="text-sm text-destructive"><span className="font-medium">Rejection Reason:</span> {request.rejectionReason}</p>}
                   <div className="mt-3 pt-3 border-t flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                     <Button size="sm" variant="outline" onClick={() => { setSelectedRequest(request); setIsDetailsModalOpen(true); }}>View Details</Button>
@@ -915,15 +940,13 @@ export default function LwopPage() {
                                             variant="outline" 
                                             size="sm" 
                                             className="h-8 px-2 text-xs"
-                                            onClick={() => {
-                                                // Create a temporary link for download with auth headers
-                                                const token = localStorage.getItem('accessToken');
-                                                if (token) {
-                                                    fetch(`/api/files/download/${doc}`, {
-                                                        headers: { 'Authorization': `Bearer ${token}` }
-                                                    })
-                                                    .then(response => response.blob())
-                                                    .then(blob => {
+                                            onClick={async () => {
+                                                try {
+                                                    const response = await fetch(`/api/files/download/${doc}`, {
+                                                        credentials: 'include'
+                                                    });
+                                                    if (response.ok) {
+                                                        const blob = await response.blob();
                                                         const url = window.URL.createObjectURL(blob);
                                                         const a = document.createElement('a');
                                                         a.href = url;
@@ -932,6 +955,19 @@ export default function LwopPage() {
                                                         a.click();
                                                         window.URL.revokeObjectURL(url);
                                                         document.body.removeChild(a);
+                                                    } else {
+                                                        toast({
+                                                            title: 'Download Failed',
+                                                            description: 'Could not download the file. Please try again.',
+                                                            variant: 'destructive'
+                                                        });
+                                                    }
+                                                } catch (error) {
+                                                    console.error('Download error:', error);
+                                                    toast({
+                                                        title: 'Download Failed', 
+                                                        description: 'An error occurred while downloading the file.',
+                                                        variant: 'destructive'
                                                     });
                                                 }
                                             }}
