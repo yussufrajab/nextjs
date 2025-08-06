@@ -19,13 +19,14 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
   switch (reportType) {
     case 'confirmation':
       title = 'Ripoti ya Kuthibitishwa Kazini';
-      headers = ['S/N', 'Jina la Mfanyakazi', 'ZAN ID', 'Taasisi', 'Tarehe ya Ombi', 'Hali', 'Mwenye Kuidhinisha'];
-      dataKeys = ['sn', 'employeeName', 'zanId', 'institution', 'requestDate', 'status', 'reviewer'];
+      headers = ['S/N', 'Jina la Mfanyakazi', 'ZAN ID', 'Jinsia', 'Taasisi', 'Tarehe ya Ombi', 'Hali', 'Mwenye Kuidhinisha'];
+      dataKeys = ['sn', 'employeeName', 'zanId', 'gender', 'institution', 'requestDate', 'status', 'reviewer'];
       
       formattedData = rawData.map((item, index) => ({
         sn: index + 1,
         employeeName: item.employee?.name || '-',
         zanId: item.employee?.zanId || '-',
+        gender: item.employee?.gender || '-',
         institution: item.employee?.institution?.name || '-',
         requestDate: new Date(item.createdAt).toLocaleDateString('sw-TZ'),
         status: item.status === 'APPROVED' ? 'Imeidhinishwa' : item.status === 'REJECTED' ? 'Imekataliwa' : 'Inasubiri',
@@ -36,6 +37,7 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
         sn: 'JUMLA',
         employeeName: '',
         zanId: '',
+        gender: '',
         institution: '',
         requestDate: '',
         status: formattedData.length,
@@ -49,13 +51,14 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
       title = reportType === 'promotionEducation' ? 'Ripoti ya Kupandishwa Cheo kwa Maendeleo ya Elimu' :
               reportType === 'promotionExperience' ? 'Ripoti ya Kupandishwa Cheo kwa Uzoefu' :
               'Ripoti ya Kupandishwa Cheo';
-      headers = ['S/N', 'Jina la Mfanyakazi', 'ZAN ID', 'Taasisi', 'Kada ya Sasa', 'Kada Inayopendekezwa', 'Aina', 'Tarehe ya Ombi', 'Hali'];
-      dataKeys = ['sn', 'employeeName', 'zanId', 'institution', 'currentCadre', 'proposedCadre', 'promotionType', 'requestDate', 'status'];
+      headers = ['S/N', 'Jina la Mfanyakazi', 'ZAN ID', 'Jinsia', 'Taasisi', 'Kada ya Sasa', 'Kada Inayopendekezwa', 'Aina', 'Tarehe ya Ombi', 'Hali'];
+      dataKeys = ['sn', 'employeeName', 'zanId', 'gender', 'institution', 'currentCadre', 'proposedCadre', 'promotionType', 'requestDate', 'status'];
       
       formattedData = rawData.map((item, index) => ({
         sn: index + 1,
         employeeName: item.employee?.name || '-',
         zanId: item.employee?.zanId || '-',
+        gender: item.employee?.gender || '-',
         institution: item.employee?.institution?.name || '-',
         currentCadre: item.employee?.cadre || '-',
         proposedCadre: item.proposedCadre || '-',
@@ -68,6 +71,7 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
         sn: 'JUMLA',
         employeeName: '',
         zanId: '',
+        gender: '',
         institution: '',
         currentCadre: '',
         proposedCadre: '',
@@ -79,13 +83,14 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
 
     case 'lwop':
       title = 'Ripoti ya Likizo Bila Malipo';
-      headers = ['S/N', 'Jina la Mfanyakazi', 'ZAN ID', 'Taasisi', 'Muda', 'Sababu', 'Tarehe ya Kuanza', 'Tarehe ya Kumaliza', 'Hali'];
-      dataKeys = ['sn', 'employeeName', 'zanId', 'institution', 'duration', 'reason', 'startDate', 'endDate', 'status'];
+      headers = ['S/N', 'Jina la Mfanyakazi', 'ZAN ID', 'Jinsia', 'Taasisi', 'Muda', 'Sababu', 'Tarehe ya Kuanza', 'Tarehe ya Kumaliza', 'Hali'];
+      dataKeys = ['sn', 'employeeName', 'zanId', 'gender', 'institution', 'duration', 'reason', 'startDate', 'endDate', 'status'];
       
       formattedData = rawData.map((item, index) => ({
         sn: index + 1,
         employeeName: item.employee?.name || '-',
         zanId: item.employee?.zanId || '-',
+        gender: item.employee?.gender || '-',
         institution: item.employee?.institution?.name || '-',
         duration: item.duration || '-',
         reason: item.reason || '-',
@@ -98,6 +103,7 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
         sn: 'JUMLA',
         employeeName: '',
         zanId: '',
+        gender: '',
         institution: '',
         duration: '',
         reason: '',
@@ -109,13 +115,14 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
 
     case 'cadreChange':
       title = 'Ripoti ya Kubadilishwa Kada';
-      headers = ['S/N', 'Jina la Mfanyakazi', 'ZAN ID', 'Taasisi', 'Kada ya Sasa', 'Kada Mpya', 'Sababu', 'Tarehe ya Ombi', 'Hali'];
-      dataKeys = ['sn', 'employeeName', 'zanId', 'institution', 'currentCadre', 'newCadre', 'reason', 'requestDate', 'status'];
+      headers = ['S/N', 'Jina la Mfanyakazi', 'ZAN ID', 'Jinsia', 'Taasisi', 'Kada ya Sasa', 'Kada Mpya', 'Sababu', 'Tarehe ya Ombi', 'Hali'];
+      dataKeys = ['sn', 'employeeName', 'zanId', 'gender', 'institution', 'currentCadre', 'newCadre', 'reason', 'requestDate', 'status'];
       
       formattedData = rawData.map((item, index) => ({
         sn: index + 1,
         employeeName: item.employee?.name || '-',
         zanId: item.employee?.zanId || '-',
+        gender: item.employee?.gender || '-',
         institution: item.employee?.institution?.name || '-',
         currentCadre: item.employee?.cadre || '-',
         newCadre: item.newCadre || '-',
@@ -128,6 +135,7 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
         sn: 'JUMLA',
         employeeName: '',
         zanId: '',
+        gender: '',
         institution: '',
         currentCadre: '',
         newCadre: '',
@@ -145,13 +153,14 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
               reportType === 'compulsoryRetirement' ? 'Ripoti ya Kustaafu kwa Lazima' :
               reportType === 'illnessRetirement' ? 'Ripoti ya Kustaafu kwa Ugonjwa' :
               'Ripoti ya Kustaafu';
-      headers = ['S/N', 'Jina la Mfanyakazi', 'ZAN ID', 'Taasisi', 'Aina ya Kustaafu', 'Tarehe ya Kustaafu', 'Tarehe ya Ombi', 'Hali'];
-      dataKeys = ['sn', 'employeeName', 'zanId', 'institution', 'retirementType', 'retirementDate', 'requestDate', 'status'];
+      headers = ['S/N', 'Jina la Mfanyakazi', 'ZAN ID', 'Jinsia', 'Taasisi', 'Aina ya Kustaafu', 'Tarehe ya Kustaafu', 'Tarehe ya Ombi', 'Hali'];
+      dataKeys = ['sn', 'employeeName', 'zanId', 'gender', 'institution', 'retirementType', 'retirementDate', 'requestDate', 'status'];
       
       formattedData = rawData.map((item, index) => ({
         sn: index + 1,
         employeeName: item.employee?.name || '-',
         zanId: item.employee?.zanId || '-',
+        gender: item.employee?.gender || '-',
         institution: item.employee?.institution?.name || '-',
         retirementType: item.retirementType === 'VOLUNTARY' ? 'Hiari' : 
                        item.retirementType === 'COMPULSORY' ? 'Lazima' : 
@@ -165,6 +174,7 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
         sn: 'JUMLA',
         employeeName: '',
         zanId: '',
+        gender: '',
         institution: '',
         retirementType: '',
         retirementDate: '',
@@ -175,13 +185,14 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
 
     case 'resignation':
       title = 'Ripoti ya Kuacha Kazi';
-      headers = ['S/N', 'Jina la Mfanyakazi', 'ZAN ID', 'Taasisi', 'Tarehe ya Kuacha', 'Sababu', 'Tarehe ya Ombi', 'Hali'];
-      dataKeys = ['sn', 'employeeName', 'zanId', 'institution', 'effectiveDate', 'reason', 'requestDate', 'status'];
+      headers = ['S/N', 'Jina la Mfanyakazi', 'ZAN ID', 'Jinsia', 'Taasisi', 'Tarehe ya Kuacha', 'Sababu', 'Tarehe ya Ombi', 'Hali'];
+      dataKeys = ['sn', 'employeeName', 'zanId', 'gender', 'institution', 'effectiveDate', 'reason', 'requestDate', 'status'];
       
       formattedData = rawData.map((item, index) => ({
         sn: index + 1,
         employeeName: item.employee?.name || '-',
         zanId: item.employee?.zanId || '-',
+        gender: item.employee?.gender || '-',
         institution: item.employee?.institution?.name || '-',
         effectiveDate: item.effectiveDate ? new Date(item.effectiveDate).toLocaleDateString('sw-TZ') : '-',
         reason: item.reason || '-',
@@ -193,6 +204,7 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
         sn: 'JUMLA',
         employeeName: '',
         zanId: '',
+        gender: '',
         institution: '',
         effectiveDate: '',
         reason: '',
@@ -203,13 +215,14 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
 
     case 'serviceExtension':
       title = 'Ripoti ya Nyongeza ya Utumishi';
-      headers = ['S/N', 'Jina la Mfanyakazi', 'ZAN ID', 'Taasisi', 'Tarehe ya Sasa ya Kustaafu', 'Muda wa Nyongeza', 'Sababu', 'Tarehe ya Ombi', 'Hali'];
-      dataKeys = ['sn', 'employeeName', 'zanId', 'institution', 'currentRetirementDate', 'extensionPeriod', 'justification', 'requestDate', 'status'];
+      headers = ['S/N', 'Jina la Mfanyakazi', 'ZAN ID', 'Jinsia', 'Taasisi', 'Tarehe ya Sasa ya Kustaafu', 'Muda wa Nyongeza', 'Sababu', 'Tarehe ya Ombi', 'Hali'];
+      dataKeys = ['sn', 'employeeName', 'zanId', 'gender', 'institution', 'currentRetirementDate', 'extensionPeriod', 'justification', 'requestDate', 'status'];
       
       formattedData = rawData.map((item, index) => ({
         sn: index + 1,
         employeeName: item.employee?.name || '-',
         zanId: item.employee?.zanId || '-',
+        gender: item.employee?.gender || '-',
         institution: item.employee?.institution?.name || '-',
         currentRetirementDate: item.currentRetirementDate ? new Date(item.currentRetirementDate).toLocaleDateString('sw-TZ') : '-',
         extensionPeriod: item.requestedExtensionPeriod || '-',
@@ -222,6 +235,7 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
         sn: 'JUMLA',
         employeeName: '',
         zanId: '',
+        gender: '',
         institution: '',
         currentRetirementDate: '',
         extensionPeriod: '',
@@ -234,13 +248,14 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
     case 'termination':
     case 'terminationDismissal':
       title = 'Ripoti ya Kufukuzwa/Kuachishwa Kazi';
-      headers = ['S/N', 'Jina la Mfanyakazi', 'ZAN ID', 'Taasisi', 'Aina', 'Sababu', 'Tarehe ya Ombi', 'Hali'];
-      dataKeys = ['sn', 'employeeName', 'zanId', 'institution', 'type', 'reason', 'requestDate', 'status'];
+      headers = ['S/N', 'Jina la Mfanyakazi', 'ZAN ID', 'Jinsia', 'Taasisi', 'Aina', 'Sababu', 'Tarehe ya Ombi', 'Hali'];
+      dataKeys = ['sn', 'employeeName', 'zanId', 'gender', 'institution', 'type', 'reason', 'requestDate', 'status'];
       
       formattedData = rawData.map((item, index) => ({
         sn: index + 1,
         employeeName: item.employee?.name || '-',
         zanId: item.employee?.zanId || '-',
+        gender: item.employee?.gender || '-',
         institution: item.employee?.institution?.name || '-',
         type: item.type === 'TERMINATION' ? 'Kuachishwa' : 'Kufukuzwa',
         reason: item.reason || '-',
@@ -252,6 +267,7 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
         sn: 'JUMLA',
         employeeName: '',
         zanId: '',
+        gender: '',
         institution: '',
         type: '',
         reason: '',
@@ -262,12 +278,13 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
 
     case 'complaints':
       title = 'Ripoti ya Malalamiko';
-      headers = ['S/N', 'Mlalamikaji', 'Aina ya Malalamiko', 'Maelezo', 'Tarehe', 'Hali'];
-      dataKeys = ['sn', 'complainant', 'complaintType', 'subject', 'date', 'status'];
+      headers = ['S/N', 'Mlalamikaji', 'Jinsia', 'Aina ya Malalamiko', 'Maelezo', 'Tarehe', 'Hali'];
+      dataKeys = ['sn', 'complainant', 'gender', 'complaintType', 'subject', 'date', 'status'];
       
       formattedData = rawData.map((item, index) => ({
         sn: index + 1,
         complainant: item.complainant?.name || '-',
+        gender: '-', // Gender not available for Users in current schema
         complaintType: item.complaintType || '-',
         subject: item.subject || '-',
         date: new Date(item.createdAt).toLocaleDateString('sw-TZ'),
@@ -277,6 +294,7 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
       totals = {
         sn: 'JUMLA',
         complainant: '',
+        gender: '',
         complaintType: '',
         subject: '',
         date: '',
@@ -286,14 +304,15 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
 
     case 'contractual':
       title = 'Ripoti ya Ajira za Mikataba';
-      headers = ['S/N', 'Jina la Mfanyakazi', 'ZAN ID', 'Taasisi', 'Aina ya Mkataba', 'Tarehe ya Kuanza', 'Tarehe ya Kumaliza'];
-      dataKeys = ['sn', 'employeeName', 'zanId', 'institution', 'contractType', 'startDate', 'endDate'];
+      headers = ['S/N', 'Jina la Mfanyakazi', 'ZAN ID', 'Jinsia', 'Taasisi', 'Aina ya Mkataba', 'Tarehe ya Kuanza', 'Tarehe ya Kumaliza'];
+      dataKeys = ['sn', 'employeeName', 'zanId', 'gender', 'institution', 'contractType', 'startDate', 'endDate'];
       
       formattedData = [];
       totals = {
         sn: 'JUMLA',
         employeeName: '',
         zanId: '',
+        gender: '',
         institution: '',
         contractType: '',
         startDate: '',
@@ -303,15 +322,16 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
 
     default:
       title = 'Ripoti';
-      headers = ['S/N', 'Jina', 'Tarehe', 'Hali'];
-      dataKeys = ['sn', 'name', 'date', 'status'];
+      headers = ['S/N', 'Jina', 'Jinsia', 'Tarehe', 'Hali'];
+      dataKeys = ['sn', 'name', 'gender', 'date', 'status'];
       formattedData = rawData.map((item, index) => ({
         sn: index + 1,
         name: item.employee?.name || '-',
+        gender: item.employee?.gender || '-',
         date: new Date(item.createdAt).toLocaleDateString('sw-TZ'),
         status: item.status || '-'
       }));
-      totals = { sn: 'JUMLA', name: '', date: '', status: formattedData.length };
+      totals = { sn: 'JUMLA', name: '', gender: '', date: '', status: formattedData.length };
   }
 
   return {
@@ -392,6 +412,8 @@ export async function GET(req: Request) {
                 id: true,
                 name: true,
                 zanId: true,
+                gender: true,
+                cadre: true,
                 institution: { select: { id: true, name: true } }
               }
             },
@@ -413,6 +435,8 @@ export async function GET(req: Request) {
                 id: true,
                 name: true,
                 zanId: true,
+                gender: true,
+                cadre: true,
                 institution: { select: { id: true, name: true } }
               }
             },
@@ -433,6 +457,8 @@ export async function GET(req: Request) {
                 id: true,
                 name: true,
                 zanId: true,
+                gender: true,
+                cadre: true,
                 institution: { select: { id: true, name: true } }
               }
             },
@@ -465,6 +491,8 @@ export async function GET(req: Request) {
                 id: true,
                 name: true,
                 zanId: true,
+                gender: true,
+                cadre: true,
                 institution: { select: { id: true, name: true } }
               }
             },
@@ -487,6 +515,8 @@ export async function GET(req: Request) {
                 id: true,
                 name: true,
                 zanId: true,
+                gender: true,
+                cadre: true,
                 institution: { select: { id: true, name: true } }
               }
             },
@@ -506,6 +536,8 @@ export async function GET(req: Request) {
                 id: true,
                 name: true,
                 zanId: true,
+                gender: true,
+                cadre: true,
                 institution: { select: { id: true, name: true } }
               }
             },
@@ -526,6 +558,8 @@ export async function GET(req: Request) {
                 id: true,
                 name: true,
                 zanId: true,
+                gender: true,
+                cadre: true,
                 institution: { select: { id: true, name: true } }
               }
             },
@@ -546,6 +580,8 @@ export async function GET(req: Request) {
                 id: true,
                 name: true,
                 zanId: true,
+                gender: true,
+                cadre: true,
                 institution: { select: { id: true, name: true } }
               }
             },
@@ -588,14 +624,14 @@ export async function GET(req: Request) {
       case 'all':
         // Get all request types and combine them
         const [confirmations, promotions, lwops, cadreChanges, retirements, resignations, serviceExtensions, terminations] = await Promise.all([
-          db.confirmationRequest.findMany({ where: whereClause, include: { employee: { select: { id: true, name: true, zanId: true, institution: { select: { id: true, name: true } } } }, submittedBy: { select: { id: true, name: true, username: true } }, reviewedBy: { select: { id: true, name: true, username: true } } }, orderBy: { createdAt: 'desc' } }).catch(() => []),
-          db.promotionRequest.findMany({ where: whereClause, include: { employee: { select: { id: true, name: true, zanId: true, institution: { select: { id: true, name: true } } } }, submittedBy: { select: { id: true, name: true, username: true } }, reviewedBy: { select: { id: true, name: true, username: true } } }, orderBy: { createdAt: 'desc' } }).catch(() => []),
-          db.lwopRequest.findMany({ where: whereClause, include: { employee: { select: { id: true, name: true, zanId: true, institution: { select: { id: true, name: true } } } }, submittedBy: { select: { id: true, name: true, username: true } }, reviewedBy: { select: { id: true, name: true, username: true } } }, orderBy: { createdAt: 'desc' } }).catch(() => []),
-          db.cadreChangeRequest.findMany({ where: whereClause, include: { employee: { select: { id: true, name: true, zanId: true, institution: { select: { id: true, name: true } } } }, submittedBy: { select: { id: true, name: true, username: true } }, reviewedBy: { select: { id: true, name: true, username: true } } }, orderBy: { createdAt: 'desc' } }).catch(() => []),
-          db.retirementRequest.findMany({ where: whereClause, include: { employee: { select: { id: true, name: true, zanId: true, institution: { select: { id: true, name: true } } } }, submittedBy: { select: { id: true, name: true, username: true } }, reviewedBy: { select: { id: true, name: true, username: true } } }, orderBy: { createdAt: 'desc' } }).catch(() => []),
-          db.resignationRequest.findMany({ where: whereClause, include: { employee: { select: { id: true, name: true, zanId: true, institution: { select: { id: true, name: true } } } }, submittedBy: { select: { id: true, name: true, username: true } }, reviewedBy: { select: { id: true, name: true, username: true } } }, orderBy: { createdAt: 'desc' } }).catch(() => []),
-          db.serviceExtensionRequest.findMany({ where: whereClause, include: { employee: { select: { id: true, name: true, zanId: true, institution: { select: { id: true, name: true } } } }, submittedBy: { select: { id: true, name: true, username: true } }, reviewedBy: { select: { id: true, name: true, username: true } } }, orderBy: { createdAt: 'desc' } }).catch(() => []),
-          db.separationRequest.findMany({ where: whereClause, include: { employee: { select: { id: true, name: true, zanId: true, institution: { select: { id: true, name: true } } } }, submittedBy: { select: { id: true, name: true, username: true } }, reviewedBy: { select: { id: true, name: true, username: true } } }, orderBy: { createdAt: 'desc' } }).catch(() => [])
+          db.confirmationRequest.findMany({ where: whereClause, include: { employee: { select: { id: true, name: true, zanId: true, gender: true, cadre: true, institution: { select: { id: true, name: true } } } }, submittedBy: { select: { id: true, name: true, username: true } }, reviewedBy: { select: { id: true, name: true, username: true } } }, orderBy: { createdAt: 'desc' } }).catch(() => []),
+          db.promotionRequest.findMany({ where: whereClause, include: { employee: { select: { id: true, name: true, zanId: true, gender: true, cadre: true, institution: { select: { id: true, name: true } } } }, submittedBy: { select: { id: true, name: true, username: true } }, reviewedBy: { select: { id: true, name: true, username: true } } }, orderBy: { createdAt: 'desc' } }).catch(() => []),
+          db.lwopRequest.findMany({ where: whereClause, include: { employee: { select: { id: true, name: true, zanId: true, gender: true, cadre: true, institution: { select: { id: true, name: true } } } }, submittedBy: { select: { id: true, name: true, username: true } }, reviewedBy: { select: { id: true, name: true, username: true } } }, orderBy: { createdAt: 'desc' } }).catch(() => []),
+          db.cadreChangeRequest.findMany({ where: whereClause, include: { employee: { select: { id: true, name: true, zanId: true, gender: true, cadre: true, institution: { select: { id: true, name: true } } } }, submittedBy: { select: { id: true, name: true, username: true } }, reviewedBy: { select: { id: true, name: true, username: true } } }, orderBy: { createdAt: 'desc' } }).catch(() => []),
+          db.retirementRequest.findMany({ where: whereClause, include: { employee: { select: { id: true, name: true, zanId: true, gender: true, cadre: true, institution: { select: { id: true, name: true } } } }, submittedBy: { select: { id: true, name: true, username: true } }, reviewedBy: { select: { id: true, name: true, username: true } } }, orderBy: { createdAt: 'desc' } }).catch(() => []),
+          db.resignationRequest.findMany({ where: whereClause, include: { employee: { select: { id: true, name: true, zanId: true, gender: true, cadre: true, institution: { select: { id: true, name: true } } } }, submittedBy: { select: { id: true, name: true, username: true } }, reviewedBy: { select: { id: true, name: true, username: true } } }, orderBy: { createdAt: 'desc' } }).catch(() => []),
+          db.serviceExtensionRequest.findMany({ where: whereClause, include: { employee: { select: { id: true, name: true, zanId: true, gender: true, cadre: true, institution: { select: { id: true, name: true } } } }, submittedBy: { select: { id: true, name: true, username: true } }, reviewedBy: { select: { id: true, name: true, username: true } } }, orderBy: { createdAt: 'desc' } }).catch(() => []),
+          db.separationRequest.findMany({ where: whereClause, include: { employee: { select: { id: true, name: true, zanId: true, gender: true, cadre: true, institution: { select: { id: true, name: true } } } }, submittedBy: { select: { id: true, name: true, username: true } }, reviewedBy: { select: { id: true, name: true, username: true } } }, orderBy: { createdAt: 'desc' } }).catch(() => [])
         ]);
 
         reportData = [
