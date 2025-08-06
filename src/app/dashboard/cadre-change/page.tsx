@@ -502,7 +502,7 @@ export default function CadreChangePage() {
                 <div className={`space-y-4 ${!!eligibilityError ? 'opacity-50 cursor-not-allowed' : ''}`}>
                   <h3 className="text-lg font-medium text-foreground">Cadre Change Details &amp; Documents (PDF Only)</h3>
                   <div>
-                    <Label htmlFor="newCadre">Proposed New Cadre</Label>
+                    <Label htmlFor="newCadre">Write new cadre and grade</Label>
                     <Input id="newCadre" placeholder="e.g., Senior Human Resource Officer" value={newCadre} onChange={(e) => setNewCadre(e.target.value)} disabled={isSubmitting || !!eligibilityError} />
                   </div>
                   <div>
@@ -927,7 +927,7 @@ export default function CadreChangePage() {
               
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="correctedNewCadre">Proposed New Cadre</Label>
+                  <Label htmlFor="correctedNewCadre">Write new cadre and grade</Label>
                   <Input 
                     id="correctedNewCadre" 
                     placeholder="e.g., Senior Human Resource Officer" 

@@ -17,14 +17,18 @@ export type EmployeeStatus =
   | 'On LWOP'
   | 'Retired'
   | 'Resigned'
+  | 'Terminated'
+  | 'Dismissed'
   | string; // Allow other statuses
 
 // Define restricted request types for each employee status
 const statusRestrictions: Record<string, RequestType[]> = {
-  'On Probation': ['lwop', 'promotion', 'cadre-change', 'service-extension'],
+  'On Probation': ['lwop', 'promotion', 'cadre-change', 'service-extension', 'retirement'],
   'On LWOP': ['confirmation', 'lwop', 'promotion', 'cadre-change', 'service-extension'],
-  'Retired': ['confirmation', 'lwop', 'promotion', 'cadre-change', 'resignation', 'service-extension'],
-  'Resigned': ['confirmation', 'lwop', 'promotion', 'cadre-change', 'resignation', 'service-extension']
+  'Retired': ['confirmation', 'lwop', 'promotion', 'cadre-change', 'resignation', 'retirement', 'termination'],
+  'Resigned': ['confirmation', 'lwop', 'promotion', 'cadre-change', 'resignation', 'retirement', 'termination'],
+  'Terminated': ['confirmation', 'lwop', 'promotion', 'cadre-change', 'resignation', 'retirement', 'termination'],
+  'Dismissed': ['confirmation', 'lwop', 'promotion', 'cadre-change', 'resignation', 'retirement', 'termination']
 };
 
 /**

@@ -51,7 +51,9 @@
       "Bash(do echo \"=== $file ===\")",
       "Bash(done)",
       "Bash(sudo netstat:*)",
-      "Bash(npm run lint)"
+      "Bash(npm run lint)",
+      "Bash(PORT=3007 npm run build)",
+      "Bash(PORT=3007 npx next start)"
     ],
     "deny": []
   }

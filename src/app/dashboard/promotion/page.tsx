@@ -688,7 +688,7 @@ export default function PromotionPage() {
                         {promotionRequestType === 'experience' && (
                             <>
                                 <div>
-                                    <Label htmlFor="proposedCadre">Proposed New Grade</Label>
+                                    <Label htmlFor="proposedCadre">Write new cadre and grade</Label>
                                     <Input id="proposedCadre" placeholder="e.g., Senior Officer Grade I" value={proposedCadre} onChange={(e) => setProposedCadre(e.target.value)} disabled={isSubmitting || !!eligibilityError} />
                                 </div>
                                 <div>
@@ -1087,7 +1087,7 @@ export default function PromotionPage() {
               
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="correctedProposedCadre">Proposed New Grade</Label>
+                  <Label htmlFor="correctedProposedCadre">Write new cadre and grade</Label>
                   <Input 
                     id="correctedProposedCadre" 
                     placeholder="e.g., Senior Officer Grade I" 
