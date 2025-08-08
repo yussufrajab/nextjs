@@ -839,7 +839,7 @@ export default function ConfirmationPage() {
 
       {currentRequestToAction && (
         <Dialog open={isRejectionModalOpen} onOpenChange={setIsRejectionModalOpen}>
-            <DialogContent className="sm:max-w-lg">
+            <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Reject Confirmation: {currentRequestToAction.id}</DialogTitle>
                     <DialogDescription>Provide the reason for rejecting the confirmation for <strong>{currentRequestToAction.employee.name}</strong>.</DialogDescription>

@@ -91,6 +91,7 @@ export default function ComplaintsPage() {
   // File upload state
   const [complaintLetterFile, setComplaintLetterFile] = useState<string>('');
   const [evidenceFile, setEvidenceFile] = useState<string>('');
+  const [officerAttachmentFile, setOfficerAttachmentFile] = useState<string>('');
 
   const [complaints, setComplaints] = useState<SubmittedComplaint[]>([]);
   const [selectedComplaint, setSelectedComplaint] = useState<SubmittedComplaint | null>(null);
@@ -369,6 +370,7 @@ export default function ComplaintsPage() {
     setActionType(type); 
     setOfficerActionComment(complaint.officerComments || '');
     setOfficerInternalNote(complaint.internalNotes || '');
+    setOfficerAttachmentFile(''); // Clear any previous attachment
     setIsActionModalOpen(true);
   };
   
@@ -389,6 +391,12 @@ export default function ComplaintsPage() {
       toastMessage = `Maelezo zaidi yameombwa kwa lalamiko ${selectedComplaint.id}.`;
     }
     
+    // Prepare updated attachments for optimistic update
+    const optimisticAttachments = [...(selectedComplaint.attachments || [])];
+    if (officerAttachmentFile) {
+      optimisticAttachments.push(officerAttachmentFile);
+    }
+
     // Optimistic update
     const optimisticUpdate = complaints.map(c => 
       c.id === selectedComplaint.id 
@@ -399,7 +407,8 @@ export default function ComplaintsPage() {
             internalNotes: officerInternalNote,
             assignedOfficerRole: role,
             reviewStage: 'completed',
-            reviewedBy: role
+            reviewedBy: role,
+            ...(officerAttachmentFile && { attachments: optimisticAttachments })
           }
         : c
     );
@@ -410,10 +419,17 @@ export default function ComplaintsPage() {
     setSelectedComplaint(null);
     setOfficerActionComment('');
     setOfficerInternalNote('');
+    setOfficerAttachmentFile('');
     setActionType(null);
 
     // Show immediate feedback
     toast({ title: "Hatua Imechukuliwa", description: toastMessage });
+
+    // Add officer attachment to current attachments if provided
+    const updatedAttachments = [...(selectedComplaint.attachments || [])];
+    if (officerAttachmentFile) {
+      updatedAttachments.push(officerAttachmentFile);
+    }
 
     const payload = {
         status: newStatus,
@@ -421,7 +437,8 @@ export default function ComplaintsPage() {
         internalNotes: officerInternalNote,
         assignedOfficerRole: role,
         reviewStage: 'completed',
-        reviewedById: user?.id
+        reviewedById: user?.id,
+        ...(officerAttachmentFile && { attachments: updatedAttachments })
     };
 
     try {
@@ -683,9 +700,18 @@ export default function ComplaintsPage() {
   };
   
   // Both DO and HHRMD should see all complaints assigned to either role
-  const complaintsForOfficerReview = complaints.filter(c => 
+  const allOfficerComplaints = complaints.filter(c => 
     (role === ROLES.DO || role === ROLES.HHRMD) && 
     (c.assignedOfficerRole === ROLES.DO || c.assignedOfficerRole === ROLES.HHRMD)
+  );
+  
+  // Separate active and completed complaints for better organization
+  const activeComplaints = allOfficerComplaints.filter(c => 
+    !['Closed - Satisfied', 'Mtumishi ameridhika na hatua', 'Closed - Commission Decision (Resolved)', 'Closed - Commission Decision (Rejected)'].includes(c.status)
+  );
+  
+  const completedComplaints = allOfficerComplaints.filter(c => 
+    ['Closed - Satisfied', 'Mtumishi ameridhika na hatua', 'Closed - Commission Decision (Resolved)', 'Closed - Commission Decision (Rejected)'].includes(c.status)
   );
   const employeeSubmittedComplaints = complaints.filter(c => c.employeeId === user?.employeeId);
 
@@ -922,7 +948,7 @@ export default function ComplaintsPage() {
                             field.onChange(objectKey);
                           }}
                           folder="complaints"
-                          maxSize={2 * 1024 * 1024}
+                          maxSize={1.2}
                           accept=".pdf"
                         />
                       </FormControl>
@@ -947,7 +973,7 @@ export default function ComplaintsPage() {
                             field.onChange(objectKey);
                           }}
                           folder="complaints"
-                          maxSize={2 * 1024 * 1024}
+                          maxSize={1.2}
                           accept=".pdf"
                         />
                       </FormControl>
@@ -984,32 +1010,34 @@ export default function ComplaintsPage() {
       )}
 
       {(role === ROLES.DO || role === ROLES.HHRMD) && (
-         <Card className="shadow-lg">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-                <div>
-                    <CardTitle>Kagua Malalamiko Yaliyowasilishwa</CardTitle>
-                    <CardDescription>Kagua, chukua hatua, au omba maelezo zaidi kuhusu malalamiko ya wafanyakazi yaliyokabidhiwa kwako.</CardDescription>
-                </div>
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => fetchComplaints(true)}
-                    disabled={isRefreshing}
-                    className="flex items-center gap-2"
-                >
-                    <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                    Sasisha
-                </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-                 <div className="flex justify-center items-center h-40">
-                    <Loader2 className="h-8 w-8 animate-spin" />
-                </div>
-            ) : complaintsForOfficerReview.length > 0 ? (
-              complaintsForOfficerReview.map((complaint) => (
+        <>
+          {/* Active Complaints Section */}
+          <Card className="shadow-lg mb-8">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                  <div>
+                      <CardTitle>Malalamiko Yanayosubiri Ukaguzi</CardTitle>
+                      <CardDescription>Malalamiko yanayohitaji hatua yako ya haraka - kagua, chukua hatua, au omba maelezo zaidi.</CardDescription>
+                  </div>
+                  <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fetchComplaints(true)}
+                      disabled={isRefreshing}
+                      className="flex items-center gap-2"
+                  >
+                      <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                      Sasisha
+                  </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                   <div className="flex justify-center items-center h-40">
+                      <Loader2 className="h-8 w-8 animate-spin" />
+                  </div>
+              ) : activeComplaints.length > 0 ? (
+              activeComplaints.map((complaint) => (
                 <div key={complaint.id} className="mb-4 border p-4 rounded-md space-y-2 shadow-sm bg-background hover:shadow-md transition-shadow">
                   <div className="flex justify-between items-start">
                     <h3 className="font-semibold text-base">{complaint.subject} (Type: {complaint.complaintType})</h3>
@@ -1127,15 +1155,55 @@ export default function ComplaintsPage() {
                 </div>
               ))
             ) : (
-              <p className="text-muted-foreground">Hakuna malalamiko yaliyokabidhiwa au yanayosubiri ukaguzi wako kwa sasa.</p>
+              <p className="text-muted-foreground">Hakuna malalamiko yanayosubiri ukaguzi wako kwa sasa.</p>
             )}
           </CardContent>
         </Card>
+
+        {/* Completed Complaints History Section */}
+        {completedComplaints.length > 0 && (
+          <Card className="shadow-lg mb-8">
+            <CardHeader>
+              <CardTitle>Historia ya Malalamiko Yaliyokamilika</CardTitle>
+              <CardDescription>Malalamiko yaliyopitia na kukamilika - historia yako ya kazi iliyofanyika.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {completedComplaints.map((complaint) => (
+                <div key={complaint.id} className="mb-4 border p-4 rounded-md space-y-2 shadow-sm bg-secondary/20 hover:shadow-md transition-shadow">
+                  <div className="flex justify-between items-start">
+                    <h3 className="font-semibold text-base">{complaint.subject} (Type: {complaint.complaintType})</h3>
+                     <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                        complaint.status === "Mtumishi ameridhika na hatua" ? "bg-green-100 text-green-700" :
+                        complaint.status === "Closed - Satisfied" ? "bg-green-100 text-green-700" :
+                        complaint.status.startsWith("Closed - Commission Decision") ? "bg-gray-100 text-gray-700" :
+                        "bg-gray-100 text-gray-700"
+                    }`}>{complaint.status}</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    From: {complaint.employeeName} {complaint.zanId ? `(ZanID: ${complaint.zanId})` : ''}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Completed: {format(parseISO(complaint.submissionDate), 'PPP')}</p>
+                  <p className="text-sm mt-1"><strong>Details Preview:</strong> {complaint.details.substring(0, 150)}{complaint.details.length > 150 ? "..." : ""}</p>
+                  
+                  <div className="mt-3 pt-3 border-t flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                    <Button size="sm" variant="outline" onClick={() => {
+                        setSelectedComplaint(complaint);
+                        setIsDetailsModalOpen(true);
+                      }}>
+                        <Eye className="mr-2 h-4 w-4"/>Tazama Historia Kamili
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+        </>
       )}
 
       {selectedComplaint && isDetailsModalOpen && (
         <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
-          <DialogContent className="sm:max-w-lg">
+          <DialogContent className="sm:max-w-6xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Maelezo ya Lalamiko: {selectedComplaint.id}</DialogTitle>
               <DialogDescription>
@@ -1277,7 +1345,7 @@ export default function ComplaintsPage() {
 
        {selectedComplaint && isActionModalOpen && (actionType === 'resolve' || actionType === 'request_info') && (
         <Dialog open={isActionModalOpen} onOpenChange={setIsActionModalOpen}>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-6xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>
                         {actionType === 'resolve' && "Tatua Lalamiko Moja kwa Moja"}
@@ -1315,15 +1383,19 @@ export default function ComplaintsPage() {
                         />
                     </div>
                     <div>
-                        <Label htmlFor="officerAttachmentLegacy">Funga Hati ya Majibu Rasmi (Si Lazima, PDF tu)</Label>
-                        <Input id="officerAttachmentLegacy" type="file" accept=".pdf" className="mt-1"/>
-                        <p className="text-xs text-muted-foreground mt-1">
-                            Hii ni mchanganyiko. Utaratibu wa kupakia faili haujakamilishwa kwenye mchezo huu.
-                        </p>
+                        <FileUpload
+                          label="Funga Hati ya Majibu Rasmi (Si Lazima)"
+                          description="Pakia hati ya majibu rasmi kwa muundo wa PDF"
+                          value={officerAttachmentFile}
+                          onChange={(objectKey) => setOfficerAttachmentFile(objectKey as string)}
+                          folder="complaints/officer-responses"
+                          maxSize={1.2}
+                          accept=".pdf"
+                        />
                     </div>
                 </div>
                 <DialogFooter>
-                    <Button variant="outline" onClick={() => { setIsActionModalOpen(false); setSelectedComplaint(null); setActionType(null); }}>Ghairi</Button>
+                    <Button variant="outline" onClick={() => { setIsActionModalOpen(false); setSelectedComplaint(null); setOfficerAttachmentFile(''); setActionType(null); }}>Ghairi</Button>
                     <Button 
                         onClick={handleOfficerSubmitLegacyAction} 
                         disabled={!officerActionComment.trim()}
@@ -1342,7 +1414,7 @@ export default function ComplaintsPage() {
 
       {currentRequestToAction && isRejectionModalOpen && (
         <Dialog open={isRejectionModalOpen} onOpenChange={setIsRejectionModalOpen}>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Kataa Lalamiko: {currentRequestToAction.id}</DialogTitle>
                     <DialogDescription>
@@ -1368,7 +1440,7 @@ export default function ComplaintsPage() {
       {/* Employee Provide Additional Information Modal */}
       {selectedComplaintForInfo && isProvideInfoModalOpen && (
         <Dialog open={isProvideInfoModalOpen} onOpenChange={setIsProvideInfoModalOpen}>
-          <DialogContent className="sm:max-w-lg">
+          <DialogContent className="sm:max-w-6xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Toa Maelezo ya Ziada</DialogTitle>
               <DialogDescription>
@@ -1555,7 +1627,7 @@ export default function ComplaintsPage() {
       {/* Commission Decision Modal */}
       {isCommissionDecisionModalOpen && selectedComplaintForCommissionDecision && (
         <Dialog open={isCommissionDecisionModalOpen} onOpenChange={setIsCommissionDecisionModalOpen}>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Weka Maamuzi ya Tume</DialogTitle>
               <DialogDescription>

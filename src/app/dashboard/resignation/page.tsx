@@ -896,7 +896,7 @@ export default function ResignationPage() {
       
        {currentRequestToAction && (
         <Dialog open={isRejectionModalOpen} onOpenChange={setIsRejectionModalOpen}>
-            <DialogContent className="sm:max-w-lg">
+            <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Flag Issue on Request: {currentRequestToAction.id}</DialogTitle>
                     <DialogDescription>

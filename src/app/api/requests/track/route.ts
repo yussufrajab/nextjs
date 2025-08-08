@@ -55,6 +55,7 @@ export async function GET(req: Request) {
               id: true,
               name: true,
               zanId: true,
+              gender: true,
               institution: { select: { id: true, name: true } }
             }
           },
@@ -77,6 +78,7 @@ export async function GET(req: Request) {
               id: true,
               name: true,
               zanId: true,
+              gender: true,
               institution: { select: { id: true, name: true } }
             }
           },
@@ -99,6 +101,7 @@ export async function GET(req: Request) {
               id: true,
               name: true,
               zanId: true,
+              gender: true,
               institution: { select: { id: true, name: true } }
             }
           },
@@ -121,6 +124,7 @@ export async function GET(req: Request) {
               id: true,
               name: true,
               zanId: true,
+              gender: true,
               institution: { select: { id: true, name: true } }
             }
           },
@@ -143,6 +147,7 @@ export async function GET(req: Request) {
               id: true,
               name: true,
               zanId: true,
+              gender: true,
               institution: { select: { id: true, name: true } }
             }
           },
@@ -165,6 +170,7 @@ export async function GET(req: Request) {
               id: true,
               name: true,
               zanId: true,
+              gender: true,
               institution: { select: { id: true, name: true } }
             }
           },
@@ -187,6 +193,7 @@ export async function GET(req: Request) {
               id: true,
               name: true,
               zanId: true,
+              gender: true,
               institution: { select: { id: true, name: true } }
             }
           },
@@ -209,6 +216,7 @@ export async function GET(req: Request) {
               id: true,
               name: true,
               zanId: true,
+              gender: true,
               institution: { select: { id: true, name: true } }
             }
           },
@@ -235,7 +243,7 @@ export async function GET(req: Request) {
       lastUpdatedDate: req.updatedAt || req.createdAt,
       currentStage: req.reviewStage || 'Initial Review',
       employeeInstitution: req.employee?.institution?.name,
-      gender: 'N/A', // This would need to be added to employee model
+      gender: req.employee?.gender || 'N/A',
       rejectionReason: req.rejectionReason
     }));
 

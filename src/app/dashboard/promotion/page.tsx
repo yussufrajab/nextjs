@@ -1073,7 +1073,7 @@ export default function PromotionPage() {
               setIsCommissionRejection(false);
             }
           }}>
-            <DialogContent className="sm:max-w-lg">
+            <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>
                       {isCommissionRejection ? 'Commission Decision: Rejection' : `Reject Promotion Request: ${currentRequestToAction.id}`}

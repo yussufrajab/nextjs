@@ -93,21 +93,13 @@ export async function GET(req: Request) {
         include: includeOptions,
       });
     } else if (userRole === ROLES.DO || userRole === ROLES.HHRMD) {
-      // Both DO and HHRMD can see all pending complaints with equal priority
+      // Both DO and HHRMD can see all complaints (including completed ones as history)
       complaints = await db.complaint.findMany({
         where: { 
           OR: [
             { assignedOfficerRole: ROLES.DO },
             { assignedOfficerRole: ROLES.HHRMD }
-          ],
-          status: { 
-            notIn: [
-              "Closed - Satisfied", 
-              "Mtumishi ameridhika na hatua",
-              "Closed - Commission Decision (Resolved)",
-              "Closed - Commission Decision (Rejected)"
-            ] 
-          } 
+          ]
         },
         orderBy: { createdAt: 'desc' },
         include: includeOptions,

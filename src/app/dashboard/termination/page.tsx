@@ -985,7 +985,7 @@ export default function TerminationAndDismissalPage() {
 
       {currentRequestToAction && (
         <Dialog open={isRejectionModalOpen} onOpenChange={setIsRejectionModalOpen}>
-            <DialogContent className="sm:max-w-lg">
+            <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Reject Request: {currentRequestToAction.id}</DialogTitle>
                     <DialogDescription>
