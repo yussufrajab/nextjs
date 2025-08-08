@@ -31,19 +31,14 @@ declare module 'jspdf' {
 
 const REPORT_TYPES = [
   { value: 'serviceExtension', label: 'Ripoti ya Nyongeza ya Utumishi (Service Extension)' },
-  { value: 'compulsoryRetirement', label: 'Ripoti ya Kustaafu kwa Lazima (Compulsory Retirement)' },
-  { value: 'voluntaryRetirement', label: 'Ripoti ya Kustaafu kwa Hiari (Voluntary Retirement)' },
-  { value: 'illnessRetirement', label: 'Ripoti ya Kustaafu kwa Ugonjwa (Illness Retirement)' },
+  { value: 'retirement', label: 'Ripoti ya Kustaafu (Retirement)' },
   { value: 'lwop', label: 'Ripoti ya Likizo Bila Malipo (Leave Without Pay)' },
   { value: 'promotion', label: 'Ripoti ya Kupandishwa Cheo (Promotion)' },
-  { value: 'promotionExperience', label: 'Ripoti ya Kupandishwa Cheo kwa Uzoefu (Promotion due to Experience)' },
-  { value: 'promotionEducation', label: 'Ripoti ya Kupandishwa Cheo kwa Maendeleo ya Elimu (Promotion due to Education Advancement)' },
   { value: 'terminationDismissal', label: 'Ripoti ya Kufukuzwa/Kuachishwa Kazi (Termination/Dismissal)' },
   { value: 'complaints', label: 'Ripoti ya Malalamiko (Complaints)' },
   { value: 'cadreChange', label: 'Ripoti ya Kubadilishwa Kada (Change of Cadre)' },
   { value: 'resignation', label: 'Ripoti ya Kuacha Kazi (Employee Resignation)' },
   { value: 'confirmation', label: 'Ripoti ya Kuthibitishwa Kazini (Confirmation)' },
-  { value: 'contractual', label: 'Ripoti ya Ajira za Mikataba (Contractual Employment)' },
 ];
 
 interface ReportOutput {

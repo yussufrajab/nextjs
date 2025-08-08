@@ -9,6 +9,26 @@ interface ReportOutput {
   dataKeys?: string[];
 }
 
+function getStatusDisplayText(status: string): string {
+  // Treat concluded/commission statuses as complete
+  if (status === 'concluded' || 
+      status === 'Approved by Commission' || 
+      status === 'Rejected by Commission' || 
+      status === 'Rejected by Commission - Request Concluded' ||
+      status.toLowerCase().includes('concluded') ||
+      status.includes('Commission') && (status.includes('Approved') || status.includes('Rejected'))) {
+    return 'Imekamilika';
+  }
+  
+  // Standard status mappings
+  if (status === 'APPROVED') return 'Imeidhinishwa';
+  if (status === 'REJECTED') return 'Imekataliwa';
+  if (status === 'RESOLVED') return 'Imetatuliwa';
+  
+  // Default fallback
+  return 'Inasubiri';
+}
+
 function formatReportData(reportType: string, rawData: any[]): ReportOutput {
   let headers: string[] = [];
   let title: string = '';
@@ -29,7 +49,7 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
         gender: item.employee?.gender || '-',
         institution: item.employee?.institution?.name || '-',
         requestDate: new Date(item.createdAt).toLocaleDateString('sw-TZ'),
-        status: item.status === 'APPROVED' ? 'Imeidhinishwa' : item.status === 'REJECTED' ? 'Imekataliwa' : 'Inasubiri',
+        status: getStatusDisplayText(item.status),
         reviewer: item.reviewedBy?.name || '-'
       }));
       
@@ -48,11 +68,9 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
     case 'promotion':
     case 'promotionExperience':
     case 'promotionEducation':
-      title = reportType === 'promotionEducation' ? 'Ripoti ya Kupandishwa Cheo kwa Maendeleo ya Elimu' :
-              reportType === 'promotionExperience' ? 'Ripoti ya Kupandishwa Cheo kwa Uzoefu' :
-              'Ripoti ya Kupandishwa Cheo';
-      headers = ['S/N', 'Jina la Mfanyakazi', 'ZAN ID', 'Jinsia', 'Taasisi', 'Kada ya Sasa', 'Kada Inayopendekezwa', 'Aina', 'Tarehe ya Ombi', 'Hali'];
-      dataKeys = ['sn', 'employeeName', 'zanId', 'gender', 'institution', 'currentCadre', 'proposedCadre', 'promotionType', 'requestDate', 'status'];
+      title = 'Ripoti ya Kupandishwa Cheo';
+      headers = ['S/N', 'Jina la Mfanyakazi', 'ZAN ID', 'Jinsia', 'Taasisi', 'Aina', 'Tarehe ya Ombi', 'Hali'];
+      dataKeys = ['sn', 'employeeName', 'zanId', 'gender', 'institution', 'promotionType', 'requestDate', 'status'];
       
       formattedData = rawData.map((item, index) => ({
         sn: index + 1,
@@ -60,11 +78,10 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
         zanId: item.employee?.zanId || '-',
         gender: item.employee?.gender || '-',
         institution: item.employee?.institution?.name || '-',
-        currentCadre: item.employee?.cadre || '-',
-        proposedCadre: item.proposedCadre || '-',
-        promotionType: item.promotionType === 'EDUCATION' ? 'Elimu' : 'Uzoefu',
+        promotionType: item.promotionType === 'EducationAdvancement' ? 'kwa maendeleo ya elimu' : 
+                      item.promotionType === 'Experience' ? 'kwa uzoefu' : '-',
         requestDate: new Date(item.createdAt).toLocaleDateString('sw-TZ'),
-        status: item.status === 'APPROVED' ? 'Imeidhinishwa' : item.status === 'REJECTED' ? 'Imekataliwa' : 'Inasubiri'
+        status: getStatusDisplayText(item.status)
       }));
       
       totals = {
@@ -73,8 +90,6 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
         zanId: '',
         gender: '',
         institution: '',
-        currentCadre: '',
-        proposedCadre: '',
         promotionType: '',
         requestDate: '',
         status: formattedData.length
@@ -96,7 +111,7 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
         reason: item.reason || '-',
         startDate: item.startDate ? new Date(item.startDate).toLocaleDateString('sw-TZ') : '-',
         endDate: item.endDate ? new Date(item.endDate).toLocaleDateString('sw-TZ') : '-',
-        status: item.status === 'APPROVED' ? 'Imeidhinishwa' : item.status === 'REJECTED' ? 'Imekataliwa' : 'Inasubiri'
+        status: getStatusDisplayText(item.status)
       }));
       
       totals = {
@@ -128,7 +143,7 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
         newCadre: item.newCadre || '-',
         reason: item.reason || '-',
         requestDate: new Date(item.createdAt).toLocaleDateString('sw-TZ'),
-        status: item.status === 'APPROVED' ? 'Imeidhinishwa' : item.status === 'REJECTED' ? 'Imekataliwa' : 'Inasubiri'
+        status: getStatusDisplayText(item.status)
       }));
       
       totals = {
@@ -149,10 +164,7 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
     case 'voluntaryRetirement':
     case 'compulsoryRetirement':
     case 'illnessRetirement':
-      title = reportType === 'voluntaryRetirement' ? 'Ripoti ya Kustaafu kwa Hiari' :
-              reportType === 'compulsoryRetirement' ? 'Ripoti ya Kustaafu kwa Lazima' :
-              reportType === 'illnessRetirement' ? 'Ripoti ya Kustaafu kwa Ugonjwa' :
-              'Ripoti ya Kustaafu';
+      title = 'Ripoti ya Kustaafu';
       headers = ['S/N', 'Jina la Mfanyakazi', 'ZAN ID', 'Jinsia', 'Taasisi', 'Aina ya Kustaafu', 'Tarehe ya Kustaafu', 'Tarehe ya Ombi', 'Hali'];
       dataKeys = ['sn', 'employeeName', 'zanId', 'gender', 'institution', 'retirementType', 'retirementDate', 'requestDate', 'status'];
       
@@ -162,12 +174,12 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
         zanId: item.employee?.zanId || '-',
         gender: item.employee?.gender || '-',
         institution: item.employee?.institution?.name || '-',
-        retirementType: item.retirementType === 'VOLUNTARY' ? 'Hiari' : 
-                       item.retirementType === 'COMPULSORY' ? 'Lazima' : 
-                       item.retirementType === 'ILLNESS' ? 'Ugonjwa' : '-',
+        retirementType: item.retirementType === 'voluntary' ? 'kwa hiari' : 
+                       item.retirementType === 'compulsory' ? 'kwa lazima' : 
+                       item.retirementType === 'illness' ? 'kwa ugonjwa' : '-',
         retirementDate: item.proposedDate ? new Date(item.proposedDate).toLocaleDateString('sw-TZ') : '-',
         requestDate: new Date(item.createdAt).toLocaleDateString('sw-TZ'),
-        status: item.status === 'APPROVED' ? 'Imeidhinishwa' : item.status === 'REJECTED' ? 'Imekataliwa' : 'Inasubiri'
+        status: getStatusDisplayText(item.status)
       }));
       
       totals = {
@@ -197,7 +209,7 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
         effectiveDate: item.effectiveDate ? new Date(item.effectiveDate).toLocaleDateString('sw-TZ') : '-',
         reason: item.reason || '-',
         requestDate: new Date(item.createdAt).toLocaleDateString('sw-TZ'),
-        status: item.status === 'APPROVED' ? 'Imeidhinishwa' : item.status === 'REJECTED' ? 'Imekataliwa' : 'Inasubiri'
+        status: getStatusDisplayText(item.status)
       }));
       
       totals = {
@@ -228,7 +240,7 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
         extensionPeriod: item.requestedExtensionPeriod || '-',
         justification: item.justification || '-',
         requestDate: new Date(item.createdAt).toLocaleDateString('sw-TZ'),
-        status: item.status === 'APPROVED' ? 'Imeidhinishwa' : item.status === 'REJECTED' ? 'Imekataliwa' : 'Inasubiri'
+        status: getStatusDisplayText(item.status)
       }));
       
       totals = {
@@ -260,7 +272,7 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
         type: item.type === 'TERMINATION' ? 'Kuachishwa' : 'Kufukuzwa',
         reason: item.reason || '-',
         requestDate: new Date(item.createdAt).toLocaleDateString('sw-TZ'),
-        status: item.status === 'APPROVED' ? 'Imeidhinishwa' : item.status === 'REJECTED' ? 'Imekataliwa' : 'Inasubiri'
+        status: getStatusDisplayText(item.status)
       }));
       
       totals = {
@@ -288,7 +300,7 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
         complaintType: item.complaintType || '-',
         subject: item.subject || '-',
         date: new Date(item.createdAt).toLocaleDateString('sw-TZ'),
-        status: item.status === 'RESOLVED' ? 'Imetatuliwa' : item.status === 'REJECTED' ? 'Imekataliwa' : 'Inasubiri'
+        status: getStatusDisplayText(item.status)
       }));
       
       totals = {
@@ -329,7 +341,7 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
         name: item.employee?.name || '-',
         gender: item.employee?.gender || '-',
         date: new Date(item.createdAt).toLocaleDateString('sw-TZ'),
-        status: item.status || '-'
+        status: getStatusDisplayText(item.status || '')
       }));
       totals = { sn: 'JUMLA', name: '', gender: '', date: '', status: formattedData.length };
   }

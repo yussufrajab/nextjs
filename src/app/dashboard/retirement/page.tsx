@@ -713,9 +713,11 @@ export default function RetirementPage() {
                       required
                     />
                   </div>
-                   <p className="text-xs text-muted-foreground">
-                    Note: Proposed retirement date must be at least 6 months from today. Age validation is based on the proposed retirement date.
-                  </p>
+                   {retirementType !== 'illness' && (
+                    <p className="text-xs text-muted-foreground">
+                      Note: Proposed retirement date must be at least 6 months from today. Age validation is based on the proposed retirement date.
+                    </p>
+                   )}
                 </div>
               </div>
             )}

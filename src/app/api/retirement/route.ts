@@ -60,10 +60,18 @@ export async function POST(req: Request) {
     console.log('Creating retirement request:', body);
 
     // Basic validation
-    if (!body.employeeId || !body.submittedById || !body.proposedDate || !body.retirementType) {
+    if (!body.employeeId || !body.submittedById || !body.retirementType) {
       return NextResponse.json({ 
         success: false, 
-        message: 'Missing required fields: employeeId, submittedById, proposedDate, retirementType' 
+        message: 'Missing required fields: employeeId, submittedById, retirementType' 
+      }, { status: 400 });
+    }
+
+    // For non-illness retirement, proposedDate is required
+    if (body.retirementType !== 'illness' && !body.proposedDate) {
+      return NextResponse.json({ 
+        success: false, 
+        message: 'Proposed date is required for compulsory and voluntary retirement' 
       }, { status: 400 });
     }
 
@@ -71,7 +79,7 @@ export async function POST(req: Request) {
       data: {
         employeeId: body.employeeId,
         submittedById: body.submittedById,
-        proposedDate: new Date(body.proposedDate),
+        proposedDate: body.proposedDate ? new Date(body.proposedDate) : new Date(), // For illness retirement, use current date if no proposed date
         retirementType: body.retirementType,
         illnessDescription: body.illnessDescription,
         delayReason: body.delayReason,
