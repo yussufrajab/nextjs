@@ -296,7 +296,7 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
       formattedData = rawData.map((item, index) => ({
         sn: index + 1,
         complainant: item.complainant?.name || '-',
-        gender: '-', // Gender not available for Users in current schema
+        gender: item.complainant?.employee?.gender || '-',
         complaintType: item.complaintType || '-',
         subject: item.subject || '-',
         date: new Date(item.createdAt).toLocaleDateString('sw-TZ'),
@@ -620,7 +620,12 @@ export async function GET(req: Request) {
                 id: true,
                 name: true,
                 institutionId: true,
-                institution: { select: { id: true, name: true } }
+                institution: { select: { id: true, name: true } },
+                employee: {
+                  select: {
+                    gender: true
+                  }
+                }
               }
             }
           },
