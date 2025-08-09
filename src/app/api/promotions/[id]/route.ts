@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { z } from 'zod';
+import { createNotification, NotificationTemplates } from '@/lib/notifications';
 
 const updateSchema = z.object({
   status: z.string().optional(),
@@ -86,6 +87,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
         }
       });
 
+      // Create appropriate notifications based on status changes
       if (validatedData.status) {
         const userToNotify = await db.user.findUnique({
           where: { employeeId: updatedRequest.employeeId },
@@ -93,13 +95,28 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
         });
 
         if (userToNotify) {
-          await db.notification.create({
-            data: {
-              userId: userToNotify.id,
-              message: `Your Promotion request for cadre "${updatedRequest.proposedCadre}" has been updated to: ${validatedData.status}.`,
+          let notification = null;
+          
+          if (validatedData.status === "Approved" || validatedData.status === "Commission Approved") {
+            notification = NotificationTemplates.promotionApproved(updatedRequest.id);
+          } else if (validatedData.status === "Rejected" || validatedData.status === "Commission Rejected") {
+            const reason = validatedData.rejectionReason || validatedData.commissionDecisionReason || 'No reason provided';
+            notification = NotificationTemplates.promotionRejected(updatedRequest.id, reason);
+          } else {
+            // Generic status update notification
+            notification = {
+              message: `Your promotion request for cadre "${updatedRequest.proposedCadre}" has been updated to: ${validatedData.status}`,
               link: `/dashboard/promotion`,
-            },
-          });
+            };
+          }
+          
+          if (notification) {
+            await createNotification({
+              userId: userToNotify.id,
+              message: notification.message,
+              link: notification.link,
+            });
+          }
         }
       }
 

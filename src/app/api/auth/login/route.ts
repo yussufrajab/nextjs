@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/db';
 import bcrypt from 'bcryptjs';
+import { createNotification, NotificationTemplates } from '@/lib/notifications';
 
 const loginSchema = z.object({
   username: z.string().min(1, 'Username is required.'),
@@ -78,6 +79,22 @@ export async function POST(req: Request) {
         lastLoginDate: new Date()
       }
     };
+
+    // Check if this is a first-time login (check if user has any existing notifications)
+    const existingNotifications = await db.notification.findMany({
+      where: { userId: user.id },
+      take: 1,
+    });
+
+    // If no existing notifications, create a welcome notification
+    if (existingNotifications.length === 0) {
+      const welcomeNotification = NotificationTemplates.welcomeMessage();
+      await createNotification({
+        userId: user.id,
+        message: welcomeNotification.message,
+        link: welcomeNotification.link,
+      });
+    }
 
     return NextResponse.json({
       success: true,

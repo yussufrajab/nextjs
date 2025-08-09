@@ -924,15 +924,15 @@ export default function CadreChangePage() {
                                               .catch(error => {
                                                 console.error('Download error:', error);
                                                 toast({
-                                                  title: 'Kosa la Kupakua',
-                                                  description: 'Imeshindwa kupakia faili',
+                                                  title: 'Download Error',
+                                                  description: 'Failed to download file',
                                                   variant: 'destructive'
                                                 });
                                               });
                                             } else {
                                               toast({
-                                                title: 'Kosa la Uthibitishaji',
-                                                description: 'Huna ruhusa ya kupakia faili',
+                                                title: 'Authorization Error',
+                                                description: 'You do not have permission to download this file',
                                                 variant: 'destructive'
                                               });
                                             }

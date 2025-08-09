@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { shouldApplyInstitutionFilter } from '@/lib/role-utils';
 import { validateEmployeeStatusForRequest } from '@/lib/employee-status-validation';
+import { createNotificationForRole, NotificationTemplates } from '@/lib/notifications';
+import { ROLES } from '@/lib/constants';
 
 export async function GET(req: Request) {
   try {
@@ -122,6 +124,15 @@ export async function POST(req: Request) {
     });
 
     console.log('Created LWOP request:', lwopRequest.id);
+
+    // Create notification for supervisors/HHRMD
+    const notification = NotificationTemplates.lwopSubmitted(
+      lwopRequest.employee.name,
+      lwopRequest.id
+    );
+    
+    await createNotificationForRole(ROLES.HHRMD, notification.message, notification.link);
+    await createNotificationForRole(ROLES.DO, notification.message, notification.link);
 
     return NextResponse.json({
       success: true,

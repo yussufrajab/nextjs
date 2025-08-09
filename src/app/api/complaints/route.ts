@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { z } from 'zod';
 import { ROLES } from '@/lib/constants';
+import { createNotificationForRole, NotificationTemplates } from '@/lib/notifications';
 
 const complaintSchema = z.object({
   complaintType: z.string().min(1),
@@ -42,6 +43,24 @@ export async function POST(req: Request) {
         assignedOfficerRole: assignedOfficerRole || ROLES.DO,
       },
     });
+
+    // Get complainant's name for notification
+    const complainant = await db.user.findUnique({
+      where: { id: complainantId },
+      select: { name: true },
+    });
+
+    // Create notification for officers
+    if (complainant) {
+      const notification = NotificationTemplates.complaintSubmitted(
+        complainant.name,
+        newComplaint.id,
+        subject
+      );
+      await createNotificationForRole(ROLES.DO, notification.message, notification.link);
+      await createNotificationForRole(ROLES.HHRMD, notification.message, notification.link);
+    }
+
     return NextResponse.json(newComplaint, { status: 201 });
   } catch (error) {
     console.error("[COMPLAINTS_POST]", error);

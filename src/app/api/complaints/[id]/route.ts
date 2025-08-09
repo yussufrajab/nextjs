@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { z } from 'zod';
+import { createNotification, NotificationTemplates } from '@/lib/notifications';
 
 const updateComplaintSchema = z.object({
   status: z.string().optional(),
@@ -38,15 +39,29 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       },
     });
 
-    // Create a notification for the user when status changes
-    if (validatedData.status) {
-      await db.notification.create({
-        data: {
+    // Create appropriate notifications based on status changes
+    if (validatedData.status && updatedComplaint.complainant) {
+      let notification = null;
+      
+      if (validatedData.status === "Resolved - Pending Employee Confirmation") {
+        notification = NotificationTemplates.complaintResolved(updatedComplaint.id);
+      } else if (validatedData.status === "Awaiting More Information") {
+        notification = NotificationTemplates.complaintMoreInfoRequested(updatedComplaint.id);
+      } else {
+        // Generic status update notification
+        notification = {
+          message: `Lalamiko lako "${updatedComplaint.subject}" limesasishwa: ${validatedData.status}`,
+          link: `/dashboard/complaints`,
+        };
+      }
+      
+      if (notification) {
+        await createNotification({
           userId: updatedComplaint.complainant.id,
-          message: `Your complaint "${updatedComplaint.subject}" has been updated to: ${validatedData.status}.`,
-          link: `/dashboard/complaints`, // Link to the complaints page
-        },
-      });
+          message: notification.message,
+          link: notification.link,
+        });
+      }
     }
 
     // If the complainant has an employeeId, fetch employee details separately
