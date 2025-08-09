@@ -53,7 +53,10 @@
       "Bash(sudo netstat:*)",
       "Bash(npm run lint)",
       "Bash(PORT=3007 npm run build)",
-      "Bash(PORT=3007 npx next start)"
+      "Bash(PORT=3007 npx next start)",
+      "Bash(git config:*)",
+      "Bash(PORT=3000 npm start)",
+      "Bash(PORT=3000 npx next start)"
     ],
     "deny": []
   }

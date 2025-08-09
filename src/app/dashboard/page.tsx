@@ -78,7 +78,7 @@ const DashboardSkeleton = () => (
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {[...Array(5)].map((_, i) => (
+          {[...Array(10)].map((_, i) => (
             <div key={i} className="flex items-center space-x-4 p-2">
               <Skeleton className="h-6 w-1/4" />
               <Skeleton className="h-6 w-1/4" />
@@ -132,7 +132,7 @@ export default function DashboardPage() {
             
             // Test direct API call to bypass API client
             try {
-                const directResponse = await fetch('/api/dashboard/metrics', {
+                const directResponse = await fetch(`/api/dashboard/metrics?userRole=${role}&userInstitutionId=${user.institutionId}`, {
                     credentials: 'include'
                 });
                 const directData = await directResponse.json();

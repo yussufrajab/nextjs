@@ -47,7 +47,7 @@ export default function UrgentActionsPage() {
     const fetchUrgentActions = async () => {
         setIsLoading(true);
         try {
-            const response = await fetch(`/api/employees/urgent-actions?userInstitutionId=${user.institutionId}`);
+            const response = await fetch(`/api/employees/urgent-actions?userRole=${role}&userInstitutionId=${user.institutionId}`);
             if (!response.ok) {
                 throw new Error("Failed to fetch urgent actions data");
             }

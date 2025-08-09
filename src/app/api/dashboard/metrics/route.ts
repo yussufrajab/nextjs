@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { ROLES } from '@/lib/constants';
+import { shouldApplyInstitutionFilter } from '@/lib/role-utils';
 
 const getRequestHref = (type: string) => {
     switch (type) {
@@ -22,6 +23,33 @@ const getRequestHref = (type: string) => {
 export async function GET(req: Request) {
   try {
     console.log('=== Dashboard metrics API called ===');
+    
+    // Get user role and institution for filtering
+    const { searchParams } = new URL(req.url);
+    const userRole = searchParams.get('userRole');
+    const userInstitutionId = searchParams.get('userInstitutionId');
+    
+    console.log('Dashboard metrics API called with:', { userRole, userInstitutionId });
+    
+    // Determine if institution filtering should be applied
+    const shouldFilter = shouldApplyInstitutionFilter(userRole, userInstitutionId);
+    console.log(`Should apply institution filter: ${shouldFilter}`);
+    
+    // Build where clause for employee-related queries
+    const buildEmployeeWhereClause = () => {
+      if (shouldFilter) {
+        return { employee: { institutionId: userInstitutionId } };
+      }
+      return {};
+    };
+    
+    // Build where clause for complaint queries (complainant is User, not Employee)
+    const buildComplaintWhereClause = () => {
+      if (shouldFilter) {
+        return { complainant: { institutionId: userInstitutionId } };
+      }
+      return {};
+    };
     
     // For debugging, let's first try with hardcoded values to see if the issue is with the API call itself
     let totalEmployees, pendingConfirmations, pendingPromotions, employeesOnLwop, pendingTerminations, openComplaints, pendingCadreChanges, pendingRetirements, pendingResignations, pendingServiceExtensions;
@@ -130,16 +158,87 @@ export async function GET(req: Request) {
       pendingServiceExtensions = 0;
     }
 
-    // Fetch recent activities (with safe error handling)
-    const confirmations = await db.confirmationRequest.findMany({ include: { employee: { select: { name: true } } }, orderBy: { updatedAt: 'desc' }, take: 5 }).catch(() => []);
-    const promotions = await db.promotionRequest.findMany({ include: { employee: { select: { name: true } } }, orderBy: { updatedAt: 'desc' }, take: 5 }).catch(() => []);
-    const lwops = await db.lwopRequest.findMany({ include: { employee: { select: { name: true } } }, orderBy: { updatedAt: 'desc' }, take: 5 }).catch(() => []);
-    const complaints = await db.complaint.findMany({ include: { complainant: { select: { name: true } } }, orderBy: { updatedAt: 'desc' }, take: 5 }).catch(() => []);
-    const separations = await db.separationRequest.findMany({ include: { employee: { select: { name: true } } }, orderBy: { updatedAt: 'desc' }, take: 5 }).catch(() => []);
-    const cadreChanges = await db.cadreChangeRequest.findMany({ include: { employee: { select: { name: true } } }, orderBy: { updatedAt: 'desc' }, take: 5 }).catch(() => []);
-    const retirements = await db.retirementRequest.findMany({ include: { employee: { select: { name: true } } }, orderBy: { updatedAt: 'desc' }, take: 5 }).catch(() => []);
-    const resignations = await db.resignationRequest.findMany({ include: { employee: { select: { name: true } } }, orderBy: { updatedAt: 'desc' }, take: 5 }).catch(() => []);
-    const serviceExtensions = await db.serviceExtensionRequest.findMany({ include: { employee: { select: { name: true } } }, orderBy: { updatedAt: 'desc' }, take: 5 }).catch(() => []);
+    // Fetch recent activities (with institution filtering and safe error handling)
+    const employeeWhereClause = buildEmployeeWhereClause();
+    const complaintWhereClause = buildComplaintWhereClause();
+    
+    console.log('Employee where clause:', employeeWhereClause);
+    console.log('Complaint where clause:', complaintWhereClause);
+    
+    const confirmations = await db.confirmationRequest.findMany({ 
+      where: employeeWhereClause,
+      include: { employee: { select: { name: true, institutionId: true } } }, 
+      orderBy: { updatedAt: 'desc' }, 
+      take: 10 
+    }).catch(() => []);
+    
+    const promotions = await db.promotionRequest.findMany({ 
+      where: employeeWhereClause,
+      include: { employee: { select: { name: true, institutionId: true } } }, 
+      orderBy: { updatedAt: 'desc' }, 
+      take: 10 
+    }).catch(() => []);
+    
+    const lwops = await db.lwopRequest.findMany({ 
+      where: employeeWhereClause,
+      include: { employee: { select: { name: true, institutionId: true } } }, 
+      orderBy: { updatedAt: 'desc' }, 
+      take: 10 
+    }).catch(() => []);
+    
+    const complaints = await db.complaint.findMany({ 
+      where: complaintWhereClause,
+      include: { complainant: { select: { name: true, institutionId: true } } }, 
+      orderBy: { updatedAt: 'desc' }, 
+      take: 10 
+    }).catch(() => []);
+    
+    const separations = await db.separationRequest.findMany({ 
+      where: employeeWhereClause,
+      include: { employee: { select: { name: true, institutionId: true } } }, 
+      orderBy: { updatedAt: 'desc' }, 
+      take: 10 
+    }).catch(() => []);
+    
+    const cadreChanges = await db.cadreChangeRequest.findMany({ 
+      where: employeeWhereClause,
+      include: { employee: { select: { name: true, institutionId: true } } }, 
+      orderBy: { updatedAt: 'desc' }, 
+      take: 10 
+    }).catch(() => []);
+    
+    const retirements = await db.retirementRequest.findMany({ 
+      where: employeeWhereClause,
+      include: { employee: { select: { name: true, institutionId: true } } }, 
+      orderBy: { updatedAt: 'desc' }, 
+      take: 10 
+    }).catch(() => []);
+    
+    const resignations = await db.resignationRequest.findMany({ 
+      where: employeeWhereClause,
+      include: { employee: { select: { name: true, institutionId: true } } }, 
+      orderBy: { updatedAt: 'desc' }, 
+      take: 10 
+    }).catch(() => []);
+    
+    const serviceExtensions = await db.serviceExtensionRequest.findMany({ 
+      where: employeeWhereClause,
+      include: { employee: { select: { name: true, institutionId: true } } }, 
+      orderBy: { updatedAt: 'desc' }, 
+      take: 10 
+    }).catch(() => []);
+    
+    console.log('Recent activities found:', {
+      confirmations: confirmations.length,
+      promotions: promotions.length,
+      lwops: lwops.length,
+      complaints: complaints.length,
+      separations: separations.length,
+      cadreChanges: cadreChanges.length,
+      retirements: retirements.length,
+      resignations: resignations.length,
+      serviceExtensions: serviceExtensions.length
+    });
     
     const allActivities = [
       ...confirmations.map(r => ({ id: r.id, type: 'Confirmation', employee: r.employee.name, status: r.status, updatedAt: r.updatedAt })),
@@ -155,7 +254,7 @@ export async function GET(req: Request) {
     
     const recentActivities = allActivities
       .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
-      .slice(0, 5)
+      .slice(0, 10)
       .map(activity => ({
           ...activity,
           href: getRequestHref(activity.type)
