@@ -32,13 +32,13 @@ export function MinioFileExample() {
       // For now, just remove from the UI
       setUploadedFiles(prev => prev.filter(key => key !== objectKey));
       toast({
-        title: 'Mafanikio',
-        description: 'Faili limeondolewa',
+        title: 'Success',
+        description: 'File has been removed',
       });
     } catch (error) {
       toast({
-        title: 'Kosa',
-        description: 'Imeshindwa kuondoa faili',
+        title: 'Error',
+        description: 'Failed to remove file',
         variant: 'destructive'
       });
     }
@@ -55,14 +55,14 @@ export function MinioFileExample() {
         <CardHeader>
           <CardTitle>MinIO File Management Demo</CardTitle>
           <CardDescription>
-            Jaribu kupakia, kuangalia, na kupakua faili la PDF kwa kutumia MinIO (Ukubwa wa juu: 2MB)
+            Try uploading, previewing, and downloading PDF files using MinIO (Max size: 2MB)
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* File Upload Component */}
           <FileUpload
-            label="Chagua Faili la PDF"
-            description="Pakia faili la PDF kwenye MinIO storage (Ukubwa wa juu: 2MB)"
+            label="Select PDF File"
+            description="Upload PDF file to MinIO storage (Max size: 2MB)"
             accept=".pdf"
             maxSize={2}
             multiple={true}
@@ -73,7 +73,7 @@ export function MinioFileExample() {
 
           {/* Manual File Upload Section */}
           <div className="border-t pt-4">
-            <h3 className="text-lg font-medium mb-3">Au Chagua Faili la PDF Kwa Mkono</h3>
+            <h3 className="text-lg font-medium mb-3">Or Select PDF File Manually</h3>
             <input
               type="file"
               multiple
@@ -103,13 +103,13 @@ export function MinioFileExample() {
                   }
                   
                   toast({
-                    title: 'Mafanikio',
-                    description: 'Faili zimepakuliwa',
+                    title: 'Success',
+                    description: 'Files have been uploaded',
                   });
                 } catch (error) {
                   toast({
-                    title: 'Kosa',
-                    description: 'Imeshindwa kupakia faili',
+                    title: 'Error',
+                    description: 'Failed to upload files',
                     variant: 'destructive'
                   });
                 } finally {
@@ -125,7 +125,7 @@ export function MinioFileExample() {
           {/* Uploaded Files List */}
           {uploadedFiles.length > 0 && (
             <div className="border-t pt-4">
-              <h3 className="text-lg font-medium mb-3">Faili Zilizopakuliwa</h3>
+              <h3 className="text-lg font-medium mb-3">Uploaded Files</h3>
               <div className="space-y-2">
                 {uploadedFiles.map((objectKey, index) => (
                   <div
@@ -148,7 +148,7 @@ export function MinioFileExample() {
                         size="sm"
                         onClick={() => handlePreview(objectKey)}
                         className="h-8 w-8 p-0"
-                        title="Angalia"
+                        title="Preview"
                       >
                         <Eye className="h-3 w-3" />
                       </Button>
@@ -159,7 +159,7 @@ export function MinioFileExample() {
                         size="sm"
                         onClick={() => handleDownload(objectKey)}
                         className="h-8 w-8 p-0"
-                        title="Pakua"
+                        title="Download"
                       >
                         <Download className="h-3 w-3" />
                       </Button>
@@ -170,7 +170,7 @@ export function MinioFileExample() {
                         size="sm"
                         onClick={() => handleDelete(objectKey)}
                         className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
-                        title="Ondoa"
+                        title="Remove"
                       >
                         <Trash2 className="h-3 w-3" />
                       </Button>
@@ -183,7 +183,7 @@ export function MinioFileExample() {
 
           {/* Testing Buttons */}
           <div className="border-t pt-4">
-            <h3 className="text-lg font-medium mb-3">Jaribu Vipengele</h3>
+            <h3 className="text-lg font-medium mb-3">Test Features</h3>
             <div className="flex space-x-2">
               <Button
                 onClick={() => {
@@ -191,8 +191,8 @@ export function MinioFileExample() {
                     handlePreview(uploadedFiles[0]);
                   } else {
                     toast({
-                      title: 'Hakuna Faili',
-                      description: 'Pakia faili kwanza',
+                      title: 'No Files',
+                      description: 'Upload a file first',
                       variant: 'destructive'
                     });
                   }
@@ -200,7 +200,7 @@ export function MinioFileExample() {
                 variant="outline"
               >
                 <Eye className="h-4 w-4 mr-2" />
-                Angalia Faili la Kwanza
+                Preview First File
               </Button>
               
               <Button
@@ -209,8 +209,8 @@ export function MinioFileExample() {
                     handleDownload(uploadedFiles[0]);
                   } else {
                     toast({
-                      title: 'Hakuna Faili',
-                      description: 'Pakia faili kwanza',
+                      title: 'No Files',
+                      description: 'Upload a file first',
                       variant: 'destructive'
                     });
                   }
@@ -218,7 +218,7 @@ export function MinioFileExample() {
                 variant="outline"
               >
                 <Download className="h-4 w-4 mr-2" />
-                Pakua Faili la Kwanza
+                Download First File
               </Button>
             </div>
           </div>

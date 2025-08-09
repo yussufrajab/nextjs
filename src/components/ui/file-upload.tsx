@@ -70,8 +70,8 @@ export function FileUpload({
       // Check file size
       if (file.size > maxSize * 1024 * 1024) {
         toast({
-          title: 'Kosa la Ukubwa wa Faili',
-          description: `Faili ${file.name} ni kubwa kuliko ${maxSize}MB`,
+          title: 'File Size Error',
+          description: `File ${file.name} is larger than ${maxSize}MB`,
           variant: 'destructive'
         });
         return;
@@ -80,8 +80,8 @@ export function FileUpload({
       // Check file type if accept is specified for PDF only
       if (accept === '.pdf' && file.type !== 'application/pdf') {
         toast({
-          title: 'Kosa la Aina ya Faili',
-          description: `Faili ${file.name} si aina ya PDF. Tafadhali chagua faili la PDF tu.`,
+          title: 'File Type Error',
+          description: `File ${file.name} is not a PDF file. Please select only PDF files.`,
           variant: 'destructive'
         });
         return;
@@ -90,8 +90,8 @@ export function FileUpload({
 
     if (!multiple && fileArray.length > 1) {
       toast({
-        title: 'Kosa',
-        description: 'Unaweza kupakia faili moja tu',
+        title: 'Error',
+        description: 'You can only upload one file',
         variant: 'destructive'
       });
       return;
@@ -153,15 +153,15 @@ export function FileUpload({
       }
 
       toast({
-        title: 'Mafanikio',
-        description: `${uploadedKeys.length} faili ${uploadedKeys.length === 1 ? 'imepakuliwa' : 'zimepakuliwa'} kwa mafanikio`,
+        title: 'Success',
+        description: `${uploadedKeys.length} file${uploadedKeys.length === 1 ? '' : 's'} uploaded successfully`,
       });
 
     } catch (error: any) {
       console.error('Upload error:', error);
       toast({
-        title: 'Kosa la Kupakia',
-        description: error.message || 'Imeshindwa kupakia faili',
+        title: 'Upload Error',
+        description: error.message || 'Failed to upload file',
         variant: 'destructive'
       });
     } finally {
@@ -256,10 +256,10 @@ export function FileUpload({
       >
         <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
         <p className="text-sm text-muted-foreground mb-2">
-          Bofya au buruta faili hapa kupakia
+          Click or drag files here to upload
         </p>
         <p className="text-xs text-muted-foreground">
-          Ukubwa wa juu: {maxSize}MB | Aina zilizoruhusiwa: PDF tu
+          Max size: {maxSize}MB | Allowed types: PDF only
         </p>
         
         <Input
@@ -277,7 +277,7 @@ export function FileUpload({
       {uploading && (
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span>Inapakia...</span>
+            <span>Uploading...</span>
             <span>{Math.round(uploadProgress)}%</span>
           </div>
           <Progress value={uploadProgress} className="h-2" />
@@ -287,7 +287,7 @@ export function FileUpload({
       {/* Uploaded Files */}
       {uploadedFiles.length > 0 && (
         <div className="space-y-2">
-          <Label className="text-sm font-medium">Faili Zilizopakuliwa:</Label>
+          <Label className="text-sm font-medium">Uploaded Files:</Label>
           <div className="space-y-2">
             {uploadedFiles.map((objectKey, index) => (
               <div
@@ -308,7 +308,7 @@ export function FileUpload({
                     size="sm"
                     onClick={() => handlePreview(objectKey)}
                     className="h-8 w-8 p-0"
-                    title="Angalia"
+                    title="Preview"
                   >
                     <Eye className="h-3 w-3" />
                   </Button>
@@ -319,7 +319,7 @@ export function FileUpload({
                     size="sm"
                     onClick={() => handleDownload(objectKey)}
                     className="h-8 w-8 p-0"
-                    title="Pakua"
+                    title="Download"
                   >
                     <Download className="h-3 w-3" />
                   </Button>
@@ -331,7 +331,7 @@ export function FileUpload({
                       size="sm"
                       onClick={() => handleRemoveFile(multiple ? index : objectKey)}
                       className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                      title="Ondoa"
+                      title="Remove"
                     >
                       <X className="h-3 w-3" />
                     </Button>

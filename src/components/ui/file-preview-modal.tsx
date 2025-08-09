@@ -22,7 +22,7 @@ export function FilePreviewModal({
   open,
   onOpenChange,
   objectKey,
-  title = 'Muhtasari wa Faili'
+  title = 'File Preview'
 }: FilePreviewModalProps) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [contentType, setContentType] = useState<string>('');
@@ -80,8 +80,8 @@ export function FilePreviewModal({
       console.error('Preview error:', error);
       setError(error.message || 'Failed to load file preview');
       toast({
-        title: 'Kosa la Muhtasari',
-        description: `Imeshindwa kupakia muhtasari wa faili: ${error.message}`,
+        title: 'Preview Error',
+        description: `Failed to load file preview: ${error.message}`,
         variant: 'destructive'
       });
     } finally {
@@ -117,15 +117,15 @@ export function FilePreviewModal({
         document.body.removeChild(a);
         
         toast({
-          title: 'Mafanikio',
-          description: 'Faili imepakuliwa kwa mafanikio',
+          title: 'Success',
+          description: 'File downloaded successfully',
         });
       })
       .catch(error => {
         console.error('Download error:', error);
         toast({
-          title: 'Kosa la Kupakua',
-          description: `Imeshindwa kupakia faili: ${error.message}`,
+          title: 'Download Error',
+          description: `Failed to download file: ${error.message}`,
           variant: 'destructive'
         });
       });
@@ -147,7 +147,7 @@ export function FilePreviewModal({
         <div className="flex items-center justify-center h-96">
           <div className="text-center">
             <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-            <p className="text-muted-foreground">Inapakia muhtasari...</p>
+            <p className="text-muted-foreground">Loading preview...</p>
           </div>
         </div>
       );
@@ -160,7 +160,7 @@ export function FilePreviewModal({
             <AlertCircle className="h-8 w-8 text-destructive mx-auto mb-2" />
             <p className="text-destructive mb-4">{error}</p>
             <Button variant="outline" onClick={loadPreview}>
-              Jaribu Tena
+              Try Again
             </Button>
           </div>
         </div>
@@ -172,7 +172,7 @@ export function FilePreviewModal({
         <div className="flex items-center justify-center h-96">
           <div className="text-center">
             <FileText className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-            <p className="text-muted-foreground">Hakuna muhtasari unapatikana</p>
+            <p className="text-muted-foreground">No preview available</p>
           </div>
         </div>
       );
@@ -194,7 +194,7 @@ export function FilePreviewModal({
 
       if (contentType === 'application/pdf') {
         return (
-          <div className="h-96">
+          <div className="h-[31.2rem]">
             <iframe
               src={previewUrl}
               className="w-full h-full border rounded-lg"
@@ -212,11 +212,11 @@ export function FilePreviewModal({
         <div className="text-center">
           <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <p className="text-muted-foreground mb-4">
-            Muhtasari haupatikani kwa aina hii ya faili
+            Preview not available for this file type
           </p>
           <Button onClick={handleDownload}>
             <Download className="h-4 w-4 mr-2" />
-            Pakua Faili
+            Download File
           </Button>
         </div>
       </div>
@@ -225,7 +225,7 @@ export function FilePreviewModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-[67.2rem] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle>{title}</DialogTitle>
@@ -233,7 +233,7 @@ export function FilePreviewModal({
               {objectKey && (
                 <Button variant="outline" size="sm" onClick={handleDownload}>
                   <Download className="h-4 w-4 mr-2" />
-                  Pakua
+                  Download
                 </Button>
               )}
             </div>

@@ -23,8 +23,8 @@ export function FileUploadExample() {
     console.log('Multiple files:', multipleFiles);
     
     toast({
-      title: 'Mafanikio',
-      description: 'Faili zimeongezwa kwenye ombi',
+      title: 'Success',
+      description: 'Files have been added to the request',
     });
   };
 
@@ -32,12 +32,12 @@ export function FileUploadExample() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Mfano wa Kupakia Faili Moja</CardTitle>
+          <CardTitle>Single File Upload Example</CardTitle>
         </CardHeader>
         <CardContent>
           <FileUpload
-            label="Fomu ya Tathmini"
-            description="Pakia fomu ya tathmini ya mfanyakazi (PDF au Word)"
+            label="Evaluation Form"
+            description="Upload employee evaluation form (PDF or Word)"
             accept=".pdf,.doc,.docx"
             folder="evaluation-forms"
             value={singleFile}
@@ -50,12 +50,12 @@ export function FileUploadExample() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Mfano wa Kupakia Faili Nyingi</CardTitle>
+          <CardTitle>Multiple Files Upload Example</CardTitle>
         </CardHeader>
         <CardContent>
           <FileUpload
-            label="Hati za Uteuzi"
-            description="Pakia hati zote za uteuzi (hadi faili 5)"
+            label="Appointment Documents"
+            description="Upload all appointment documents (up to 5 files)"
             accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
             folder="appointment-documents"
             multiple
@@ -68,23 +68,23 @@ export function FileUploadExample() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Muhtasari wa Faili</CardTitle>
+          <CardTitle>File Summary</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             <div>
-              <h4 className="font-medium">Faili Moja:</h4>
+              <h4 className="font-medium">Single File:</h4>
               <p className="text-sm text-muted-foreground">
-                {singleFile || 'Hakuna faili iliyochaguliwa'}
+                {singleFile || 'No file selected'}
               </p>
             </div>
             
             <div>
-              <h4 className="font-medium">Faili Nyingi:</h4>
+              <h4 className="font-medium">Multiple Files:</h4>
               <p className="text-sm text-muted-foreground">
                 {multipleFiles.length > 0 
-                  ? `${multipleFiles.length} faili zimechaguliwa`
-                  : 'Hakuna faili zilizochaguliwa'}
+                  ? `${multipleFiles.length} files selected`
+                  : 'No files selected'}
               </p>
             </div>
 
@@ -92,7 +92,7 @@ export function FileUploadExample() {
               onClick={handleSubmit}
               disabled={!singleFile && multipleFiles.length === 0}
             >
-              Wasilisha Ombi
+              Submit Request
             </Button>
           </div>
         </CardContent>
