@@ -56,7 +56,8 @@
       "Bash(PORT=3007 npx next start)",
       "Bash(git config:*)",
       "Bash(PORT=3000 npm start)",
-      "Bash(PORT=3000 npx next start)"
+      "Bash(PORT=3000 npx next start)",
+      "Bash(PORT=9002 npm run dev)"
     ],
     "deny": []
   }

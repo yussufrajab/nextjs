@@ -28,13 +28,17 @@ import { apiClient } from '@/lib/api-client';
 const userSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
   username: z.string().min(3, { message: "Username must be at least 3 characters." }),
+  phoneNumber: z.string()
+    .min(10, "Phone number must be exactly 10 digits.")
+    .max(10, "Phone number must be exactly 10 digits.")
+    .regex(/^\d{10}$/, "Phone number must contain only digits."),
   role: z.string().min(1, "Role is required"),
   institutionId: z.string().min(1, "Institution is required."),
   password: z.string().min(6, "Password must be at least 6 characters.").optional(),
 });
 
 type UserFormValues = z.infer<typeof userSchema>;
-type UserWithInstitutionName = User & { institution: string };
+type UserWithInstitutionName = User & { institution: string; isMockPhoneNumber?: boolean };
 
 export default function UserManagementPage() {
   const [users, setUsers] = useState<UserWithInstitutionName[]>([]);
@@ -178,6 +182,7 @@ export default function UserManagementPage() {
     form.reset({ 
       name: user.name, 
       username: user.username,
+      phoneNumber: user.phoneNumber || '',
       role: user.role as string,
       institutionId: user.institutionId,
       password: '', // Password field is for changing, not displaying
@@ -188,7 +193,7 @@ export default function UserManagementPage() {
   const openCreateDialog = () => {
     setEditingUser(null);
     setSelectedRole(''); // Reset selected role for new user
-    form.reset({ name: "", username: "", role: undefined, institutionId: undefined, password: "" });
+    form.reset({ name: "", username: "", phoneNumber: "", role: undefined, institutionId: undefined, password: "" });
     setIsDialogOpen(true);
   };
 
@@ -270,6 +275,7 @@ export default function UserManagementPage() {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Username</TableHead>
+                <TableHead>Phone Number</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead>Institution</TableHead>
                 <TableHead>Status</TableHead>
@@ -285,6 +291,9 @@ export default function UserManagementPage() {
                 <TableRow key={user.id}>
                   <TableCell className="font-medium">{user.name}</TableCell>
                   <TableCell>{user.username}</TableCell>
+                  <TableCell>
+                    {user.phoneNumber || 'N/A'}
+                  </TableCell>
                   <TableCell>{user.role}</TableCell>
                   <TableCell>{user.institution || 'N/A'}</TableCell>
                   <TableCell>
@@ -370,6 +379,9 @@ export default function UserManagementPage() {
               )}/>
               <FormField name="username" control={form.control} render={({ field }) => (
                 <FormItem><FormLabel>Username</FormLabel><FormControl><Input placeholder="e.g., jali" {...field} /></FormControl><FormMessage /></FormItem>
+              )}/>
+              <FormField name="phoneNumber" control={form.control} render={({ field }) => (
+                <FormItem><FormLabel>Phone Number</FormLabel><FormControl><Input placeholder="e.g., 0777123456" maxLength={10} {...field} /></FormControl><FormMessage /></FormItem>
               )}/>
               <FormField name="password" control={form.control} render={({ field }) => (
                 <FormItem><FormLabel>Password</FormLabel><FormControl><Input type="password" placeholder={editingUser ? "New password (optional)" : "Enter temporary password"} {...field} /></FormControl><FormMessage /></FormItem>

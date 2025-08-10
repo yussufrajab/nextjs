@@ -6,6 +6,7 @@ export interface User {
   username: string;
   name: string;
   password: string;
+  phoneNumber?: string;
   role: Role;
   employeeId?: string | null; 
   institutionId: string;

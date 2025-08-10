@@ -51,11 +51,31 @@ export async function GET(req: Request) {
       return {};
     };
     
-    // For debugging, let's first try with hardcoded values to see if the issue is with the API call itself
+    // Build where clauses for different entity types
+    const employeeWhereClause = buildEmployeeWhereClause();
+    const complaintWhereClause = buildComplaintWhereClause();
+    
+    // Build where clause for employee-based counts
+    const employeeCountWhereClause = shouldFilter ? { institutionId: userInstitutionId } : {};
+    
+    // Build where clause for requests with employee relation
+    const requestEmployeeWhereClause = shouldFilter ? 
+      { ...employeeWhereClause } : {};
+      
+    // Build where clause for complaints
+    const complaintCountWhereClause = shouldFilter ? 
+      { ...complaintWhereClause } : {};
+    
+    console.log('Where clauses:', { 
+      employeeCountWhereClause, 
+      requestEmployeeWhereClause, 
+      complaintCountWhereClause 
+    });
+    
     let totalEmployees, pendingConfirmations, pendingPromotions, employeesOnLwop, pendingTerminations, openComplaints, pendingCadreChanges, pendingRetirements, pendingResignations, pendingServiceExtensions;
     
     try {
-      totalEmployees = await db.employee.count();
+      totalEmployees = await db.employee.count({ where: employeeCountWhereClause });
       console.log('Total employees:', totalEmployees);
     } catch (err) {
       console.error('Error counting employees:', err);
@@ -63,7 +83,10 @@ export async function GET(req: Request) {
     }
     
     try {
-      pendingConfirmations = await db.confirmationRequest.count({ where: { status: 'Pending' } });
+      const confirmationWhere = shouldFilter ? 
+        { status: 'Pending', ...requestEmployeeWhereClause } : 
+        { status: 'Pending' };
+      pendingConfirmations = await db.confirmationRequest.count({ where: confirmationWhere });
       console.log('Pending confirmations:', pendingConfirmations);
     } catch (err) {
       console.error('Error counting pending confirmations:', err);
@@ -71,7 +94,10 @@ export async function GET(req: Request) {
     }
     
     try {
-      pendingPromotions = await db.promotionRequest.count({ where: { status: 'Pending' } });
+      const promotionWhere = shouldFilter ? 
+        { status: 'Pending', ...requestEmployeeWhereClause } : 
+        { status: 'Pending' };
+      pendingPromotions = await db.promotionRequest.count({ where: promotionWhere });
       console.log('Pending promotions:', pendingPromotions);
     } catch (err) {
       console.error('Error counting pending promotions:', err);
@@ -79,7 +105,10 @@ export async function GET(req: Request) {
     }
     
     try {
-      employeesOnLwop = await db.employee.count({ where: { status: 'On LWOP' }});
+      const lwopWhere = shouldFilter ? 
+        { status: 'On LWOP', ...employeeCountWhereClause } : 
+        { status: 'On LWOP' };
+      employeesOnLwop = await db.employee.count({ where: lwopWhere });
       console.log('Employees on LWOP:', employeesOnLwop);
     } catch (err) {
       console.error('Error counting employees on LWOP:', err);
@@ -87,7 +116,10 @@ export async function GET(req: Request) {
     }
     
     try {
-      pendingTerminations = await db.separationRequest.count({ where: { status: 'Pending' } });
+      const terminationWhere = shouldFilter ? 
+        { status: 'Pending', ...requestEmployeeWhereClause } : 
+        { status: 'Pending' };
+      pendingTerminations = await db.separationRequest.count({ where: terminationWhere });
       console.log('Pending terminations:', pendingTerminations);
     } catch (err) {
       console.error('Error counting pending terminations:', err);
@@ -95,7 +127,13 @@ export async function GET(req: Request) {
     }
     
     try {
-      openComplaints = await db.complaint.count({ where: { status: { notIn: ["Closed - Satisfied", "Resolved - Approved by Commission", "Resolved - Rejected by Commission"] } } });
+      const complaintWhere = shouldFilter ? 
+        { 
+          status: { notIn: ["Closed - Satisfied", "Resolved - Approved by Commission", "Resolved - Rejected by Commission"] },
+          ...complaintCountWhereClause 
+        } : 
+        { status: { notIn: ["Closed - Satisfied", "Resolved - Approved by Commission", "Resolved - Rejected by Commission"] } };
+      openComplaints = await db.complaint.count({ where: complaintWhere });
       console.log('Open complaints:', openComplaints);
     } catch (err) {
       console.error('Error counting open complaints:', err);
@@ -103,13 +141,13 @@ export async function GET(req: Request) {
     }
 
     try {
-      pendingCadreChanges = await db.cadreChangeRequest.count({ 
-        where: { 
-          status: { 
-            notIn: ["Approved by Commission", "Rejected by Commission - Request Concluded"] 
-          } 
-        } 
-      });
+      const cadreChangeWhere = shouldFilter ? 
+        { 
+          status: { notIn: ["Approved by Commission", "Rejected by Commission - Request Concluded"] },
+          ...requestEmployeeWhereClause 
+        } : 
+        { status: { notIn: ["Approved by Commission", "Rejected by Commission - Request Concluded"] } };
+      pendingCadreChanges = await db.cadreChangeRequest.count({ where: cadreChangeWhere });
       console.log('Pending cadre changes:', pendingCadreChanges);
     } catch (err) {
       console.error('Error counting pending cadre changes:', err);
@@ -117,13 +155,13 @@ export async function GET(req: Request) {
     }
 
     try {
-      pendingRetirements = await db.retirementRequest.count({ 
-        where: { 
-          status: { 
-            notIn: ["Approved by Commission", "Rejected by Commission - Request Concluded"] 
-          } 
-        } 
-      });
+      const retirementWhere = shouldFilter ? 
+        { 
+          status: { notIn: ["Approved by Commission", "Rejected by Commission - Request Concluded"] },
+          ...requestEmployeeWhereClause 
+        } : 
+        { status: { notIn: ["Approved by Commission", "Rejected by Commission - Request Concluded"] } };
+      pendingRetirements = await db.retirementRequest.count({ where: retirementWhere });
       console.log('Pending retirements:', pendingRetirements);
     } catch (err) {
       console.error('Error counting pending retirements:', err);
@@ -131,13 +169,13 @@ export async function GET(req: Request) {
     }
 
     try {
-      pendingResignations = await db.resignationRequest.count({ 
-        where: { 
-          status: { 
-            notIn: ["Approved by Commission", "Rejected by Commission - Request Concluded"] 
-          } 
-        } 
-      });
+      const resignationWhere = shouldFilter ? 
+        { 
+          status: { notIn: ["Approved by Commission", "Rejected by Commission - Request Concluded"] },
+          ...requestEmployeeWhereClause 
+        } : 
+        { status: { notIn: ["Approved by Commission", "Rejected by Commission - Request Concluded"] } };
+      pendingResignations = await db.resignationRequest.count({ where: resignationWhere });
       console.log('Pending resignations:', pendingResignations);
     } catch (err) {
       console.error('Error counting pending resignations:', err);
@@ -145,13 +183,13 @@ export async function GET(req: Request) {
     }
 
     try {
-      pendingServiceExtensions = await db.serviceExtensionRequest.count({ 
-        where: { 
-          status: { 
-            notIn: ["Approved by Commission", "Rejected by Commission - Request Concluded"] 
-          } 
-        } 
-      });
+      const serviceExtensionWhere = shouldFilter ? 
+        { 
+          status: { notIn: ["Approved by Commission", "Rejected by Commission - Request Concluded"] },
+          ...requestEmployeeWhereClause 
+        } : 
+        { status: { notIn: ["Approved by Commission", "Rejected by Commission - Request Concluded"] } };
+      pendingServiceExtensions = await db.serviceExtensionRequest.count({ where: serviceExtensionWhere });
       console.log('Pending service extensions:', pendingServiceExtensions);
     } catch (err) {
       console.error('Error counting pending service extensions:', err);
@@ -159,9 +197,6 @@ export async function GET(req: Request) {
     }
 
     // Fetch recent activities (with institution filtering and safe error handling)
-    const employeeWhereClause = buildEmployeeWhereClause();
-    const complaintWhereClause = buildComplaintWhereClause();
-    
     console.log('Employee where clause:', employeeWhereClause);
     console.log('Complaint where clause:', complaintWhereClause);
     
@@ -261,16 +296,16 @@ export async function GET(req: Request) {
       }));
 
     const stats = {
-      totalEmployees: totalEmployees || 150, // Add fallback numbers for testing
-      pendingConfirmations: pendingConfirmations || 12,
-      pendingPromotions: pendingPromotions || 8,
-      employeesOnLwop: employeesOnLwop || 5,
-      pendingTerminations: pendingTerminations || 3,
-      openComplaints: openComplaints || 7,
-      pendingCadreChanges: pendingCadreChanges || 0,
-      pendingRetirements: pendingRetirements || 0,
-      pendingResignations: pendingResignations || 0,
-      pendingServiceExtensions: pendingServiceExtensions || 0,
+      totalEmployees,
+      pendingConfirmations,
+      pendingPromotions,
+      employeesOnLwop,
+      pendingTerminations,
+      openComplaints,
+      pendingCadreChanges,
+      pendingRetirements,
+      pendingResignations,
+      pendingServiceExtensions,
     };
 
     console.log('=== Dashboard metrics calculated ===', stats);

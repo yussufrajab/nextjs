@@ -200,10 +200,20 @@ export default function DashboardPage() {
     return <DashboardSkeleton />;
   }
 
+  // Get institution name for display
+  const getInstitutionName = () => {
+    if (!user?.institution) return '';
+    if (typeof user.institution === 'string') return user.institution;
+    return user.institution.name;
+  };
+
+  const institutionName = getInstitutionName();
+  const shouldShowInstitution = role === ROLES.HRO && institutionName;
+
   return (
     <div className="flex-1 space-y-4">
       <PageHeader
-        title="Dashboard"
+        title={shouldShowInstitution ? `Dashboard - ${institutionName}` : "Dashboard"}
         description="Manage all your HR processes in one place."
       />
       

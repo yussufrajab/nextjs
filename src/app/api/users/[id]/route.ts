@@ -6,6 +6,11 @@ import bcrypt from 'bcryptjs';
 const userUpdateSchema = z.object({
   name: z.string().min(2).optional(),
   username: z.string().min(3).optional(),
+  phoneNumber: z.string()
+    .min(10, "Phone number must be exactly 10 digits.")
+    .max(10, "Phone number must be exactly 10 digits.")
+    .regex(/^\d{10}$/, "Phone number must contain only digits.")
+    .optional(),
   role: z.string().optional(),
   institutionId: z.string().optional(),
   active: z.boolean().optional(),
@@ -25,10 +30,29 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     const updatedUser = await db.user.update({
       where: { id: params.id },
       data: validatedData,
-      select: { id: true, name: true, username: true, role: true, active: true, institution: { select: { name: true } } },
+      select: { id: true, name: true, username: true, phoneNumber: true, role: true, active: true, institution: { select: { name: true } } },
     });
 
-    return NextResponse.json(updatedUser);
+    // Generate mock phone number if not present
+    const generateMockPhoneNumber = (userId: string): string => {
+      let hash = 0;
+      for (let i = 0; i < userId.length; i++) {
+        const char = userId.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash;
+      }
+      const baseNumber = Math.abs(hash) % 100000000;
+      return `07${baseNumber.toString().padStart(8, '0')}`;
+    };
+
+    const response = {
+      ...updatedUser,
+      phoneNumber: updatedUser.phoneNumber || generateMockPhoneNumber(updatedUser.id),
+      isMockPhoneNumber: !updatedUser.phoneNumber,
+      institution: updatedUser.institution.name,
+    };
+
+    return NextResponse.json(response);
   } catch (error) {
     console.error("[USER_PUT]", error);
     if (error instanceof z.ZodError) {
