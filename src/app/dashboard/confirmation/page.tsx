@@ -139,9 +139,8 @@ export default function ConfirmationPage() {
 
       const filteredData = allRequests.filter((req: ConfirmationRequest) => {
         if (role === ROLES.HHRMD || role === ROLES.HRMO) {
-          return req.status !== 'Approved by Commission' &&
-                 !req.status.includes('Rejected by Commission') &&
-                 req.reviewStage !== 'completed';
+          // Show all requests for HHRMD/HRMO including completed ones for tracking
+          return true;
         } else if (role === ROLES.HRO) {
           return req.submittedById === user.id;
         }
@@ -378,7 +377,7 @@ export default function ConfirmationPage() {
       setRejectionReasonInput('');
       setIsRejectionModalOpen(true);
     } else if (action === 'forward') {
-      // Parallel workflow: First HRMO/HHRMD to approve wins - immediately forwards to Commission
+      // HRMO/HHRMD approval forwards to Commission
       const roleName = role === ROLES.HRMO ? 'HRMO' : 'HHRMD';
       const payload = { 
         status: `Approved by ${roleName} – Awaiting Commission Decision`, 
@@ -387,7 +386,7 @@ export default function ConfirmationPage() {
         reviewedById: user?.id
       };
       
-      await handleUpdateRequest(requestId, payload, `Request approved by ${roleName} and forwarded to Commission (parallel workflow - first approval wins)`);
+      await handleUpdateRequest(requestId, payload, `Request approved by ${roleName} and forwarded to Commission`);
     }
   };
 
@@ -646,7 +645,15 @@ export default function ConfirmationPage() {
             ) : paginatedRequests.length > 0 ? (
               paginatedRequests.map((request) => (
                 <div key={request.id} className="mb-4 border p-4 rounded-md space-y-2 shadow-sm bg-background hover:shadow-md transition-shadow">
-                  <h3 className="font-semibold text-base">Confirmation for: {request.employee.name} (ZanID: {request.employee.zanId})</h3>
+                  <h3 className="font-semibold text-base flex items-center gap-2">
+                    Confirmation for: {request.employee.name} (ZanID: {request.employee.zanId})
+                    {request.reviewStage === 'completed' && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        <CheckCircle className="w-3 h-3 mr-1" />
+                        Completed
+                      </span>
+                    )}
+                  </h3>
                   <p className="text-sm text-muted-foreground">Department: {request.employee.department}</p>
                   <p className="text-sm text-muted-foreground">Submitted: {format(parseISO(request.createdAt), 'PPP')} by {request.submittedBy?.name || 'N/A'}</p>
                   {request.decisionDate && <p className="text-sm text-muted-foreground">Initial Review Date: {format(parseISO(request.decisionDate), 'PPP')}</p>}
@@ -704,7 +711,6 @@ export default function ConfirmationPage() {
                           <>
                             <Button size="sm" onClick={() => handleInitialAction(request.id, 'forward')}>Verify &amp; Forward to Commission</Button>
                             <Button size="sm" variant="destructive" onClick={() => handleInitialAction(request.id, 'reject')}>Reject &amp; Return to HRO</Button>
-                            <span className="text-xs text-muted-foreground italic">Parallel workflow: First approval wins</span>
                           </>
                         )}
                         {/* Both HHRMD and HRMO handle commission decisions */}

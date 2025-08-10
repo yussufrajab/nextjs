@@ -11,7 +11,7 @@ import { ROLES, EMPLOYEES } from '@/lib/constants';
 import React, { useState, useEffect } from 'react';
 import type { Employee, User, Role } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
-import { Loader2, Search, FileText, CalendarDays, CheckSquare, RefreshCw, Clock } from 'lucide-react';
+import { Loader2, Search, FileText, CalendarDays, CheckSquare, RefreshCw, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { format, parseISO } from 'date-fns';
 import { Pagination } from '@/components/shared/pagination';
@@ -692,7 +692,35 @@ export default function ServiceExtensionPage() {
             ) : pendingRequests.length > 0 ? (
               pendingRequests.map((request) => (
                 <div key={request.id} className="mb-4 border p-4 rounded-md space-y-2 shadow-sm bg-background hover:shadow-md transition-shadow">
-                  <h3 className="font-semibold text-base">Service Extension for: {request.employee.name} (ZanID: {request.employee.zanId})</h3>
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-semibold text-base flex items-center gap-2">
+                      Service Extension for: {request.employee.name} (ZanID: {request.employee.zanId})
+                      {(request.status.includes('Approved by Commission') || request.status.includes('Rejected by Commission')) && (
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                          request.status.includes('Approved by Commission') 
+                            ? 'bg-green-100 text-green-800 border border-green-200' 
+                            : 'bg-red-100 text-red-800 border border-red-200'
+                        }`}>
+                          {request.status.includes('Approved by Commission') ? (
+                            <>
+                              <CheckCircle className="w-3 h-3 mr-1" />
+                              Completed ✓
+                            </>
+                          ) : (
+                            <>
+                              <XCircle className="w-3 h-3 mr-1" />
+                              Rejected ✗
+                            </>
+                          )}
+                        </span>
+                      )}
+                    </h3>
+                    {(request.status.includes('Approved by Commission') || request.status.includes('Rejected by Commission')) && (
+                      <div className="text-xs text-muted-foreground">
+                        Final Decision
+                      </div>
+                    )}
+                  </div>
                   <p className="text-sm text-muted-foreground">Current Retirement: {request.currentRetirementDate ? format(parseISO(request.currentRetirementDate), 'PPP') : 'N/A'}</p>
                   <p className="text-sm text-muted-foreground">Extension Requested: {request.requestedExtensionPeriod}</p>
                   <p className="text-sm text-muted-foreground">Submitted: {request.createdAt ? format(parseISO(request.createdAt), 'PPP') : 'N/A'}</p>
@@ -785,7 +813,35 @@ export default function ServiceExtensionPage() {
             ) : paginatedRequests.length > 0 ? (
               paginatedRequests.map((request) => (
                 <div key={request.id} className="mb-4 border p-4 rounded-md space-y-2 shadow-sm bg-background hover:shadow-md transition-shadow">
-                  <h3 className="font-semibold text-base">Service Extension for: {request.employee.name} (ZanID: {request.employee.zanId})</h3>
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-semibold text-base flex items-center gap-2">
+                      Service Extension for: {request.employee.name} (ZanID: {request.employee.zanId})
+                      {(request.status.includes('Approved by Commission') || request.status.includes('Rejected by Commission')) && (
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                          request.status.includes('Approved by Commission') 
+                            ? 'bg-green-100 text-green-800 border border-green-200' 
+                            : 'bg-red-100 text-red-800 border border-red-200'
+                        }`}>
+                          {request.status.includes('Approved by Commission') ? (
+                            <>
+                              <CheckCircle className="w-3 h-3 mr-1" />
+                              Completed ✓
+                            </>
+                          ) : (
+                            <>
+                              <XCircle className="w-3 h-3 mr-1" />
+                              Rejected ✗
+                            </>
+                          )}
+                        </span>
+                      )}
+                    </h3>
+                    {(request.status.includes('Approved by Commission') || request.status.includes('Rejected by Commission')) && (
+                      <div className="text-xs text-muted-foreground">
+                        Final Decision
+                      </div>
+                    )}
+                  </div>
                   <p className="text-sm text-muted-foreground">Current Retirement: {request.currentRetirementDate ? format(parseISO(request.currentRetirementDate), 'PPP') : 'N/A'}</p>
                   <p className="text-sm text-muted-foreground">Extension Requested: {request.requestedExtensionPeriod}</p>
                   <p className="text-sm text-muted-foreground">Submitted: {request.createdAt ? format(parseISO(request.createdAt), 'PPP') : 'N/A'} by {request.submittedBy?.name || 'N/A'}</p>
