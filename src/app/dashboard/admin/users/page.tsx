@@ -230,7 +230,9 @@ export default function UserManagementPage() {
   const filteredUsers = users.filter(user =>
     user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (user.zanId && user.zanId.toLowerCase().includes(searchQuery.toLowerCase()))
+    (user.zanId && user.zanId.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    user.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (user.phoneNumber && user.phoneNumber.includes(searchQuery))
   );
 
   const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
@@ -252,7 +254,7 @@ export default function UserManagementPage() {
       />
       <div className="flex justify-end mb-4">
         <Input
-          placeholder="Search users by name, username, or ZanID..."
+          placeholder="Search by name, username, ZanID, role, or phone number..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="max-w-sm"
@@ -283,11 +285,7 @@ export default function UserManagementPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedUsers.filter((user) =>
-                user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                (user.zanId && user.zanId.toLowerCase().includes(searchQuery.toLowerCase()))
-              ).map((user) => (
+              {paginatedUsers.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell className="font-medium">{user.name}</TableCell>
                   <TableCell>{user.username}</TableCell>
@@ -340,7 +338,7 @@ export default function UserManagementPage() {
             currentPage={currentPage}
             totalPages={totalPages}
             onPageChange={setCurrentPage}
-            totalItems={users.length}
+            totalItems={filteredUsers.length}
             itemsPerPage={itemsPerPage}
           />
           </>

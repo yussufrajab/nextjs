@@ -58,7 +58,7 @@ export const NAV_ITEMS: NavItem[] = [
     title: 'Urgent Actions',
     href: '/dashboard/urgent-actions',
     icon: AlertTriangle,
-    roles: [ROLES.HRO, ROLES.HRMO, ROLES.HRRP],
+    roles: [ROLES.HRO, ROLES.HRRP],
     description: 'View employees needing immediate attention.',
   },
   {
