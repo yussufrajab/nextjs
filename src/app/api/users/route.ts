@@ -6,6 +6,7 @@ import bcrypt from 'bcryptjs';
 const userSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
   username: z.string().min(3, { message: "Username must be at least 3 characters." }),
+  email: z.string().email({ message: "Please enter a valid email address." }),
   phoneNumber: z.string()
     .min(10, "Phone number must be exactly 10 digits.")
     .max(10, "Phone number must be exactly 10 digits.")
@@ -44,14 +45,24 @@ export async function GET() {
       return mockPhone;
     };
 
-    // Flatten the institution object and add mock phone numbers
+    // Generate mock email based on user ID and username for consistency
+    const generateMockEmail = (userId: string, username: string): string => {
+      // Use username as base, fallback to user ID hash if username is short
+      const baseEmail = username.length >= 3 ? username.toLowerCase() : `user${userId.slice(-6)}`;
+      return `${baseEmail}@mock.local`;
+    };
+
+    // Flatten the institution object and add mock data where missing
     const formattedUsers = users.map(user => {
       const { password, ...userWithoutPassword } = user;
       const isMockPhone = !user.phoneNumber;
+      const isMockEmail = !user.email;
       return {
         ...userWithoutPassword,
+        email: user.email || generateMockEmail(user.id, user.username),
         phoneNumber: user.phoneNumber || generateMockPhoneNumber(user.id),
         isMockPhoneNumber: isMockPhone,
+        isMockEmail: isMockEmail,
         institution: user.institution.name,
       };
     });
@@ -66,7 +77,7 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { name, username, phoneNumber, role, institutionId, password } = userSchema.parse(body);
+    const { name, username, email, phoneNumber, role, institutionId, password } = userSchema.parse(body);
     
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
@@ -75,12 +86,13 @@ export async function POST(req: Request) {
       data: {
         name,
         username,
+        email,
         phoneNumber,
         role,
         institutionId,
         password: hashedPassword,
       },
-       select: { id: true, name: true, username: true, phoneNumber: true, role: true, active: true, institution: { select: { name: true } } },
+       select: { id: true, name: true, username: true, email: true, phoneNumber: true, role: true, active: true, institution: { select: { name: true } } },
     });
 
     // Format response with institution name

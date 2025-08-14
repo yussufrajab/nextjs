@@ -6,6 +6,7 @@ import bcrypt from 'bcryptjs';
 const userUpdateSchema = z.object({
   name: z.string().min(2).optional(),
   username: z.string().min(3).optional(),
+  email: z.string().email({ message: "Please enter a valid email address." }).optional().or(z.literal("")),
   phoneNumber: z.string()
     .min(10, "Phone number must be exactly 10 digits.")
     .max(10, "Phone number must be exactly 10 digits.")
@@ -30,7 +31,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     const updatedUser = await db.user.update({
       where: { id: params.id },
       data: validatedData,
-      select: { id: true, name: true, username: true, phoneNumber: true, role: true, active: true, institution: { select: { name: true } } },
+      select: { id: true, name: true, username: true, email: true, phoneNumber: true, role: true, active: true, institution: { select: { name: true } } },
     });
 
     // Generate mock phone number if not present

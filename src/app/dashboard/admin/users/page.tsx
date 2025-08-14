@@ -28,6 +28,20 @@ import { apiClient } from '@/lib/api-client';
 const userSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
   username: z.string().min(3, { message: "Username must be at least 3 characters." }),
+  email: z.string().email({ message: "Please enter a valid email address." }),
+  phoneNumber: z.string()
+    .min(10, "Phone number must be exactly 10 digits.")
+    .max(10, "Phone number must be exactly 10 digits.")
+    .regex(/^\d{10}$/, "Phone number must contain only digits."),
+  role: z.string().min(1, "Role is required"),
+  institutionId: z.string().min(1, "Institution is required."),
+  password: z.string().min(6, "Password must be at least 6 characters.").optional(),
+});
+
+const userEditSchema = z.object({
+  name: z.string().min(2, { message: "Name must be at least 2 characters." }),
+  username: z.string().min(3, { message: "Username must be at least 3 characters." }),
+  email: z.string().email({ message: "Please enter a valid email address." }).optional().or(z.literal("")),
   phoneNumber: z.string()
     .min(10, "Phone number must be exactly 10 digits.")
     .max(10, "Phone number must be exactly 10 digits.")
@@ -38,7 +52,8 @@ const userSchema = z.object({
 });
 
 type UserFormValues = z.infer<typeof userSchema>;
-type UserWithInstitutionName = User & { institution: string; isMockPhoneNumber?: boolean };
+type UserEditFormValues = z.infer<typeof userEditSchema>;
+type UserWithInstitutionName = User & { institution: string; isMockPhoneNumber?: boolean; isMockEmail?: boolean };
 
 export default function UserManagementPage() {
   const [users, setUsers] = useState<UserWithInstitutionName[]>([]);
@@ -132,6 +147,17 @@ export default function UserManagementPage() {
   const onSubmit = async (data: UserFormValues) => {
     setIsSubmitting(true);
 
+    // For new users, email is required
+    if (!editingUser && !data.email) {
+      toast({
+        title: "Email Required",
+        description: "Email address is required for new user registration.",
+        variant: "destructive"
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
     // Validate role-institution compatibility
     const selectedInstitution = institutions.find(inst => inst.id === data.institutionId);
     if (selectedInstitution) {
@@ -178,14 +204,15 @@ export default function UserManagementPage() {
   
   const openEditDialog = (user: UserWithInstitutionName) => {
     setEditingUser(user);
-    setSelectedRole(user.role as string); // Set selected role for editing
+    setSelectedRole(user.role as string);
     form.reset({ 
       name: user.name, 
       username: user.username,
+      email: user.email || '',
       phoneNumber: user.phoneNumber || '',
       role: user.role as string,
       institutionId: user.institutionId,
-      password: '', // Password field is for changing, not displaying
+      password: '',
     });
     setIsDialogOpen(true);
   };
@@ -193,7 +220,7 @@ export default function UserManagementPage() {
   const openCreateDialog = () => {
     setEditingUser(null);
     setSelectedRole(''); // Reset selected role for new user
-    form.reset({ name: "", username: "", phoneNumber: "", role: undefined, institutionId: undefined, password: "" });
+    form.reset({ name: "", username: "", email: "", phoneNumber: "", role: undefined, institutionId: undefined, password: "" });
     setIsDialogOpen(true);
   };
 
@@ -230,6 +257,7 @@ export default function UserManagementPage() {
   const filteredUsers = users.filter(user =>
     user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (user.email && user.email.toLowerCase().includes(searchQuery.toLowerCase())) ||
     (user.zanId && user.zanId.toLowerCase().includes(searchQuery.toLowerCase())) ||
     user.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (user.phoneNumber && user.phoneNumber.includes(searchQuery))
@@ -254,7 +282,7 @@ export default function UserManagementPage() {
       />
       <div className="flex justify-end mb-4">
         <Input
-          placeholder="Search by name, username, ZanID, role, or phone number..."
+          placeholder="Search by name, username, email, ZanID, role, or phone number..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="max-w-sm"
@@ -277,6 +305,7 @@ export default function UserManagementPage() {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Username</TableHead>
+                <TableHead>Email</TableHead>
                 <TableHead>Phone Number</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead>Institution</TableHead>
@@ -289,6 +318,12 @@ export default function UserManagementPage() {
                 <TableRow key={user.id}>
                   <TableCell className="font-medium">{user.name}</TableCell>
                   <TableCell>{user.username}</TableCell>
+                  <TableCell>
+                    {user.email || 'N/A'}
+                    {user.isMockEmail && (
+                      <span className="ml-1 text-xs text-muted-foreground">(mock)</span>
+                    )}
+                  </TableCell>
                   <TableCell>
                     {user.phoneNumber || 'N/A'}
                   </TableCell>
@@ -377,6 +412,16 @@ export default function UserManagementPage() {
               )}/>
               <FormField name="username" control={form.control} render={({ field }) => (
                 <FormItem><FormLabel>Username</FormLabel><FormControl><Input placeholder="e.g., jali" {...field} /></FormControl><FormMessage /></FormItem>
+              )}/>
+              <FormField name="email" control={form.control} render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email Address {!editingUser && <span className="text-red-500">*</span>}</FormLabel>
+                  <FormControl><Input type="email" placeholder="e.g., jali@example.com" {...field} /></FormControl>
+                  <FormMessage />
+                  {!editingUser && (
+                    <p className="text-sm text-muted-foreground">Required for new user registration</p>
+                  )}
+                </FormItem>
               )}/>
               <FormField name="phoneNumber" control={form.control} render={({ field }) => (
                 <FormItem><FormLabel>Phone Number</FormLabel><FormControl><Input placeholder="e.g., 0777123456" maxLength={10} {...field} /></FormControl><FormMessage /></FormItem>
