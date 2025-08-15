@@ -19,6 +19,7 @@ import { Pagination } from '@/components/shared/pagination';
 import { FileUpload } from '@/components/ui/file-upload';
 import { FilePreviewModal } from '@/components/ui/file-preview-modal';
 import { apiClient } from '@/lib/api-client';
+import { EmployeeSearch } from '@/components/shared/employee-search';
 
 
 interface SeparationRequest {
@@ -39,9 +40,7 @@ interface SeparationRequest {
 export default function TerminationAndDismissalPage() {
   const { role, user } = useAuth();
   const { accessToken } = useAuthStore();
-  const [zanId, setZanId] = useState('');
   const [employeeDetails, setEmployeeDetails] = useState<Employee | null>(null);
-  const [isFetchingEmployee, setIsFetchingEmployee] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -191,55 +190,16 @@ export default function TerminationAndDismissalPage() {
     }
   };
 
-  const handleFetchEmployeeDetails = async () => {
-    if (!zanId) {
-      toast({ title: "ZanID Required", description: "Please enter an employee's ZanID.", variant: "destructive" });
-      return;
-    }
-    
-    // Trim whitespace and validate format
-    const cleanZanId = zanId.trim();
-    if (!/^\d+$/.test(cleanZanId) || cleanZanId.length === 0) {
-      toast({ title: "Invalid ZanID Format", description: "ZanID must contain only digits.", variant: "destructive" });
-      return;
-    }
-    
-    setIsFetchingEmployee(true);
-    setEmployeeDetails(null);
+  const handleEmployeeFound = (employee: Employee) => {
     resetFormFields();
+    setEmployeeDetails(employee);
+    setEmployeeStatus(employee.status === 'On Probation' ? 'probation' : 'confirmed');
+  };
 
-    try {
-        console.log(`[TERMINATION] Searching for employee with ZanID: ${cleanZanId}`); // Debug log
-        const response = await fetch(`/api/employees/search?zanId=${cleanZanId}`);
-        
-        console.log(`[TERMINATION] Response status: ${response.status}`); // Debug log
-        
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error(`[TERMINATION] API Error: ${errorText}`); // Debug log
-            throw new Error(errorText || "Employee not found");
-        }
-        
-        const result = await response.json();
-        if (!result.success || !result.data || result.data.length === 0) {
-            throw new Error("Employee not found");
-        }
-        const foundEmployee: Employee = result.data[0];
-        console.log(`[TERMINATION] Found employee: ${foundEmployee.name}`); // Debug log
-
-        setEmployeeDetails(foundEmployee);
-        setEmployeeStatus(foundEmployee.status === 'On Probation' ? 'probation' : 'confirmed');
-        toast({ title: "Employee Found", description: `Details for ${foundEmployee.name} loaded successfully.` });
-    } catch (error: any) {
-        console.error(`[TERMINATION] Error fetching employee:`, error); // Debug log
-        toast({ 
-            title: "Employee Not Found", 
-            description: error.message || `No employee found with ZanID: ${cleanZanId}.`, 
-            variant: "destructive" 
-        });
-    } finally {
-        setIsFetchingEmployee(false);
-    }
+  const handleEmployeeClear = () => {
+    setEmployeeDetails(null);
+    setEmployeeStatus(null);
+    resetFormFields();
   };
   
   const handleUpdateRequest = async (requestId: string, payload: any, actionDescription?: string) => {
@@ -344,7 +304,6 @@ export default function TerminationAndDismissalPage() {
         
         await fetchRequests(); // Refresh list
         toast({ title: "Request Submitted", description: `${type} request for ${employeeDetails.name} submitted successfully.` });
-        setZanId('');
         setEmployeeDetails(null);
         resetFormFields();
     } catch(error) {
@@ -520,19 +479,14 @@ export default function TerminationAndDismissalPage() {
         <Card className="mb-6 shadow-lg">
           <CardHeader>
             <CardTitle>Submit Termination or Dismissal Request</CardTitle>
-            <CardDescription>Enter ZanID to fetch employee details. The required form will appear based on the employee's status.</CardDescription>
+            <CardDescription>Search for an employee by ZANID or Payroll Number. The required form will appear based on the employee's status.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="zanIdInput">Employee ZanID</Label>
-              <div className="flex space-x-2">
-                <Input id="zanIdInput" placeholder="Enter ZanID" value={zanId} onChange={(e) => setZanId(e.target.value)} disabled={isFetchingEmployee || isSubmitting} />
-                <Button onClick={handleFetchEmployeeDetails} disabled={isFetchingEmployee || !zanId || isSubmitting}>
-                  {isFetchingEmployee ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4" />}
-                  Fetch Details
-                </Button>
-              </div>
-            </div>
+            <EmployeeSearch 
+              onEmployeeFound={handleEmployeeFound}
+              onClear={handleEmployeeClear}
+              disabled={isSubmitting}
+            />
 
             {employeeDetails && employeeStatus && (
               <div className="space-y-6 pt-2">

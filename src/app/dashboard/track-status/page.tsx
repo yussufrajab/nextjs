@@ -10,6 +10,8 @@ import { ROLES, INSTITUTIONS } from '@/lib/constants';
 import React, { useState, useEffect, useCallback } from 'react';
 import { Loader2, Search, Eye, CalendarDays, Filter, Building, ListFilter as StatusFilterIcon, FileDown } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { EmployeeSearch } from '@/components/shared/employee-search';
+import type { Employee } from '@/lib/types';
 import {
   Table,
   TableHeader,
@@ -55,7 +57,7 @@ const ALL_STATUSES_FILTER_VALUE = "__ALL_STATUSES__";
 
 export default function TrackStatusPage() {
   const { user, role } = useAuth();
-  const [zanIdInput, setZanIdInput] = useState('');
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [searchAttempted, setSearchAttempted] = useState(false);
   
@@ -128,13 +130,16 @@ export default function TrackStatusPage() {
   }, [role, user, isTableView, fetchRequests]);
 
 
-  const handleSearchRequests = () => {
-    if (!zanIdInput.trim()) {
-      toast({ title: "ZanID Required", description: "Please enter an employee's ZanID to search.", variant: "destructive" });
-      return;
-    }
-    const params = new URLSearchParams({ zanId: zanIdInput.trim() });
+  const handleEmployeeFound = (employee: Employee) => {
+    setSelectedEmployee(employee);
+    const params = new URLSearchParams({ zanId: employee.zanId });
     fetchRequests(params);
+  };
+
+  const handleEmployeeClear = () => {
+    setSelectedEmployee(null);
+    setTrackedRequests([]);
+    setFilteredRequests([]);
   };
 
   const handleFilterRequests = () => {
@@ -273,16 +278,12 @@ export default function TrackStatusPage() {
                   </Button>
                 </div>
               ) : (
-                <div className="flex flex-col sm:flex-row sm:items-end sm:space-x-2 space-y-2 sm:space-y-0">
-                  <div className="flex-grow space-y-1">
-                    <Label htmlFor="zanIdInput">Employee ZanID</Label>
-                    <Input id="zanIdInput" placeholder="Enter ZanID" value={zanIdInput} onChange={(e) => setZanIdInput(e.target.value)} disabled={isSearching}/>
-                  </div>
-                  <Button onClick={handleSearchRequests} disabled={isSearching || !zanIdInput.trim()}>
-                    {isSearching ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4" />}
-                    Search Requests
-                  </Button>
-                </div>
+                <EmployeeSearch 
+                  onEmployeeFound={handleEmployeeFound}
+                  onClear={handleEmployeeClear}
+                  disabled={isSearching}
+                  placeholder="Enter ZANID or Payroll Number to track requests"
+                />
               )}
             </CardContent>
           </Card>
@@ -299,7 +300,7 @@ export default function TrackStatusPage() {
               <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between">
                 <div>
                     <CardTitle>
-                    {isTableView ? "Requests List" : `Request Status for ZanID: ${zanIdInput}`}
+                    {isTableView ? "Requests List" : `Request Status for: ${selectedEmployee?.name} (${selectedEmployee?.zanId})`}
                     </CardTitle>
                     <CardDescription>
                     {isTableView && `Displaying ${filteredRequests.length} of the latest 100 requests matching your criteria.`}
@@ -321,7 +322,7 @@ export default function TrackStatusPage() {
                   <>
                   <Table>
                     <TableCaption>
-                      {isTableView ? "Overview of the 100 latest submitted requests." : `A list of recent requests for ZanID: ${zanIdInput}.`}
+                      {isTableView ? "Overview of the 100 latest submitted requests." : `A list of recent requests for ${selectedEmployee?.name} (${selectedEmployee?.zanId}).`}
                     </TableCaption>
                     <TableHeader>
                       <TableRow>
@@ -366,7 +367,7 @@ export default function TrackStatusPage() {
                   </>
                 ) : (
                   <p className="text-muted-foreground text-center py-4">
-                    {isTableView ? "No requests match the current filter criteria." : `No requests found for ZanID: ${zanIdInput}.`}
+                    {isTableView ? "No requests match the current filter criteria." : `No requests found for ${selectedEmployee?.name} (${selectedEmployee?.zanId}).`}
                   </p>
                 )}
               </CardContent>

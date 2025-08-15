@@ -18,6 +18,7 @@ import { Pagination } from '@/components/shared/pagination';
 import { FileUpload } from '@/components/ui/file-upload';
 import { FilePreviewModal } from '@/components/ui/file-preview-modal';
 import { useAuthStore } from '@/store/auth-store';
+import { EmployeeSearch } from '@/components/shared/employee-search';
 
 interface ServiceExtensionRequest {
   id: string;
@@ -38,9 +39,7 @@ interface ServiceExtensionRequest {
 export default function ServiceExtensionPage() {
   const { role, user } = useAuth();
   const { accessToken } = useAuthStore();
-  const [zanId, setZanId] = useState('');
   const [employeeDetails, setEmployeeDetails] = useState<Employee | null>(null);
-  const [isFetchingEmployee, setIsFetchingEmployee] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -212,54 +211,14 @@ export default function ServiceExtensionPage() {
   };
 
 
-  const handleFetchEmployeeDetails = async () => {
-    if (!zanId) {
-      toast({ title: "ZanID Required", description: "Please enter an employee's ZanID.", variant: "destructive" });
-      return;
-    }
-    
-    // Trim whitespace and validate format
-    const cleanZanId = zanId.trim();
-    if (!/^\d+$/.test(cleanZanId) || cleanZanId.length === 0) {
-      toast({ title: "Invalid ZanID Format", description: "ZanID must contain only digits.", variant: "destructive" });
-      return;
-    }
-    
-    setIsFetchingEmployee(true);
+  const handleEmployeeFound = (employee: Employee) => {
+    resetFormFields();
+    setEmployeeDetails(employee);
+  };
+
+  const handleEmployeeClear = () => {
     setEmployeeDetails(null);
     resetFormFields();
-
-    try {
-        console.log(`[SERVICE_EXTENSION] Searching for employee with ZanID: ${cleanZanId}`); // Debug log
-        const response = await fetch(`/api/employees/search?zanId=${cleanZanId}`);
-        
-        console.log(`[SERVICE_EXTENSION] Response status: ${response.status}`); // Debug log
-        
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error(`[SERVICE_EXTENSION] API Error: ${errorText}`); // Debug log
-            throw new Error(errorText || "Employee not found");
-        }
-        
-        const result = await response.json();
-        if (!result.success || !result.data || result.data.length === 0) {
-            throw new Error("Employee not found");
-        }
-        const foundEmployee: Employee = result.data[0];
-        console.log(`[SERVICE_EXTENSION] Found employee: ${foundEmployee.name}`); // Debug log
-
-        setEmployeeDetails(foundEmployee);
-        toast({ title: "Employee Found", description: `Details for ${foundEmployee.name} loaded successfully.` });
-    } catch (error: any) {
-        console.error(`[SERVICE_EXTENSION] Error fetching employee:`, error); // Debug log
-        toast({ 
-            title: "Employee Not Found", 
-            description: error.message || `No employee found with ZanID: ${cleanZanId}.`, 
-            variant: "destructive" 
-        });
-    } finally {
-        setIsFetchingEmployee(false);
-    }
   };
   
   const handleUpdateRequest = async (requestId: string, payload: any, actionDescription?: string) => {
@@ -379,7 +338,6 @@ export default function ServiceExtensionPage() {
         await fetchRequests(false);
       }, 1000);
       
-      setZanId('');
       setEmployeeDetails(null);
       resetFormFields();
     } catch(error) {
@@ -566,19 +524,14 @@ export default function ServiceExtensionPage() {
         <Card className="mb-6 shadow-lg">
           <CardHeader>
             <CardTitle>Submit Service Extension Request</CardTitle>
-            <CardDescription>Enter ZanID, then fill extension details and upload required PDF documents.</CardDescription>
+            <CardDescription>Search for an employee by ZANID or Payroll Number, then fill extension details and upload required PDF documents.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="zanIdServiceExt">Employee ZanID</Label>
-              <div className="flex space-x-2">
-                <Input id="zanIdServiceExt" placeholder="Enter ZanID" value={zanId} onChange={(e) => setZanId(e.target.value)} disabled={isFetchingEmployee || isSubmitting} />
-                <Button onClick={handleFetchEmployeeDetails} disabled={isFetchingEmployee || !zanId || isSubmitting}>
-                  {isFetchingEmployee ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4" />}
-                  Fetch Details
-                </Button>
-              </div>
-            </div>
+            <EmployeeSearch 
+              onEmployeeFound={handleEmployeeFound}
+              onClear={handleEmployeeClear}
+              disabled={isSubmitting}
+            />
 
             {employeeDetails && (
               <div className="space-y-6 pt-2">

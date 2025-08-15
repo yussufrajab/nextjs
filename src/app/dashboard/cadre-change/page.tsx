@@ -21,6 +21,7 @@ import { FileUpload } from '@/components/ui/file-upload';
 import { apiClient } from '@/lib/api-client';
 import { FilePreviewModal } from '@/components/ui/file-preview-modal';
 import { useAuthStore } from '@/store/auth-store';
+import { EmployeeSearch } from '@/components/shared/employee-search';
 
 interface CadreChangeRequest {
   id: string;
@@ -41,9 +42,7 @@ interface CadreChangeRequest {
 export default function CadreChangePage() {
   const { role, user } = useAuth();
   const { accessToken } = useAuthStore();
-  const [zanId, setZanId] = useState('');
   const [employeeDetails, setEmployeeDetails] = useState<Employee | null>(null);
-  const [isFetchingEmployee, setIsFetchingEmployee] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -159,69 +158,34 @@ export default function CadreChangePage() {
     if (checkboxInput) checkboxInput.checked = false;
   };
 
-  const handleFetchEmployeeDetails = async () => {
-    if (!zanId) {
-      toast({ title: "ZanID Required", description: "Please enter an employee's ZanID.", variant: "destructive" });
-      return;
-    }
-    
-    // Trim whitespace and validate format
-    const cleanZanId = zanId.trim();
-    if (!/^\d+$/.test(cleanZanId) || cleanZanId.length === 0) {
-      toast({ title: "Invalid ZanID Format", description: "ZanID must contain only digits.", variant: "destructive" });
-      return;
-    }
-    
-    setIsFetchingEmployee(true);
-    setEmployeeDetails(null);
+  const handleEmployeeFound = (employee: Employee) => {
     resetFormFields();
     setEligibilityError(null);
 
-    try {
-        console.log(`Searching for employee with ZanID: ${cleanZanId}`); // Debug log
-        const response = await fetch(`/api/employees/search?zanId=${cleanZanId}`);
-        
-        console.log(`Response status: ${response.status}`); // Debug log
-        
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error(`API Error: ${errorText}`); // Debug log
-            throw new Error(errorText || "Employee not found");
-        }
-        
-        const result = await response.json();
-        if (!result.success || !result.data || result.data.length === 0) {
-            throw new Error("Employee not found");
-        }
-        const foundEmployee: Employee = result.data[0];
-        console.log(`Found employee: ${foundEmployee.name}`); // Debug log
-
-        let error = null;
-        if (foundEmployee.status === 'On Probation' || foundEmployee.status === 'On LWOP') {
-          error = `Employee is currently '${foundEmployee.status}' and is not eligible for a cadre change.`;
-        } else if (foundEmployee.employmentDate) {
-          const yearsOfService = differenceInYears(new Date(), parseISO(foundEmployee.employmentDate));
-          if (yearsOfService < 3) {
-            error = `Employee must have at least 3 years of service for a cadre change. Current service: ${yearsOfService} years.`;
-          }
-        }
-        
-        setEmployeeDetails(foundEmployee);
-        
-        if (error) {
-          setEligibilityError(error);
-          toast({ title: "Employee Ineligible", description: error, variant: "destructive", duration: 7000 });
-        } else {
-          setEligibilityError(null);
-          toast({ title: "Employee Found", description: `Details for ${foundEmployee.name} loaded successfully.` });
-        }
-    } catch (error: any) {
-        console.error(`Search failed:`, error); // Debug log
-        const errorMessage = error.message || `No employee found with ZanID: ${cleanZanId}.`;
-        toast({ title: "Employee Not Found", description: errorMessage, variant: "destructive" });
-    } finally {
-        setIsFetchingEmployee(false);
+    let error = null;
+    if (employee.status === 'On Probation' || employee.status === 'On LWOP') {
+      error = `Employee is currently '${employee.status}' and is not eligible for a cadre change.`;
+    } else if (employee.employmentDate) {
+      const yearsOfService = differenceInYears(new Date(), parseISO(employee.employmentDate));
+      if (yearsOfService < 3) {
+        error = `Employee must have at least 3 years of service for a cadre change. Current service: ${yearsOfService} years.`;
+      }
     }
+    
+    setEmployeeDetails(employee);
+    
+    if (error) {
+      setEligibilityError(error);
+      toast({ title: "Employee Ineligible", description: error, variant: "destructive", duration: 7000 });
+    } else {
+      setEligibilityError(null);
+    }
+  };
+
+  const handleEmployeeClear = () => {
+    setEmployeeDetails(null);
+    resetFormFields();
+    setEligibilityError(null);
   };
 
   const handleSubmitRequest = async () => {
@@ -301,7 +265,6 @@ export default function CadreChangePage() {
           await fetchRequests();
         }, 1000);
         
-        setZanId('');
         setEmployeeDetails(null);
         resetFormFields();
     } catch(error) {
@@ -456,19 +419,14 @@ export default function CadreChangePage() {
         <Card className="mb-6 shadow-lg">
           <CardHeader>
             <CardTitle>Submit Cadre Change Request</CardTitle>
-            <CardDescription>Enter ZanID to fetch details, then complete the form. All documents must be PDF.</CardDescription>
+            <CardDescription>Search for an employee by ZANID or Payroll Number, then complete the form. All documents must be PDF.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="zanIdCadreChange">Employee ZanID</Label>
-              <div className="flex space-x-2">
-                <Input id="zanIdCadreChange" placeholder="Enter ZanID" value={zanId} onChange={(e) => setZanId(e.target.value)} disabled={isFetchingEmployee || isSubmitting} />
-                <Button onClick={handleFetchEmployeeDetails} disabled={isFetchingEmployee || !zanId || isSubmitting}>
-                  {isFetchingEmployee ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4" />}
-                  Fetch Details
-                </Button>
-              </div>
-            </div>
+            <EmployeeSearch 
+              onEmployeeFound={handleEmployeeFound}
+              onClear={handleEmployeeClear}
+              disabled={isSubmitting}
+            />
 
             {employeeDetails && (
               <div className="space-y-6 pt-2">

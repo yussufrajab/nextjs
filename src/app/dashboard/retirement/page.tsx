@@ -20,6 +20,7 @@ import { Pagination } from '@/components/shared/pagination';
 import { FileUpload } from '@/components/ui/file-upload';
 import { FilePreviewModal } from '@/components/ui/file-preview-modal';
 import { useAuthStore } from '@/store/auth-store';
+import { EmployeeSearch } from '@/components/shared/employee-search';
 
 interface RetirementRequest {
   id: string;
@@ -44,9 +45,7 @@ const VOLUNTARY_RETIREMENT_AGE = 55;
 export default function RetirementPage() {
   const { role, user } = useAuth();
   const { accessToken } = useAuthStore();
-  const [zanId, setZanId] = useState('');
   const [employeeDetails, setEmployeeDetails] = useState<Employee | null>(null);
-  const [isFetchingEmployee, setIsFetchingEmployee] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -230,54 +229,18 @@ export default function RetirementPage() {
     setShowDelayFields(false);
   };
 
-  const handleFetchEmployeeDetails = async () => {
-    if (!zanId) {
-      toast({ title: "ZanID Required", description: "Please enter an employee's ZanID.", variant: "destructive" });
-      return;
-    }
+  const handleEmployeeFound = (employee: Employee) => {
+    resetFormFields();
+    setEmployeeDetails(employee);
     
-    // Trim whitespace and validate format
-    const cleanZanId = zanId.trim();
-    if (!/^\d+$/.test(cleanZanId) || cleanZanId.length === 0) {
-      toast({ title: "Invalid ZanID Format", description: "ZanID must contain only digits.", variant: "destructive" });
-      return;
+    if (!employee.dateOfBirth) {
+      toast({ title: "Missing Information", description: "Employee date of birth is missing. Age validation cannot be performed.", variant: "warning", duration: 5000 });
     }
-    
-    setIsFetchingEmployee(true);
+  };
+
+  const handleEmployeeClear = () => {
     setEmployeeDetails(null);
     resetFormFields();
-
-    try {
-        console.log(`[RETIREMENT] Searching for employee with ZanID: ${cleanZanId}`); // Debug log
-        const response = await fetch(`/api/employees/search?zanId=${cleanZanId}`);
-        
-        console.log(`[RETIREMENT] Response status: ${response.status}`); // Debug log
-        
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error(`[RETIREMENT] API Error: ${errorText}`); // Debug log
-            throw new Error(errorText || "Employee not found");
-        }
-        
-        const result = await response.json();
-        if (!result.success || !result.data || result.data.length === 0) {
-            throw new Error("Employee not found");
-        }
-        const foundEmployee: Employee = result.data[0];
-        console.log(`[RETIREMENT] Found employee: ${foundEmployee.name}`); // Debug log
-
-        setEmployeeDetails(foundEmployee);
-        if (!foundEmployee.dateOfBirth) {
-            toast({ title: "Missing Information", description: "Employee date of birth is missing. Age validation cannot be performed.", variant: "warning", duration: 5000 });
-        }
-        toast({ title: "Employee Found", description: `Details for ${foundEmployee.name} loaded successfully.` });
-    } catch (error: any) {
-        console.error(`[RETIREMENT] Search failed:`, error); // Debug log
-        const errorMessage = error.message || `No employee found with ZanID: ${cleanZanId}.`;
-        toast({ title: "Employee Not Found", description: errorMessage, variant: "destructive" });
-    } finally {
-        setIsFetchingEmployee(false);
-    }
   };
 
   const handleSubmitRetirementRequest = async () => {
@@ -364,7 +327,6 @@ export default function RetirementPage() {
         
         await fetchRequests(); // Refresh list
         toast({ title: "Retirement Request Submitted", description: `Request for ${employeeDetails.name} submitted successfully.` });
-        setZanId('');
         setEmployeeDetails(null);
         resetFormFields();
     } catch(error) {
@@ -558,19 +520,14 @@ export default function RetirementPage() {
         <Card className="mb-6 shadow-lg">
           <CardHeader>
             <CardTitle>Submit Retirement Request</CardTitle>
-            <CardDescription>Enter ZanID, then fill retirement details and upload required PDF documents.</CardDescription>
+            <CardDescription>Search for an employee by ZANID or Payroll Number, then fill retirement details and upload required PDF documents.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="zanIdRetirement">Employee ZanID</Label>
-              <div className="flex space-x-2">
-                <Input id="zanIdRetirement" placeholder="Enter ZanID" value={zanId} onChange={(e) => setZanId(e.target.value)} disabled={isFetchingEmployee || isSubmitting} />
-                <Button onClick={handleFetchEmployeeDetails} disabled={isFetchingEmployee || !zanId || isSubmitting}>
-                  {isFetchingEmployee ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4" />}
-                  Fetch Details
-                </Button>
-              </div>
-            </div>
+            <EmployeeSearch 
+              onEmployeeFound={handleEmployeeFound}
+              onClear={handleEmployeeClear}
+              disabled={isSubmitting}
+            />
 
             {employeeDetails && (
               <div className="space-y-6 pt-2">
