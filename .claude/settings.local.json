@@ -68,7 +68,12 @@
       "Bash(PORT=9002 npm start)",
       "Bash(npx prisma:*)",
       "Bash(npx next start:*)",
-      "Bash(PORT=3005 npx next start)"
+      "Bash(PORT=3005 npx next start)",
+      "Bash(systemctl:*)",
+      "Bash(mc ls:*)",
+      "Bash(cat:*)",
+      "Bash(git init:*)",
+      "Bash(git remote set-url:*)"
     ],
     "deny": []
   }

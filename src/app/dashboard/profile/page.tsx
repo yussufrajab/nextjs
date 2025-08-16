@@ -14,6 +14,8 @@ import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/hooks/use-toast';
 import { Loader2, Search, FileText, UserCircle, Briefcase, Award, ArrowLeft } from 'lucide-react';
+import { DocumentUpload } from '@/components/employee/document-upload';
+import { CertificateUpload } from '@/components/employee/certificate-upload';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableCaption } from '@/components/ui/table';
 import { Pagination } from '@/components/shared/pagination';
 
@@ -47,10 +49,52 @@ const getStatusColor = (status?: string) => {
   }
 };
 
-const CERTIFICATE_ORDER: EmployeeCertificate['type'][] = ['Certificate', 'Diploma', 'Bachelor Degree', 'Master Degree'];
+const CERTIFICATE_ORDER: EmployeeCertificate['type'][] = [
+  'Certificate of primary education',
+  'Certificate of Secondary education (Form IV)',
+  'Advanced Certificate of Secondary education (Form VII)', 
+  'Certificate',
+  'Diploma',
+  'Bachelor Degree',
+  'Master Degree',
+  'PHd'
+];
 
 // Component to render the detailed profile view
-const EmployeeDetailsCard = ({ emp, onBack }: { emp: Employee, onBack: () => void }) => (
+const EmployeeDetailsCard = ({ emp, onBack, userRole, userInstitutionId }: { emp: Employee, onBack: () => void, userRole?: string, userInstitutionId?: string }) => {
+  const [documentUrls, setDocumentUrls] = useState({
+    'ardhil-hali': emp.ardhilHaliUrl,
+    'confirmation-letter': emp.confirmationLetterUrl,
+    'job-contract': emp.jobContractUrl,
+    'birth-certificate': emp.birthCertificateUrl
+  });
+
+  const [certificates, setCertificates] = useState(emp.certificates || []);
+
+  // Check if user can upload documents (HRO or CSC roles)
+  const canUploadDocuments = userRole && ['HRO', 'HHRMD', 'HRMO', 'DO', 'CSCS', 'PO', 'ADMIN'].includes(userRole);
+
+  const handleDocumentUploadSuccess = (documentType: string, documentUrl: string) => {
+    setDocumentUrls(prev => ({
+      ...prev,
+      [documentType]: documentUrl
+    }));
+  };
+
+  const handleCertificateUploadSuccess = (certificate: any) => {
+    setCertificates(prev => {
+      // Remove existing certificate of the same type if any
+      const filtered = prev.filter(cert => cert.type !== certificate.type);
+      // Add the new certificate
+      return [...filtered, certificate];
+    });
+  };
+
+  const handleCertificateDeleteSuccess = (certificateType: string) => {
+    setCertificates(prev => prev.filter(cert => cert.type !== certificateType));
+  };
+
+  return (
   <Card className="mt-6 shadow-lg">
     <CardHeader className="border-b pb-6">
       <div className="flex items-center gap-4">
@@ -119,49 +163,85 @@ const EmployeeDetailsCard = ({ emp, onBack }: { emp: Employee, onBack: () => voi
           <h3 className="text-xl font-semibold font-headline text-foreground">Employee Documents</h3>
         </div>
         <Card className="bg-secondary/20 shadow-sm mb-6">
-          <CardHeader className="pb-3 pt-4"><CardTitle className="text-base">Core Documents</CardTitle></CardHeader>
-          <CardContent className="pt-0 pb-4 space-y-3 text-sm">
-            <div className="flex items-center justify-between p-3 rounded-md border bg-background">
-              <Label className="font-medium text-foreground">Ardhil-hali:</Label>
-              {emp.ardhilHaliUrl ? <Button asChild variant="link" size="sm"><a href={emp.ardhilHaliUrl} target="_blank" rel="noopener noreferrer">View Document</a></Button> : <span className="text-muted-foreground">Not Available</span>}
-            </div>
-            <div className="flex items-center justify-between p-3 rounded-md border bg-background">
-              <Label className="font-medium text-foreground">Confirmation Letter:</Label>
-              {emp.confirmationLetterUrl ? <Button asChild variant="link" size="sm"><a href={emp.confirmationLetterUrl} target="_blank" rel="noopener noreferrer">View Document</a></Button> : <span className="text-muted-foreground">Not Available</span>}
-            </div>
-            <div className="flex items-center justify-between p-3 rounded-md border bg-background">
-              <Label className="font-medium text-foreground">Job Contract:</Label>
-              {emp.jobContractUrl ? <Button asChild variant="link" size="sm"><a href={emp.jobContractUrl} target="_blank" rel="noopener noreferrer">View Document</a></Button> : <span className="text-muted-foreground">Not Available</span>}
-            </div>
-            <div className="flex items-center justify-between p-3 rounded-md border bg-background">
-              <Label className="font-medium text-foreground">Birth Certificate:</Label>
-              {emp.birthCertificateUrl ? <Button asChild variant="link" size="sm"><a href={emp.birthCertificateUrl} target="_blank" rel="noopener noreferrer">View Document</a></Button> : <span className="text-muted-foreground">Not Available</span>}
-            </div>
+          <CardHeader className="pb-3 pt-4">
+            <CardTitle className="text-base">Core Documents</CardTitle>
+            {canUploadDocuments && (
+              <p className="text-sm text-muted-foreground">
+                You can upload and manage employee documents. Only PDF files up to 5MB are allowed.
+              </p>
+            )}
+          </CardHeader>
+          <CardContent className="pt-0 pb-4 space-y-3">
+            <DocumentUpload
+              employeeId={emp.id}
+              documentType="ardhil-hali"
+              documentTitle="Ardhil-hali"
+              currentUrl={documentUrls['ardhil-hali'] || undefined}
+              canUpload={canUploadDocuments || false}
+              userRole={userRole}
+              userInstitutionId={userInstitutionId}
+              onUploadSuccess={(url) => handleDocumentUploadSuccess('ardhil-hali', url)}
+            />
+            <DocumentUpload
+              employeeId={emp.id}
+              documentType="confirmation-letter"
+              documentTitle="Confirmation Letter"
+              currentUrl={documentUrls['confirmation-letter'] || undefined}
+              canUpload={canUploadDocuments || false}
+              userRole={userRole}
+              userInstitutionId={userInstitutionId}
+              onUploadSuccess={(url) => handleDocumentUploadSuccess('confirmation-letter', url)}
+            />
+            <DocumentUpload
+              employeeId={emp.id}
+              documentType="job-contract"
+              documentTitle="Job Contract"
+              currentUrl={documentUrls['job-contract'] || undefined}
+              canUpload={canUploadDocuments || false}
+              userRole={userRole}
+              userInstitutionId={userInstitutionId}
+              onUploadSuccess={(url) => handleDocumentUploadSuccess('job-contract', url)}
+            />
+            <DocumentUpload
+              employeeId={emp.id}
+              documentType="birth-certificate"
+              documentTitle="Birth Certificate"
+              currentUrl={documentUrls['birth-certificate'] || undefined}
+              canUpload={canUploadDocuments || false}
+              userRole={userRole}
+              userInstitutionId={userInstitutionId}
+              onUploadSuccess={(url) => handleDocumentUploadSuccess('birth-certificate', url)}
+            />
           </CardContent>
         </Card>
          <Card className="bg-secondary/20 shadow-sm">
-           <CardHeader className="pb-3 pt-4"><div className="flex items-center"><Award className="h-5 w-5 mr-2 text-primary" /><CardTitle className="text-base">Employee Certificates</CardTitle></div></CardHeader>
-          <CardContent className="pt-0 pb-4 space-y-3 text-sm">
+           <CardHeader className="pb-3 pt-4">
+             <div className="flex items-center">
+               <Award className="h-5 w-5 mr-2 text-primary" />
+               <CardTitle className="text-base">Employee Certificates</CardTitle>
+             </div>
+             {canUploadDocuments && (
+               <p className="text-sm text-muted-foreground">
+                 You can upload and manage employee certificates. Only PDF files up to 5MB are allowed.
+               </p>
+             )}
+           </CardHeader>
+          <CardContent className="pt-0 pb-4 space-y-3">
             {CERTIFICATE_ORDER.map((certType) => {
-              const cert = emp.certificates?.find(c => c.type === certType);
+              const cert = certificates.find(c => c.type === certType);
               return (
-                <div key={certType} className="flex items-center justify-between p-3 rounded-md border bg-background">
-                  <div>
-                    <Label className="font-medium text-foreground">{certType}:</Label>
-                    {cert ? (
-                      <p className="text-muted-foreground text-xs">{cert.name}</p>
-                    ) : (
-                      <p className="text-muted-foreground text-xs italic">Not Available</p>
-                    )}
-                  </div>
-                  {cert?.url ? (
-                    <Button asChild variant="link" size="sm">
-                      <a href={cert.url} target="_blank" rel="noopener noreferrer">View Document</a>
-                    </Button>
-                  ) : (
-                    <span className="text-muted-foreground text-xs">No Document</span>
-                  )}
-                </div>
+                <CertificateUpload
+                  key={certType}
+                  employeeId={emp.id}
+                  certificateType={certType}
+                  certificateTitle={certType}
+                  currentCertificate={cert}
+                  canUpload={canUploadDocuments || false}
+                  userRole={userRole}
+                  userInstitutionId={userInstitutionId}
+                  onUploadSuccess={handleCertificateUploadSuccess}
+                  onDeleteSuccess={handleCertificateDeleteSuccess}
+                />
               );
             })}
           </CardContent>
@@ -169,7 +249,8 @@ const EmployeeDetailsCard = ({ emp, onBack }: { emp: Employee, onBack: () => voi
       </section>
     </CardContent>
   </Card>
-);
+  );
+};
 
 export default function ProfilePage() {
   const { user, role, isLoading: authLoading } = useAuth();
@@ -310,7 +391,7 @@ export default function ProfilePage() {
   if (selectedEmployee) {
     // Employee role should not see the back button
     const onBack = role === ROLES.EMPLOYEE ? () => {} : () => setSelectedEmployee(null);
-    return <EmployeeDetailsCard emp={selectedEmployee} onBack={onBack} />;
+    return <EmployeeDetailsCard emp={selectedEmployee} onBack={onBack} userRole={role || undefined} userInstitutionId={user?.institutionId || undefined} />;
   }
 
   return (
