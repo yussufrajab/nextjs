@@ -22,7 +22,7 @@ import type { User } from '@/lib/types';
 import { Loader2 } from 'lucide-react';
 
 const loginFormSchema = z.object({
-  username: z.string().min(1, { message: 'Username is required.' }),
+  username: z.string().min(1, { message: 'Username or email is required.' }),
   password: z.string().min(1, { message: 'Password is required.' }),
 });
 
@@ -61,7 +61,7 @@ export function LoginForm() {
     } else {
       toast({
         title: 'Login Failed',
-        description: 'Invalid username or password.',
+        description: 'Invalid username/email or password.',
         variant: 'destructive',
       });
       setIsLoading(false);
@@ -76,9 +76,9 @@ export function LoginForm() {
           name="username"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Username</FormLabel>
+              <FormLabel>Username or Email</FormLabel>
               <FormControl>
-                <Input placeholder="Enter your username" {...field} />
+                <Input placeholder="Enter your username or email" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

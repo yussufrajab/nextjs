@@ -57,7 +57,18 @@
       "Bash(git config:*)",
       "Bash(PORT=3000 npm start)",
       "Bash(PORT=3000 npx next start)",
-      "Bash(PORT=9002 npm run dev)"
+      "Bash(PORT=9002 npm run dev)",
+      "Bash(git add:*)",
+      "Bash(git push:*)",
+      "Bash(mvn:*)",
+      "Bash(npm install)",
+      "Bash(PORT=3001 node app.js)",
+      "Bash(mv:*)",
+      "Bash(PORT=3000 npx next start -p 3000)",
+      "Bash(PORT=9002 npm start)",
+      "Bash(npx prisma:*)",
+      "Bash(npx next start:*)",
+      "Bash(PORT=3005 npx next start)"
     ],
     "deny": []
   }

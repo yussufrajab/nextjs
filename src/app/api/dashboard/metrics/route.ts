@@ -83,22 +83,72 @@ export async function GET(req: Request) {
     }
     
     try {
+      // Role-specific confirmation counts based on what each role can act on
+      let confirmationStatuses: string[] = [];
+      
+      switch (userRole) {
+        case 'HRO':
+          confirmationStatuses = ['Pending HRMO Review'];
+          break;
+        case 'HHRMD':
+          confirmationStatuses = ['Pending HRMO/HHRMD Review'];
+          break;
+        case 'CSCS':
+        case 'Admin':
+          confirmationStatuses = ['Request Received – Awaiting Commission Decision'];
+          break;
+        default:
+          // For other roles, show all non-final statuses
+          confirmationStatuses = [
+            'PENDING', 
+            'Pending HRMO Review', 
+            'Pending HRMO/HHRMD Review', 
+            'Request Received – Awaiting Commission Decision',
+            'UNDER_REVIEW'
+          ];
+      }
+      
       const confirmationWhere = shouldFilter ? 
-        { status: 'Pending', ...requestEmployeeWhereClause } : 
-        { status: 'Pending' };
+        { status: { in: confirmationStatuses }, ...requestEmployeeWhereClause } : 
+        { status: { in: confirmationStatuses } };
       pendingConfirmations = await db.confirmationRequest.count({ where: confirmationWhere });
-      console.log('Pending confirmations:', pendingConfirmations);
+      console.log('Pending confirmations for role', userRole, ':', pendingConfirmations);
     } catch (err) {
       console.error('Error counting pending confirmations:', err);
       pendingConfirmations = 0;
     }
     
     try {
+      // Role-specific promotion counts
+      let promotionStatuses: string[] = [];
+      
+      switch (userRole) {
+        case 'HRO':
+          promotionStatuses = ['Pending HRMO Review', 'Draft - Pending Review'];
+          break;
+        case 'HHRMD':
+          promotionStatuses = ['Pending HRMO/HHRMD Review'];
+          break;
+        case 'CSCS':
+        case 'Admin':
+          promotionStatuses = ['Request Received – Awaiting Commission Decision'];
+          break;
+        default:
+          promotionStatuses = [
+            'PENDING', 
+            'Pending HRMO Review', 
+            'Pending HRMO/HHRMD Review', 
+            'Request Received – Awaiting Commission Decision',
+            'Draft - Pending Review',
+            'UNDER_REVIEW'
+          ];
+      }
+      
       const promotionWhere = shouldFilter ? 
-        { status: 'Pending', ...requestEmployeeWhereClause } : 
-        { status: 'Pending' };
+        { status: { in: promotionStatuses }, ...requestEmployeeWhereClause } : 
+        { status: { in: promotionStatuses } };
       pendingPromotions = await db.promotionRequest.count({ where: promotionWhere });
-      console.log('Pending promotions:', pendingPromotions);
+      console.log('Pending promotions for role', userRole, ':', pendingPromotions);
     } catch (err) {
       console.error('Error counting pending promotions:', err);
       pendingPromotions = 0;
@@ -116,11 +166,37 @@ export async function GET(req: Request) {
     }
     
     try {
+      // Role-specific termination/separation counts
+      let terminationStatuses: string[] = [];
+      
+      switch (userRole) {
+        case 'HRO':
+          terminationStatuses = ['Rejected by HHRMD - Awaiting HRO Correction'];
+          break;
+        case 'HHRMD':
+          terminationStatuses = ['Pending DO/HHRMD Review'];
+          break;
+        case 'DO':
+          terminationStatuses = ['Pending DO/HHRMD Review'];
+          break;
+        case 'CSCS':
+        case 'Admin':
+          terminationStatuses = ['Request Received – Awaiting Commission Decision'];
+          break;
+        default:
+          terminationStatuses = [
+            'PENDING',
+            'Pending DO/HHRMD Review',
+            'Request Received – Awaiting Commission Decision',
+            'Rejected by HHRMD - Awaiting HRO Correction'
+          ];
+      }
+      
       const terminationWhere = shouldFilter ? 
-        { status: 'Pending', ...requestEmployeeWhereClause } : 
-        { status: 'Pending' };
+        { status: { in: terminationStatuses }, ...requestEmployeeWhereClause } : 
+        { status: { in: terminationStatuses } };
       pendingTerminations = await db.separationRequest.count({ where: terminationWhere });
-      console.log('Pending terminations:', pendingTerminations);
+      console.log('Pending terminations for role', userRole, ':', pendingTerminations);
     } catch (err) {
       console.error('Error counting pending terminations:', err);
       pendingTerminations = 0;
@@ -141,56 +217,140 @@ export async function GET(req: Request) {
     }
 
     try {
+      // Role-specific cadre change counts
+      let cadreChangeStatuses: string[] = [];
+      
+      switch (userRole) {
+        case 'HRO':
+          cadreChangeStatuses = ['Pending HRMO Review', 'Rejected by HRMO - Awaiting HRO Correction'];
+          break;
+        case 'HHRMD':
+          cadreChangeStatuses = ['Pending HRMO/HHRMD Review'];
+          break;
+        case 'CSCS':
+        case 'Admin':
+          cadreChangeStatuses = ['Request Received – Awaiting Commission Decision'];
+          break;
+        default:
+          cadreChangeStatuses = [
+            'Pending HRMO Review',
+            'Pending HRMO/HHRMD Review',
+            'Request Received – Awaiting Commission Decision',
+            'Rejected by HRMO - Awaiting HRO Correction',
+            'UNDER_REVIEW'
+          ];
+      }
+      
       const cadreChangeWhere = shouldFilter ? 
-        { 
-          status: { notIn: ["Approved by Commission", "Rejected by Commission - Request Concluded"] },
-          ...requestEmployeeWhereClause 
-        } : 
-        { status: { notIn: ["Approved by Commission", "Rejected by Commission - Request Concluded"] } };
+        { status: { in: cadreChangeStatuses }, ...requestEmployeeWhereClause } : 
+        { status: { in: cadreChangeStatuses } };
       pendingCadreChanges = await db.cadreChangeRequest.count({ where: cadreChangeWhere });
-      console.log('Pending cadre changes:', pendingCadreChanges);
+      console.log('Pending cadre changes for role', userRole, ':', pendingCadreChanges);
     } catch (err) {
       console.error('Error counting pending cadre changes:', err);
       pendingCadreChanges = 0;
     }
 
     try {
+      // Role-specific retirement counts
+      let retirementStatuses: string[] = [];
+      
+      switch (userRole) {
+        case 'HRO':
+          retirementStatuses = ['Pending HRMO Review', 'Rejected by HHRMD - Awaiting HRO Correction'];
+          break;
+        case 'HHRMD':
+          retirementStatuses = ['Pending HRMO/HHRMD Review', 'Pending HHRMD Review'];
+          break;
+        case 'CSCS':
+        case 'Admin':
+          retirementStatuses = ['Request Received – Awaiting Commission Decision'];
+          break;
+        default:
+          retirementStatuses = [
+            'PENDING', 
+            'Pending HRMO Review', 
+            'Pending HRMO/HHRMD Review',
+            'Pending HHRMD Review',
+            'Rejected by HHRMD - Awaiting HRO Correction',
+            'Request Received – Awaiting Commission Decision',
+            'UNDER_REVIEW'
+          ];
+      }
+      
       const retirementWhere = shouldFilter ? 
-        { 
-          status: { notIn: ["Approved by Commission", "Rejected by Commission - Request Concluded"] },
-          ...requestEmployeeWhereClause 
-        } : 
-        { status: { notIn: ["Approved by Commission", "Rejected by Commission - Request Concluded"] } };
+        { status: { in: retirementStatuses }, ...requestEmployeeWhereClause } : 
+        { status: { in: retirementStatuses } };
       pendingRetirements = await db.retirementRequest.count({ where: retirementWhere });
-      console.log('Pending retirements:', pendingRetirements);
+      console.log('Pending retirements for role', userRole, ':', pendingRetirements);
     } catch (err) {
       console.error('Error counting pending retirements:', err);
       pendingRetirements = 0;
     }
 
     try {
+      // Role-specific resignation counts
+      let resignationStatuses: string[] = [];
+      
+      switch (userRole) {
+        case 'HRO':
+          resignationStatuses = ['Rejected by HHRMD - Awaiting HRO Action'];
+          break;
+        case 'HHRMD':
+          resignationStatuses = ['Pending HRMO/HHRMD Review'];
+          break;
+        case 'CSCS':
+        case 'Admin':
+          resignationStatuses = ['Forwarded to Commission for Acknowledgment'];
+          break;
+        default:
+          resignationStatuses = [
+            'Pending HRMO/HHRMD Review',
+            'Forwarded to Commission for Acknowledgment',
+            'Rejected by HHRMD - Awaiting HRO Action',
+            'UNDER_REVIEW'
+          ];
+      }
+      
       const resignationWhere = shouldFilter ? 
-        { 
-          status: { notIn: ["Approved by Commission", "Rejected by Commission - Request Concluded"] },
-          ...requestEmployeeWhereClause 
-        } : 
-        { status: { notIn: ["Approved by Commission", "Rejected by Commission - Request Concluded"] } };
+        { status: { in: resignationStatuses }, ...requestEmployeeWhereClause } : 
+        { status: { in: resignationStatuses } };
       pendingResignations = await db.resignationRequest.count({ where: resignationWhere });
-      console.log('Pending resignations:', pendingResignations);
+      console.log('Pending resignations for role', userRole, ':', pendingResignations);
     } catch (err) {
       console.error('Error counting pending resignations:', err);
       pendingResignations = 0;
     }
 
     try {
+      // Role-specific service extension counts
+      let serviceExtensionStatuses: string[] = [];
+      
+      switch (userRole) {
+        case 'HRO':
+          serviceExtensionStatuses = ['Rejected by HHRMD - Awaiting HRO Correction'];
+          break;
+        case 'HHRMD':
+          serviceExtensionStatuses = ['Pending HRMO/HHRMD Review'];
+          break;
+        case 'CSCS':
+        case 'Admin':
+          serviceExtensionStatuses = ['Request Received – Awaiting Commission Decision'];
+          break;
+        default:
+          serviceExtensionStatuses = [
+            'Pending HRMO/HHRMD Review',
+            'Request Received – Awaiting Commission Decision',
+            'Rejected by HHRMD - Awaiting HRO Correction',
+            'UNDER_REVIEW'
+          ];
+      }
+      
       const serviceExtensionWhere = shouldFilter ? 
-        { 
-          status: { notIn: ["Approved by Commission", "Rejected by Commission - Request Concluded"] },
-          ...requestEmployeeWhereClause 
-        } : 
-        { status: { notIn: ["Approved by Commission", "Rejected by Commission - Request Concluded"] } };
+        { status: { in: serviceExtensionStatuses }, ...requestEmployeeWhereClause } : 
+        { status: { in: serviceExtensionStatuses } };
       pendingServiceExtensions = await db.serviceExtensionRequest.count({ where: serviceExtensionWhere });
-      console.log('Pending service extensions:', pendingServiceExtensions);
+      console.log('Pending service extensions for role', userRole, ':', pendingServiceExtensions);
     } catch (err) {
       console.error('Error counting pending service extensions:', err);
       pendingServiceExtensions = 0;

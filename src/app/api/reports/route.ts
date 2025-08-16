@@ -29,6 +29,20 @@ function getStatusDisplayText(status: string): string {
   return 'Inasubiri';
 }
 
+function getCommissionDecision(status: string, commissionDecisionDate?: any): string {
+  // Determine commission decision based on status
+  if (status === 'Approved by Commission' || (status === 'concluded' && commissionDecisionDate)) {
+    return 'Imekubaliwa';
+  } else if (status === 'Rejected by Commission' || status === 'Rejected by Commission - Request Concluded') {
+    return 'Imekataliwa';
+  } else if (status && (status.includes('Commission') && status.includes('Approved'))) {
+    return 'Imekubaliwa';
+  } else if (status && (status.includes('Commission') && status.includes('Rejected'))) {
+    return 'Imekataliwa';
+  }
+  return '-';
+}
+
 function formatReportData(reportType: string, rawData: any[]): ReportOutput {
   let headers: string[] = [];
   let title: string = '';
@@ -39,8 +53,8 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
   switch (reportType) {
     case 'confirmation':
       title = 'Ripoti ya Kuthibitishwa Kazini';
-      headers = ['S/N', 'Jina la Mfanyakazi', 'ZAN ID', 'Jinsia', 'Taasisi', 'Tarehe ya Ombi', 'Hali', 'Mwenye Kuidhinisha'];
-      dataKeys = ['sn', 'employeeName', 'zanId', 'gender', 'institution', 'requestDate', 'status', 'reviewer'];
+      headers = ['S/N', 'Jina la Mfanyakazi', 'ZAN ID', 'Jinsia', 'Taasisi', 'Tarehe ya Ombi', 'Hali', 'Maamuzi'];
+      dataKeys = ['sn', 'employeeName', 'zanId', 'gender', 'institution', 'requestDate', 'status', 'commissionDecision'];
       
       formattedData = rawData.map((item, index) => ({
         sn: index + 1,
@@ -50,7 +64,7 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
         institution: item.employee?.institution?.name || '-',
         requestDate: new Date(item.createdAt).toLocaleDateString('sw-TZ'),
         status: getStatusDisplayText(item.status),
-        reviewer: item.reviewedBy?.name || '-'
+        commissionDecision: getCommissionDecision(item.status, item.commissionDecisionDate)
       }));
       
       totals = {
@@ -61,7 +75,7 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
         institution: '',
         requestDate: '',
         status: formattedData.length,
-        reviewer: ''
+        commissionDecision: ''
       };
       break;
 
@@ -69,8 +83,8 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
     case 'promotionExperience':
     case 'promotionEducation':
       title = 'Ripoti ya Kupandishwa Cheo';
-      headers = ['S/N', 'Jina la Mfanyakazi', 'ZAN ID', 'Jinsia', 'Taasisi', 'Aina', 'Tarehe ya Ombi', 'Hali'];
-      dataKeys = ['sn', 'employeeName', 'zanId', 'gender', 'institution', 'promotionType', 'requestDate', 'status'];
+      headers = ['S/N', 'Jina la Mfanyakazi', 'ZAN ID', 'Jinsia', 'Taasisi', 'Aina', 'Tarehe ya Ombi', 'Hali', 'Maamuzi'];
+      dataKeys = ['sn', 'employeeName', 'zanId', 'gender', 'institution', 'promotionType', 'requestDate', 'status', 'commissionDecision'];
       
       formattedData = rawData.map((item, index) => ({
         sn: index + 1,
@@ -81,7 +95,8 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
         promotionType: item.promotionType === 'EducationAdvancement' ? 'kwa maendeleo ya elimu' : 
                       item.promotionType === 'Experience' ? 'kwa uzoefu' : '-',
         requestDate: new Date(item.createdAt).toLocaleDateString('sw-TZ'),
-        status: getStatusDisplayText(item.status)
+        status: getStatusDisplayText(item.status),
+        commissionDecision: getCommissionDecision(item.status, item.commissionDecisionDate)
       }));
       
       totals = {
@@ -92,14 +107,15 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
         institution: '',
         promotionType: '',
         requestDate: '',
-        status: formattedData.length
+        status: formattedData.length,
+        commissionDecision: ''
       };
       break;
 
     case 'lwop':
       title = 'Ripoti ya Likizo Bila Malipo';
-      headers = ['S/N', 'Jina la Mfanyakazi', 'ZAN ID', 'Jinsia', 'Taasisi', 'Muda', 'Sababu', 'Tarehe ya Kuanza', 'Tarehe ya Kumaliza', 'Hali'];
-      dataKeys = ['sn', 'employeeName', 'zanId', 'gender', 'institution', 'duration', 'reason', 'startDate', 'endDate', 'status'];
+      headers = ['S/N', 'Jina la Mfanyakazi', 'ZAN ID', 'Jinsia', 'Taasisi', 'Muda', 'Sababu', 'Tarehe ya Kuanza', 'Tarehe ya Kumaliza', 'Hali', 'Maamuzi'];
+      dataKeys = ['sn', 'employeeName', 'zanId', 'gender', 'institution', 'duration', 'reason', 'startDate', 'endDate', 'status', 'commissionDecision'];
       
       formattedData = rawData.map((item, index) => ({
         sn: index + 1,
@@ -111,7 +127,8 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
         reason: item.reason || '-',
         startDate: item.startDate ? new Date(item.startDate).toLocaleDateString('sw-TZ') : '-',
         endDate: item.endDate ? new Date(item.endDate).toLocaleDateString('sw-TZ') : '-',
-        status: getStatusDisplayText(item.status)
+        status: getStatusDisplayText(item.status),
+        commissionDecision: getCommissionDecision(item.status, item.commissionDecisionDate)
       }));
       
       totals = {
@@ -124,14 +141,15 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
         reason: '',
         startDate: '',
         endDate: '',
-        status: formattedData.length
+        status: formattedData.length,
+        commissionDecision: ''
       };
       break;
 
     case 'cadreChange':
       title = 'Ripoti ya Kubadilishwa Kada';
-      headers = ['S/N', 'Jina la Mfanyakazi', 'ZAN ID', 'Jinsia', 'Taasisi', 'Kada ya Sasa', 'Kada Mpya', 'Sababu', 'Tarehe ya Ombi', 'Hali'];
-      dataKeys = ['sn', 'employeeName', 'zanId', 'gender', 'institution', 'currentCadre', 'newCadre', 'reason', 'requestDate', 'status'];
+      headers = ['S/N', 'Jina la Mfanyakazi', 'ZAN ID', 'Jinsia', 'Taasisi', 'Kada ya Sasa', 'Kada Mpya', 'Sababu', 'Tarehe ya Ombi', 'Hali', 'Maamuzi'];
+      dataKeys = ['sn', 'employeeName', 'zanId', 'gender', 'institution', 'currentCadre', 'newCadre', 'reason', 'requestDate', 'status', 'commissionDecision'];
       
       formattedData = rawData.map((item, index) => ({
         sn: index + 1,
@@ -143,7 +161,8 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
         newCadre: item.newCadre || '-',
         reason: item.reason || '-',
         requestDate: new Date(item.createdAt).toLocaleDateString('sw-TZ'),
-        status: getStatusDisplayText(item.status)
+        status: getStatusDisplayText(item.status),
+        commissionDecision: getCommissionDecision(item.status, item.commissionDecisionDate)
       }));
       
       totals = {
@@ -156,7 +175,8 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
         newCadre: '',
         reason: '',
         requestDate: '',
-        status: formattedData.length
+        status: formattedData.length,
+        commissionDecision: ''
       };
       break;
 
@@ -165,8 +185,8 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
     case 'compulsoryRetirement':
     case 'illnessRetirement':
       title = 'Ripoti ya Kustaafu';
-      headers = ['S/N', 'Jina la Mfanyakazi', 'ZAN ID', 'Jinsia', 'Taasisi', 'Aina ya Kustaafu', 'Tarehe ya Kustaafu', 'Tarehe ya Ombi', 'Hali'];
-      dataKeys = ['sn', 'employeeName', 'zanId', 'gender', 'institution', 'retirementType', 'retirementDate', 'requestDate', 'status'];
+      headers = ['S/N', 'Jina la Mfanyakazi', 'ZAN ID', 'Jinsia', 'Taasisi', 'Aina ya Kustaafu', 'Tarehe ya Kustaafu', 'Tarehe ya Ombi', 'Hali', 'Maamuzi'];
+      dataKeys = ['sn', 'employeeName', 'zanId', 'gender', 'institution', 'retirementType', 'retirementDate', 'requestDate', 'status', 'commissionDecision'];
       
       formattedData = rawData.map((item, index) => ({
         sn: index + 1,
@@ -179,7 +199,8 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
                        item.retirementType === 'illness' ? 'kwa ugonjwa' : '-',
         retirementDate: item.proposedDate ? new Date(item.proposedDate).toLocaleDateString('sw-TZ') : '-',
         requestDate: new Date(item.createdAt).toLocaleDateString('sw-TZ'),
-        status: getStatusDisplayText(item.status)
+        status: getStatusDisplayText(item.status),
+        commissionDecision: getCommissionDecision(item.status, item.commissionDecisionDate)
       }));
       
       totals = {
@@ -191,14 +212,15 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
         retirementType: '',
         retirementDate: '',
         requestDate: '',
-        status: formattedData.length
+        status: formattedData.length,
+        commissionDecision: ''
       };
       break;
 
     case 'resignation':
       title = 'Ripoti ya Kuacha Kazi';
-      headers = ['S/N', 'Jina la Mfanyakazi', 'ZAN ID', 'Jinsia', 'Taasisi', 'Tarehe ya Kuacha', 'Sababu', 'Tarehe ya Ombi', 'Hali'];
-      dataKeys = ['sn', 'employeeName', 'zanId', 'gender', 'institution', 'effectiveDate', 'reason', 'requestDate', 'status'];
+      headers = ['S/N', 'Jina la Mfanyakazi', 'ZAN ID', 'Jinsia', 'Taasisi', 'Tarehe ya Kuacha', 'Sababu', 'Tarehe ya Ombi', 'Hali', 'Maamuzi'];
+      dataKeys = ['sn', 'employeeName', 'zanId', 'gender', 'institution', 'effectiveDate', 'reason', 'requestDate', 'status', 'commissionDecision'];
       
       formattedData = rawData.map((item, index) => ({
         sn: index + 1,
@@ -209,7 +231,8 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
         effectiveDate: item.effectiveDate ? new Date(item.effectiveDate).toLocaleDateString('sw-TZ') : '-',
         reason: item.reason || '-',
         requestDate: new Date(item.createdAt).toLocaleDateString('sw-TZ'),
-        status: getStatusDisplayText(item.status)
+        status: getStatusDisplayText(item.status),
+        commissionDecision: getCommissionDecision(item.status, item.commissionDecisionDate)
       }));
       
       totals = {
@@ -221,14 +244,15 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
         effectiveDate: '',
         reason: '',
         requestDate: '',
-        status: formattedData.length
+        status: formattedData.length,
+        commissionDecision: ''
       };
       break;
 
     case 'serviceExtension':
       title = 'Ripoti ya Nyongeza ya Utumishi';
-      headers = ['S/N', 'Jina la Mfanyakazi', 'ZAN ID', 'Jinsia', 'Taasisi', 'Tarehe ya Sasa ya Kustaafu', 'Muda wa Nyongeza', 'Sababu', 'Tarehe ya Ombi', 'Hali'];
-      dataKeys = ['sn', 'employeeName', 'zanId', 'gender', 'institution', 'currentRetirementDate', 'extensionPeriod', 'justification', 'requestDate', 'status'];
+      headers = ['S/N', 'Jina la Mfanyakazi', 'ZAN ID', 'Jinsia', 'Taasisi', 'Tarehe ya Sasa ya Kustaafu', 'Muda wa Nyongeza', 'Sababu', 'Tarehe ya Ombi', 'Hali', 'Maamuzi'];
+      dataKeys = ['sn', 'employeeName', 'zanId', 'gender', 'institution', 'currentRetirementDate', 'extensionPeriod', 'justification', 'requestDate', 'status', 'commissionDecision'];
       
       formattedData = rawData.map((item, index) => ({
         sn: index + 1,
@@ -240,7 +264,8 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
         extensionPeriod: item.requestedExtensionPeriod || '-',
         justification: item.justification || '-',
         requestDate: new Date(item.createdAt).toLocaleDateString('sw-TZ'),
-        status: getStatusDisplayText(item.status)
+        status: getStatusDisplayText(item.status),
+        commissionDecision: getCommissionDecision(item.status, item.commissionDecisionDate)
       }));
       
       totals = {
@@ -253,15 +278,16 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
         extensionPeriod: '',
         justification: '',
         requestDate: '',
-        status: formattedData.length
+        status: formattedData.length,
+        commissionDecision: ''
       };
       break;
 
     case 'termination':
     case 'terminationDismissal':
       title = 'Ripoti ya Kufukuzwa/Kuachishwa Kazi';
-      headers = ['S/N', 'Jina la Mfanyakazi', 'ZAN ID', 'Jinsia', 'Taasisi', 'Aina', 'Sababu', 'Tarehe ya Ombi', 'Hali'];
-      dataKeys = ['sn', 'employeeName', 'zanId', 'gender', 'institution', 'type', 'reason', 'requestDate', 'status'];
+      headers = ['S/N', 'Jina la Mfanyakazi', 'ZAN ID', 'Jinsia', 'Taasisi', 'Aina', 'Sababu', 'Tarehe ya Ombi', 'Hali', 'Maamuzi'];
+      dataKeys = ['sn', 'employeeName', 'zanId', 'gender', 'institution', 'type', 'reason', 'requestDate', 'status', 'commissionDecision'];
       
       formattedData = rawData.map((item, index) => ({
         sn: index + 1,
@@ -272,7 +298,8 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
         type: item.type === 'TERMINATION' ? 'Kuachishwa' : 'Kufukuzwa',
         reason: item.reason || '-',
         requestDate: new Date(item.createdAt).toLocaleDateString('sw-TZ'),
-        status: getStatusDisplayText(item.status)
+        status: getStatusDisplayText(item.status),
+        commissionDecision: getCommissionDecision(item.status, item.commissionDecisionDate)
       }));
       
       totals = {
@@ -284,14 +311,15 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
         type: '',
         reason: '',
         requestDate: '',
-        status: formattedData.length
+        status: formattedData.length,
+        commissionDecision: ''
       };
       break;
 
     case 'complaints':
       title = 'Ripoti ya Malalamiko';
-      headers = ['S/N', 'Mlalamikaji', 'Jinsia', 'Aina ya Malalamiko', 'Maelezo', 'Tarehe', 'Hali'];
-      dataKeys = ['sn', 'complainant', 'gender', 'complaintType', 'subject', 'date', 'status'];
+      headers = ['S/N', 'Mlalamikaji', 'Jinsia', 'Aina ya Malalamiko', 'Maelezo', 'Tarehe', 'Hali', 'Maamuzi'];
+      dataKeys = ['sn', 'complainant', 'gender', 'complaintType', 'subject', 'date', 'status', 'commissionDecision'];
       
       formattedData = rawData.map((item, index) => ({
         sn: index + 1,
@@ -300,7 +328,8 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
         complaintType: item.complaintType || '-',
         subject: item.subject || '-',
         date: new Date(item.createdAt).toLocaleDateString('sw-TZ'),
-        status: getStatusDisplayText(item.status)
+        status: getStatusDisplayText(item.status),
+        commissionDecision: getCommissionDecision(item.status, item.commissionDecisionDate)
       }));
       
       totals = {
@@ -310,7 +339,8 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
         complaintType: '',
         subject: '',
         date: '',
-        status: formattedData.length
+        status: formattedData.length,
+        commissionDecision: ''
       };
       break;
 

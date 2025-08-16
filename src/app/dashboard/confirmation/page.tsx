@@ -18,6 +18,7 @@ import { format, parseISO, isAfter } from 'date-fns';
 import { Pagination } from '@/components/shared/pagination';
 import { FileUpload } from '@/components/ui/file-upload';
 import { FilePreviewModal } from '@/components/ui/file-preview-modal';
+import { EmployeeSearch } from '@/components/shared/employee-search';
 
 interface ConfirmationRequest {
   id: string;
@@ -35,9 +36,7 @@ interface ConfirmationRequest {
 
 export default function ConfirmationPage() {
   const { role, user, isLoading: isAuthLoading } = useAuth();
-  const [zanId, setZanId] = useState('');
   const [employeeToConfirm, setEmployeeToConfirm] = useState<Employee | null>(null);
-  const [isFetchingEmployee, setIsFetchingEmployee] = useState(false);
   
   const [evaluationFormFile, setEvaluationFormFile] = useState<string>('');
   const [ipaCertificateFile, setIpaCertificateFile] = useState<string>('');
@@ -187,63 +186,44 @@ export default function ConfirmationPage() {
     setIsIpaRequired(false);
   }
 
-  const handleFetchEmployeeDetails = async () => {
-    if (!zanId) {
-      toast({ title: "ZanID Required", description: "Please enter an employee's ZanID.", variant: "destructive" });
-      return;
-    }
+  const handleEmployeeFound = (employee: Employee) => {
+    console.log(`[CONFIRMATION] Found employee: ${employee.name}`);
     
-    // Trim whitespace and validate format
-    const cleanZanId = zanId.trim();
-    if (!/^\d+$/.test(cleanZanId) || cleanZanId.length === 0) {
-      toast({ title: "Invalid ZanID Format", description: "ZanID must contain only digits.", variant: "destructive" });
-      return;
-    }
-    
-    setIsFetchingEmployee(true);
+    // Reset form fields when new employee is selected
     resetEmployeeAndForm();
-
-    try {
-        console.log(`[CONFIRMATION] Searching for employee with ZanID: ${cleanZanId}`); // Debug log
-        const response = await fetch(`/api/employees/search?zanId=${cleanZanId}`);
-        
-        console.log(`[CONFIRMATION] Response status: ${response.status}`); // Debug log
-        
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error(`[CONFIRMATION] API Error: ${errorText}`); // Debug log
-            throw new Error(errorText || "Employee not found");
+    
+    setEmployeeToConfirm(employee);
+    
+    // Check if IPA certificate is required based on employment date
+    if (employee.employmentDate) {
+      try {
+        const employmentDate = parseISO(employee.employmentDate);
+        const cutoffDate = new Date('2014-05-01');
+        if (isAfter(employmentDate, cutoffDate)) {
+          setIsIpaRequired(true);
         }
-        
-        const result = await response.json();
-        if (!result.success || !result.data || result.data.length === 0) {
-            throw new Error("Employee not found");
-        }
-        const foundEmployee: Employee = result.data[0];
-        console.log(`[CONFIRMATION] Found employee: ${foundEmployee.name}`); // Debug log
-
-        setEmployeeToConfirm(foundEmployee);
-        if (foundEmployee.employmentDate) {
-            try {
-                const employmentDate = parseISO(foundEmployee.employmentDate);
-                const cutoffDate = new Date('2014-05-01');
-                if (isAfter(employmentDate, cutoffDate)) setIsIpaRequired(true);
-            } catch (error) {
-                toast({ title: "Date Error", description: "Could not parse employee's employment date.", variant: "destructive" });
-            }
-        }
-        if (foundEmployee.status === 'Confirmed') {
-            toast({ title: "Already Confirmed", description: "This employee has already been confirmed.", variant: "destructive", duration: 5000 });
-        } else {
-            toast({ title: "Employee Found", description: `Details for ${foundEmployee.name} loaded successfully.` });
-        }
-    } catch (error: any) {
-        console.error(`[CONFIRMATION] Search failed:`, error); // Debug log
-        const errorMessage = error.message || `No employee found with ZanID: ${cleanZanId}.`;
-        toast({ title: "Employee Not Found", description: errorMessage, variant: "destructive" });
-    } finally {
-        setIsFetchingEmployee(false);
+      } catch (error) {
+        toast({ 
+          title: "Date Error", 
+          description: "Could not parse employee's employment date.", 
+          variant: "destructive" 
+        });
+      }
     }
+    
+    // Check if employee is already confirmed
+    if (employee.status === 'Confirmed') {
+      toast({ 
+        title: "Already Confirmed", 
+        description: "This employee has already been confirmed.", 
+        variant: "destructive", 
+        duration: 5000 
+      });
+    }
+  };
+
+  const handleClearEmployee = () => {
+    resetEmployeeAndForm();
   };
 
   const handleSubmitRequest = async () => {
@@ -520,16 +500,11 @@ export default function ConfirmationPage() {
             <CardDescription>Enter employee's ZanID to fetch details. Required documents will be determined by hiring date.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="zanId">Employee ZanID</Label>
-              <div className="flex space-x-2">
-                <Input id="zanId" placeholder="Enter ZanID" value={zanId} onChange={(e) => setZanId(e.target.value)} disabled={isFetchingEmployee || isSubmitting} />
-                <Button onClick={handleFetchEmployeeDetails} disabled={isFetchingEmployee || !zanId || isSubmitting}>
-                  {isFetchingEmployee ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4" />}
-                  Fetch Details
-                </Button>
-              </div>
-            </div>
+            <EmployeeSearch
+              onEmployeeFound={handleEmployeeFound}
+              onClear={handleClearEmployee}
+              disabled={isSubmitting}
+            />
 
             {employeeToConfirm && (
               <div className="space-y-6 pt-2">

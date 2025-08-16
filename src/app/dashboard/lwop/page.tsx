@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { FileUpload } from '@/components/ui/file-upload';
+import { EmployeeSearch } from '@/components/shared/employee-search';
 import { useAuth } from '@/hooks/use-auth';
 import { ROLES, EMPLOYEES } from '@/lib/constants';
 import React, { useState, useEffect } from 'react';
@@ -59,9 +60,7 @@ function parseDurationToMonths(durationStr: string): number | null {
 
 export default function LwopPage() {
   const { role, user } = useAuth();
-  const [zanId, setZanId] = useState('');
   const [employeeDetails, setEmployeeDetails] = useState<Employee | null>(null);
-  const [isFetchingEmployee, setIsFetchingEmployee] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -193,56 +192,26 @@ export default function LwopPage() {
     fetchRequests();
   }, [user, role]);
 
-  const handleFetchEmployeeDetails = async () => {
-    if (!zanId) {
-      toast({ title: "ZanID Required", description: "Please enter an employee's ZanID.", variant: "destructive" });
-      return;
-    }
-    
-    // Trim whitespace and validate format
-    const cleanZanId = zanId.trim();
-    if (!/^\d+$/.test(cleanZanId) || cleanZanId.length === 0) {
-      toast({ title: "Invalid ZanID Format", description: "ZanID must contain only digits.", variant: "destructive" });
-      return;
-    }
-    
-    setIsFetchingEmployee(true);
-    setEmployeeDetails(null);
+  const resetForm = () => {
     setStartDate('');
     setEndDate('');
     setDuration('');
     setReason('');
     setLetterOfRequestKey('');
     setEmployeeConsentLetterKey('');
+  };
 
-    try {
-        console.log(`[LWOP] Searching for employee with ZanID: ${cleanZanId}`); // Debug log
-        const response = await fetch(`/api/employees/search?zanId=${cleanZanId}`);
-        
-        console.log(`[LWOP] Response status: ${response.status}`); // Debug log
-        
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error(`[LWOP] API Error: ${errorText}`); // Debug log
-            throw new Error(errorText || "Employee not found");
-        }
-        
-        const result = await response.json();
-        if (!result.success || !result.data || result.data.length === 0) {
-            throw new Error("Employee not found");
-        }
-        const foundEmployee: Employee = result.data[0];
-        console.log(`[LWOP] Found employee: ${foundEmployee.name}`); // Debug log
+  const handleEmployeeFound = (employee: Employee) => {
+    console.log(`[LWOP] Found employee: ${employee.name}`);
+    
+    // Reset form fields when new employee is selected
+    resetForm();
+    setEmployeeDetails(employee);
+  };
 
-        setEmployeeDetails(foundEmployee);
-        toast({ title: "Employee Found", description: `Details for ${foundEmployee.name} loaded successfully.` });
-    } catch (error: any) {
-        console.error(`[LWOP] Search failed:`, error); // Debug log
-        const errorMessage = error.message || `No employee found with ZanID: ${cleanZanId}.`;
-        toast({ title: "Employee Not Found", description: errorMessage, variant: "destructive" });
-    } finally {
-        setIsFetchingEmployee(false);
-    }
+  const handleClearEmployee = () => {
+    setEmployeeDetails(null);
+    resetForm();
   };
 
   const handleResubmit = (request: LWOPRequest) => {
@@ -607,19 +576,14 @@ export default function LwopPage() {
         <Card className="mb-6 shadow-lg">
           <CardHeader>
             <CardTitle>Submit LWOP Request</CardTitle>
-            <CardDescription>Enter employee's ZanID to fetch details, then complete the LWOP form.</CardDescription>
+            <CardDescription>Search employee by ZANID or Payroll Number, then complete the LWOP form.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="zanIdLwop">Employee ZanID</Label>
-              <div className="flex space-x-2">
-                <Input id="zanIdLwop" placeholder="Enter ZanID" value={zanId} onChange={(e) => setZanId(e.target.value)} disabled={isFetchingEmployee || isSubmitting} />
-                <Button onClick={handleFetchEmployeeDetails} disabled={isFetchingEmployee || !zanId || isSubmitting}>
-                  {isFetchingEmployee ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4" />}
-                  Fetch Details
-                </Button>
-              </div>
-            </div>
+            <EmployeeSearch
+              onEmployeeFound={handleEmployeeFound}
+              onClear={handleClearEmployee}
+              disabled={isSubmitting}
+            />
 
             {employeeDetails && (
               <div className="space-y-6 pt-2">

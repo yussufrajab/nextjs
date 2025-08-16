@@ -5,7 +5,7 @@ import bcrypt from 'bcryptjs';
 import { createNotification, NotificationTemplates } from '@/lib/notifications';
 
 const loginSchema = z.object({
-  username: z.string().min(1, 'Username is required.'),
+  username: z.string().min(1, 'Username or email is required.'),
   password: z.string().min(1, 'Password is required.'),
 });
 
@@ -14,11 +14,16 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { username, password } = loginSchema.parse(body);
 
-    console.log('Login attempt for username:', username);
+    console.log('Login attempt for username/email:', username);
 
-    // Find user in database
-    const user = await db.user.findUnique({
-      where: { username },
+    // Check if the input is an email (contains @) or username
+    const isEmail = username.includes('@');
+    
+    // Find user in database by either email or username
+    const user = await db.user.findFirst({
+      where: isEmail 
+        ? { email: username }
+        : { username: username },
       include: {
         institution: true,
         employee: true
@@ -28,7 +33,7 @@ export async function POST(req: Request) {
     if (!user) {
       console.log('User not found:', username);
       return NextResponse.json(
-        { success: false, message: 'Invalid username or password' },
+        { success: false, message: 'Invalid username/email or password' },
         { status: 401 }
       );
     }
@@ -47,7 +52,7 @@ export async function POST(req: Request) {
     if (!isPasswordValid) {
       console.log('Invalid password for user:', username);
       return NextResponse.json(
-        { success: false, message: 'Invalid username or password' },
+        { success: false, message: 'Invalid username/email or password' },
         { status: 401 }
       );
     }
