@@ -172,7 +172,10 @@ ALTER TABLE public."EmployeeCertificate" OWNER TO postgres;
 
 CREATE TABLE public."Institution" (
     id text NOT NULL,
-    name text NOT NULL
+    name text NOT NULL,
+    email text,
+    "phoneNumber" text,
+    "voteNumber" text
 );
 
 
@@ -1181,51 +1184,51 @@ cmd0h0wxz0083e6h6ukfoubxg	Bachelor Degree	Geography	https://placehold.co/bachelo
 -- Data for Name: Institution; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public."Institution" (id, name) FROM stdin;
-cmd059ion0000e6d85kexfukl	TUME YA UTUMISHI SERIKALINI
-cmd06nn7n0001e67w2h5rf86x	OFISI YA RAIS, FEDHA NA MIPANGO
-cmd06nn7r0002e67w8df8thtn	WIZARA YA ELIMU NA MAFUNZO YA AMALI
-cmd06nn7u0003e67wa4hiyie7	WIZARA YA AFYA
-cmd06xe1x0000e6bqalx28nja	Ofisi ya Msajili wa Hazina
-cmd06xe220001e6bqj26tnlsj	Ofisi ya Mkuu wa Mkoa wa Kusini Unguja
-cmd06xe250002e6bqp8aabk92	Wakala wa Vipimo Zanzibar
-cmd06xe270003e6bq0wm0v3c7	WIZARA YA MAENDELEO YA JAMII,JINSIA,WAZEE NA WATOTO
-cmd06xe2a0004e6bqwbtjm4x9	KAMISHENI YA UTUMISHI WA UMMA
-cmd06xe2c0005e6bqulk6iu8g	WAKALA WA SERIKALI MTANDAO (eGAZ)
-cmd06xe2e0006e6bqvjfhq32c	OFISI YA MKAGUZI MKUU WA NDANI WA SERIKALI
-cmd06xe2j0008e6bqqpmbs9bv	Ofisi ya Mhasibu Mkuu wa Serikali
-cmd06xe2m0009e6bq0ps9u9ut	TAASISI YA NYARAKA NA KUMBUKUMBU
-cmd06xe2o000ae6bquqbkbg4z	AFISI YA RAISI KAZI, UCHUMI NA UWEKEZAJI
-cmd06xe2r000be6bqrqhwhbq1	KAMISHENI YA UTALII ZANZIBAR
-cmd06xe2t000ce6bq2jxl6o5e	SEKRETARIETI YA AJIRA .
-cmd06xe2w000de6bqzqo9qu3m	TAASISI YA ELIMU YA ZANZIBAR
-cmd06xe2y000ee6bqel875c2s	KAMISHENI YA KUKABILIANA NA MAAFA ZANZIBAR
-cmd06xe30000fe6bqe6ljiz1v	WAKALA WA MAJENGO ZANZIBAR
-cmd06xe34000he6bqfdqiw9ll	WIZARA YA KILIMO UMWAGILIAJI MALIASILI NA MIFUGO
-cmd06xe37000ie6bq43r62ea6	WIZARA YA UJENZI MAWASILIANO NA UCHUKUZI
-cmd06xe39000je6bqeouszvrd	OFISI YA MAKAMO WA KWANZA WA RAISI
-cmd06xe3b000ke6bqxuwovzub	WIZARA YA BIASHARA NA MAENDELEO YA VIWANDA
-cmd06xe3e000le6bqscwfh5be	SEKRETARIETI YA AJIRA
-cmd06xe3g000me6bqh9gabe3e	OFISI YA RAIS, TAWALA ZA MIKOA, SERIKALI ZA MITAA NA IDARA MAALUMU ZA SMZ
-cmd06xe3i000ne6bq2q3y9g2z	OFISI YA RAIS - KATIBA SHERIA UTUMISHI NA UTAWALA BORA
-cmd06xe3l000oe6bq5drrocqt	WIZARA YA HABARI, VIJANA, UTAMADUNI NA MICHEZO
-cmd06xe3n000pe6bquce6e6ga	TUME YA UCHAGUZI YA ZANZIBAR
-cmd06xe3p000qe6bqwqcuyke1	OFISI YA MAKAMO WA PILI WA RAISI
-cmd06xe3r000re6bqum8g62id	WIZARA YA UCHUMI WA BULUU NA UVUVI
-cmd06xe3t000se6bqknluakbq	OFISI YA MUFTI MKUU WA ZANZIBAR
-cmd06xe3w000te6bqc44b0xpr	MAMLAKA YA KUZUIA RUSHWA NA UHUJUMU WA UCHUMI ZANZIBAR
-cmd06xe3y000ue6bqzqkztrsa	WIZARA YA ARDHI NA MAENDELEO YA MAKAAZI ZANZIBAR
-cmd06xe40000ve6bqrip9e4m6	WIZARA YA UTALII NA MAMBO YA KALE
-cmd06xe43000we6bqegt3ofa0	OFISI YA RAIS - IKULU
-cmd06xe45000xe6bqb6qc19ys	MAMLAKA YA KUDHIBITI NA KUPAMBANA NA DAWA ZA KULEVYA ZANZIBAR
-cmd06xe48000ye6bqwhlp0tum	TUME YA MAADILI YA VIONGOZI WA UMMA
-cmd06xe4b0010e6bqt54zkblq	AFISI YA MKURUGENZI WA MASHTAKA
-cmd06xe4e0011e6bqv8eg0b16	AFISI YA MWANASHERIA MKUU
-cmd06xe4g0012e6bqou5f9gur	WIZARA YA MAJI NISHATI NA MADINI
-inst_1753108793068	Updated Test Institution
-cmd06xe2h0007e6bqta680e3b	KAMISHENI YA ARDHI ZANZIBAR
-cme571jn200002bcqa9freppg	5 Wizara ya Majaribio ya Mfumo na ukaguzi
-cme6s7yqe000m2bgx708j9uly	Tume ya kusimamia Nidhamu
+COPY public."Institution" (id, name, email, "phoneNumber", "voteNumber") FROM stdin;
+cmd06xe2c0005e6bqulk6iu8g	WAKALA WA SERIKALI MTANDAO (eGAZ)	\N	\N	\N
+cmd06xe2t000ce6bq2jxl6o5e	SEKRETARIETI YA AJIRA .	\N	\N	\N
+cmd06xe3e000le6bqscwfh5be	SEKRETARIETI YA AJIRA	\N	\N	\N
+inst_1753108793068	Updated Test Institution	\N	\N	\N
+cme571jn200002bcqa9freppg	5 Wizara ya Majaribio ya Mfumo na ukaguzi	\N	\N	\N
+cme6s7yqe000m2bgx708j9uly	Tume ya kusimamia Nidhamu	\N	\N	\N
+cmd06nn7u0003e67wa4hiyie7	WIZARA YA AFYA	info@mohz.go.tz	+255242231614	H01
+cmd06nn7r0002e67w8df8thtn	WIZARA YA ELIMU NA MAFUNZO YA AMALI	info@moez.go.tz	+255777458878	K01
+cmd06xe4g0012e6bqou5f9gur	WIZARA YA MAJI NISHATI NA MADINI	info@majismz.go.tz	0242232695	N03
+cmd06xe4e0011e6bqv8eg0b16	AFISI YA MWANASHERIA MKUU	info@agcz.go.tz	0242232502	G03
+cmd06xe4b0010e6bqt54zkblq	AFISI YA MKURUGENZI WA MASHTAKA	dppznz@dppznz.go.tz	+255-24-2235564	G04
+cmd059ion0000e6d85kexfukl	TUME YA UTUMISHI SERIKALINI	info@zanajira.go.tz	0773101012	E08
+cmd06xe48000ye6bqwhlp0tum	TUME YA MAADILI YA VIONGOZI WA UMMA	info@ethicscommission.go.tz	+255242235535	G15
+cmd06xe45000xe6bqb6qc19ys	MAMLAKA YA KUDHIBITI NA KUPAMBANA NA DAWA ZA KULEVYA ZANZIBAR	info@zdcea.go.tz	+255242233403	C04
+cmd06xe43000we6bqegt3ofa0	OFISI YA RAIS - IKULU	info@ikuluzanzibar.go.tz	+2252230814#5	A01
+cmd06xe40000ve6bqrip9e4m6	WIZARA YA UTALII NA MAMBO YA KALE	info@utaliismz.go.tz	0242231250	J04
+cmd06xe3y000ue6bqzqkztrsa	WIZARA YA ARDHI NA MAENDELEO YA MAKAAZI ZANZIBAR	info@ardhismz.go.tz	0242941193	N02
+cmd06xe3w000te6bqc44b0xpr	MAMLAKA YA KUZUIA RUSHWA NA UHUJUMU WA UCHUMI ZANZIBAR	info@zaeca.go.tz	0774824242	E05
+cmd06xe3t000se6bqknluakbq	OFISI YA MUFTI MKUU WA ZANZIBAR	info@muftizanzibar.go.tz	0777483627	G14
+cmd06xe3r000re6bqum8g62id	WIZARA YA UCHUMI WA BULUU NA UVUVI	info@blueeconomy.go.tz	242941195	L02
+cmd06xe3p000qe6bqwqcuyke1	OFISI YA MAKAMO WA PILI WA RAISI	info@ompr.go.tz	0242231826	C01
+cmd06xe3n000pe6bquce6e6ga	TUME YA UCHAGUZI YA ZANZIBAR	info@zec.go.tz	242231489	C03
+cmd06xe3l000oe6bq5drrocqt	WIZARA YA HABARI, VIJANA, UTAMADUNI NA MICHEZO	info@habarismz.go.tz	0242231202	J03
+cmd06xe3i000ne6bq2q3y9g2z	OFISI YA RAIS - KATIBA SHERIA UTUMISHI NA UTAWALA BORA	info@utumishismz.go.tz	+255242230034	G01
+cmd06xe3g000me6bqh9gabe3e	OFISI YA RAIS, TAWALA ZA MIKOA, SERIKALI ZA MITAA NA IDARA MAALUMU ZA SMZ	info@tamisemim.go.tz	+255242230034	D01
+cmd06xe3b000ke6bqxuwovzub	WIZARA YA BIASHARA NA MAENDELEO YA VIWANDA	info@tradesmz.go.tz	024-2941140	R01
+cmd06xe39000je6bqeouszvrd	OFISI YA MAKAMO WA KWANZA WA RAISI	info@omkr.go.tz	+255 242232475	B01
+cmd06xe37000ie6bq43r62ea6	WIZARA YA UJENZI MAWASILIANO NA UCHUKUZI	info@moic.go.tz	0242941138	P01
+cmd06xe34000he6bqfdqiw9ll	WIZARA YA KILIMO UMWAGILIAJI MALIASILI NA MIFUGO	ps@kilimoznz.go.tz	0777868306	L01
+cmd06nn7n0001e67w2h5rf86x	OFISI YA RAIS, FEDHA NA MIPANGO	info@mofzanzibar.go.tz	+255 2477666664/5	F01
+cmd06xe30000fe6bqe6ljiz1v	WAKALA WA MAJENGO ZANZIBAR	info@zba.go.tz	0242232695	Z01
+cmd06xe2y000ee6bqel875c2s	KAMISHENI YA KUKABILIANA NA MAAFA ZANZIBAR	zdmc@maafaznz.go.tz	+255242234755	Z02
+cmd06xe2w000de6bqzqo9qu3m	TAASISI YA ELIMU YA ZANZIBAR	info@zie.go.tz	+255242230193	Z03
+cmd06xe2r000be6bqrqhwhbq1	KAMISHENI YA UTALII ZANZIBAR	info@zanzibartourism.go.tz	+255 24 2233485	J02
+cmd06xe2o000ae6bquqbkbg4z	AFISI YA RAISI KAZI, UCHUMI NA UWEKEZAJI	info@arkuusmz.go.tz	0242230061	A07
+cmd06xe2m0009e6bq0ps9u9ut	TAASISI YA NYARAKA NA KUMBUKUMBU	info@ziar.go.tz	11111111111	A10
+cmd06xe2j0008e6bqqpmbs9bv	Ofisi ya Mhasibu Mkuu wa Serikali	info@mofzanzibar.go.tz	024776666	F05
+cmd06xe2h0007e6bqta680e3b	KAMISHENI YA ARDHI ZANZIBAR	info@kamisheniardhi.go.tz	0774776619	N04
+cmd06xe2e0006e6bqvjfhq32c	OFISI YA MKAGUZI MKUU WA NDANI WA SERIKALI	info@oiagsmz.go.tz	255743600320	x06
+cmd06xe2a0004e6bqwbtjm4x9	KAMISHENI YA UTUMISHI WA UMMA	kamisheni.utumishi@zpsc.go.tz	+255242230872	E07
+cmd06xe270003e6bq0wm0v3c7	WIZARA YA MAENDELEO YA JAMII,JINSIA,WAZEE NA WATOTO	info@jamiismz.go.tz	+255242231413	H04
+cmd06xe250002e6bqp8aabk92	Wakala wa Vipimo Zanzibar	info@zawemasmz.go.tz	0778586654	\N
+cmd06xe220001e6bqj26tnlsj	Ofisi ya Mkuu wa Mkoa wa Kusini Unguja	info@southunguja.go.tz	0777433124	D08
+cmd06xe1x0000e6bqalx28nja	Ofisi ya Msajili wa Hazina	info@trosmz.go.tz	111111111111	F07
 \.
 
 
@@ -1539,6 +1542,7 @@ cme2wcwfo00032bjvb0hf1loe	Approved by Commission	completed	illness	homa ya mdudu
 cme4297s300012bqgqt6s5ems	Approved by Commission	completed	illness	kifafa	2025-08-09 09:36:56.737	\N	{retirement/1754732212130_6zluzs_ripoti_ya_kupandishwa_cheo_report__1_.pdf,retirement/1754732176812_dmj8ks_request_status_report_report.pdf,retirement/1754732192073_972lo6_1754407554728_bj7hik_sababu.pdf}	\N	emp_005	cmd06nnbn000le67wtg41s3su	cmd059ir10002e6d86l802ljc	2025-08-09 09:36:56.739	2025-08-10 13:32:20.943
 cme3innw700012bpoqzo3xu3y	Rejected by Commission - Request Concluded	completed	illness	homa	2025-08-09 00:28:18.484	\N	{retirement/1754699295150_akhlcq_cheti.pdf,retirement/1754699279435_kuq3jw_1754403408864_8f2228_Employee_Profile_Analysis.pdf,retirement/1754699288995_7otdo1_request_status_report_report.pdf}	\N	emp_003	cmd06nnbn000le67wtg41s3su	cmd059ir10002e6d86l802ljc	2025-08-09 00:28:18.485	2025-08-10 13:32:51.104
 cme6065fb00032boivlznv5zh	Pending HRMO/HHRMD Review	initial	illness	kifafa	2025-08-10 18:14:06.836	\N	{retirement/1754849644180_0stbr2_20250725_071305_7f9eb5d3__2_.pdf,retirement/1754849627689_hqzsb5_cheti.pdf,retirement/1754849633905_bgsvyd_1754407554728_bj7hik_sababu.pdf}	\N	cme45oe2u000h2bfwmhka9n0f	cme471pqo00032bidhttxmboj	\N	2025-08-10 18:14:06.838	2025-08-10 18:14:06.838
+cmeda4fir00012bs3alg7rqb4	Pending HRMO/HHRMD Review	initial	illness	homa kali	2025-08-15 20:27:06.001	\N	{retirement/1755289618717_j57jzw_Mozilla-Recovery-Key_2025-07-12_yussufrajab_gmail.com.pdf,retirement/1755289601703_9toiki_request_status_report_report.pdf,retirement/1755289610242_0v088l_20250725_071305_7f9eb5d3__2_.pdf}	\N	cme571jn200003emp006	cme577oj300022bcqm9dhpzy8	\N	2025-08-15 20:27:06.003	2025-08-15 20:27:06.003
 cme4jxrnr000p2btjwgatstbv	Approved by Commission	completed	illness	kifaduru	2025-08-09 17:51:55.717	\N	{retirement/1754761911701_kk823u_20250725_100627_d2b91848__2_.pdf,retirement/1754761904336_bxmpko_1754403408864_8f2228_Employee_Profile_Analysis.pdf,retirement/1754761907725_a4gxkc_request_status_report_report.pdf}	\N	cme45oe31000l2bfw2kzug3tj	cme471pqo00032bidhttxmboj	cmd059ir10002e6d86l802ljc	2025-08-09 17:51:55.718	2025-08-10 13:25:56.275
 \.
 
