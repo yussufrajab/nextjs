@@ -11,10 +11,20 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import React, { useState, useEffect } from 'react';
-import { Pencil, PlusCircle, Trash2, Loader2 } from 'lucide-react';
+import { Pencil, PlusCircle, Trash2, Loader2, FileDown } from 'lucide-react';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 import { toast } from '@/hooks/use-toast';
 import { Pagination } from '@/components/shared/pagination';
 import { apiClient } from '@/lib/api-client';
+
+// Augment jsPDF with autoTable
+declare module 'jspdf' {
+  interface jsPDF {
+    autoTable: (options: any) => jsPDF;
+  }
+}
 
 export interface Institution {
   id: string;
@@ -138,6 +148,73 @@ export default function InstitutionManagementPage() {
       }
   };
 
+  const handleExportToPdf = () => {
+    if (!filteredInstitutions || filteredInstitutions.length === 0) {
+      toast({ title: "Export Error", description: "No institutions data to export.", variant: "destructive" });
+      return;
+    }
+
+    const doc = new jsPDF({ orientation: 'landscape' });
+    doc.setFontSize(18);
+    doc.text('Institutions List', 14, 22);
+    doc.setFontSize(10);
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 30);
+    doc.text(`Total Institutions: ${filteredInstitutions.length}`, 14, 36);
+
+    const tableColumn = ['Institution ID', 'Institution Name', 'Email', 'Phone Number', 'Vote Number'];
+    const tableRows: any[][] = [];
+
+    filteredInstitutions.forEach(institution => {
+      const rowData = [
+        institution.id,
+        institution.name,
+        institution.email || '-',
+        institution.phoneNumber || '-',
+        institution.voteNumber || '-'
+      ];
+      tableRows.push(rowData);
+    });
+    
+    doc.autoTable({
+      head: [tableColumn],
+      body: tableRows,
+      startY: 42,
+      theme: 'grid',
+      headStyles: { fillColor: [22, 160, 133] },
+      styles: { fontSize: 8, cellPadding: 1.5 },
+      columnStyles: { 0: { cellWidth: 'auto' } },
+    });
+    
+    doc.save(`institutions_list_${new Date().toISOString().split('T')[0]}.pdf`);
+    toast({ title: "PDF Exported", description: "Institutions list exported to PDF successfully." });
+  };
+
+  const handleExportToExcel = () => {
+    if (!filteredInstitutions || filteredInstitutions.length === 0) {
+      toast({ title: "Export Error", description: "No institutions data to export.", variant: "destructive" });
+      return;
+    }
+
+    const wsData: any[][] = [['Institution ID', 'Institution Name', 'Email', 'Phone Number', 'Vote Number']];
+
+    filteredInstitutions.forEach(institution => {
+      const rowData = [
+        institution.id,
+        institution.name,
+        institution.email || '',
+        institution.phoneNumber || '',
+        institution.voteNumber || ''
+      ];
+      wsData.push(rowData);
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Institutions");
+    XLSX.writeFile(wb, `institutions_list_${new Date().toISOString().split('T')[0]}.xlsx`);
+    toast({ title: "Excel Exported", description: "Institutions list exported to Excel successfully." });
+  };
+
   const filteredInstitutions = institutions.filter(institution => {
     const query = searchQuery.toLowerCase();
     return (
@@ -161,10 +238,24 @@ export default function InstitutionManagementPage() {
         title="Institution Management"
         description="Create, update, and manage institutions in the system."
         actions={
-          <Button onClick={openCreateDialog}>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Add New Institution
-          </Button>
+          <div className="flex space-x-2">
+            <Button onClick={openCreateDialog}>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Add New Institution
+            </Button>
+            {filteredInstitutions.length > 0 && (
+              <>
+                <Button variant="outline" size="sm" onClick={handleExportToPdf}>
+                  <FileDown className="mr-2 h-4 w-4" />
+                  Export PDF
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleExportToExcel}>
+                  <FileDown className="mr-2 h-4 w-4" />
+                  Export Excel
+                </Button>
+              </>
+            )}
+          </div>
         }
       />
       <Input
