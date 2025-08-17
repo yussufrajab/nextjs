@@ -45,10 +45,13 @@ model User {
 }
 
 model Institution {
-  id        String     @id @default(cuid())
-  name      String     @unique
-  employees Employee[]
-  users     User[]
+  id          String     @id @default(cuid())
+  name        String     @unique
+  email       String?
+  phoneNumber String?
+  voteNumber  String?
+  employees   Employee[]
+  users       User[]
 }
 
 model Employee {

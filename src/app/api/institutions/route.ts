@@ -8,7 +8,10 @@ export async function GET(req: Request) {
     const institutions = await db.institution.findMany({
       select: {
         id: true,
-        name: true
+        name: true,
+        email: true,
+        phoneNumber: true,
+        voteNumber: true
       },
       orderBy: { name: 'asc' }
     });
@@ -32,7 +35,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { name } = body;
+    const { name, email, phoneNumber, voteNumber } = body;
 
     if (!name || typeof name !== 'string' || name.trim().length === 0) {
       return NextResponse.json({
@@ -60,7 +63,10 @@ export async function POST(req: Request) {
 
     const newInstitution = await db.institution.create({
       data: {
-        name: name.trim()
+        name: name.trim(),
+        email: email?.trim() || null,
+        phoneNumber: phoneNumber?.trim() || null,
+        voteNumber: voteNumber?.trim() || null
       }
     });
 

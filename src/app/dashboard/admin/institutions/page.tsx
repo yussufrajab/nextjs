@@ -19,10 +19,16 @@ import { apiClient } from '@/lib/api-client';
 export interface Institution {
   id: string;
   name: string;
+  email?: string;
+  phoneNumber?: string;
+  voteNumber?: string;
 }
 
 const institutionSchema = z.object({
   name: z.string().min(3, { message: "Institution name must be at least 3 characters long." }),
+  email: z.string().email().optional().or(z.literal("")),
+  phoneNumber: z.string().optional(),
+  voteNumber: z.string().optional(),
 });
 
 type InstitutionFormValues = z.infer<typeof institutionSchema>;
@@ -61,6 +67,9 @@ export default function InstitutionManagementPage() {
     resolver: zodResolver(institutionSchema),
     defaultValues: {
       name: "",
+      email: "",
+      phoneNumber: "",
+      voteNumber: "",
     },
   });
 
@@ -91,13 +100,23 @@ export default function InstitutionManagementPage() {
   
   const openEditDialog = (institution: Institution) => {
     setEditingInstitution(institution);
-    form.reset({ name: institution.name });
+    form.reset({ 
+      name: institution.name,
+      email: institution.email || "",
+      phoneNumber: institution.phoneNumber || "",
+      voteNumber: institution.voteNumber || "",
+    });
     setIsDialogOpen(true);
   };
 
   const openCreateDialog = () => {
     setEditingInstitution(null);
-    form.reset({ name: "" });
+    form.reset({ 
+      name: "",
+      email: "",
+      phoneNumber: "",
+      voteNumber: "",
+    });
     setIsDialogOpen(true);
   };
 
@@ -119,9 +138,16 @@ export default function InstitutionManagementPage() {
       }
   };
 
-  const filteredInstitutions = institutions.filter(institution =>
-    institution.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredInstitutions = institutions.filter(institution => {
+    const query = searchQuery.toLowerCase();
+    return (
+      institution.id.toLowerCase().includes(query) ||
+      institution.name.toLowerCase().includes(query) ||
+      (institution.email && institution.email.toLowerCase().includes(query)) ||
+      (institution.phoneNumber && institution.phoneNumber.toLowerCase().includes(query)) ||
+      (institution.voteNumber && institution.voteNumber.toLowerCase().includes(query))
+    );
+  });
 
   const totalPages = Math.ceil(filteredInstitutions.length / itemsPerPage);
   const paginatedInstitutions = filteredInstitutions.slice(
@@ -142,10 +168,10 @@ export default function InstitutionManagementPage() {
         }
       />
       <Input
-        placeholder="Search institutions by name..."
+        placeholder="Search by ID, name, email, phone, or vote number..."
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
-        className="max-w-sm mb-4"
+        className="max-w-md mb-4"
       />
       <Card>
         <CardHeader>
@@ -162,14 +188,22 @@ export default function InstitutionManagementPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>Institution ID</TableHead>
                     <TableHead>Institution Name</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Phone Number</TableHead>
+                    <TableHead>Vote Number</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {paginatedInstitutions.map(inst => (
                     <TableRow key={inst.id}>
+                      <TableCell className="font-mono text-sm text-gray-600">{inst.id}</TableCell>
                       <TableCell className="font-medium">{inst.name}</TableCell>
+                      <TableCell>{inst.email || '-'}</TableCell>
+                      <TableCell>{inst.phoneNumber || '-'}</TableCell>
+                      <TableCell>{inst.voteNumber || '-'}</TableCell>
                       <TableCell className="text-right space-x-2">
                         <Button variant="outline" size="icon" onClick={() => openEditDialog(inst)}>
                           <Pencil className="h-4 w-4" />
@@ -211,6 +245,45 @@ export default function InstitutionManagementPage() {
                     <FormLabel>Institution Name</FormLabel>
                     <FormControl>
                       <Input placeholder="e.g., Wizara ya Afya" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., info@afya.go.tz" type="email" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="phoneNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Phone Number</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., +255 24 123 4567" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="voteNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Vote Number</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., 001" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

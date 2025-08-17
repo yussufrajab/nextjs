@@ -4,6 +4,9 @@ import { z } from 'zod';
 
 const institutionSchema = z.object({
   name: z.string().min(3, { message: "Institution name must be at least 3 characters long." }),
+  email: z.string().email().optional().or(z.literal("")),
+  phoneNumber: z.string().optional(),
+  voteNumber: z.string().optional(),
 });
 
 export async function PUT(
@@ -16,7 +19,12 @@ export async function PUT(
 
     const updatedInstitution = await db.institution.update({
       where: { id: params.id },
-      data: { name: validatedData.name },
+      data: { 
+        name: validatedData.name,
+        email: validatedData.email?.trim() || null,
+        phoneNumber: validatedData.phoneNumber?.trim() || null,
+        voteNumber: validatedData.voteNumber?.trim() || null,
+      },
     });
 
     return NextResponse.json(updatedInstitution);
