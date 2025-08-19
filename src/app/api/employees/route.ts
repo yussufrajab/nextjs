@@ -61,6 +61,14 @@ export async function GET(req: Request) {
             id: true,
             name: true
           }
+        },
+        certificates: {
+          select: {
+            id: true,
+            type: true,
+            name: true,
+            url: true
+          }
         }
       },
       orderBy: [
