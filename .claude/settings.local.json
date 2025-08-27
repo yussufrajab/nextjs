@@ -75,7 +75,11 @@
       "Bash(git init:*)",
       "Bash(git remote set-url:*)",
       "Bash(fuser:*)",
-      "Bash(PORT=9002 npx next start)"
+      "Bash(PORT=9002 npx next start)",
+      "Bash(PORT=9002 pm2 start npm --name \"csms-app\" -- start)",
+      "Bash(pm2 stop:*)",
+      "Bash(pm2 delete:*)",
+      "Bash(PORT=9002 npm run build)"
     ],
     "deny": []
   }
