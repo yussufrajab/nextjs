@@ -55,6 +55,7 @@ const CERTIFICATE_ORDER: EmployeeCertificate['type'][] = [
   'Advanced Certificate of Secondary education (Form VII)', 
   'Certificate',
   'Diploma',
+  'Advanced Diploma',
   'Bachelor Degree',
   'Master Degree',
   'PHd'

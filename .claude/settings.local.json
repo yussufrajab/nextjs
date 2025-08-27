@@ -73,7 +73,9 @@
       "Bash(mc ls:*)",
       "Bash(cat:*)",
       "Bash(git init:*)",
-      "Bash(git remote set-url:*)"
+      "Bash(git remote set-url:*)",
+      "Bash(fuser:*)",
+      "Bash(PORT=9002 npx next start)"
     ],
     "deny": []
   }

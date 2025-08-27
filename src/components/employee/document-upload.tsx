@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
+import { useFileExists } from '@/hooks/use-file-exists';
 import { Loader2, Upload, FileText, Eye, ExternalLink, Download, MoreVertical } from 'lucide-react';
 import {
   DropdownMenu,
@@ -40,6 +41,9 @@ export function DocumentUpload({
   const [isUploading, setIsUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+  
+  // Check if the file actually exists in storage
+  const fileExists = useFileExists(currentUrl);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -122,13 +126,28 @@ export function DocumentUpload({
   };
 
   const handleView = () => {
-    if (currentUrl) {
+    if (currentUrl && fileExists.exists) {
       setIsPreviewModalOpen(true);
+    } else if (currentUrl && !fileExists.exists) {
+      toast({
+        title: "Document not available",
+        description: "The document is not available at this time",
+        variant: "destructive"
+      });
     }
   };
 
   const handleDownload = () => {
     if (!currentUrl) return;
+    
+    if (!fileExists.exists) {
+      toast({
+        title: "Document not available",
+        description: "The document is not available at this time",
+        variant: "destructive"
+      });
+      return;
+    }
 
     // Extract the object key from the URL
     const urlPath = currentUrl.replace('/api/files/download/', '');
@@ -188,31 +207,44 @@ export function DocumentUpload({
           
           {currentUrl ? (
             <div className="flex items-center gap-2 mt-1">
-              <Badge variant="outline" className="text-green-600 border-green-600">
-                Available
-              </Badge>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7 text-xs"
-                  >
-                    <MoreVertical className="h-3 w-3 mr-1" />
-                    Actions
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={handleView}>
-                    <Eye className="h-3 w-3 mr-2" />
-                    View
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleDownload}>
-                    <Download className="h-3 w-3 mr-2" />
-                    Download
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {fileExists.loading ? (
+                <Badge variant="outline" className="text-blue-600 border-blue-600">
+                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                  Checking...
+                </Badge>
+              ) : fileExists.exists ? (
+                <>
+                  <Badge variant="outline" className="text-green-600 border-green-600">
+                    Available
+                  </Badge>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 text-xs"
+                      >
+                        <MoreVertical className="h-3 w-3 mr-1" />
+                        Actions
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={handleView}>
+                        <Eye className="h-3 w-3 mr-2" />
+                        View
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={handleDownload}>
+                        <Download className="h-3 w-3 mr-2" />
+                        Download
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </>
+              ) : (
+                <Badge variant="outline" className="text-red-600 border-red-600">
+                  Document not available
+                </Badge>
+              )}
             </div>
           ) : (
             <div className="mt-1">

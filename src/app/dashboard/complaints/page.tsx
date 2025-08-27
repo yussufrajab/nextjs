@@ -10,7 +10,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useAuthStore } from '@/store/auth-store';
 import { ROLES, EMPLOYEES } from '@/lib/constants';
 import React, { useState, useEffect } from 'react';
-import { standardizeComplaintFormatting } from '@/ai/flows/complaint-rewriter';
+import { standardizeComplaintFormatting } from '@/ai/wrapper';
 import type { Role as UserRole } from '@/lib/types';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';

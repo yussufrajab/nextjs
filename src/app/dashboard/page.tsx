@@ -176,12 +176,19 @@ export default function DashboardPage() {
         if (role === ROLES.HRO || role === ROLES.HRRP) {
             if (!user.institutionId) return;
             try {
-                // Note: This endpoint would need to be implemented in the Spring Boot backend
-                // For now, we'll skip this until the backend endpoint is available
-                console.log("Urgent actions endpoint not yet implemented in Spring Boot backend");
-                setUrgentCount(0);
+                const response = await fetch(`/api/employees/urgent-actions?userRole=${role}&userInstitutionId=${user.institutionId}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    const totalUrgent = (result.data.probationOverdue?.length || 0) + (result.data.nearingRetirement?.length || 0);
+                    setUrgentCount(totalUrgent);
+                } else {
+                    console.error("Failed to fetch urgent actions:", result.message);
+                    setUrgentCount(0);
+                }
             } catch (error) {
-                console.error("Could not load urgent actions count.");
+                console.error("Could not load urgent actions count.", error);
+                setUrgentCount(0);
             }
         }
     };

@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
+import { useFileExists } from '@/hooks/use-file-exists';
 import { Loader2, Upload, FileText, Eye, Download, MoreVertical, Trash2, Plus } from 'lucide-react';
 import {
   DropdownMenu,
@@ -58,6 +59,9 @@ export function CertificateUpload({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [certificateName, setCertificateName] = useState('');
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+  
+  // Check if the certificate file actually exists in storage
+  const fileExists = useFileExists(currentCertificate?.url);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -157,13 +161,28 @@ export function CertificateUpload({
   };
 
   const handleView = () => {
-    if (currentCertificate?.url) {
+    if (currentCertificate?.url && fileExists.exists) {
       setIsPreviewModalOpen(true);
+    } else if (currentCertificate?.url && !fileExists.exists) {
+      toast({
+        title: "Document not available",
+        description: "The certificate is not available at this time",
+        variant: "destructive"
+      });
     }
   };
 
   const handleDownload = () => {
     if (!currentCertificate?.url) return;
+    
+    if (!fileExists.exists) {
+      toast({
+        title: "Document not available",
+        description: "The certificate is not available at this time",
+        variant: "destructive"
+      });
+      return;
+    }
 
     const urlPath = currentCertificate.url.replace('/api/files/download/', '');
     
@@ -264,10 +283,17 @@ export function CertificateUpload({
             <div className="mt-1">
               <p className="text-muted-foreground text-xs">{currentCertificate.name}</p>
               <div className="flex items-center gap-2 mt-1">
-                <Badge variant="outline" className="text-green-600 border-green-600">
-                  Available
-                </Badge>
-                {currentCertificate.url && (
+                {fileExists.loading ? (
+                  <Badge variant="outline" className="text-blue-600 border-blue-600">
+                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                    Checking...
+                  </Badge>
+                ) : fileExists.exists ? (
+                  <>
+                    <Badge variant="outline" className="text-green-600 border-green-600">
+                      Available
+                    </Badge>
+                    {currentCertificate.url && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
@@ -300,6 +326,12 @@ export function CertificateUpload({
                       )}
                     </DropdownMenuContent>
                   </DropdownMenu>
+                    )}
+                  </>
+                ) : (
+                  <Badge variant="outline" className="text-red-600 border-red-600">
+                    Document not available
+                  </Badge>
                 )}
               </div>
             </div>

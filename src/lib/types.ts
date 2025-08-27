@@ -20,7 +20,7 @@ export interface User {
 
 export interface EmployeeCertificate {
   id: string;
-  type: "Certificate" | "Diploma" | "Bachelor Degree" | "Master Degree" | "PhD" | "Other";
+  type: "Certificate" | "Diploma" | "Advanced Diploma" | "Bachelor Degree" | "Master Degree" | "PhD" | "Other";
   name: string; 
   url: string; 
   employeeId: string;

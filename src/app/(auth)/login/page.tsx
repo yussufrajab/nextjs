@@ -10,8 +10,8 @@ export default function LoginPage() {
     <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 h-16 w-16">
-            <Logo />
+          <div className="mx-auto mb-4 flex justify-center">
+            <Logo width={80} height={80} />
           </div>
           <CardTitle className="text-3xl font-headline">{APP_NAME}</CardTitle>
           <CardDescription>Staff Portal - Sign in to manage employee lifecycle processes.</CardDescription>

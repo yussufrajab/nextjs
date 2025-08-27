@@ -7,6 +7,7 @@ const hrimsRequestSchema = z.object({
   zanId: z.string().optional(),
   payrollNumber: z.string().optional(),
   institutionVoteNumber: z.string(),
+  syncDocuments: z.boolean().optional().default(false), // Default false for two-API approach
   hrimsApiUrl: z.string().url().optional(), // External HRIMS API URL
   hrimsApiKey: z.string().optional(), // API key for HRIMS authentication
 }).refine(
@@ -17,45 +18,48 @@ const hrimsRequestSchema = z.object({
   }
 );
 
-// Schema for expected HRIMS employee response
+// Schema for expected HRIMS employee response (core data only)
 const hrimsEmployeeResponseSchema = z.object({
-  employee: z.object({
-    zanId: z.string(),
-    payrollNumber: z.string().optional(),
-    name: z.string(),
-    gender: z.string().optional(),
-    dateOfBirth: z.string().optional(),
-    placeOfBirth: z.string().optional(),
-    region: z.string().optional(),
-    countryOfBirth: z.string().optional(),
-    phoneNumber: z.string().optional(),
-    contactAddress: z.string().optional(),
-    zssfNumber: z.string().optional(),
-    cadre: z.string().optional(),
-    salaryScale: z.string().optional(),
-    ministry: z.string().optional(),
-    department: z.string().optional(),
-    appointmentType: z.string().optional(),
-    contractType: z.string().optional(),
-    recentTitleDate: z.string().optional(),
-    currentReportingOffice: z.string().optional(),
-    currentWorkplace: z.string().optional(),
-    employmentDate: z.string().optional(),
-    confirmationDate: z.string().optional(),
-    retirementDate: z.string().optional(),
-    status: z.string().optional(),
-    institutionVoteNumber: z.string(),
+  success: z.boolean(),
+  message: z.string(),
+  data: z.object({
+    employee: z.object({
+      zanId: z.string(),
+      payrollNumber: z.string().optional(),
+      name: z.string(),
+      gender: z.string().optional(),
+      dateOfBirth: z.string().optional(),
+      placeOfBirth: z.string().optional(),
+      region: z.string().optional(),
+      countryOfBirth: z.string().optional(),
+      phoneNumber: z.string().optional(),
+      contactAddress: z.string().optional(),
+      zssfNumber: z.string().optional(),
+      photo: z.object({
+        contentType: z.string(),
+        content: z.string(),
+        lastUpdated: z.string().optional(),
+      }).optional(),
+      cadre: z.string().optional(),
+      salaryScale: z.string().optional(),
+      ministry: z.string().optional(),
+      department: z.string().optional(),
+      appointmentType: z.string().optional(),
+      contractType: z.string().optional(),
+      recentTitleDate: z.string().optional(),
+      currentReportingOffice: z.string().optional(),
+      currentWorkplace: z.string().optional(),
+      employmentDate: z.string().optional(),
+      confirmationDate: z.string().optional(),
+      retirementDate: z.string().optional(),
+      status: z.string().optional(),
+      institutionVoteNumber: z.string(),
+      documentStats: z.object({
+        totalDocuments: z.number(),
+        totalCertificates: z.number(),
+      }).optional(),
+    }),
   }),
-  documents: z.array(z.object({
-    type: z.enum(['ardhilHali', 'confirmationLetter', 'jobContract', 'birthCertificate']),
-    url: z.string().url(),
-    name: z.string().optional(),
-  })).optional(),
-  certificates: z.array(z.object({
-    type: z.string(),
-    name: z.string(),
-    url: z.string().url(),
-  })).optional(),
 });
 
 export async function POST(req: Request) {
@@ -98,6 +102,33 @@ export async function POST(req: Request) {
 
     console.log('Employee synced successfully:', savedEmployee.id);
 
+    const documentStats = validatedHrimsData.data.employee.documentStats;
+    
+    // Trigger background sync for documents and certificates if they exist
+    const backgroundTasks = [];
+    
+    if (documentStats?.totalDocuments > 0) {
+      // Trigger documents sync in background
+      backgroundTasks.push(
+        triggerBackgroundDocumentsSync(validatedRequest, validatedHrimsData.data.employee.zanId)
+      );
+    }
+    
+    if (documentStats?.totalCertificates > 0) {
+      // Trigger certificates sync in background  
+      backgroundTasks.push(
+        triggerBackgroundCertificatesSync(validatedRequest, validatedHrimsData.data.employee.zanId)
+      );
+    }
+
+    // Start background tasks without waiting for them to complete
+    if (backgroundTasks.length > 0) {
+      Promise.all(backgroundTasks).catch(error => {
+        console.error('Background sync error:', error);
+        // Background tasks failing shouldn't affect the main response
+      });
+    }
+    
     return NextResponse.json({
       success: true,
       message: 'Employee data synced successfully from HRIMS',
@@ -106,8 +137,10 @@ export async function POST(req: Request) {
         zanId: savedEmployee.zanId,
         name: savedEmployee.name,
         institutionId: savedEmployee.institutionId,
-        documentsCount: validatedHrimsData.documents?.length || 0,
-        certificatesCount: validatedHrimsData.certificates?.length || 0
+        documentsCount: documentStats?.totalDocuments || 0,
+        certificatesCount: documentStats?.totalCertificates || 0,
+        documentsStatus: documentStats?.totalDocuments > 0 ? "syncing" : "completed", // Status based on background sync
+        certificatesStatus: documentStats?.totalCertificates > 0 ? "syncing" : "completed" // Status based on background sync
       }
     }, { status: 200 });
 
@@ -179,7 +212,7 @@ async function upsertEmployeeFromHRIMS(
   hrimsData: z.infer<typeof hrimsEmployeeResponseSchema>,
   institutionId: string
 ) {
-  const { employee, documents, certificates } = hrimsData;
+  const { employee } = hrimsData.data;
 
   // Check if employee already exists
   const existingEmployee = await db.employee.findFirst({
@@ -214,14 +247,7 @@ async function upsertEmployeeFromHRIMS(
     retirementDate: employee.retirementDate ? new Date(employee.retirementDate) : null,
     status: employee.status || null,
     institutionId: institutionId,
-  };
-
-  // Handle document URLs
-  const documentUrls = {
-    ardhilHaliUrl: documents?.find(d => d.type === 'ardhilHali')?.url || null,
-    confirmationLetterUrl: documents?.find(d => d.type === 'confirmationLetter')?.url || null,
-    jobContractUrl: documents?.find(d => d.type === 'jobContract')?.url || null,
-    birthCertificateUrl: documents?.find(d => d.type === 'birthCertificate')?.url || null,
+    profileImageUrl: employee.photo?.content ? `data:${employee.photo.contentType};base64,${employee.photo.content}` : null,
   };
 
   let savedEmployee;
@@ -230,30 +256,12 @@ async function upsertEmployeeFromHRIMS(
     // Update existing employee
     savedEmployee = await db.employee.update({
       where: { id: existingEmployee.id },
-      data: { ...employeeData, ...documentUrls }
+      data: employeeData
     });
   } else {
     // Create new employee
     savedEmployee = await db.employee.create({
-      data: { ...employeeData, ...documentUrls }
-    });
-  }
-
-  // Handle certificates
-  if (certificates && certificates.length > 0) {
-    // Delete existing certificates for this employee
-    await db.employeeCertificate.deleteMany({
-      where: { employeeId: savedEmployee.id }
-    });
-
-    // Create new certificates
-    await db.employeeCertificate.createMany({
-      data: certificates.map(cert => ({
-        employeeId: savedEmployee.id,
-        type: cert.type,
-        name: cert.name,
-        url: cert.url
-      }))
+      data: employeeData
     });
   }
 
@@ -263,61 +271,114 @@ async function upsertEmployeeFromHRIMS(
 // Mock data for development/testing
 function getMockHRIMSData(request: z.infer<typeof hrimsRequestSchema>) {
   return {
-    employee: {
-      zanId: request.zanId || "Z123456789",
-      payrollNumber: request.payrollNumber || "PAY001234",
-      name: "John Doe Mwalimu",
-      gender: "Male",
-      dateOfBirth: "1990-05-15",
-      placeOfBirth: "Stone Town",
-      region: "Zanzibar Urban",
-      countryOfBirth: "Tanzania",
-      phoneNumber: "+255777123456",
-      contactAddress: "P.O. Box 123, Stone Town, Zanzibar",
-      zssfNumber: "ZSSF123456",
-      cadre: "Administrative Officer",
-      salaryScale: "PGSS 7",
-      ministry: "Ministry of Health",
-      department: "Human Resources",
-      appointmentType: "Permanent",
-      contractType: "Full-time",
-      recentTitleDate: "2023-01-01",
-      currentReportingOffice: "HR Department",
-      currentWorkplace: "Mnazi Mmoja Hospital",
-      employmentDate: "2020-03-01",
-      confirmationDate: "2021-03-01",
-      retirementDate: "2055-05-15",
-      status: "Active",
-      institutionVoteNumber: request.institutionVoteNumber
-    },
-    documents: [
-      {
-        type: "ardhilHali" as const,
-        url: "https://example.com/documents/ardhil-hali-123.pdf",
-        name: "Ardhil Hali Certificate"
-      },
-      {
-        type: "confirmationLetter" as const,
-        url: "https://example.com/documents/confirmation-123.pdf", 
-        name: "Confirmation Letter"
-      },
-      {
-        type: "jobContract" as const,
-        url: "https://example.com/documents/contract-123.pdf",
-        name: "Employment Contract"
+    success: true,
+    message: "Employee found successfully",
+    data: {
+      employee: {
+        zanId: request.zanId || "Z123456789",
+        payrollNumber: request.payrollNumber || "PAY001234",
+        name: "John Doe Mwalimu",
+        gender: "Male",
+        dateOfBirth: "1990-05-15",
+        placeOfBirth: "Stone Town",
+        region: "Zanzibar Urban",
+        countryOfBirth: "Tanzania",
+        phoneNumber: "+255777123456",
+        contactAddress: "P.O. Box 123, Stone Town, Zanzibar",
+        zssfNumber: "ZSSF123456",
+        photo: {
+          contentType: "image/jpeg",
+          content: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+          lastUpdated: "2025-08-15"
+        },
+        cadre: "Administrative Officer",
+        salaryScale: "PGSS 7",
+        ministry: "Ministry of Health",
+        department: "Human Resources",
+        appointmentType: "Permanent",
+        contractType: "Full-time",
+        recentTitleDate: "2023-01-01",
+        currentReportingOffice: "HR Department",
+        currentWorkplace: "Mnazi Mmoja Hospital",
+        employmentDate: "2020-03-01",
+        confirmationDate: "2021-03-01",
+        retirementDate: "2055-05-15",
+        status: "Active",
+        institutionVoteNumber: request.institutionVoteNumber,
+        documentStats: {
+          totalDocuments: 3,
+          totalCertificates: 5
+        }
       }
-    ],
-    certificates: [
-      {
-        type: "Bachelor Degree",
-        name: "Bachelor of Arts in Administration",
-        url: "https://example.com/certificates/bachelor-123.pdf"
-      },
-      {
-        type: "Certificate",
-        name: "Public Administration Certificate",
-        url: "https://example.com/certificates/cert-123.pdf"
-      }
-    ]
+    }
   };
+}
+
+// Background sync functions
+async function triggerBackgroundDocumentsSync(
+  request: z.infer<typeof hrimsRequestSchema>,
+  zanId: string
+) {
+  try {
+    console.log(`Starting background documents sync for employee: ${zanId}`);
+    
+    const syncPayload = {
+      zanId: zanId,
+      institutionVoteNumber: request.institutionVoteNumber,
+      hrimsApiUrl: request.hrimsApiUrl,
+      hrimsApiKey: request.hrimsApiKey,
+    };
+
+    // Use the internal API base URL for background sync
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:9002';
+    const response = await fetch(`${baseUrl}/api/hrims/sync-documents`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(syncPayload),
+    });
+
+    if (response.ok) {
+      console.log(`Documents sync completed for employee: ${zanId}`);
+    } else {
+      console.error(`Documents sync failed for employee: ${zanId}`, response.statusText);
+    }
+  } catch (error) {
+    console.error(`Error in background documents sync for employee ${zanId}:`, error);
+  }
+}
+
+async function triggerBackgroundCertificatesSync(
+  request: z.infer<typeof hrimsRequestSchema>,
+  zanId: string
+) {
+  try {
+    console.log(`Starting background certificates sync for employee: ${zanId}`);
+    
+    const syncPayload = {
+      zanId: zanId,
+      institutionVoteNumber: request.institutionVoteNumber,
+      hrimsApiUrl: request.hrimsApiUrl,
+      hrimsApiKey: request.hrimsApiKey,
+    };
+
+    // Use the internal API base URL for background sync
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:9002';
+    const response = await fetch(`${baseUrl}/api/hrims/sync-certificates`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(syncPayload),
+    });
+
+    if (response.ok) {
+      console.log(`Certificates sync completed for employee: ${zanId}`);
+    } else {
+      console.error(`Certificates sync failed for employee: ${zanId}`, response.statusText);
+    }
+  } catch (error) {
+    console.error(`Error in background certificates sync for employee ${zanId}:`, error);
+  }
 }
