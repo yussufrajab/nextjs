@@ -83,7 +83,8 @@
       "Bash(PORT=3006 npm run build)",
       "Bash(pm2 list:*)",
       "Bash(pm2 restart:*)",
-      "Bash(pm2 save:*)"
+      "Bash(pm2 save:*)",
+      "Bash(netstat:*)"
     ],
     "deny": []
   }

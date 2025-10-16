@@ -1,19 +1,25 @@
 import { Client as MinioClient } from 'minio';
 
-// MinIO client configuration - hardcoded working credentials for testing
-const accessKey = 'csmsapp';
-const secretKey = 'csmsapp123';
+// MinIO client configuration from environment variables
+const accessKey = process.env.MINIO_ACCESS_KEY || 'minioadmin';
+const secretKey = process.env.MINIO_SECRET_KEY || 'minioadmin123';
+const endPoint = process.env.MINIO_ENDPOINT || 'localhost';
+const port = parseInt(process.env.MINIO_PORT || '9000');
+const useSSL = process.env.MINIO_USE_SSL === 'true';
 
 console.log('MinIO credentials check:', {
   accessKey,
-  secretKey: '[HARDCODED]',
+  secretKey: secretKey ? '[CONFIGURED]' : '[MISSING]',
+  endPoint,
+  port,
+  useSSL,
   NODE_ENV: process.env.NODE_ENV
 });
 
 const minioClient = new MinioClient({
-  endPoint: 'localhost',
-  port: 9000,
-  useSSL: false,
+  endPoint,
+  port,
+  useSSL,
   accessKey,
   secretKey,
 });
