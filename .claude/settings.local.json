@@ -79,7 +79,11 @@
       "Bash(PORT=9002 pm2 start npm --name \"csms-app\" -- start)",
       "Bash(pm2 stop:*)",
       "Bash(pm2 delete:*)",
-      "Bash(PORT=9002 npm run build)"
+      "Bash(PORT=9002 npm run build)",
+      "Bash(PORT=3006 npm run build)",
+      "Bash(pm2 list:*)",
+      "Bash(pm2 restart:*)",
+      "Bash(pm2 save:*)"
     ],
     "deny": []
   }

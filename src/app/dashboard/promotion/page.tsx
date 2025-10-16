@@ -292,19 +292,23 @@ export default function PromotionPage() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
-        if (!response.ok) throw new Error('Failed to submit/update request');
-        
+
+        // Parse JSON first
         const result = await response.json();
-        
+
+        // Check both HTTP status and API response
+        if (!response.ok || !result.success) {
+          throw new Error(result.message || 'Failed to submit/update request');
+        }
+
         if (!isEditingExistingRequest) {
           // Replace optimistic request with real server response
-          const optimisticId = `temp-${Date.now()}`;
-          if (result.success && result.data) {
-            setPendingRequests(prev => prev.map(req => 
+          if (result.data) {
+            setPendingRequests(prev => prev.map(req =>
               req.id.startsWith('temp-') ? result.data : req
             ));
           }
-          
+
           // Force refresh to ensure data consistency
           setTimeout(async () => {
             await fetchRequests();
@@ -313,8 +317,7 @@ export default function PromotionPage() {
           await fetchRequests(); // Refresh list for edits
           toast({ title: "Promotion Request Updated", description: `Request for ${employeeDetails.name} updated successfully.` });
         }
-        
-        setZanId('');
+
         setEmployeeDetails(null);
         resetFormFields();
         setIsEditingExistingRequest(false);
@@ -476,10 +479,6 @@ export default function PromotionPage() {
 
   const handleCorrection = (request: PromotionRequest) => {
     setRequestToCorrect(request);
-    setZanId(request.employee.zanId || '');
-    setPayrollNumber(request.employee.payrollNumber || '');
-    // Set search type based on what data is available
-    setSearchType(request.employee.zanId ? 'zanId' : 'payrollNumber');
     setEmployeeDetails(request.employee as Employee);
     // Properly map the promotionType from the database values to our form values
     const mappedType = request.promotionType === 'EducationAdvancement' ? 'education' : 'experience';
@@ -585,7 +584,6 @@ export default function PromotionPage() {
     }
 
     // Reset form
-    setZanId('');
     setEmployeeDetails(null);
     resetFormFields();
     setCorrectedProposedCadre('');
@@ -1260,10 +1258,9 @@ export default function PromotionPage() {
             <DialogFooter className="flex flex-col sm:flex-row gap-2">
               <Button 
                 variant="outline" 
-                onClick={() => { 
-                  setIsCorrectionModalOpen(false); 
+                onClick={() => {
+                  setIsCorrectionModalOpen(false);
                   setRequestToCorrect(null);
-                  setZanId('');
                   setEmployeeDetails(null);
                   resetFormFields();
                   setCorrectedProposedCadre('');

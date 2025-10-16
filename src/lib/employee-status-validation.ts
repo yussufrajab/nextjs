@@ -54,7 +54,15 @@ export function validateEmployeeStatusForRequest(
   if (restrictedRequests.includes(requestType)) {
     const statusDisplayName = employeeStatus;
     const requestDisplayName = getRequestDisplayName(requestType);
-    
+
+    // Special message for probation status and service extension
+    if (employeeStatus === 'On Probation' && requestType === 'service-extension') {
+      return {
+        isValid: false,
+        message: 'Employees on probation are not eligible for service extension.'
+      };
+    }
+
     return {
       isValid: false,
       message: `Cannot submit ${requestDisplayName} request. Employee status is "${statusDisplayName}" which restricts this request type.`

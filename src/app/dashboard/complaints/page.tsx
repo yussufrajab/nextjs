@@ -915,9 +915,28 @@ export default function ComplaintsPage() {
                     <FormItem>
                       <FormLabel className="flex items-center"><Phone className="mr-2 h-4 w-4 text-primary"/>Namba Yako ya Simu ya Sasa *</FormLabel>
                       <FormControl>
-                        <Input type="tel" placeholder="Ingiza namba yako ya simu, mfano: 0777123456" {...field} />
+                        <Input
+                          type="tel"
+                          placeholder="Ingiza namba yako ya simu, mfano: 0777123456"
+                          {...field}
+                          onBlur={(e) => {
+                            field.onBlur();
+                            // Trigger validation on blur
+                            form.trigger('complainantPhoneNumber');
+                          }}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            // Trigger validation on change for immediate feedback
+                            if (e.target.value.length > 0) {
+                              form.trigger('complainantPhoneNumber');
+                            }
+                          }}
+                        />
                       </FormControl>
                       <FormMessage />
+                      <p className="text-xs text-muted-foreground">
+                        Namba ya simu lazima iwe na tarakimu 10 zenye kuanza na '0'
+                      </p>
                     </FormItem>
                   )}
                 />
@@ -928,9 +947,28 @@ export default function ComplaintsPage() {
                     <FormItem>
                       <FormLabel className="flex items-center"><Users className="mr-2 h-4 w-4 text-primary"/>Namba ya Simu ya Mlezi / Mdhamini *</FormLabel>
                       <FormControl>
-                        <Input type="tel" placeholder="Ingiza namba ya simu ya mlezi, mfano: 0777123456" {...field} />
+                        <Input
+                          type="tel"
+                          placeholder="Ingiza namba ya simu ya mlezi, mfano: 0777123456"
+                          {...field}
+                          onBlur={(e) => {
+                            field.onBlur();
+                            // Trigger validation on blur
+                            form.trigger('nextOfKinPhoneNumber');
+                          }}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            // Trigger validation on change for immediate feedback
+                            if (e.target.value.length > 0) {
+                              form.trigger('nextOfKinPhoneNumber');
+                            }
+                          }}
+                        />
                       </FormControl>
                       <FormMessage />
+                      <p className="text-xs text-muted-foreground">
+                        Namba ya simu lazima iwe na tarakimu 10 zenye kuanza na '0'
+                      </p>
                     </FormItem>
                   )}
                 />
@@ -1556,9 +1594,26 @@ export default function ComplaintsPage() {
                       <FormItem>
                         <FormLabel>Namba ya Simu ya Mlalamikaji</FormLabel>
                         <FormControl>
-                          <Input placeholder="0xxxxxxxxx" {...field} />
+                          <Input
+                            type="tel"
+                            placeholder="0xxxxxxxxx"
+                            {...field}
+                            onBlur={(e) => {
+                              field.onBlur();
+                              form.trigger('complainantPhoneNumber');
+                            }}
+                            onChange={(e) => {
+                              field.onChange(e);
+                              if (e.target.value.length > 0) {
+                                form.trigger('complainantPhoneNumber');
+                              }
+                            }}
+                          />
                         </FormControl>
                         <FormMessage />
+                        <p className="text-xs text-muted-foreground">
+                          Namba ya simu lazima iwe na tarakimu 10 zenye kuanza na '0'
+                        </p>
                       </FormItem>
                     )}
                   />
@@ -1570,9 +1625,26 @@ export default function ComplaintsPage() {
                       <FormItem>
                         <FormLabel>Namba ya Simu ya Ndugu wa Karibu</FormLabel>
                         <FormControl>
-                          <Input placeholder="0xxxxxxxxx" {...field} />
+                          <Input
+                            type="tel"
+                            placeholder="0xxxxxxxxx"
+                            {...field}
+                            onBlur={(e) => {
+                              field.onBlur();
+                              form.trigger('nextOfKinPhoneNumber');
+                            }}
+                            onChange={(e) => {
+                              field.onChange(e);
+                              if (e.target.value.length > 0) {
+                                form.trigger('nextOfKinPhoneNumber');
+                              }
+                            }}
+                          />
                         </FormControl>
                         <FormMessage />
+                        <p className="text-xs text-muted-foreground">
+                          Namba ya simu lazima iwe na tarakimu 10 zenye kuanza na '0'
+                        </p>
                       </FormItem>
                     )}
                   />

@@ -319,7 +319,7 @@ export default function ProfilePage() {
             setPageLoading(true);
             try {
                 // Assuming an API endpoint exists to get a profile by employee ID
-                const response = await fetch(`/api/employees/search?zanId=${user.zanId}`); // A bit of a hack, would be better to have a dedicated /api/profile
+                const response = await fetch(`/api/employees/search?zanId=${user.zanId}&userRole=${user.role}&userInstitutionId=${user.institutionId}`); // A bit of a hack, would be better to have a dedicated /api/profile
                 if (!response.ok) throw new Error("Could not load your profile.");
                 const result = await response.json();
                 

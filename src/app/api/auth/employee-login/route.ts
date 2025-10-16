@@ -101,6 +101,7 @@ export async function POST(req: Request) {
       username: employee.user.username,
       role: employee.user.role,
       employeeId: employee.id,
+      institutionId: employee.institutionId,
       department: employee.department,
       cadre: employee.cadre,
       institution: employee.institution.name,
