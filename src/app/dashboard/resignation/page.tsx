@@ -14,6 +14,7 @@ import { toast } from '@/hooks/use-toast';
 import { Loader2, Search, FileText, CalendarDays, Paperclip, RefreshCw, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Pagination } from '@/components/shared/pagination';
 import { FileUpload } from '@/components/ui/file-upload';
 import { FilePreviewModal } from '@/components/ui/file-preview-modal';
@@ -43,6 +44,7 @@ export default function ResignationPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [hasPendingResignation, setHasPendingResignation] = useState(false);
 
   const [effectiveDate, setEffectiveDate] = useState('');
   const [reason, setReason] = useState('');
@@ -147,12 +149,35 @@ export default function ResignationPage() {
     setReason('');
     setNoticeOrReceiptFile('');
     setLetterOfRequestFile('');
+    setHasPendingResignation(false);
     const fileInputs = document.querySelectorAll('input[type="file"]');
     fileInputs.forEach(input => (input as HTMLInputElement).value = '');
   };
 
   const handleEmployeeFound = (employee: Employee) => {
     resetFormFields();
+
+    // Check for pending resignation request
+    const pendingStatuses = [
+      'Pending HRMO/HHRMD Review',
+      'Pending DO/HHRMD Review',
+      'Request Received – Awaiting Commission Decision'
+    ];
+
+    const hasPending = pendingRequests.some(
+      req => req.employee.id === employee.id && pendingStatuses.includes(req.status)
+    );
+
+    if (hasPending) {
+      setHasPendingResignation(true);
+      toast({
+        title: "Request Already Submitted",
+        description: "A resignation request for this employee is already being reviewed. You cannot submit another request until the current one is completed.",
+        variant: "destructive",
+        duration: 6000
+      });
+    }
+
     setEmployeeDetails(employee);
   };
 
@@ -204,15 +229,30 @@ export default function ResignationPage() {
             body: JSON.stringify(payload)
         });
 
-        if (!response.ok) throw new Error('Failed to submit resignation request.');
+        const result = await response.json();
+
+        // Check if the API request was successful
+        if (!response.ok || !result.success) {
+          const errorMessage = result.message || 'Failed to submit resignation request';
+          throw new Error(errorMessage);
+        }
 
         await fetchRequests();
-        toast({ title: "Resignation Request Submitted", description: `Request for ${employeeDetails.name} submitted successfully.` });
+        toast({
+          title: "Resignation Request Submitted",
+          description: `Request for ${employeeDetails.name} submitted successfully.`
+        });
         setEmployeeDetails(null);
         resetFormFields();
 
     } catch(error) {
-        toast({ title: "Submission Failed", description: "Could not submit the resignation request.", variant: "destructive" });
+        const errorMessage = error instanceof Error ? error.message : "Could not submit the resignation request.";
+        toast({
+          title: "Submission Failed",
+          description: errorMessage,
+          variant: "destructive"
+        });
+        console.error('Resignation submission error:', error);
     } finally {
         setIsSubmitting(false);
     }
@@ -443,15 +483,23 @@ export default function ResignationPage() {
                   </div>
                 )}
 
-                <div className={`space-y-4 ${cannotSubmitResignation ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                {hasPendingResignation && (
+                  <Alert variant="destructive" className="mt-4">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTitle>Request Already Submitted</AlertTitle>
+                    <AlertDescription>A resignation request for this employee is already being reviewed. You cannot submit another request until the current one is completed.</AlertDescription>
+                  </Alert>
+                )}
+
+                <div className={`space-y-4 ${cannotSubmitResignation || hasPendingResignation ? 'opacity-50 cursor-not-allowed' : ''}`}>
                   <h3 className="text-lg font-medium text-foreground">Resignation Details & Documents</h3>
                   <div>
                     <Label htmlFor="effectiveDate" className="flex items-center"><CalendarDays className="mr-2 h-4 w-4 text-primary" />Effective Date of Resignation</Label>
-                    <Input id="effectiveDate" type="date" value={effectiveDate} onChange={(e) => setEffectiveDate(e.target.value)} disabled={isSubmitting || cannotSubmitResignation} min={minEffectiveDate} />
+                    <Input id="effectiveDate" type="date" value={effectiveDate} onChange={(e) => setEffectiveDate(e.target.value)} disabled={isSubmitting || cannotSubmitResignation || hasPendingResignation} min={minEffectiveDate} />
                   </div>
                   <div>
-                    <Label htmlFor="reasonResignation">Reason for Resignation (Optional)</Label>
-                    <Textarea id="reasonResignation" placeholder="Optional: Enter reason stated by employee" value={reason} onChange={(e) => setReason(e.target.value)} disabled={isSubmitting || cannotSubmitResignation} />
+                    <Label htmlFor="reasonResignation">Reason for Resignation</Label>
+                    <Textarea id="reasonResignation" placeholder="Optional: Enter reason stated by employee" value={reason} onChange={(e) => setReason(e.target.value)} disabled={isSubmitting || cannotSubmitResignation || hasPendingResignation} />
                   </div>
                   <div>
                     <Label htmlFor="letterOfRequestResignation" className="flex items-center"><FileText className="mr-2 h-4 w-4 text-primary" />Upload Letter of Request (Required, PDF Only)</Label>
@@ -460,18 +508,18 @@ export default function ResignationPage() {
                       value={letterOfRequestFile}
                       onChange={setLetterOfRequestFile}
                       onPreview={handlePreviewFile}
-                      disabled={isSubmitting || cannotSubmitResignation}
+                      disabled={isSubmitting || cannotSubmitResignation || hasPendingResignation}
                       required
                     />
                   </div>
                   <div>
-                    <Label htmlFor="noticeOrReceiptFile" className="flex items-center"><Paperclip className="mr-2 h-4 w-4 text-primary" />Upload 3 months resignation notice or receipt of resignation equal to employee’s salary (Required, PDF Only)</Label>
+                    <Label htmlFor="noticeOrReceiptFile" className="flex items-center"><Paperclip className="mr-2 h-4 w-4 text-primary" />Upload 3 months resignation notice or receipt of resignation equal to employee's salary (Required, PDF Only)</Label>
                     <FileUpload
                       folder="resignation"
                       value={noticeOrReceiptFile}
                       onChange={setNoticeOrReceiptFile}
                       onPreview={handlePreviewFile}
-                      disabled={isSubmitting || cannotSubmitResignation}
+                      disabled={isSubmitting || cannotSubmitResignation || hasPendingResignation}
                       required
                     />
                   </div>
@@ -481,15 +529,16 @@ export default function ResignationPage() {
           </CardContent>
           {employeeDetails && (
             <CardFooter className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2 pt-4 border-t">
-              <Button 
-                onClick={handleSubmitResignationRequest} 
+              <Button
+                onClick={handleSubmitResignationRequest}
                 disabled={
-                    !employeeDetails || 
+                    !employeeDetails ||
                     !effectiveDate ||
-                    !letterOfRequestFile || 
+                    !letterOfRequestFile ||
                     !noticeOrReceiptFile ||
                     cannotSubmitResignation ||
-                    isSubmitting 
+                    hasPendingResignation ||
+                    isSubmitting
                 }>
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Submit Resignation Request
@@ -953,7 +1002,7 @@ export default function ResignationPage() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="correctedReason">Reason for Resignation (Optional)</Label>
+                  <Label htmlFor="correctedReason">Reason for Resignation</Label>
                   <Textarea 
                     id="correctedReason" 
                     placeholder="Optional: Enter reason stated by employee" 

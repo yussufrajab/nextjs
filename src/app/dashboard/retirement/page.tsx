@@ -12,7 +12,7 @@ import React, { useState, useEffect } from 'react';
 import type { Employee, User, Role } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
 import { Loader2, Search, FileText, CalendarDays, ListFilter, Stethoscope, ClipboardCheck, AlertTriangle, RefreshCw, CheckCircle, XCircle } from 'lucide-react';
-import { addMonths, format, isBefore, differenceInYears, parseISO } from 'date-fns';
+import { addMonths, addYears, format, isBefore, differenceInYears, parseISO, startOfDay } from 'date-fns';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Textarea } from '@/components/ui/textarea';
@@ -49,6 +49,7 @@ export default function RetirementPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [hasPendingRetirement, setHasPendingRetirement] = useState(false);
 
   const [retirementType, setRetirementType] = useState('');
   const [retirementDate, setRetirementDate] = useState('');
@@ -165,14 +166,50 @@ export default function RetirementPage() {
     fetchRequests();
   }, [user, role]);
 
+  // Auto-fill retirement date for compulsory retirement
+  useEffect(() => {
+    if (retirementType === 'compulsory' && employeeDetails && employeeDetails.dateOfBirth) {
+      // Parse date manually to avoid timezone issues
+      const birthDateStr = employeeDetails.dateOfBirth.split('T')[0]; // Get only YYYY-MM-DD part
+      const [year, month, day] = birthDateStr.split('-').map(Number);
+
+      // Calculate retirement date: add 60 years to birth year, keep same month and day
+      // Then add 1 day to ensure they've completed their 60th year
+      const retirementYear = year + COMPULSORY_RETIREMENT_AGE;
+
+      // Create a date object and add 1 day
+      const retirementDate = new Date(retirementYear, month - 1, day); // month is 0-indexed in Date
+      retirementDate.setDate(retirementDate.getDate() + 1); // Add 1 day
+
+      // Format back to YYYY-MM-DD
+      const formattedYear = retirementDate.getFullYear();
+      const formattedMonth = String(retirementDate.getMonth() + 1).padStart(2, '0');
+      const formattedDay = String(retirementDate.getDate()).padStart(2, '0');
+      const formattedDate = `${formattedYear}-${formattedMonth}-${formattedDay}`;
+
+      setRetirementDate(formattedDate);
+    }
+  }, [retirementType, employeeDetails]);
+
   useEffect(() => {
     setAgeEligibilityError(null);
     setShowDelayFields(false);
 
     if (employeeDetails && employeeDetails.dateOfBirth && retirementType && retirementDate) {
-      const birthDate = parseISO(employeeDetails.dateOfBirth);
-      const proposedRetirementDate = parseISO(retirementDate);
-      const ageAtRetirement = differenceInYears(proposedRetirementDate, birthDate);
+      // Parse date strings manually to avoid timezone issues
+      const birthDateStr = employeeDetails.dateOfBirth.split('T')[0]; // Get only YYYY-MM-DD part
+      const retirementDateStr = retirementDate;
+
+      const [birthYear, birthMonth, birthDay] = birthDateStr.split('-').map(Number);
+      const [retireYear, retireMonth, retireDay] = retirementDateStr.split('-').map(Number);
+
+      // Calculate age at retirement more accurately
+      let ageAtRetirement = retireYear - birthYear;
+
+      // Check if birthday has occurred in the retirement year
+      if (retireMonth < birthMonth || (retireMonth === birthMonth && retireDay < birthDay)) {
+        ageAtRetirement--; // Birthday hasn't occurred yet in retirement year
+      }
 
       if (retirementType === 'compulsory') {
         if (ageAtRetirement > COMPULSORY_RETIREMENT_AGE) {
@@ -190,15 +227,51 @@ export default function RetirementPage() {
     }
   }, [employeeDetails, retirementType, retirementDate]);
 
+  // Auto-fill corrected retirement date for compulsory retirement in correction modal
+  useEffect(() => {
+    if (correctedRetirementType === 'compulsory' && requestToCorrect && requestToCorrect.employee.dateOfBirth) {
+      // Parse date manually to avoid timezone issues
+      const birthDateStr = requestToCorrect.employee.dateOfBirth.split('T')[0]; // Get only YYYY-MM-DD part
+      const [year, month, day] = birthDateStr.split('-').map(Number);
+
+      // Calculate retirement date: add 60 years to birth year, keep same month and day
+      // Then add 1 day to ensure they've completed their 60th year
+      const retirementYear = year + COMPULSORY_RETIREMENT_AGE;
+
+      // Create a date object and add 1 day
+      const retirementDate = new Date(retirementYear, month - 1, day); // month is 0-indexed in Date
+      retirementDate.setDate(retirementDate.getDate() + 1); // Add 1 day
+
+      // Format back to YYYY-MM-DD
+      const formattedYear = retirementDate.getFullYear();
+      const formattedMonth = String(retirementDate.getMonth() + 1).padStart(2, '0');
+      const formattedDay = String(retirementDate.getDate()).padStart(2, '0');
+      const formattedDate = `${formattedYear}-${formattedMonth}-${formattedDay}`;
+
+      setCorrectedRetirementDate(formattedDate);
+    }
+  }, [correctedRetirementType, requestToCorrect]);
+
   // Validation for corrected retirement date in correction modal
   useEffect(() => {
     setCorrectedAgeEligibilityError(null);
     setShowCorrectedDelayFields(false);
 
     if (requestToCorrect && requestToCorrect.employee.dateOfBirth && correctedRetirementType && correctedRetirementDate) {
-      const birthDate = parseISO(requestToCorrect.employee.dateOfBirth);
-      const proposedRetirementDate = parseISO(correctedRetirementDate);
-      const ageAtRetirement = differenceInYears(proposedRetirementDate, birthDate);
+      // Parse date strings manually to avoid timezone issues
+      const birthDateStr = requestToCorrect.employee.dateOfBirth.split('T')[0]; // Get only YYYY-MM-DD part
+      const retirementDateStr = correctedRetirementDate;
+
+      const [birthYear, birthMonth, birthDay] = birthDateStr.split('-').map(Number);
+      const [retireYear, retireMonth, retireDay] = retirementDateStr.split('-').map(Number);
+
+      // Calculate age at retirement more accurately
+      let ageAtRetirement = retireYear - birthYear;
+
+      // Check if birthday has occurred in the retirement year
+      if (retireMonth < birthMonth || (retireMonth === birthMonth && retireDay < birthDay)) {
+        ageAtRetirement--; // Birthday hasn't occurred yet in retirement year
+      }
 
       if (correctedRetirementType === 'compulsory') {
         if (ageAtRetirement > COMPULSORY_RETIREMENT_AGE) {
@@ -227,12 +300,35 @@ export default function RetirementPage() {
     setDelayReason('');
     setDelayDocumentFile('');
     setShowDelayFields(false);
+    setHasPendingRetirement(false);
   };
 
   const handleEmployeeFound = (employee: Employee) => {
     resetFormFields();
+
+    // Check for pending retirement request
+    const pendingStatuses = [
+      'Pending HRMO/HHRMD Review',
+      'Pending DO/HHRMD Review',
+      'Request Received – Awaiting Commission Decision'
+    ];
+
+    const hasPending = pendingRequests.some(
+      req => req.employee.id === employee.id && pendingStatuses.includes(req.status)
+    );
+
+    if (hasPending) {
+      setHasPendingRetirement(true);
+      toast({
+        title: "Request Already Submitted",
+        description: "A retirement request for this employee is already being reviewed. You cannot submit another request until the current one is completed.",
+        variant: "destructive",
+        duration: 6000
+      });
+    }
+
     setEmployeeDetails(employee);
-    
+
     if (!employee.dateOfBirth) {
       toast({ title: "Missing Information", description: "Employee date of birth is missing. Age validation cannot be performed.", variant: "warning", duration: 5000 });
     }
@@ -323,28 +419,45 @@ export default function RetirementPage() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
-        if (!response.ok) throw new Error('Failed to submit request');
-        
+
+        const result = await response.json();
+
+        // Check if the API request was successful
+        if (!response.ok || !result.success) {
+          const errorMessage = result.message || 'Failed to submit request';
+          throw new Error(errorMessage);
+        }
+
         await fetchRequests(); // Refresh list
-        toast({ title: "Retirement Request Submitted", description: `Request for ${employeeDetails.name} submitted successfully.` });
+        toast({
+          title: "Retirement Request Submitted",
+          description: `Request for ${employeeDetails.name} submitted successfully.`
+        });
         setEmployeeDetails(null);
         resetFormFields();
     } catch(error) {
-        toast({ title: "Submission Failed", description: "Could not submit the retirement request.", variant: "destructive" });
+        const errorMessage = error instanceof Error ? error.message : "Could not submit the retirement request.";
+        toast({
+          title: "Submission Failed",
+          description: errorMessage,
+          variant: "destructive"
+        });
+        console.error('Retirement submission error:', error);
     } finally {
         setIsSubmitting(false);
     }
   };
   
-  const isSubmitDisabled = 
-    !employeeDetails || 
-    !retirementType || 
-    (retirementType !== 'illness' && !retirementDate) || 
-    letterOfRequestFile === '' || 
-    (retirementType === 'illness' && (medicalFormFile === '' || illnessLeaveLetterFile === '' || !illnessDescription)) || 
+  const isSubmitDisabled =
+    !employeeDetails ||
+    !retirementType ||
+    (retirementType !== 'illness' && !retirementDate) ||
+    letterOfRequestFile === '' ||
+    (retirementType === 'illness' && (medicalFormFile === '' || illnessLeaveLetterFile === '' || !illnessDescription)) ||
     (showDelayFields && (!delayReason.trim() || delayDocumentFile === '')) ||
     (ageEligibilityError && !showDelayFields) ||
     cannotSubmitRetirement ||
+    hasPendingRetirement ||
     isSubmitting;
   
   const handleUpdateRequest = async (requestId: string, payload: any, actionDescription?: string) => {
@@ -564,11 +677,19 @@ export default function RetirementPage() {
                   </Alert>
                 )}
 
-                <div className={`space-y-4 ${(ageEligibilityError && !showDelayFields) || cannotSubmitRetirement ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                {hasPendingRetirement && (
+                  <Alert variant="destructive" className="mt-4">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTitle>Request Already Submitted</AlertTitle>
+                    <AlertDescription>A retirement request for this employee is already being reviewed. You cannot submit another request until the current one is completed.</AlertDescription>
+                  </Alert>
+                )}
+
+                <div className={`space-y-4 ${(ageEligibilityError && !showDelayFields) || cannotSubmitRetirement || hasPendingRetirement ? 'opacity-50 cursor-not-allowed' : ''}`}>
                   <h3 className="text-lg font-medium text-foreground">Retirement Details &amp; Documents (PDF Only)</h3>
                   <div>
                     <Label htmlFor="retirementType" className="flex items-center"><ListFilter className="mr-2 h-4 w-4 text-primary" />Retirement Type</Label>
-                    <Select value={retirementType} onValueChange={setRetirementType} disabled={isSubmitting || (ageEligibilityError && !showDelayFields) || cannotSubmitRetirement}>
+                    <Select value={retirementType} onValueChange={setRetirementType} disabled={isSubmitting || (ageEligibilityError && !showDelayFields) || cannotSubmitRetirement || hasPendingRetirement}>
                       <SelectTrigger id="retirementTypeTrigger">
                         <SelectValue placeholder="Select retirement type" />
                       </SelectTrigger>
