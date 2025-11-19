@@ -84,7 +84,12 @@
       "Bash(pm2 list:*)",
       "Bash(pm2 restart:*)",
       "Bash(pm2 save:*)",
-      "Bash(netstat:*)"
+      "Bash(netstat:*)",
+      "Bash(git remote add:*)",
+      "Bash(git commit:*)",
+      "Bash(ssh-keyscan:*)",
+      "Bash(~/.ssh/known_hosts)",
+      "Bash(git reset:*)"
     ],
     "deny": []
   }
