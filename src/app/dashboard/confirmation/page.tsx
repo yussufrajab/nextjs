@@ -295,8 +295,7 @@ export default function ConfirmationPage() {
       setTimeout(async () => {
         await fetchRequests();
       }, 1000);
-      
-      setZanId('');
+
       resetEmployeeAndForm();
     } catch(error) {
       // Remove optimistic request on error

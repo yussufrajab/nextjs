@@ -5,7 +5,7 @@
 - Node.js and npm installed
 - Git (optional, for cloning)
 
-## Files Required in beky4 folder
+## Files Required in beky5 folder
 - `nody_backup.sql` - Database backup file
 - `schema.prisma` - Prisma schema file
 - `package.json` - Node.js dependencies
@@ -14,8 +14,8 @@
 ## Restoration Steps
 
 ### For Linux/Unix VPS:
-1. Copy the `beky4` folder to your VPS
-2. Navigate to the beky4 directory
+1. Copy the `beky5` folder to your VPS
+2. Navigate to the beky5 directory
 3. Make the script executable:
    ```bash
    chmod +x restore_database.sh
@@ -26,7 +26,7 @@
    ```
 
 ### For Windows VPS:
-1. Copy the `beky4` folder to your VPS
+1. Copy the `beky5` folder to your VPS
 2. Navigate to the beky4 directory
 3. Run the restoration script:
    ```cmd

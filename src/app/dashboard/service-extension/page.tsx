@@ -43,6 +43,7 @@ export default function ServiceExtensionPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isProbationError, setIsProbationError] = useState(false);
 
   const [currentRetirementDate, setCurrentRetirementDate] = useState('');
   const [requestedExtensionPeriod, setRequestedExtensionPeriod] = useState('');
@@ -214,10 +215,14 @@ export default function ServiceExtensionPage() {
   const handleEmployeeFound = (employee: Employee) => {
     resetFormFields();
     setEmployeeDetails(employee);
+
+    // Check if employee is on probation
+    setIsProbationError(employee.status === 'On Probation');
   };
 
   const handleEmployeeClear = () => {
     setEmployeeDetails(null);
+    setIsProbationError(false);
     resetFormFields();
   };
   
@@ -267,6 +272,17 @@ export default function ServiceExtensionPage() {
       toast({ title: "Submission Error", description: "Employee or user details are missing.", variant: "destructive" });
       return;
     }
+
+    // Check if employee is on probation
+    if (employeeDetails.status === 'On Probation') {
+      toast({
+        title: "Submission Not Allowed",
+        description: "Employees on probation are not eligible for service extension.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (!currentRetirementDate || !requestedExtensionPeriod || !justification || !letterOfRequestFile || !employeeConsentLetterFile) {
         toast({ title: "Submission Error", description: "Please fill all required fields and upload both required PDF documents.", variant: "destructive" });
         return;
@@ -552,19 +568,30 @@ export default function ServiceExtensionPage() {
                   </div>
                 </div>
 
+                {isProbationError && (
+                  <div className="p-4 bg-red-50 border border-red-300 rounded-md">
+                    <p className="text-red-700 font-semibold text-sm">
+                      ⚠️ Employees on probation are not eligible for service extension.
+                    </p>
+                    <p className="text-red-600 text-xs mt-1">
+                      This employee cannot submit a service extension request until their probation period is completed.
+                    </p>
+                  </div>
+                )}
+
                 <div className="space-y-4">
                   <h3 className="text-lg font-medium text-foreground">Service Extension Details &amp; Documents</h3>
                   <div>
                     <Label htmlFor="currentRetirementDate" className="flex items-center"><CalendarDays className="mr-2 h-4 w-4 text-primary" />Current Retirement Date</Label>
-                    <Input id="currentRetirementDate" type="date" value={currentRetirementDate} onChange={(e) => setCurrentRetirementDate(e.target.value)} disabled={isSubmitting} min={new Date().toISOString().split('T')[0]} />
+                    <Input id="currentRetirementDate" type="date" value={currentRetirementDate} onChange={(e) => setCurrentRetirementDate(e.target.value)} disabled={isProbationError || isSubmitting} min={new Date().toISOString().split('T')[0]} />
                   </div>
                   <div>
                     <Label htmlFor="requestedExtensionPeriod">Requested Extension Period (e.g., 1 year, 6 months)</Label>
-                    <Input id="requestedExtensionPeriod" placeholder="Specify duration of extension" value={requestedExtensionPeriod} onChange={(e) => setRequestedExtensionPeriod(e.target.value)} disabled={isSubmitting} />
+                    <Input id="requestedExtensionPeriod" placeholder="Specify duration of extension" value={requestedExtensionPeriod} onChange={(e) => setRequestedExtensionPeriod(e.target.value)} disabled={isProbationError || isSubmitting} />
                   </div>
                   <div>
                     <Label htmlFor="justificationServiceExt">Justification for Extension</Label>
-                    <Textarea id="justificationServiceExt" placeholder="Provide strong reasons for the service extension" value={justification} onChange={(e) => setJustification(e.target.value)} disabled={isSubmitting} />
+                    <Textarea id="justificationServiceExt" placeholder="Provide strong reasons for the service extension" value={justification} onChange={(e) => setJustification(e.target.value)} disabled={isProbationError || isSubmitting} />
                   </div>
                   <div>
                     <Label htmlFor="letterOfRequestServiceExt" className="flex items-center"><FileText className="mr-2 h-4 w-4 text-primary" />Upload Letter of Request (Required, PDF Only)</Label>
@@ -573,7 +600,7 @@ export default function ServiceExtensionPage() {
                       value={letterOfRequestFile}
                       onChange={setLetterOfRequestFile}
                       onPreview={handlePreviewFile}
-                      disabled={isSubmitting}
+                      disabled={isProbationError || isSubmitting}
                       required
                     />
                   </div>
@@ -584,7 +611,7 @@ export default function ServiceExtensionPage() {
                       value={employeeConsentLetterFile}
                       onChange={setEmployeeConsentLetterFile}
                       onPreview={handlePreviewFile}
-                      disabled={isSubmitting}
+                      disabled={isProbationError || isSubmitting}
                       required
                     />
                   </div>
@@ -594,16 +621,17 @@ export default function ServiceExtensionPage() {
           </CardContent>
           {employeeDetails && (
             <CardFooter className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2 pt-4 border-t">
-              <Button 
-                onClick={handleSubmitServiceExtensionRequest} 
+              <Button
+                onClick={handleSubmitServiceExtensionRequest}
                 disabled={
-                    !employeeDetails || 
+                    !employeeDetails ||
+                    employeeDetails?.status === 'On Probation' ||
                     !currentRetirementDate ||
                     !requestedExtensionPeriod ||
                     !justification ||
-                    !letterOfRequestFile || 
+                    !letterOfRequestFile ||
                     !employeeConsentLetterFile ||
-                    isSubmitting 
+                    isSubmitting
                 }>
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Submit Request
