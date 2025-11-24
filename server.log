@@ -1,0 +1,11 @@
+   ▲ Next.js 15.2.3
+   - Local:        http://localhost:9007
+   - Network:      http://10.0.202.33:9007
+
+ ✓ Starting...
+ ✓ Ready in 508ms
+MinIO credentials check: {
+  accessKey: 'csmsapp',
+  secretKey: '[HARDCODED]',
+  NODE_ENV: 'production'
+}

@@ -1,0 +1,411 @@
+'use client';
+
+import { PageHeader } from '@/components/shared/page-header';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import React, { useState, useEffect } from 'react';
+import { Search, Download, Loader2, Building, Users, Database } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
+import { Pagination } from '@/components/shared/pagination';
+
+export interface Institution {
+  id: string;
+  name: string;
+  email?: string;
+  phoneNumber?: string;
+  voteNumber?: string;
+}
+
+export interface EmployeeFetchResult {
+  employee: {
+    zanId: string;
+    name: string;
+    payrollNumber?: string;
+    cadre?: string;
+    status?: string;
+  };
+  documents: number;
+  certificates: number;
+}
+
+const employeeSearchSchema = z.object({
+  zanId: z.string().optional(),
+  payrollNumber: z.string().optional(),
+}).refine(data => data.zanId || data.payrollNumber, {
+  message: "Either ZanID or Payroll Number must be provided",
+});
+
+type EmployeeSearchFormValues = z.infer<typeof employeeSearchSchema>;
+
+export default function FetchDataPage() {
+  const [institutions, setInstitutions] = useState<Institution[]>([]);
+  const [filteredInstitutions, setFilteredInstitutions] = useState<Institution[]>([]);
+  const [selectedInstitution, setSelectedInstitution] = useState<Institution | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isFetching, setIsFetching] = useState(false);
+  const [isEmployeeDialogOpen, setIsEmployeeDialogOpen] = useState(false);
+  const [fetchResults, setFetchResults] = useState<EmployeeFetchResult[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+
+  const itemsPerPage = 10;
+
+  const form = useForm<EmployeeSearchFormValues>({
+    resolver: zodResolver(employeeSearchSchema),
+  });
+
+  // Load institutions
+  useEffect(() => {
+    const loadInstitutions = async () => {
+      try {
+        const response = await fetch('/api/institutions');
+        if (!response.ok) throw new Error('Failed to fetch institutions');
+        const data = await response.json();
+        setInstitutions(data.data || []);
+        setFilteredInstitutions(data.data || []);
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to load institutions",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadInstitutions();
+  }, []);
+
+  // Filter institutions based on search
+  useEffect(() => {
+    if (!searchTerm) {
+      setFilteredInstitutions(institutions);
+    } else {
+      const filtered = institutions.filter(inst =>
+        inst.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        inst.voteNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        inst.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        inst.phoneNumber?.includes(searchTerm)
+      );
+      setFilteredInstitutions(filtered);
+    }
+    setCurrentPage(1);
+  }, [searchTerm, institutions]);
+
+  // Paginated institutions
+  const paginatedInstitutions = filteredInstitutions.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const totalInstitutionPages = Math.ceil(filteredInstitutions.length / itemsPerPage);
+
+  const handleFetchEmployeeData = async (values: EmployeeSearchFormValues) => {
+    if (!selectedInstitution?.voteNumber) {
+      toast({
+        title: "Error",
+        description: "Institution vote number is required",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsFetching(true);
+    try {
+      const response = await fetch('/api/hrims/fetch-employee', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...values,
+          institutionVoteNumber: selectedInstitution.voteNumber,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to fetch employee data');
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        setFetchResults([result.data]);
+        toast({
+          title: "Success",
+          description: `Employee data fetched and stored successfully. ${result.data.documents} documents and ${result.data.certificates} certificates processed.`,
+        });
+        form.reset();
+      } else {
+        throw new Error(result.message || 'Failed to fetch employee data');
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to fetch employee data",
+        variant: "destructive"
+      });
+    } finally {
+      setIsFetching(false);
+    }
+  };
+
+  const handleBulkFetch = async () => {
+    if (!selectedInstitution?.voteNumber) {
+      toast({
+        title: "Error",
+        description: "Institution vote number is required",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsFetching(true);
+    try {
+      const response = await fetch('/api/hrims/bulk-fetch', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          institutionVoteNumber: selectedInstitution.voteNumber,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to start bulk fetch');
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast({
+          title: "Bulk Fetch Started",
+          description: `Started fetching all employees from ${selectedInstitution.name}. This may take a few minutes.`,
+        });
+      } else {
+        throw new Error(result.message || 'Failed to start bulk fetch');
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to start bulk fetch",
+        variant: "destructive"
+      });
+    } finally {
+      setIsFetching(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div>
+        <PageHeader title="Fetch Data from HRIMS" description="Loading..." />
+        <Card>
+          <CardContent className="flex items-center justify-center h-64">
+            <Loader2 className="h-8 w-8 animate-spin" />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <PageHeader
+        title="Fetch Data from HRIMS"
+        description="Fetch employee data from the external HRIMS system and store it in the local database."
+      />
+
+      {/* Institution Selection */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Building className="h-5 w-5" />
+            Select Institution
+          </CardTitle>
+          <CardDescription>
+            Choose an institution to fetch employee data from HRIMS. Search by name, vote number, email, or phone.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="search">Search Institutions</Label>
+            <div className="relative">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Input
+                id="search"
+                placeholder="Search by name, vote number, email, or phone..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
+
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Vote Number</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Phone</TableHead>
+                <TableHead>Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {paginatedInstitutions.length > 0 ? (
+                paginatedInstitutions.map(inst => (
+                  <TableRow key={inst.id}>
+                    <TableCell className="font-medium">{inst.name}</TableCell>
+                    <TableCell>{inst.voteNumber || 'N/A'}</TableCell>
+                    <TableCell>{inst.email || 'N/A'}</TableCell>
+                    <TableCell>{inst.phoneNumber || 'N/A'}</TableCell>
+                    <TableCell>
+                      <Button
+                        size="sm"
+                        onClick={() => setSelectedInstitution(inst)}
+                        disabled={selectedInstitution?.id === inst.id}
+                      >
+                        {selectedInstitution?.id === inst.id ? 'Selected' : 'Select'}
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center">No institutions found.</TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalInstitutionPages}
+            onPageChange={setCurrentPage}
+            totalItems={filteredInstitutions.length}
+            itemsPerPage={itemsPerPage}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Selected Institution & Actions */}
+      {selectedInstitution && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Database className="h-5 w-5" />
+              Fetch Operations for {selectedInstitution.name}
+            </CardTitle>
+            <CardDescription>
+              Vote Number: {selectedInstitution.voteNumber}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Button
+                onClick={() => setIsEmployeeDialogOpen(true)}
+                disabled={isFetching}
+                className="flex items-center gap-2"
+              >
+                <Users className="h-4 w-4" />
+                {isFetching ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                Fetch Single Employee
+              </Button>
+
+              <Button
+                onClick={handleBulkFetch}
+                disabled={isFetching}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <Download className="h-4 w-4" />
+                {isFetching ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                Bulk Fetch All Employees
+              </Button>
+            </div>
+
+            {fetchResults.length > 0 && (
+              <div className="border rounded-lg p-4 bg-green-50">
+                <h4 className="font-medium text-green-800 mb-2">Recent Fetch Results</h4>
+                {fetchResults.map((result, index) => (
+                  <div key={index} className="text-sm text-green-700">
+                    <p><strong>{result.employee.name}</strong> (ZanID: {result.employee.zanId})</p>
+                    <p>Documents: {result.documents} | Certificates: {result.certificates}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Employee Search Dialog */}
+      <Dialog open={isEmployeeDialogOpen} onOpenChange={setIsEmployeeDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Fetch Single Employee Data</DialogTitle>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleFetchEmployeeData)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="zanId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>ZanID</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter ZanID..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="payrollNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Payroll Number</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter Payroll Number..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="text-sm text-gray-600">
+                Note: Provide either ZanID or Payroll Number (or both)
+              </div>
+
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setIsEmployeeDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isFetching}>
+                  {isFetching ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                  Fetch Employee Data
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

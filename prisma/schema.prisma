@@ -1,0 +1,294 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model CadreChangeRequest {
+  id                                          String   @id
+  status                                      String
+  reviewStage                                 String
+  newCadre                                    String
+  reason                                      String?
+  studiedOutsideCountry                       Boolean?
+  documents                                   String[]
+  rejectionReason                             String?
+  employeeId                                  String
+  submittedById                               String
+  reviewedById                                String?
+  createdAt                                   DateTime @default(now())
+  updatedAt                                   DateTime
+  Employee                                    Employee @relation(fields: [employeeId], references: [id])
+  User_CadreChangeRequest_reviewedByIdToUser  User?    @relation("CadreChangeRequest_reviewedByIdToUser", fields: [reviewedById], references: [id])
+  User_CadreChangeRequest_submittedByIdToUser User     @relation("CadreChangeRequest_submittedByIdToUser", fields: [submittedById], references: [id])
+}
+
+model Complaint {
+  id                                 String   @id
+  complaintType                      String
+  subject                            String
+  details                            String
+  complainantPhoneNumber             String
+  nextOfKinPhoneNumber               String
+  attachments                        String[]
+  status                             String
+  reviewStage                        String
+  officerComments                    String?
+  internalNotes                      String?
+  rejectionReason                    String?
+  complainantId                      String
+  assignedOfficerRole                String
+  reviewedById                       String?
+  createdAt                          DateTime @default(now())
+  updatedAt                          DateTime
+  User_Complaint_complainantIdToUser User     @relation("Complaint_complainantIdToUser", fields: [complainantId], references: [id])
+  User_Complaint_reviewedByIdToUser  User?    @relation("Complaint_reviewedByIdToUser", fields: [reviewedById], references: [id])
+}
+
+model ConfirmationRequest {
+  id                                           String    @id
+  status                                       String
+  reviewStage                                  String
+  documents                                    String[]
+  rejectionReason                              String?
+  employeeId                                   String
+  submittedById                                String
+  reviewedById                                 String?
+  decisionDate                                 DateTime?
+  commissionDecisionDate                       DateTime?
+  createdAt                                    DateTime  @default(now())
+  updatedAt                                    DateTime
+  Employee                                     Employee  @relation(fields: [employeeId], references: [id])
+  User_ConfirmationRequest_reviewedByIdToUser  User?     @relation("ConfirmationRequest_reviewedByIdToUser", fields: [reviewedById], references: [id])
+  User_ConfirmationRequest_submittedByIdToUser User      @relation("ConfirmationRequest_submittedByIdToUser", fields: [submittedById], references: [id])
+}
+
+model Employee {
+  id                      String                    @id
+  employeeEntityId        String?
+  name                    String
+  gender                  String
+  profileImageUrl         String?
+  dateOfBirth             DateTime?
+  placeOfBirth            String?
+  region                  String?
+  countryOfBirth          String?
+  zanId                   String                    @unique
+  phoneNumber             String?
+  contactAddress          String?
+  zssfNumber              String?
+  payrollNumber           String?
+  cadre                   String?
+  salaryScale             String?
+  ministry                String?
+  department              String?
+  appointmentType         String?
+  contractType            String?
+  recentTitleDate         DateTime?
+  currentReportingOffice  String?
+  currentWorkplace        String?
+  employmentDate          DateTime?
+  confirmationDate        DateTime?
+  retirementDate          DateTime?
+  status                  String?
+  ardhilHaliUrl           String?
+  confirmationLetterUrl   String?
+  jobContractUrl          String?
+  birthCertificateUrl     String?
+  institutionId           String
+  CadreChangeRequest      CadreChangeRequest[]
+  ConfirmationRequest     ConfirmationRequest[]
+  Institution             Institution               @relation(fields: [institutionId], references: [id])
+  EmployeeCertificate     EmployeeCertificate[]
+  LwopRequest             LwopRequest[]
+  PromotionRequest        PromotionRequest[]
+  ResignationRequest      ResignationRequest[]
+  RetirementRequest       RetirementRequest[]
+  SeparationRequest       SeparationRequest[]
+  ServiceExtensionRequest ServiceExtensionRequest[]
+  User                    User?
+}
+
+model EmployeeCertificate {
+  id         String   @id
+  type       String
+  name       String
+  url        String?
+  employeeId String
+  Employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+}
+
+model Institution {
+  id          String     @id
+  name        String     @unique
+  email       String?
+  phoneNumber String?
+  voteNumber  String?
+  Employee    Employee[]
+  User        User[]
+}
+
+model LwopRequest {
+  id                                   String    @id
+  status                               String
+  reviewStage                          String
+  duration                             String
+  reason                               String
+  documents                            String[]
+  rejectionReason                      String?
+  employeeId                           String
+  submittedById                        String
+  reviewedById                         String?
+  createdAt                            DateTime  @default(now())
+  updatedAt                            DateTime
+  endDate                              DateTime?
+  startDate                            DateTime?
+  Employee                             Employee  @relation(fields: [employeeId], references: [id])
+  User_LwopRequest_reviewedByIdToUser  User?     @relation("LwopRequest_reviewedByIdToUser", fields: [reviewedById], references: [id])
+  User_LwopRequest_submittedByIdToUser User      @relation("LwopRequest_submittedByIdToUser", fields: [submittedById], references: [id])
+}
+
+model Notification {
+  id        String   @id
+  message   String
+  link      String?
+  isRead    Boolean  @default(false)
+  userId    String
+  createdAt DateTime @default(now())
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PromotionRequest {
+  id                                        String   @id
+  status                                    String
+  reviewStage                               String
+  proposedCadre                             String
+  promotionType                             String
+  studiedOutsideCountry                     Boolean?
+  documents                                 String[]
+  rejectionReason                           String?
+  employeeId                                String
+  submittedById                             String
+  reviewedById                              String?
+  createdAt                                 DateTime @default(now())
+  updatedAt                                 DateTime
+  commissionDecisionReason                  String?
+  Employee                                  Employee @relation(fields: [employeeId], references: [id])
+  User_PromotionRequest_reviewedByIdToUser  User?    @relation("PromotionRequest_reviewedByIdToUser", fields: [reviewedById], references: [id])
+  User_PromotionRequest_submittedByIdToUser User     @relation("PromotionRequest_submittedByIdToUser", fields: [submittedById], references: [id])
+}
+
+model ResignationRequest {
+  id                                          String   @id
+  status                                      String
+  reviewStage                                 String
+  effectiveDate                               DateTime
+  reason                                      String?
+  documents                                   String[]
+  rejectionReason                             String?
+  employeeId                                  String
+  submittedById                               String
+  reviewedById                                String?
+  createdAt                                   DateTime @default(now())
+  updatedAt                                   DateTime
+  Employee                                    Employee @relation(fields: [employeeId], references: [id])
+  User_ResignationRequest_reviewedByIdToUser  User?    @relation("ResignationRequest_reviewedByIdToUser", fields: [reviewedById], references: [id])
+  User_ResignationRequest_submittedByIdToUser User     @relation("ResignationRequest_submittedByIdToUser", fields: [submittedById], references: [id])
+}
+
+model RetirementRequest {
+  id                                         String   @id
+  status                                     String
+  reviewStage                                String
+  retirementType                             String
+  illnessDescription                         String?
+  proposedDate                               DateTime
+  delayReason                                String?
+  documents                                  String[]
+  rejectionReason                            String?
+  employeeId                                 String
+  submittedById                              String
+  reviewedById                               String?
+  createdAt                                  DateTime @default(now())
+  updatedAt                                  DateTime
+  Employee                                   Employee @relation(fields: [employeeId], references: [id])
+  User_RetirementRequest_reviewedByIdToUser  User?    @relation("RetirementRequest_reviewedByIdToUser", fields: [reviewedById], references: [id])
+  User_RetirementRequest_submittedByIdToUser User     @relation("RetirementRequest_submittedByIdToUser", fields: [submittedById], references: [id])
+}
+
+model SeparationRequest {
+  id                                         String   @id
+  type                                       String
+  status                                     String
+  reviewStage                                String
+  reason                                     String
+  documents                                  String[]
+  rejectionReason                            String?
+  employeeId                                 String
+  submittedById                              String
+  reviewedById                               String?
+  createdAt                                  DateTime @default(now())
+  updatedAt                                  DateTime
+  Employee                                   Employee @relation(fields: [employeeId], references: [id])
+  User_SeparationRequest_reviewedByIdToUser  User?    @relation("SeparationRequest_reviewedByIdToUser", fields: [reviewedById], references: [id])
+  User_SeparationRequest_submittedByIdToUser User     @relation("SeparationRequest_submittedByIdToUser", fields: [submittedById], references: [id])
+}
+
+model ServiceExtensionRequest {
+  id                                               String   @id
+  status                                           String
+  reviewStage                                      String
+  currentRetirementDate                            DateTime
+  requestedExtensionPeriod                         String
+  justification                                    String
+  documents                                        String[]
+  rejectionReason                                  String?
+  employeeId                                       String
+  submittedById                                    String
+  reviewedById                                     String?
+  createdAt                                        DateTime @default(now())
+  updatedAt                                        DateTime
+  Employee                                         Employee @relation(fields: [employeeId], references: [id])
+  User_ServiceExtensionRequest_reviewedByIdToUser  User?    @relation("ServiceExtensionRequest_reviewedByIdToUser", fields: [reviewedById], references: [id])
+  User_ServiceExtensionRequest_submittedByIdToUser User     @relation("ServiceExtensionRequest_submittedByIdToUser", fields: [submittedById], references: [id])
+}
+
+model User {
+  id                                                                  String                    @id
+  name                                                                String
+  username                                                            String                    @unique
+  password                                                            String
+  role                                                                String
+  active                                                              Boolean                   @default(true)
+  employeeId                                                          String?                   @unique
+  institutionId                                                       String
+  createdAt                                                           DateTime                  @default(now())
+  updatedAt                                                           DateTime
+  phoneNumber                                                         String?
+  email                                                               String?
+  CadreChangeRequest_CadreChangeRequest_reviewedByIdToUser            CadreChangeRequest[]      @relation("CadreChangeRequest_reviewedByIdToUser")
+  CadreChangeRequest_CadreChangeRequest_submittedByIdToUser           CadreChangeRequest[]      @relation("CadreChangeRequest_submittedByIdToUser")
+  Complaint_Complaint_complainantIdToUser                             Complaint[]               @relation("Complaint_complainantIdToUser")
+  Complaint_Complaint_reviewedByIdToUser                              Complaint[]               @relation("Complaint_reviewedByIdToUser")
+  ConfirmationRequest_ConfirmationRequest_reviewedByIdToUser          ConfirmationRequest[]     @relation("ConfirmationRequest_reviewedByIdToUser")
+  ConfirmationRequest_ConfirmationRequest_submittedByIdToUser         ConfirmationRequest[]     @relation("ConfirmationRequest_submittedByIdToUser")
+  LwopRequest_LwopRequest_reviewedByIdToUser                          LwopRequest[]             @relation("LwopRequest_reviewedByIdToUser")
+  LwopRequest_LwopRequest_submittedByIdToUser                         LwopRequest[]             @relation("LwopRequest_submittedByIdToUser")
+  Notification                                                        Notification[]
+  PromotionRequest_PromotionRequest_reviewedByIdToUser                PromotionRequest[]        @relation("PromotionRequest_reviewedByIdToUser")
+  PromotionRequest_PromotionRequest_submittedByIdToUser               PromotionRequest[]        @relation("PromotionRequest_submittedByIdToUser")
+  ResignationRequest_ResignationRequest_reviewedByIdToUser            ResignationRequest[]      @relation("ResignationRequest_reviewedByIdToUser")
+  ResignationRequest_ResignationRequest_submittedByIdToUser           ResignationRequest[]      @relation("ResignationRequest_submittedByIdToUser")
+  RetirementRequest_RetirementRequest_reviewedByIdToUser              RetirementRequest[]       @relation("RetirementRequest_reviewedByIdToUser")
+  RetirementRequest_RetirementRequest_submittedByIdToUser             RetirementRequest[]       @relation("RetirementRequest_submittedByIdToUser")
+  SeparationRequest_SeparationRequest_reviewedByIdToUser              SeparationRequest[]       @relation("SeparationRequest_reviewedByIdToUser")
+  SeparationRequest_SeparationRequest_submittedByIdToUser             SeparationRequest[]       @relation("SeparationRequest_submittedByIdToUser")
+  ServiceExtensionRequest_ServiceExtensionRequest_reviewedByIdToUser  ServiceExtensionRequest[] @relation("ServiceExtensionRequest_reviewedByIdToUser")
+  ServiceExtensionRequest_ServiceExtensionRequest_submittedByIdToUser ServiceExtensionRequest[] @relation("ServiceExtensionRequest_submittedByIdToUser")
+  Employee                                                            Employee?                 @relation(fields: [employeeId], references: [id])
+  Institution                                                         Institution               @relation(fields: [institutionId], references: [id])
+}
