@@ -51,3 +51,10 @@ mc
 minio-data/
 minio.log
 *.pid
+
+# SQL backup files
+*.sql
+beky5/*.sql
+
+# Response data files (test data)
+src/app/dashboard/profile/*.json

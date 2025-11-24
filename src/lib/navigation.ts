@@ -7,13 +7,13 @@ import {
   MessageSquareWarning,
   Users,
   Briefcase,
-  LogOut as LogOutIcon, 
+  LogOut as LogOutIcon,
   CalendarPlus,
   UserX,
   Ban,
   UserCog,
   BarChart3,
-  ShieldCheck, 
+  ShieldCheck,
   Replace,
   UserMinus,
   ListChecks,
@@ -21,6 +21,7 @@ import {
   AlertTriangle,
   LineChart,
   Building,
+  Download,
 } from 'lucide-react';
 import type { NavItem, Role } from './types';
 import { ROLES } from './constants';
@@ -51,6 +52,20 @@ export const NAV_ITEMS: NavItem[] = [
             icon: Building,
             roles: [ROLES.ADMIN as Role],
             description: 'Create and manage institutions.'
+        },
+        {
+            title: 'Fetch Data',
+            href: '/dashboard/admin/fetch-data',
+            icon: Download,
+            roles: [ROLES.ADMIN as Role],
+            description: 'Fetch employee data from HRIMS system.'
+        },
+        {
+            title: 'Test HRIMS',
+            href: '/dashboard/admin/test-hrims',
+            icon: AlertTriangle,
+            roles: [ROLES.ADMIN as Role],
+            description: 'Test HRIMS API connectivity and data fetching.'
         }
     ]
   },

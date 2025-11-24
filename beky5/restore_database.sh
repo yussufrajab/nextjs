@@ -33,8 +33,8 @@ createdb -h $DB_HOST -U $DB_USER $DB_NAME
 echo "📥 Step 3: Restoring database from backup..."
 psql -h $DB_HOST -U $DB_USER -d $DB_NAME -f nody_backup.sql
 
-echo "📦 Step 4: Installing Node.js dependencies..."
-npm install --legacy-peer-deps
+#echo "📦 Step 4: Installing Node.js dependencies..."
+#npm install --legacy-peer-deps
 
 echo "🔧 Step 5: Setting up Prisma..."
 # Create .env file with VPS credentials

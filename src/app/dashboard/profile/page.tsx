@@ -27,8 +27,41 @@ const getInitials = (name?: string) => {
   return (names[0][0] + names[names.length - 1][0]).toUpperCase();
 };
 
+async function getEmployeesList() {
+  const url = "/api/external/employees";
+
+  const payload = {
+    RequestId: "203",
+    RequestPayloadData: {
+      // PageNumber: 0,
+      // PageSize: 100
+      "RequestBody": "536151"
+    }
+  };
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  });
+
+  return response.json();
+}
+
+async function loadExternalEmployees() {
+    try {
+      const data = await getEmployeesList();
+      console.log("External Employees API Response:", data);
+    } catch (error) {
+      console.error("Error fetching employees:", error);
+    }
+  }
+
+
 // Helper function to get status color
-const getStatusColor = (status?: string) => {
+const getStatusColor = (status?: string | null) => {
   switch (status) {
     case 'Confirmed':
       return 'text-green-600';
@@ -49,7 +82,7 @@ const getStatusColor = (status?: string) => {
   }
 };
 
-const CERTIFICATE_ORDER: EmployeeCertificate['type'][] = [
+const CERTIFICATE_ORDER: string[] = [
   'Certificate of primary education',
   'Certificate of Secondary education (Form IV)',
   'Advanced Certificate of Secondary education (Form VII)', 
@@ -285,6 +318,7 @@ export default function ProfilePage() {
         const params = new URLSearchParams();
         params.append('q', query);
         params.append('size', '1000');
+        loadExternalEmployees();
         
         if (status && status !== 'all') params.append('status', status);
         if (gender && gender !== 'all') params.append('gender', gender);
@@ -355,7 +389,11 @@ export default function ProfilePage() {
 
   const pageTitle = useMemo(() => {
     if (role === ROLES.EMPLOYEE) return "My Profile";
-    if (isInstitutionalViewer) return `Employee Profiles - ${user?.institution?.name || 'Your Institution'}`;
+    if (isInstitutionalViewer) {
+      const inst = user?.institution;
+      const instName = typeof inst === 'object' && inst !== null ? inst.name : (typeof inst === 'string' ? inst : undefined);
+      return `Employee Profiles - ${instName || 'Your Institution'}`;
+    }
     return "All Employee Profiles";
   }, [role, isInstitutionalViewer, user]);
 
