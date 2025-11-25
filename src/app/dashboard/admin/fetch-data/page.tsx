@@ -61,6 +61,10 @@ export default function FetchDataPage() {
 
   const form = useForm<EmployeeSearchFormValues>({
     resolver: zodResolver(employeeSearchSchema),
+    defaultValues: {
+      zanId: '',
+      payrollNumber: '',
+    },
   });
 
   // Load institutions
@@ -368,7 +372,13 @@ export default function FetchDataPage() {
                   <FormItem>
                     <FormLabel>ZanID</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter ZanID..." {...field} />
+                      <Input
+                        placeholder="Enter ZanID..."
+                        value={field.value || ''}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        name={field.name}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -382,7 +392,13 @@ export default function FetchDataPage() {
                   <FormItem>
                     <FormLabel>Payroll Number</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter Payroll Number..." {...field} />
+                      <Input
+                        placeholder="Enter Payroll Number..."
+                        value={field.value || ''}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        name={field.name}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
