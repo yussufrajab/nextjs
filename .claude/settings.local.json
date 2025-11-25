@@ -93,7 +93,8 @@
       "Read(//d/csms/**)",
       "Bash(pm2 logs:*)",
       "Bash(time curl:*)",
-      "Bash(pm2 status:*)"
+      "Bash(pm2 status:*)",
+      "Bash(PGPASSWORD=Mamlaka2020 pg_dump:*)"
     ],
     "deny": []
   }
