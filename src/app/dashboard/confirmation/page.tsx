@@ -62,7 +62,9 @@ export default function ConfirmationPage() {
   const [correctedLetterOfRequestFile, setCorrectedLetterOfRequestFile] = useState<string>('');
 
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 50; // Server-side pagination
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
   // File preview modal state
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
@@ -94,7 +96,7 @@ export default function ConfirmationPage() {
     return cleanName;
   };
 
-  const fetchRequests = async (isRefresh = false) => {
+  const fetchRequests = React.useCallback(async (isRefresh = false, page = 1) => {
     if (!user || !role) return;
     if (isRefresh) {
       setIsRefreshing(true);
@@ -107,7 +109,14 @@ export default function ConfirmationPage() {
       // Client-side filtering will then handle role-specific display logic.
       // Add cache-busting parameter and headers for refresh
       const cacheBuster = isRefresh ? `&_t=${Date.now()}` : '';
-      let url = `/api/confirmations?userId=${user.id}&userRole=${role}&userInstitutionId=${user.institutionId || ''}${cacheBuster}`;
+      const params = new URLSearchParams();
+      params.append('userId', user.id);
+      params.append('userRole', role);
+      params.append('userInstitutionId', user.institutionId || '');
+      params.append('page', page.toString());
+      params.append('size', itemsPerPage.toString());
+
+      let url = `/api/confirmations?${params.toString()}${cacheBuster}`;
 
       const response = await fetch(url, {
         method: 'GET',
@@ -125,12 +134,15 @@ export default function ConfirmationPage() {
         throw new Error(`Failed to fetch confirmation requests: ${response.status} - ${errorText}`);
       }
 
-      const allRequests = await response.json();
-      console.log('Fetched data (before client-side filter):', allRequests);
+      const result = await response.json();
+      console.log('Fetched data (before client-side filter):', result);
 
       // Log the user and role to confirm they are correctly identified
       console.log('Current user:', user);
       console.log('Current role:', role);
+
+      // Handle both paginated and non-paginated responses
+      const allRequests = Array.isArray(result) ? result : (result.data || []);
 
       allRequests.forEach((req: ConfirmationRequest) => {
         console.log(`Request ID: ${req.id}, Status: ${req.status}, Review Stage: ${req.reviewStage}`);
@@ -154,7 +166,19 @@ export default function ConfirmationPage() {
           console.log(`- ID: ${req.id}, Status: "${req.status}", ReviewStage: "${req.reviewStage}"`);
         });
       }
+
       setPendingRequests(filteredData);
+
+      // Update pagination info from server response or calculate from filtered data
+      if (result.pagination) {
+        setTotalItems(result.pagination.total || filteredData.length);
+        setTotalPages(result.pagination.totalPages || Math.ceil(filteredData.length / itemsPerPage));
+      } else {
+        // Fallback if pagination info not provided
+        setTotalItems(filteredData.length);
+        setTotalPages(Math.ceil(filteredData.length / itemsPerPage));
+      }
+
       if (isRefresh) {
         toast({ title: "Refreshed", description: "Confirmation requests have been updated.", duration: 2000 });
       }
@@ -168,13 +192,20 @@ export default function ConfirmationPage() {
         setIsLoading(false);
       }
     }
-  };
+  }, [user, role, itemsPerPage]);
 
   useEffect(() => {
     if (!isAuthLoading && user && role) {
       fetchRequests();
     }
-  }, [user, role, isAuthLoading]);
+  }, [user, role, isAuthLoading, fetchRequests]);
+
+  // Fetch new data when page changes
+  useEffect(() => {
+    if (currentPage > 1 && user && role) {
+      fetchRequests(false, currentPage);
+    }
+  }, [currentPage, fetchRequests, user, role]);
 
   const isAlreadyConfirmed = employeeToConfirm?.status === 'Confirmed';
 
@@ -473,7 +504,7 @@ export default function ConfirmationPage() {
   };
 
   const isSubmitDisabled = !employeeToConfirm || evaluationFormFile === '' || (isIpaRequired && ipaCertificateFile === '') || letterOfRequestFile === '' || isSubmitting || isAlreadyConfirmed;
-  
+
   // Debug logging for button state
   console.log('Submit button state:', {
     hasEmployee: !!employeeToConfirm,
@@ -485,8 +516,9 @@ export default function ConfirmationPage() {
     isAlreadyConfirmed,
     isDisabled: isSubmitDisabled
   });
-  
-  const paginatedRequests = pendingRequests.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  // Server-side pagination - use requests directly from API
+  const paginatedRequests = pendingRequests || [];
 
 
   return (
@@ -709,9 +741,9 @@ export default function ConfirmationPage() {
             )}
             <Pagination
               currentPage={currentPage}
-              totalPages={Math.ceil(pendingRequests.length / itemsPerPage)}
+              totalPages={totalPages}
               onPageChange={setCurrentPage}
-              totalItems={pendingRequests.length}
+              totalItems={totalItems}
               itemsPerPage={itemsPerPage}
             />
           </CardContent>

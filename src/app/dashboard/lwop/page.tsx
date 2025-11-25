@@ -10,7 +10,7 @@ import { FileUpload } from '@/components/ui/file-upload';
 import { EmployeeSearch } from '@/components/shared/employee-search';
 import { useAuth } from '@/hooks/use-auth';
 import { ROLES, EMPLOYEES } from '@/lib/constants';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import type { Employee, User, Role } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
 import { Loader2, Search, FileText, AlertTriangle, CheckSquare, Eye, Download, RefreshCw, CheckCircle, XCircle } from 'lucide-react';
@@ -80,7 +80,9 @@ export default function LwopPage() {
   const [rejectionReasonInput, setRejectionReasonInput] = useState('');
   const [currentRequestToAction, setCurrentRequestToAction] = useState<LWOPRequest | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 50;
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
   const [isCorrectionModalOpen, setIsCorrectionModalOpen] = useState(false);
   const [requestToCorrect, setRequestToCorrect] = useState<LWOPRequest | null>(null);
@@ -146,7 +148,7 @@ export default function LwopPage() {
     }
   }, [startDate, endDate]);
   
-  const fetchRequests = async (isRefresh = false) => {
+  const fetchRequests = useCallback(async (isRefresh = false, page = currentPage) => {
     if (!user || !role) return;
     if (isRefresh) {
       setIsRefreshing(true);
@@ -154,9 +156,21 @@ export default function LwopPage() {
       setIsLoading(true);
     }
     try {
-      // Add cache-busting parameter and headers for refresh
-      const cacheBuster = isRefresh ? `&_t=${Date.now()}` : '';
-      const response = await fetch(`/api/lwop?userId=${user.id}&userRole=${role}&userInstitutionId=${user.institutionId || ''}${cacheBuster}`, {
+      // Build query parameters using URLSearchParams
+      const params = new URLSearchParams({
+        userId: user.id,
+        userRole: role,
+        userInstitutionId: user.institutionId || '',
+        page: page.toString(),
+        size: itemsPerPage.toString()
+      });
+
+      // Add cache-busting parameter for refresh
+      if (isRefresh) {
+        params.append('_t', Date.now().toString());
+      }
+
+      const response = await fetch(`/api/lwop?${params.toString()}`, {
         method: 'GET',
         headers: {
           'Cache-Control': isRefresh ? 'no-cache, no-store, must-revalidate' : 'default',
@@ -167,7 +181,20 @@ export default function LwopPage() {
       if (!response.ok) throw new Error('Failed to fetch LWOP requests');
       const data = await response.json();
       console.log("[LWOP_FRONTEND] Data received from API:", data);
-      const processedData = data.map((req: any) => ({
+
+      // Handle both array and paginated object responses
+      let requests = [];
+      if (Array.isArray(data)) {
+        requests = data;
+        setTotalItems(data.length);
+        setTotalPages(Math.ceil(data.length / itemsPerPage));
+      } else if (data.data && Array.isArray(data.data)) {
+        requests = data.data;
+        setTotalItems(data.pagination?.total || data.data.length);
+        setTotalPages(data.pagination?.totalPages || Math.ceil((data.pagination?.total || data.data.length) / itemsPerPage));
+      }
+
+      const processedData = requests.map((req: any) => ({
         ...req,
         createdAt: typeof req.createdAt === 'object' ? req.createdAt.toISOString() : req.createdAt,
         updatedAt: typeof req.updatedAt === 'object' ? req.updatedAt.toISOString() : req.updatedAt,
@@ -186,11 +213,17 @@ export default function LwopPage() {
         setIsLoading(false);
       }
     }
-  };
+  }, [user, role, currentPage, itemsPerPage]);
 
   useEffect(() => {
     fetchRequests();
-  }, [user, role]);
+  }, [fetchRequests]);
+
+  useEffect(() => {
+    if (currentPage > 1) {
+      fetchRequests(false, currentPage);
+    }
+  }, [currentPage]);
 
   const resetForm = () => {
     setStartDate('');
@@ -464,8 +497,7 @@ export default function LwopPage() {
         setTimeout(async () => {
           await fetchRequests();
         }, 1000);
-        
-        setZanId('');
+
         setEmployeeDetails(null);
         setStartDate('');
         setEndDate('');
@@ -567,7 +599,7 @@ export default function LwopPage() {
     await handleUpdateRequest(requestId, payload, actionDescription);
   };
 
-  const paginatedRequests = pendingRequests.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const paginatedRequests = pendingRequests || [];
 
   return (
     <div>
@@ -797,9 +829,9 @@ export default function LwopPage() {
             )}
              <Pagination
                 currentPage={currentPage}
-                totalPages={Math.ceil(pendingRequests.length / itemsPerPage)}
+                totalPages={totalPages}
                 onPageChange={setCurrentPage}
-                totalItems={pendingRequests.length}
+                totalItems={totalItems}
                 itemsPerPage={itemsPerPage}
              />
           </CardContent>

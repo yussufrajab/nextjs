@@ -15,7 +15,7 @@ import { FilePreviewModal } from '@/components/ui/file-preview-modal';
 import { EmployeeSearch } from '@/components/shared/employee-search';
 import { useAuth } from '@/hooks/use-auth';
 import { ROLES } from '@/lib/constants';
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import type { Employee, User, Role } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
 import { Loader2, Search, FileText, Award, ChevronsUpDown, ListFilter, Star, AlertTriangle, RefreshCw, CheckCircle, XCircle } from 'lucide-react';
@@ -50,13 +50,9 @@ export default function PromotionPage() {
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-
-  const paginatedRequests = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return pendingRequests.slice(startIndex, endIndex);
-  }, [pendingRequests, currentPage, itemsPerPage]);
+  const itemsPerPage = 50;
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
 
   const [employeeDetails, setEmployeeDetails] = useState<Employee | null>(null);
@@ -131,7 +127,7 @@ export default function PromotionPage() {
 
 
 
-  const fetchRequests = async (isRefresh = false) => {
+  const fetchRequests = useCallback(async (isRefresh = false, page = currentPage) => {
     if (!user || !role) return;
     if (isRefresh) {
       setIsRefreshing(true);
@@ -139,9 +135,21 @@ export default function PromotionPage() {
       setIsLoading(true);
     }
     try {
-        // Add cache-busting parameter and headers for refresh
-        const cacheBuster = isRefresh ? `&_t=${Date.now()}` : '';
-        const response = await fetch(`/api/promotions?userId=${user.id}&userRole=${role}&userInstitutionId=${user.institutionId || ''}${cacheBuster}`, {
+        // Build query parameters using URLSearchParams
+        const params = new URLSearchParams({
+          userId: user.id,
+          userRole: role,
+          userInstitutionId: user.institutionId || '',
+          page: page.toString(),
+          size: itemsPerPage.toString()
+        });
+
+        // Add cache-busting parameter for refresh
+        if (isRefresh) {
+          params.append('_t', Date.now().toString());
+        }
+
+        const response = await fetch(`/api/promotions?${params.toString()}`, {
           method: 'GET',
           headers: {
             'Cache-Control': isRefresh ? 'no-cache, no-store, must-revalidate' : 'default',
@@ -150,8 +158,21 @@ export default function PromotionPage() {
           }
         });
         if (!response.ok) throw new Error('Failed to fetch promotion requests');
-        const result = await response.json();
-        setPendingRequests(result.data || []);
+        const data = await response.json();
+
+        // Handle both array and paginated object responses
+        let requests = [];
+        if (Array.isArray(data)) {
+          requests = data;
+          setTotalItems(data.length);
+          setTotalPages(Math.ceil(data.length / itemsPerPage));
+        } else if (data.data && Array.isArray(data.data)) {
+          requests = data.data;
+          setTotalItems(data.pagination?.total || data.data.length);
+          setTotalPages(data.pagination?.totalPages || Math.ceil((data.pagination?.total || data.data.length) / itemsPerPage));
+        }
+
+        setPendingRequests(requests);
         if (isRefresh) {
           toast({ title: "Refreshed", description: "Promotion requests have been updated.", duration: 2000 });
         }
@@ -164,11 +185,17 @@ export default function PromotionPage() {
           setIsLoading(false);
         }
     }
-  };
+  }, [user, role, currentPage, itemsPerPage]);
 
   useEffect(() => {
     fetchRequests();
-  }, [user, role]);
+  }, [fetchRequests]);
+
+  useEffect(() => {
+    if (currentPage > 1) {
+      fetchRequests(false, currentPage);
+    }
+  }, [currentPage]);
 
   const resetFormFields = () => {
     setPromotionRequestType('');
@@ -589,6 +616,8 @@ export default function PromotionPage() {
     setCorrectedProposedCadre('');
   };
 
+  const paginatedRequests = pendingRequests || [];
+
   return (
     <React.Fragment>
       <PageHeader title="Promotion" description="Manage employee promotions based on experience or education." />
@@ -892,9 +921,9 @@ export default function PromotionPage() {
           )}
           <Pagination
             currentPage={currentPage}
-            totalPages={Math.ceil(pendingRequests.length / itemsPerPage)}
+            totalPages={totalPages}
             onPageChange={setCurrentPage}
-            totalItems={pendingRequests.length}
+            totalItems={totalItems}
             itemsPerPage={itemsPerPage}
           />
         </CardContent>

@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/hooks/use-auth';
 import { ROLES, EMPLOYEES } from '@/lib/constants';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import type { Employee, User, Role } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
 import { Loader2, Search, FileText, CalendarDays, CheckSquare, RefreshCw, Clock, CheckCircle, XCircle } from 'lucide-react';
@@ -90,7 +90,9 @@ export default function ServiceExtensionPage() {
   const [currentRequestToAction, setCurrentRequestToAction] = useState<ServiceExtensionRequest | null>(null);
   
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 50;
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   
   // Auto-refresh state
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
@@ -105,18 +107,30 @@ export default function ServiceExtensionPage() {
   const [correctedLetterOfRequestFile, setCorrectedLetterOfRequestFile] = useState<string>('');
   const [correctedEmployeeConsentLetterFile, setCorrectedEmployeeConsentLetterFile] = useState<string>('');
 
-  const fetchRequests = async (showLoadingState = true, isRefresh = false) => {
+  const fetchRequests = useCallback(async (showLoadingState = true, isRefresh = false, page = currentPage) => {
     if (!user || !role) return;
     if (isRefresh) {
       setIsRefreshing(true);
     } else if (showLoadingState) {
       setIsLoading(true);
     }
-    
+
     try {
-      // Add cache-busting parameter and headers for refresh
-      const cacheBuster = isRefresh ? `&_t=${Date.now()}` : '';
-      const response = await fetch(`/api/service-extension?userId=${user.id}&userRole=${role}&userInstitutionId=${user.institutionId || ''}${cacheBuster}`, {
+      // Build query parameters using URLSearchParams
+      const params = new URLSearchParams({
+        userId: user.id,
+        userRole: role,
+        userInstitutionId: user.institutionId || '',
+        page: page.toString(),
+        size: itemsPerPage.toString()
+      });
+
+      // Add cache-busting parameter for refresh
+      if (isRefresh) {
+        params.append('_t', Date.now().toString());
+      }
+
+      const response = await fetch(`/api/service-extension?${params.toString()}`, {
         method: 'GET',
         headers: {
           'Cache-Control': isRefresh ? 'no-cache, no-store, must-revalidate' : 'default',
@@ -126,14 +140,26 @@ export default function ServiceExtensionPage() {
       });
       if (!response.ok) throw new Error('Failed to fetch service extension requests');
       const data = await response.json();
-      
+
+      // Handle both array and paginated object responses
+      let requests = [];
+      if (Array.isArray(data)) {
+        requests = data;
+        setTotalItems(data.length);
+        setTotalPages(Math.ceil(data.length / itemsPerPage));
+      } else if (data.data && Array.isArray(data.data)) {
+        requests = data.data;
+        setTotalItems(data.pagination?.total || data.data.length);
+        setTotalPages(data.pagination?.totalPages || Math.ceil((data.pagination?.total || data.data.length) / itemsPerPage));
+      }
+
       // Check for changes in status to show notifications
       if (pendingRequests.length > 0) {
-        const changedRequests = data.filter((newReq: ServiceExtensionRequest) => {
+        const changedRequests = requests.filter((newReq: ServiceExtensionRequest) => {
           const oldReq = pendingRequests.find(r => r.id === newReq.id);
           return oldReq && oldReq.status !== newReq.status;
         });
-        
+
         changedRequests.forEach((req: ServiceExtensionRequest) => {
           const oldReq = pendingRequests.find(r => r.id === req.id);
           if (oldReq) {
@@ -145,10 +171,10 @@ export default function ServiceExtensionPage() {
           }
         });
       }
-      
-      setPendingRequests(data);
+
+      setPendingRequests(requests);
       setLastRefresh(new Date());
-      
+
       if (isRefresh) {
         toast({ title: "Refreshed", description: "Service extension requests have been updated.", duration: 2000 });
       }
@@ -163,11 +189,17 @@ export default function ServiceExtensionPage() {
         setIsLoading(false);
       }
     }
-  };
+  }, [user, role, currentPage, itemsPerPage, pendingRequests]);
 
   useEffect(() => {
     fetchRequests();
-  }, [user, role]);
+  }, [fetchRequests]);
+
+  useEffect(() => {
+    if (currentPage > 1) {
+      fetchRequests(false, false, currentPage);
+    }
+  }, [currentPage]);
 
   // Auto-refresh effect
   useEffect(() => {
@@ -522,10 +554,7 @@ export default function ServiceExtensionPage() {
     }
   };
 
-  const paginatedRequests = pendingRequests.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const paginatedRequests = pendingRequests || [];
 
   // Manual refresh function
   const handleManualRefresh = async () => {
@@ -888,9 +917,9 @@ export default function ServiceExtensionPage() {
             )}
              <Pagination
               currentPage={currentPage}
-              totalPages={Math.ceil(pendingRequests.length / itemsPerPage)}
+              totalPages={totalPages}
               onPageChange={setCurrentPage}
-              totalItems={pendingRequests.length}
+              totalItems={totalItems}
               itemsPerPage={itemsPerPage}
             />
           </CardContent>

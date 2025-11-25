@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/hooks/use-auth';
 import { ROLES, EMPLOYEES } from '@/lib/constants';
 import { useAuthStore } from '@/store/auth-store';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import type { Employee, User, Role } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
 import { Loader2, Search, FileText, CalendarDays, Paperclip, ShieldAlert, FileWarning, PauseOctagon, Files, Ban, RefreshCw, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
@@ -102,7 +102,9 @@ export default function TerminationAndDismissalPage() {
   const [currentRequestToAction, setCurrentRequestToAction] = useState<SeparationRequest | null>(null);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 50;
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
   const [isCorrectionModalOpen, setIsCorrectionModalOpen] = useState(false);
   const [requestToCorrect, setRequestToCorrect] = useState<SeparationRequest | null>(null);
@@ -123,7 +125,7 @@ export default function TerminationAndDismissalPage() {
   const isEmployeeDismissed = employeeDetails?.status === 'Dismissed';
   const cannotSubmitTermination = isEmployeeTerminated || isEmployeeDismissed;
 
-  const fetchRequests = async (isRefresh = false) => {
+  const fetchRequests = useCallback(async (isRefresh = false, page = currentPage) => {
     if (!user || !role) return;
     if (isRefresh) {
       setIsRefreshing(true);
@@ -131,9 +133,21 @@ export default function TerminationAndDismissalPage() {
       setIsLoading(true);
     }
     try {
-      // Add cache-busting parameter and headers for refresh
-      const cacheBuster = isRefresh ? `&_t=${Date.now()}` : '';
-      const response = await fetch(`/api/termination?userId=${user.id}&userRole=${role}&userInstitutionId=${user.institutionId || ''}${cacheBuster}`, {
+      // Build query parameters using URLSearchParams
+      const params = new URLSearchParams({
+        userId: user.id,
+        userRole: role,
+        userInstitutionId: user.institutionId || '',
+        page: page.toString(),
+        size: itemsPerPage.toString()
+      });
+
+      // Add cache-busting parameter for refresh
+      if (isRefresh) {
+        params.append('_t', Date.now().toString());
+      }
+
+      const response = await fetch(`/api/termination?${params.toString()}`, {
         method: 'GET',
         headers: {
           'Cache-Control': isRefresh ? 'no-cache, no-store, must-revalidate' : 'default',
@@ -143,7 +157,20 @@ export default function TerminationAndDismissalPage() {
       });
       if (!response.ok) throw new Error('Failed to fetch separation requests');
       const data = await response.json();
-      setPendingRequests(data);
+
+      // Handle both array and paginated object responses
+      let requests = [];
+      if (Array.isArray(data)) {
+        requests = data;
+        setTotalItems(data.length);
+        setTotalPages(Math.ceil(data.length / itemsPerPage));
+      } else if (data.data && Array.isArray(data.data)) {
+        requests = data.data;
+        setTotalItems(data.pagination?.total || data.data.length);
+        setTotalPages(data.pagination?.totalPages || Math.ceil((data.pagination?.total || data.data.length) / itemsPerPage));
+      }
+
+      setPendingRequests(requests);
       if (isRefresh) {
         toast({ title: "Refreshed", description: "Request list has been updated.", duration: 2000 });
       }
@@ -156,11 +183,17 @@ export default function TerminationAndDismissalPage() {
         setIsLoading(false);
       }
     }
-  };
+  }, [user, role, currentPage, itemsPerPage]);
 
   useEffect(() => {
     fetchRequests();
-  }, [user, role]);
+  }, [fetchRequests]);
+
+  useEffect(() => {
+    if (currentPage > 1) {
+      fetchRequests(false, currentPage);
+    }
+  }, [currentPage]);
 
 
   const resetFormFields = () => {
@@ -466,10 +499,7 @@ export default function TerminationAndDismissalPage() {
     }
   };
   
-  const paginatedRequests = pendingRequests.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const paginatedRequests = pendingRequests || [];
 
 
   return (
@@ -870,9 +900,9 @@ export default function TerminationAndDismissalPage() {
             )}
              <Pagination
               currentPage={currentPage}
-              totalPages={Math.ceil(pendingRequests.length / itemsPerPage)}
+              totalPages={totalPages}
               onPageChange={setCurrentPage}
-              totalItems={pendingRequests.length}
+              totalItems={totalItems}
               itemsPerPage={itemsPerPage}
             />
           </CardContent>

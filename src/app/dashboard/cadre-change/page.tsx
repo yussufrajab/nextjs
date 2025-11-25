@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/hooks/use-auth';
 import { ROLES } from '@/lib/constants';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import type { Employee, User, Role } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
 import { Loader2, Search, FileText, Award, ChevronsUpDown, AlertTriangle, RefreshCw, CheckCircle, XCircle } from 'lucide-react';
@@ -78,7 +78,9 @@ export default function CadreChangePage() {
   const [eligibilityError, setEligibilityError] = useState<string | null>(null);
   
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 50;
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   
   // Handle file preview
   const handlePreviewFile = (objectKey: string) => {
@@ -106,7 +108,7 @@ export default function CadreChangePage() {
     return cleanName;
   };
 
-  const fetchRequests = async (isRefresh = false) => {
+  const fetchRequests = useCallback(async (isRefresh = false, page = currentPage) => {
     if (!user || !role) return;
     if (isRefresh) {
       setIsRefreshing(true);
@@ -114,9 +116,21 @@ export default function CadreChangePage() {
       setIsLoading(true);
     }
     try {
-        // Add cache-busting parameter and headers for refresh
-        const cacheBuster = isRefresh ? `&_t=${Date.now()}` : '';
-        const response = await fetch(`/api/cadre-change?userId=${user.id}&userRole=${role}&userInstitutionId=${user.institutionId || ''}${cacheBuster}`, {
+        // Build query parameters using URLSearchParams
+        const params = new URLSearchParams({
+          userId: user.id,
+          userRole: role,
+          userInstitutionId: user.institutionId || '',
+          page: page.toString(),
+          size: itemsPerPage.toString()
+        });
+
+        // Add cache-busting parameter for refresh
+        if (isRefresh) {
+          params.append('_t', Date.now().toString());
+        }
+
+        const response = await fetch(`/api/cadre-change?${params.toString()}`, {
           method: 'GET',
           headers: {
             'Cache-Control': isRefresh ? 'no-cache, no-store, must-revalidate' : 'default',
@@ -125,10 +139,21 @@ export default function CadreChangePage() {
           }
         });
         if (!response.ok) throw new Error('Failed to fetch cadre change requests');
-        const result = await response.json();
-        console.log('Cadre change API result:', result);
-        console.log('result.data type:', typeof result.data, 'isArray:', Array.isArray(result.data));
-        setPendingRequests(Array.isArray(result.data) ? result.data : []);
+        const data = await response.json();
+
+        // Handle both array and paginated object responses
+        let requests = [];
+        if (Array.isArray(data)) {
+          requests = data;
+          setTotalItems(data.length);
+          setTotalPages(Math.ceil(data.length / itemsPerPage));
+        } else if (data.data && Array.isArray(data.data)) {
+          requests = data.data;
+          setTotalItems(data.pagination?.total || data.data.length);
+          setTotalPages(data.pagination?.totalPages || Math.ceil((data.pagination?.total || data.data.length) / itemsPerPage));
+        }
+
+        setPendingRequests(requests);
         if (isRefresh) {
           toast({ title: "Refreshed", description: "Cadre change requests have been updated.", duration: 2000 });
         }
@@ -141,11 +166,17 @@ export default function CadreChangePage() {
           setIsLoading(false);
         }
     }
-  };
+  }, [user, role, currentPage, itemsPerPage]);
 
   useEffect(() => {
     fetchRequests();
-  }, [user, role]);
+  }, [fetchRequests]);
+
+  useEffect(() => {
+    if (currentPage > 1) {
+      fetchRequests(false, currentPage);
+    }
+  }, [currentPage]);
 
   const resetFormFields = () => {
     setNewCadre('');
@@ -405,10 +436,7 @@ export default function CadreChangePage() {
     }
   };
 
-  const paginatedRequests = Array.isArray(pendingRequests) ? pendingRequests.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  ) : [];
+  const paginatedRequests = pendingRequests || [];
 
 
   
@@ -635,9 +663,9 @@ export default function CadreChangePage() {
             ))}
             <Pagination
               currentPage={currentPage}
-              totalPages={Math.ceil((Array.isArray(pendingRequests) ? pendingRequests.length : 0) / itemsPerPage)}
+              totalPages={totalPages}
               onPageChange={setCurrentPage}
-              totalItems={Array.isArray(pendingRequests) ? pendingRequests.length : 0}
+              totalItems={totalItems}
               itemsPerPage={itemsPerPage}
             />
           </CardContent>
@@ -769,9 +797,9 @@ export default function CadreChangePage() {
             )}
              <Pagination
               currentPage={currentPage}
-              totalPages={Math.ceil((Array.isArray(pendingRequests) ? pendingRequests.length : 0) / itemsPerPage)}
+              totalPages={totalPages}
               onPageChange={setCurrentPage}
-              totalItems={Array.isArray(pendingRequests) ? pendingRequests.length : 0}
+              totalItems={totalItems}
               itemsPerPage={itemsPerPage}
             />
           </CardContent>

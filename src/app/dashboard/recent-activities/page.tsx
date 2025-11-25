@@ -69,7 +69,7 @@ export default function RecentActivitiesPage() {
     }
   }, [isAuthLoading, role, router]);
 
-  React.useEffect(() => {
+  const fetchRecentActivities = React.useCallback(async () => {
     if (isAuthLoading || !user) return;
 
     const isDashboardUser = role !== ROLES.EMPLOYEE && role !== ROLES.PO;
@@ -78,39 +78,39 @@ export default function RecentActivitiesPage() {
       return;
     }
 
-    const fetchRecentActivities = async () => {
-      try {
-        setIsPageLoading(true);
+    try {
+      setIsPageLoading(true);
 
-        const response = await fetch(
-          `/api/dashboard/metrics?userRole=${role}&userInstitutionId=${user.institutionId}`,
-          { credentials: 'include' }
-        );
+      const response = await fetch(
+        `/api/dashboard/metrics?userRole=${role}&userInstitutionId=${user.institutionId}`,
+        { credentials: 'include' }
+      );
 
-        const result = await response.json();
-        console.log('Recent activities API response:', result);
+      const result = await response.json();
+      console.log('Recent activities API response:', result);
 
-        if (result.success && result.data?.recentActivities) {
-          setRecentActivities(result.data.recentActivities);
-        } else {
-          console.error('Failed to fetch recent activities:', result.message);
-          setRecentActivities([]);
-        }
-      } catch (error) {
-        console.error('Recent activities fetch error:', error);
-        toast({
-          title: "Error",
-          description: "Could not load recent activities.",
-          variant: "destructive"
-        });
+      if (result.success && result.data?.recentActivities) {
+        setRecentActivities(result.data.recentActivities);
+      } else {
+        console.error('Failed to fetch recent activities:', result.message);
         setRecentActivities([]);
-      } finally {
-        setIsPageLoading(false);
       }
-    };
-
-    fetchRecentActivities();
+    } catch (error) {
+      console.error('Recent activities fetch error:', error);
+      toast({
+        title: "Error",
+        description: "Could not load recent activities.",
+        variant: "destructive"
+      });
+      setRecentActivities([]);
+    } finally {
+      setIsPageLoading(false);
+    }
   }, [isAuthLoading, user, role]);
+
+  React.useEffect(() => {
+    fetchRecentActivities();
+  }, [fetchRecentActivities]);
 
   if (isAuthLoading || isPageLoading) {
     return <RecentActivitiesSkeleton />;

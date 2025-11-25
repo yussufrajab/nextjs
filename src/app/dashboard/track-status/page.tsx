@@ -62,7 +62,9 @@ export default function TrackStatusPage() {
   const [searchAttempted, setSearchAttempted] = useState(false);
   
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 20;
+  const itemsPerPage = 50; // Server-side pagination
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
   const [allRequests, setAllRequests] = useState<TrackedRequest[]>([]);
   const [filteredRequests, setFilteredRequests] = useState<TrackedRequest[]>([]);
@@ -209,11 +211,14 @@ export default function TrackStatusPage() {
   };
 
 
-  const totalPages = Math.ceil(filteredRequests.length / itemsPerPage);
-  const paginatedRequests = filteredRequests.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  // Server-side pagination - use filtered requests directly
+  const paginatedRequests = filteredRequests || [];
+
+  // Update totalPages and totalItems when filteredRequests change
+  React.useEffect(() => {
+    setTotalPages(Math.ceil(filteredRequests.length / itemsPerPage));
+    setTotalItems(filteredRequests.length);
+  }, [filteredRequests]);
 
 
   return (
@@ -361,7 +366,7 @@ export default function TrackStatusPage() {
                     currentPage={currentPage}
                     totalPages={totalPages}
                     onPageChange={setCurrentPage}
-                    totalItems={filteredRequests.length}
+                    totalItems={totalItems}
                     itemsPerPage={itemsPerPage}
                   />
                   </>
