@@ -99,6 +99,11 @@ export default function ConfirmationPage() {
     return cleanName;
   };
 
+  // Helper function to get employee from request (handles both Employee and employee)
+  const getEmployeeFromRequest = (request: ConfirmationRequest) => {
+    return request.Employee || request.employee;
+  };
+
   const fetchRequests = React.useCallback(async (isRefresh = false, page = 1) => {
     if (!user || !role) return;
     if (isRefresh) {
@@ -410,9 +415,10 @@ export default function ConfirmationPage() {
 
       // Show immediate success feedback
       if (actionDescription && request) {
+        const employeeData = getEmployeeFromRequest(request);
         toast({
           title: "Status Updated",
-          description: `${actionDescription} for ${request.Employee.name}. Status: ${payload.status}`,
+          description: `${actionDescription} for ${employeeData?.name || 'Employee'}. Status: ${payload.status}`,
           duration: 3000
         });
       }
@@ -519,9 +525,10 @@ export default function ConfirmationPage() {
     setPendingRequests(optimisticUpdate);
 
     // Show immediate success feedback
+    const employeeData = getEmployeeFromRequest(request);
     toast({
       title: "Request Corrected & Resubmitted",
-      description: `Confirmation request for ${request.Employee.name} has been corrected and resubmitted. Status: Pending HRMO/HHRMD Review`,
+      description: `Confirmation request for ${employeeData?.name || 'Employee'} has been corrected and resubmitted. Status: Pending HRMO/HHRMD Review`,
       duration: 4000
     });
 
@@ -718,10 +725,12 @@ export default function ConfirmationPage() {
             {isLoading ? (
                <div className="flex justify-center items-center h-40"><Loader2 className="h-8 w-8 animate-spin" /></div>
             ) : paginatedRequests.length > 0 ? (
-              paginatedRequests.map((request) => (
+              paginatedRequests.map((request) => {
+                const employeeData = getEmployeeFromRequest(request);
+                return (
                 <div key={request.id} className="mb-4 border p-4 rounded-md space-y-2 shadow-sm bg-background hover:shadow-md transition-shadow">
                   <h3 className="font-semibold text-base flex items-center gap-2">
-                    Confirmation for: {request.Employee.name} (ZanID: {request.Employee.zanId})
+                    Confirmation for: {employeeData?.name || 'N/A'} (ZanID: {employeeData?.zanId || 'N/A'})
                     {request.reviewStage === 'completed' && (
                       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                         <CheckCircle className="w-3 h-3 mr-1" />
@@ -729,7 +738,7 @@ export default function ConfirmationPage() {
                       </span>
                     )}
                   </h3>
-                  <p className="text-sm text-muted-foreground">Department: {request.Employee.department}</p>
+                  <p className="text-sm text-muted-foreground">Department: {employeeData?.department || 'N/A'}</p>
                   <p className="text-sm text-muted-foreground">Submitted: {format(parseISO(request.createdAt), 'PPP')} by {request.submittedBy?.name || 'N/A'}</p>
                   {request.decisionDate && <p className="text-sm text-muted-foreground">Initial Review Date: {format(parseISO(request.decisionDate), 'PPP')}</p>}
                   {request.commissionDecisionDate && <p className="text-sm text-muted-foreground">Commission Decision Date: {format(parseISO(request.commissionDecisionDate), 'PPP')}</p>}
@@ -804,7 +813,8 @@ export default function ConfirmationPage() {
                     )}
                   </div>
                 </div>
-              ))
+                );
+              })
             ) : (
               <p className="text-muted-foreground">No confirmation requests pending your review.</p>
             )}
@@ -818,27 +828,29 @@ export default function ConfirmationPage() {
           </CardContent>
         </Card>
 
-      {selectedRequest && (
+      {selectedRequest && (() => {
+        const selectedEmployeeData = getEmployeeFromRequest(selectedRequest);
+        return (
         <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
           <DialogContent className="sm:max-w-3xl">
             <DialogHeader>
               <DialogTitle>Request Details: {selectedRequest.id}</DialogTitle>
               <DialogDescription>
-                Confirmation for <strong>{selectedRequest.Employee.name}</strong> (ZanID: {selectedRequest.Employee.zanId}).
+                Confirmation for <strong>{selectedEmployeeData?.name || 'N/A'}</strong> (ZanID: {selectedEmployeeData?.zanId || 'N/A'}).
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4 text-sm max-h-[70vh] overflow-y-auto">
                 <div className="space-y-1 border-b pb-3 mb-3">
                     <h4 className="font-semibold text-base text-foreground mb-2">Employee Information</h4>
-                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">Full Name:</Label><p className="col-span-2 font-medium">{selectedRequest.Employee.name}</p></div>
-                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">ZanID:</Label><p className="col-span-2 font-medium">{selectedRequest.Employee.zanId}</p></div>
-                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">Payroll #:</Label><p className="col-span-2 font-medium">{selectedRequest.Employee.payrollNumber || 'N/A'}</p></div>
-                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">ZSSF #:</Label><p className="col-span-2 font-medium">{selectedRequest.Employee.zssfNumber || 'N/A'}</p></div>
-                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">Department:</Label><p className="col-span-2 font-medium">{selectedRequest.Employee.department}</p></div>
-                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">Cadre:</Label><p className="col-span-2 font-medium">{selectedRequest.Employee.cadre}</p></div>
-                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">Employment Date:</Label><p className="col-span-2 font-medium">{selectedRequest.Employee.employmentDate ? format(parseISO(selectedRequest.Employee.employmentDate), 'PPP') : 'N/A'}</p></div>
-                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">DOB:</Label><p className="col-span-2 font-medium">{selectedRequest.Employee.dateOfBirth ? format(parseISO(selectedRequest.Employee.dateOfBirth), 'PPP') : 'N/A'}</p></div>
-                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">Institution:</Label><p className="col-span-2 font-medium">{selectedRequest.Employee.Institution?.name || 'N/A'}</p></div>
+                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">Full Name:</Label><p className="col-span-2 font-medium">{selectedEmployeeData?.name || 'N/A'}</p></div>
+                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">ZanID:</Label><p className="col-span-2 font-medium">{selectedEmployeeData?.zanId || 'N/A'}</p></div>
+                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">Payroll #:</Label><p className="col-span-2 font-medium">{selectedEmployeeData?.payrollNumber || 'N/A'}</p></div>
+                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">ZSSF #:</Label><p className="col-span-2 font-medium">{selectedEmployeeData?.zssfNumber || 'N/A'}</p></div>
+                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">Department:</Label><p className="col-span-2 font-medium">{selectedEmployeeData?.department || 'N/A'}</p></div>
+                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">Cadre:</Label><p className="col-span-2 font-medium">{selectedEmployeeData?.cadre || 'N/A'}</p></div>
+                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">Employment Date:</Label><p className="col-span-2 font-medium">{selectedEmployeeData?.employmentDate ? format(parseISO(selectedEmployeeData.employmentDate), 'PPP') : 'N/A'}</p></div>
+                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">DOB:</Label><p className="col-span-2 font-medium">{selectedEmployeeData?.dateOfBirth ? format(parseISO(selectedEmployeeData.dateOfBirth), 'PPP') : 'N/A'}</p></div>
+                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">Institution:</Label><p className="col-span-2 font-medium">{selectedEmployeeData?.Institution?.name || selectedEmployeeData?.institution?.name || 'N/A'}</p></div>
                 </div>
 
                 <div className="space-y-1">
@@ -916,14 +928,17 @@ export default function ConfirmationPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      )}
+        );
+      })()}
 
-      {currentRequestToAction && (
+      {currentRequestToAction && (() => {
+        const currentEmployeeData = getEmployeeFromRequest(currentRequestToAction);
+        return (
         <Dialog open={isRejectionModalOpen} onOpenChange={setIsRejectionModalOpen}>
             <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Reject Confirmation: {currentRequestToAction.id}</DialogTitle>
-                    <DialogDescription>Provide the reason for rejecting the confirmation for <strong>{currentRequestToAction.Employee.name}</strong>.</DialogDescription>
+                    <DialogDescription>Provide the reason for rejecting the confirmation for <strong>{currentEmployeeData?.name || 'N/A'}</strong>.</DialogDescription>
                 </DialogHeader>
                 <div className="py-4">
                     <Textarea placeholder="Enter rejection reason here..." value={rejectionReasonInput} onChange={(e) => setRejectionReasonInput(e.target.value)} rows={4} />
@@ -934,15 +949,18 @@ export default function ConfirmationPage() {
                 </DialogFooter>
             </DialogContent>
         </Dialog>
-      )}
+        );
+      })()}
 
-      {requestToCorrect && (
+      {requestToCorrect && (() => {
+        const correctEmployeeData = getEmployeeFromRequest(requestToCorrect);
+        return (
         <Dialog open={isCorrectionModalOpen} onOpenChange={setIsCorrectionModalOpen}>
           <DialogContent className="sm:max-w-2xl">
             <DialogHeader>
               <DialogTitle>Correct & Resubmit Confirmation Request</DialogTitle>
               <DialogDescription>
-                Please upload the corrected documents for <strong>{requestToCorrect.Employee.name}</strong> (ZanID: {requestToCorrect.Employee.zanId}).
+                Please upload the corrected documents for <strong>{correctEmployeeData?.name || 'N/A'}</strong> (ZanID: {correctEmployeeData?.zanId || 'N/A'}).
               </DialogDescription>
             </DialogHeader>
             <div className="py-4 space-y-4">
@@ -995,7 +1013,8 @@ export default function ConfirmationPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      )}
+        );
+      })()}
 
       {/* File Preview Modal */}
       <FilePreviewModal

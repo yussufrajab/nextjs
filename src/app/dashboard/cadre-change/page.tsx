@@ -111,6 +111,11 @@ export default function CadreChangePage() {
     return cleanName;
   };
 
+  // Helper function to get employee from request (handles both Employee and employee)
+  const getEmployeeFromRequest = (request: CadreChangeRequest) => {
+    return request.Employee || request.employee;
+  };
+
   const fetchRequests = useCallback(async (isRefresh = false, page = currentPage) => {
     if (!user || !role) return;
     if (isRefresh) {
@@ -347,10 +352,11 @@ export default function CadreChangePage() {
 
       // Show immediate success feedback
       if (actionDescription && request) {
-        toast({ 
-          title: "Status Updated", 
-          description: `${actionDescription} for ${request.Employee.name}. Status: ${payload.status}`,
-          duration: 3000 
+        const employeeData = getEmployeeFromRequest(request);
+        toast({
+          title: "Status Updated",
+          description: `${actionDescription} for ${employeeData?.name || 'Employee'}. Status: ${payload.status}`,
+          duration: 3000
         });
       }
 
@@ -410,13 +416,14 @@ export default function CadreChangePage() {
   const handleCommissionDecision = async (requestId: string, decision: 'approved' | 'rejected') => {
     const request = pendingRequests.find(req => req.id === requestId);
     if (!request) return;
-    
+
+    const employeeData = getEmployeeFromRequest(request);
     const finalStatus = decision === 'approved' ? "Approved by Commission" : "Rejected by Commission - Request Concluded";
     const payload = { status: finalStatus, reviewStage: 'completed' };
-    const actionDescription = decision === 'approved' 
-      ? `Cadre change approved by Commission. Employee ${request.Employee.name} cadre updated to "${request.newCadre}".`
+    const actionDescription = decision === 'approved'
+      ? `Cadre change approved by Commission. Employee ${employeeData?.name || 'Employee'} cadre updated to "${request.newCadre}".`
       : `Cadre change rejected by Commission`;
-    
+
     await handleUpdateRequest(requestId, payload, actionDescription);
   };
 
@@ -614,11 +621,13 @@ export default function CadreChangePage() {
             </div>
           </CardHeader>
           <CardContent>
-            {paginatedRequests.map((request) => (
+            {paginatedRequests.map((request) => {
+              const employeeData = getEmployeeFromRequest(request);
+              return (
               <div key={request.id} className="mb-4 border p-4 rounded-md space-y-2 shadow-sm bg-background hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-semibold text-base flex items-center gap-2">
-                    Cadre Change for: {request.Employee.name} (ZanID: {request.Employee.zanId})
+                    Cadre Change for: {employeeData?.name || 'N/A'} (ZanID: {employeeData?.zanId || 'N/A'})
                     {(request.status.includes('Approved by Commission') || request.status.includes('Rejected by Commission')) && (
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                         request.status.includes('Approved by Commission') 
@@ -645,7 +654,7 @@ export default function CadreChangePage() {
                     </div>
                   )}
                 </div>
-                <p className="text-sm text-muted-foreground">From Cadre: {request.Employee.cadre}</p>
+                <p className="text-sm text-muted-foreground">From Cadre: {employeeData?.cadre}</p>
                 <p className="text-sm text-muted-foreground">To Cadre: {request.newCadre}</p>
                 <p className="text-sm text-muted-foreground">Submitted: {request.createdAt ? format(parseISO(request.createdAt), 'PPP') : 'N/A'}</p>
                 <div className="flex items-center space-x-2">
@@ -697,7 +706,8 @@ export default function CadreChangePage() {
                   )}
                 </div>
               </div>
-            ))}
+              );
+            })}
             <Pagination
               currentPage={currentPage}
               totalPages={totalPages}
@@ -733,11 +743,13 @@ export default function CadreChangePage() {
              {isLoading ? (
               <div className="flex justify-center items-center h-40"><Loader2 className="h-8 w-8 animate-spin" /></div>
             ) : paginatedRequests.length > 0 ? (
-              paginatedRequests.map((request) => (
+              paginatedRequests.map((request) => {
+                const employeeData = getEmployeeFromRequest(request);
+                return (
                 <div key={request.id} className="mb-4 border p-4 rounded-md space-y-2 shadow-sm bg-background hover:shadow-md transition-shadow">
                   <div className="flex items-center justify-between mb-2">
                   <h3 className="font-semibold text-base flex items-center gap-2">
-                    Cadre Change for: {request.Employee.name} (ZanID: {request.Employee.zanId})
+                    Cadre Change for: {employeeData?.name || 'N/A'} (ZanID: {employeeData?.zanId || 'N/A'})
                     {(request.status.includes('Approved by Commission') || request.status.includes('Rejected by Commission')) && (
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                         request.status.includes('Approved by Commission') 
@@ -764,7 +776,7 @@ export default function CadreChangePage() {
                     </div>
                   )}
                 </div>
-                  <p className="text-sm text-muted-foreground">From Cadre: {request.Employee.cadre}</p>
+                  <p className="text-sm text-muted-foreground">From Cadre: {employeeData?.cadre}</p>
                   <p className="text-sm text-muted-foreground">To Cadre: {request.newCadre}</p>
                   <p className="text-sm text-muted-foreground">Submitted: {request.createdAt ? format(parseISO(request.createdAt), 'PPP') : 'N/A'} by {request.submittedBy?.name || 'N/A'}</p>
                   <div className="flex items-center space-x-2">
@@ -828,7 +840,8 @@ export default function CadreChangePage() {
                     )}
                   </div>
                 </div>
-              ))
+                );
+              })
             ) : (
               <p className="text-muted-foreground">No cadre change requests pending your review.</p>
             )}
@@ -843,13 +856,15 @@ export default function CadreChangePage() {
         </Card>
       )}
 
-      {selectedRequest && (
+      {selectedRequest && (() => {
+        const selectedEmployeeData = getEmployeeFromRequest(selectedRequest);
+        return (
         <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
           <DialogContent className="sm:max-w-3xl">
             <DialogHeader>
               <DialogTitle>Request Details: {selectedRequest.id}</DialogTitle>
               <DialogDescription>
-                Change of Cadre request for <strong>{selectedRequest.Employee.name}</strong> (ZanID: {selectedRequest.Employee.zanId}).
+                Change of Cadre request for <strong>{selectedEmployeeData?.name || 'N/A'}</strong> (ZanID: {selectedEmployeeData?.zanId || 'N/A'}).
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4 text-sm max-h-[70vh] overflow-y-auto">
@@ -857,39 +872,39 @@ export default function CadreChangePage() {
                     <h4 className="font-semibold text-base text-foreground mb-2">Employee Information</h4>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Full Name:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.name}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedEmployeeData?.name || 'N/A'}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">ZanID:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.zanId}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedEmployeeData.zanId}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Payroll #:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.payrollNumber || 'N/A'}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedEmployeeData.payrollNumber || 'N/A'}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">ZSSF #:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.zssfNumber || 'N/A'}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedEmployeeData.zssfNumber || 'N/A'}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Department:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.department}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedEmployeeData.department}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Current Cadre:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.cadre}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedEmployeeData.cadre}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Employment Date:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.employmentDate ? format(parseISO(selectedRequest.Employee.employmentDate), 'PPP') : 'N/A'}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedEmployeeData.employmentDate ? format(parseISO(selectedEmployeeData.employmentDate), 'PPP') : 'N/A'}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Date of Birth:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.dateOfBirth ? format(parseISO(selectedRequest.Employee.dateOfBirth), 'PPP') : 'N/A'}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedEmployeeData.dateOfBirth ? format(parseISO(selectedEmployeeData.dateOfBirth), 'PPP') : 'N/A'}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Institution:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.institution?.name || 'N/A'}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedEmployeeData.institution?.name || 'N/A'}</p>
                     </div>
                 </div>
                 <div className="space-y-1">
@@ -1035,15 +1050,18 @@ export default function CadreChangePage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      )}
+        );
+      })()}
 
-      {currentRequestToAction && (
+      {currentRequestToAction && (() => {
+        const currentEmployeeData = getEmployeeFromRequest(currentRequestToAction);
+        return (
         <Dialog open={isRejectionModalOpen} onOpenChange={setIsRejectionModalOpen}>
             <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Reject Cadre Change Request: {currentRequestToAction.id}</DialogTitle>
                     <DialogDescription>
-                        Please provide the reason for rejecting the cadre change request for <strong>{currentRequestToAction.Employee.name}</strong>. This reason will be visible to the HRO.
+                        Please provide the reason for rejecting the cadre change request for <strong>{currentEmployeeData?.name || 'N/A'}</strong>. This reason will be visible to the HRO.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="py-4">
@@ -1060,15 +1078,18 @@ export default function CadreChangePage() {
                 </DialogFooter>
             </DialogContent>
         </Dialog>
-      )}
+        );
+      })()}
 
-      {requestToCorrect && (
+      {requestToCorrect && (() => {
+        const correctEmployeeData = getEmployeeFromRequest(requestToCorrect);
+        return (
         <Dialog open={isCorrectionModalOpen} onOpenChange={setIsCorrectionModalOpen}>
           <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Correct & Resubmit Cadre Change Request</DialogTitle>
               <DialogDescription>
-                Please update the details and upload corrected documents for <strong>{requestToCorrect.Employee.name}</strong> (ZanID: {requestToCorrect.Employee.zanId}).
+                Please update the details and upload corrected documents for <strong>{correctEmployeeData?.name || 'N/A'}</strong> (ZanID: {correctEmployeeData?.zanId || 'N/A'}).
               </DialogDescription>
             </DialogHeader>
             <div className="py-4 space-y-4">
@@ -1158,8 +1179,9 @@ export default function CadreChangePage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      )}
-      
+        );
+      })()}
+
       {/* File Preview Modal */}
       <FilePreviewModal
         open={isPreviewModalOpen}

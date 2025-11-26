@@ -29,8 +29,13 @@ type EmployeeLoginValues = z.infer<typeof employeeLoginSchema>;
 
 export function EmployeeLoginForm() {
   const router = useRouter();
-  const { setUserManually } = useAuthStore();
+  const { setUserManually, logout } = useAuthStore();
   const [isLoading, setIsLoading] = React.useState(false);
+
+  // Logout any existing user when component mounts
+  React.useEffect(() => {
+    logout();
+  }, [logout]);
 
   const form = useForm<EmployeeLoginValues>({
     resolver: zodResolver(employeeLoginSchema),
