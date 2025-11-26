@@ -24,8 +24,10 @@ import { EmployeeSearch } from '@/components/shared/employee-search';
 
 interface SeparationRequest {
   id: string;
-  employee: Partial<Employee & User & { institution: { name: string } }>;
+  Employee?: Partial<Employee & User & { Institution: { name: string } }>; // API returns this (capital E)
+  employee?: Partial<Employee & User & { institution: { name: string } }>; // Keep for compatibility
   submittedBy: Partial<User>;
+  submittedById?: string;
   reviewedBy?: Partial<User> | null;
   status: string;
   reviewStage: string;
@@ -46,6 +48,7 @@ export default function TerminationAndDismissalPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   
   const [employeeStatus, setEmployeeStatus] = useState<'probation' | 'confirmed' | null>(null);
+  const [hasPendingTermination, setHasPendingTermination] = useState(false);
 
   const [reason, setReason] = useState('');
 
@@ -207,10 +210,11 @@ export default function TerminationAndDismissalPage() {
     setWarningLettersFile('');
     setEmployeeExplanationLetterFile('');
     setOtherAdditionalDocumentsFile('');
+    setHasPendingTermination(false);
   };
 
   const isSubmitButtonDisabled = () => {
-    if (!employeeDetails || !employeeStatus || !reason.trim() || letterOfRequestFile === '' || cannotSubmitTermination || isSubmitting) {
+    if (!employeeDetails || !employeeStatus || !reason.trim() || letterOfRequestFile === '' || cannotSubmitTermination || hasPendingTermination || isSubmitting) {
       return true;
     }
     
@@ -227,12 +231,52 @@ export default function TerminationAndDismissalPage() {
     resetFormFields();
     setEmployeeDetails(employee);
     setEmployeeStatus(employee.status === 'On Probation' ? 'probation' : 'confirmed');
+
+    // Check for pending termination/dismissal request
+    const pendingStatuses = [
+      'Pending HRMO/HHRMD Review',
+      'Pending DO/HHRMD Review',
+      'Request Received – Awaiting Commission Decision'
+    ];
+
+    console.log('[TERMINATION] Checking for pending requests:', {
+      employeeId: employee.id,
+      totalRequests: pendingRequests.length
+    });
+
+    // Log all requests for this employee to debug
+    const matchingRequests = pendingRequests.filter(req => {
+      const employeeId = (req as any).Employee?.id || req.employee?.id;
+      return employeeId === employee.id;
+    });
+
+    console.log('[TERMINATION] Matching requests for employee:', {
+      employeeId: employee.id,
+      matchingCount: matchingRequests.length,
+      matchingRequests: matchingRequests.map(r => ({
+        id: r.id,
+        status: r.status,
+        reviewStage: r.reviewStage,
+        type: r.type
+      }))
+    });
+
+    // API returns 'Employee' (capital E), check both for compatibility
+    const hasPending = matchingRequests.some(req => pendingStatuses.includes(req.status));
+
+    console.log('[TERMINATION] Has pending result:', {
+      hasPending,
+      pendingStatuses
+    });
+
+    setHasPendingTermination(hasPending);
   };
 
   const handleEmployeeClear = () => {
     setEmployeeDetails(null);
     setEmployeeStatus(null);
     resetFormFields();
+    setHasPendingTermination(false);
   };
   
   const handleUpdateRequest = async (requestId: string, payload: any, actionDescription?: string) => {
@@ -251,7 +295,7 @@ export default function TerminationAndDismissalPage() {
       if (actionDescription && request) {
         toast({ 
           title: "Status Updated", 
-          description: `${actionDescription} for ${request.employee.name}. Status: ${payload.status}`,
+          description: `${actionDescription} for ${request.Employee.name}. Status: ${payload.status}`,
           duration: 3000 
         });
       }
@@ -444,7 +488,7 @@ export default function TerminationAndDismissalPage() {
     // Show immediate success feedback
     toast({ 
       title: "Request Corrected & Resubmitted", 
-      description: `${request.type} request for ${request.employee.name} has been corrected and resubmitted. Status: Pending DO/HHRMD Review`,
+      description: `${request.type} request for ${request.Employee.name} has been corrected and resubmitted. Status: Pending DO/HHRMD Review`,
       duration: 4000
     });
 
@@ -548,11 +592,19 @@ export default function TerminationAndDismissalPage() {
                   </div>
                 )}
 
-                <div className={`space-y-4 ${cannotSubmitTermination ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                {hasPendingTermination && (
+                  <div className="flex items-center p-4 mt-2 text-sm text-destructive border border-destructive/50 rounded-md bg-destructive/10">
+                    <AlertTriangle className="h-5 w-5 mr-3 flex-shrink-0" />
+                    <span>A termination/dismissal request for this employee is already being reviewed. You cannot submit another request until the current one is completed.</span>
+                  </div>
+                )}
+
+                {!cannotSubmitTermination && !hasPendingTermination && (
+                <div className="space-y-4">
                   <h3 className="text-lg font-medium text-foreground">More Details ...</h3>
                   <div>
                     <Label htmlFor="reason">Reason for Firing</Label>
-                    <Textarea id="reason" placeholder="Clearly state the grounds for firing..." value={reason} onChange={(e) => setReason(e.target.value)} disabled={isSubmitting || cannotSubmitTermination} />
+                    <Textarea id="reason" placeholder="Clearly state the grounds for firing..." value={reason} onChange={(e) => setReason(e.target.value)} disabled={isSubmitting || cannotSubmitTermination || hasPendingTermination} />
                   </div>
                   
                   {/* Common Document */}
@@ -563,7 +615,7 @@ export default function TerminationAndDismissalPage() {
                       value={letterOfRequestFile}
                       onChange={setLetterOfRequestFile}
                       onPreview={handlePreviewFile}
-                      disabled={isSubmitting || cannotSubmitTermination}
+                      disabled={isSubmitting || cannotSubmitTermination || hasPendingTermination}
                       required
                     />
                   </div>
@@ -577,7 +629,7 @@ export default function TerminationAndDismissalPage() {
                         value={terminationSupportingDocFile}
                         onChange={setTerminationSupportingDocFile}
                         onPreview={handlePreviewFile}
-                        disabled={isSubmitting || cannotSubmitTermination}
+                        disabled={isSubmitting || cannotSubmitTermination || hasPendingTermination}
                         required
                       />
                     </div>
@@ -594,7 +646,7 @@ export default function TerminationAndDismissalPage() {
                           value={misconductEvidenceFile}
                           onChange={setMisconductEvidenceFile}
                           onPreview={handlePreviewFile}
-                          disabled={isSubmitting || cannotSubmitTermination}
+                          disabled={isSubmitting || cannotSubmitTermination || hasPendingTermination}
                           required
                         />
                       </div>
@@ -605,7 +657,7 @@ export default function TerminationAndDismissalPage() {
                           value={summonNoticeFile}
                           onChange={setSummonNoticeFile}
                           onPreview={handlePreviewFile}
-                          disabled={isSubmitting || cannotSubmitTermination}
+                          disabled={isSubmitting || cannotSubmitTermination || hasPendingTermination}
                           required
                         />
                       </div>
@@ -616,7 +668,7 @@ export default function TerminationAndDismissalPage() {
                           value={suspensionLetterFile}
                           onChange={setSuspensionLetterFile}
                           onPreview={handlePreviewFile}
-                          disabled={isSubmitting || cannotSubmitTermination}
+                          disabled={isSubmitting || cannotSubmitTermination || hasPendingTermination}
                           required
                         />
                       </div>
@@ -628,7 +680,7 @@ export default function TerminationAndDismissalPage() {
                           value={warningLettersFile}
                           onChange={setWarningLettersFile}
                           onPreview={handlePreviewFile}
-                          disabled={isSubmitting || cannotSubmitTermination}
+                          disabled={isSubmitting || cannotSubmitTermination || hasPendingTermination}
                         />
                       </div>
                       <div>
@@ -638,7 +690,7 @@ export default function TerminationAndDismissalPage() {
                           value={employeeExplanationLetterFile}
                           onChange={setEmployeeExplanationLetterFile}
                           onPreview={handlePreviewFile}
-                          disabled={isSubmitting || cannotSubmitTermination}
+                          disabled={isSubmitting || cannotSubmitTermination || hasPendingTermination}
                         />
                       </div>
                       <div>
@@ -648,16 +700,17 @@ export default function TerminationAndDismissalPage() {
                           value={otherAdditionalDocumentsFile}
                           onChange={setOtherAdditionalDocumentsFile}
                           onPreview={handlePreviewFile}
-                          disabled={isSubmitting || cannotSubmitTermination}
+                          disabled={isSubmitting || cannotSubmitTermination || hasPendingTermination}
                         />
                       </div>
                     </>
                   )}
                 </div>
+                )}
               </div>
             )}
           </CardContent>
-          {employeeDetails && employeeStatus && (
+          {employeeDetails && employeeStatus && !cannotSubmitTermination && !hasPendingTermination && (
             <CardFooter className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2 pt-4 border-t">
               <Button onClick={handleSubmitRequest} disabled={isSubmitButtonDisabled()}>
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -696,7 +749,7 @@ export default function TerminationAndDismissalPage() {
                 <div key={request.id} className="mb-4 border p-4 rounded-md space-y-2 shadow-sm bg-background hover:shadow-md transition-shadow">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="font-semibold text-base flex items-center gap-2">
-                      {request.type} for: {request.employee.name} (ZanID: {request.employee.zanId})
+                      {request.type} for: {request.Employee.name} (ZanID: {request.Employee.zanId})
                       {(request.status.includes('Approved by Commission') || request.status.includes('Rejected by Commission')) && (
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                           request.status.includes('Approved by Commission') 
@@ -810,7 +863,7 @@ export default function TerminationAndDismissalPage() {
                 <div key={request.id} className="mb-4 border p-4 rounded-md space-y-2 shadow-sm bg-background hover:shadow-md transition-shadow">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="font-semibold text-base flex items-center gap-2">
-                      {request.type} for: {request.employee.name} (ZanID: {request.employee.zanId})
+                      {request.type} for: {request.Employee.name} (ZanID: {request.Employee.zanId})
                       {(request.status.includes('Approved by Commission') || request.status.includes('Rejected by Commission')) && (
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                           request.status.includes('Approved by Commission') 
@@ -915,18 +968,18 @@ export default function TerminationAndDismissalPage() {
             <DialogHeader>
               <DialogTitle>{selectedRequest.type} Request Details: {selectedRequest.id}</DialogTitle>
               <DialogDescription>
-                For <strong>{selectedRequest.employee.name}</strong> (ZanID: {selectedRequest.employee.zanId}).
+                For <strong>{selectedRequest.Employee.name}</strong> (ZanID: {selectedRequest.Employee.zanId}).
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4 text-sm max-h-[70vh] overflow-y-auto">
                 <div className="space-y-1 border-b pb-3 mb-3">
                     <h4 className="font-semibold text-base text-foreground mb-2">Employee Information</h4>
-                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">Name:</Label><p className="col-span-2 font-medium">{selectedRequest.employee.name}</p></div>
-                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">ZanID:</Label><p className="col-span-2 font-medium">{selectedRequest.employee.zanId}</p></div>
-                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">Payroll #:</Label><p className="col-span-2 font-medium">{selectedRequest.employee.payrollNumber || 'N/A'}</p></div>
-                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">ZSSF #:</Label><p className="col-span-2 font-medium">{selectedRequest.employee.zssfNumber || 'N/A'}</p></div>
-                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">Department:</Label><p className="col-span-2 font-medium">{selectedRequest.employee.department}</p></div>
-                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">Institution:</Label><p className="col-span-2 font-medium">{selectedRequest.employee.institution?.name || 'N/A'}</p></div>
+                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">Name:</Label><p className="col-span-2 font-medium">{selectedRequest.Employee.name}</p></div>
+                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">ZanID:</Label><p className="col-span-2 font-medium">{selectedRequest.Employee.zanId}</p></div>
+                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">Payroll #:</Label><p className="col-span-2 font-medium">{selectedRequest.Employee.payrollNumber || 'N/A'}</p></div>
+                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">ZSSF #:</Label><p className="col-span-2 font-medium">{selectedRequest.Employee.zssfNumber || 'N/A'}</p></div>
+                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">Department:</Label><p className="col-span-2 font-medium">{selectedRequest.Employee.department}</p></div>
+                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">Institution:</Label><p className="col-span-2 font-medium">{selectedRequest.Employee.institution?.name || 'N/A'}</p></div>
                 </div>
                  <div className="space-y-1">
                      <h4 className="font-semibold text-base text-foreground mb-2">Request Information</h4>
@@ -1029,7 +1082,7 @@ export default function TerminationAndDismissalPage() {
                 <DialogHeader>
                     <DialogTitle>Reject Request: {currentRequestToAction.id}</DialogTitle>
                     <DialogDescription>
-                        Please provide the reason for rejecting the request for <strong>{currentRequestToAction.employee.name}</strong>. This reason will be visible to the HRO.
+                        Please provide the reason for rejecting the request for <strong>{currentRequestToAction.Employee.name}</strong>. This reason will be visible to the HRO.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="py-4">
@@ -1054,7 +1107,7 @@ export default function TerminationAndDismissalPage() {
             <DialogHeader>
               <DialogTitle>Correct {requestToCorrect.type} Request: {requestToCorrect.id}</DialogTitle>
               <DialogDescription>
-                Update the details for <strong>{requestToCorrect.employee.name}</strong>'s {requestToCorrect.type.toLowerCase()} request and upload new documents.
+                Update the details for <strong>{requestToCorrect.Employee.name}</strong>'s {requestToCorrect.type.toLowerCase()} request and upload new documents.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-6 py-4">

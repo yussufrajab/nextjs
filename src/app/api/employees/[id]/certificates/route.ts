@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { uploadFile, generateObjectKey } from '@/lib/minio';
 import { PrismaClient } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 
 const prisma = new PrismaClient();
 
@@ -42,7 +43,7 @@ export async function POST(
     }
 
     // Verify employee exists
-    const employee = await prisma.employee.findUnique({
+    const employee = await prisma.Employee.findUnique({
       where: { id: employeeId }
     });
 
@@ -141,6 +142,7 @@ export async function POST(
       // Create new certificate
       await prisma.employeeCertificate.create({
         data: {
+          id: uuidv4(),
           type: certificateType,
           name: certificateName.trim(),
           url: certificateUrl,
@@ -184,13 +186,13 @@ export async function GET(
     const { id: employeeId } = await params;
 
     // Fetch employee to check access permissions
-    const employee = await prisma.employee.findUnique({
+    const employee = await prisma.Employee.findUnique({
       where: { id: employeeId },
       select: {
         id: true,
         name: true,
         institutionId: true,
-        certificates: {
+        EmployeeCertificate: {
           select: {
             id: true,
             type: true,
@@ -223,7 +225,7 @@ export async function GET(
       data: {
         employeeId: employee.id,
         employeeName: employee.name,
-        certificates: employee.certificates
+        certificates: employee.EmployeeCertificate
       }
     });
 
@@ -272,7 +274,7 @@ export async function DELETE(
         employeeId: employeeId
       },
       include: {
-        employee: {
+        Employee: {
           select: {
             institutionId: true
           }
@@ -289,7 +291,7 @@ export async function DELETE(
 
     // For HRO role, check if employee belongs to their institution
     if (userRole === 'HRO') {
-      if (certificate.employee.institutionId !== userInstitutionId) {
+      if (certificate.Employee.institutionId !== userInstitutionId) {
         return NextResponse.json(
           { success: false, message: 'Can only delete certificates for employees in your institution' },
           { status: 403 }

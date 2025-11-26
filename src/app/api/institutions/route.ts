@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { v4 as uuidv4 } from 'uuid';
 
 export async function GET(req: Request) {
   try {
     console.log('Institutions API called');
 
-    const institutions = await db.institution.findMany({
+    const institutions = await db.Institution.findMany({
       select: {
         id: true,
         name: true,
@@ -45,7 +46,7 @@ export async function POST(req: Request) {
     }
 
     // Check if institution with the same name already exists
-    const existingInstitution = await db.institution.findFirst({
+    const existingInstitution = await db.Institution.findFirst({
       where: {
         name: {
           equals: name.trim(),
@@ -61,8 +62,9 @@ export async function POST(req: Request) {
       }, { status: 409 });
     }
 
-    const newInstitution = await db.institution.create({
+    const newInstitution = await db.Institution.create({
       data: {
+        id: uuidv4(),
         name: name.trim(),
         email: email?.trim() || null,
         phoneNumber: phoneNumber?.trim() || null,
@@ -70,7 +72,7 @@ export async function POST(req: Request) {
       }
     });
 
-    console.log('Created new institution:', newInstitution);
+    console.log('Created new Institution:', newInstitution);
 
     return NextResponse.json({
       success: true,

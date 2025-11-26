@@ -124,8 +124,8 @@ export default function TrackStatusPage() {
       let params = new URLSearchParams();
       params.set('limit', '100'); // Always get 100 latest requests
       if (role === ROLES.HRO && user?.institution?.name) {
-          params.append('institutionName', user.institution.name);
-          setInstitutionFilter(user.institution.name);
+          params.append('institutionName', typeof user.institution === 'object' ? user.institution.name : user.institution);
+          setInstitutionFilter(typeof user.institution === 'object' ? user.institution.name : user.institution);
       }
       fetchRequests(params);
     }
@@ -158,7 +158,7 @@ export default function TrackStatusPage() {
     }
     
     if (role === ROLES.HRO && user?.institution?.name) {
-      params.set('institutionName', user.institution.name);
+      params.set('institutionName', typeof user.institution === 'object' ? user.institution.name : user.institution);
     }
     
     fetchRequests(params);

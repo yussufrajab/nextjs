@@ -13,7 +13,7 @@ export async function GET(req: Request) {
     // Apply institution filtering based on role
     if (shouldApplyInstitutionFilter(userRole, userInstitutionId)) {
       console.log(`Applying institution filter for role ${userRole} with institutionId ${userInstitutionId}`);
-      whereClause.employee = {
+      whereClause.Employee = {
         institutionId: userInstitutionId
       };
     } else {
@@ -23,16 +23,16 @@ export async function GET(req: Request) {
     const requests = await db.retirementRequest.findMany({
       where: whereClause,
       include: {
-        employee: {
+        Employee: {
           select: {
             id: true,
             name: true,
             zanId: true,
-            institution: { select: { id: true, name: true } }
+            Institution: { select: { id: true, name: true } }
           }
         },
-        submittedBy: { select: { id: true, name: true, username: true } },
-        reviewedBy: { select: { id: true, name: true, username: true } }
+        User_RetirementRequest_submittedByIdToUser: { select: { id: true, name: true, username: true } },
+        User_RetirementRequest_reviewedByIdToUser: { select: { id: true, name: true, username: true } }
       },
       orderBy: { createdAt: 'desc' }
     }).catch(() => []);

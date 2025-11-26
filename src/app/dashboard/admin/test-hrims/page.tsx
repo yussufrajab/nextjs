@@ -3,6 +3,8 @@
 import { PageHeader } from '@/components/shared/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import React, { useState } from 'react';
 import { Loader2, TestTube, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
@@ -21,9 +23,22 @@ interface TestData {
   tests: TestResult[];
 }
 
+interface TestParameters {
+  pageNumber: number;
+  pageSize: number;
+  payrollNumber: string;
+}
+
 export default function TestHRIMSPage() {
   const [isRunning, setIsRunning] = useState(false);
   const [testResults, setTestResults] = useState<TestData | null>(null);
+
+  // Test parameters
+  const [parameters, setParameters] = useState<TestParameters>({
+    pageNumber: 0,
+    pageSize: 100,
+    payrollNumber: '536151'
+  });
 
   const runHRIMSTests = async () => {
     setIsRunning(true);
@@ -36,10 +51,11 @@ export default function TestHRIMSPage() {
       });
 
       const response = await fetch('/api/hrims/test', {
-        method: 'GET',
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-        }
+        },
+        body: JSON.stringify(parameters)
       });
 
       if (!response.ok) {
@@ -105,8 +121,60 @@ export default function TestHRIMSPage() {
     <div>
       <PageHeader
         title="Test HRIMS Integration"
-        description="Test connectivity and data fetching from the HRIMS external API"
+        description="Test connectivity and data fetching from the HRIMS external API with custom parameters"
       />
+
+      {/* Test Parameters Configuration */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Test Parameters</CardTitle>
+          <CardDescription>
+            Configure the parameters for testing the HRIMS API integration
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="pageNumber">Page Number (Test 1)</Label>
+              <Input
+                id="pageNumber"
+                type="number"
+                min="0"
+                value={parameters.pageNumber}
+                onChange={(e) => setParameters({ ...parameters, pageNumber: parseInt(e.target.value) || 0 })}
+                placeholder="0"
+              />
+              <p className="text-xs text-gray-500">For employee list pagination</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="pageSize">Page Size (Test 1)</Label>
+              <Input
+                id="pageSize"
+                type="number"
+                min="1"
+                max="1000"
+                value={parameters.pageSize}
+                onChange={(e) => setParameters({ ...parameters, pageSize: parseInt(e.target.value) || 100 })}
+                placeholder="100"
+              />
+              <p className="text-xs text-gray-500">Number of records per page</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="payrollNumber">Payroll Number (Tests 2 & 3)</Label>
+              <Input
+                id="payrollNumber"
+                type="text"
+                value={parameters.payrollNumber}
+                onChange={(e) => setParameters({ ...parameters, payrollNumber: e.target.value })}
+                placeholder="536151"
+              />
+              <p className="text-xs text-gray-500">Employee payroll number</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Test Controls */}
       <Card className="mb-6">
@@ -134,9 +202,9 @@ export default function TestHRIMSPage() {
             <p><strong>Tests will verify:</strong></p>
             <ul className="list-disc list-inside mt-2 space-y-1">
               <li>Basic connectivity to HRIMS API (http://10.0.217.11:8135)</li>
-              <li>Employee list fetching (RequestId: 201)</li>
-              <li>Specific employee data fetching (RequestId: 202)</li>
-              <li>Employee photo fetching (RequestId: 203)</li>
+              <li>Employee list fetching (RequestId: 201) - with page {parameters.pageNumber}, size {parameters.pageSize}</li>
+              <li>Specific employee data fetching (RequestId: 202) - for payroll# {parameters.payrollNumber}</li>
+              <li>Employee photo fetching (RequestId: 203) - for payroll# {parameters.payrollNumber}</li>
             </ul>
           </div>
         </CardContent>

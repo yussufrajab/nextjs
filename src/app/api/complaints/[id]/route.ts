@@ -22,15 +22,15 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       where: { id: params.id },
       data: validatedData,
       include: {
-        complainant: {
+        User_Complaint_complainantIdToUser: {
           select: {
             id: true,
             name: true,
             employeeId: true,
-            institution: { select: { name: true } },
+            Institution: { select: { name: true } },
           },
         },
-        reviewedBy: {
+        User_Complaint_reviewedByIdToUser: {
           select: {
             name: true,
             role: true,
@@ -40,9 +40,9 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     });
 
     // Create appropriate notifications based on status changes
-    if (validatedData.status && updatedComplaint.complainant) {
+    if (validatedData.status && updatedComplaint.User_Complaint_complainantIdToUser) {
       let notification = null;
-      
+
       if (validatedData.status === "Resolved - Pending Employee Confirmation") {
         notification = NotificationTemplates.complaintResolved(updatedComplaint.id);
       } else if (validatedData.status === "Awaiting More Information") {
@@ -54,10 +54,10 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
           link: `/dashboard/complaints`,
         };
       }
-      
+
       if (notification) {
         await createNotification({
-          userId: updatedComplaint.complainant.id,
+          userId: updatedComplaint.User_Complaint_complainantIdToUser.id,
           message: notification.message,
           link: notification.link,
         });
@@ -66,9 +66,9 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 
     // If the complainant has an employeeId, fetch employee details separately
     let employeeDetails = null;
-    if (updatedComplaint.complainant.employeeId) {
-      employeeDetails = await db.employee.findUnique({
-        where: { id: updatedComplaint.complainant.employeeId },
+    if (updatedComplaint.User_Complaint_complainantIdToUser.employeeId) {
+      employeeDetails = await db.Employee.findUnique({
+        where: { id: updatedComplaint.User_Complaint_complainantIdToUser.employeeId },
         select: {
           zanId: true,
           department: true,
@@ -80,9 +80,9 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     // Format the response to match frontend expectations
     const formattedResponse = {
       ...updatedComplaint,
-      complainant: {
-        ...updatedComplaint.complainant,
-        employee: employeeDetails
+      User_Complaint_complainantIdToUser: {
+        ...updatedComplaint.User_Complaint_complainantIdToUser,
+        Employee: employeeDetails
       }
     };
 

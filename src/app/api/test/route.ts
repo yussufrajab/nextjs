@@ -5,7 +5,7 @@ export async function GET() {
   console.log('=== TEST API CALLED ===');
   try {
     // Test database connection
-    const userCount = await db.user.count();
+    const userCount = await db.User.count();
     
     return NextResponse.json({
       success: true,

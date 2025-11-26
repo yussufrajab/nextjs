@@ -35,7 +35,7 @@ export async function GET(req: Request) {
     console.log('Employee search request:', { ...validatedRequest, timestamp: new Date().toISOString() });
 
     // Find institution by vote number
-    const institution = await db.institution.findFirst({
+    const institution = await db.Institution.findFirst({
       where: {
         voteNumber: validatedRequest.institutionVoteNumber
       }
@@ -62,10 +62,10 @@ export async function GET(req: Request) {
     }
 
     // Find employee with optional includes
-    const employee = await db.employee.findFirst({
+    const employee = await db.Employee.findFirst({
       where: searchCriteria,
       include: {
-        institution: {
+        Institution: {
           select: {
             id: true,
             name: true,
@@ -74,7 +74,7 @@ export async function GET(req: Request) {
             phoneNumber: true
           }
         },
-        certificates: validatedRequest.includeCertificates,
+        EmployeeCertificate: validatedRequest.includeCertificates,
       }
     });
 
@@ -87,7 +87,7 @@ export async function GET(req: Request) {
 
     // Format response data
     const responseData = {
-      employee: {
+      Employee: {
         id: employee.id,
         zanId: employee.zanId,
         payrollNumber: employee.payrollNumber,
@@ -113,7 +113,7 @@ export async function GET(req: Request) {
         confirmationDate: employee.confirmationDate?.toISOString().split('T')[0],
         retirementDate: employee.retirementDate?.toISOString().split('T')[0],
         status: employee.status,
-        institution: employee.institution
+        Institution: employee.Institution
       },
       documents: validatedRequest.includeDocuments ? {
         ardhilHali: employee.ardhilHaliUrl ? {
@@ -137,7 +137,7 @@ export async function GET(req: Request) {
           name: 'Birth Certificate'
         } : null,
       } : undefined,
-      certificates: validatedRequest.includeCertificates ? employee.certificates?.map(cert => ({
+      certificates: validatedRequest.includeCertificates ? employee.EmployeeCertificate?.map((cert: any) => ({
         id: cert.id,
         type: cert.type,
         name: cert.name,
@@ -182,7 +182,7 @@ export async function POST(req: Request) {
     console.log('Employee search request (POST):', { ...validatedRequest, timestamp: new Date().toISOString() });
 
     // Find institution by vote number
-    const institution = await db.institution.findFirst({
+    const institution = await db.Institution.findFirst({
       where: {
         voteNumber: validatedRequest.institutionVoteNumber
       }
@@ -209,10 +209,10 @@ export async function POST(req: Request) {
     }
 
     // Find employee with optional includes
-    const employee = await db.employee.findFirst({
+    const employee = await db.Employee.findFirst({
       where: searchCriteria,
       include: {
-        institution: {
+        Institution: {
           select: {
             id: true,
             name: true,
@@ -221,7 +221,7 @@ export async function POST(req: Request) {
             phoneNumber: true
           }
         },
-        certificates: validatedRequest.includeCertificates,
+        EmployeeCertificate: validatedRequest.includeCertificates,
       }
     });
 
@@ -234,7 +234,7 @@ export async function POST(req: Request) {
 
     // Format response data (same as GET)
     const responseData = {
-      employee: {
+      Employee: {
         id: employee.id,
         zanId: employee.zanId,
         payrollNumber: employee.payrollNumber,
@@ -260,7 +260,7 @@ export async function POST(req: Request) {
         confirmationDate: employee.confirmationDate?.toISOString().split('T')[0],
         retirementDate: employee.retirementDate?.toISOString().split('T')[0],
         status: employee.status,
-        institution: employee.institution
+        Institution: employee.Institution
       },
       documents: validatedRequest.includeDocuments ? {
         ardhilHali: employee.ardhilHaliUrl ? {
@@ -284,7 +284,7 @@ export async function POST(req: Request) {
           name: 'Birth Certificate'
         } : null,
       } : undefined,
-      certificates: validatedRequest.includeCertificates ? employee.certificates?.map(cert => ({
+      certificates: validatedRequest.includeCertificates ? employee.EmployeeCertificate?.map((cert: any) => ({
         id: cert.id,
         type: cert.type,
         name: cert.name,

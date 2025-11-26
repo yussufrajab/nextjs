@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { z } from 'zod';
 import { format } from 'date-fns';
+import { v4 as uuidv4 } from 'uuid';
 
 const updateSchema = z.object({
   status: z.string().optional(),
@@ -23,14 +24,14 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       where: { id },
       data: validatedData,
       include: {
-        employee: { select: { name: true, zanId: true, department: true, cadre: true, employmentDate: true, dateOfBirth: true, institution: { select: { name: true } }, payrollNumber: true, zssfNumber: true }},
-        submittedBy: { select: { name: true, role: true } },
-        reviewedBy: { select: { name: true, role: true } },
+        Employee: { select: { name: true, zanId: true, department: true, cadre: true, employmentDate: true, dateOfBirth: true, Institution: { select: { name: true } }, payrollNumber: true, zssfNumber: true }},
+        User_ResignationRequest_submittedByIdToUser: { select: { name: true, role: true } },
+        User_ResignationRequest_reviewedByIdToUser: { select: { name: true, role: true } },
       }
     });
 
     if (validatedData.status) {
-      const userToNotify = await db.user.findUnique({
+      const userToNotify = await db.User.findUnique({
         where: { employeeId: updatedRequest.employeeId },
         select: { id: true }
       });
@@ -38,6 +39,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       if (userToNotify) {
         await db.notification.create({
           data: {
+            id: uuidv4(),
             userId: userToNotify.id,
             message: `Your Resignation request with effective date ${format(new Date(updatedRequest.effectiveDate), 'PPP')} has been updated to: ${validatedData.status}.`,
             link: `/dashboard/resignation`,

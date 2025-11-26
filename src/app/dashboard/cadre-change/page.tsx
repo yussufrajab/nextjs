@@ -25,8 +25,10 @@ import { EmployeeSearch } from '@/components/shared/employee-search';
 
 interface CadreChangeRequest {
   id: string;
-  employee: Partial<Employee & User & { institution: { name: string } }>;
+  Employee?: Partial<Employee & User & { Institution: { name: string } }>; // API returns this (capital E)
+  employee?: Partial<Employee & User & { institution: { name: string } }>; // Keep for compatibility
   submittedBy: Partial<User>;
+  submittedById?: string;
   reviewedBy?: Partial<User> | null;
   status: string;
   reviewStage: string;
@@ -76,7 +78,8 @@ export default function CadreChangePage() {
   const [correctedStudiedOutsideCountry, setCorrectedStudiedOutsideCountry] = useState(false);
 
   const [eligibilityError, setEligibilityError] = useState<string | null>(null);
-  
+  const [hasPendingCadreChange, setHasPendingCadreChange] = useState(false);
+
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 50;
   const [totalItems, setTotalItems] = useState(0);
@@ -185,6 +188,7 @@ export default function CadreChangePage() {
     setStudiedOutsideCountry(false);
     setTcuFormFile('');
     setLetterOfRequestFile('');
+    setHasPendingCadreChange(false);
     const checkboxInput = document.getElementById('studiedOutsideCountryCadre') as HTMLInputElement;
     if (checkboxInput) checkboxInput.checked = false;
   };
@@ -202,9 +206,30 @@ export default function CadreChangePage() {
         error = `Employee must have at least 3 years of service for a cadre change. Current service: ${yearsOfService} years.`;
       }
     }
-    
+
+    // Check for pending cadre change request
+    const pendingStatuses = [
+      'Pending HRMO/HHRMD Review',
+      'Pending DO/HHRMD Review',
+      'Request Received – Awaiting Commission Decision'
+    ];
+
+    console.log('[CADRE_CHANGE] Checking for pending requests:', {
+      employeeId: employee.id,
+      totalRequests: pendingRequests.length
+    });
+
+    // API returns 'Employee' (capital E), check both for compatibility
+    const hasPending = pendingRequests.some(req => {
+      const employeeId = (req as any).Employee?.id || req.employee?.id;
+      return employeeId === employee.id && pendingStatuses.includes(req.status);
+    });
+
+    console.log('[CADRE_CHANGE] Has pending result:', hasPending);
+
+    setHasPendingCadreChange(hasPending);
     setEmployeeDetails(employee);
-    
+
     if (error) {
       setEligibilityError(error);
       toast({ title: "Employee Ineligible", description: error, variant: "destructive", duration: 7000 });
@@ -217,6 +242,7 @@ export default function CadreChangePage() {
     setEmployeeDetails(null);
     resetFormFields();
     setEligibilityError(null);
+    setHasPendingCadreChange(false);
   };
 
   const handleSubmitRequest = async () => {
@@ -323,7 +349,7 @@ export default function CadreChangePage() {
       if (actionDescription && request) {
         toast({ 
           title: "Status Updated", 
-          description: `${actionDescription} for ${request.employee.name}. Status: ${payload.status}`,
+          description: `${actionDescription} for ${request.Employee.name}. Status: ${payload.status}`,
           duration: 3000 
         });
       }
@@ -388,7 +414,7 @@ export default function CadreChangePage() {
     const finalStatus = decision === 'approved' ? "Approved by Commission" : "Rejected by Commission - Request Concluded";
     const payload = { status: finalStatus, reviewStage: 'completed' };
     const actionDescription = decision === 'approved' 
-      ? `Cadre change approved by Commission. Employee ${request.employee.name} cadre updated to "${request.newCadre}".`
+      ? `Cadre change approved by Commission. Employee ${request.Employee.name} cadre updated to "${request.newCadre}".`
       : `Cadre change rejected by Commission`;
     
     await handleUpdateRequest(requestId, payload, actionDescription);
@@ -484,16 +510,25 @@ export default function CadreChangePage() {
                     </AlertDescription>
                   </Alert>
                 )}
-            
-                <div className={`space-y-4 ${!!eligibilityError ? 'opacity-50 cursor-not-allowed' : ''}`}>
+
+                {hasPendingCadreChange && (
+                  <Alert variant="destructive" className="mt-4">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTitle>Request Already Submitted</AlertTitle>
+                    <AlertDescription>A cadre change request for this employee is already being reviewed. You cannot submit another request until the current one is completed.</AlertDescription>
+                  </Alert>
+                )}
+
+                {!eligibilityError && !hasPendingCadreChange && (
+                <div className="space-y-4">
                   <h3 className="text-lg font-medium text-foreground">Cadre Change Details &amp; Documents (PDF Only)</h3>
                   <div>
                     <Label htmlFor="newCadre">Write new cadre and grade</Label>
-                    <Input id="newCadre" placeholder="e.g., Senior Human Resource Officer" value={newCadre} onChange={(e) => setNewCadre(e.target.value)} disabled={isSubmitting || !!eligibilityError} />
+                    <Input id="newCadre" placeholder="e.g., Senior Human Resource Officer" value={newCadre} onChange={(e) => setNewCadre(e.target.value)} disabled={isSubmitting || !!eligibilityError || hasPendingCadreChange} />
                   </div>
                   <div>
                     <Label htmlFor="reasonCadreChange">Reason for Cadre Change &amp; Qualifications</Label>
-                    <Textarea id="reasonCadreChange" placeholder="Explain the reason and list relevant qualifications" value={reasonCadreChange} onChange={(e) => setReasonCadreChange(e.target.value)} disabled={isSubmitting || !!eligibilityError} />
+                    <Textarea id="reasonCadreChange" placeholder="Explain the reason and list relevant qualifications" value={reasonCadreChange} onChange={(e) => setReasonCadreChange(e.target.value)} disabled={isSubmitting || !!eligibilityError || hasPendingCadreChange} />
                   </div>
                   <FileUpload
                     label="Upload Certificate"
@@ -502,10 +537,10 @@ export default function CadreChangePage() {
                     value={certificateFile}
                     onChange={setCertificateFile}
                     folder="cadre-change"
-                    disabled={isSubmitting || !!eligibilityError}
+                    disabled={isSubmitting || !!eligibilityError || hasPendingCadreChange}
                   />
                   <div className="flex items-center space-x-2">
-                    <Checkbox id="studiedOutsideCountryCadre" checked={studiedOutsideCountry} onCheckedChange={(checked) => setStudiedOutsideCountry(checked as boolean)} disabled={isSubmitting || !!eligibilityError} />
+                    <Checkbox id="studiedOutsideCountryCadre" checked={studiedOutsideCountry} onCheckedChange={(checked) => setStudiedOutsideCountry(checked as boolean)} disabled={isSubmitting || !!eligibilityError || hasPendingCadreChange} />
                     <Label htmlFor="studiedOutsideCountryCadre" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                       Employee studied outside the country? (Requires TCU Form)
                     </Label>
@@ -518,7 +553,7 @@ export default function CadreChangePage() {
                       value={tcuFormFile}
                       onChange={setTcuFormFile}
                       folder="cadre-change"
-                      disabled={isSubmitting || !!eligibilityError}
+                      disabled={isSubmitting || !!eligibilityError || hasPendingCadreChange}
                       required
                     />
                   )}
@@ -529,20 +564,22 @@ export default function CadreChangePage() {
                     value={letterOfRequestFile}
                     onChange={setLetterOfRequestFile}
                     folder="cadre-change"
-                    disabled={isSubmitting || !!eligibilityError}
+                    disabled={isSubmitting || !!eligibilityError || hasPendingCadreChange}
                     required
                   />
                 </div>
+                )}
               </div>
             )}
           </CardContent>
-          {employeeDetails && (
+          {employeeDetails && !eligibilityError && !hasPendingCadreChange && (
             <CardFooter className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2 pt-4 border-t">
-                <Button onClick={handleSubmitRequest} 
+                <Button onClick={handleSubmitRequest}
                         disabled={
                             !!eligibilityError ||
-                            !employeeDetails || 
-                            !newCadre || 
+                            hasPendingCadreChange ||
+                            !employeeDetails ||
+                            !newCadre ||
                             !reasonCadreChange ||
                             !letterOfRequestFile ||
                             (studiedOutsideCountry && !tcuFormFile) ||
@@ -581,7 +618,7 @@ export default function CadreChangePage() {
               <div key={request.id} className="mb-4 border p-4 rounded-md space-y-2 shadow-sm bg-background hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-semibold text-base flex items-center gap-2">
-                    Cadre Change for: {request.employee.name} (ZanID: {request.employee.zanId})
+                    Cadre Change for: {request.Employee.name} (ZanID: {request.Employee.zanId})
                     {(request.status.includes('Approved by Commission') || request.status.includes('Rejected by Commission')) && (
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                         request.status.includes('Approved by Commission') 
@@ -608,7 +645,7 @@ export default function CadreChangePage() {
                     </div>
                   )}
                 </div>
-                <p className="text-sm text-muted-foreground">From Cadre: {request.employee.cadre}</p>
+                <p className="text-sm text-muted-foreground">From Cadre: {request.Employee.cadre}</p>
                 <p className="text-sm text-muted-foreground">To Cadre: {request.newCadre}</p>
                 <p className="text-sm text-muted-foreground">Submitted: {request.createdAt ? format(parseISO(request.createdAt), 'PPP') : 'N/A'}</p>
                 <div className="flex items-center space-x-2">
@@ -700,7 +737,7 @@ export default function CadreChangePage() {
                 <div key={request.id} className="mb-4 border p-4 rounded-md space-y-2 shadow-sm bg-background hover:shadow-md transition-shadow">
                   <div className="flex items-center justify-between mb-2">
                   <h3 className="font-semibold text-base flex items-center gap-2">
-                    Cadre Change for: {request.employee.name} (ZanID: {request.employee.zanId})
+                    Cadre Change for: {request.Employee.name} (ZanID: {request.Employee.zanId})
                     {(request.status.includes('Approved by Commission') || request.status.includes('Rejected by Commission')) && (
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                         request.status.includes('Approved by Commission') 
@@ -727,7 +764,7 @@ export default function CadreChangePage() {
                     </div>
                   )}
                 </div>
-                  <p className="text-sm text-muted-foreground">From Cadre: {request.employee.cadre}</p>
+                  <p className="text-sm text-muted-foreground">From Cadre: {request.Employee.cadre}</p>
                   <p className="text-sm text-muted-foreground">To Cadre: {request.newCadre}</p>
                   <p className="text-sm text-muted-foreground">Submitted: {request.createdAt ? format(parseISO(request.createdAt), 'PPP') : 'N/A'} by {request.submittedBy?.name || 'N/A'}</p>
                   <div className="flex items-center space-x-2">
@@ -812,7 +849,7 @@ export default function CadreChangePage() {
             <DialogHeader>
               <DialogTitle>Request Details: {selectedRequest.id}</DialogTitle>
               <DialogDescription>
-                Change of Cadre request for <strong>{selectedRequest.employee.name}</strong> (ZanID: {selectedRequest.employee.zanId}).
+                Change of Cadre request for <strong>{selectedRequest.Employee.name}</strong> (ZanID: {selectedRequest.Employee.zanId}).
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4 text-sm max-h-[70vh] overflow-y-auto">
@@ -820,39 +857,39 @@ export default function CadreChangePage() {
                     <h4 className="font-semibold text-base text-foreground mb-2">Employee Information</h4>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Full Name:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.name}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.name}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">ZanID:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.zanId}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.zanId}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Payroll #:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.payrollNumber || 'N/A'}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.payrollNumber || 'N/A'}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">ZSSF #:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.zssfNumber || 'N/A'}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.zssfNumber || 'N/A'}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Department:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.department}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.department}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Current Cadre:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.cadre}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.cadre}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Employment Date:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.employmentDate ? format(parseISO(selectedRequest.employee.employmentDate), 'PPP') : 'N/A'}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.employmentDate ? format(parseISO(selectedRequest.Employee.employmentDate), 'PPP') : 'N/A'}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Date of Birth:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.dateOfBirth ? format(parseISO(selectedRequest.employee.dateOfBirth), 'PPP') : 'N/A'}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.dateOfBirth ? format(parseISO(selectedRequest.Employee.dateOfBirth), 'PPP') : 'N/A'}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Institution:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.institution?.name || 'N/A'}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.institution?.name || 'N/A'}</p>
                     </div>
                 </div>
                 <div className="space-y-1">
@@ -1006,7 +1043,7 @@ export default function CadreChangePage() {
                 <DialogHeader>
                     <DialogTitle>Reject Cadre Change Request: {currentRequestToAction.id}</DialogTitle>
                     <DialogDescription>
-                        Please provide the reason for rejecting the cadre change request for <strong>{currentRequestToAction.employee.name}</strong>. This reason will be visible to the HRO.
+                        Please provide the reason for rejecting the cadre change request for <strong>{currentRequestToAction.Employee.name}</strong>. This reason will be visible to the HRO.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="py-4">
@@ -1031,7 +1068,7 @@ export default function CadreChangePage() {
             <DialogHeader>
               <DialogTitle>Correct & Resubmit Cadre Change Request</DialogTitle>
               <DialogDescription>
-                Please update the details and upload corrected documents for <strong>{requestToCorrect.employee.name}</strong> (ZanID: {requestToCorrect.employee.zanId}).
+                Please update the details and upload corrected documents for <strong>{requestToCorrect.Employee.name}</strong> (ZanID: {requestToCorrect.Employee.zanId}).
               </DialogDescription>
             </DialogHeader>
             <div className="py-4 space-y-4">

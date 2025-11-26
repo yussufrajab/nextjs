@@ -17,7 +17,7 @@ export async function PUT(
     const body = await req.json();
     const validatedData = institutionSchema.parse(body);
 
-    const updatedInstitution = await db.institution.update({
+    const updatedInstitution = await db.Institution.update({
       where: { id: params.id },
       data: { 
         name: validatedData.name,
@@ -48,7 +48,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    await db.institution.delete({
+    await db.Institution.delete({
       where: { id: params.id },
     });
     return new NextResponse(null, { status: 204 });

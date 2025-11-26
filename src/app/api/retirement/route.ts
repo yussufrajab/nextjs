@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { shouldApplyInstitutionFilter } from '@/lib/role-utils';
+import { v4 as uuidv4 } from 'uuid';
 
 export async function GET(req: Request) {
   try {
@@ -17,7 +18,7 @@ export async function GET(req: Request) {
     // Apply institution filtering based on role
     if (shouldApplyInstitutionFilter(userRole, userInstitutionId)) {
       console.log(`Applying institution filter for role ${userRole} with institutionId ${userInstitutionId}`);
-      whereClause.employee = {
+      whereClause.Employee = {
         institutionId: userInstitutionId
       };
     } else {
@@ -27,7 +28,7 @@ export async function GET(req: Request) {
     const requests = await db.retirementRequest.findMany({
       where: whereClause,
       include: {
-        employee: {
+        Employee: {
           select: {
             id: true,
             name: true,
@@ -38,11 +39,11 @@ export async function GET(req: Request) {
             cadre: true,
             dateOfBirth: true,
             employmentDate: true,
-            institution: { select: { id: true, name: true } }
+            Institution: { select: { id: true, name: true } }
           }
         },
-        submittedBy: { select: { id: true, name: true, username: true } },
-        reviewedBy: { select: { id: true, name: true, username: true } }
+        User_RetirementRequest_submittedByIdToUser: { select: { id: true, name: true, username: true } },
+        User_RetirementRequest_reviewedByIdToUser: { select: { id: true, name: true, username: true } }
       },
       orderBy: { createdAt: 'desc' }
     }).catch(() => []);
@@ -77,6 +78,7 @@ export async function POST(req: Request) {
 
     const retirementRequest = await db.retirementRequest.create({
       data: {
+        id: uuidv4(),
         employeeId: body.employeeId,
         submittedById: body.submittedById,
         proposedDate: body.proposedDate ? new Date(body.proposedDate) : new Date(), // For illness retirement, use current date if no proposed date
@@ -86,10 +88,11 @@ export async function POST(req: Request) {
         documents: body.documents || [],
         status: body.status || 'Pending HRMO/HHRMD Review',
         reviewStage: body.reviewStage || 'initial',
-        rejectionReason: body.rejectionReason
+        rejectionReason: body.rejectionReason,
+        updatedAt: new Date()
       },
       include: {
-        employee: {
+        Employee: {
           select: {
             id: true,
             name: true,
@@ -100,7 +103,7 @@ export async function POST(req: Request) {
             cadre: true,
             dateOfBirth: true,
             employmentDate: true,
-            institution: { select: { id: true, name: true } }
+            Institution: { select: { id: true, name: true } }
           }
         }
       }
@@ -144,7 +147,7 @@ export async function PATCH(req: Request) {
       where: { id },
       data: updateData,
       include: {
-        employee: {
+        Employee: {
           select: {
             id: true,
             name: true,
@@ -155,19 +158,19 @@ export async function PATCH(req: Request) {
             cadre: true,
             dateOfBirth: true,
             employmentDate: true,
-            institution: { select: { id: true, name: true } }
+            Institution: { select: { id: true, name: true } }
           }
         }
       }
     });
 
     // If retirement request is approved by Commission, update employee status
-    if (updateData.status === "Approved by Commission" && updatedRequest.employee) {
-      await db.employee.update({
-        where: { id: updatedRequest.employee.id },
+    if (updateData.status === "Approved by Commission" && updatedRequest.Employee) {
+      await db.Employee.update({
+        where: { id: updatedRequest.Employee.id },
         data: { status: "Retired" }
       });
-      console.log(`Employee ${updatedRequest.employee.name} status updated to "Retired" after retirement approval`);
+      console.log(`Employee ${updatedRequest.Employee.name} status updated to "Retired" after retirement approval`);
     }
 
     return NextResponse.json({

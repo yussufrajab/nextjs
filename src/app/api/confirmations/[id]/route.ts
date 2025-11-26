@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { z } from 'zod';
+import { v4 as uuidv4 } from 'uuid';
 
 const updateSchema = z.object({
   status: z.string().optional(),
@@ -22,7 +23,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     });
 
     if (validatedData.status) {
-      const userToNotify = await db.user.findUnique({
+      const userToNotify = await db.User.findUnique({
         where: { employeeId: updatedRequest.employeeId },
         select: { id: true }
       });
@@ -30,6 +31,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       if (userToNotify) {
         await db.notification.create({
           data: {
+            id: uuidv4(),
             userId: userToNotify.id,
             message: `Your Confirmation request has been updated to: ${validatedData.status}.`,
             link: `/dashboard/confirmation`,

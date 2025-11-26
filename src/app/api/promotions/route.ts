@@ -4,6 +4,7 @@ import { shouldApplyInstitutionFilter } from '@/lib/role-utils';
 import { validateEmployeeStatusForRequest } from '@/lib/employee-status-validation';
 import { createNotificationForRole, NotificationTemplates } from '@/lib/notifications';
 import { ROLES } from '@/lib/constants';
+import { v4 as uuidv4 } from 'uuid';
 
 export async function GET(req: Request) {
   try {
@@ -20,7 +21,7 @@ export async function GET(req: Request) {
     // Apply institution filtering based on role
     if (shouldApplyInstitutionFilter(userRole, userInstitutionId)) {
       console.log(`Applying institution filter for role ${userRole} with institutionId ${userInstitutionId}`);
-      whereClause.employee = {
+      whereClause.Employee = {
         institutionId: userInstitutionId
       };
     } else {
@@ -30,7 +31,7 @@ export async function GET(req: Request) {
     const promotionRequests = await db.promotionRequest.findMany({
       where: whereClause,
       include: {
-        employee: {
+        Employee: {
           select: {
             id: true,
             name: true,
@@ -41,7 +42,7 @@ export async function GET(req: Request) {
             cadre: true,
             dateOfBirth: true,
             employmentDate: true,
-            institution: {
+            Institution: {
               select: {
                 id: true,
                 name: true
@@ -49,14 +50,14 @@ export async function GET(req: Request) {
             }
           }
         },
-        submittedBy: {
+        User_PromotionRequest_submittedByIdToUser: {
           select: {
             id: true,
             name: true,
             username: true
           }
         },
-        reviewedBy: {
+        User_PromotionRequest_reviewedByIdToUser: {
           select: {
             id: true,
             name: true,
@@ -106,7 +107,7 @@ export async function POST(req: Request) {
     }
 
     // Get employee details to check status
-    const employee = await db.employee.findUnique({
+    const employee = await db.Employee.findUnique({
       where: { id: body.employeeId },
       select: { id: true, name: true, status: true }
     });
@@ -129,6 +130,7 @@ export async function POST(req: Request) {
 
     const promotionRequest = await db.promotionRequest.create({
       data: {
+        id: uuidv4(),
         employeeId: body.employeeId,
         submittedById: body.submittedById,
         promotionType: body.promotionType,
@@ -137,10 +139,11 @@ export async function POST(req: Request) {
         status: 'Pending HRMO/HHRMD Review',
         reviewStage: 'initial',
         documents: body.documents || [],
-        commissionDecisionReason: body.commissionDecisionReason || null
+        commissionDecisionReason: body.commissionDecisionReason || null,
+        updatedAt: new Date()
       },
       include: {
-        employee: {
+        Employee: {
           select: {
             id: true,
             name: true,
@@ -151,7 +154,7 @@ export async function POST(req: Request) {
             cadre: true,
             dateOfBirth: true,
             employmentDate: true,
-            institution: {
+            Institution: {
               select: {
                 id: true,
                 name: true
@@ -166,12 +169,12 @@ export async function POST(req: Request) {
 
     // Create notification for supervisors/HHRMD
     const notification = NotificationTemplates.promotionSubmitted(
-      promotionRequest.employee.name,
+      promotionRequest.Employee.name,
       promotionRequest.id
     );
-    
-    await createNotificationForRole(ROLES.HHRMD, notification.message, notification.link);
-    await createNotificationForRole(ROLES.DO, notification.message, notification.link);
+
+    await createNotificationForRole(ROLES.HHRMD || 'HHRMD', notification.message, notification.link);
+    await createNotificationForRole(ROLES.DO || 'DO', notification.message, notification.link);
 
     return NextResponse.json({
       success: true,
@@ -204,7 +207,7 @@ export async function PATCH(req: Request) {
       where: { id },
       data: updateData,
       include: {
-        employee: {
+        Employee: {
           select: {
             id: true,
             name: true,
@@ -215,7 +218,7 @@ export async function PATCH(req: Request) {
             cadre: true,
             dateOfBirth: true,
             employmentDate: true,
-            institution: {
+            Institution: {
               select: {
                 id: true,
                 name: true
@@ -227,12 +230,12 @@ export async function PATCH(req: Request) {
     });
 
     // If promotion request is approved by Commission, update employee cadre
-    if (updateData.status === "Approved by Commission" && updatedRequest.employee) {
-      await db.employee.update({
-        where: { id: updatedRequest.employee.id },
+    if (updateData.status === "Approved by Commission" && updatedRequest.Employee) {
+      await db.Employee.update({
+        where: { id: updatedRequest.Employee.id },
         data: { cadre: updatedRequest.proposedCadre }
       });
-      console.log(`Employee ${updatedRequest.employee.name} cadre updated to "${updatedRequest.proposedCadre}" after promotion approval`);
+      console.log(`Employee ${updatedRequest.Employee.name} cadre updated to "${updatedRequest.proposedCadre}" after promotion approval`);
     }
 
     return NextResponse.json({

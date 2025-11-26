@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { shouldApplyInstitutionFilter } from '@/lib/role-utils';
 import { validateEmployeeStatusForRequest } from '@/lib/employee-status-validation';
+import { v4 as uuidv4 } from 'uuid';
 
 export async function GET(req: Request) {
   try {
@@ -18,7 +19,7 @@ export async function GET(req: Request) {
     // Apply institution filtering based on role
     if (shouldApplyInstitutionFilter(userRole, userInstitutionId)) {
       console.log(`Applying institution filter for role ${userRole} with institutionId ${userInstitutionId}`);
-      whereClause.employee = {
+      whereClause.Employee = {
         institutionId: userInstitutionId
       };
     } else {
@@ -28,7 +29,7 @@ export async function GET(req: Request) {
     const requests = await db.confirmationRequest.findMany({
       where: whereClause,
       include: {
-        employee: {
+        Employee: {
           select: {
             id: true,
             name: true,
@@ -39,14 +40,14 @@ export async function GET(req: Request) {
             cadre: true,
             dateOfBirth: true,
             employmentDate: true,
-            institution: { select: { id: true, name: true } }
+            Institution: { select: { id: true, name: true } }
           }
         },
-        submittedBy: { 
-          select: { id: true, name: true, username: true } 
+        User_ConfirmationRequest_submittedByIdToUser: {
+          select: { id: true, name: true, username: true }
         },
-        reviewedBy: { 
-          select: { id: true, name: true, username: true } 
+        User_ConfirmationRequest_reviewedByIdToUser: {
+          select: { id: true, name: true, username: true }
         }
       },
       orderBy: { createdAt: 'desc' }
@@ -73,7 +74,7 @@ export async function POST(req: Request) {
     }
 
     // Get employee details to check status
-    const employee = await db.employee.findUnique({
+    const employee = await db.Employee.findUnique({
       where: { id: body.employeeId },
       select: { id: true, name: true, status: true }
     });
@@ -96,14 +97,16 @@ export async function POST(req: Request) {
 
     const confirmationRequest = await db.confirmationRequest.create({
       data: {
+        id: uuidv4(),
         employeeId: body.employeeId,
         submittedById: body.submittedById,
         status: body.status || 'Pending',
         reviewStage: body.reviewStage || 'initial',
-        documents: body.documents || []
+        documents: body.documents || [],
+        updatedAt: new Date(),
       },
       include: {
-        employee: {
+        Employee: {
           select: {
             id: true,
             name: true,
@@ -114,7 +117,7 @@ export async function POST(req: Request) {
             cadre: true,
             dateOfBirth: true,
             employmentDate: true,
-            institution: { select: { id: true, name: true } }
+            Institution: { select: { id: true, name: true } }
           }
         }
       }
@@ -153,7 +156,7 @@ export async function PATCH(req: Request) {
       where: { id },
       data: updateData,
       include: {
-        employee: {
+        Employee: {
           select: {
             id: true,
             name: true,
@@ -164,7 +167,7 @@ export async function PATCH(req: Request) {
             cadre: true,
             dateOfBirth: true,
             employmentDate: true,
-            institution: { select: { id: true, name: true } }
+            Institution: { select: { id: true, name: true } }
           }
         }
       }
@@ -174,7 +177,7 @@ export async function PATCH(req: Request) {
     if (updateData.status === 'Approved by Commission') {
       try {
         // Update employee status from "On Probation" to "Confirmed"
-        await db.employee.update({
+        await db.Employee.update({
           where: { id: updatedRequest.employeeId },
           data: {
             status: 'Confirmed',
@@ -182,7 +185,7 @@ export async function PATCH(req: Request) {
           }
         });
 
-        console.log(`Employee ${updatedRequest.employee.name} (${updatedRequest.employee.zanId}) status updated to "Confirmed" due to commission approval`);
+        console.log(`Employee ${updatedRequest.Employee.name} (${updatedRequest.Employee.zanId}) status updated to "Confirmed" due to commission approval`);
       } catch (employeeUpdateError) {
         console.error('Failed to update employee status:', employeeUpdateError);
         // Don't fail the entire request if employee update fails

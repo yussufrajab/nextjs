@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { z } from 'zod';
+import { v4 as uuidv4 } from 'uuid';
 
 const updateSchema = z.object({
   status: z.string().optional(),
@@ -24,7 +25,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       where: { id: params.id },
       data: validatedData,
       include: {
-        employee: { 
+        Employee: { 
           select: { 
             id: true,
             name: true, 
@@ -35,17 +36,17 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
             dateOfBirth: true, 
             payrollNumber: true, 
             zssfNumber: true,
-            institution: { select: { id: true, name: true } } 
+            Institution: { select: { id: true, name: true } } 
           }
         },
-        submittedBy: { select: { id: true, name: true, username: true, role: true } },
-        reviewedBy: { select: { id: true, name: true, username: true, role: true } },
+        User_CadreChangeRequest_submittedByIdToUser: { select: { id: true, name: true, username: true, role: true } },
+        User_CadreChangeRequest_reviewedByIdToUser: { select: { id: true, name: true, username: true, role: true } },
       }
     });
 
     // If status is updated, create a notification for the employee
     if (validatedData.status) {
-      const userToNotify = await db.user.findUnique({
+      const userToNotify = await db.User.findUnique({
         where: { employeeId: updatedRequest.employeeId },
         select: { id: true }
       });
@@ -53,6 +54,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       if (userToNotify) {
         await db.notification.create({
           data: {
+            id: uuidv4(),
             userId: userToNotify.id,
             message: `Your Change of Cadre request to "${updatedRequest.newCadre}" has been updated to: ${validatedData.status}.`,
             link: `/dashboard/cadre-change`,
@@ -62,12 +64,12 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     }
 
     // If cadre change request is approved by Commission, update employee cadre
-    if (validatedData.status === "Approved by Commission" && updatedRequest.employee) {
-      await db.employee.update({
-        where: { id: updatedRequest.employee.id },
+    if (validatedData.status === "Approved by Commission" && updatedRequest.Employee) {
+      await db.Employee.update({
+        where: { id: updatedRequest.Employee.id },
         data: { cadre: updatedRequest.newCadre }
       });
-      console.log(`Employee ${updatedRequest.employee.name} cadre updated to "${updatedRequest.newCadre}" after cadre change approval`);
+      console.log(`Employee ${updatedRequest.Employee.name} cadre updated to "${updatedRequest.newCadre}" after cadre change approval`);
     }
 
     console.log('Cadre change request updated successfully:', updatedRequest.id);
@@ -87,7 +89,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     const request = await db.cadreChangeRequest.findUnique({
       where: { id: params.id },
       include: {
-        employee: { 
+        Employee: { 
           select: { 
             id: true,
             name: true, 
@@ -98,11 +100,11 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
             dateOfBirth: true, 
             payrollNumber: true, 
             zssfNumber: true,
-            institution: { select: { id: true, name: true } } 
+            Institution: { select: { id: true, name: true } } 
           }
         },
-        submittedBy: { select: { id: true, name: true, username: true, role: true } },
-        reviewedBy: { select: { id: true, name: true, username: true, role: true } },
+        User_CadreChangeRequest_submittedByIdToUser: { select: { id: true, name: true, username: true, role: true } },
+        User_CadreChangeRequest_reviewedByIdToUser: { select: { id: true, name: true, username: true, role: true } },
       }
     });
 

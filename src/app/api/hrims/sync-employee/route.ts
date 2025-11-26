@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { z } from 'zod';
+import { v4 as uuidv4 } from 'uuid';
 
 // Validation schema for the HRIMS sync request
 const hrimsRequestSchema = z.object({
@@ -23,7 +24,7 @@ const hrimsEmployeeResponseSchema = z.object({
   success: z.boolean(),
   message: z.string(),
   data: z.object({
-    employee: z.object({
+    Employee: z.object({
       zanId: z.string(),
       payrollNumber: z.string().optional(),
       name: z.string(),
@@ -71,7 +72,7 @@ export async function POST(req: Request) {
     const validatedRequest = hrimsRequestSchema.parse(body);
 
     // Find institution by vote number
-    const institution = await db.institution.findFirst({
+    const institution = await db.Institution.findFirst({
       where: {
         voteNumber: validatedRequest.institutionVoteNumber
       }
@@ -102,7 +103,7 @@ export async function POST(req: Request) {
 
     console.log('Employee synced successfully:', savedEmployee.id);
 
-    const documentStats = validatedHrimsData.data.employee.documentStats;
+    const documentStats = validatedHrimsData.data.Employee.documentStats;
     
     // Trigger background sync for documents and certificates if they exist
     const backgroundTasks = [];
@@ -110,14 +111,14 @@ export async function POST(req: Request) {
     if (documentStats?.totalDocuments > 0) {
       // Trigger documents sync in background
       backgroundTasks.push(
-        triggerBackgroundDocumentsSync(validatedRequest, validatedHrimsData.data.employee.zanId)
+        triggerBackgroundDocumentsSync(validatedRequest, validatedHrimsData.data.Employee.zanId)
       );
     }
-    
+
     if (documentStats?.totalCertificates > 0) {
-      // Trigger certificates sync in background  
+      // Trigger certificates sync in background
       backgroundTasks.push(
-        triggerBackgroundCertificatesSync(validatedRequest, validatedHrimsData.data.employee.zanId)
+        triggerBackgroundCertificatesSync(validatedRequest, validatedHrimsData.data.Employee.zanId)
       );
     }
 
@@ -212,56 +213,59 @@ async function upsertEmployeeFromHRIMS(
   hrimsData: z.infer<typeof hrimsEmployeeResponseSchema>,
   institutionId: string
 ) {
-  const { employee } = hrimsData.data;
+  const { Employee } = hrimsData.data;
 
   // Check if employee already exists
-  const existingEmployee = await db.employee.findFirst({
+  const existingEmployee = await db.Employee.findFirst({
     where: {
-      zanId: employee.zanId
+      zanId: Employee.zanId
     }
   });
 
   const employeeData = {
-    zanId: employee.zanId,
-    name: employee.name,
-    gender: employee.gender || null,
-    dateOfBirth: employee.dateOfBirth ? new Date(employee.dateOfBirth) : null,
-    placeOfBirth: employee.placeOfBirth || null,
-    region: employee.region || null,
-    countryOfBirth: employee.countryOfBirth || null,
-    phoneNumber: employee.phoneNumber || null,
-    contactAddress: employee.contactAddress || null,
-    zssfNumber: employee.zssfNumber || null,
-    payrollNumber: employee.payrollNumber || null,
-    cadre: employee.cadre || null,
-    salaryScale: employee.salaryScale || null,
-    ministry: employee.ministry || null,
-    department: employee.department || null,
-    appointmentType: employee.appointmentType || null,
-    contractType: employee.contractType || null,
-    recentTitleDate: employee.recentTitleDate ? new Date(employee.recentTitleDate) : null,
-    currentReportingOffice: employee.currentReportingOffice || null,
-    currentWorkplace: employee.currentWorkplace || null,
-    employmentDate: employee.employmentDate ? new Date(employee.employmentDate) : null,
-    confirmationDate: employee.confirmationDate ? new Date(employee.confirmationDate) : null,
-    retirementDate: employee.retirementDate ? new Date(employee.retirementDate) : null,
-    status: employee.status || null,
+    zanId: Employee.zanId,
+    name: Employee.name,
+    gender: Employee.gender || null,
+    dateOfBirth: Employee.dateOfBirth ? new Date(Employee.dateOfBirth) : null,
+    placeOfBirth: Employee.placeOfBirth || null,
+    region: Employee.region || null,
+    countryOfBirth: Employee.countryOfBirth || null,
+    phoneNumber: Employee.phoneNumber || null,
+    contactAddress: Employee.contactAddress || null,
+    zssfNumber: Employee.zssfNumber || null,
+    payrollNumber: Employee.payrollNumber || null,
+    cadre: Employee.cadre || null,
+    salaryScale: Employee.salaryScale || null,
+    ministry: Employee.ministry || null,
+    department: Employee.department || null,
+    appointmentType: Employee.appointmentType || null,
+    contractType: Employee.contractType || null,
+    recentTitleDate: Employee.recentTitleDate ? new Date(Employee.recentTitleDate) : null,
+    currentReportingOffice: Employee.currentReportingOffice || null,
+    currentWorkplace: Employee.currentWorkplace || null,
+    employmentDate: Employee.employmentDate ? new Date(Employee.employmentDate) : null,
+    confirmationDate: Employee.confirmationDate ? new Date(Employee.confirmationDate) : null,
+    retirementDate: Employee.retirementDate ? new Date(Employee.retirementDate) : null,
+    status: Employee.status || null,
     institutionId: institutionId,
-    profileImageUrl: employee.photo?.content ? `data:${employee.photo.contentType};base64,${employee.photo.content}` : null,
+    profileImageUrl: Employee.photo?.content ? `data:${Employee.photo.contentType};base64,${Employee.photo.content}` : null,
   };
 
   let savedEmployee;
 
   if (existingEmployee) {
     // Update existing employee
-    savedEmployee = await db.employee.update({
+    savedEmployee = await db.Employee.update({
       where: { id: existingEmployee.id },
       data: employeeData
     });
   } else {
     // Create new employee
-    savedEmployee = await db.employee.create({
-      data: employeeData
+    savedEmployee = await db.Employee.create({
+      data: {
+        id: uuidv4(),
+        ...employeeData
+      }
     });
   }
 
@@ -274,7 +278,7 @@ function getMockHRIMSData(request: z.infer<typeof hrimsRequestSchema>) {
     success: true,
     message: "Employee found successfully",
     data: {
-      employee: {
+      Employee: {
         zanId: request.zanId || "Z123456789",
         payrollNumber: request.payrollNumber || "PAY001234",
         name: "John Doe Mwalimu",
@@ -320,7 +324,7 @@ async function triggerBackgroundDocumentsSync(
   zanId: string
 ) {
   try {
-    console.log(`Starting background documents sync for employee: ${zanId}`);
+    console.log(`Starting background documents sync for Employee: ${zanId}`);
     
     const syncPayload = {
       zanId: zanId,
@@ -340,9 +344,9 @@ async function triggerBackgroundDocumentsSync(
     });
 
     if (response.ok) {
-      console.log(`Documents sync completed for employee: ${zanId}`);
+      console.log(`Documents sync completed for Employee: ${zanId}`);
     } else {
-      console.error(`Documents sync failed for employee: ${zanId}`, response.statusText);
+      console.error(`Documents sync failed for Employee: ${zanId}`, response.statusText);
     }
   } catch (error) {
     console.error(`Error in background documents sync for employee ${zanId}:`, error);
@@ -354,7 +358,7 @@ async function triggerBackgroundCertificatesSync(
   zanId: string
 ) {
   try {
-    console.log(`Starting background certificates sync for employee: ${zanId}`);
+    console.log(`Starting background certificates sync for Employee: ${zanId}`);
     
     const syncPayload = {
       zanId: zanId,
@@ -374,9 +378,9 @@ async function triggerBackgroundCertificatesSync(
     });
 
     if (response.ok) {
-      console.log(`Certificates sync completed for employee: ${zanId}`);
+      console.log(`Certificates sync completed for Employee: ${zanId}`);
     } else {
-      console.error(`Certificates sync failed for employee: ${zanId}`, response.statusText);
+      console.error(`Certificates sync failed for Employee: ${zanId}`, response.statusText);
     }
   } catch (error) {
     console.error(`Error in background certificates sync for employee ${zanId}:`, error);

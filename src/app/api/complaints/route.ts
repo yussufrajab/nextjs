@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { z } from 'zod';
 import { ROLES } from '@/lib/constants';
 import { createNotificationForRole, NotificationTemplates } from '@/lib/notifications';
+import { v4 as uuidv4 } from 'uuid';
 
 const complaintSchema = z.object({
   complaintType: z.string().min(1),
@@ -31,6 +32,7 @@ export async function POST(req: Request) {
 
     const newComplaint = await db.complaint.create({
       data: {
+        id: uuidv4(),
         complaintType,
         subject,
         details: complaintText,
@@ -40,25 +42,28 @@ export async function POST(req: Request) {
         complainantId,
         status: "Submitted",
         reviewStage: 'initial',
-        assignedOfficerRole: assignedOfficerRole || ROLES.DO,
+        assignedOfficerRole: assignedOfficerRole || ROLES.DO || 'DO',
+        updatedAt: new Date(),
       },
     });
 
     // Get complainant's name for notification
-    const complainant = await db.user.findUnique({
+    const complainant = await db.User.findUnique({
       where: { id: complainantId },
       select: { name: true },
     });
 
     // Create notification for officers
-    if (complainant) {
+    if (complainant && complainant.name) {
       const notification = NotificationTemplates.complaintSubmitted(
         complainant.name,
         newComplaint.id,
         subject
       );
-      await createNotificationForRole(ROLES.DO, notification.message, notification.link);
-      await createNotificationForRole(ROLES.HHRMD, notification.message, notification.link);
+      const doRole = ROLES.DO || 'DO';
+      const hhrmdRole = ROLES.HHRMD || 'HHRMD';
+      await createNotificationForRole(doRole, notification.message, notification.link);
+      await createNotificationForRole(hhrmdRole, notification.message, notification.link);
     }
 
     return NextResponse.json(newComplaint, { status: 201 });
@@ -83,21 +88,21 @@ export async function GET(req: Request) {
   try {
     let complaints;
     const includeOptions = {
-      complainant: {
+      User_Complaint_complainantIdToUser: {
         select: {
           name: true,
           employeeId: true,
-          employee: {
+          Employee: {
             select: {
               zanId: true,
               department: true,
               cadre: true,
             }
           },
-          institution: { select: { name: true } }
+          Institution: { select: { name: true } }
         }
       },
-      reviewedBy: {
+      User_Complaint_reviewedByIdToUser: {
         select: {
           name: true,
           role: true,
@@ -113,11 +118,13 @@ export async function GET(req: Request) {
       });
     } else if (userRole === ROLES.DO || userRole === ROLES.HHRMD) {
       // Both DO and HHRMD can see all complaints (including completed ones as history)
+      const doRole = ROLES.DO || 'DO';
+      const hhrmdRole = ROLES.HHRMD || 'HHRMD';
       complaints = await db.complaint.findMany({
-        where: { 
+        where: {
           OR: [
-            { assignedOfficerRole: ROLES.DO },
-            { assignedOfficerRole: ROLES.HHRMD }
+            { assignedOfficerRole: doRole },
+            { assignedOfficerRole: hhrmdRole }
           ]
         },
         orderBy: { createdAt: 'desc' },
@@ -134,11 +141,11 @@ export async function GET(req: Request) {
     // Map the response to match frontend expectations
     const formattedComplaints = complaints.map(c => ({
         id: c.id,
-        employeeId: c.complainant.employeeId,
-        employeeName: c.complainant.name,
-        zanId: c.complainant.employee?.zanId,
-        department: c.complainant.employee?.department,
-        cadre: c.complainant.employee?.cadre,
+        employeeId: c.User_Complaint_complainantIdToUser.employeeId,
+        employeeName: c.User_Complaint_complainantIdToUser.name,
+        zanId: c.User_Complaint_complainantIdToUser.Employee?.zanId,
+        department: c.User_Complaint_complainantIdToUser.Employee?.department,
+        cadre: c.User_Complaint_complainantIdToUser.Employee?.cadre,
         complaintType: c.complaintType,
         subject: c.subject,
         details: c.details,
@@ -152,7 +159,7 @@ export async function GET(req: Request) {
         assignedOfficerRole: c.assignedOfficerRole,
         reviewStage: c.reviewStage,
         rejectionReason: c.rejectionReason,
-        reviewedBy: c.reviewedBy?.role,
+        reviewedBy: c.User_Complaint_reviewedByIdToUser?.role,
     }));
 
     return NextResponse.json(formattedComplaints);

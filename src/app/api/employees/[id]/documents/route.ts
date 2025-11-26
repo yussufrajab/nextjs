@@ -36,7 +36,7 @@ export async function POST(
     }
 
     // Verify employee exists
-    const employee = await prisma.employee.findUnique({
+    const employee = await prisma.Employee.findUnique({
       where: { id: employeeId }
     });
 
@@ -109,7 +109,7 @@ export async function POST(
     const fieldName = DOCUMENT_FIELD_MAPPING[documentType as keyof typeof DOCUMENT_FIELD_MAPPING];
     const documentUrl = `/api/files/download/${objectKey}`;
 
-    await prisma.employee.update({
+    await prisma.Employee.update({
       where: { id: employeeId },
       data: {
         [fieldName]: documentUrl
@@ -150,7 +150,7 @@ export async function GET(
     const { id: employeeId } = await params;
 
     // Fetch employee with document URLs
-    const employee = await prisma.employee.findUnique({
+    const employee = await prisma.Employee.findUnique({
       where: { id: employeeId },
       select: {
         id: true,

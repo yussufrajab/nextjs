@@ -26,19 +26,19 @@ export async function POST(req: Request) {
     });
 
     // Find employee with matching credentials
-    const employee = await db.employee.findFirst({
+    const employee = await db.Employee.findFirst({
       where: {
         zanId: normalizedZanId,
         zssfNumber: normalizedZssfNumber,
         payrollNumber: normalizedPayrollNumber,
       },
       include: {
-        institution: {
+        Institution: {
           select: {
             name: true,
           }
         },
-        user: {
+        User: {
           select: {
             id: true,
             name: true,
@@ -62,33 +62,33 @@ export async function POST(req: Request) {
     }
 
     // Check if employee has an associated user account
-    if (!employee.user) {
+    if (!employee.User) {
       return NextResponse.json(
-        { 
-          success: false, 
-          message: 'No user account found for this employee. Please contact HR for assistance.' 
+        {
+          success: false,
+          message: 'No user account found for this employee. Please contact HR for assistance.'
         },
         { status: 401 }
       );
     }
 
     // Check if user account is active
-    if (!employee.user.active) {
+    if (!employee.User.active) {
       return NextResponse.json(
-        { 
-          success: false, 
-          message: 'Your account has been deactivated. Please contact HR for assistance.' 
+        {
+          success: false,
+          message: 'Your account has been deactivated. Please contact HR for assistance.'
         },
         { status: 401 }
       );
     }
 
     // Check if user role is EMPLOYEE
-    if (employee.user.role !== ROLES.EMPLOYEE) {
+    if (employee.User.role !== ROLES.EMPLOYEE) {
       return NextResponse.json(
-        { 
-          success: false, 
-          message: 'This login is only for employees. Please use the staff login page.' 
+        {
+          success: false,
+          message: 'This login is only for employees. Please use the staff login page.'
         },
         { status: 403 }
       );
@@ -96,15 +96,15 @@ export async function POST(req: Request) {
 
     // Successful authentication - return user data
     const userData = {
-      id: employee.user.id,
-      name: employee.user.name,
-      username: employee.user.username,
-      role: employee.user.role,
+      id: employee.User.id,
+      name: employee.User.name,
+      username: employee.User.username,
+      role: employee.User.role,
       employeeId: employee.id,
       institutionId: employee.institutionId,
       department: employee.department,
       cadre: employee.cadre,
-      institution: employee.institution.name,
+      Institution: employee.Institution.name,
       zanId: employee.zanId,
       zssfNumber: employee.zssfNumber,
       payrollNumber: employee.payrollNumber,

@@ -41,16 +41,16 @@ export async function GET(req: Request) {
 
     // Build where clause for employee-related queries
     const buildEmployeeWhereClause = () => {
-      if (shouldFilter) {
-        return { employee: { institutionId: userInstitutionId } };
+      if (shouldFilter && userInstitutionId) {
+        return { Employee: { institutionId: userInstitutionId } };
       }
       return {};
     };
 
     // Build where clause for complaint queries (complainant is User, not Employee)
     const buildComplaintWhereClause = () => {
-      if (shouldFilter) {
-        return { complainant: { institutionId: userInstitutionId } };
+      if (shouldFilter && userInstitutionId) {
+        return { User_Complaint_complainantIdToUser: { institutionId: userInstitutionId } };
       }
       return {};
     };
@@ -60,7 +60,7 @@ export async function GET(req: Request) {
     const complaintWhereClause = buildComplaintWhereClause();
 
     // Build where clause for employee-based counts
-    const employeeCountWhereClause = shouldFilter ? { institutionId: userInstitutionId } : {};
+    const employeeCountWhereClause = (shouldFilter && userInstitutionId) ? { institutionId: userInstitutionId } : {};
 
     // Build where clause for requests with employee relation
     const requestEmployeeWhereClause = shouldFilter ?
@@ -165,7 +165,7 @@ export async function GET(req: Request) {
       pendingResignationsResult,
       pendingServiceExtensionsResult
     ] = await Promise.allSettled([
-      db.employee.count({ where: employeeCountWhereClause }),
+      db.Employee.count({ where: employeeCountWhereClause }),
       db.confirmationRequest.count({
         where: shouldFilter
           ? { status: { in: getConfirmationStatuses(userRole) }, ...requestEmployeeWhereClause }
@@ -176,7 +176,7 @@ export async function GET(req: Request) {
           ? { status: { in: getPromotionStatuses(userRole) }, ...requestEmployeeWhereClause }
           : { status: { in: getPromotionStatuses(userRole) } }
       }),
-      db.employee.count({
+      db.Employee.count({
         where: shouldFilter
           ? { status: 'On LWOP', ...employeeCountWhereClause }
           : { status: 'On LWOP' }
@@ -252,7 +252,7 @@ export async function GET(req: Request) {
           id: true,
           status: true,
           updatedAt: true,
-          employee: { select: { name: true } }
+          Employee: { select: { name: true } }
         },
         orderBy: { updatedAt: 'desc' },
         take: 3
@@ -263,7 +263,7 @@ export async function GET(req: Request) {
           id: true,
           status: true,
           updatedAt: true,
-          employee: { select: { name: true } }
+          Employee: { select: { name: true } }
         },
         orderBy: { updatedAt: 'desc' },
         take: 3
@@ -274,7 +274,7 @@ export async function GET(req: Request) {
           id: true,
           status: true,
           updatedAt: true,
-          employee: { select: { name: true } }
+          Employee: { select: { name: true } }
         },
         orderBy: { updatedAt: 'desc' },
         take: 3
@@ -285,7 +285,7 @@ export async function GET(req: Request) {
           id: true,
           status: true,
           updatedAt: true,
-          complainant: { select: { name: true } }
+          User_Complaint_complainantIdToUser: { select: { name: true } }
         },
         orderBy: { updatedAt: 'desc' },
         take: 3
@@ -297,7 +297,7 @@ export async function GET(req: Request) {
           type: true,
           status: true,
           updatedAt: true,
-          employee: { select: { name: true } }
+          Employee: { select: { name: true } }
         },
         orderBy: { updatedAt: 'desc' },
         take: 3
@@ -308,7 +308,7 @@ export async function GET(req: Request) {
           id: true,
           status: true,
           updatedAt: true,
-          employee: { select: { name: true } }
+          Employee: { select: { name: true } }
         },
         orderBy: { updatedAt: 'desc' },
         take: 3
@@ -319,7 +319,7 @@ export async function GET(req: Request) {
           id: true,
           status: true,
           updatedAt: true,
-          employee: { select: { name: true } }
+          Employee: { select: { name: true } }
         },
         orderBy: { updatedAt: 'desc' },
         take: 3
@@ -330,7 +330,7 @@ export async function GET(req: Request) {
           id: true,
           status: true,
           updatedAt: true,
-          employee: { select: { name: true } }
+          Employee: { select: { name: true } }
         },
         orderBy: { updatedAt: 'desc' },
         take: 3
@@ -341,7 +341,7 @@ export async function GET(req: Request) {
           id: true,
           status: true,
           updatedAt: true,
-          employee: { select: { name: true } }
+          Employee: { select: { name: true } }
         },
         orderBy: { updatedAt: 'desc' },
         take: 3
@@ -374,15 +374,15 @@ export async function GET(req: Request) {
     });
     
     const allActivities = [
-      ...confirmations.map(r => ({ id: r.id, type: 'Confirmation', employee: r.employee.name, status: r.status, updatedAt: r.updatedAt })),
-      ...promotions.map(r => ({ id: r.id, type: 'Promotion', employee: r.employee.name, status: r.status, updatedAt: r.updatedAt })),
-      ...lwops.map(r => ({ id: r.id, type: 'LWOP', employee: r.employee.name, status: r.status, updatedAt: r.updatedAt })),
-      ...complaints.map(r => ({ id: r.id, type: 'Complaint', employee: r.complainant.name, status: r.status, updatedAt: r.updatedAt })),
-      ...separations.map(r => ({ id: r.id, type: r.type === 'TERMINATION' ? 'Termination' : 'Dismissal', employee: r.employee.name, status: r.status, updatedAt: r.updatedAt })),
-      ...cadreChanges.map(r => ({ id: r.id, type: 'Change of Cadre', employee: r.employee.name, status: r.status, updatedAt: r.updatedAt })),
-      ...retirements.map(r => ({ id: r.id, type: 'Retirement', employee: r.employee.name, status: r.status, updatedAt: r.updatedAt })),
-      ...resignations.map(r => ({ id: r.id, type: 'Resignation', employee: r.employee.name, status: r.status, updatedAt: r.updatedAt })),
-      ...serviceExtensions.map(r => ({ id: r.id, type: 'Service Extension', employee: r.employee.name, status: r.status, updatedAt: r.updatedAt })),
+      ...confirmations.map(r => ({ id: r.id, type: 'Confirmation', Employee: r.Employee.name, status: r.status, updatedAt: r.updatedAt })),
+      ...promotions.map(r => ({ id: r.id, type: 'Promotion', Employee: r.Employee.name, status: r.status, updatedAt: r.updatedAt })),
+      ...lwops.map(r => ({ id: r.id, type: 'LWOP', Employee: r.Employee.name, status: r.status, updatedAt: r.updatedAt })),
+      ...complaints.map(r => ({ id: r.id, type: 'Complaint', Employee: r.User_Complaint_complainantIdToUser.name, status: r.status, updatedAt: r.updatedAt })),
+      ...separations.map(r => ({ id: r.id, type: r.type === 'TERMINATION' ? 'Termination' : 'Dismissal', Employee: r.Employee.name, status: r.status, updatedAt: r.updatedAt })),
+      ...cadreChanges.map(r => ({ id: r.id, type: 'Change of Cadre', Employee: r.Employee.name, status: r.status, updatedAt: r.updatedAt })),
+      ...retirements.map(r => ({ id: r.id, type: 'Retirement', Employee: r.Employee.name, status: r.status, updatedAt: r.updatedAt })),
+      ...resignations.map(r => ({ id: r.id, type: 'Resignation', Employee: r.Employee.name, status: r.status, updatedAt: r.updatedAt })),
+      ...serviceExtensions.map(r => ({ id: r.id, type: 'Service Extension', Employee: r.Employee.name, status: r.status, updatedAt: r.updatedAt })),
     ];
     
     const recentActivities = allActivities

@@ -39,7 +39,7 @@ export async function GET(req: Request) {
       // Parallel count queries for better performance
       const [nearingRetirementCount, probationOverdueCount] = await Promise.all([
         // Count employees approaching retirement
-        db.employee.count({
+        db.Employee.count({
           where: {
             ...baseWhere,
             retirementDate: {
@@ -49,7 +49,7 @@ export async function GET(req: Request) {
           }
         }),
         // Count employees with overdue probation
-        db.employee.count({
+        db.Employee.count({
           where: {
             ...baseWhere,
             status: { not: 'Confirmed' },
@@ -92,9 +92,9 @@ export async function GET(req: Request) {
 
     // Fetch counts and data in parallel
     const [probationCount, retirementCount, probationEmployees, retirementEmployees] = await Promise.all([
-      db.employee.count({ where: probationWhere }),
-      db.employee.count({ where: retirementWhere }),
-      db.employee.findMany({
+      db.Employee.count({ where: probationWhere }),
+      db.Employee.count({ where: retirementWhere }),
+      db.Employee.findMany({
         where: probationWhere,
         select: {
           id: true,
@@ -105,7 +105,7 @@ export async function GET(req: Request) {
           dateOfBirth: true,
           retirementDate: true,
           institutionId: true,
-          institution: {
+          Institution: {
             select: {
               id: true,
               name: true
@@ -116,7 +116,7 @@ export async function GET(req: Request) {
         skip,
         take: limit
       }),
-      db.employee.findMany({
+      db.Employee.findMany({
         where: retirementWhere,
         select: {
           id: true,
@@ -127,7 +127,7 @@ export async function GET(req: Request) {
           dateOfBirth: true,
           retirementDate: true,
           institutionId: true,
-          institution: {
+          Institution: {
             select: {
               id: true,
               name: true

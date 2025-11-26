@@ -262,9 +262,9 @@ export default function RetirementPage() {
 
   // Auto-fill corrected retirement date for compulsory retirement in correction modal
   useEffect(() => {
-    if (correctedRetirementType === 'compulsory' && requestToCorrect && requestToCorrect.employee.dateOfBirth) {
+    if (correctedRetirementType === 'compulsory' && requestToCorrect && requestToCorrect.Employee.dateOfBirth) {
       // Parse date manually to avoid timezone issues
-      const birthDateStr = requestToCorrect.employee.dateOfBirth.split('T')[0]; // Get only YYYY-MM-DD part
+      const birthDateStr = requestToCorrect.Employee.dateOfBirth.split('T')[0]; // Get only YYYY-MM-DD part
       const [year, month, day] = birthDateStr.split('-').map(Number);
 
       // Calculate retirement date: add 60 years to birth year, keep same month and day
@@ -290,9 +290,9 @@ export default function RetirementPage() {
     setCorrectedAgeEligibilityError(null);
     setShowCorrectedDelayFields(false);
 
-    if (requestToCorrect && requestToCorrect.employee.dateOfBirth && correctedRetirementType && correctedRetirementDate) {
+    if (requestToCorrect && requestToCorrect.Employee.dateOfBirth && correctedRetirementType && correctedRetirementDate) {
       // Parse date strings manually to avoid timezone issues
-      const birthDateStr = requestToCorrect.employee.dateOfBirth.split('T')[0]; // Get only YYYY-MM-DD part
+      const birthDateStr = requestToCorrect.Employee.dateOfBirth.split('T')[0]; // Get only YYYY-MM-DD part
       const retirementDateStr = correctedRetirementDate;
 
       const [birthYear, birthMonth, birthDay] = birthDateStr.split('-').map(Number);
@@ -347,7 +347,7 @@ export default function RetirementPage() {
     ];
 
     const hasPending = pendingRequests.some(
-      req => req.employee.id === employee.id && pendingStatuses.includes(req.status)
+      req => req.Employee.id === employee.id && pendingStatuses.includes(req.status)
     );
 
     if (hasPending) {
@@ -509,7 +509,7 @@ export default function RetirementPage() {
     if (actionDescription && request) {
       toast({ 
         title: "Status Updated", 
-        description: `${actionDescription} for ${request.employee.name}. Status: ${payload.status}`,
+        description: `${actionDescription} for ${request.Employee.name}. Status: ${payload.status}`,
         duration: 3000 
       });
     }
@@ -574,8 +574,8 @@ export default function RetirementPage() {
     const finalStatus = decision === 'approved' ? "Approved by Commission" : "Rejected by Commission - Request Concluded";
     const payload = { status: finalStatus, reviewStage: 'completed' };
     const actionDescription = decision === 'approved' 
-      ? `Retirement request approved by Commission for ${request.employee.name}`
-      : `Retirement request rejected by Commission for ${request.employee.name}`;
+      ? `Retirement request approved by Commission for ${request.Employee.name}`
+      : `Retirement request rejected by Commission for ${request.Employee.name}`;
     
     await handleUpdateRequest(requestId, payload, actionDescription);
   };
@@ -868,7 +868,7 @@ export default function RetirementPage() {
               <div key={request.id} className="mb-4 border p-4 rounded-md space-y-2 shadow-sm bg-background hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-semibold text-base flex items-center gap-2">
-                    Retirement Request for: {request.employee.name} (ZanID: {request.employee.zanId})
+                    Retirement Request for: {request.Employee.name} (ZanID: {request.Employee.zanId})
                     {(request.status.includes('Approved by Commission') || request.status.includes('Rejected by Commission')) && (
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                         request.status.includes('Approved by Commission') 
@@ -987,7 +987,7 @@ export default function RetirementPage() {
                 <div key={request.id} className="mb-4 border p-4 rounded-md space-y-2 shadow-sm bg-background hover:shadow-md transition-shadow">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="font-semibold text-base flex items-center gap-2">
-                      Retirement Request for: {request.employee.name} (ZanID: {request.employee.zanId})
+                      Retirement Request for: {request.Employee.name} (ZanID: {request.Employee.zanId})
                       {(request.status.includes('Approved by Commission') || request.status.includes('Rejected by Commission')) && (
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                           request.status.includes('Approved by Commission') 
@@ -1099,7 +1099,7 @@ export default function RetirementPage() {
             <DialogHeader>
               <DialogTitle>Request Details: {selectedRequest.id}</DialogTitle>
               <DialogDescription>
-                Retirement request for <strong>{selectedRequest.employee.name}</strong> (ZanID: {selectedRequest.employee.zanId}).
+                Retirement request for <strong>{selectedRequest.Employee.name}</strong> (ZanID: {selectedRequest.Employee.zanId}).
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4 text-sm max-h-[70vh] overflow-y-auto">
@@ -1107,38 +1107,38 @@ export default function RetirementPage() {
                     <h4 className="font-semibold text-base text-foreground mb-2">Employee Information</h4>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Full Name:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.name}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.name}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">ZanID:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.zanId}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.zanId}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Payroll #:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.payrollNumber || 'N/A'}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.payrollNumber || 'N/A'}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">ZSSF #:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.zssfNumber || 'N/A'}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.zssfNumber || 'N/A'}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Department:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.department}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.department}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Cadre/Position:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.cadre}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.cadre}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Employment Date:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.employmentDate ? format(parseISO(selectedRequest.employee.employmentDate), 'PPP') : 'N/A'}</p></div>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.employmentDate ? format(parseISO(selectedRequest.Employee.employmentDate), 'PPP') : 'N/A'}</p></div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Date of Birth:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.dateOfBirth ? format(parseISO(selectedRequest.employee.dateOfBirth), 'PPP') : 'N/A'}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.dateOfBirth ? format(parseISO(selectedRequest.Employee.dateOfBirth), 'PPP') : 'N/A'}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Institution:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.institution?.name || 'N/A'}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.institution?.name || 'N/A'}</p>
                     </div>
                 </div>
                 <div className="space-y-1">
@@ -1269,7 +1269,7 @@ export default function RetirementPage() {
                 <DialogHeader>
                     <DialogTitle>Reject Retirement Request: {currentRequestToAction.id}</DialogTitle>
                     <DialogDescription>
-                        Please provide the reason for rejecting the retirement request for <strong>{currentRequestToAction.employee.name}</strong>. This reason will be visible to the HRO.
+                        Please provide the reason for rejecting the retirement request for <strong>{currentRequestToAction.Employee.name}</strong>. This reason will be visible to the HRO.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="py-4">
@@ -1294,7 +1294,7 @@ export default function RetirementPage() {
             <DialogHeader>
               <DialogTitle>Correct & Resubmit Retirement Request</DialogTitle>
               <DialogDescription>
-                Please update the details and upload corrected documents for <strong>{requestToCorrect.employee.name}</strong> (ZanID: {requestToCorrect.employee.zanId}).
+                Please update the details and upload corrected documents for <strong>{requestToCorrect.Employee.name}</strong> (ZanID: {requestToCorrect.Employee.zanId}).
               </DialogDescription>
             </DialogHeader>
             <div className="py-4 space-y-4">

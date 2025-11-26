@@ -347,7 +347,7 @@ export default function FetchDataPage() {
                 <h4 className="font-medium text-green-800 mb-2">Recent Fetch Results</h4>
                 {fetchResults.map((result, index) => (
                   <div key={index} className="text-sm text-green-700">
-                    <p><strong>{result.employee.name}</strong> (ZanID: {result.employee.zanId})</p>
+                    <p><strong>{result.Employee.name}</strong> (ZanID: {result.Employee.zanId})</p>
                     <p>Documents: {result.documents} | Certificates: {result.certificates}</p>
                   </div>
                 ))}
