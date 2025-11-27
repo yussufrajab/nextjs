@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { z } from 'zod';
 import { ROLES } from '@/lib/constants';
 import bcrypt from 'bcryptjs';
+import { randomBytes } from 'crypto';
 
 const employeeLoginSchema = z.object({
   zanId: z.string().min(1),
@@ -92,9 +93,13 @@ export async function POST(req: Request) {
         const defaultPassword = employee.zanId;
         const hashedPassword = await bcrypt.hash(defaultPassword, 10);
 
+        // Generate unique id for user
+        const userId = `emp_${randomBytes(16).toString('hex')}`;
+
         // Create user account
         user = await db.User.create({
           data: {
+            id: userId,
             username,
             password: hashedPassword,
             name: employee.name,
@@ -102,6 +107,7 @@ export async function POST(req: Request) {
             active: true,
             employeeId: employee.id,
             institutionId: employee.institutionId,
+            updatedAt: new Date(),
           },
           select: {
             id: true,
