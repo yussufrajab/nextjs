@@ -635,7 +635,7 @@ export default function ResignationPage() {
                   </div>
                   <p className="text-sm text-muted-foreground">Effective Date: {request.effectiveDate ? format(parseISO(request.effectiveDate), 'PPP') : 'N/A'}</p>
                   {request.reason && <p className="text-sm text-muted-foreground">Reason: {request.reason}</p>}
-                  <p className="text-sm text-muted-foreground">Submitted: {request.createdAt ? format(parseISO(request.createdAt), 'PPP') : 'N/A'}</p>
+                  <p className="text-sm text-muted-foreground">Submitted: {request.createdAt ? format(parseISO(request.createdAt), 'PPP') : 'N/A'} by {request.submittedBy?.name || 'N/A'}</p>
                   <div className="flex items-center space-x-2">
                     <p className="text-sm"><span className="font-medium">Status:</span></p>
                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${

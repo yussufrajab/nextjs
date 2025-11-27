@@ -51,9 +51,18 @@ export async function GET(req: Request) {
 
     console.log(`Found ${requests.length} cadre change requests`);
 
+    // Transform the data to match frontend expectations
+    const transformedRequests = requests.map((req: any) => ({
+      ...req,
+      submittedBy: req.User_CadreChangeRequest_submittedByIdToUser,
+      reviewedBy: req.User_CadreChangeRequest_reviewedByIdToUser,
+      User_CadreChangeRequest_submittedByIdToUser: undefined,
+      User_CadreChangeRequest_reviewedByIdToUser: undefined
+    }));
+
     return NextResponse.json({
       success: true,
-      data: requests
+      data: transformedRequests
     });
   } catch (error) {
     console.error("[CADRE_CHANGE_GET]", error);
@@ -125,7 +134,8 @@ export async function POST(req: Request) {
             Institution: { select: { id: true, name: true } }
           }
         }
-      }
+      ,
+        User_CadreChangeRequest_submittedByIdToUser: { select: { id: true, name: true, username: true } }}
     });
 
     console.log('Created cadre change request:', cadreChangeRequest.id);
@@ -175,7 +185,9 @@ export async function PATCH(req: Request) {
             Institution: { select: { id: true, name: true } }
           }
         }
-      }
+      ,
+        User_CadreChangeRequest_submittedByIdToUser: { select: { id: true, name: true, username: true } },
+        User_CadreChangeRequest_reviewedByIdToUser: { select: { id: true, name: true, username: true } }}
     });
 
     // If cadre change request is approved by Commission, update employee cadre
@@ -187,9 +199,19 @@ export async function PATCH(req: Request) {
       console.log(`Employee ${updatedRequest.Employee.name} cadre updated to "${updatedRequest.newCadre}" after cadre change approval`);
     }
 
+    
+    // Transform the data to match frontend expectations
+    const transformedRequest = {
+      ...updatedRequest,
+      submittedBy: (updatedRequest as any).User_CadreChangeRequest_submittedByIdToUser,
+      reviewedBy: (updatedRequest as any).User_CadreChangeRequest_reviewedByIdToUser,
+      User_CadreChangeRequest_submittedByIdToUser: undefined,
+      User_CadreChangeRequest_reviewedByIdToUser: undefined
+    };
+
     return NextResponse.json({
       success: true,
-      data: updatedRequest
+      data: transformedRequest
     });
 
   } catch (error) {

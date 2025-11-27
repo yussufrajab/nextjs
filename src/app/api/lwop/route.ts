@@ -51,7 +51,16 @@ export async function GET(req: Request) {
       orderBy: { createdAt: 'desc' }
     }).catch(() => []);
 
-    return NextResponse.json(requests);
+    // Transform the data to match frontend expectations
+    const transformedRequests = requests.map((req: any) => ({
+      ...req,
+      submittedBy: req.User_LwopRequest_submittedByIdToUser,
+      reviewedBy: req.User_LwopRequest_reviewedByIdToUser,
+      User_LwopRequest_submittedByIdToUser: undefined,
+      User_LwopRequest_reviewedByIdToUser: undefined
+    }));
+
+    return NextResponse.json(transformedRequests);
   } catch (error) {
     console.error("[LWOP_GET]", error);
     return NextResponse.json({ success: false, message: 'Internal Server Error' }, { status: 500 });
@@ -122,7 +131,8 @@ export async function POST(req: Request) {
             employmentDate: true,
             Institution: { select: { id: true, name: true } }
           }
-        }
+        },
+        User_LwopRequest_submittedByIdToUser: { select: { id: true, name: true, username: true } }
       }
     });
 
@@ -137,9 +147,16 @@ export async function POST(req: Request) {
     await createNotificationForRole(ROLES.HHRMD || 'HHRMD', notification.message, notification.link);
     await createNotificationForRole(ROLES.DO || 'DO', notification.message, notification.link);
 
+    // Transform the data to match frontend expectations
+    const transformedRequest = {
+      ...lwopRequest,
+      submittedBy: (lwopRequest as any).User_LwopRequest_submittedByIdToUser,
+      User_LwopRequest_submittedByIdToUser: undefined
+    };
+
     return NextResponse.json({
       success: true,
-      data: lwopRequest
+      data: transformedRequest
     });
 
   } catch (error) {
@@ -183,7 +200,9 @@ export async function PATCH(req: Request) {
             employmentDate: true,
             Institution: { select: { id: true, name: true } }
           }
-        }
+        },
+        User_LwopRequest_submittedByIdToUser: { select: { id: true, name: true, username: true } },
+        User_LwopRequest_reviewedByIdToUser: { select: { id: true, name: true, username: true } }
       }
     });
 
@@ -196,9 +215,18 @@ export async function PATCH(req: Request) {
       console.log(`Employee ${updatedRequest.Employee.name} status updated to "On LWOP" after LWOP approval`);
     }
 
+    // Transform the data to match frontend expectations
+    const transformedRequest = {
+      ...updatedRequest,
+      submittedBy: (updatedRequest as any).User_LwopRequest_submittedByIdToUser,
+      reviewedBy: (updatedRequest as any).User_LwopRequest_reviewedByIdToUser,
+      User_LwopRequest_submittedByIdToUser: undefined,
+      User_LwopRequest_reviewedByIdToUser: undefined
+    };
+
     return NextResponse.json({
       success: true,
-      data: updatedRequest
+      data: transformedRequest
     });
 
   } catch (error) {

@@ -897,7 +897,7 @@ export default function RetirementPage() {
                 </div>
                 <p className="text-sm text-muted-foreground">Type: {request.retirementType}</p>
                 <p className="text-sm text-muted-foreground">Proposed Date: {request.proposedDate ? format(parseISO(request.proposedDate), 'PPP') : 'N/A'}</p>
-                <p className="text-sm text-muted-foreground">Submitted: {request.createdAt ? format(parseISO(request.createdAt), 'PPP') : 'N/A'}</p>
+                <p className="text-sm text-muted-foreground">Submitted: {request.createdAt ? format(parseISO(request.createdAt), 'PPP') : 'N/A'} by {request.submittedBy?.name || 'N/A'}</p>
                 <div className="flex items-center space-x-2">
                   <p className="text-sm"><span className="font-medium">Status:</span></p>
                   <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${

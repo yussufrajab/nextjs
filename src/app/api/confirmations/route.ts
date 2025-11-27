@@ -53,7 +53,16 @@ export async function GET(req: Request) {
       orderBy: { createdAt: 'desc' }
     });
 
-    return NextResponse.json(requests);
+    // Transform the data to match frontend expectations
+    const transformedRequests = requests.map((req: any) => ({
+      ...req,
+      submittedBy: req.User_ConfirmationRequest_submittedByIdToUser,
+      reviewedBy: req.User_ConfirmationRequest_reviewedByIdToUser,
+      User_ConfirmationRequest_submittedByIdToUser: undefined,
+      User_ConfirmationRequest_reviewedByIdToUser: undefined
+    }));
+
+    return NextResponse.json(transformedRequests);
   } catch (error) {
     console.error("[CONFIRMATIONS_GET]", error);
     return NextResponse.json({ success: false, message: 'Internal Server Error' }, { status: 500 });
@@ -119,15 +128,25 @@ export async function POST(req: Request) {
             employmentDate: true,
             Institution: { select: { id: true, name: true } }
           }
+        },
+        User_ConfirmationRequest_submittedByIdToUser: {
+          select: { id: true, name: true, username: true }
         }
       }
     });
 
     console.log('Created confirmation request:', confirmationRequest.id);
 
+    // Transform the data to match frontend expectations
+    const transformedRequest = {
+      ...confirmationRequest,
+      submittedBy: (confirmationRequest as any).User_ConfirmationRequest_submittedByIdToUser,
+      User_ConfirmationRequest_submittedByIdToUser: undefined
+    };
+
     return NextResponse.json({
       success: true,
-      data: confirmationRequest
+      data: transformedRequest
     });
 
   } catch (error) {
@@ -169,6 +188,12 @@ export async function PATCH(req: Request) {
             employmentDate: true,
             Institution: { select: { id: true, name: true } }
           }
+        },
+        User_ConfirmationRequest_submittedByIdToUser: {
+          select: { id: true, name: true, username: true }
+        },
+        User_ConfirmationRequest_reviewedByIdToUser: {
+          select: { id: true, name: true, username: true }
         }
       }
     });
@@ -192,9 +217,18 @@ export async function PATCH(req: Request) {
       }
     }
 
+    // Transform the data to match frontend expectations
+    const transformedRequest = {
+      ...updatedRequest,
+      submittedBy: (updatedRequest as any).User_ConfirmationRequest_submittedByIdToUser,
+      reviewedBy: (updatedRequest as any).User_ConfirmationRequest_reviewedByIdToUser,
+      User_ConfirmationRequest_submittedByIdToUser: undefined,
+      User_ConfirmationRequest_reviewedByIdToUser: undefined
+    };
+
     return NextResponse.json({
       success: true,
-      data: updatedRequest
+      data: transformedRequest
     });
 
   } catch (error) {

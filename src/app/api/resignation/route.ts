@@ -49,7 +49,16 @@ export async function GET(req: Request) {
       orderBy: { createdAt: 'desc' }
     }).catch(() => []);
 
-    return NextResponse.json(requests);
+    // Transform the data to match frontend expectations
+    const transformedRequests = requests.map((req: any) => ({
+      ...req,
+      submittedBy: req.User_ResignationRequest_submittedByIdToUser,
+      reviewedBy: req.User_ResignationRequest_reviewedByIdToUser,
+      User_ResignationRequest_submittedByIdToUser: undefined,
+      User_ResignationRequest_reviewedByIdToUser: undefined
+    }));
+
+    return NextResponse.json(transformedRequests);
   } catch (error) {
     console.error("[RESIGNATION_GET]", error);
     return NextResponse.json({ success: false, message: 'Internal Server Error' }, { status: 500 });
@@ -119,14 +128,22 @@ export async function POST(req: Request) {
             Institution: { select: { id: true, name: true } }
           }
         }
-      }
+      ,
+        User_ResignationRequest_submittedByIdToUser: { select: { id: true, name: true, username: true } }}
     });
 
     console.log('Created resignation request:', resignationRequest.id);
 
+    // Transform the data to match frontend expectations
+    const transformedRequest = {
+      ...resignationRequest,
+      submittedBy: (resignationRequest as any).User_ResignationRequest_submittedByIdToUser,
+      User_ResignationRequest_submittedByIdToUser: undefined
+    };
+
     return NextResponse.json({
       success: true,
-      data: resignationRequest
+      data: transformedRequest
     });
 
   } catch (error) {
@@ -174,7 +191,9 @@ export async function PATCH(req: Request) {
             Institution: { select: { id: true, name: true } }
           }
         }
-      }
+      ,
+        User_ResignationRequest_submittedByIdToUser: { select: { id: true, name: true, username: true } },
+        User_ResignationRequest_reviewedByIdToUser: { select: { id: true, name: true, username: true } }}
     });
 
     // If resignation request is approved by Commission, update employee status
@@ -186,9 +205,19 @@ export async function PATCH(req: Request) {
       console.log(`Employee ${updatedRequest.Employee.name} status updated to "Resigned" after resignation approval`);
     }
 
+    
+    // Transform the data to match frontend expectations
+    const transformedRequest = {
+      ...updatedRequest,
+      submittedBy: (updatedRequest as any).User_ResignationRequest_submittedByIdToUser,
+      reviewedBy: (updatedRequest as any).User_ResignationRequest_reviewedByIdToUser,
+      User_ResignationRequest_submittedByIdToUser: undefined,
+      User_ResignationRequest_reviewedByIdToUser: undefined
+    };
+
     return NextResponse.json({
       success: true,
-      data: updatedRequest
+      data: transformedRequest
     });
 
   } catch (error) {

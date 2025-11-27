@@ -48,7 +48,16 @@ export async function GET(req: Request) {
       orderBy: { createdAt: 'desc' }
     }).catch(() => []);
 
-    return NextResponse.json(requests);
+    // Transform the data to match frontend expectations
+    const transformedRequests = requests.map((req: any) => ({
+      ...req,
+      submittedBy: req.User_SeparationRequest_submittedByIdToUser,
+      reviewedBy: req.User_SeparationRequest_reviewedByIdToUser,
+      User_SeparationRequest_submittedByIdToUser: undefined,
+      User_SeparationRequest_reviewedByIdToUser: undefined
+    }));
+
+    return NextResponse.json(transformedRequests);
   } catch (error) {
     console.error("[TERMINATION_GET]", error);
     return NextResponse.json({ success: false, message: 'Internal Server Error' }, { status: 500 });
@@ -101,9 +110,16 @@ export async function POST(req: Request) {
 
     console.log('Created termination request:', separationRequest.id);
 
+    // Transform the data to match frontend expectations
+    const transformedRequest = {
+      ...separationRequest,
+      submittedBy: (separationRequest as any).User_TerminationRequest_submittedByIdToUser,
+      User_TerminationRequest_submittedByIdToUser: undefined
+    };
+
     return NextResponse.json({
       success: true,
-      data: separationRequest
+      data: transformedRequest
     });
 
   } catch (error) {
@@ -174,9 +190,19 @@ export async function PATCH(req: Request) {
       console.log(`Employee ${updatedRequest.Employee.name} status updated from "${currentEmployeeStatus}" to "${newStatus}" after ${updatedRequest.type.toLowerCase()} approval`);
     }
 
+    
+    // Transform the data to match frontend expectations
+    const transformedRequest = {
+      ...updatedRequest,
+      submittedBy: (updatedRequest as any).User_TerminationRequest_submittedByIdToUser,
+      reviewedBy: (updatedRequest as any).User_TerminationRequest_reviewedByIdToUser,
+      User_TerminationRequest_submittedByIdToUser: undefined,
+      User_TerminationRequest_reviewedByIdToUser: undefined
+    };
+
     return NextResponse.json({
       success: true,
-      data: updatedRequest
+      data: transformedRequest
     });
 
   } catch (error) {

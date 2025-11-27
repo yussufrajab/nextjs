@@ -70,9 +70,18 @@ export async function GET(req: Request) {
 
     console.log(`Found ${promotionRequests.length} promotion requests`);
 
+    // Transform the data to match frontend expectations
+    const transformedRequests = promotionRequests.map((req: any) => ({
+      ...req,
+      submittedBy: req.User_PromotionRequest_submittedByIdToUser,
+      reviewedBy: req.User_PromotionRequest_reviewedByIdToUser,
+      User_PromotionRequest_submittedByIdToUser: undefined,
+      User_PromotionRequest_reviewedByIdToUser: undefined
+    }));
+
     return NextResponse.json({
       success: true,
-      data: promotionRequests
+      data: transformedRequests
     });
 
   } catch (error) {
@@ -161,6 +170,13 @@ export async function POST(req: Request) {
               }
             }
           }
+        },
+        User_PromotionRequest_submittedByIdToUser: {
+          select: {
+            id: true,
+            name: true,
+            username: true
+          }
         }
       }
     });
@@ -176,9 +192,16 @@ export async function POST(req: Request) {
     await createNotificationForRole(ROLES.HHRMD || 'HHRMD', notification.message, notification.link);
     await createNotificationForRole(ROLES.DO || 'DO', notification.message, notification.link);
 
+    // Transform the data to match frontend expectations
+    const transformedRequest = {
+      ...promotionRequest,
+      submittedBy: (promotionRequest as any).User_PromotionRequest_submittedByIdToUser,
+      User_PromotionRequest_submittedByIdToUser: undefined
+    };
+
     return NextResponse.json({
       success: true,
-      data: promotionRequest
+      data: transformedRequest
     });
 
   } catch (error) {
@@ -225,6 +248,20 @@ export async function PATCH(req: Request) {
               }
             }
           }
+        },
+        User_PromotionRequest_submittedByIdToUser: {
+          select: {
+            id: true,
+            name: true,
+            username: true
+          }
+        },
+        User_PromotionRequest_reviewedByIdToUser: {
+          select: {
+            id: true,
+            name: true,
+            username: true
+          }
         }
       }
     });
@@ -238,9 +275,18 @@ export async function PATCH(req: Request) {
       console.log(`Employee ${updatedRequest.Employee.name} cadre updated to "${updatedRequest.proposedCadre}" after promotion approval`);
     }
 
+    // Transform the data to match frontend expectations
+    const transformedRequest = {
+      ...updatedRequest,
+      submittedBy: (updatedRequest as any).User_PromotionRequest_submittedByIdToUser,
+      reviewedBy: (updatedRequest as any).User_PromotionRequest_reviewedByIdToUser,
+      User_PromotionRequest_submittedByIdToUser: undefined,
+      User_PromotionRequest_reviewedByIdToUser: undefined
+    };
+
     return NextResponse.json({
       success: true,
-      data: updatedRequest
+      data: transformedRequest
     });
 
   } catch (error) {

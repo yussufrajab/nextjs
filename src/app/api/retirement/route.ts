@@ -48,7 +48,16 @@ export async function GET(req: Request) {
       orderBy: { createdAt: 'desc' }
     }).catch(() => []);
 
-    return NextResponse.json(requests);
+    // Transform the data to match frontend expectations
+    const transformedRequests = requests.map((req: any) => ({
+      ...req,
+      submittedBy: req.User_RetirementRequest_submittedByIdToUser,
+      reviewedBy: req.User_RetirementRequest_reviewedByIdToUser,
+      User_RetirementRequest_submittedByIdToUser: undefined,
+      User_RetirementRequest_reviewedByIdToUser: undefined
+    }));
+
+    return NextResponse.json(transformedRequests);
   } catch (error) {
     console.error("[RETIREMENT_GET]", error);
     return NextResponse.json({ success: false, message: 'Internal Server Error' }, { status: 500 });
@@ -106,14 +115,22 @@ export async function POST(req: Request) {
             Institution: { select: { id: true, name: true } }
           }
         }
-      }
+      ,
+        User_RetirementRequest_submittedByIdToUser: { select: { id: true, name: true, username: true } }}
     });
 
     console.log('Created retirement request:', retirementRequest.id);
 
+    // Transform the data to match frontend expectations
+    const transformedRequest = {
+      ...retirementRequest,
+      submittedBy: (retirementRequest as any).User_RetirementRequest_submittedByIdToUser,
+      User_RetirementRequest_submittedByIdToUser: undefined
+    };
+
     return NextResponse.json({
       success: true,
-      data: retirementRequest
+      data: transformedRequest
     });
 
   } catch (error) {
@@ -161,7 +178,9 @@ export async function PATCH(req: Request) {
             Institution: { select: { id: true, name: true } }
           }
         }
-      }
+      ,
+        User_RetirementRequest_submittedByIdToUser: { select: { id: true, name: true, username: true } },
+        User_RetirementRequest_reviewedByIdToUser: { select: { id: true, name: true, username: true } }}
     });
 
     // If retirement request is approved by Commission, update employee status
@@ -173,9 +192,19 @@ export async function PATCH(req: Request) {
       console.log(`Employee ${updatedRequest.Employee.name} status updated to "Retired" after retirement approval`);
     }
 
+    
+    // Transform the data to match frontend expectations
+    const transformedRequest = {
+      ...updatedRequest,
+      submittedBy: (updatedRequest as any).User_RetirementRequest_submittedByIdToUser,
+      reviewedBy: (updatedRequest as any).User_RetirementRequest_reviewedByIdToUser,
+      User_RetirementRequest_submittedByIdToUser: undefined,
+      User_RetirementRequest_reviewedByIdToUser: undefined
+    };
+
     return NextResponse.json({
       success: true,
-      data: updatedRequest
+      data: transformedRequest
     });
 
   } catch (error) {

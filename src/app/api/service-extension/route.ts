@@ -49,7 +49,16 @@ export async function GET(req: Request) {
       orderBy: { createdAt: 'desc' }
     }).catch(() => []);
 
-    return NextResponse.json(requests);
+    // Transform the data to match frontend expectations
+    const transformedRequests = requests.map((req: any) => ({
+      ...req,
+      submittedBy: req.User_ServiceExtensionRequest_submittedByIdToUser,
+      reviewedBy: req.User_ServiceExtensionRequest_reviewedByIdToUser,
+      User_ServiceExtensionRequest_submittedByIdToUser: undefined,
+      User_ServiceExtensionRequest_reviewedByIdToUser: undefined
+    }));
+
+    return NextResponse.json(transformedRequests);
   } catch (error) {
     console.error("[SERVICE_EXTENSION_GET]", error);
     return NextResponse.json({ success: false, message: 'Internal Server Error' }, { status: 500 });
@@ -120,7 +129,8 @@ export async function POST(req: Request) {
             Institution: { select: { id: true, name: true } }
           }
         }
-      }
+      ,
+        User_ServiceExtensionRequest_submittedByIdToUser: { select: { id: true, name: true, username: true } }}
     });
 
     console.log('Created service extension request:', serviceExtensionRequest.id);
@@ -176,7 +186,9 @@ export async function PATCH(req: Request) {
             Institution: { select: { id: true, name: true } }
           }
         }
-      }
+      ,
+        User_ServiceExtensionRequest_submittedByIdToUser: { select: { id: true, name: true, username: true } },
+        User_ServiceExtensionRequest_reviewedByIdToUser: { select: { id: true, name: true, username: true } }}
     });
 
     // Check if the service extension request was approved by commission
@@ -215,9 +227,19 @@ export async function PATCH(req: Request) {
       }
     }
 
+    
+    // Transform the data to match frontend expectations
+    const transformedRequest = {
+      ...updatedRequest,
+      submittedBy: (updatedRequest as any).User_ServiceExtensionRequest_submittedByIdToUser,
+      reviewedBy: (updatedRequest as any).User_ServiceExtensionRequest_reviewedByIdToUser,
+      User_ServiceExtensionRequest_submittedByIdToUser: undefined,
+      User_ServiceExtensionRequest_reviewedByIdToUser: undefined
+    };
+
     return NextResponse.json({
       success: true,
-      data: updatedRequest
+      data: transformedRequest
     });
 
   } catch (error) {
