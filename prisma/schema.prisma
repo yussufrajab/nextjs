@@ -128,7 +128,7 @@ model Institution {
   email       String?
   phoneNumber String?
   voteNumber  String?
-  tinNumber   String?
+  tinNumber   String?    @unique
   Employee    Employee[]
   User        User[]
 }

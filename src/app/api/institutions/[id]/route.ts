@@ -7,6 +7,7 @@ const institutionSchema = z.object({
   email: z.string().email().optional().or(z.literal("")),
   phoneNumber: z.string().optional(),
   voteNumber: z.string().optional(),
+  tinNumber: z.string().optional(),
 });
 
 export async function PUT(
@@ -17,13 +18,33 @@ export async function PUT(
     const body = await req.json();
     const validatedData = institutionSchema.parse(body);
 
+    // Check if another institution has the same tin number (only if tin number is provided)
+    if (validatedData.tinNumber && validatedData.tinNumber.trim().length > 0) {
+      const existingTinNumber = await db.Institution.findFirst({
+        where: {
+          tinNumber: validatedData.tinNumber.trim(),
+          NOT: {
+            id: params.id
+          }
+        }
+      });
+
+      if (existingTinNumber) {
+        return NextResponse.json({
+          success: false,
+          message: 'An institution with this Tin Number already exists'
+        }, { status: 409 });
+      }
+    }
+
     const updatedInstitution = await db.Institution.update({
       where: { id: params.id },
-      data: { 
+      data: {
         name: validatedData.name,
         email: validatedData.email?.trim() || null,
         phoneNumber: validatedData.phoneNumber?.trim() || null,
         voteNumber: validatedData.voteNumber?.trim() || null,
+        tinNumber: validatedData.tinNumber?.trim() || null,
       },
     });
 
@@ -34,7 +55,11 @@ export async function PUT(
       return new NextResponse(JSON.stringify(error.errors), { status: 400 });
     }
     if ((error as any).code === 'P2002') {
-        return new NextResponse('Institution with this name already exists', { status: 409 });
+      const target = (error as any).meta?.target;
+      if (target && target.includes('tinNumber')) {
+        return new NextResponse('Institution with this Tin Number already exists', { status: 409 });
+      }
+      return new NextResponse('Institution with this name already exists', { status: 409 });
     }
     if ((error as any).code === 'P2025') {
         return new NextResponse('Institution not found', { status: 404 });
