@@ -158,7 +158,7 @@ export const NAV_ITEMS: NavItem[] = [
     title: 'Recent Activities',
     href: '/dashboard/recent-activities',
     icon: Activity,
-    roles: [ROLES.HRO, ROLES.HHRMD, ROLES.HRMO, ROLES.DO, ROLES.CSCS, ROLES.HRRP, ROLES.ADMIN as Role],
+    roles: [ROLES.HRO, ROLES.HHRMD, ROLES.HRMO, ROLES.DO, ROLES.CSCS, ROLES.HRRP],
     description: 'An overview of the latest requests and their statuses.',
   },
   {
