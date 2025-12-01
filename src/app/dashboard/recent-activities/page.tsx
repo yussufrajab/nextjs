@@ -64,7 +64,7 @@ export default function RecentActivitiesPage() {
   const [isPageLoading, setIsPageLoading] = React.useState(true);
 
   React.useEffect(() => {
-    if (!isAuthLoading && (role === ROLES.EMPLOYEE || role === ROLES.PO)) {
+    if (!isAuthLoading && (role === ROLES.EMPLOYEE || role === ROLES.PO || role === ROLES.ADMIN)) {
       router.replace('/dashboard/profile');
     }
   }, [isAuthLoading, role, router]);
@@ -72,7 +72,7 @@ export default function RecentActivitiesPage() {
   const fetchRecentActivities = React.useCallback(async () => {
     if (isAuthLoading || !user) return;
 
-    const isDashboardUser = role !== ROLES.EMPLOYEE && role !== ROLES.PO;
+    const isDashboardUser = role !== ROLES.EMPLOYEE && role !== ROLES.PO && role !== ROLES.ADMIN;
     if (!isDashboardUser) {
       setIsPageLoading(false);
       return;

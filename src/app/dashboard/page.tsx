@@ -375,50 +375,53 @@ export default function DashboardPage() {
         )}
       </div>
 
-      <div className="pt-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Activities</CardTitle>
-            <CardDescription>An overview of the latest requests and their statuses.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Request ID</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Employee</TableHead>
-                  <TableHead className="text-right">Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {Array.isArray(recentActivities) && recentActivities.length > 0 ? (
-                  recentActivities.map((activity) => (
-                    <TableRow key={activity.id}>
-                      <TableCell>
-                        <Link href={activity.href} passHref legacyBehavior>
-                          <a className="font-medium text-primary hover:underline">{activity.id}</a>
-                        </Link>
-                      </TableCell>
-                      <TableCell>{activity.type}</TableCell>
-                      <TableCell>{activity.employee}</TableCell>
-                      <TableCell className="text-right">
-                        <Badge variant={getStatusVariant(activity.status)}>{activity.status}</Badge>
+      {/* Recent Activities - Hidden for Admin role */}
+      {role !== ROLES.ADMIN && (
+        <div className="pt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Activities</CardTitle>
+              <CardDescription>An overview of the latest requests and their statuses.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Request ID</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Employee</TableHead>
+                    <TableHead className="text-right">Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {Array.isArray(recentActivities) && recentActivities.length > 0 ? (
+                    recentActivities.map((activity) => (
+                      <TableRow key={activity.id}>
+                        <TableCell>
+                          <Link href={activity.href} passHref legacyBehavior>
+                            <a className="font-medium text-primary hover:underline">{activity.id}</a>
+                          </Link>
+                        </TableCell>
+                        <TableCell>{activity.type}</TableCell>
+                        <TableCell>{activity.employee}</TableCell>
+                        <TableCell className="text-right">
+                          <Badge variant={getStatusVariant(activity.status)}>{activity.status}</Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center text-muted-foreground">
+                        No recent activities to display.
                       </TableCell>
                     </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground">
-                      No recent activities to display.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      </div>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
