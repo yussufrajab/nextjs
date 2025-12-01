@@ -715,7 +715,7 @@ export default function LwopPage() {
         </Card>
       )}
 
-       {(role === ROLES.HHRMD || role === ROLES.HRMO || role === ROLES.CSCS || role === 'Admin' || role === ROLES.HRO) && (
+       {(role === ROLES.HHRMD || role === ROLES.HRMO || role === ROLES.CSCS || role === ROLES.HRO) && (
         <Card className="shadow-lg">
           <CardHeader>
             <div className="flex items-center justify-between">

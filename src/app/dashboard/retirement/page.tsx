@@ -959,7 +959,7 @@ export default function RetirementPage() {
         </Card>
       )}
 
-      {(role === ROLES.HHRMD || role === ROLES.HRMO || role === ROLES.CSCS || role === 'Admin') && ( 
+      {(role === ROLES.HHRMD || role === ROLES.HRMO || role === ROLES.CSCS) && ( 
         <Card className="shadow-lg">
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -1059,7 +1059,7 @@ export default function RetirementPage() {
                   {request.rejectionReason && <p className="text-sm text-destructive"><span className="font-medium">Rejection Reason:</span> {request.rejectionReason}</p>}
                   <div className="mt-3 pt-3 border-t flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                     <Button size="sm" variant="outline" onClick={() => { setSelectedRequest(request); setIsDetailsModalOpen(true); }}>View Details</Button>
-                    {(role === ROLES.HHRMD || role === ROLES.HRMO || role === ROLES.CSCS || role === 'Admin') && (
+                    {(role === ROLES.HHRMD || role === ROLES.HRMO || role === ROLES.CSCS) && (
                       <>
                         {/* HRMO/HHRMD Parallel Review Actions */}
                         {(role === ROLES.HRMO || role === ROLES.HHRMD) && (request.status === 'Pending HRMO/HHRMD Review') && (

@@ -86,7 +86,6 @@ export async function GET(req: Request) {
         case 'HRO': return ['Pending HRMO Review'];
         case 'HHRMD': return ['Pending HRMO/HHRMD Review'];
         case 'CSCS':
-        case 'Admin':
         default: return ['PENDING', 'Pending HRMO Review', 'Pending HRMO/HHRMD Review', 'Request Received – Awaiting Commission Decision', 'UNDER_REVIEW'];
       }
     };
@@ -96,7 +95,6 @@ export async function GET(req: Request) {
         case 'HRO': return ['Pending HRMO Review', 'Draft - Pending Review'];
         case 'HHRMD': return ['Pending HRMO/HHRMD Review'];
         case 'CSCS':
-        case 'Admin':
         default: return ['PENDING', 'Pending HRMO Review', 'Pending HRMO/HHRMD Review', 'Request Received – Awaiting Commission Decision', 'Draft - Pending Review', 'UNDER_REVIEW'];
       }
     };
@@ -107,7 +105,6 @@ export async function GET(req: Request) {
         case 'HHRMD':
         case 'DO': return ['Pending DO/HHRMD Review'];
         case 'CSCS':
-        case 'Admin':
         default: return ['PENDING', 'Pending DO/HHRMD Review', 'Request Received – Awaiting Commission Decision', 'Rejected by HHRMD - Awaiting HRO Correction'];
       }
     };
@@ -117,7 +114,6 @@ export async function GET(req: Request) {
         case 'HRO': return ['Pending HRMO Review', 'Rejected by HRMO - Awaiting HRO Correction'];
         case 'HHRMD': return ['Pending HRMO/HHRMD Review'];
         case 'CSCS':
-        case 'Admin':
         default: return ['Pending HRMO Review', 'Pending HRMO/HHRMD Review', 'Request Received – Awaiting Commission Decision', 'Rejected by HRMO - Awaiting HRO Correction', 'UNDER_REVIEW'];
       }
     };
@@ -127,7 +123,6 @@ export async function GET(req: Request) {
         case 'HRO': return ['Pending HRMO Review', 'Rejected by HHRMD - Awaiting HRO Correction'];
         case 'HHRMD': return ['Pending HRMO/HHRMD Review', 'Pending HHRMD Review'];
         case 'CSCS':
-        case 'Admin':
         default: return ['PENDING', 'Pending HRMO Review', 'Pending HRMO/HHRMD Review', 'Pending HHRMD Review', 'Rejected by HHRMD - Awaiting HRO Correction', 'Request Received – Awaiting Commission Decision', 'UNDER_REVIEW'];
       }
     };
@@ -137,7 +132,6 @@ export async function GET(req: Request) {
         case 'HRO': return ['Rejected by HHRMD - Awaiting HRO Action'];
         case 'HHRMD': return ['Pending HRMO/HHRMD Review'];
         case 'CSCS':
-        case 'Admin':
         default: return ['Pending HRMO/HHRMD Review', 'Forwarded to Commission for Acknowledgment', 'Rejected by HHRMD - Awaiting HRO Action', 'UNDER_REVIEW'];
       }
     };
@@ -147,7 +141,6 @@ export async function GET(req: Request) {
         case 'HRO': return ['Rejected by HHRMD - Awaiting HRO Correction'];
         case 'HHRMD': return ['Pending HRMO/HHRMD Review'];
         case 'CSCS':
-        case 'Admin':
         default: return ['Pending HRMO/HHRMD Review', 'Request Received – Awaiting Commission Decision', 'Rejected by HHRMD - Awaiting HRO Correction', 'UNDER_REVIEW'];
       }
     };
@@ -233,7 +226,7 @@ export async function GET(req: Request) {
     console.log('Employee where clause:', employeeWhereClause);
     console.log('Complaint where clause:', complaintWhereClause);
 
-    // Fetch more items for CSC roles (CSCS, Admin) who need comprehensive oversight
+    // Fetch more items for CSC roles (CSCS only) who need comprehensive oversight
     // Regular roles get 3 items per category, CSC roles get 5 items per category
     const itemsPerCategory = isCSCRole(userRole) ? 5 : 3;
     console.log(`Fetching ${itemsPerCategory} items per category for role: ${userRole}`);
