@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { ROLES } from '@/lib/constants';
-import { shouldApplyInstitutionFilter } from '@/lib/role-utils';
+import { shouldApplyInstitutionFilter, isCSCRole } from '@/lib/role-utils';
 
 const getRequestHref = (type: string) => {
     switch (type) {
@@ -86,7 +86,7 @@ export async function GET(req: Request) {
         case 'HRO': return ['Pending HRMO Review'];
         case 'HHRMD': return ['Pending HRMO/HHRMD Review'];
         case 'CSCS':
-        case 'Admin': return ['Request Received – Awaiting Commission Decision'];
+        case 'Admin':
         default: return ['PENDING', 'Pending HRMO Review', 'Pending HRMO/HHRMD Review', 'Request Received – Awaiting Commission Decision', 'UNDER_REVIEW'];
       }
     };
@@ -96,7 +96,7 @@ export async function GET(req: Request) {
         case 'HRO': return ['Pending HRMO Review', 'Draft - Pending Review'];
         case 'HHRMD': return ['Pending HRMO/HHRMD Review'];
         case 'CSCS':
-        case 'Admin': return ['Request Received – Awaiting Commission Decision'];
+        case 'Admin':
         default: return ['PENDING', 'Pending HRMO Review', 'Pending HRMO/HHRMD Review', 'Request Received – Awaiting Commission Decision', 'Draft - Pending Review', 'UNDER_REVIEW'];
       }
     };
@@ -107,7 +107,7 @@ export async function GET(req: Request) {
         case 'HHRMD':
         case 'DO': return ['Pending DO/HHRMD Review'];
         case 'CSCS':
-        case 'Admin': return ['Request Received – Awaiting Commission Decision'];
+        case 'Admin':
         default: return ['PENDING', 'Pending DO/HHRMD Review', 'Request Received – Awaiting Commission Decision', 'Rejected by HHRMD - Awaiting HRO Correction'];
       }
     };
@@ -117,7 +117,7 @@ export async function GET(req: Request) {
         case 'HRO': return ['Pending HRMO Review', 'Rejected by HRMO - Awaiting HRO Correction'];
         case 'HHRMD': return ['Pending HRMO/HHRMD Review'];
         case 'CSCS':
-        case 'Admin': return ['Request Received – Awaiting Commission Decision'];
+        case 'Admin':
         default: return ['Pending HRMO Review', 'Pending HRMO/HHRMD Review', 'Request Received – Awaiting Commission Decision', 'Rejected by HRMO - Awaiting HRO Correction', 'UNDER_REVIEW'];
       }
     };
@@ -127,7 +127,7 @@ export async function GET(req: Request) {
         case 'HRO': return ['Pending HRMO Review', 'Rejected by HHRMD - Awaiting HRO Correction'];
         case 'HHRMD': return ['Pending HRMO/HHRMD Review', 'Pending HHRMD Review'];
         case 'CSCS':
-        case 'Admin': return ['Request Received – Awaiting Commission Decision'];
+        case 'Admin':
         default: return ['PENDING', 'Pending HRMO Review', 'Pending HRMO/HHRMD Review', 'Pending HHRMD Review', 'Rejected by HHRMD - Awaiting HRO Correction', 'Request Received – Awaiting Commission Decision', 'UNDER_REVIEW'];
       }
     };
@@ -137,7 +137,7 @@ export async function GET(req: Request) {
         case 'HRO': return ['Rejected by HHRMD - Awaiting HRO Action'];
         case 'HHRMD': return ['Pending HRMO/HHRMD Review'];
         case 'CSCS':
-        case 'Admin': return ['Forwarded to Commission for Acknowledgment'];
+        case 'Admin':
         default: return ['Pending HRMO/HHRMD Review', 'Forwarded to Commission for Acknowledgment', 'Rejected by HHRMD - Awaiting HRO Action', 'UNDER_REVIEW'];
       }
     };
@@ -147,7 +147,7 @@ export async function GET(req: Request) {
         case 'HRO': return ['Rejected by HHRMD - Awaiting HRO Correction'];
         case 'HHRMD': return ['Pending HRMO/HHRMD Review'];
         case 'CSCS':
-        case 'Admin': return ['Request Received – Awaiting Commission Decision'];
+        case 'Admin':
         default: return ['Pending HRMO/HHRMD Review', 'Request Received – Awaiting Commission Decision', 'Rejected by HHRMD - Awaiting HRO Correction', 'UNDER_REVIEW'];
       }
     };
@@ -233,8 +233,10 @@ export async function GET(req: Request) {
     console.log('Employee where clause:', employeeWhereClause);
     console.log('Complaint where clause:', complaintWhereClause);
 
-    // Fetch only 3 most recent from each category to reduce data transfer
-    // We'll combine and take top 10 overall
+    // Fetch more items for CSC roles (CSCS, Admin) who need comprehensive oversight
+    // Regular roles get 3 items per category, CSC roles get 5 items per category
+    const itemsPerCategory = isCSCRole(userRole) ? 5 : 3;
+    console.log(`Fetching ${itemsPerCategory} items per category for role: ${userRole}`);
     const [
       confirmationsResult,
       promotionsResult,
@@ -255,7 +257,7 @@ export async function GET(req: Request) {
           Employee: { select: { name: true } }
         },
         orderBy: { updatedAt: 'desc' },
-        take: 3
+        take: itemsPerCategory
       }),
       db.promotionRequest.findMany({
         where: employeeWhereClause,
@@ -266,7 +268,7 @@ export async function GET(req: Request) {
           Employee: { select: { name: true } }
         },
         orderBy: { updatedAt: 'desc' },
-        take: 3
+        take: itemsPerCategory
       }),
       db.lwopRequest.findMany({
         where: employeeWhereClause,
@@ -277,7 +279,7 @@ export async function GET(req: Request) {
           Employee: { select: { name: true } }
         },
         orderBy: { updatedAt: 'desc' },
-        take: 3
+        take: itemsPerCategory
       }),
       db.complaint.findMany({
         where: complaintWhereClause,
@@ -288,7 +290,7 @@ export async function GET(req: Request) {
           User_Complaint_complainantIdToUser: { select: { name: true } }
         },
         orderBy: { updatedAt: 'desc' },
-        take: 3
+        take: itemsPerCategory
       }),
       db.separationRequest.findMany({
         where: employeeWhereClause,
@@ -300,7 +302,7 @@ export async function GET(req: Request) {
           Employee: { select: { name: true } }
         },
         orderBy: { updatedAt: 'desc' },
-        take: 3
+        take: itemsPerCategory
       }),
       db.cadreChangeRequest.findMany({
         where: employeeWhereClause,
@@ -311,7 +313,7 @@ export async function GET(req: Request) {
           Employee: { select: { name: true } }
         },
         orderBy: { updatedAt: 'desc' },
-        take: 3
+        take: itemsPerCategory
       }),
       db.retirementRequest.findMany({
         where: employeeWhereClause,
@@ -322,7 +324,7 @@ export async function GET(req: Request) {
           Employee: { select: { name: true } }
         },
         orderBy: { updatedAt: 'desc' },
-        take: 3
+        take: itemsPerCategory
       }),
       db.resignationRequest.findMany({
         where: employeeWhereClause,
@@ -333,7 +335,7 @@ export async function GET(req: Request) {
           Employee: { select: { name: true } }
         },
         orderBy: { updatedAt: 'desc' },
-        take: 3
+        take: itemsPerCategory
       }),
       db.serviceExtensionRequest.findMany({
         where: employeeWhereClause,
@@ -344,7 +346,7 @@ export async function GET(req: Request) {
           Employee: { select: { name: true } }
         },
         orderBy: { updatedAt: 'desc' },
-        take: 3
+        take: itemsPerCategory
       })
     ]);
 

@@ -701,7 +701,7 @@ export default function ComplaintsPage() {
   
   // Both DO and HHRMD should see all complaints assigned to either role
   const allOfficerComplaints = complaints.filter(c => 
-    (role === ROLES.DO || role === ROLES.HHRMD) && 
+    (role === ROLES.DO || role === ROLES.HHRMD || role === ROLES.CSCS || role === 'Admin') && 
     (c.assignedOfficerRole === ROLES.DO || c.assignedOfficerRole === ROLES.HHRMD)
   );
   
@@ -1047,7 +1047,7 @@ export default function ComplaintsPage() {
         </>
       )}
 
-      {(role === ROLES.DO || role === ROLES.HHRMD) && (
+      {(role === ROLES.DO || role === ROLES.HHRMD || role === ROLES.CSCS || role === 'Admin') && (
         <>
           {/* Active Complaints Section */}
           <Card className="shadow-lg mb-8">
@@ -1254,7 +1254,7 @@ export default function ComplaintsPage() {
               <div><strong className="text-muted-foreground">Iliwasilishwa Mnamo:</strong> {format(parseISO(selectedComplaint.submissionDate), 'PPP p')}</div>
               <div><strong className="text-muted-foreground">Hali:</strong> <span className="text-primary">{selectedComplaint.status}</span></div>
               
-              {(role === ROLES.DO || role === ROLES.HHRMD) && (
+              {(role === ROLES.DO || role === ROLES.HHRMD || role === ROLES.CSCS || role === 'Admin') && (
                 <Card className="mt-3 bg-blue-50 border-blue-200">
                   <CardHeader className="pb-2 pt-3">
                     <CardTitle className="text-base text-blue-700">Maelezo ya Mawasiliano (Siri)</CardTitle>

@@ -693,7 +693,7 @@ export default function ResignationPage() {
         </Card>
       )}
 
-      {(role === ROLES.HHRMD || role === ROLES.HRMO) && ( 
+      {(role === ROLES.HHRMD || role === ROLES.HRMO || role === ROLES.CSCS || role === 'Admin') && ( 
         <Card className="shadow-lg">
           <CardHeader>
             <div className="flex items-center justify-between">

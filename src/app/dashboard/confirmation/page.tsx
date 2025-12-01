@@ -157,8 +157,8 @@ export default function ConfirmationPage() {
       });
 
       const filteredData = allRequests.filter((req: ConfirmationRequest) => {
-        if (role === ROLES.HHRMD || role === ROLES.HRMO) {
-          // Show all requests for HHRMD/HRMO including completed ones for tracking
+        if (role === ROLES.HHRMD || role === ROLES.HRMO || role === ROLES.CSCS || role === 'Admin') {
+          // Show all requests for HHRMD/HRMO/CSCS/Admin including completed ones for tracking
           return true;
         } else if (role === ROLES.HRO) {
           return req.submittedById === user.id;

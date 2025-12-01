@@ -853,7 +853,7 @@ export default function ServiceExtensionPage() {
         </Card>
       )}
 
-      {(role === ROLES.HHRMD || role === ROLES.HRMO) && ( 
+      {(role === ROLES.HHRMD || role === ROLES.HRMO || role === ROLES.CSCS || role === 'Admin') && ( 
         <Card className="shadow-lg">
           <CardHeader>
             <div className="flex items-center justify-between">
