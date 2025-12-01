@@ -1,5 +1,6 @@
 import { db } from '@/lib/db';
 import { ROLES } from '@/lib/constants';
+import { v4 as uuidv4 } from 'uuid';
 
 export interface NotificationData {
   message: string;
@@ -11,6 +12,7 @@ export async function createNotification(data: NotificationData) {
   try {
     await db.notification.create({
       data: {
+        id: uuidv4(),
         message: data.message,
         link: data.link,
         userId: data.userId,
@@ -25,12 +27,13 @@ export async function createNotification(data: NotificationData) {
 
 export async function createNotificationForRole(role: string, message: string, link?: string) {
   try {
-    const users = await db.user.findMany({
+    const users = await db.User.findMany({
       where: { role: role, active: true },
       select: { id: true },
     });
 
     const notifications = users.map(user => ({
+      id: uuidv4(),
       message,
       link,
       userId: user.id,

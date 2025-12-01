@@ -13,7 +13,7 @@ export async function GET(req: Request) {
     let whereClause: any = {};
 
     if (shouldApplyInstitutionFilter(userRole, userInstitutionId)) {
-      whereClause.employee = {
+      whereClause.Employee = {
         institutionId: userInstitutionId
       };
       console.log('Applying institution filter for confirmation requests, role:', userRole);
@@ -24,16 +24,16 @@ export async function GET(req: Request) {
     const requests = await db.confirmationRequest.findMany({
       where: whereClause,
       include: {
-        employee: {
+        Employee: {
           select: {
             id: true,
             name: true,
             zanId: true,
-            institution: { select: { id: true, name: true } }
+            Institution: { select: { id: true, name: true } }
           }
         },
-        submittedBy: { select: { id: true, name: true, username: true } },
-        reviewedBy: { select: { id: true, name: true, username: true } }
+        User_ConfirmationRequest_submittedByIdToUser: { select: { id: true, name: true, username: true } },
+        User_ConfirmationRequest_reviewedByIdToUser: { select: { id: true, name: true, username: true } }
       },
       orderBy: { createdAt: 'desc' }
     }).catch(() => []);

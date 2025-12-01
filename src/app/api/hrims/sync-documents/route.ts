@@ -53,7 +53,7 @@ export async function POST(req: Request) {
     const validatedRequest = hrimsDocumentsRequestSchema.parse(body);
 
     // Find institution by vote number
-    const institution = await db.institution.findFirst({
+    const institution = await db.Institution.findFirst({
       where: {
         voteNumber: validatedRequest.institutionVoteNumber
       }
@@ -67,7 +67,7 @@ export async function POST(req: Request) {
     }
 
     // Find employee to ensure they exist
-    const employee = await db.employee.findFirst({
+    const employee = await db.Employee.findFirst({
       where: {
         OR: [
           { zanId: validatedRequest.zanId },
@@ -100,7 +100,7 @@ export async function POST(req: Request) {
     // Store documents in database
     const result = await storeEmployeeDocuments(validatedHrimsData, employee.id);
 
-    console.log('Documents synced successfully for employee:', employee.id);
+    console.log('Documents synced successfully for Employee:', employee.id);
 
     return NextResponse.json({
       success: true,
@@ -205,7 +205,7 @@ async function storeEmployeeDocuments(
           break;
       }
 
-      await db.employee.update({
+      await db.Employee.update({
         where: { id: employeeId },
         data: updateData
       });

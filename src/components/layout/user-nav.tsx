@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -12,13 +13,15 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/hooks/use-auth';
-import { LogOut, User as UserIcon, Settings } from 'lucide-react';
+import { LogOut, User as UserIcon, KeyRound } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { ChangePasswordModal } from '@/components/auth/change-password-modal';
 
 export function UserNav() {
   const { user, logout, isLoading } = useAuth();
   const router = useRouter();
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
 
   if (isLoading || !user) {
     return (
@@ -69,9 +72,9 @@ export function UserNav() {
               <span>Profile</span>
             </DropdownMenuItem>
           </Link>
-          <DropdownMenuItem disabled>
-            <Settings className="mr-2 h-4 w-4" />
-            <span>Settings</span>
+          <DropdownMenuItem onClick={() => setIsChangePasswordOpen(true)}>
+            <KeyRound className="mr-2 h-4 w-4" />
+            <span>Change Password</span>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
@@ -80,6 +83,10 @@ export function UserNav() {
           <span>Log out</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
+      <ChangePasswordModal
+        open={isChangePasswordOpen}
+        onOpenChange={setIsChangePasswordOpen}
+      />
     </DropdownMenu>
   );
 }

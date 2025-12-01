@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { shouldApplyInstitutionFilter } from '@/lib/role-utils';
 import { validateEmployeeStatusForRequest } from '@/lib/employee-status-validation';
+import { v4 as uuidv4 } from 'uuid';
 
 export async function GET(req: Request) {
   try {
@@ -18,7 +19,7 @@ export async function GET(req: Request) {
     // Apply institution filtering based on role
     if (shouldApplyInstitutionFilter(userRole, userInstitutionId)) {
       console.log(`Applying institution filter for role ${userRole} with institutionId ${userInstitutionId}`);
-      whereClause.employee = {
+      whereClause.Employee = {
         institutionId: userInstitutionId
       };
     } else {
@@ -28,7 +29,7 @@ export async function GET(req: Request) {
     const requests = await db.cadreChangeRequest.findMany({
       where: whereClause,
       include: {
-        employee: {
+        Employee: {
           select: {
             id: true,
             name: true,
@@ -39,20 +40,29 @@ export async function GET(req: Request) {
             cadre: true,
             dateOfBirth: true,
             employmentDate: true,
-            institution: { select: { id: true, name: true } }
+            Institution: { select: { id: true, name: true } }
           }
         },
-        submittedBy: { select: { id: true, name: true, username: true } },
-        reviewedBy: { select: { id: true, name: true, username: true } }
+        User_CadreChangeRequest_submittedByIdToUser: { select: { id: true, name: true, username: true } },
+        User_CadreChangeRequest_reviewedByIdToUser: { select: { id: true, name: true, username: true } }
       },
       orderBy: { createdAt: 'desc' }
     }).catch(() => []);
 
     console.log(`Found ${requests.length} cadre change requests`);
 
+    // Transform the data to match frontend expectations
+    const transformedRequests = requests.map((req: any) => ({
+      ...req,
+      submittedBy: req.User_CadreChangeRequest_submittedByIdToUser,
+      reviewedBy: req.User_CadreChangeRequest_reviewedByIdToUser,
+      User_CadreChangeRequest_submittedByIdToUser: undefined,
+      User_CadreChangeRequest_reviewedByIdToUser: undefined
+    }));
+
     return NextResponse.json({
       success: true,
-      data: requests
+      data: transformedRequests
     });
   } catch (error) {
     console.error("[CADRE_CHANGE_GET]", error);
@@ -74,7 +84,7 @@ export async function POST(req: Request) {
     }
 
     // Get employee details to check status
-    const employee = await db.employee.findUnique({
+    const employee = await db.Employee.findUnique({
       where: { id: body.employeeId },
       select: { id: true, name: true, status: true }
     });
@@ -97,6 +107,7 @@ export async function POST(req: Request) {
 
     const cadreChangeRequest = await db.cadreChangeRequest.create({
       data: {
+        id: uuidv4(),
         employeeId: body.employeeId,
         submittedById: body.submittedById,
         newCadre: body.newCadre,
@@ -105,10 +116,11 @@ export async function POST(req: Request) {
         documents: body.documents || [],
         status: body.status || 'Pending HRMO/HHRMD Review',
         reviewStage: body.reviewStage || 'initial',
-        rejectionReason: body.rejectionReason
+        rejectionReason: body.rejectionReason,
+        updatedAt: new Date(),
       },
       include: {
-        employee: {
+        Employee: {
           select: {
             id: true,
             name: true,
@@ -119,10 +131,11 @@ export async function POST(req: Request) {
             cadre: true,
             dateOfBirth: true,
             employmentDate: true,
-            institution: { select: { id: true, name: true } }
+            Institution: { select: { id: true, name: true } }
           }
         }
-      }
+      ,
+        User_CadreChangeRequest_submittedByIdToUser: { select: { id: true, name: true, username: true } }}
     });
 
     console.log('Created cadre change request:', cadreChangeRequest.id);
@@ -158,7 +171,7 @@ export async function PATCH(req: Request) {
       where: { id },
       data: updateData,
       include: {
-        employee: {
+        Employee: {
           select: {
             id: true,
             name: true,
@@ -169,24 +182,36 @@ export async function PATCH(req: Request) {
             cadre: true,
             dateOfBirth: true,
             employmentDate: true,
-            institution: { select: { id: true, name: true } }
+            Institution: { select: { id: true, name: true } }
           }
         }
-      }
+      ,
+        User_CadreChangeRequest_submittedByIdToUser: { select: { id: true, name: true, username: true } },
+        User_CadreChangeRequest_reviewedByIdToUser: { select: { id: true, name: true, username: true } }}
     });
 
     // If cadre change request is approved by Commission, update employee cadre
-    if (updateData.status === "Approved by Commission" && updatedRequest.employee) {
-      await db.employee.update({
-        where: { id: updatedRequest.employee.id },
+    if (updateData.status === "Approved by Commission" && updatedRequest.Employee) {
+      await db.Employee.update({
+        where: { id: updatedRequest.Employee.id },
         data: { cadre: updatedRequest.newCadre }
       });
-      console.log(`Employee ${updatedRequest.employee.name} cadre updated to "${updatedRequest.newCadre}" after cadre change approval`);
+      console.log(`Employee ${updatedRequest.Employee.name} cadre updated to "${updatedRequest.newCadre}" after cadre change approval`);
     }
+
+    
+    // Transform the data to match frontend expectations
+    const transformedRequest = {
+      ...updatedRequest,
+      submittedBy: (updatedRequest as any).User_CadreChangeRequest_submittedByIdToUser,
+      reviewedBy: (updatedRequest as any).User_CadreChangeRequest_reviewedByIdToUser,
+      User_CadreChangeRequest_submittedByIdToUser: undefined,
+      User_CadreChangeRequest_reviewedByIdToUser: undefined
+    };
 
     return NextResponse.json({
       success: true,
-      data: updatedRequest
+      data: transformedRequest
     });
 
   } catch (error) {

@@ -15,7 +15,7 @@ import { FilePreviewModal } from '@/components/ui/file-preview-modal';
 import { EmployeeSearch } from '@/components/shared/employee-search';
 import { useAuth } from '@/hooks/use-auth';
 import { ROLES } from '@/lib/constants';
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import type { Employee, User, Role } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
 import { Loader2, Search, FileText, Award, ChevronsUpDown, ListFilter, Star, AlertTriangle, RefreshCw, CheckCircle, XCircle } from 'lucide-react';
@@ -25,7 +25,7 @@ import { format, parseISO, differenceInYears } from 'date-fns';
 
 interface PromotionRequest {
   id: string;
-  employee: Partial<Employee & User & { institution: { name: string } }>;
+  Employee: Partial<Employee & User & { Institution: { name: string } }>;
   submittedBy: Partial<User>;
   reviewedBy?: Partial<User> | null;
   status: string;
@@ -50,13 +50,9 @@ export default function PromotionPage() {
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-
-  const paginatedRequests = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return pendingRequests.slice(startIndex, endIndex);
-  }, [pendingRequests, currentPage, itemsPerPage]);
+  const itemsPerPage = 50;
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
 
   const [employeeDetails, setEmployeeDetails] = useState<Employee | null>(null);
@@ -124,6 +120,7 @@ export default function PromotionPage() {
   const [isCommissionRejection, setIsCommissionRejection] = useState(false);
 
   const [eligibilityError, setEligibilityError] = useState<string | null>(null);
+  const [hasPendingPromotion, setHasPendingPromotion] = useState(false);
   const [isCorrectionModalOpen, setIsCorrectionModalOpen] = useState(false);
   const [requestToCorrect, setRequestToCorrect] = useState<PromotionRequest | null>(null);
   const [correctedProposedCadre, setCorrectedProposedCadre] = useState('');
@@ -131,7 +128,7 @@ export default function PromotionPage() {
 
 
 
-  const fetchRequests = async (isRefresh = false) => {
+  const fetchRequests = useCallback(async (isRefresh = false, page = currentPage) => {
     if (!user || !role) return;
     if (isRefresh) {
       setIsRefreshing(true);
@@ -139,9 +136,21 @@ export default function PromotionPage() {
       setIsLoading(true);
     }
     try {
-        // Add cache-busting parameter and headers for refresh
-        const cacheBuster = isRefresh ? `&_t=${Date.now()}` : '';
-        const response = await fetch(`/api/promotions?userId=${user.id}&userRole=${role}&userInstitutionId=${user.institutionId || ''}${cacheBuster}`, {
+        // Build query parameters using URLSearchParams
+        const params = new URLSearchParams({
+          userId: user.id,
+          userRole: role,
+          userInstitutionId: user.institutionId || '',
+          page: page.toString(),
+          size: itemsPerPage.toString()
+        });
+
+        // Add cache-busting parameter for refresh
+        if (isRefresh) {
+          params.append('_t', Date.now().toString());
+        }
+
+        const response = await fetch(`/api/promotions?${params.toString()}`, {
           method: 'GET',
           headers: {
             'Cache-Control': isRefresh ? 'no-cache, no-store, must-revalidate' : 'default',
@@ -150,8 +159,21 @@ export default function PromotionPage() {
           }
         });
         if (!response.ok) throw new Error('Failed to fetch promotion requests');
-        const result = await response.json();
-        setPendingRequests(result.data || []);
+        const data = await response.json();
+
+        // Handle both array and paginated object responses
+        let requests = [];
+        if (Array.isArray(data)) {
+          requests = data;
+          setTotalItems(data.length);
+          setTotalPages(Math.ceil(data.length / itemsPerPage));
+        } else if (data.data && Array.isArray(data.data)) {
+          requests = data.data;
+          setTotalItems(data.pagination?.total || data.data.length);
+          setTotalPages(data.pagination?.totalPages || Math.ceil((data.pagination?.total || data.data.length) / itemsPerPage));
+        }
+
+        setPendingRequests(requests);
         if (isRefresh) {
           toast({ title: "Refreshed", description: "Promotion requests have been updated.", duration: 2000 });
         }
@@ -164,11 +186,17 @@ export default function PromotionPage() {
           setIsLoading(false);
         }
     }
-  };
+  }, [user, role, currentPage, itemsPerPage]);
 
   useEffect(() => {
     fetchRequests();
-  }, [user, role]);
+  }, [fetchRequests]);
+
+  useEffect(() => {
+    if (currentPage > 1) {
+      fetchRequests(false, currentPage);
+    }
+  }, [currentPage]);
 
   const resetFormFields = () => {
     setPromotionRequestType('');
@@ -181,11 +209,12 @@ export default function PromotionPage() {
     setStudiedOutsideCountry(false);
     setTcuFormFile('');
     setLetterOfRequestFile('');
+    setHasPendingPromotion(false);
   };
 
   const handleEmployeeFound = (employee: Employee) => {
     console.log(`[PROMOTION] Found employee: ${employee.name}`);
-    
+
     // Reset form fields when new employee is selected
     resetFormFields();
     setEligibilityError(null);
@@ -201,15 +230,27 @@ export default function PromotionPage() {
       }
     }
 
+    // Check for pending promotion request
+    const pendingStatuses = [
+      'Pending HRMO/HHRMD Review',
+      'Pending DO/HHRMD Review',
+      'Request Received – Awaiting Commission Decision'
+    ];
+
+    const hasPending = pendingRequests.some(
+      req => req.Employee?.id === employee.id && pendingStatuses.includes(req.status)
+    );
+
+    setHasPendingPromotion(hasPending);
     setEmployeeDetails(employee);
 
     if (error) {
       setEligibilityError(error);
-      toast({ 
-        title: "Employee Ineligible", 
-        description: error, 
-        variant: "destructive", 
-        duration: 7000 
+      toast({
+        title: "Employee Ineligible",
+        description: error,
+        variant: "destructive",
+        duration: 7000
       });
     } else {
       setEligibilityError(null);
@@ -220,6 +261,7 @@ export default function PromotionPage() {
     setEmployeeDetails(null);
     resetFormFields();
     setEligibilityError(null);
+    setHasPendingPromotion(false);
   };
 
   const handleSubmitPromotionRequest = async () => {
@@ -261,9 +303,9 @@ export default function PromotionPage() {
       // Create optimistic new request to show immediately
       const optimisticRequest: PromotionRequest = {
         id: `temp-${Date.now()}`, // Temporary ID until server responds
-        employee: {
+        Employee: {
           ...employeeDetails,
-          institution: { name: typeof employeeDetails.institution === 'object' ? employeeDetails.institution.name : employeeDetails.institution || 'N/A' }
+          Institution: { name: typeof employeeDetails.institution === 'object' ? employeeDetails.Institution.name : employeeDetails.institution || 'N/A' }
         },
         submittedBy: { name: user.name },
         status: 'Pending HRMO/HHRMD Review',
@@ -347,10 +389,10 @@ export default function PromotionPage() {
 
     // Show immediate success feedback
     if (actionDescription && request) {
-      toast({ 
-        title: "Status Updated", 
-        description: `${actionDescription} for ${request.employee.name}. Status: ${payload.status}`,
-        duration: 3000 
+      toast({
+        title: "Status Updated",
+        description: `${actionDescription} for ${request.Employee.name}. Status: ${payload.status}`,
+        duration: 3000
       });
     }
 
@@ -376,7 +418,7 @@ export default function PromotionPage() {
 
   const isSubmitDisabled = () => {
     // Basic validation
-    const basicValidation = !!eligibilityError || isSubmitting || !employeeDetails || !promotionRequestType || letterOfRequestFile === '';
+    const basicValidation = !!eligibilityError || hasPendingPromotion || isSubmitting || !employeeDetails || !promotionRequestType || letterOfRequestFile === '';
     if (basicValidation) {
       return true;
     }
@@ -466,26 +508,26 @@ export default function PromotionPage() {
       }
       
       const finalStatus = "Approved by Commission";
-      const payload = { 
-        status: finalStatus, 
+      const payload = {
+        status: finalStatus,
         reviewStage: 'completed',
         commissionDecisionReason: reason
       };
-      const actionDescription = `Promotion approved by Commission. Employee ${request?.employee.name} rank updated to "${request?.proposedCadre}".`;
-      
+      const actionDescription = `Promotion approved by Commission. Employee ${request?.Employee.name} rank updated to "${request?.proposedCadre}".`;
+
       await handleUpdateRequest(requestId, payload, actionDescription);
     }
   };
 
   const handleCorrection = (request: PromotionRequest) => {
     setRequestToCorrect(request);
-    setEmployeeDetails(request.employee as Employee);
+    setEmployeeDetails(request.Employee as Employee);
     // Properly map the promotionType from the database values to our form values
     const mappedType = request.promotionType === 'EducationAdvancement' ? 'education' : 'experience';
     setPromotionRequestType(mappedType);
     setCorrectedProposedCadre(request.proposedCadre);
     setStudiedOutsideCountry(request.studiedOutsideCountry || false);
-    
+
     // Clear file inputs - they need to be re-uploaded
     setPerformanceAppraisalFileY1('');
     setPerformanceAppraisalFileY2('');
@@ -494,7 +536,7 @@ export default function PromotionPage() {
     setCertificateFile('');
     setTcuFormFile('');
     setLetterOfRequestFile('');
-    
+
     setIsCorrectionModalOpen(true);
   };
 
@@ -546,9 +588,9 @@ export default function PromotionPage() {
     setPendingRequests(optimisticUpdate);
 
     // Show immediate success feedback
-    toast({ 
-      title: "Request Corrected & Resubmitted", 
-      description: `Promotion request for ${request.employee.name} has been corrected and resubmitted. Status: Pending HRMO/HHRMD Review`,
+    toast({
+      title: "Request Corrected & Resubmitted",
+      description: `Promotion request for ${request.Employee.name} has been corrected and resubmitted. Status: Pending HRMO/HHRMD Review`,
       duration: 4000
     });
 
@@ -589,6 +631,8 @@ export default function PromotionPage() {
     setCorrectedProposedCadre('');
   };
 
+  const paginatedRequests = pendingRequests || [];
+
   return (
     <React.Fragment>
       <PageHeader title="Promotion" description="Manage employee promotions based on experience or education." />
@@ -619,7 +663,7 @@ export default function PromotionPage() {
                       <div><Label className="text-muted-foreground">Current Cadre/Position:</Label> <p className="font-semibold text-foreground">{employeeDetails.cadre || 'N/A'}</p></div>
                       <div><Label className="text-muted-foreground">Employment Date:</Label> <p className="font-semibold text-foreground">{employeeDetails.employmentDate ? format(parseISO(employeeDetails.employmentDate.toString()), 'PPP') : 'N/A'}</p></div>
                       <div><Label className="text-muted-foreground">Date of Birth:</Label> <p className="font-semibold text-foreground">{employeeDetails.dateOfBirth ? format(parseISO(employeeDetails.dateOfBirth.toString()), 'PPP') : 'N/A'}</p></div>
-                      <div className="lg:col-span-1"><Label className="text-muted-foreground">Institution:</Label> <p className="font-semibold text-foreground">{typeof employeeDetails.institution === 'object' ? employeeDetails.institution.name : employeeDetails.institution || 'N/A'}</p></div>
+                      <div className="lg:col-span-1"><Label className="text-muted-foreground">Institution:</Label> <p className="font-semibold text-foreground">{typeof employeeDetails.institution === 'object' ? employeeDetails.Institution.name : employeeDetails.institution || 'N/A'}</p></div>
                     </div>
                   </div>
                 </div>
@@ -634,9 +678,17 @@ export default function PromotionPage() {
                   </Alert>
                 )}
 
+                {hasPendingPromotion && (
+                  <Alert variant="destructive" className="mt-4">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTitle>Request Already Submitted</AlertTitle>
+                    <AlertDescription>A promotion request for this employee is already being reviewed. You cannot submit another request until the current one is completed.</AlertDescription>
+                  </Alert>
+                )}
+
                 <div className="space-y-2">
                     <Label htmlFor="promotionTypeSelect" className="flex items-center"><ListFilter className="mr-2 h-4 w-4 text-primary" />Promotion Type</Label>
-                    <Select value={promotionRequestType} onValueChange={(value) => setPromotionRequestType(value as 'experience' | 'education' | '')} disabled={isSubmitting || !!eligibilityError}>
+                    <Select value={promotionRequestType} onValueChange={(value) => setPromotionRequestType(value as 'experience' | 'education' | '')} disabled={isSubmitting || !!eligibilityError || hasPendingPromotion}>
                       <SelectTrigger id="promotionTypeSelect">
                         <SelectValue placeholder="Select promotion type" />
                       </SelectTrigger>
@@ -648,14 +700,14 @@ export default function PromotionPage() {
                 </div>
             
                 {promotionRequestType && (
-                    <div className={`space-y-4 ${!!eligibilityError ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                    <div className={`space-y-4 ${!!eligibilityError || hasPendingPromotion ? 'opacity-50 cursor-not-allowed' : ''}`}>
                         <h3 className="text-lg font-medium text-foreground">Promotion Details &amp; Documents (PDF Only)</h3>
 
                         {promotionRequestType === 'experience' && (
                             <>
                                 <div>
                                     <Label htmlFor="proposedCadre">Write new cadre and grade</Label>
-                                    <Input id="proposedCadre" placeholder="e.g., Senior Officer Grade I" value={proposedCadre} onChange={(e) => setProposedCadre(e.target.value)} disabled={isSubmitting || !!eligibilityError} />
+                                    <Input id="proposedCadre" placeholder="e.g., Senior Officer Grade I" value={proposedCadre} onChange={(e) => setProposedCadre(e.target.value)} disabled={isSubmitting || !!eligibilityError || hasPendingPromotion} />
                                 </div>
                                 <div>
                                 <Label className="flex items-center mb-2"><Star className="mr-2 h-4 w-4 text-primary" />Upload Performance Appraisal Form (Year 1)</Label>
@@ -665,7 +717,7 @@ export default function PromotionPage() {
                                   folder="promotion/performance-appraisals"
                                   accept=".pdf"
                                   maxSize={2}
-                                  disabled={isSubmitting || !!eligibilityError}
+                                  disabled={isSubmitting || !!eligibilityError || hasPendingPromotion}
                                 />
                                 </div>
                                 <div>
@@ -676,7 +728,7 @@ export default function PromotionPage() {
                                   folder="promotion/performance-appraisals"
                                   accept=".pdf"
                                   maxSize={2}
-                                  disabled={isSubmitting || !!eligibilityError}
+                                  disabled={isSubmitting || !!eligibilityError || hasPendingPromotion}
                                 />
                                 </div>
                                 <div>
@@ -687,7 +739,7 @@ export default function PromotionPage() {
                                   folder="promotion/performance-appraisals"
                                   accept=".pdf"
                                   maxSize={2}
-                                  disabled={isSubmitting || !!eligibilityError}
+                                  disabled={isSubmitting || !!eligibilityError || hasPendingPromotion}
                                 />
                                 </div>
                                 <div>
@@ -698,7 +750,7 @@ export default function PromotionPage() {
                                   folder="promotion/csc-forms"
                                   accept=".pdf"
                                   maxSize={2}
-                                  disabled={isSubmitting || !!eligibilityError}
+                                  disabled={isSubmitting || !!eligibilityError || hasPendingPromotion}
                                 />
                                 </div>
                             </>
@@ -714,11 +766,11 @@ export default function PromotionPage() {
                                   folder="promotion/certificates"
                                   accept=".pdf"
                                   maxSize={2}
-                                  disabled={isSubmitting || !!eligibilityError}
+                                  disabled={isSubmitting || !!eligibilityError || hasPendingPromotion}
                                 />
                                 </div>
                                 <div className="flex items-center space-x-2">
-                                <Checkbox id="studiedOutsideCountryPromo" checked={studiedOutsideCountry} onCheckedChange={(checked) => setStudiedOutsideCountry(checked as boolean)} disabled={isSubmitting || !!eligibilityError} />
+                                <Checkbox id="studiedOutsideCountryPromo" checked={studiedOutsideCountry} onCheckedChange={(checked) => setStudiedOutsideCountry(checked as boolean)} disabled={isSubmitting || !!eligibilityError || hasPendingPromotion} />
                                 <Label htmlFor="studiedOutsideCountryPromo" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Employee studied outside the country? (Requires TCU Form)</Label>
                                 </div>
                                 {studiedOutsideCountry && (
@@ -730,7 +782,7 @@ export default function PromotionPage() {
                                       folder="promotion/tcu-forms"
                                       accept=".pdf"
                                       maxSize={2}
-                                      disabled={isSubmitting || !!eligibilityError}
+                                      disabled={isSubmitting || !!eligibilityError || hasPendingPromotion}
                                     />
                                 </div>
                                 )}
@@ -744,7 +796,7 @@ export default function PromotionPage() {
                               folder="promotion/letters"
                               accept=".pdf"
                               maxSize={2}
-                              disabled={isSubmitting || !!eligibilityError}
+                              disabled={isSubmitting || !!eligibilityError || hasPendingPromotion}
                             />
                         </div>
                     </div>
@@ -790,11 +842,11 @@ export default function PromotionPage() {
               <div key={request.id} className="mb-4 border p-4 rounded-md space-y-2 shadow-sm bg-background hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-semibold text-base flex items-center gap-2">
-                    Promotion Request for: {request.employee.name} (ZanID: {request.employee.zanId})
+                    Promotion Request for: {request.Employee.name} (ZanID: {request.Employee.zanId})
                     {(request.status.includes('Approved by Commission') || request.status.includes('Rejected by Commission')) && (
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                        request.status.includes('Approved by Commission') 
-                          ? 'bg-green-100 text-green-800 border border-green-200' 
+                        request.status.includes('Approved by Commission')
+                          ? 'bg-green-100 text-green-800 border border-green-200'
                           : 'bg-red-100 text-red-800 border border-red-200'
                       }`}>
                         {request.status.includes('Approved by Commission') ? (
@@ -892,9 +944,9 @@ export default function PromotionPage() {
           )}
           <Pagination
             currentPage={currentPage}
-            totalPages={Math.ceil(pendingRequests.length / itemsPerPage)}
+            totalPages={totalPages}
             onPageChange={setCurrentPage}
-            totalItems={pendingRequests.length}
+            totalItems={totalItems}
             itemsPerPage={itemsPerPage}
           />
         </CardContent>
@@ -906,7 +958,7 @@ export default function PromotionPage() {
             <DialogHeader>
               <DialogTitle>Request Details: {selectedRequest.id}</DialogTitle>
               <DialogDescription>
-                Promotion request for <strong>{selectedRequest.employee.name}</strong> (ZanID: {selectedRequest.employee.zanId}).
+                Promotion request for <strong>{selectedRequest.Employee.name}</strong> (ZanID: {selectedRequest.Employee.zanId}).
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4 text-sm max-h-[70vh] overflow-y-auto">
@@ -914,39 +966,39 @@ export default function PromotionPage() {
                     <h4 className="font-semibold text-base text-foreground mb-2">Employee Information</h4>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Full Name:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.name}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.name}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">ZanID:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.zanId}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.zanId}</p>
                     </div>
                      <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Payroll #:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.payrollNumber || 'N/A'}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.payrollNumber || 'N/A'}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">ZSSF #:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.zssfNumber || 'N/A'}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.zssfNumber || 'N/A'}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Department:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.department}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.department}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Current Cadre:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.cadre}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.cadre}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Employment Date:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.employmentDate ? format(parseISO(selectedRequest.employee.employmentDate.toString()), 'PPP') : 'N/A'}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.employmentDate ? format(parseISO(selectedRequest.Employee.employmentDate.toString()), 'PPP') : 'N/A'}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Date of Birth:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.dateOfBirth ? format(parseISO(selectedRequest.employee.dateOfBirth.toString()), 'PPP') : 'N/A'}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.dateOfBirth ? format(parseISO(selectedRequest.Employee.dateOfBirth.toString()), 'PPP') : 'N/A'}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Institution:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.institution?.name || 'N/A'}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.Institution?.name || 'N/A'}</p>
                     </div>
                 </div>
                 <div className="space-y-1">
@@ -1073,7 +1125,7 @@ export default function PromotionPage() {
                       {isCommissionRejection ? 'Commission Decision: Rejection' : `Reject Promotion Request: ${currentRequestToAction.id}`}
                     </DialogTitle>
                     <DialogDescription>
-                        Please provide the reason for {isCommissionRejection ? 'the Commission\'s rejection of' : 'rejecting'} the promotion request for <strong>{currentRequestToAction.employee.name}</strong> ({currentRequestToAction.promotionType}). 
+                        Please provide the reason for {isCommissionRejection ? 'the Commission\'s rejection of' : 'rejecting'} the promotion request for <strong>{currentRequestToAction.Employee.name}</strong> ({currentRequestToAction.promotionType}).
                         {isCommissionRejection ? ' This decision is final and no corrections will be allowed.' : ' This reason will be visible to the HRO for correction.'}
                     </DialogDescription>
                 </DialogHeader>
@@ -1105,7 +1157,7 @@ export default function PromotionPage() {
             <DialogHeader>
               <DialogTitle>Correct & Resubmit Promotion Request</DialogTitle>
               <DialogDescription>
-                Address the rejection reasons and update the promotion request for <strong>{requestToCorrect.employee.name}</strong>. 
+                Address the rejection reasons and update the promotion request for <strong>{requestToCorrect.Employee.name}</strong>.
                 Make necessary corrections and upload updated documents before resubmitting for review.
               </DialogDescription>
             </DialogHeader>

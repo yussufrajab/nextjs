@@ -37,7 +37,7 @@ async function saveEmployeeFromDetailedData(hrimsData: any, institutionId: strin
     const currentSalary = hrimsData.salaryInformation?.find((sal: any) => sal.isCurrent) || hrimsData.salaryInformation?.[0];
 
     // Find or create employee
-    const existingEmployee = await db.employee.findUnique({
+    const existingEmployee = await db.Employee.findUnique({
       where: { zanId: personalInfo.zanIdNumber }
     });
 
@@ -82,7 +82,7 @@ async function saveEmployeeFromDetailedData(hrimsData: any, institutionId: strin
     };
 
     // Save/update employee
-    await db.employee.upsert({
+    await db.Employee.upsert({
       where: { zanId: personalInfo.zanIdNumber },
       update: dbEmployeeData,
       create: dbEmployeeData,
@@ -104,7 +104,7 @@ async function saveEmployeeFromListData(employeeBasicInfo: any, institutionId: s
     }
 
     // Find or create employee
-    const existingEmployee = await db.employee.findUnique({
+    const existingEmployee = await db.Employee.findUnique({
       where: { zanId: employeeBasicInfo.zanIdNumber }
     });
 
@@ -155,7 +155,7 @@ async function saveEmployeeFromListData(employeeBasicInfo: any, institutionId: s
     });
 
     // Save/update employee
-    await db.employee.upsert({
+    await db.Employee.upsert({
       where: { zanId: employeeBasicInfo.zanIdNumber },
       update: dbEmployeeData,
       create: dbEmployeeData,
@@ -194,7 +194,7 @@ async function processEmployeeDocuments(zanId: string, payrollNumber: string, em
 
         const documentUrl = `data:${doc.contentType};base64,${doc.content}`;
 
-        await db.employee.update({
+        await db.Employee.update({
           where: { id: employeeId },
           data: { [fieldName]: documentUrl }
         });
@@ -381,7 +381,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Find institution by vote number
-    const institution = await db.institution.findFirst({
+    const institution = await db.Institution.findFirst({
       where: { voteNumber: institutionVoteNumber }
     });
 
@@ -393,7 +393,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Start bulk fetch process in the background
-    console.log(`Starting bulk fetch for institution: ${institution.name} (${institutionVoteNumber})`);
+    console.log(`Starting bulk fetch for Institution: ${institution.name} (${institutionVoteNumber})`);
 
     // Note: In a production environment, you would typically use a job queue system
     // like Bull, Agenda, or a background worker service for this kind of operation

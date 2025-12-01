@@ -2,12 +2,22 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { z } from 'zod';
 import { ROLES } from '@/lib/constants';
+import bcrypt from 'bcryptjs';
+import { randomBytes } from 'crypto';
 
 const employeeLoginSchema = z.object({
   zanId: z.string().min(1),
   zssfNumber: z.string().min(1),
   payrollNumber: z.string().min(1),
 });
+
+// Helper function to generate username from employee name
+function generateUsername(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '') // Remove non-alphanumeric characters
+    .slice(0, 50); // Limit to 50 characters
+}
 
 export async function POST(req: Request) {
   try {
@@ -26,19 +36,19 @@ export async function POST(req: Request) {
     });
 
     // Find employee with matching credentials
-    const employee = await db.employee.findFirst({
+    const employee = await db.Employee.findFirst({
       where: {
         zanId: normalizedZanId,
         zssfNumber: normalizedZssfNumber,
         payrollNumber: normalizedPayrollNumber,
       },
       include: {
-        institution: {
+        Institution: {
           select: {
             name: true,
           }
         },
-        user: {
+        User: {
           select: {
             id: true,
             name: true,
@@ -61,34 +71,87 @@ export async function POST(req: Request) {
       );
     }
 
-    // Check if employee has an associated user account
-    if (!employee.user) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          message: 'No user account found for this employee. Please contact HR for assistance.' 
-        },
-        { status: 401 }
-      );
+    // Auto-provision user account if employee doesn't have one (JIT provisioning)
+    let user = employee.User;
+
+    if (!user) {
+      console.log('[EMPLOYEE_LOGIN] No user account found. Auto-provisioning user account for employee:', employee.name);
+
+      try {
+        // Generate username from employee name
+        const baseUsername = generateUsername(employee.name);
+
+        // Check if username already exists and make it unique if necessary
+        let username = baseUsername;
+        let counter = 1;
+        while (await db.User.findUnique({ where: { username } })) {
+          username = `${baseUsername}${counter}`;
+          counter++;
+        }
+
+        // Generate default password (using ZAN ID as default for security)
+        const defaultPassword = employee.zanId;
+        const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+
+        // Generate unique id for user
+        const userId = `emp_${randomBytes(16).toString('hex')}`;
+
+        // Create user account
+        user = await db.User.create({
+          data: {
+            id: userId,
+            username,
+            password: hashedPassword,
+            name: employee.name,
+            role: ROLES.EMPLOYEE,
+            active: true,
+            employeeId: employee.id,
+            institutionId: employee.institutionId,
+            updatedAt: new Date(),
+          },
+          select: {
+            id: true,
+            name: true,
+            username: true,
+            role: true,
+            active: true,
+          }
+        });
+
+        console.log('[EMPLOYEE_LOGIN] User account auto-provisioned successfully:', {
+          username: user.username,
+          employeeId: employee.id
+        });
+
+      } catch (provisionError) {
+        console.error('[EMPLOYEE_LOGIN] Error auto-provisioning user account:', provisionError);
+        return NextResponse.json(
+          {
+            success: false,
+            message: 'Failed to create user account. Please contact HR for assistance.'
+          },
+          { status: 500 }
+        );
+      }
     }
 
     // Check if user account is active
-    if (!employee.user.active) {
+    if (!user.active) {
       return NextResponse.json(
-        { 
-          success: false, 
-          message: 'Your account has been deactivated. Please contact HR for assistance.' 
+        {
+          success: false,
+          message: 'Your account has been deactivated. Please contact HR for assistance.'
         },
         { status: 401 }
       );
     }
 
     // Check if user role is EMPLOYEE
-    if (employee.user.role !== ROLES.EMPLOYEE) {
+    if (user.role !== ROLES.EMPLOYEE) {
       return NextResponse.json(
-        { 
-          success: false, 
-          message: 'This login is only for employees. Please use the staff login page.' 
+        {
+          success: false,
+          message: 'This login is only for employees. Please use the staff login page.'
         },
         { status: 403 }
       );
@@ -96,15 +159,15 @@ export async function POST(req: Request) {
 
     // Successful authentication - return user data
     const userData = {
-      id: employee.user.id,
-      name: employee.user.name,
-      username: employee.user.username,
-      role: employee.user.role,
+      id: user.id,
+      name: user.name,
+      username: user.username,
+      role: user.role,
       employeeId: employee.id,
       institutionId: employee.institutionId,
       department: employee.department,
       cadre: employee.cadre,
-      institution: employee.institution.name,
+      Institution: employee.Institution.name,
       zanId: employee.zanId,
       zssfNumber: employee.zssfNumber,
       payrollNumber: employee.payrollNumber,

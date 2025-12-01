@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { z } from 'zod';
 import { createNotification, NotificationTemplates } from '@/lib/notifications';
+import { v4 as uuidv4 } from 'uuid';
 
 const updateSchema = z.object({
   status: z.string().optional(),
@@ -23,7 +24,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     // Check if promotion exists
     const existingRequest = await db.promotionRequest.findUnique({
       where: { id: params.id },
-      include: { employee: true }
+      include: { Employee: true }
     });
 
     if (!existingRequest) {
@@ -41,14 +42,14 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
           where: { id: params.id },
           data: validatedData,
           include: {
-            employee: { select: { name: true, zanId: true, department: true, cadre: true }},
-            submittedBy: { select: { name: true, role: true } },
-            reviewedBy: { select: { name: true, role: true } },
+            Employee: { select: { name: true, zanId: true, department: true, cadre: true }},
+            User_PromotionRequest_submittedByIdToUser: { select: { name: true, role: true } },
+            User_PromotionRequest_reviewedByIdToUser: { select: { name: true, role: true } },
           }
         });
 
         // Update the employee's cadre to the proposed cadre
-        await tx.employee.update({
+        await tx.Employee.update({
           where: { id: existingRequest.employeeId },
           data: {
             cadre: existingRequest.proposedCadre
@@ -59,7 +60,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       });
 
       // Send notification
-      const userToNotify = await db.user.findUnique({
+      const userToNotify = await db.User.findUnique({
         where: { employeeId: existingRequest.employeeId },
         select: { id: true }
       });
@@ -67,6 +68,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       if (userToNotify) {
         await db.notification.create({
           data: {
+            id: uuidv4(),
             userId: userToNotify.id,
             message: `Your Promotion request for cadre "${existingRequest.proposedCadre}" has been approved by the Commission.`,
             link: `/dashboard/promotion`,
@@ -81,15 +83,15 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
         where: { id: params.id },
         data: validatedData,
         include: {
-          employee: { select: { name: true, zanId: true, department: true, cadre: true }},
-          submittedBy: { select: { name: true, role: true } },
-          reviewedBy: { select: { name: true, role: true } },
+          Employee: { select: { name: true, zanId: true, department: true, cadre: true }},
+          User_PromotionRequest_submittedByIdToUser: { select: { name: true, role: true } },
+          User_PromotionRequest_reviewedByIdToUser: { select: { name: true, role: true } },
         }
       });
 
       // Create appropriate notifications based on status changes
       if (validatedData.status) {
-        const userToNotify = await db.user.findUnique({
+        const userToNotify = await db.User.findUnique({
           where: { employeeId: updatedRequest.employeeId },
           select: { id: true }
         });

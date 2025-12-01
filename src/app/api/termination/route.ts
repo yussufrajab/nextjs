@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { shouldApplyInstitutionFilter } from '@/lib/role-utils';
+import { v4 as uuidv4 } from 'uuid';
 
 export async function GET(req: Request) {
   try {
@@ -17,7 +18,7 @@ export async function GET(req: Request) {
     // Apply institution filtering based on role
     if (shouldApplyInstitutionFilter(userRole, userInstitutionId)) {
       console.log(`Applying institution filter for role ${userRole} with institutionId ${userInstitutionId}`);
-      whereClause.employee = {
+      whereClause.Employee = {
         institutionId: userInstitutionId
       };
     } else {
@@ -27,7 +28,7 @@ export async function GET(req: Request) {
     const requests = await db.separationRequest.findMany({
       where: whereClause,
       include: {
-        employee: {
+        Employee: {
           select: {
             id: true,
             name: true,
@@ -38,16 +39,25 @@ export async function GET(req: Request) {
             cadre: true,
             dateOfBirth: true,
             employmentDate: true,
-            institution: { select: { id: true, name: true } }
+            Institution: { select: { id: true, name: true } }
           }
         },
-        submittedBy: { select: { id: true, name: true, username: true } },
-        reviewedBy: { select: { id: true, name: true, username: true } }
+        User_SeparationRequest_submittedByIdToUser: { select: { id: true, name: true, username: true } },
+        User_SeparationRequest_reviewedByIdToUser: { select: { id: true, name: true, username: true } }
       },
       orderBy: { createdAt: 'desc' }
     }).catch(() => []);
 
-    return NextResponse.json(requests);
+    // Transform the data to match frontend expectations
+    const transformedRequests = requests.map((req: any) => ({
+      ...req,
+      submittedBy: req.User_SeparationRequest_submittedByIdToUser,
+      reviewedBy: req.User_SeparationRequest_reviewedByIdToUser,
+      User_SeparationRequest_submittedByIdToUser: undefined,
+      User_SeparationRequest_reviewedByIdToUser: undefined
+    }));
+
+    return NextResponse.json(transformedRequests);
   } catch (error) {
     console.error("[TERMINATION_GET]", error);
     return NextResponse.json({ success: false, message: 'Internal Server Error' }, { status: 500 });
@@ -69,6 +79,7 @@ export async function POST(req: Request) {
 
     const separationRequest = await db.separationRequest.create({
       data: {
+        id: uuidv4(),
         employeeId: body.employeeId,
         submittedById: body.submittedById,
         type: body.type,
@@ -76,10 +87,11 @@ export async function POST(req: Request) {
         documents: body.documents || [],
         status: body.status || 'Pending HRMO/HHRMD Review',
         reviewStage: body.reviewStage || 'initial',
-        rejectionReason: body.rejectionReason
+        rejectionReason: body.rejectionReason,
+        updatedAt: new Date()
       },
       include: {
-        employee: {
+        Employee: {
           select: {
             id: true,
             name: true,
@@ -90,7 +102,7 @@ export async function POST(req: Request) {
             cadre: true,
             dateOfBirth: true,
             employmentDate: true,
-            institution: { select: { id: true, name: true } }
+            Institution: { select: { id: true, name: true } }
           }
         }
       }
@@ -98,9 +110,16 @@ export async function POST(req: Request) {
 
     console.log('Created termination request:', separationRequest.id);
 
+    // Transform the data to match frontend expectations
+    const transformedRequest = {
+      ...separationRequest,
+      submittedBy: (separationRequest as any).User_TerminationRequest_submittedByIdToUser,
+      User_TerminationRequest_submittedByIdToUser: undefined
+    };
+
     return NextResponse.json({
       success: true,
-      data: separationRequest
+      data: transformedRequest
     });
 
   } catch (error) {
@@ -131,7 +150,7 @@ export async function PATCH(req: Request) {
       where: { id },
       data: updateData,
       include: {
-        employee: {
+        Employee: {
           select: {
             id: true,
             name: true,
@@ -142,17 +161,18 @@ export async function PATCH(req: Request) {
             cadre: true,
             dateOfBirth: true,
             employmentDate: true,
-            institution: { select: { id: true, name: true } }
+            status: true,
+            Institution: { select: { id: true, name: true } }
           }
         }
       }
     });
 
     // If separation request is approved by Commission, update employee status based on current employee status
-    if (updateData.status === "Approved by Commission" && updatedRequest.employee) {
-      const currentEmployeeStatus = updatedRequest.employee.status;
+    if (updateData.status === "Approved by Commission" && updatedRequest.Employee) {
+      const currentEmployeeStatus = updatedRequest.Employee.status;
       let newStatus;
-      
+
       if (currentEmployeeStatus === "Confirmed") {
         newStatus = "Dismissed";
       } else if (currentEmployeeStatus === "Probation" || currentEmployeeStatus === "On Probation") {
@@ -161,18 +181,28 @@ export async function PATCH(req: Request) {
         // For other statuses, default based on separation type
         newStatus = updatedRequest.type === "DISMISSAL" ? "Dismissed" : "Terminated";
       }
-      
-      await db.employee.update({
-        where: { id: updatedRequest.employee.id },
+
+      await db.Employee.update({
+        where: { id: updatedRequest.Employee.id },
         data: { status: newStatus }
       });
-      
-      console.log(`Employee ${updatedRequest.employee.name} status updated from "${currentEmployeeStatus}" to "${newStatus}" after ${updatedRequest.type.toLowerCase()} approval`);
+
+      console.log(`Employee ${updatedRequest.Employee.name} status updated from "${currentEmployeeStatus}" to "${newStatus}" after ${updatedRequest.type.toLowerCase()} approval`);
     }
+
+    
+    // Transform the data to match frontend expectations
+    const transformedRequest = {
+      ...updatedRequest,
+      submittedBy: (updatedRequest as any).User_TerminationRequest_submittedByIdToUser,
+      reviewedBy: (updatedRequest as any).User_TerminationRequest_reviewedByIdToUser,
+      User_TerminationRequest_submittedByIdToUser: undefined,
+      User_TerminationRequest_reviewedByIdToUser: undefined
+    };
 
     return NextResponse.json({
       success: true,
-      data: updatedRequest
+      data: transformedRequest
     });
 
   } catch (error) {

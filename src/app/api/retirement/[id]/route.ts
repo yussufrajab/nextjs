@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { z } from 'zod';
+import { v4 as uuidv4 } from 'uuid';
 
 const updateSchema = z.object({
   status: z.string().optional(),
@@ -23,14 +24,14 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       where: { id: params.id },
       data: validatedData,
       include: {
-        employee: { select: { name: true, zanId: true, department: true, cadre: true, employmentDate: true, dateOfBirth: true, institution: { select: { name: true } }, payrollNumber: true, zssfNumber: true }},
-        submittedBy: { select: { name: true, role: true } },
-        reviewedBy: { select: { name: true, role: true } },
+        Employee: { select: { name: true, zanId: true, department: true, cadre: true, employmentDate: true, dateOfBirth: true, Institution: { select: { name: true } }, payrollNumber: true, zssfNumber: true }},
+        User_RetirementRequest_submittedByIdToUser: { select: { name: true, role: true } },
+        User_RetirementRequest_reviewedByIdToUser: { select: { name: true, role: true } },
       }
     });
 
     if (validatedData.status) {
-      const userToNotify = await db.user.findUnique({
+      const userToNotify = await db.User.findUnique({
         where: { employeeId: updatedRequest.employeeId },
         select: { id: true }
       });
@@ -38,6 +39,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       if (userToNotify) {
         await db.notification.create({
           data: {
+            id: uuidv4(),
             userId: userToNotify.id,
             message: `Your ${updatedRequest.retirementType} Retirement request has been updated to: ${validatedData.status}.`,
             link: `/dashboard/retirement`,

@@ -16,8 +16,8 @@ export async function GET(req: Request) {
     let institutionFilter: any = {};
     if (institutionName) {
       institutionFilter = {
-        employee: {
-          institution: {
+        Employee: {
+          Institution: {
             name: {
               contains: institutionName,
               mode: 'insensitive'
@@ -50,17 +50,17 @@ export async function GET(req: Request) {
       const promotionRequests = await db.promotionRequest.findMany({
         where: whereClause,
         include: {
-          employee: {
+          Employee: {
             select: {
               id: true,
               name: true,
               zanId: true,
               gender: true,
-              institution: { select: { id: true, name: true } }
+              Institution: { select: { id: true, name: true } }
             }
           },
-          submittedBy: { select: { id: true, name: true, username: true } },
-          reviewedBy: { select: { id: true, name: true, username: true } }
+          User_PromotionRequest_submittedByIdToUser: { select: { id: true, name: true, username: true } },
+          User_PromotionRequest_reviewedByIdToUser: { select: { id: true, name: true, username: true } }
         },
         orderBy: { createdAt: 'desc' }
       }).catch(() => []);
@@ -73,17 +73,17 @@ export async function GET(req: Request) {
       const confirmationRequests = await db.confirmationRequest.findMany({
         where: whereClause,
         include: {
-          employee: {
+          Employee: {
             select: {
               id: true,
               name: true,
               zanId: true,
               gender: true,
-              institution: { select: { id: true, name: true } }
+              Institution: { select: { id: true, name: true } }
             }
           },
-          submittedBy: { select: { id: true, name: true, username: true } },
-          reviewedBy: { select: { id: true, name: true, username: true } }
+          User_ConfirmationRequest_submittedByIdToUser: { select: { id: true, name: true, username: true } },
+          User_ConfirmationRequest_reviewedByIdToUser: { select: { id: true, name: true, username: true } }
         },
         orderBy: { createdAt: 'desc' }
       }).catch(() => []);
@@ -96,17 +96,17 @@ export async function GET(req: Request) {
       const lwopRequests = await db.lwopRequest.findMany({
         where: whereClause,
         include: {
-          employee: {
+          Employee: {
             select: {
               id: true,
               name: true,
               zanId: true,
               gender: true,
-              institution: { select: { id: true, name: true } }
+              Institution: { select: { id: true, name: true } }
             }
           },
-          submittedBy: { select: { id: true, name: true, username: true } },
-          reviewedBy: { select: { id: true, name: true, username: true } }
+          User_LwopRequest_submittedByIdToUser: { select: { id: true, name: true, username: true } },
+          User_LwopRequest_reviewedByIdToUser: { select: { id: true, name: true, username: true } }
         },
         orderBy: { createdAt: 'desc' }
       }).catch(() => []);
@@ -119,17 +119,17 @@ export async function GET(req: Request) {
       const cadreChangeRequests = await db.cadreChangeRequest.findMany({
         where: whereClause,
         include: {
-          employee: {
+          Employee: {
             select: {
               id: true,
               name: true,
               zanId: true,
               gender: true,
-              institution: { select: { id: true, name: true } }
+              Institution: { select: { id: true, name: true } }
             }
           },
-          submittedBy: { select: { id: true, name: true, username: true } },
-          reviewedBy: { select: { id: true, name: true, username: true } }
+          User_CadreChangeRequest_submittedByIdToUser: { select: { id: true, name: true, username: true } },
+          User_CadreChangeRequest_reviewedByIdToUser: { select: { id: true, name: true, username: true } }
         },
         orderBy: { createdAt: 'desc' }
       }).catch(() => []);
@@ -142,17 +142,17 @@ export async function GET(req: Request) {
       const retirementRequests = await db.retirementRequest.findMany({
         where: whereClause,
         include: {
-          employee: {
+          Employee: {
             select: {
               id: true,
               name: true,
               zanId: true,
               gender: true,
-              institution: { select: { id: true, name: true } }
+              Institution: { select: { id: true, name: true } }
             }
           },
-          submittedBy: { select: { id: true, name: true, username: true } },
-          reviewedBy: { select: { id: true, name: true, username: true } }
+          User_RetirementRequest_submittedByIdToUser: { select: { id: true, name: true, username: true } },
+          User_RetirementRequest_reviewedByIdToUser: { select: { id: true, name: true, username: true } }
         },
         orderBy: { createdAt: 'desc' }
       }).catch(() => []);
@@ -165,17 +165,17 @@ export async function GET(req: Request) {
       const resignationRequests = await db.resignationRequest.findMany({
         where: whereClause,
         include: {
-          employee: {
+          Employee: {
             select: {
               id: true,
               name: true,
               zanId: true,
               gender: true,
-              institution: { select: { id: true, name: true } }
+              Institution: { select: { id: true, name: true } }
             }
           },
-          submittedBy: { select: { id: true, name: true, username: true } },
-          reviewedBy: { select: { id: true, name: true, username: true } }
+          User_ResignationRequest_submittedByIdToUser: { select: { id: true, name: true, username: true } },
+          User_ResignationRequest_reviewedByIdToUser: { select: { id: true, name: true, username: true } }
         },
         orderBy: { createdAt: 'desc' }
       }).catch(() => []);
@@ -188,17 +188,17 @@ export async function GET(req: Request) {
       const serviceExtensionRequests = await db.serviceExtensionRequest.findMany({
         where: whereClause,
         include: {
-          employee: {
+          Employee: {
             select: {
               id: true,
               name: true,
               zanId: true,
               gender: true,
-              institution: { select: { id: true, name: true } }
+              Institution: { select: { id: true, name: true } }
             }
           },
-          submittedBy: { select: { id: true, name: true, username: true } },
-          reviewedBy: { select: { id: true, name: true, username: true } }
+          User_ServiceExtensionRequest_submittedByIdToUser: { select: { id: true, name: true, username: true } },
+          User_ServiceExtensionRequest_reviewedByIdToUser: { select: { id: true, name: true, username: true } }
         },
         orderBy: { createdAt: 'desc' }
       }).catch(() => []);
@@ -211,17 +211,17 @@ export async function GET(req: Request) {
       const separationRequests = await db.separationRequest.findMany({
         where: whereClause,
         include: {
-          employee: {
+          Employee: {
             select: {
               id: true,
               name: true,
               zanId: true,
               gender: true,
-              institution: { select: { id: true, name: true } }
+              Institution: { select: { id: true, name: true } }
             }
           },
-          submittedBy: { select: { id: true, name: true, username: true } },
-          reviewedBy: { select: { id: true, name: true, username: true } }
+          User_SeparationRequest_submittedByIdToUser: { select: { id: true, name: true, username: true } },
+          User_SeparationRequest_reviewedByIdToUser: { select: { id: true, name: true, username: true } }
         },
         orderBy: { createdAt: 'desc' }
       }).catch(() => []);
@@ -235,15 +235,15 @@ export async function GET(req: Request) {
     // Map to TrackedRequest format
     const mappedRequests = allRequests.map(req => ({
       id: req.id,
-      employeeName: req.employee?.name || 'Unknown',
-      zanId: req.employee?.zanId || 'Unknown',
+      employeeName: req.Employee?.name || 'Unknown',
+      zanId: req.Employee?.zanId || 'Unknown',
       requestType: req.requestType,
       submissionDate: req.createdAt,
       status: req.status || 'Unknown',
       lastUpdatedDate: req.updatedAt || req.createdAt,
       currentStage: req.reviewStage || 'Initial Review',
-      employeeInstitution: req.employee?.institution?.name,
-      gender: req.employee?.gender || 'N/A',
+      employeeInstitution: req.Employee?.Institution?.name,
+      gender: req.Employee?.gender || 'N/A',
       rejectionReason: req.rejectionReason
     }));
 

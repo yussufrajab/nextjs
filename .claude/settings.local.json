@@ -90,7 +90,16 @@
       "Bash(ssh-keyscan:*)",
       "Bash(~/.ssh/known_hosts)",
       "Bash(git reset:*)",
-      "Read(//d/csms/**)"
+      "Read(//d/csms/**)",
+      "Bash(pm2 logs:*)",
+      "Bash(time curl:*)",
+      "Bash(pm2 status:*)",
+      "Bash(PGPASSWORD=Mamlaka2020 pg_dump:*)",
+      "Bash(git fetch:*)",
+      "Bash(perl -i -pe:*)",
+      "Bash(xargs sed:*)",
+      "Bash(xargs kill:*)",
+      "Bash(PORT=9002 pm2 start:*)"
     ],
     "deny": []
   }

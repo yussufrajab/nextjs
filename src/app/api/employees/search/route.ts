@@ -89,16 +89,16 @@ export async function GET(req: Request) {
       }
     }
 
-    const employees = await db.employee.findMany({
+    const employees = await db.Employee.findMany({
       where: whereClause,
       include: {
-        institution: {
+        Institution: {
           select: {
             id: true,
             name: true
           }
         },
-        certificates: {
+        EmployeeCertificate: {
           select: {
             id: true,
             type: true,

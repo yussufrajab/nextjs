@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/hooks/use-auth';
 import { ROLES, EMPLOYEES } from '@/lib/constants';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import type { Employee, User, Role } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
 import { Loader2, Search, FileText, CalendarDays, Paperclip, RefreshCw, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
@@ -24,7 +24,7 @@ import { EmployeeSearch } from '@/components/shared/employee-search';
 
 interface ResignationRequest {
   id: string;
-  employee: Partial<Employee & User & { institution: { name: string } }>;
+  Employee: Partial<Employee & User & { Institution: { name: string } }>;
   submittedBy: Partial<User>;
   reviewedBy?: Partial<User> | null;
   status: string;
@@ -91,7 +91,9 @@ export default function ResignationPage() {
   const [currentRequestToAction, setCurrentRequestToAction] = useState<ResignationRequest | null>(null);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 50;
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
   const [isCorrectionModalOpen, setIsCorrectionModalOpen] = useState(false);
   const [requestToCorrect, setRequestToCorrect] = useState<ResignationRequest | null>(null);
@@ -104,7 +106,7 @@ export default function ResignationPage() {
   const isEmployeeResigned = employeeDetails?.status === 'Resigned';
   const cannotSubmitResignation = isEmployeeResigned;
   
-  const fetchRequests = async (isRefresh = false) => {
+  const fetchRequests = useCallback(async (isRefresh = false, page = currentPage) => {
     if (!user || !role) return;
     if (isRefresh) {
       setIsRefreshing(true);
@@ -112,9 +114,21 @@ export default function ResignationPage() {
       setIsLoading(true);
     }
     try {
-      // Add cache-busting parameter and headers for refresh
-      const cacheBuster = isRefresh ? `&_t=${Date.now()}` : '';
-      const response = await fetch(`/api/resignation?userId=${user.id}&userRole=${role}&userInstitutionId=${user.institutionId || ''}${cacheBuster}`, {
+      // Build query parameters using URLSearchParams
+      const params = new URLSearchParams({
+        userId: user.id,
+        userRole: role,
+        userInstitutionId: user.institutionId || '',
+        page: page.toString(),
+        size: itemsPerPage.toString()
+      });
+
+      // Add cache-busting parameter for refresh
+      if (isRefresh) {
+        params.append('_t', Date.now().toString());
+      }
+
+      const response = await fetch(`/api/resignation?${params.toString()}`, {
         method: 'GET',
         headers: {
           'Cache-Control': isRefresh ? 'no-cache, no-store, must-revalidate' : 'default',
@@ -124,7 +138,20 @@ export default function ResignationPage() {
       });
       if (!response.ok) throw new Error('Failed to fetch resignation requests');
       const data = await response.json();
-      setPendingRequests(data);
+
+      // Handle both array and paginated object responses
+      let requests = [];
+      if (Array.isArray(data)) {
+        requests = data;
+        setTotalItems(data.length);
+        setTotalPages(Math.ceil(data.length / itemsPerPage));
+      } else if (data.data && Array.isArray(data.data)) {
+        requests = data.data;
+        setTotalItems(data.pagination?.total || data.data.length);
+        setTotalPages(data.pagination?.totalPages || Math.ceil((data.pagination?.total || data.data.length) / itemsPerPage));
+      }
+
+      setPendingRequests(requests);
       if (isRefresh) {
         toast({ title: "Refreshed", description: "Resignation requests have been updated.", duration: 2000 });
       }
@@ -137,12 +164,18 @@ export default function ResignationPage() {
         setIsLoading(false);
       }
     }
-  };
+  }, [user, role, currentPage, itemsPerPage]);
 
   useEffect(() => {
     fetchRequests();
     setMinEffectiveDate(format(new Date(), 'yyyy-MM-dd'));
-  }, [user, role]);
+  }, [fetchRequests]);
+
+  useEffect(() => {
+    if (currentPage > 1) {
+      fetchRequests(false, currentPage);
+    }
+  }, [currentPage]);
 
   const resetFormFields = () => {
     setEffectiveDate('');
@@ -165,7 +198,7 @@ export default function ResignationPage() {
     ];
 
     const hasPending = pendingRequests.some(
-      req => req.employee.id === employee.id && pendingStatuses.includes(req.status)
+      req => req.Employee.id === employee.id && pendingStatuses.includes(req.status)
     );
 
     if (hasPending) {
@@ -274,7 +307,7 @@ export default function ResignationPage() {
       if (actionDescription && request) {
         toast({ 
           title: "Status Updated", 
-          description: `${actionDescription} for ${request.employee.name}. Status: ${payload.status}`,
+          description: `${actionDescription} for ${request.Employee.name}. Status: ${payload.status}`,
           duration: 3000 
         });
       }
@@ -388,7 +421,7 @@ export default function ResignationPage() {
     // Show immediate success feedback
     toast({ 
       title: "Request Corrected & Resubmitted", 
-      description: `Resignation request for ${request.employee.name} has been corrected and resubmitted. Status: Pending HRMO/HHRMD Review`,
+      description: `Resignation request for ${request.Employee.name} has been corrected and resubmitted. Status: Pending HRMO/HHRMD Review`,
       duration: 4000
     });
 
@@ -434,10 +467,7 @@ export default function ResignationPage() {
   };
 
   const filteredRequests = getFilteredRequests();
-  const paginatedRequests = filteredRequests.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const paginatedRequests = filteredRequests || [];
 
 
   return (
@@ -576,7 +606,7 @@ export default function ResignationPage() {
                 <div key={request.id} className="mb-4 border p-4 rounded-md space-y-2 shadow-sm bg-background hover:shadow-md transition-shadow">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="font-semibold text-base flex items-center gap-2">
-                      Resignation for: {request.employee.name} (ZanID: {request.employee.zanId})
+                      Resignation for: {request.Employee.name} (ZanID: {request.Employee.zanId})
                       {(request.status.includes('Approved by Commission') || request.status.includes('Rejected by Commission')) && (
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                           request.status.includes('Approved by Commission') 
@@ -605,7 +635,7 @@ export default function ResignationPage() {
                   </div>
                   <p className="text-sm text-muted-foreground">Effective Date: {request.effectiveDate ? format(parseISO(request.effectiveDate), 'PPP') : 'N/A'}</p>
                   {request.reason && <p className="text-sm text-muted-foreground">Reason: {request.reason}</p>}
-                  <p className="text-sm text-muted-foreground">Submitted: {request.createdAt ? format(parseISO(request.createdAt), 'PPP') : 'N/A'}</p>
+                  <p className="text-sm text-muted-foreground">Submitted: {request.createdAt ? format(parseISO(request.createdAt), 'PPP') : 'N/A'} by {request.submittedBy?.name || 'N/A'}</p>
                   <div className="flex items-center space-x-2">
                     <p className="text-sm"><span className="font-medium">Status:</span></p>
                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
@@ -663,7 +693,7 @@ export default function ResignationPage() {
         </Card>
       )}
 
-      {(role === ROLES.HHRMD || role === ROLES.HRMO) && ( 
+      {(role === ROLES.HHRMD || role === ROLES.HRMO || role === ROLES.CSCS) && ( 
         <Card className="shadow-lg">
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -691,7 +721,7 @@ export default function ResignationPage() {
                 <div key={request.id} className="mb-4 border p-4 rounded-md space-y-2 shadow-sm bg-background hover:shadow-md transition-shadow">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="font-semibold text-base flex items-center gap-2">
-                      Resignation for: {request.employee.name} (ZanID: {request.employee.zanId})
+                      Resignation for: {request.Employee.name} (ZanID: {request.Employee.zanId})
                       {(request.status.includes('Approved by Commission') || request.status.includes('Rejected by Commission')) && (
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                           request.status.includes('Approved by Commission') 
@@ -784,9 +814,9 @@ export default function ResignationPage() {
             )}
             <Pagination
                 currentPage={currentPage}
-                totalPages={Math.ceil(filteredRequests.length / itemsPerPage)}
+                totalPages={totalPages}
                 onPageChange={setCurrentPage}
-                totalItems={filteredRequests.length}
+                totalItems={totalItems}
                 itemsPerPage={itemsPerPage}
             />
           </CardContent>
@@ -799,7 +829,7 @@ export default function ResignationPage() {
             <DialogHeader>
               <DialogTitle>Request Details: {selectedRequest.id}</DialogTitle>
               <DialogDescription>
-                Resignation request for <strong>{selectedRequest.employee.name}</strong> (ZanID: {selectedRequest.employee.zanId}).
+                Resignation request for <strong>{selectedRequest.Employee.name}</strong> (ZanID: {selectedRequest.Employee.zanId}).
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4 text-sm max-h-[70vh] overflow-y-auto">
@@ -807,39 +837,39 @@ export default function ResignationPage() {
                     <h4 className="font-semibold text-base text-foreground mb-2">Employee Information</h4>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Full Name:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.name}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.name}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">ZanID:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.zanId}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.zanId}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Payroll #:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.payrollNumber || 'N/A'}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.payrollNumber || 'N/A'}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">ZSSF #:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.zssfNumber || 'N/A'}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.zssfNumber || 'N/A'}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Department:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.department}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.department}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Cadre/Position:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.cadre}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.cadre}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Employment Date:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.employmentDate ? format(parseISO(selectedRequest.employee.employmentDate), 'PPP') : 'N/A'}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.employmentDate ? format(parseISO(selectedRequest.Employee.employmentDate), 'PPP') : 'N/A'}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Date of Birth:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.dateOfBirth ? format(parseISO(selectedRequest.employee.dateOfBirth), 'PPP') : 'N/A'}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.dateOfBirth ? format(parseISO(selectedRequest.Employee.dateOfBirth), 'PPP') : 'N/A'}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Institution:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.institution?.name || 'N/A'}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.institution?.name || 'N/A'}</p>
                     </div>
                 </div>
                 <div className="space-y-1">
@@ -958,7 +988,7 @@ export default function ResignationPage() {
                 <DialogHeader>
                     <DialogTitle>Flag Issue on Request: {currentRequestToAction.id}</DialogTitle>
                     <DialogDescription>
-                        Please provide the reason for flagging this issue for <strong>{currentRequestToAction.employee.name}</strong>. The request will be returned to the HRO.
+                        Please provide the reason for flagging this issue for <strong>{currentRequestToAction.Employee.name}</strong>. The request will be returned to the HRO.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="py-4">
@@ -983,7 +1013,7 @@ export default function ResignationPage() {
             <DialogHeader>
               <DialogTitle>Correct Resignation Request: {requestToCorrect.id}</DialogTitle>
               <DialogDescription>
-                Update the details for <strong>{requestToCorrect.employee.name}</strong>'s resignation request and upload new documents.
+                Update the details for <strong>{requestToCorrect.Employee.name}</strong>'s resignation request and upload new documents.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-6 py-4">

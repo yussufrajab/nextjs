@@ -20,13 +20,13 @@ export async function POST(req: Request) {
     const isEmail = username.includes('@');
     
     // Find user in database by either email or username
-    const user = await db.user.findFirst({
-      where: isEmail 
+    const user = await db.User.findFirst({
+      where: isEmail
         ? { email: username }
         : { username: username },
       include: {
-        institution: true,
-        employee: true
+        Institution: true,
+        Employee: true
       }
     });
 
@@ -73,9 +73,9 @@ export async function POST(req: Request) {
         username: user.username,
         role: user.role,
         institutionId: user.institutionId,
-        institutionName: user.institution?.name || '',
-        institution: user.institution,
-        employee: user.employee,
+        institutionName: user.Institution?.name || '',
+        Institution: user.Institution,
+        Employee: user.Employee,
         isEnabled: user.active, // Frontend expects isEnabled
         active: user.active,
         employeeId: user.employeeId,

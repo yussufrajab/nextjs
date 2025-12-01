@@ -22,6 +22,7 @@ import {
   LineChart,
   Building,
   Download,
+  Activity,
 } from 'lucide-react';
 import type { NavItem, Role } from './types';
 import { ROLES } from './constants';
@@ -152,6 +153,13 @@ export const NAV_ITEMS: NavItem[] = [
     icon: ListChecks,
     roles: [ROLES.HRO, ROLES.HHRMD, ROLES.HRMO, ROLES.DO, ROLES.CSCS, ROLES.HRRP, ROLES.PO],
     description: 'Track the status of submitted requests.',
+  },
+  {
+    title: 'Recent Activities',
+    href: '/dashboard/recent-activities',
+    icon: Activity,
+    roles: [ROLES.HRO, ROLES.HHRMD, ROLES.HRMO, ROLES.DO, ROLES.CSCS, ROLES.HRRP],
+    description: 'An overview of the latest requests and their statuses.',
   },
   {
     title: 'Reports & Analytics',

@@ -178,7 +178,7 @@ const EmployeeDetailsCard = ({ emp, onBack, userRole, userInstitutionId }: { emp
             <div><Label className="text-muted-foreground">Rank (Cadre):</Label><p className="font-medium text-foreground">{emp.cadre || 'N/A'}</p></div>
             <div><Label className="text-muted-foreground">Salary Scale:</Label><p className="font-medium text-foreground">{emp.salaryScale || 'N/A'}</p></div>
             <div><Label className="text-muted-foreground">Ministry:</Label><p className="font-medium text-foreground">{emp.ministry || 'N/A'}</p></div>
-            <div><Label className="text-muted-foreground">Institution:</Label><p className="font-medium text-foreground">{typeof emp.institution === 'object' ? emp.institution.name : emp.institution || 'N/A'}</p></div>
+            <div><Label className="text-muted-foreground">Institution:</Label><p className="font-medium text-foreground">{typeof emp.institution === 'object' ? emp.Institution.name : emp.institution || 'N/A'}</p></div>
             <div><Label className="text-muted-foreground">Department:</Label><p className="font-medium text-foreground">{emp.department || 'N/A'}</p></div>
             <div><Label className="text-muted-foreground">Appointment Type:</Label><p className="font-medium text-foreground">{emp.appointmentType || 'N/A'}</p></div>
             <div><Label className="text-muted-foreground">Contract Type:</Label><p className="font-medium text-foreground">{emp.contractType || 'N/A'}</p></div>
@@ -297,7 +297,9 @@ export default function ProfilePage() {
   const [pageLoading, setPageLoading] = useState(true);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 20;
+  const itemsPerPage = 50; // Server-side pagination
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
   const isCommissionUser = useMemo(() => 
     role === ROLES.HHRMD || role === ROLES.HRMO || role === ROLES.DO || role === ROLES.CSCS || role === ROLES.PO || role === ROLES.ADMIN,
@@ -309,20 +311,21 @@ export default function ProfilePage() {
     [role]
   );
 
-  const fetchEmployees = useCallback(async (query = '', status = '', gender = '') => {
+  const fetchEmployees = useCallback(async (query = '', status = '', gender = '', page = 1) => {
     setPageLoading(true);
     try {
         // CSC internal roles and Admin should see ALL employees from all institutions
         // Institution-based roles should only see employees from their institution
-        // Build query parameters
+        // Build query parameters with server-side pagination
         const params = new URLSearchParams();
         params.append('q', query);
-        params.append('size', '1000');
+        params.append('page', page.toString());
+        params.append('size', itemsPerPage.toString());
         loadExternalEmployees();
-        
+
         if (status && status !== 'all') params.append('status', status);
         if (gender && gender !== 'all') params.append('gender', gender);
-        
+
         let url: string;
         if (isCommissionUser) {
           // CSC roles see all employees - don't filter by institution
@@ -333,17 +336,28 @@ export default function ProfilePage() {
           params.append('userInstitutionId', user?.institutionId || '');
           url = `/api/employees?${params.toString()}`;
         }
-        
+
         const response = await fetch(url);
         if (!response.ok) throw new Error('Failed to fetch employees');
         const result = await response.json();
+
         setEmployees(result.data || []);
+
+        // Update pagination info from server response
+        if (result.pagination) {
+          setTotalItems(result.pagination.total || 0);
+          setTotalPages(result.pagination.totalPages || 1);
+        } else {
+          // Fallback if pagination info not provided
+          setTotalItems(result.data?.length || 0);
+          setTotalPages(1);
+        }
     } catch (error) {
         toast({ title: "Error", description: "Could not load employee data.", variant: "destructive" });
     } finally {
         setPageLoading(false);
     }
-  }, [role, user?.institutionId, isCommissionUser]);
+  }, [role, user?.institutionId, isCommissionUser, itemsPerPage]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -379,13 +393,20 @@ export default function ProfilePage() {
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       if (isInstitutionalViewer || isCommissionUser) {
-        fetchEmployees(searchTerm, statusFilter, genderFilter);
-        setCurrentPage(1);
+        setCurrentPage(1); // Reset to page 1 when filters change
+        fetchEmployees(searchTerm, statusFilter, genderFilter, 1);
       }
     }, 500);
 
     return () => clearTimeout(delayDebounceFn);
   }, [searchTerm, statusFilter, genderFilter, fetchEmployees, isInstitutionalViewer, isCommissionUser]);
+
+  // Fetch new data when page changes
+  useEffect(() => {
+    if (currentPage > 1 && (isInstitutionalViewer || isCommissionUser)) {
+      fetchEmployees(searchTerm, statusFilter, genderFilter, currentPage);
+    }
+  }, [currentPage, searchTerm, statusFilter, genderFilter, fetchEmployees, isInstitutionalViewer, isCommissionUser]);
 
   const pageTitle = useMemo(() => {
     if (role === ROLES.EMPLOYEE) return "My Profile";
@@ -403,11 +424,8 @@ export default function ProfilePage() {
     return "Search and view profiles for all employees across all institutions.";
   }, [role, isInstitutionalViewer]);
 
-  const totalPages = Math.ceil((employees?.length || 0) / itemsPerPage);
-  const paginatedEmployees = employees?.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  ) || [];
+  // Server-side pagination - use employees directly from API
+  const paginatedEmployees = employees || [];
 
 
 
@@ -510,13 +528,13 @@ export default function ProfilePage() {
             <CardHeader>
               <CardTitle>Employee List</CardTitle>
               <CardDescription>
-                {employees?.length || 0} employee(s) found
+                {totalItems || 0} employee(s) found
                 {(searchTerm || (statusFilter && statusFilter !== 'all') || (genderFilter && genderFilter !== 'all')) && (
                   <span className="text-muted-foreground">
                     {' '}with active filters
                   </span>
                 )}
-                .
+                . Showing page {currentPage} of {totalPages}.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -539,7 +557,7 @@ export default function ProfilePage() {
                                     <TableCell className="font-medium">{emp.name}</TableCell>
                                     <TableCell>{emp.gender}</TableCell>
                                     <TableCell>{emp.zanId}</TableCell>
-                                    <TableCell>{typeof emp.institution === 'object' ? emp.institution.name : emp.institution || 'N/A'}</TableCell>
+                                    <TableCell>{typeof emp.institution === 'object' ? emp.Institution.name : emp.institution || 'N/A'}</TableCell>
                                     <TableCell>{emp.cadre || 'N/A'}</TableCell>
                                     <TableCell>
                                       <span className={`font-medium ${getStatusColor(emp.status)}`}>
@@ -559,7 +577,7 @@ export default function ProfilePage() {
                   currentPage={currentPage}
                   totalPages={totalPages}
                   onPageChange={setCurrentPage}
-                  totalItems={employees?.length || 0}
+                  totalItems={totalItems}
                   itemsPerPage={itemsPerPage}
                 />
             </CardContent>

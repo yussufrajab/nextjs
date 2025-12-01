@@ -33,8 +33,6 @@ const hrimsCertificatesResponseSchema = z.object({
       content: z.string(), // Base64 encoded content
       size: z.number(),
       lastUpdated: z.string(),
-      institutionAwarded: z.string().optional(),
-      yearAwarded: z.string().optional(),
     })),
     pagination: z.object({
       currentPage: z.number(),
@@ -55,7 +53,7 @@ export async function POST(req: Request) {
     const validatedRequest = hrimsCertificatesRequestSchema.parse(body);
 
     // Find institution by vote number
-    const institution = await db.institution.findFirst({
+    const institution = await db.Institution.findFirst({
       where: {
         voteNumber: validatedRequest.institutionVoteNumber
       }
@@ -69,7 +67,7 @@ export async function POST(req: Request) {
     }
 
     // Find employee to ensure they exist
-    const employee = await db.employee.findFirst({
+    const employee = await db.Employee.findFirst({
       where: {
         OR: [
           { zanId: validatedRequest.zanId },
@@ -102,7 +100,7 @@ export async function POST(req: Request) {
     // Store certificates in database
     const result = await storeEmployeeCertificates(validatedHrimsData, employee.id);
 
-    console.log('Certificates synced successfully for employee:', employee.id);
+    console.log('Certificates synced successfully for Employee:', employee.id);
 
     return NextResponse.json({
       success: true,
@@ -199,12 +197,11 @@ async function storeEmployeeCertificates(
       // Store certificate with base64 content as data URL
       await db.employeeCertificate.create({
         data: {
+          id: cert.id,
           employeeId,
           type: cert.type,
           name: cert.name,
           url: `data:${cert.contentType};base64,${cert.content}`,
-          institutionAwarded: cert.institutionAwarded,
-          yearAwarded: cert.yearAwarded,
         }
       });
 
@@ -233,9 +230,7 @@ function getMockHRIMSCertificatesData(request: z.infer<typeof hrimsCertificatesR
           contentType: "application/pdf",
           content: "JVBERi0xLjcKCjEgMCBvYmoKPDwKL1R5cGUgL0NhdGFsb2cKL1BhZ2VzIDIgMCBSCj4+CmVuZG9iagoKMiAwIG9iago8PAovVHlwZSAvUGFnZXMKL0tpZHMgWzMgMCBSXQovQ291bnQgMQo+PgplbmRvYmoKCjMgMCBvYmoKPDwKL1R5cGUgL1BhZ2UKL1BhcmVudCAyIDAgUgovTWVkaWFCb3ggWzAgMCA2MTIgNzkyXQovQ29udGVudHMgNCAwIFIKPj4KZW5kb2JqCgo0IDAgb2JqCjw8Ci9MZW5ndGggNDAKPj4Kc3RyZWFtCkJUCi9GMSAxMiBUZgo3MiA3MjAgVGQKKE1vY2sgQmFjaGVsb3IgRGVncmVlIENlcnRpZmljYXRlKSBUagpFVAplbmRzdHJlYW0KZW5kb2JqCgp4cmVmCjAgNQowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMDkgMDAwMDAgbiAKMDAwMDAwMDA1OCAwMDAwMCBuIAowMDAwMDAwMTE1IDAwMDAwIG4gCjAwMDAwMDAyMDggMDAwMDAgbiAKdHJhaWxlcgo8PAovU2l6ZSA1Ci9Sb290IDEgMCBSCj4+CnN0YXJ0eHJlZgoyOTgKJSVFT0Y=",
           size: 312567,
-          lastUpdated: "2025-01-10",
-          institutionAwarded: "University of Dodoma",
-          yearAwarded: "2015"
+          lastUpdated: "2025-01-10"
         },
         {
           id: "cert_002",
@@ -244,9 +239,7 @@ function getMockHRIMSCertificatesData(request: z.infer<typeof hrimsCertificatesR
           contentType: "application/pdf",
           content: "JVBERi0xLjcKCjEgMCBvYmoKPDwKL1R5cGUgL0NhdGFsb2cKL1BhZ2VzIDIgMCBSCj4+CmVuZG9iagoKMiAwIG9iago8PAovVHlwZSAvUGFnZXMKL0tpZHMgWzMgMCBSXQovQ291bnQgMQo+PgplbmRvYmoKCjMgMCBvYmoKPDwKL1R5cGUgL1BhZ2UKL1BhcmVudCAyIDAgUgovTWVkaWFCb3ggWzAgMCA2MTIgNzkyXQovQ29udGVudHMgNCAwIFIKPj4KZW5kb2JqCgo0IDAgb2JqCjw8Ci9MZW5ndGggMzgKPj4Kc3RyZWFtCkJUCi9GMSAxMiBUZgo3MiA3MjAgVGQKKE1vY2sgTWFzdGVyIERlZ3JlZSBDZXJ0aWZpY2F0ZSkgVGoKRVQKZW5kc3RyZWFtCmVuZG9iagoKeHJlZgowIDUKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMDA5IDAwMDAwIG4gCjAwMDAwMDAwNTggMDAwMDAgbiAKMDAwMDAwMDExNSAwMDAwMCBuIAowMDAwMDAwMjA4IDAwMDAwIG4gCnRyYWlsZXIKPDwKL1NpemUgNQovUm9vdCAxIDAgUgo+PgpzdGFydHhyZWYKMjk2CiUlRU9G",
           size: 289134,
-          lastUpdated: "2025-01-10",
-          institutionAwarded: "Muhimbili University of Health Sciences",
-          yearAwarded: "2019"
+          lastUpdated: "2025-01-10"
         },
         {
           id: "cert_003",
@@ -255,9 +248,7 @@ function getMockHRIMSCertificatesData(request: z.infer<typeof hrimsCertificatesR
           contentType: "application/pdf",
           content: "JVBERi0xLjcKCjEgMCBvYmoKPDwKL1R5cGUgL0NhdGFsb2cKL1BhZ2VzIDIgMCBSCj4+CmVuZG9iagoKMiAwIG9iago8PAovVHlwZSAvUGFnZXMKL0tpZHMgWzMgMCBSXQovQ291bnQgMQo+PgplbmRvYmoKCjMgMCBvYmoKPDwKL1R5cGUgL1BhZ2UKL1BhcmVudCAyIDAgUgovTWVkaWFCb3ggWzAgMCA2MTIgNzkyXQovQ29udGVudHMgNCAwIFIKPj4KZW5kb2JqCgo0IDAgb2JqCjw8Ci9MZW5ndGggNDYKPj4Kc3RyZWFtCkJUCi9GMSAxMiBUZgo3MiA3MjAgVGQKKE1vY2sgUHVibGljIEFkbWluaXN0cmF0aW9uIENlcnRpZmljYXRlKSBUagpFVAplbmRzdHJlYW0KZW5kb2JqCgp4cmVmCjAgNQowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMDkgMDAwMDAgbiAKMDAwMDAwMDA1OCAwMDAwMCBuIAowMDAwMDAwMTE1IDAwMDAwIG4gCjAwMDAwMDAyMDggMDAwMDAgbiAKdHJhaWxlcgo8PAovU2l6ZSA1Ci9Sb290IDEgMCBSCj4+CnN0YXJ0eHJlZgozMDQKJSVFT0Y=",
           size: 198765,
-          lastUpdated: "2025-01-08",
-          institutionAwarded: "Institute of Public Administration",
-          yearAwarded: "2012"
+          lastUpdated: "2025-01-08"
         }
       ],
       pagination: {

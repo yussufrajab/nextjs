@@ -233,7 +233,7 @@ export default function DismissalPage() {
         cadre: employeeDetails.cadre || 'N/A',
         employmentDate: employeeDetails.employmentDate?.toString() || 'N/A',
         dateOfBirth: employeeDetails.dateOfBirth?.toString() || 'N/A',
-        institution: typeof employeeDetails.institution === 'object' ? employeeDetails.institution.name : employeeDetails.institution || 'N/A',
+        institution: typeof employeeDetails.institution === 'object' ? employeeDetails.Institution.name : employeeDetails.institution || 'N/A',
         reasonSummary: reasonDismissal,
         proposedDate: proposedDateDismissal,
         submissionDate: format(new Date(), 'yyyy-MM-dd'),
@@ -368,7 +368,7 @@ export default function DismissalPage() {
                       <div><Label className="text-muted-foreground">Cadre/Position:</Label> <p className="font-semibold text-foreground">{employeeDetails.cadre || 'N/A'}</p></div>
                       <div><Label className="text-muted-foreground">Employment Date:</Label> <p className="font-semibold text-foreground">{employeeDetails.employmentDate ? format(parseISO(employeeDetails.employmentDate.toString()), 'PPP') : 'N/A'}</p></div>
                       <div><Label className="text-muted-foreground">Date of Birth:</Label> <p className="font-semibold text-foreground">{employeeDetails.dateOfBirth ? format(parseISO(employeeDetails.dateOfBirth.toString()), 'PPP') : 'N/A'}</p></div>
-                      <div className="lg:col-span-1"><Label className="text-muted-foreground">Institution:</Label> <p className="font-semibold text-foreground">{typeof employeeDetails.institution === 'object' ? employeeDetails.institution.name : employeeDetails.institution || 'N/A'}</p></div>
+                      <div className="lg:col-span-1"><Label className="text-muted-foreground">Institution:</Label> <p className="font-semibold text-foreground">{typeof employeeDetails.institution === 'object' ? employeeDetails.Institution.name : employeeDetails.institution || 'N/A'}</p></div>
                       <div className="md:col-span-2 lg:col-span-3"><Label className="text-muted-foreground">Current Status:</Label> <p className={`font-semibold ${isDismissalAllowed ? 'text-green-600' : 'text-red-600'}`}>{employeeDetails.status || 'N/A'}</p></div>
                     </div>
                   </div>

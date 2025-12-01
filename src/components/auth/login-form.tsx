@@ -30,8 +30,13 @@ type LoginFormValues = z.infer<typeof loginFormSchema>;
 
 export function LoginForm() {
   const router = useRouter();
-  const { login } = useAuthStore();
+  const { login, logout } = useAuthStore();
   const [isLoading, setIsLoading] = React.useState(false);
+
+  // Logout any existing user when component mounts
+  React.useEffect(() => {
+    logout();
+  }, [logout]);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginFormSchema),

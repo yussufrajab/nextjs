@@ -32,6 +32,7 @@ export interface Institution {
   email?: string;
   phoneNumber?: string;
   voteNumber?: string;
+  tinNumber?: string;
 }
 
 const institutionSchema = z.object({
@@ -39,6 +40,7 @@ const institutionSchema = z.object({
   email: z.string().email().optional().or(z.literal("")),
   phoneNumber: z.string().optional(),
   voteNumber: z.string().optional(),
+  tinNumber: z.string().optional(),
 });
 
 type InstitutionFormValues = z.infer<typeof institutionSchema>;
@@ -80,6 +82,7 @@ export default function InstitutionManagementPage() {
       email: "",
       phoneNumber: "",
       voteNumber: "",
+      tinNumber: "",
     },
   });
 
@@ -110,22 +113,24 @@ export default function InstitutionManagementPage() {
   
   const openEditDialog = (institution: Institution) => {
     setEditingInstitution(institution);
-    form.reset({ 
+    form.reset({
       name: institution.name,
       email: institution.email || "",
       phoneNumber: institution.phoneNumber || "",
       voteNumber: institution.voteNumber || "",
+      tinNumber: institution.tinNumber || "",
     });
     setIsDialogOpen(true);
   };
 
   const openCreateDialog = () => {
     setEditingInstitution(null);
-    form.reset({ 
+    form.reset({
       name: "",
       email: "",
       phoneNumber: "",
       voteNumber: "",
+      tinNumber: "",
     });
     setIsDialogOpen(true);
   };
@@ -161,15 +166,15 @@ export default function InstitutionManagementPage() {
     doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 30);
     doc.text(`Total Institutions: ${filteredInstitutions.length}`, 14, 36);
 
-    const tableColumn = ['Institution ID', 'Institution Name', 'Email', 'Phone Number', 'Vote Number'];
+    const tableColumn = ['Institution Name', 'Email', 'Phone Number', 'Tin Number', 'Vote Number'];
     const tableRows: any[][] = [];
 
     filteredInstitutions.forEach(institution => {
       const rowData = [
-        institution.id,
         institution.name,
         institution.email || '-',
         institution.phoneNumber || '-',
+        institution.tinNumber || '-',
         institution.voteNumber || '-'
       ];
       tableRows.push(rowData);
@@ -195,14 +200,14 @@ export default function InstitutionManagementPage() {
       return;
     }
 
-    const wsData: any[][] = [['Institution ID', 'Institution Name', 'Email', 'Phone Number', 'Vote Number']];
+    const wsData: any[][] = [['Institution Name', 'Email', 'Phone Number', 'Tin Number', 'Vote Number']];
 
     filteredInstitutions.forEach(institution => {
       const rowData = [
-        institution.id,
         institution.name,
         institution.email || '',
         institution.phoneNumber || '',
+        institution.tinNumber || '',
         institution.voteNumber || ''
       ];
       wsData.push(rowData);
@@ -218,11 +223,11 @@ export default function InstitutionManagementPage() {
   const filteredInstitutions = institutions.filter(institution => {
     const query = searchQuery.toLowerCase();
     return (
-      institution.id.toLowerCase().includes(query) ||
       institution.name.toLowerCase().includes(query) ||
       (institution.email && institution.email.toLowerCase().includes(query)) ||
       (institution.phoneNumber && institution.phoneNumber.toLowerCase().includes(query)) ||
-      (institution.voteNumber && institution.voteNumber.toLowerCase().includes(query))
+      (institution.voteNumber && institution.voteNumber.toLowerCase().includes(query)) ||
+      (institution.tinNumber && institution.tinNumber.toLowerCase().includes(query))
     );
   });
 
@@ -259,7 +264,7 @@ export default function InstitutionManagementPage() {
         }
       />
       <Input
-        placeholder="Search by ID, name, email, phone, or vote number..."
+        placeholder="Search by name, email, phone, vote number, or tin number..."
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
         className="max-w-md mb-4"
@@ -279,10 +284,10 @@ export default function InstitutionManagementPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Institution ID</TableHead>
                     <TableHead>Institution Name</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Phone Number</TableHead>
+                    <TableHead>Tin Number</TableHead>
                     <TableHead>Vote Number</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -290,10 +295,10 @@ export default function InstitutionManagementPage() {
                 <TableBody>
                   {paginatedInstitutions.map(inst => (
                     <TableRow key={inst.id}>
-                      <TableCell className="font-mono text-sm text-gray-600">{inst.id}</TableCell>
                       <TableCell className="font-medium">{inst.name}</TableCell>
                       <TableCell>{inst.email || '-'}</TableCell>
                       <TableCell>{inst.phoneNumber || '-'}</TableCell>
+                      <TableCell className="font-mono text-sm text-gray-600">{inst.tinNumber || '-'}</TableCell>
                       <TableCell>{inst.voteNumber || '-'}</TableCell>
                       <TableCell className="text-right space-x-2">
                         <Button variant="outline" size="icon" onClick={() => openEditDialog(inst)}>
@@ -375,6 +380,19 @@ export default function InstitutionManagementPage() {
                     <FormLabel>Vote Number</FormLabel>
                     <FormControl>
                       <Input placeholder="e.g., 001" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="tinNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tin Number</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., 123-456-789" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

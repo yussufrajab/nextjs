@@ -10,7 +10,7 @@ import { FileUpload } from '@/components/ui/file-upload';
 import { EmployeeSearch } from '@/components/shared/employee-search';
 import { useAuth } from '@/hooks/use-auth';
 import { ROLES, EMPLOYEES } from '@/lib/constants';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import type { Employee, User, Role } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
 import { Loader2, Search, FileText, AlertTriangle, CheckSquare, Eye, Download, RefreshCw, CheckCircle, XCircle } from 'lucide-react';
@@ -21,7 +21,8 @@ import { FilePreviewModal } from '@/components/ui/file-preview-modal';
 
 interface LWOPRequest {
   id: string;
-  employee: Partial<Employee & User & { institution: { name: string } }>;
+  Employee?: Partial<Employee & User & { institution: { name: string }, Institution: { name: string } }>; // API returns this (capital E)
+  employee?: Partial<Employee & User & { institution: { name: string } }>; // Keep for compatibility
   submittedBy: Partial<User>;
   reviewedBy?: Partial<User> | null;
   status: string;
@@ -80,7 +81,9 @@ export default function LwopPage() {
   const [rejectionReasonInput, setRejectionReasonInput] = useState('');
   const [currentRequestToAction, setCurrentRequestToAction] = useState<LWOPRequest | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 50;
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
   const [isCorrectionModalOpen, setIsCorrectionModalOpen] = useState(false);
   const [requestToCorrect, setRequestToCorrect] = useState<LWOPRequest | null>(null);
@@ -98,12 +101,18 @@ export default function LwopPage() {
   const isEmployeeOnLWOP = employeeDetails?.status === 'On LWOP' || employeeDetails?.status === 'LWOP';
   
   // Check for existing pending LWOP requests for this employee
-  const hasPendingLWOPRequest = employeeDetails ? pendingRequests.some(request => 
-    request.employee.id === employeeDetails.id && 
-    (request.status.includes('Pending') || request.status.includes('Awaiting'))
-  ) : false;
+  const hasPendingLWOPRequest = employeeDetails ? pendingRequests.some(request => {
+    const employeeId = request.Employee?.id || request.employee?.id;
+    return employeeId === employeeDetails.id &&
+      (request.status.includes('Pending') || request.status.includes('Awaiting'));
+  }) : false;
   
   const cannotSubmitLWOP = isEmployeeOnProbation || isEmployeeOnLWOP || hasPendingLWOPRequest;
+
+  // Helper function to get employee from request (handles both Employee and employee)
+  const getEmployeeFromRequest = (request: LWOPRequest) => {
+    return request.Employee || request.employee;
+  };
 
   // Helper function to shorten document names for better display
   const getShortDocumentName = (fullPath: string): string => {
@@ -146,7 +155,7 @@ export default function LwopPage() {
     }
   }, [startDate, endDate]);
   
-  const fetchRequests = async (isRefresh = false) => {
+  const fetchRequests = useCallback(async (isRefresh = false, page = currentPage) => {
     if (!user || !role) return;
     if (isRefresh) {
       setIsRefreshing(true);
@@ -154,9 +163,21 @@ export default function LwopPage() {
       setIsLoading(true);
     }
     try {
-      // Add cache-busting parameter and headers for refresh
-      const cacheBuster = isRefresh ? `&_t=${Date.now()}` : '';
-      const response = await fetch(`/api/lwop?userId=${user.id}&userRole=${role}&userInstitutionId=${user.institutionId || ''}${cacheBuster}`, {
+      // Build query parameters using URLSearchParams
+      const params = new URLSearchParams({
+        userId: user.id,
+        userRole: role,
+        userInstitutionId: user.institutionId || '',
+        page: page.toString(),
+        size: itemsPerPage.toString()
+      });
+
+      // Add cache-busting parameter for refresh
+      if (isRefresh) {
+        params.append('_t', Date.now().toString());
+      }
+
+      const response = await fetch(`/api/lwop?${params.toString()}`, {
         method: 'GET',
         headers: {
           'Cache-Control': isRefresh ? 'no-cache, no-store, must-revalidate' : 'default',
@@ -167,7 +188,20 @@ export default function LwopPage() {
       if (!response.ok) throw new Error('Failed to fetch LWOP requests');
       const data = await response.json();
       console.log("[LWOP_FRONTEND] Data received from API:", data);
-      const processedData = data.map((req: any) => ({
+
+      // Handle both array and paginated object responses
+      let requests = [];
+      if (Array.isArray(data)) {
+        requests = data;
+        setTotalItems(data.length);
+        setTotalPages(Math.ceil(data.length / itemsPerPage));
+      } else if (data.data && Array.isArray(data.data)) {
+        requests = data.data;
+        setTotalItems(data.pagination?.total || data.data.length);
+        setTotalPages(data.pagination?.totalPages || Math.ceil((data.pagination?.total || data.data.length) / itemsPerPage));
+      }
+
+      const processedData = requests.map((req: any) => ({
         ...req,
         createdAt: typeof req.createdAt === 'object' ? req.createdAt.toISOString() : req.createdAt,
         updatedAt: typeof req.updatedAt === 'object' ? req.updatedAt.toISOString() : req.updatedAt,
@@ -186,11 +220,17 @@ export default function LwopPage() {
         setIsLoading(false);
       }
     }
-  };
+  }, [user, role, currentPage, itemsPerPage]);
 
   useEffect(() => {
     fetchRequests();
-  }, [user, role]);
+  }, [fetchRequests]);
+
+  useEffect(() => {
+    if (currentPage > 1) {
+      fetchRequests(false, currentPage);
+    }
+  }, [currentPage]);
 
   const resetForm = () => {
     setStartDate('');
@@ -284,9 +324,10 @@ export default function LwopPage() {
     setPendingRequests(optimisticUpdate);
 
     // Show immediate success feedback
-    toast({ 
-      title: "Request Corrected & Resubmitted", 
-      description: `LWOP request for ${request.employee.name} has been corrected and resubmitted. Status: Pending HRMO/HHRMD Review`,
+    const employeeData = getEmployeeFromRequest(request);
+    toast({
+      title: "Request Corrected & Resubmitted",
+      description: `LWOP request for ${employeeData?.name || 'Employee'} has been corrected and resubmitted. Status: Pending HRMO/HHRMD Review`,
       duration: 4000
     });
 
@@ -420,7 +461,7 @@ export default function LwopPage() {
       id: `temp-${Date.now()}`, // Temporary ID until server responds
       employee: {
         ...employeeDetails,
-        institution: { name: typeof employeeDetails.institution === 'object' ? employeeDetails.institution.name : employeeDetails.institution || 'N/A' }
+        institution: { name: typeof employeeDetails.institution === 'object' ? employeeDetails.Institution.name : employeeDetails.institution || 'N/A' }
       },
       submittedBy: { name: user.name },
       status: 'Pending HRMO/HHRMD Review',
@@ -464,8 +505,7 @@ export default function LwopPage() {
         setTimeout(async () => {
           await fetchRequests();
         }, 1000);
-        
-        setZanId('');
+
         setEmployeeDetails(null);
         setStartDate('');
         setEndDate('');
@@ -485,10 +525,10 @@ export default function LwopPage() {
   const handleUpdateRequest = async (requestId: string, payload: any, actionDescription?: string) => {
       // Get request info for immediate feedback
       const request = pendingRequests.find(req => req.id === requestId);
-      
+
       // Optimistic update - immediately show new status
-      const optimisticUpdate = pendingRequests.map(req => 
-        req.id === requestId 
+      const optimisticUpdate = pendingRequests.map(req =>
+        req.id === requestId
           ? { ...req, ...payload, updatedAt: new Date().toISOString() }
           : req
       );
@@ -496,10 +536,11 @@ export default function LwopPage() {
 
       // Show immediate success feedback
       if (actionDescription && request) {
-        toast({ 
-          title: "Status Updated", 
-          description: `${actionDescription} for ${request.employee.name}. Status: ${payload.status}`,
-          duration: 3000 
+        const employeeData = getEmployeeFromRequest(request);
+        toast({
+          title: "Status Updated",
+          description: `${actionDescription} for ${employeeData?.name || 'Employee'}. Status: ${payload.status}`,
+          duration: 3000
         });
       }
 
@@ -567,7 +608,7 @@ export default function LwopPage() {
     await handleUpdateRequest(requestId, payload, actionDescription);
   };
 
-  const paginatedRequests = pendingRequests.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const paginatedRequests = pendingRequests || [];
 
   return (
     <div>
@@ -599,7 +640,7 @@ export default function LwopPage() {
                       <div><Label className="text-muted-foreground">Cadre/Position:</Label> <p className="font-semibold text-foreground">{employeeDetails.cadre || 'N/A'}</p></div>
                       <div><Label className="text-muted-foreground">Employment Date:</Label> <p className="font-semibold text-foreground">{employeeDetails.employmentDate ? format(parseISO(String(employeeDetails.employmentDate)), 'PPP') : 'N/A'}</p></div>
                       <div><Label className="text-muted-foreground">Date of Birth:</Label> <p className="font-semibold text-foreground">{employeeDetails.dateOfBirth ? format(parseISO(String(employeeDetails.dateOfBirth)), 'PPP') : 'N/A'}</p></div>
-                      <div className="lg:col-span-1"><Label className="text-muted-foreground">Institution:</Label> <p className="font-semibold text-foreground">{typeof employeeDetails.institution === 'object' && employeeDetails.institution !== null ? employeeDetails.institution.name : employeeDetails.institution || 'N/A'}</p></div>
+                      <div className="lg:col-span-1"><Label className="text-muted-foreground">Institution:</Label> <p className="font-semibold text-foreground">{typeof employeeDetails.institution === 'object' && employeeDetails.institution !== null ? employeeDetails.Institution.name : employeeDetails.institution || 'N/A'}</p></div>
                       <div className="md:col-span-2 lg:col-span-3"><Label className="text-muted-foreground">Current Status:</Label> <p className={`font-semibold ${isEmployeeOnProbation ? 'text-destructive' : 'text-green-600'}`}>{employeeDetails.status || 'N/A'}</p></div>
                     </div>
                   </div>
@@ -674,7 +715,7 @@ export default function LwopPage() {
         </Card>
       )}
 
-       {(role === ROLES.HHRMD || role === ROLES.HRMO || role === ROLES.HRO) && (
+       {(role === ROLES.HHRMD || role === ROLES.HRMO || role === ROLES.CSCS || role === ROLES.HRO) && (
         <Card className="shadow-lg">
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -698,11 +739,13 @@ export default function LwopPage() {
             {isLoading ? (
                <div className="flex justify-center items-center h-40"><Loader2 className="h-8 w-8 animate-spin" /></div>
             ) : paginatedRequests.length > 0 ? (
-              paginatedRequests.map((request) => (
+              paginatedRequests.map((request) => {
+                const employeeData = getEmployeeFromRequest(request);
+                return (
                 <div key={request.id} className="mb-4 border p-4 rounded-md space-y-2 shadow-sm bg-background hover:shadow-md transition-shadow">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="font-semibold text-base flex items-center gap-2">
-                      LWOP Request for: {request.employee?.name || 'N/A'} (ZanID: {request.employee?.zanId || 'N/A'})
+                      LWOP Request for: {employeeData?.name || 'N/A'} (ZanID: {employeeData?.zanId || 'N/A'})
                       {(request.status.includes('Approved by Commission') || request.status.includes('Rejected by Commission')) && (
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                           request.status.includes('Approved by Commission') 
@@ -791,28 +834,31 @@ export default function LwopPage() {
                     )}
                   </div>
                 </div>
-              ))
+                );
+              })
             ) : (
               <p className="text-muted-foreground">No LWOP requests pending your review.</p>
             )}
              <Pagination
                 currentPage={currentPage}
-                totalPages={Math.ceil(pendingRequests.length / itemsPerPage)}
+                totalPages={totalPages}
                 onPageChange={setCurrentPage}
-                totalItems={pendingRequests.length}
+                totalItems={totalItems}
                 itemsPerPage={itemsPerPage}
              />
           </CardContent>
         </Card>
       )}
 
-      {selectedRequest && (
+      {selectedRequest && (() => {
+        const selectedEmployeeData = getEmployeeFromRequest(selectedRequest);
+        return (
         <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
           <DialogContent className="sm:max-w-3xl">
             <DialogHeader>
               <DialogTitle>Request Details: {selectedRequest.id}</DialogTitle>
               <DialogDescription>
-                LWOP request for <strong>{selectedRequest.employee.name}</strong> (ZanID: {selectedRequest.employee.zanId}).
+                LWOP request for <strong>{selectedEmployeeData?.name || 'N/A'}</strong> (ZanID: {selectedEmployeeData?.zanId || 'N/A'}).
               </DialogDescription>
             </DialogHeader>
              <div className="space-y-4 py-4 text-sm max-h-[70vh] overflow-y-auto">
@@ -820,39 +866,39 @@ export default function LwopPage() {
                     <h4 className="font-semibold text-base text-foreground mb-2">Employee Information</h4>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Full Name:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.name}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedEmployeeData?.name || 'N/A'}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">ZanID:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.zanId}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedEmployeeData?.zanId || 'N/A'}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Payroll #:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.payrollNumber || 'N/A'}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedEmployeeData?.payrollNumber || 'N/A'}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">ZSSF #:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.zssfNumber || 'N/A'}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedEmployeeData?.zssfNumber || 'N/A'}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Department:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.department}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedEmployeeData?.department || 'N/A'}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Cadre/Position:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.cadre}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedEmployeeData?.cadre || 'N/A'}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Employment Date:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.employmentDate ? format(parseISO(selectedRequest.employee.employmentDate.toString()), 'PPP') : 'N/A'}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedEmployeeData?.employmentDate ? format(parseISO(selectedEmployeeData.employmentDate.toString()), 'PPP') : 'N/A'}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Date of Birth:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.dateOfBirth ? format(parseISO(selectedRequest.employee.dateOfBirth.toString()), 'PPP') : 'N/A'}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedEmployeeData?.dateOfBirth ? format(parseISO(selectedEmployeeData.dateOfBirth.toString()), 'PPP') : 'N/A'}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Institution:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.institution?.name || 'N/A'}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedEmployeeData?.Institution?.name || selectedEmployeeData?.institution?.name || 'N/A'}</p>
                     </div>
                 </div>
 
@@ -984,15 +1030,18 @@ export default function LwopPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      )}
+        );
+      })()}
 
-      {currentRequestToAction && (
+      {currentRequestToAction && (() => {
+        const currentEmployeeData = getEmployeeFromRequest(currentRequestToAction);
+        return (
         <Dialog open={isRejectionModalOpen} onOpenChange={setIsRejectionModalOpen}>
             <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Reject LWOP Request: {currentRequestToAction.id}</DialogTitle>
                     <DialogDescription>
-                        Please provide the reason for rejecting the LWOP request for <strong>{currentRequestToAction.employee.name}</strong>. This reason will be visible to the HRO.
+                        Please provide the reason for rejecting the LWOP request for <strong>{currentEmployeeData?.name || 'N/A'}</strong>. This reason will be visible to the HRO.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="py-4">
@@ -1009,7 +1058,8 @@ export default function LwopPage() {
                 </DialogFooter>
             </DialogContent>
         </Dialog>
-      )}
+        );
+      })()}
 
     {/* Correction Modal */}
     <Dialog open={isCorrectionModalOpen} onOpenChange={setIsCorrectionModalOpen}>

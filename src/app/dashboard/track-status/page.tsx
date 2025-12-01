@@ -62,7 +62,9 @@ export default function TrackStatusPage() {
   const [searchAttempted, setSearchAttempted] = useState(false);
   
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 20;
+  const itemsPerPage = 50; // Server-side pagination
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
   const [allRequests, setAllRequests] = useState<TrackedRequest[]>([]);
   const [filteredRequests, setFilteredRequests] = useState<TrackedRequest[]>([]);
@@ -122,8 +124,8 @@ export default function TrackStatusPage() {
       let params = new URLSearchParams();
       params.set('limit', '100'); // Always get 100 latest requests
       if (role === ROLES.HRO && user?.institution?.name) {
-          params.append('institutionName', user.institution.name);
-          setInstitutionFilter(user.institution.name);
+          params.append('institutionName', typeof user.institution === 'object' ? user.institution.name : user.institution);
+          setInstitutionFilter(typeof user.institution === 'object' ? user.institution.name : user.institution);
       }
       fetchRequests(params);
     }
@@ -156,7 +158,7 @@ export default function TrackStatusPage() {
     }
     
     if (role === ROLES.HRO && user?.institution?.name) {
-      params.set('institutionName', user.institution.name);
+      params.set('institutionName', typeof user.institution === 'object' ? user.institution.name : user.institution);
     }
     
     fetchRequests(params);
@@ -209,11 +211,14 @@ export default function TrackStatusPage() {
   };
 
 
-  const totalPages = Math.ceil(filteredRequests.length / itemsPerPage);
-  const paginatedRequests = filteredRequests.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  // Server-side pagination - use filtered requests directly
+  const paginatedRequests = filteredRequests || [];
+
+  // Update totalPages and totalItems when filteredRequests change
+  React.useEffect(() => {
+    setTotalPages(Math.ceil(filteredRequests.length / itemsPerPage));
+    setTotalItems(filteredRequests.length);
+  }, [filteredRequests]);
 
 
   return (
@@ -361,7 +366,7 @@ export default function TrackStatusPage() {
                     currentPage={currentPage}
                     totalPages={totalPages}
                     onPageChange={setCurrentPage}
-                    totalItems={filteredRequests.length}
+                    totalItems={totalItems}
                     itemsPerPage={itemsPerPage}
                   />
                   </>

@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/hooks/use-auth';
 import { ROLES, EMPLOYEES } from '@/lib/constants';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import type { Employee, User, Role } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
 import { Loader2, Search, FileText, CalendarDays, ListFilter, Stethoscope, ClipboardCheck, AlertTriangle, RefreshCw, CheckCircle, XCircle } from 'lucide-react';
@@ -86,7 +86,9 @@ export default function RetirementPage() {
   const [showCorrectedDelayFields, setShowCorrectedDelayFields] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 50;
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
   // File preview modal state
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
@@ -127,7 +129,7 @@ export default function RetirementPage() {
     setMinRetirementDate(format(sixMonthsFromNow, 'yyyy-MM-dd'));
   }, []);
 
-  const fetchRequests = async (isRefresh = false) => {
+  const fetchRequests = useCallback(async (isRefresh = false, page = currentPage) => {
     if (!user || !role) return;
     if (isRefresh) {
       setIsRefreshing(true);
@@ -135,9 +137,21 @@ export default function RetirementPage() {
       setIsLoading(true);
     }
     try {
-      // Add cache-busting parameter and headers for refresh
-      const cacheBuster = isRefresh ? `&_t=${Date.now()}` : '';
-      const response = await fetch(`/api/retirement?userId=${user.id}&userRole=${role}&userInstitutionId=${user.institutionId || ''}${cacheBuster}`, {
+      // Build query parameters using URLSearchParams
+      const params = new URLSearchParams({
+        userId: user.id,
+        userRole: role,
+        userInstitutionId: user.institutionId || '',
+        page: page.toString(),
+        size: itemsPerPage.toString()
+      });
+
+      // Add cache-busting parameter for refresh
+      if (isRefresh) {
+        params.append('_t', Date.now().toString());
+      }
+
+      const response = await fetch(`/api/retirement?${params.toString()}`, {
         method: 'GET',
         headers: {
           'Cache-Control': isRefresh ? 'no-cache, no-store, must-revalidate' : 'default',
@@ -147,7 +161,20 @@ export default function RetirementPage() {
       });
       if (!response.ok) throw new Error('Failed to fetch retirement requests');
       const data = await response.json();
-      setPendingRequests(data);
+
+      // Handle both array and paginated object responses
+      let requests = [];
+      if (Array.isArray(data)) {
+        requests = data;
+        setTotalItems(data.length);
+        setTotalPages(Math.ceil(data.length / itemsPerPage));
+      } else if (data.data && Array.isArray(data.data)) {
+        requests = data.data;
+        setTotalItems(data.pagination?.total || data.data.length);
+        setTotalPages(data.pagination?.totalPages || Math.ceil((data.pagination?.total || data.data.length) / itemsPerPage));
+      }
+
+      setPendingRequests(requests);
       if (isRefresh) {
         toast({ title: "Refreshed", description: "Retirement requests have been updated.", duration: 2000 });
       }
@@ -160,11 +187,17 @@ export default function RetirementPage() {
         setIsLoading(false);
       }
     }
-  };
+  }, [user, role, currentPage, itemsPerPage]);
 
   useEffect(() => {
     fetchRequests();
-  }, [user, role]);
+  }, [fetchRequests]);
+
+  useEffect(() => {
+    if (currentPage > 1) {
+      fetchRequests(false, currentPage);
+    }
+  }, [currentPage]);
 
   // Auto-fill retirement date for compulsory retirement
   useEffect(() => {
@@ -229,9 +262,9 @@ export default function RetirementPage() {
 
   // Auto-fill corrected retirement date for compulsory retirement in correction modal
   useEffect(() => {
-    if (correctedRetirementType === 'compulsory' && requestToCorrect && requestToCorrect.employee.dateOfBirth) {
+    if (correctedRetirementType === 'compulsory' && requestToCorrect && requestToCorrect.Employee.dateOfBirth) {
       // Parse date manually to avoid timezone issues
-      const birthDateStr = requestToCorrect.employee.dateOfBirth.split('T')[0]; // Get only YYYY-MM-DD part
+      const birthDateStr = requestToCorrect.Employee.dateOfBirth.split('T')[0]; // Get only YYYY-MM-DD part
       const [year, month, day] = birthDateStr.split('-').map(Number);
 
       // Calculate retirement date: add 60 years to birth year, keep same month and day
@@ -257,9 +290,9 @@ export default function RetirementPage() {
     setCorrectedAgeEligibilityError(null);
     setShowCorrectedDelayFields(false);
 
-    if (requestToCorrect && requestToCorrect.employee.dateOfBirth && correctedRetirementType && correctedRetirementDate) {
+    if (requestToCorrect && requestToCorrect.Employee.dateOfBirth && correctedRetirementType && correctedRetirementDate) {
       // Parse date strings manually to avoid timezone issues
-      const birthDateStr = requestToCorrect.employee.dateOfBirth.split('T')[0]; // Get only YYYY-MM-DD part
+      const birthDateStr = requestToCorrect.Employee.dateOfBirth.split('T')[0]; // Get only YYYY-MM-DD part
       const retirementDateStr = correctedRetirementDate;
 
       const [birthYear, birthMonth, birthDay] = birthDateStr.split('-').map(Number);
@@ -314,7 +347,7 @@ export default function RetirementPage() {
     ];
 
     const hasPending = pendingRequests.some(
-      req => req.employee.id === employee.id && pendingStatuses.includes(req.status)
+      req => req.Employee.id === employee.id && pendingStatuses.includes(req.status)
     );
 
     if (hasPending) {
@@ -476,7 +509,7 @@ export default function RetirementPage() {
     if (actionDescription && request) {
       toast({ 
         title: "Status Updated", 
-        description: `${actionDescription} for ${request.employee.name}. Status: ${payload.status}`,
+        description: `${actionDescription} for ${request.Employee.name}. Status: ${payload.status}`,
         duration: 3000 
       });
     }
@@ -541,8 +574,8 @@ export default function RetirementPage() {
     const finalStatus = decision === 'approved' ? "Approved by Commission" : "Rejected by Commission - Request Concluded";
     const payload = { status: finalStatus, reviewStage: 'completed' };
     const actionDescription = decision === 'approved' 
-      ? `Retirement request approved by Commission for ${request.employee.name}`
-      : `Retirement request rejected by Commission for ${request.employee.name}`;
+      ? `Retirement request approved by Commission for ${request.Employee.name}`
+      : `Retirement request rejected by Commission for ${request.Employee.name}`;
     
     await handleUpdateRequest(requestId, payload, actionDescription);
   };
@@ -621,10 +654,7 @@ export default function RetirementPage() {
     }
   };
 
-  const paginatedRequests = pendingRequests.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const paginatedRequests = pendingRequests || [];
 
   return (
     <div>
@@ -838,7 +868,7 @@ export default function RetirementPage() {
               <div key={request.id} className="mb-4 border p-4 rounded-md space-y-2 shadow-sm bg-background hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-semibold text-base flex items-center gap-2">
-                    Retirement Request for: {request.employee.name} (ZanID: {request.employee.zanId})
+                    Retirement Request for: {request.Employee.name} (ZanID: {request.Employee.zanId})
                     {(request.status.includes('Approved by Commission') || request.status.includes('Rejected by Commission')) && (
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                         request.status.includes('Approved by Commission') 
@@ -867,7 +897,7 @@ export default function RetirementPage() {
                 </div>
                 <p className="text-sm text-muted-foreground">Type: {request.retirementType}</p>
                 <p className="text-sm text-muted-foreground">Proposed Date: {request.proposedDate ? format(parseISO(request.proposedDate), 'PPP') : 'N/A'}</p>
-                <p className="text-sm text-muted-foreground">Submitted: {request.createdAt ? format(parseISO(request.createdAt), 'PPP') : 'N/A'}</p>
+                <p className="text-sm text-muted-foreground">Submitted: {request.createdAt ? format(parseISO(request.createdAt), 'PPP') : 'N/A'} by {request.submittedBy?.name || 'N/A'}</p>
                 <div className="flex items-center space-x-2">
                   <p className="text-sm"><span className="font-medium">Status:</span></p>
                   <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
@@ -920,16 +950,16 @@ export default function RetirementPage() {
             ))}
             <Pagination
               currentPage={currentPage}
-              totalPages={Math.ceil(pendingRequests.length / itemsPerPage)}
+              totalPages={totalPages}
               onPageChange={setCurrentPage}
-              totalItems={pendingRequests.length}
+              totalItems={totalItems}
               itemsPerPage={itemsPerPage}
             />
           </CardContent>
         </Card>
       )}
 
-      {(role === ROLES.HHRMD || role === ROLES.HRMO) && ( 
+      {(role === ROLES.HHRMD || role === ROLES.HRMO || role === ROLES.CSCS) && ( 
         <Card className="shadow-lg">
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -957,7 +987,7 @@ export default function RetirementPage() {
                 <div key={request.id} className="mb-4 border p-4 rounded-md space-y-2 shadow-sm bg-background hover:shadow-md transition-shadow">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="font-semibold text-base flex items-center gap-2">
-                      Retirement Request for: {request.employee.name} (ZanID: {request.employee.zanId})
+                      Retirement Request for: {request.Employee.name} (ZanID: {request.Employee.zanId})
                       {(request.status.includes('Approved by Commission') || request.status.includes('Rejected by Commission')) && (
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                           request.status.includes('Approved by Commission') 
@@ -1029,7 +1059,7 @@ export default function RetirementPage() {
                   {request.rejectionReason && <p className="text-sm text-destructive"><span className="font-medium">Rejection Reason:</span> {request.rejectionReason}</p>}
                   <div className="mt-3 pt-3 border-t flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                     <Button size="sm" variant="outline" onClick={() => { setSelectedRequest(request); setIsDetailsModalOpen(true); }}>View Details</Button>
-                    {(role === ROLES.HHRMD || role === ROLES.HRMO) && (
+                    {(role === ROLES.HHRMD || role === ROLES.HRMO || role === ROLES.CSCS) && (
                       <>
                         {/* HRMO/HHRMD Parallel Review Actions */}
                         {(role === ROLES.HRMO || role === ROLES.HHRMD) && (request.status === 'Pending HRMO/HHRMD Review') && (
@@ -1054,9 +1084,9 @@ export default function RetirementPage() {
             )}
              <Pagination
               currentPage={currentPage}
-              totalPages={Math.ceil(pendingRequests.length / itemsPerPage)}
+              totalPages={totalPages}
               onPageChange={setCurrentPage}
-              totalItems={pendingRequests.length}
+              totalItems={totalItems}
               itemsPerPage={itemsPerPage}
             />
           </CardContent>
@@ -1069,7 +1099,7 @@ export default function RetirementPage() {
             <DialogHeader>
               <DialogTitle>Request Details: {selectedRequest.id}</DialogTitle>
               <DialogDescription>
-                Retirement request for <strong>{selectedRequest.employee.name}</strong> (ZanID: {selectedRequest.employee.zanId}).
+                Retirement request for <strong>{selectedRequest.Employee.name}</strong> (ZanID: {selectedRequest.Employee.zanId}).
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4 text-sm max-h-[70vh] overflow-y-auto">
@@ -1077,38 +1107,38 @@ export default function RetirementPage() {
                     <h4 className="font-semibold text-base text-foreground mb-2">Employee Information</h4>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Full Name:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.name}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.name}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">ZanID:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.zanId}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.zanId}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Payroll #:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.payrollNumber || 'N/A'}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.payrollNumber || 'N/A'}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">ZSSF #:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.zssfNumber || 'N/A'}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.zssfNumber || 'N/A'}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Department:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.department}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.department}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Cadre/Position:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.cadre}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.cadre}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Employment Date:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.employmentDate ? format(parseISO(selectedRequest.employee.employmentDate), 'PPP') : 'N/A'}</p></div>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.employmentDate ? format(parseISO(selectedRequest.Employee.employmentDate), 'PPP') : 'N/A'}</p></div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Date of Birth:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.dateOfBirth ? format(parseISO(selectedRequest.employee.dateOfBirth), 'PPP') : 'N/A'}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.dateOfBirth ? format(parseISO(selectedRequest.Employee.dateOfBirth), 'PPP') : 'N/A'}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Institution:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.employee.institution?.name || 'N/A'}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.institution?.name || 'N/A'}</p>
                     </div>
                 </div>
                 <div className="space-y-1">
@@ -1239,7 +1269,7 @@ export default function RetirementPage() {
                 <DialogHeader>
                     <DialogTitle>Reject Retirement Request: {currentRequestToAction.id}</DialogTitle>
                     <DialogDescription>
-                        Please provide the reason for rejecting the retirement request for <strong>{currentRequestToAction.employee.name}</strong>. This reason will be visible to the HRO.
+                        Please provide the reason for rejecting the retirement request for <strong>{currentRequestToAction.Employee.name}</strong>. This reason will be visible to the HRO.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="py-4">
@@ -1264,7 +1294,7 @@ export default function RetirementPage() {
             <DialogHeader>
               <DialogTitle>Correct & Resubmit Retirement Request</DialogTitle>
               <DialogDescription>
-                Please update the details and upload corrected documents for <strong>{requestToCorrect.employee.name}</strong> (ZanID: {requestToCorrect.employee.zanId}).
+                Please update the details and upload corrected documents for <strong>{requestToCorrect.Employee.name}</strong> (ZanID: {requestToCorrect.Employee.zanId}).
               </DialogDescription>
             </DialogHeader>
             <div className="py-4 space-y-4">

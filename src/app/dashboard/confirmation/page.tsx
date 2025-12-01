@@ -22,8 +22,10 @@ import { EmployeeSearch } from '@/components/shared/employee-search';
 
 interface ConfirmationRequest {
   id: string;
-  employee: Partial<Employee & User & { institution: { name: string } }>;
+  Employee?: Partial<Employee & User & { Institution: { name: string } }>; // API returns this (capital E)
+  employee?: Partial<Employee & User & { institution: { name: string } }>; // Keep for compatibility
   submittedBy: Partial<User>;
+  submittedById?: string;
   reviewedBy?: Partial<User> | null;
   status: string;
   reviewStage: string;
@@ -46,6 +48,7 @@ export default function ConfirmationPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isIpaRequired, setIsIpaRequired] = useState(false);
+  const [hasPendingConfirmation, setHasPendingConfirmation] = useState(false);
 
   const [pendingRequests, setPendingRequests] = useState<ConfirmationRequest[]>([]);
   const [selectedRequest, setSelectedRequest] = useState<ConfirmationRequest | null>(null);
@@ -62,7 +65,9 @@ export default function ConfirmationPage() {
   const [correctedLetterOfRequestFile, setCorrectedLetterOfRequestFile] = useState<string>('');
 
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 50; // Server-side pagination
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
   // File preview modal state
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
@@ -94,7 +99,12 @@ export default function ConfirmationPage() {
     return cleanName;
   };
 
-  const fetchRequests = async (isRefresh = false) => {
+  // Helper function to get employee from request (handles both Employee and employee)
+  const getEmployeeFromRequest = (request: ConfirmationRequest) => {
+    return request.Employee || request.employee;
+  };
+
+  const fetchRequests = React.useCallback(async (isRefresh = false, page = 1) => {
     if (!user || !role) return;
     if (isRefresh) {
       setIsRefreshing(true);
@@ -107,7 +117,14 @@ export default function ConfirmationPage() {
       // Client-side filtering will then handle role-specific display logic.
       // Add cache-busting parameter and headers for refresh
       const cacheBuster = isRefresh ? `&_t=${Date.now()}` : '';
-      let url = `/api/confirmations?userId=${user.id}&userRole=${role}&userInstitutionId=${user.institutionId || ''}${cacheBuster}`;
+      const params = new URLSearchParams();
+      params.append('userId', user.id);
+      params.append('userRole', role);
+      params.append('userInstitutionId', user.institutionId || '');
+      params.append('page', page.toString());
+      params.append('size', itemsPerPage.toString());
+
+      let url = `/api/confirmations?${params.toString()}${cacheBuster}`;
 
       const response = await fetch(url, {
         method: 'GET',
@@ -125,20 +142,23 @@ export default function ConfirmationPage() {
         throw new Error(`Failed to fetch confirmation requests: ${response.status} - ${errorText}`);
       }
 
-      const allRequests = await response.json();
-      console.log('Fetched data (before client-side filter):', allRequests);
+      const result = await response.json();
+      console.log('Fetched data (before client-side filter):', result);
 
       // Log the user and role to confirm they are correctly identified
       console.log('Current user:', user);
       console.log('Current role:', role);
+
+      // Handle both paginated and non-paginated responses
+      const allRequests = Array.isArray(result) ? result : (result.data || []);
 
       allRequests.forEach((req: ConfirmationRequest) => {
         console.log(`Request ID: ${req.id}, Status: ${req.status}, Review Stage: ${req.reviewStage}`);
       });
 
       const filteredData = allRequests.filter((req: ConfirmationRequest) => {
-        if (role === ROLES.HHRMD || role === ROLES.HRMO) {
-          // Show all requests for HHRMD/HRMO including completed ones for tracking
+        if (role === ROLES.HHRMD || role === ROLES.HRMO || role === ROLES.CSCS) {
+          // Show all requests for HHRMD/HRMO/CSCS including completed ones for tracking
           return true;
         } else if (role === ROLES.HRO) {
           return req.submittedById === user.id;
@@ -154,7 +174,19 @@ export default function ConfirmationPage() {
           console.log(`- ID: ${req.id}, Status: "${req.status}", ReviewStage: "${req.reviewStage}"`);
         });
       }
+
       setPendingRequests(filteredData);
+
+      // Update pagination info from server response or calculate from filtered data
+      if (result.pagination) {
+        setTotalItems(result.pagination.total || filteredData.length);
+        setTotalPages(result.pagination.totalPages || Math.ceil(filteredData.length / itemsPerPage));
+      } else {
+        // Fallback if pagination info not provided
+        setTotalItems(filteredData.length);
+        setTotalPages(Math.ceil(filteredData.length / itemsPerPage));
+      }
+
       if (isRefresh) {
         toast({ title: "Refreshed", description: "Confirmation requests have been updated.", duration: 2000 });
       }
@@ -168,32 +200,103 @@ export default function ConfirmationPage() {
         setIsLoading(false);
       }
     }
-  };
+  }, [user, role, itemsPerPage]);
 
   useEffect(() => {
     if (!isAuthLoading && user && role) {
       fetchRequests();
     }
-  }, [user, role, isAuthLoading]);
+  }, [user, role, isAuthLoading, fetchRequests]);
+
+  // Fetch new data when page changes
+  useEffect(() => {
+    if (currentPage > 1 && user && role) {
+      fetchRequests(false, currentPage);
+    }
+  }, [currentPage, fetchRequests, user, role]);
+
+  // Check for pending confirmation whenever employee or requests change
+  useEffect(() => {
+    console.log('[CONFIRMATION] useEffect triggered:', {
+      hasEmployee: !!employeeToConfirm,
+      employeeId: employeeToConfirm?.id,
+      requestsCount: pendingRequests.length
+    });
+
+    if (employeeToConfirm && pendingRequests.length > 0) {
+      const pendingStatuses = [
+        'Pending HRMO/HHRMD Review',
+        'Pending DO/HHRMD Review',
+        'Request Received – Awaiting Commission Decision'
+      ];
+
+      // Log all employee IDs from pending requests to debug
+      // Note: API returns 'Employee' (capital E) not 'employee'
+      console.log('[CONFIRMATION] All employee IDs in pending requests:',
+        pendingRequests.map(req => ({
+          requestId: req.id,
+          employeeId: (req as any).Employee?.id || req.employee?.id,
+          employeeName: (req as any).Employee?.name || req.employee?.name,
+          status: req.status
+        }))
+      );
+
+      // Find matching requests for this employee
+      // API returns 'Employee' (capital E), check both for compatibility
+      const matchingRequests = pendingRequests.filter(
+        req => {
+          const employeeId = (req as any).Employee?.id || req.employee?.id;
+          return employeeId === employeeToConfirm.id;
+        }
+      );
+
+      console.log('[CONFIRMATION] Matching requests for employee:', {
+        employeeId: employeeToConfirm.id,
+        matchingCount: matchingRequests.length,
+        matchingRequests: matchingRequests.map(r => ({
+          id: r.id,
+          employeeId: (r as any).Employee?.id || r.employee?.id,
+          employeeName: (r as any).Employee?.name || r.employee?.name,
+          status: r.status,
+          reviewStage: r.reviewStage
+        }))
+      });
+
+      const hasPending = matchingRequests.some(req => pendingStatuses.includes(req.status));
+
+      console.log('[CONFIRMATION] Has pending result:', {
+        hasPending,
+        pendingStatuses
+      });
+
+      setHasPendingConfirmation(hasPending);
+    } else if (!employeeToConfirm) {
+      console.log('[CONFIRMATION] No employee selected, clearing pending state');
+      setHasPendingConfirmation(false);
+    } else if (pendingRequests.length === 0) {
+      console.log('[CONFIRMATION] No requests loaded yet, waiting...');
+    }
+  }, [employeeToConfirm, pendingRequests]);
 
   const isAlreadyConfirmed = employeeToConfirm?.status === 'Confirmed';
 
   const resetEmployeeAndForm = () => {
-    setEmployeeToConfirm(null); 
+    setEmployeeToConfirm(null);
     setEvaluationFormFile('');
     setIpaCertificateFile('');
     setLetterOfRequestFile('');
     setIsIpaRequired(false);
+    setHasPendingConfirmation(false);
   }
 
   const handleEmployeeFound = (employee: Employee) => {
     console.log(`[CONFIRMATION] Found employee: ${employee.name}`);
-    
+
     // Reset form fields when new employee is selected
     resetEmployeeAndForm();
-    
+
     setEmployeeToConfirm(employee);
-    
+
     // Check if IPA certificate is required based on employment date
     if (employee.employmentDate) {
       try {
@@ -203,23 +306,15 @@ export default function ConfirmationPage() {
           setIsIpaRequired(true);
         }
       } catch (error) {
-        toast({ 
-          title: "Date Error", 
-          description: "Could not parse employee's employment date.", 
-          variant: "destructive" 
+        toast({
+          title: "Date Error",
+          description: "Could not parse employee's employment date.",
+          variant: "destructive"
         });
       }
     }
-    
-    // Check if employee is already confirmed
-    if (employee.status === 'Confirmed') {
-      toast({ 
-        title: "Already Confirmed", 
-        description: "This employee has already been confirmed.", 
-        variant: "destructive", 
-        duration: 5000 
-      });
-    }
+
+    // Note: Pending confirmation check is handled in useEffect to ensure pendingRequests is loaded
   };
 
   const handleClearEmployee = () => {
@@ -255,7 +350,7 @@ export default function ConfirmationPage() {
       id: `temp-${Date.now()}`, // Temporary ID until server responds
       employee: {
         ...employeeToConfirm,
-        institution: { name: typeof employeeToConfirm.institution === 'object' ? employeeToConfirm.institution.name : employeeToConfirm.institution || 'N/A' }
+        institution: { name: typeof employeeToConfirm.institution === 'object' ? employeeToConfirm.Institution.name : employeeToConfirm.institution || 'N/A' }
       },
       submittedBy: { name: user.name },
       status: 'Pending HRMO/HHRMD Review',
@@ -320,10 +415,11 @@ export default function ConfirmationPage() {
 
       // Show immediate success feedback
       if (actionDescription && request) {
-        toast({ 
-          title: "Status Updated", 
-          description: `${actionDescription} for ${request.employee.name}. Status: ${payload.status}`,
-          duration: 3000 
+        const employeeData = getEmployeeFromRequest(request);
+        toast({
+          title: "Status Updated",
+          description: `${actionDescription} for ${employeeData?.name || 'Employee'}. Status: ${payload.status}`,
+          duration: 3000
         });
       }
 
@@ -408,7 +504,7 @@ export default function ConfirmationPage() {
     if (!request || !user) return;
 
     if (correctedEvaluationFormFile === '' || correctedLetterOfRequestFile === '' || 
-        ((requestToCorrect?.employee.employmentDate && isAfter(parseISO(requestToCorrect.employee.employmentDate), new Date('2014-05-01')) || 
+        ((requestToCorrect?.Employee.employmentDate && isAfter(parseISO(requestToCorrect.Employee.employmentDate), new Date('2014-05-01')) || 
           requestToCorrect?.documents.includes('IPA Certificate')) && correctedIpaCertificateFile === '')) {
       toast({ title: "Submission Error", description: "All required documents must be attached.", variant: "destructive" });
       return;
@@ -429,9 +525,10 @@ export default function ConfirmationPage() {
     setPendingRequests(optimisticUpdate);
 
     // Show immediate success feedback
-    toast({ 
-      title: "Request Corrected & Resubmitted", 
-      description: `Confirmation request for ${request.employee.name} has been corrected and resubmitted. Status: Pending HRMO/HHRMD Review`,
+    const employeeData = getEmployeeFromRequest(request);
+    toast({
+      title: "Request Corrected & Resubmitted",
+      description: `Confirmation request for ${employeeData?.name || 'Employee'} has been corrected and resubmitted. Status: Pending HRMO/HHRMD Review`,
       duration: 4000
     });
 
@@ -472,8 +569,8 @@ export default function ConfirmationPage() {
     }
   };
 
-  const isSubmitDisabled = !employeeToConfirm || evaluationFormFile === '' || (isIpaRequired && ipaCertificateFile === '') || letterOfRequestFile === '' || isSubmitting || isAlreadyConfirmed;
-  
+  const isSubmitDisabled = !employeeToConfirm || evaluationFormFile === '' || (isIpaRequired && ipaCertificateFile === '') || letterOfRequestFile === '' || isSubmitting || isAlreadyConfirmed || hasPendingConfirmation;
+
   // Debug logging for button state
   console.log('Submit button state:', {
     hasEmployee: !!employeeToConfirm,
@@ -485,8 +582,9 @@ export default function ConfirmationPage() {
     isAlreadyConfirmed,
     isDisabled: isSubmitDisabled
   });
-  
-  const paginatedRequests = pendingRequests.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  // Server-side pagination - use requests directly from API
+  const paginatedRequests = pendingRequests || [];
 
 
   return (
@@ -532,8 +630,17 @@ export default function ConfirmationPage() {
                     <AlertDescription>This employee is already confirmed.</AlertDescription>
                   </Alert>
                 )}
-            
-                <div className={`space-y-4 ${isAlreadyConfirmed ? 'opacity-50 cursor-not-allowed' : ''}`}>
+
+                {hasPendingConfirmation && (
+                  <Alert variant="destructive" className="mt-4">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTitle>Request Already Submitted</AlertTitle>
+                    <AlertDescription>A confirmation request for this employee is already being reviewed. You cannot submit another request until the current one is completed.</AlertDescription>
+                  </Alert>
+                )}
+
+                {!isAlreadyConfirmed && !hasPendingConfirmation && (
+                <div className="space-y-4">
                   <h3 className="text-lg font-medium text-foreground">Required Documents (PDF Only)</h3>
                   {isIpaRequired && (
                     <p className="text-sm text-muted-foreground -mt-3 mb-2">
@@ -548,7 +655,7 @@ export default function ConfirmationPage() {
                       folder="confirmation/evaluation-forms"
                       accept=".pdf"
                       maxSize={2}
-                      disabled={isSubmitting || isAlreadyConfirmed}
+                      disabled={isSubmitting || isAlreadyConfirmed || hasPendingConfirmation}
                     />
                   </div>
                   {isIpaRequired && (
@@ -560,7 +667,7 @@ export default function ConfirmationPage() {
                           folder="confirmation/ipa-certificates"
                           accept=".pdf"
                           maxSize={2}
-                          disabled={isSubmitting || isAlreadyConfirmed}
+                          disabled={isSubmitting || isAlreadyConfirmed || hasPendingConfirmation}
                         />
                     </div>
                   )}
@@ -572,14 +679,15 @@ export default function ConfirmationPage() {
                       folder="confirmation/letters"
                       accept=".pdf"
                       maxSize={2}
-                      disabled={isSubmitting || isAlreadyConfirmed}
+                      disabled={isSubmitting || isAlreadyConfirmed || hasPendingConfirmation}
                     />
                   </div>
                 </div>
+                )}
               </div>
             )}
           </CardContent>
-          {employeeToConfirm && (
+          {employeeToConfirm && !isAlreadyConfirmed && !hasPendingConfirmation && (
             <CardFooter className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2 pt-4 border-t">
                 <Button onClick={handleSubmitRequest} disabled={isSubmitDisabled}>
                   {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -617,10 +725,12 @@ export default function ConfirmationPage() {
             {isLoading ? (
                <div className="flex justify-center items-center h-40"><Loader2 className="h-8 w-8 animate-spin" /></div>
             ) : paginatedRequests.length > 0 ? (
-              paginatedRequests.map((request) => (
+              paginatedRequests.map((request) => {
+                const employeeData = getEmployeeFromRequest(request);
+                return (
                 <div key={request.id} className="mb-4 border p-4 rounded-md space-y-2 shadow-sm bg-background hover:shadow-md transition-shadow">
                   <h3 className="font-semibold text-base flex items-center gap-2">
-                    Confirmation for: {request.employee.name} (ZanID: {request.employee.zanId})
+                    Confirmation for: {employeeData?.name || 'N/A'} (ZanID: {employeeData?.zanId || 'N/A'})
                     {request.reviewStage === 'completed' && (
                       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                         <CheckCircle className="w-3 h-3 mr-1" />
@@ -628,7 +738,7 @@ export default function ConfirmationPage() {
                       </span>
                     )}
                   </h3>
-                  <p className="text-sm text-muted-foreground">Department: {request.employee.department}</p>
+                  <p className="text-sm text-muted-foreground">Department: {employeeData?.department || 'N/A'}</p>
                   <p className="text-sm text-muted-foreground">Submitted: {format(parseISO(request.createdAt), 'PPP')} by {request.submittedBy?.name || 'N/A'}</p>
                   {request.decisionDate && <p className="text-sm text-muted-foreground">Initial Review Date: {format(parseISO(request.decisionDate), 'PPP')}</p>}
                   {request.commissionDecisionDate && <p className="text-sm text-muted-foreground">Commission Decision Date: {format(parseISO(request.commissionDecisionDate), 'PPP')}</p>}
@@ -703,41 +813,44 @@ export default function ConfirmationPage() {
                     )}
                   </div>
                 </div>
-              ))
+                );
+              })
             ) : (
               <p className="text-muted-foreground">No confirmation requests pending your review.</p>
             )}
             <Pagination
               currentPage={currentPage}
-              totalPages={Math.ceil(pendingRequests.length / itemsPerPage)}
+              totalPages={totalPages}
               onPageChange={setCurrentPage}
-              totalItems={pendingRequests.length}
+              totalItems={totalItems}
               itemsPerPage={itemsPerPage}
             />
           </CardContent>
         </Card>
 
-      {selectedRequest && (
+      {selectedRequest && (() => {
+        const selectedEmployeeData = getEmployeeFromRequest(selectedRequest);
+        return (
         <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
           <DialogContent className="sm:max-w-3xl">
             <DialogHeader>
               <DialogTitle>Request Details: {selectedRequest.id}</DialogTitle>
               <DialogDescription>
-                Confirmation for <strong>{selectedRequest.employee.name}</strong> (ZanID: {selectedRequest.employee.zanId}).
+                Confirmation for <strong>{selectedEmployeeData?.name || 'N/A'}</strong> (ZanID: {selectedEmployeeData?.zanId || 'N/A'}).
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4 text-sm max-h-[70vh] overflow-y-auto">
                 <div className="space-y-1 border-b pb-3 mb-3">
                     <h4 className="font-semibold text-base text-foreground mb-2">Employee Information</h4>
-                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">Full Name:</Label><p className="col-span-2 font-medium">{selectedRequest.employee.name}</p></div>
-                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">ZanID:</Label><p className="col-span-2 font-medium">{selectedRequest.employee.zanId}</p></div>
-                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">Payroll #:</Label><p className="col-span-2 font-medium">{selectedRequest.employee.payrollNumber || 'N/A'}</p></div>
-                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">ZSSF #:</Label><p className="col-span-2 font-medium">{selectedRequest.employee.zssfNumber || 'N/A'}</p></div>
-                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">Department:</Label><p className="col-span-2 font-medium">{selectedRequest.employee.department}</p></div>
-                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">Cadre:</Label><p className="col-span-2 font-medium">{selectedRequest.employee.cadre}</p></div>
-                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">Employment Date:</Label><p className="col-span-2 font-medium">{selectedRequest.employee.employmentDate ? format(parseISO(selectedRequest.employee.employmentDate), 'PPP') : 'N/A'}</p></div>
-                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">DOB:</Label><p className="col-span-2 font-medium">{selectedRequest.employee.dateOfBirth ? format(parseISO(selectedRequest.employee.dateOfBirth), 'PPP') : 'N/A'}</p></div>
-                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">Institution:</Label><p className="col-span-2 font-medium">{selectedRequest.employee.institution?.name || 'N/A'}</p></div>
+                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">Full Name:</Label><p className="col-span-2 font-medium">{selectedEmployeeData?.name || 'N/A'}</p></div>
+                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">ZanID:</Label><p className="col-span-2 font-medium">{selectedEmployeeData?.zanId || 'N/A'}</p></div>
+                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">Payroll #:</Label><p className="col-span-2 font-medium">{selectedEmployeeData?.payrollNumber || 'N/A'}</p></div>
+                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">ZSSF #:</Label><p className="col-span-2 font-medium">{selectedEmployeeData?.zssfNumber || 'N/A'}</p></div>
+                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">Department:</Label><p className="col-span-2 font-medium">{selectedEmployeeData?.department || 'N/A'}</p></div>
+                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">Cadre:</Label><p className="col-span-2 font-medium">{selectedEmployeeData?.cadre || 'N/A'}</p></div>
+                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">Employment Date:</Label><p className="col-span-2 font-medium">{selectedEmployeeData?.employmentDate ? format(parseISO(selectedEmployeeData.employmentDate), 'PPP') : 'N/A'}</p></div>
+                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">DOB:</Label><p className="col-span-2 font-medium">{selectedEmployeeData?.dateOfBirth ? format(parseISO(selectedEmployeeData.dateOfBirth), 'PPP') : 'N/A'}</p></div>
+                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">Institution:</Label><p className="col-span-2 font-medium">{selectedEmployeeData?.Institution?.name || selectedEmployeeData?.institution?.name || 'N/A'}</p></div>
                 </div>
 
                 <div className="space-y-1">
@@ -815,14 +928,17 @@ export default function ConfirmationPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      )}
+        );
+      })()}
 
-      {currentRequestToAction && (
+      {currentRequestToAction && (() => {
+        const currentEmployeeData = getEmployeeFromRequest(currentRequestToAction);
+        return (
         <Dialog open={isRejectionModalOpen} onOpenChange={setIsRejectionModalOpen}>
             <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Reject Confirmation: {currentRequestToAction.id}</DialogTitle>
-                    <DialogDescription>Provide the reason for rejecting the confirmation for <strong>{currentRequestToAction.employee.name}</strong>.</DialogDescription>
+                    <DialogDescription>Provide the reason for rejecting the confirmation for <strong>{currentEmployeeData?.name || 'N/A'}</strong>.</DialogDescription>
                 </DialogHeader>
                 <div className="py-4">
                     <Textarea placeholder="Enter rejection reason here..." value={rejectionReasonInput} onChange={(e) => setRejectionReasonInput(e.target.value)} rows={4} />
@@ -833,15 +949,18 @@ export default function ConfirmationPage() {
                 </DialogFooter>
             </DialogContent>
         </Dialog>
-      )}
+        );
+      })()}
 
-      {requestToCorrect && (
+      {requestToCorrect && (() => {
+        const correctEmployeeData = getEmployeeFromRequest(requestToCorrect);
+        return (
         <Dialog open={isCorrectionModalOpen} onOpenChange={setIsCorrectionModalOpen}>
           <DialogContent className="sm:max-w-2xl">
             <DialogHeader>
               <DialogTitle>Correct & Resubmit Confirmation Request</DialogTitle>
               <DialogDescription>
-                Please upload the corrected documents for <strong>{requestToCorrect.employee.name}</strong> (ZanID: {requestToCorrect.employee.zanId}).
+                Please upload the corrected documents for <strong>{correctEmployeeData?.name || 'N/A'}</strong> (ZanID: {correctEmployeeData?.zanId || 'N/A'}).
               </DialogDescription>
             </DialogHeader>
             <div className="py-4 space-y-4">
@@ -862,7 +981,7 @@ export default function ConfirmationPage() {
                   maxSize={2}
                 />
               </div>
-              {(requestToCorrect.employee.employmentDate && isAfter(parseISO(requestToCorrect.employee.employmentDate), new Date('2014-05-01')) || 
+              {(requestToCorrect.Employee.employmentDate && isAfter(parseISO(requestToCorrect.Employee.employmentDate), new Date('2014-05-01')) || 
                 requestToCorrect.documents.includes('IPA Certificate')) && (
                 <div>
                   <Label className="flex items-center mb-2"><Award className="mr-2 h-4 w-4 text-primary" />Upload Corrected IPA Certificate</Label>
@@ -894,7 +1013,8 @@ export default function ConfirmationPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      )}
+        );
+      })()}
 
       {/* File Preview Modal */}
       <FilePreviewModal

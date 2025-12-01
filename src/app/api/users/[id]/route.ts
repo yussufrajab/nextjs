@@ -28,10 +28,10 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       validatedData.password = await bcrypt.hash(validatedData.password, salt);
     }
 
-    const updatedUser = await db.user.update({
+    const updatedUser = await db.User.update({
       where: { id: params.id },
       data: validatedData,
-      select: { id: true, name: true, username: true, email: true, phoneNumber: true, role: true, active: true, institution: { select: { name: true } } },
+      select: { id: true, name: true, username: true, email: true, phoneNumber: true, role: true, active: true, Institution: { select: { name: true } } },
     });
 
     // Generate mock phone number if not present
@@ -50,7 +50,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       ...updatedUser,
       phoneNumber: updatedUser.phoneNumber || generateMockPhoneNumber(updatedUser.id),
       isMockPhoneNumber: !updatedUser.phoneNumber,
-      institution: updatedUser.institution.name,
+      Institution: updatedUser.Institution?.name,
     };
 
     return NextResponse.json(response);
@@ -68,7 +68,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 
 export async function DELETE(req: Request, { params }: { params: { id: string } }) {
   try {
-    await db.user.delete({
+    await db.User.delete({
       where: { id: params.id },
     });
     return new NextResponse(null, { status: 204 });

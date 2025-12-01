@@ -61,6 +61,10 @@ export default function FetchDataPage() {
 
   const form = useForm<EmployeeSearchFormValues>({
     resolver: zodResolver(employeeSearchSchema),
+    defaultValues: {
+      zanId: '',
+      payrollNumber: '',
+    },
   });
 
   // Load institutions
@@ -343,7 +347,7 @@ export default function FetchDataPage() {
                 <h4 className="font-medium text-green-800 mb-2">Recent Fetch Results</h4>
                 {fetchResults.map((result, index) => (
                   <div key={index} className="text-sm text-green-700">
-                    <p><strong>{result.employee.name}</strong> (ZanID: {result.employee.zanId})</p>
+                    <p><strong>{result.Employee.name}</strong> (ZanID: {result.Employee.zanId})</p>
                     <p>Documents: {result.documents} | Certificates: {result.certificates}</p>
                   </div>
                 ))}
@@ -368,7 +372,13 @@ export default function FetchDataPage() {
                   <FormItem>
                     <FormLabel>ZanID</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter ZanID..." {...field} />
+                      <Input
+                        placeholder="Enter ZanID..."
+                        value={field.value || ''}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        name={field.name}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -382,7 +392,13 @@ export default function FetchDataPage() {
                   <FormItem>
                     <FormLabel>Payroll Number</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter Payroll Number..." {...field} />
+                      <Input
+                        placeholder="Enter Payroll Number..."
+                        value={field.value || ''}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        name={field.name}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

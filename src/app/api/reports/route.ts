@@ -58,15 +58,15 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
       
       formattedData = rawData.map((item, index) => ({
         sn: index + 1,
-        employeeName: item.employee?.name || '-',
-        zanId: item.employee?.zanId || '-',
-        gender: item.employee?.gender || '-',
-        institution: item.employee?.institution?.name || '-',
+        employeeName: item.Employee?.name || '-',
+        zanId: item.Employee?.zanId || '-',
+        gender: item.Employee?.gender || '-',
+        institution: item.Employee?.Institution?.name || '-',
         requestDate: new Date(item.createdAt).toLocaleDateString('sw-TZ'),
         status: getStatusDisplayText(item.status),
         commissionDecision: getCommissionDecision(item.status, item.commissionDecisionDate)
       }));
-      
+
       totals = {
         sn: 'JUMLA',
         employeeName: '',
@@ -88,11 +88,11 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
       
       formattedData = rawData.map((item, index) => ({
         sn: index + 1,
-        employeeName: item.employee?.name || '-',
-        zanId: item.employee?.zanId || '-',
-        gender: item.employee?.gender || '-',
-        institution: item.employee?.institution?.name || '-',
-        promotionType: item.promotionType === 'EducationAdvancement' ? 'kwa maendeleo ya elimu' : 
+        employeeName: item.Employee?.name || '-',
+        zanId: item.Employee?.zanId || '-',
+        gender: item.Employee?.gender || '-',
+        institution: item.Employee?.Institution?.name || '-',
+        promotionType: item.promotionType === 'EducationAdvancement' ? 'kwa maendeleo ya elimu' :
                       item.promotionType === 'Experience' ? 'kwa uzoefu' : '-',
         requestDate: new Date(item.createdAt).toLocaleDateString('sw-TZ'),
         status: getStatusDisplayText(item.status),
@@ -119,10 +119,10 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
       
       formattedData = rawData.map((item, index) => ({
         sn: index + 1,
-        employeeName: item.employee?.name || '-',
-        zanId: item.employee?.zanId || '-',
-        gender: item.employee?.gender || '-',
-        institution: item.employee?.institution?.name || '-',
+        employeeName: item.Employee?.name || '-',
+        zanId: item.Employee?.zanId || '-',
+        gender: item.Employee?.gender || '-',
+        institution: item.Employee?.Institution?.name || '-',
         duration: item.duration || '-',
         reason: item.reason || '-',
         startDate: item.startDate ? new Date(item.startDate).toLocaleDateString('sw-TZ') : '-',
@@ -153,11 +153,11 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
       
       formattedData = rawData.map((item, index) => ({
         sn: index + 1,
-        employeeName: item.employee?.name || '-',
-        zanId: item.employee?.zanId || '-',
-        gender: item.employee?.gender || '-',
-        institution: item.employee?.institution?.name || '-',
-        currentCadre: item.employee?.cadre || '-',
+        employeeName: item.Employee?.name || '-',
+        zanId: item.Employee?.zanId || '-',
+        gender: item.Employee?.gender || '-',
+        institution: item.Employee?.Institution?.name || '-',
+        currentCadre: item.Employee?.cadre || '-',
         newCadre: item.newCadre || '-',
         reason: item.reason || '-',
         requestDate: new Date(item.createdAt).toLocaleDateString('sw-TZ'),
@@ -190,12 +190,12 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
       
       formattedData = rawData.map((item, index) => ({
         sn: index + 1,
-        employeeName: item.employee?.name || '-',
-        zanId: item.employee?.zanId || '-',
-        gender: item.employee?.gender || '-',
-        institution: item.employee?.institution?.name || '-',
-        retirementType: item.retirementType === 'voluntary' ? 'kwa hiari' : 
-                       item.retirementType === 'compulsory' ? 'kwa lazima' : 
+        employeeName: item.Employee?.name || '-',
+        zanId: item.Employee?.zanId || '-',
+        gender: item.Employee?.gender || '-',
+        institution: item.Employee?.Institution?.name || '-',
+        retirementType: item.retirementType === 'voluntary' ? 'kwa hiari' :
+                       item.retirementType === 'compulsory' ? 'kwa lazima' :
                        item.retirementType === 'illness' ? 'kwa ugonjwa' : '-',
         retirementDate: item.proposedDate ? new Date(item.proposedDate).toLocaleDateString('sw-TZ') : '-',
         requestDate: new Date(item.createdAt).toLocaleDateString('sw-TZ'),
@@ -224,10 +224,10 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
       
       formattedData = rawData.map((item, index) => ({
         sn: index + 1,
-        employeeName: item.employee?.name || '-',
-        zanId: item.employee?.zanId || '-',
-        gender: item.employee?.gender || '-',
-        institution: item.employee?.institution?.name || '-',
+        employeeName: item.Employee?.name || '-',
+        zanId: item.Employee?.zanId || '-',
+        gender: item.Employee?.gender || '-',
+        institution: item.Employee?.Institution?.name || '-',
         effectiveDate: item.effectiveDate ? new Date(item.effectiveDate).toLocaleDateString('sw-TZ') : '-',
         reason: item.reason || '-',
         requestDate: new Date(item.createdAt).toLocaleDateString('sw-TZ'),
@@ -256,10 +256,10 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
       
       formattedData = rawData.map((item, index) => ({
         sn: index + 1,
-        employeeName: item.employee?.name || '-',
-        zanId: item.employee?.zanId || '-',
-        gender: item.employee?.gender || '-',
-        institution: item.employee?.institution?.name || '-',
+        employeeName: item.Employee?.name || '-',
+        zanId: item.Employee?.zanId || '-',
+        gender: item.Employee?.gender || '-',
+        institution: item.Employee?.Institution?.name || '-',
         currentRetirementDate: item.currentRetirementDate ? new Date(item.currentRetirementDate).toLocaleDateString('sw-TZ') : '-',
         extensionPeriod: item.requestedExtensionPeriod || '-',
         justification: item.justification || '-',
@@ -291,10 +291,10 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
       
       formattedData = rawData.map((item, index) => ({
         sn: index + 1,
-        employeeName: item.employee?.name || '-',
-        zanId: item.employee?.zanId || '-',
-        gender: item.employee?.gender || '-',
-        institution: item.employee?.institution?.name || '-',
+        employeeName: item.Employee?.name || '-',
+        zanId: item.Employee?.zanId || '-',
+        gender: item.Employee?.gender || '-',
+        institution: item.Employee?.Institution?.name || '-',
         type: item.type === 'TERMINATION' ? 'Kuachishwa' : 'Kufukuzwa',
         reason: item.reason || '-',
         requestDate: new Date(item.createdAt).toLocaleDateString('sw-TZ'),
@@ -323,8 +323,8 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
       
       formattedData = rawData.map((item, index) => ({
         sn: index + 1,
-        complainant: item.complainant?.name || '-',
-        gender: item.complainant?.employee?.gender || '-',
+        complainant: item.User_Complaint_complainantIdToUser?.name || '-',
+        gender: item.User_Complaint_complainantIdToUser?.Employee?.gender || '-',
         complaintType: item.complaintType || '-',
         subject: item.subject || '-',
         date: new Date(item.createdAt).toLocaleDateString('sw-TZ'),
@@ -368,8 +368,8 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
       dataKeys = ['sn', 'name', 'gender', 'date', 'status'];
       formattedData = rawData.map((item, index) => ({
         sn: index + 1,
-        name: item.employee?.name || '-',
-        gender: item.employee?.gender || '-',
+        name: item.Employee?.name || '-',
+        gender: item.Employee?.gender || '-',
         date: new Date(item.createdAt).toLocaleDateString('sw-TZ'),
         status: getStatusDisplayText(item.status || '')
       }));
@@ -430,7 +430,7 @@ export async function GET(req: Request) {
     // Build institution filter
     let institutionFilter: any = {};
     if (institutionId) {
-      institutionFilter.employee = {
+      institutionFilter.Employee = {
         institutionId: institutionId
       };
     }
@@ -449,18 +449,18 @@ export async function GET(req: Request) {
         reportData = await db.confirmationRequest.findMany({
           where: whereClause,
           include: {
-            employee: {
+            Employee: {
               select: {
                 id: true,
                 name: true,
                 zanId: true,
                 gender: true,
                 cadre: true,
-                institution: { select: { id: true, name: true } }
+                Institution: { select: { id: true, name: true } }
               }
             },
-            submittedBy: { select: { id: true, name: true, username: true } },
-            reviewedBy: { select: { id: true, name: true, username: true } }
+            User_ConfirmationRequest_submittedByIdToUser: { select: { id: true, name: true, username: true } },
+            User_ConfirmationRequest_reviewedByIdToUser: { select: { id: true, name: true, username: true } }
           },
           orderBy: { createdAt: 'desc' }
         }).catch(() => []);
@@ -472,18 +472,18 @@ export async function GET(req: Request) {
         reportData = await db.promotionRequest.findMany({
           where: whereClause,
           include: {
-            employee: {
+            Employee: {
               select: {
                 id: true,
                 name: true,
                 zanId: true,
                 gender: true,
                 cadre: true,
-                institution: { select: { id: true, name: true } }
+                Institution: { select: { id: true, name: true } }
               }
             },
-            submittedBy: { select: { id: true, name: true, username: true } },
-            reviewedBy: { select: { id: true, name: true, username: true } }
+            User_PromotionRequest_submittedByIdToUser: { select: { id: true, name: true, username: true } },
+            User_PromotionRequest_reviewedByIdToUser: { select: { id: true, name: true, username: true } }
           },
           orderBy: { createdAt: 'desc' }
         }).catch(() => []);
@@ -494,18 +494,18 @@ export async function GET(req: Request) {
         reportData = await db.lwopRequest.findMany({
           where: whereClause,
           include: {
-            employee: {
+            Employee: {
               select: {
                 id: true,
                 name: true,
                 zanId: true,
                 gender: true,
                 cadre: true,
-                institution: { select: { id: true, name: true } }
+                Institution: { select: { id: true, name: true } }
               }
             },
-            submittedBy: { select: { id: true, name: true, username: true } },
-            reviewedBy: { select: { id: true, name: true, username: true } }
+            User_LwopRequest_submittedByIdToUser: { select: { id: true, name: true, username: true } },
+            User_LwopRequest_reviewedByIdToUser: { select: { id: true, name: true, username: true } }
           },
           orderBy: { createdAt: 'desc' }
         }).catch((error) => {
@@ -528,18 +528,18 @@ export async function GET(req: Request) {
         reportData = await db.cadreChangeRequest.findMany({
           where: whereClause,
           include: {
-            employee: {
+            Employee: {
               select: {
                 id: true,
                 name: true,
                 zanId: true,
                 gender: true,
                 cadre: true,
-                institution: { select: { id: true, name: true } }
+                Institution: { select: { id: true, name: true } }
               }
             },
-            submittedBy: { select: { id: true, name: true, username: true } },
-            reviewedBy: { select: { id: true, name: true, username: true } }
+            User_CadreChangeRequest_submittedByIdToUser: { select: { id: true, name: true, username: true } },
+            User_CadreChangeRequest_reviewedByIdToUser: { select: { id: true, name: true, username: true } }
           },
           orderBy: { createdAt: 'desc' }
         }).catch(() => []);
@@ -552,18 +552,18 @@ export async function GET(req: Request) {
         reportData = await db.retirementRequest.findMany({
           where: whereClause,
           include: {
-            employee: {
+            Employee: {
               select: {
                 id: true,
                 name: true,
                 zanId: true,
                 gender: true,
                 cadre: true,
-                institution: { select: { id: true, name: true } }
+                Institution: { select: { id: true, name: true } }
               }
             },
-            submittedBy: { select: { id: true, name: true, username: true } },
-            reviewedBy: { select: { id: true, name: true, username: true } }
+            User_RetirementRequest_submittedByIdToUser: { select: { id: true, name: true, username: true } },
+            User_RetirementRequest_reviewedByIdToUser: { select: { id: true, name: true, username: true } }
           },
           orderBy: { createdAt: 'desc' }
         }).catch(() => []);
@@ -573,18 +573,18 @@ export async function GET(req: Request) {
         reportData = await db.resignationRequest.findMany({
           where: whereClause,
           include: {
-            employee: {
+            Employee: {
               select: {
                 id: true,
                 name: true,
                 zanId: true,
                 gender: true,
                 cadre: true,
-                institution: { select: { id: true, name: true } }
+                Institution: { select: { id: true, name: true } }
               }
             },
-            submittedBy: { select: { id: true, name: true, username: true } },
-            reviewedBy: { select: { id: true, name: true, username: true } }
+            User_ResignationRequest_submittedByIdToUser: { select: { id: true, name: true, username: true } },
+            User_ResignationRequest_reviewedByIdToUser: { select: { id: true, name: true, username: true } }
           },
           orderBy: { createdAt: 'desc' }
         }).catch(() => []);
@@ -595,18 +595,18 @@ export async function GET(req: Request) {
         reportData = await db.serviceExtensionRequest.findMany({
           where: whereClause,
           include: {
-            employee: {
+            Employee: {
               select: {
                 id: true,
                 name: true,
                 zanId: true,
                 gender: true,
                 cadre: true,
-                institution: { select: { id: true, name: true } }
+                Institution: { select: { id: true, name: true } }
               }
             },
-            submittedBy: { select: { id: true, name: true, username: true } },
-            reviewedBy: { select: { id: true, name: true, username: true } }
+            User_ServiceExtensionRequest_submittedByIdToUser: { select: { id: true, name: true, username: true } },
+            User_ServiceExtensionRequest_reviewedByIdToUser: { select: { id: true, name: true, username: true } }
           },
           orderBy: { createdAt: 'desc' }
         }).catch(() => []);
@@ -617,18 +617,18 @@ export async function GET(req: Request) {
         reportData = await db.separationRequest.findMany({
           where: whereClause,
           include: {
-            employee: {
+            Employee: {
               select: {
                 id: true,
                 name: true,
                 zanId: true,
                 gender: true,
                 cadre: true,
-                institution: { select: { id: true, name: true } }
+                Institution: { select: { id: true, name: true } }
               }
             },
-            submittedBy: { select: { id: true, name: true, username: true } },
-            reviewedBy: { select: { id: true, name: true, username: true } }
+            User_SeparationRequest_submittedByIdToUser: { select: { id: true, name: true, username: true } },
+            User_SeparationRequest_reviewedByIdToUser: { select: { id: true, name: true, username: true } }
           },
           orderBy: { createdAt: 'desc' }
         }).catch(() => []);
@@ -639,19 +639,19 @@ export async function GET(req: Request) {
           where: {
             ...dateFilter,
             ...(institutionId && {
-              complainant: {
+              User_Complaint_complainantIdToUser: {
                 institutionId: institutionId
               }
             })
           },
           include: {
-            complainant: {
+            User_Complaint_complainantIdToUser: {
               select: {
                 id: true,
                 name: true,
                 institutionId: true,
-                institution: { select: { id: true, name: true } },
-                employee: {
+                Institution: { select: { id: true, name: true } },
+                Employee: {
                   select: {
                     gender: true
                   }
@@ -671,14 +671,14 @@ export async function GET(req: Request) {
       case 'all':
         // Get all request types and combine them
         const [confirmations, promotions, lwops, cadreChanges, retirements, resignations, serviceExtensions, terminations] = await Promise.all([
-          db.confirmationRequest.findMany({ where: whereClause, include: { employee: { select: { id: true, name: true, zanId: true, gender: true, cadre: true, institution: { select: { id: true, name: true } } } }, submittedBy: { select: { id: true, name: true, username: true } }, reviewedBy: { select: { id: true, name: true, username: true } } }, orderBy: { createdAt: 'desc' } }).catch(() => []),
-          db.promotionRequest.findMany({ where: whereClause, include: { employee: { select: { id: true, name: true, zanId: true, gender: true, cadre: true, institution: { select: { id: true, name: true } } } }, submittedBy: { select: { id: true, name: true, username: true } }, reviewedBy: { select: { id: true, name: true, username: true } } }, orderBy: { createdAt: 'desc' } }).catch(() => []),
-          db.lwopRequest.findMany({ where: whereClause, include: { employee: { select: { id: true, name: true, zanId: true, gender: true, cadre: true, institution: { select: { id: true, name: true } } } }, submittedBy: { select: { id: true, name: true, username: true } }, reviewedBy: { select: { id: true, name: true, username: true } } }, orderBy: { createdAt: 'desc' } }).catch(() => []),
-          db.cadreChangeRequest.findMany({ where: whereClause, include: { employee: { select: { id: true, name: true, zanId: true, gender: true, cadre: true, institution: { select: { id: true, name: true } } } }, submittedBy: { select: { id: true, name: true, username: true } }, reviewedBy: { select: { id: true, name: true, username: true } } }, orderBy: { createdAt: 'desc' } }).catch(() => []),
-          db.retirementRequest.findMany({ where: whereClause, include: { employee: { select: { id: true, name: true, zanId: true, gender: true, cadre: true, institution: { select: { id: true, name: true } } } }, submittedBy: { select: { id: true, name: true, username: true } }, reviewedBy: { select: { id: true, name: true, username: true } } }, orderBy: { createdAt: 'desc' } }).catch(() => []),
-          db.resignationRequest.findMany({ where: whereClause, include: { employee: { select: { id: true, name: true, zanId: true, gender: true, cadre: true, institution: { select: { id: true, name: true } } } }, submittedBy: { select: { id: true, name: true, username: true } }, reviewedBy: { select: { id: true, name: true, username: true } } }, orderBy: { createdAt: 'desc' } }).catch(() => []),
-          db.serviceExtensionRequest.findMany({ where: whereClause, include: { employee: { select: { id: true, name: true, zanId: true, gender: true, cadre: true, institution: { select: { id: true, name: true } } } }, submittedBy: { select: { id: true, name: true, username: true } }, reviewedBy: { select: { id: true, name: true, username: true } } }, orderBy: { createdAt: 'desc' } }).catch(() => []),
-          db.separationRequest.findMany({ where: whereClause, include: { employee: { select: { id: true, name: true, zanId: true, gender: true, cadre: true, institution: { select: { id: true, name: true } } } }, submittedBy: { select: { id: true, name: true, username: true } }, reviewedBy: { select: { id: true, name: true, username: true } } }, orderBy: { createdAt: 'desc' } }).catch(() => [])
+          db.confirmationRequest.findMany({ where: whereClause, include: { Employee: { select: { id: true, name: true, zanId: true, gender: true, cadre: true, Institution: { select: { id: true, name: true } } } }, User_ConfirmationRequest_submittedByIdToUser: { select: { id: true, name: true, username: true } }, User_ConfirmationRequest_reviewedByIdToUser: { select: { id: true, name: true, username: true } } }, orderBy: { createdAt: 'desc' } }).catch(() => []),
+          db.promotionRequest.findMany({ where: whereClause, include: { Employee: { select: { id: true, name: true, zanId: true, gender: true, cadre: true, Institution: { select: { id: true, name: true } } } }, User_PromotionRequest_submittedByIdToUser: { select: { id: true, name: true, username: true } }, User_PromotionRequest_reviewedByIdToUser: { select: { id: true, name: true, username: true } } }, orderBy: { createdAt: 'desc' } }).catch(() => []),
+          db.lwopRequest.findMany({ where: whereClause, include: { Employee: { select: { id: true, name: true, zanId: true, gender: true, cadre: true, Institution: { select: { id: true, name: true } } } }, User_LwopRequest_submittedByIdToUser: { select: { id: true, name: true, username: true } }, User_LwopRequest_reviewedByIdToUser: { select: { id: true, name: true, username: true } } }, orderBy: { createdAt: 'desc' } }).catch(() => []),
+          db.cadreChangeRequest.findMany({ where: whereClause, include: { Employee: { select: { id: true, name: true, zanId: true, gender: true, cadre: true, Institution: { select: { id: true, name: true } } } }, User_CadreChangeRequest_submittedByIdToUser: { select: { id: true, name: true, username: true } }, User_CadreChangeRequest_reviewedByIdToUser: { select: { id: true, name: true, username: true } } }, orderBy: { createdAt: 'desc' } }).catch(() => []),
+          db.retirementRequest.findMany({ where: whereClause, include: { Employee: { select: { id: true, name: true, zanId: true, gender: true, cadre: true, Institution: { select: { id: true, name: true } } } }, User_RetirementRequest_submittedByIdToUser: { select: { id: true, name: true, username: true } }, User_RetirementRequest_reviewedByIdToUser: { select: { id: true, name: true, username: true } } }, orderBy: { createdAt: 'desc' } }).catch(() => []),
+          db.resignationRequest.findMany({ where: whereClause, include: { Employee: { select: { id: true, name: true, zanId: true, gender: true, cadre: true, Institution: { select: { id: true, name: true } } } }, User_ResignationRequest_submittedByIdToUser: { select: { id: true, name: true, username: true } }, User_ResignationRequest_reviewedByIdToUser: { select: { id: true, name: true, username: true } } }, orderBy: { createdAt: 'desc' } }).catch(() => []),
+          db.serviceExtensionRequest.findMany({ where: whereClause, include: { Employee: { select: { id: true, name: true, zanId: true, gender: true, cadre: true, Institution: { select: { id: true, name: true } } } }, User_ServiceExtensionRequest_submittedByIdToUser: { select: { id: true, name: true, username: true } }, User_ServiceExtensionRequest_reviewedByIdToUser: { select: { id: true, name: true, username: true } } }, orderBy: { createdAt: 'desc' } }).catch(() => []),
+          db.separationRequest.findMany({ where: whereClause, include: { Employee: { select: { id: true, name: true, zanId: true, gender: true, cadre: true, Institution: { select: { id: true, name: true } } } }, User_SeparationRequest_submittedByIdToUser: { select: { id: true, name: true, username: true } }, User_SeparationRequest_reviewedByIdToUser: { select: { id: true, name: true, username: true } } }, orderBy: { createdAt: 'desc' } }).catch(() => [])
         ]);
 
         reportData = [

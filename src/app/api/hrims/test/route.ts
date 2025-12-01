@@ -7,7 +7,26 @@ const HRIMS_CONFIG = {
   TOKEN: "CfDJ8M6SKjORsSdBliudb_vdU_DEea8FKIcQckiBxdvt4EJgtcP0ba_3REOpGvWYeOF46fvqw8heVnqFnXTwOmD5Wg5Qg3yNJlwyGDHVhqbgyKxB31Bjh2pI6C2qAYnLMovU4XLlQFVu7cTpIqtgItNZpM4"
 };
 
-export async function GET() {
+interface TestParameters {
+  pageNumber?: number;
+  pageSize?: number;
+  payrollNumber?: string;
+}
+
+export async function POST(request: NextRequest) {
+  // Parse request body for custom parameters
+  let params: TestParameters = {};
+  try {
+    params = await request.json();
+  } catch (error) {
+    // Use defaults if parsing fails
+  }
+
+  // Set defaults if not provided
+  const pageNumber = params.pageNumber ?? 0;
+  const pageSize = params.pageSize ?? 100;
+  const payrollNumber = params.payrollNumber ?? '536151';
+
   const testResults = {
     timestamp: new Date().toISOString(),
     tests: [] as any[]
@@ -15,19 +34,20 @@ export async function GET() {
 
   // Test 1: Get list of employees
   console.log('🔍 Testing HRIMS API - Get list of employees...');
+  console.log(`Parameters: PageNumber=${pageNumber}, PageSize=${pageSize}`);
 
   const listEmployeesPayload = {
     RequestId: "201",
     RequestPayloadData: {
-      PageNumber: 0,
-      PageSize: 100
+      PageNumber: pageNumber,
+      PageSize: pageSize
     }
   };
 
   testResults.tests.push({
     name: 'Get list of employees',
     status: 'running',
-    details: 'Testing employee list retrieval with RequestId: 201',
+    details: `Testing employee list retrieval with RequestId: 201, PageNumber: ${pageNumber}, PageSize: ${pageSize}`,
     requestPayload: listEmployeesPayload,
     endpoint: `${HRIMS_CONFIG.BASE_URL}/Employees`,
     headers: {
@@ -60,7 +80,7 @@ export async function GET() {
       testResults.tests[0] = {
         ...testResults.tests[0],
         status: 'success',
-        details: 'Successfully retrieved employee list from HRIMS API',
+        details: `Successfully retrieved employee list from HRIMS API (Page ${pageNumber}, Size ${pageSize})`,
         responsePayload: data,
         responseInfo: {
           status: response.status,
@@ -108,18 +128,19 @@ export async function GET() {
 
   // Test 2: Get information about a single employee by PayrollNumber
   console.log('🔍 Testing HRIMS API - Get single employee by PayrollNumber...');
+  console.log(`Parameters: PayrollNumber=${payrollNumber}`);
 
   const specificEmployeePayload = {
     RequestId: "202",
     RequestPayloadData: {
-      RequestBody: "536151"
+      RequestBody: payrollNumber
     }
   };
 
   testResults.tests.push({
     name: 'Get information about a single employee by PayrollNumber',
     status: 'running',
-    details: 'Testing single employee retrieval with RequestId: 202',
+    details: `Testing single employee retrieval with RequestId: 202, PayrollNumber: ${payrollNumber}`,
     requestPayload: specificEmployeePayload,
     endpoint: `${HRIMS_CONFIG.BASE_URL}/Employees`,
     headers: {
@@ -152,7 +173,7 @@ export async function GET() {
       testResults.tests[1] = {
         ...testResults.tests[1],
         status: 'success',
-        details: 'Successfully fetched specific employee data from HRIMS API',
+        details: `Successfully fetched specific employee data for payroll# ${payrollNumber} from HRIMS API`,
         responsePayload: data,
         responseInfo: {
           status: response.status,
@@ -199,18 +220,19 @@ export async function GET() {
 
   // Test 3: Get employee photo
   console.log('🔍 Testing HRIMS API - Get employee photo...');
+  console.log(`Parameters: PayrollNumber=${payrollNumber}`);
 
   const photoPayload = {
     RequestId: "203",
     RequestPayloadData: {
-      RequestBody: "536151"
+      RequestBody: payrollNumber
     }
   };
 
   testResults.tests.push({
     name: 'Get employee photo',
     status: 'running',
-    details: 'Testing employee photo retrieval with RequestId: 203',
+    details: `Testing employee photo retrieval with RequestId: 203, PayrollNumber: ${payrollNumber}`,
     requestPayload: photoPayload,
     endpoint: `${HRIMS_CONFIG.BASE_URL}/Employees`,
     headers: {
@@ -243,7 +265,7 @@ export async function GET() {
       testResults.tests[2] = {
         ...testResults.tests[2],
         status: 'success',
-        details: 'Successfully fetched employee photo from HRIMS API',
+        details: `Successfully fetched employee photo for payroll# ${payrollNumber} from HRIMS API`,
         responsePayload: data,
         responseInfo: {
           status: response.status,
@@ -297,4 +319,9 @@ export async function GET() {
     message: 'HRIMS API tests completed with complete request/response payloads',
     data: testResults
   });
+}
+
+// Keep GET method for backwards compatibility
+export async function GET() {
+  return POST(new NextRequest('http://localhost/api/hrims/test', { method: 'POST' }));
 }

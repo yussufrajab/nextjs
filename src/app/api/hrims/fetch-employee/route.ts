@@ -13,7 +13,7 @@ interface HRIMSEmployeeResponse {
   success: boolean;
   message: string;
   data?: {
-    employee: {
+    Employee: {
       zanId: string;
       payrollNumber?: string;
       name: string;
@@ -110,7 +110,7 @@ async function saveEmployeeToDatabase(hrimsData: any, institutionId: string) {
     const highestEducation = hrimsData.educationHistories?.[0];
 
     // Find or create employee
-    const existingEmployee = await db.employee.findUnique({
+    const existingEmployee = await db.Employee.findUnique({
       where: { zanId: personalInfo.zanIdNumber }
     });
 
@@ -163,7 +163,7 @@ async function saveEmployeeToDatabase(hrimsData: any, institutionId: string) {
     });
 
     // Save/update employee
-    await db.employee.upsert({
+    await db.Employee.upsert({
       where: { zanId: personalInfo.zanIdNumber },
       update: dbEmployeeData,
       create: dbEmployeeData,
@@ -210,7 +210,7 @@ async function processDocuments(zanId: string, payrollNumber: string, employeeId
         const documentUrl = `data:${doc.contentType};base64,${doc.content}`;
 
         // Update employee record with document URL
-        await db.employee.update({
+        await db.Employee.update({
           where: { id: employeeId },
           data: {
             [fieldName]: documentUrl
@@ -290,7 +290,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Find institution by vote number
-    const institution = await db.institution.findFirst({
+    const institution = await db.Institution.findFirst({
       where: { voteNumber: institutionVoteNumber }
     });
 
@@ -341,7 +341,7 @@ export async function POST(req: NextRequest) {
       success: true,
       message: 'Employee data fetched and stored successfully from HRIMS',
       data: {
-        employee: {
+        Employee: {
           zanId: personalInfo.zanIdNumber,
           name: [personalInfo.firstName, personalInfo.middleName, personalInfo.lastName]
             .filter(name => name && name.trim())

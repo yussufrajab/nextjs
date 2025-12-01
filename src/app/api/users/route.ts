@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
+import { v4 as uuidv4 } from 'uuid';
 
 const userSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -18,10 +19,10 @@ const userSchema = z.object({
 
 export async function GET() {
   try {
-    const users = await db.user.findMany({
+    const users = await db.User.findMany({
       orderBy: { name: 'asc' },
       include: {
-        institution: {
+        Institution: {
           select: {
             name: true,
           },
@@ -63,7 +64,7 @@ export async function GET() {
         phoneNumber: user.phoneNumber || generateMockPhoneNumber(user.id),
         isMockPhoneNumber: isMockPhone,
         isMockEmail: isMockEmail,
-        institution: user.institution.name,
+        Institution: user.Institution.name,
       };
     });
 
@@ -82,8 +83,9 @@ export async function POST(req: Request) {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const newUser = await db.user.create({
+    const newUser = await db.User.create({
       data: {
+        id: uuidv4(),
         name,
         username,
         email,
@@ -91,14 +93,15 @@ export async function POST(req: Request) {
         role,
         institutionId,
         password: hashedPassword,
+        updatedAt: new Date(),
       },
-       select: { id: true, name: true, username: true, email: true, phoneNumber: true, role: true, active: true, institution: { select: { name: true } } },
+       select: { id: true, name: true, username: true, email: true, phoneNumber: true, role: true, active: true, Institution: { select: { name: true } } },
     });
 
     // Format response with institution name
     const response = {
       ...newUser,
-      institution: newUser.institution.name,
+      Institution: newUser.Institution.name,
     };
 
     return NextResponse.json(response, { status: 201 });

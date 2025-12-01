@@ -1,17 +1,19 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { v4 as uuidv4 } from 'uuid';
 
 export async function GET(req: Request) {
   try {
     console.log('Institutions API called');
 
-    const institutions = await db.institution.findMany({
+    const institutions = await db.Institution.findMany({
       select: {
         id: true,
         name: true,
         email: true,
         phoneNumber: true,
-        voteNumber: true
+        voteNumber: true,
+        tinNumber: true
       },
       orderBy: { name: 'asc' }
     });
@@ -35,7 +37,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { name, email, phoneNumber, voteNumber } = body;
+    const { name, email, phoneNumber, voteNumber, tinNumber } = body;
 
     if (!name || typeof name !== 'string' || name.trim().length === 0) {
       return NextResponse.json({
@@ -45,7 +47,7 @@ export async function POST(req: Request) {
     }
 
     // Check if institution with the same name already exists
-    const existingInstitution = await db.institution.findFirst({
+    const existingInstitution = await db.Institution.findFirst({
       where: {
         name: {
           equals: name.trim(),
@@ -61,16 +63,34 @@ export async function POST(req: Request) {
       }, { status: 409 });
     }
 
-    const newInstitution = await db.institution.create({
+    // Check if institution with the same tin number already exists (only if tin number is provided)
+    if (tinNumber && tinNumber.trim().length > 0) {
+      const existingTinNumber = await db.Institution.findFirst({
+        where: {
+          tinNumber: tinNumber.trim()
+        }
+      });
+
+      if (existingTinNumber) {
+        return NextResponse.json({
+          success: false,
+          message: 'An institution with this Tin Number already exists'
+        }, { status: 409 });
+      }
+    }
+
+    const newInstitution = await db.Institution.create({
       data: {
+        id: uuidv4(),
         name: name.trim(),
         email: email?.trim() || null,
         phoneNumber: phoneNumber?.trim() || null,
-        voteNumber: voteNumber?.trim() || null
+        voteNumber: voteNumber?.trim() || null,
+        tinNumber: tinNumber?.trim() || null
       }
     });
 
-    console.log('Created new institution:', newInstitution);
+    console.log('Created new Institution:', newInstitution);
 
     return NextResponse.json({
       success: true,
@@ -80,8 +100,26 @@ export async function POST(req: Request) {
 
   } catch (error) {
     console.error("[INSTITUTIONS_POST]", error);
-    return NextResponse.json({ 
-      success: false, 
+
+    // Handle unique constraint violations from Prisma
+    if ((error as any).code === 'P2002') {
+      const target = (error as any).meta?.target;
+      if (target && target.includes('tinNumber')) {
+        return NextResponse.json({
+          success: false,
+          message: 'An institution with this Tin Number already exists'
+        }, { status: 409 });
+      }
+      if (target && target.includes('name')) {
+        return NextResponse.json({
+          success: false,
+          message: 'An institution with this name already exists'
+        }, { status: 409 });
+      }
+    }
+
+    return NextResponse.json({
+      success: false,
       message: 'Internal Server Error',
       error: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });
