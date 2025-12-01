@@ -3,7 +3,7 @@
  */
 
 // CSC internal roles that should see ALL institutions data
-export const CSC_ROLES = ['ADMIN', 'HHRMD', 'HRMO', 'DO', 'PO', 'CSCS'];
+export const CSC_ROLES = ['Admin', 'HHRMD', 'HRMO', 'DO', 'PO', 'CSCS'];
 
 /**
  * Determines if a user role should have access to all institutions data
