@@ -36,8 +36,10 @@ export async function GET(req: Request) {
     console.log('Dashboard metrics API called with:', { userRole, userInstitutionId });
 
     // Determine if institution filtering should be applied
-    const shouldFilter = shouldApplyInstitutionFilter(userRole, userInstitutionId);
-    console.log(`Should apply institution filter: ${shouldFilter}`);
+    // Admin sees total system counts (no filtering) for system administration purposes
+    // but doesn't have HR oversight permissions (handled separately)
+    const shouldFilter = userRole === 'Admin' ? false : shouldApplyInstitutionFilter(userRole, userInstitutionId);
+    console.log(`Should apply institution filter: ${shouldFilter} (role: ${userRole})`);
 
     // Build where clause for employee-related queries
     const buildEmployeeWhereClause = () => {
