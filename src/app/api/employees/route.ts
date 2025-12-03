@@ -30,12 +30,13 @@ export async function GET(req: Request) {
       console.log('No user role provided - showing ALL employees (default behavior)');
     }
 
-    // If search query provided, search by name or zanId
+    // If search query provided, search by name, zanId, cadre, or institution name
     if (q) {
       whereClause.OR = [
         { name: { contains: q, mode: 'insensitive' } },
         { zanId: { contains: q, mode: 'insensitive' } },
-        { cadre: { contains: q, mode: 'insensitive' } }
+        { cadre: { contains: q, mode: 'insensitive' } },
+        { Institution: { name: { contains: q, mode: 'insensitive' } } }
       ];
     }
 

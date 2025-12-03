@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -22,6 +23,7 @@ export interface Institution {
   email?: string;
   phoneNumber?: string;
   voteNumber?: string;
+  tinNumber?: string;
 }
 
 export interface EmployeeFetchResult {
@@ -56,6 +58,7 @@ export default function FetchDataPage() {
   const [fetchResults, setFetchResults] = useState<EmployeeFetchResult[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
+  const [identifierType, setIdentifierType] = useState<'votecode' | 'tin'>('votecode');
 
   const itemsPerPage = 10;
 
@@ -98,6 +101,7 @@ export default function FetchDataPage() {
       const filtered = institutions.filter(inst =>
         inst.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         inst.voteNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        inst.tinNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         inst.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         inst.phoneNumber?.includes(searchTerm)
       );
@@ -213,6 +217,72 @@ export default function FetchDataPage() {
     }
   };
 
+  const handleFetchByInstitution = async () => {
+    // Validate based on selected identifier type
+    if (identifierType === 'votecode' && !selectedInstitution?.voteNumber) {
+      toast({
+        title: "Error",
+        description: "Institution must have a vote number to use this option",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (identifierType === 'tin' && !selectedInstitution?.tinNumber) {
+      toast({
+        title: "Error",
+        description: "Institution must have a TIN number to use this option",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsFetching(true);
+    try {
+      const response = await fetch('/api/hrims/fetch-by-institution', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          identifierType,
+          voteNumber: selectedInstitution.voteNumber,
+          tinNumber: selectedInstitution.tinNumber,
+          institutionId: selectedInstitution.id,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to fetch employees by institution');
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast({
+          title: "Fetch Successful",
+          description: `Fetched ${result.data.employeeCount} employees from ${selectedInstitution.name} using ${result.data.usedIdentifier}.`,
+        });
+
+        // Optionally show summary of results
+        if (result.data.employeeCount > 0) {
+          setFetchResults(result.data.employees || []);
+        }
+      } else {
+        throw new Error(result.message || 'Failed to fetch employees');
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to fetch employees by institution",
+        variant: "destructive"
+      });
+    } finally {
+      setIsFetching(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div>
@@ -241,7 +311,7 @@ export default function FetchDataPage() {
             Select Institution
           </CardTitle>
           <CardDescription>
-            Choose an institution to fetch employee data from HRIMS. Search by name, vote number, email, or phone.
+            Choose an institution to fetch employee data from HRIMS. Search by name, vote number, TIN number, email, or phone.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -251,7 +321,7 @@ export default function FetchDataPage() {
               <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
                 id="search"
-                placeholder="Search by name, vote number, email, or phone..."
+                placeholder="Search by name, vote number, TIN, email, or phone..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -264,6 +334,7 @@ export default function FetchDataPage() {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Vote Number</TableHead>
+                <TableHead>TIN Number</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Phone</TableHead>
                 <TableHead>Action</TableHead>
@@ -275,6 +346,7 @@ export default function FetchDataPage() {
                   <TableRow key={inst.id}>
                     <TableCell className="font-medium">{inst.name}</TableCell>
                     <TableCell>{inst.voteNumber || 'N/A'}</TableCell>
+                    <TableCell>{inst.tinNumber || 'N/A'}</TableCell>
                     <TableCell>{inst.email || 'N/A'}</TableCell>
                     <TableCell>{inst.phoneNumber || 'N/A'}</TableCell>
                     <TableCell>
@@ -290,7 +362,7 @@ export default function FetchDataPage() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center">No institutions found.</TableCell>
+                  <TableCell colSpan={6} className="text-center">No institutions found.</TableCell>
                 </TableRow>
               )}
             </TableBody>
@@ -315,11 +387,38 @@ export default function FetchDataPage() {
               Fetch Operations for {selectedInstitution.name}
             </CardTitle>
             <CardDescription>
-              Vote Number: {selectedInstitution.voteNumber}
+              <div className="space-y-1">
+                <p>Vote Number: {selectedInstitution.voteNumber || 'N/A'}</p>
+                <p>TIN Number: {selectedInstitution.tinNumber || 'N/A'}</p>
+              </div>
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Identifier Type Selector */}
+            <div className="border rounded-lg p-4 bg-gray-50">
+              <Label className="text-base font-semibold mb-3 block">Select Identifier Type for Institution Fetch</Label>
+              <RadioGroup value={identifierType} onValueChange={(value) => setIdentifierType(value as 'votecode' | 'tin')}>
+                <div className="flex items-center space-x-6">
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="votecode" id="votecode" />
+                    <Label htmlFor="votecode" className="cursor-pointer font-normal">
+                      Vote Code {selectedInstitution.voteNumber ? `(${selectedInstitution.voteNumber})` : '(Not Available)'}
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="tin" id="tin" />
+                    <Label htmlFor="tin" className="cursor-pointer font-normal">
+                      TIN Number {selectedInstitution.tinNumber ? `(${selectedInstitution.tinNumber})` : '(Not Available)'}
+                    </Label>
+                  </div>
+                </div>
+              </RadioGroup>
+              <p className="text-xs text-gray-600 mt-2">
+                Choose which identifier to use when fetching employees from HRIMS for this institution.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Button
                 onClick={() => setIsEmployeeDialogOpen(true)}
                 disabled={isFetching}
@@ -340,17 +439,32 @@ export default function FetchDataPage() {
                 {isFetching ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                 Bulk Fetch All Employees
               </Button>
+
+              <Button
+                onClick={handleFetchByInstitution}
+                disabled={isFetching || (identifierType === 'votecode' && !selectedInstitution.voteNumber) || (identifierType === 'tin' && !selectedInstitution.tinNumber)}
+                variant="secondary"
+                className="flex items-center gap-2"
+              >
+                <Building className="h-4 w-4" />
+                {isFetching ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                Fetch by {identifierType === 'votecode' ? 'Vote Code' : 'TIN'}
+              </Button>
             </div>
 
             {fetchResults.length > 0 && (
               <div className="border rounded-lg p-4 bg-green-50">
-                <h4 className="font-medium text-green-800 mb-2">Recent Fetch Results</h4>
-                {fetchResults.map((result, index) => (
-                  <div key={index} className="text-sm text-green-700">
-                    <p><strong>{result.Employee.name}</strong> (ZanID: {result.Employee.zanId})</p>
-                    <p>Documents: {result.documents} | Certificates: {result.certificates}</p>
-                  </div>
-                ))}
+                <h4 className="font-medium text-green-800 mb-2">Fetched Employees ({fetchResults.length})</h4>
+                <div className="space-y-2">
+                  {fetchResults.map((employee, index) => (
+                    <div key={index} className="text-sm text-green-700 border-b border-green-200 pb-2 last:border-0">
+                      <p><strong>{employee.name}</strong> (ZanID: {employee.zanId})</p>
+                      {employee.cadre && <p>Cadre: {employee.cadre}</p>}
+                      {employee.ministry && <p>Ministry: {employee.ministry}</p>}
+                      <p>Status: {employee.status}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </CardContent>

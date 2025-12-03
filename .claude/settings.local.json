@@ -99,7 +99,11 @@
       "Bash(perl -i -pe:*)",
       "Bash(xargs sed:*)",
       "Bash(xargs kill:*)",
-      "Bash(PORT=9002 pm2 start:*)"
+      "Bash(PORT=9002 pm2 start:*)",
+      "Bash(do echo \"=== $file ===\" grep -A1 \"Submitted:</Label>\" \"$file\")",
+      "Bash(PORT=3000 npm run build:*)",
+      "Bash(PORT=3000 pm2 start:*)",
+      "Bash(pm2 start:*)"
     ],
     "deny": []
   }

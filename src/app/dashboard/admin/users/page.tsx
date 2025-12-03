@@ -87,7 +87,7 @@ export default function UserManagementPage() {
       // Transform the data to include institution name
       const transformedUsers = data.map((user: any) => ({
         ...user,
-        institution: user.institution || 'N/A'  // Backend returns institution name as string
+        institution: user.Institution || 'N/A'  // Backend returns Institution (capital I) as string
       }));
       setUsers(transformedUsers);
     } catch (error) {
@@ -260,7 +260,8 @@ export default function UserManagementPage() {
     (user.email && user.email.toLowerCase().includes(searchQuery.toLowerCase())) ||
     (user.zanId && user.zanId.toLowerCase().includes(searchQuery.toLowerCase())) ||
     user.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (user.phoneNumber && user.phoneNumber.includes(searchQuery))
+    (user.phoneNumber && user.phoneNumber.includes(searchQuery)) ||
+    (user.institution && user.institution.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
@@ -282,7 +283,7 @@ export default function UserManagementPage() {
       />
       <div className="flex justify-end mb-4">
         <Input
-          placeholder="Search by name, username, email, ZanID, role, or phone number..."
+          placeholder="Search by name, username, email, ZanID, role, institution, or phone..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="max-w-sm"

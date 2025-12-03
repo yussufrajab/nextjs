@@ -74,7 +74,8 @@ export async function GET(req: Request) {
             OR: [
               { name: { contains: q, mode: 'insensitive' } },
               { zanId: { contains: q, mode: 'insensitive' } },
-              { payrollNumber: { contains: q, mode: 'insensitive' } }
+              { payrollNumber: { contains: q, mode: 'insensitive' } },
+              { Institution: { name: { contains: q, mode: 'insensitive' } } }
             ]
           }
         ];
@@ -84,7 +85,8 @@ export async function GET(req: Request) {
         whereClause.OR = [
           { name: { contains: q, mode: 'insensitive' } },
           { zanId: { contains: q, mode: 'insensitive' } },
-          { payrollNumber: { contains: q, mode: 'insensitive' } }
+          { payrollNumber: { contains: q, mode: 'insensitive' } },
+          { Institution: { name: { contains: q, mode: 'insensitive' } } }
         ];
       }
     }

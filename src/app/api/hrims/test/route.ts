@@ -11,6 +11,8 @@ interface TestParameters {
   pageNumber?: number;
   pageSize?: number;
   payrollNumber?: string;
+  voteCode?: string;
+  tinNumber?: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -26,6 +28,8 @@ export async function POST(request: NextRequest) {
   const pageNumber = params.pageNumber ?? 0;
   const pageSize = params.pageSize ?? 100;
   const payrollNumber = params.payrollNumber ?? '536151';
+  const voteCode = params.voteCode ?? '004';
+  const tinNumber = params.tinNumber ?? '119060370';
 
   const testResults = {
     timestamp: new Date().toISOString(),
@@ -305,6 +309,196 @@ export async function POST(request: NextRequest) {
       ...testResults.tests[2],
       status: 'failed',
       details: 'Failed to connect to HRIMS API for employee photo',
+      error: {
+        name: error instanceof Error ? error.name : 'Unknown Error',
+        message: error instanceof Error ? error.message : 'Unknown error occurred'
+      }
+    };
+  }
+
+  // Test 4: Get employees by Vote Code
+  console.log('🔍 Testing HRIMS API - Get employees by Vote Code...');
+  console.log(`Parameters: VoteCode=${voteCode}, PageNumber=0, PageSize=10`);
+
+  const voteCodePayload = {
+    RequestId: "204",
+    RequestPayloadData: {
+      PageNumber: 0,
+      PageSize: 10,
+      RequestBody: voteCode
+    }
+  };
+
+  testResults.tests.push({
+    name: 'Get employees by Vote Code',
+    status: 'running',
+    details: `Testing employee retrieval by institution vote code with RequestId: 204, VoteCode: ${voteCode}`,
+    requestPayload: voteCodePayload,
+    endpoint: `${HRIMS_CONFIG.BASE_URL}/Employees`,
+    headers: {
+      'ApiKey': HRIMS_CONFIG.API_KEY,
+      'Token': HRIMS_CONFIG.TOKEN,
+      'Content-Type': 'application/json'
+    }
+  });
+
+  try {
+    console.log('📤 Sending vote code request:', voteCodePayload);
+
+    const response = await fetch(`${HRIMS_CONFIG.BASE_URL}/Employees`, {
+      method: 'POST',
+      headers: {
+        'ApiKey': HRIMS_CONFIG.API_KEY,
+        'Token': HRIMS_CONFIG.TOKEN,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(voteCodePayload),
+      signal: AbortSignal.timeout(30000)
+    });
+
+    console.log(`📥 Response status: ${response.status} ${response.statusText}`);
+
+    if (response.ok) {
+      const data = await response.json();
+      console.log('✅ Vote code fetch successful');
+
+      testResults.tests[3] = {
+        ...testResults.tests[3],
+        status: 'success',
+        details: `Successfully fetched employees for vote code ${voteCode} from HRIMS API`,
+        responsePayload: data,
+        responseInfo: {
+          status: response.status,
+          statusText: response.statusText,
+          headers: Object.fromEntries(response.headers.entries()),
+          dataStructure: {
+            hasData: !!data,
+            dataKeys: data ? Object.keys(data) : [],
+            dataType: typeof data,
+            responseSize: JSON.stringify(data).length,
+            employeeCount: data?.data?.length || 0
+          }
+        }
+      };
+    } else {
+      const errorText = await response.text();
+      console.error('❌ Vote code API error:', errorText);
+
+      testResults.tests[3] = {
+        ...testResults.tests[3],
+        status: 'failed',
+        details: `Vote code API returned error status ${response.status}`,
+        responsePayload: errorText,
+        responseInfo: {
+          status: response.status,
+          statusText: response.statusText,
+          headers: Object.fromEntries(response.headers.entries())
+        }
+      };
+    }
+
+  } catch (error) {
+    console.error('🚨 Vote code fetch connection failed:', error);
+
+    testResults.tests[3] = {
+      ...testResults.tests[3],
+      status: 'failed',
+      details: 'Failed to connect to HRIMS API for vote code fetch',
+      error: {
+        name: error instanceof Error ? error.name : 'Unknown Error',
+        message: error instanceof Error ? error.message : 'Unknown error occurred'
+      }
+    };
+  }
+
+  // Test 5: Get employees by TIN Number
+  console.log('🔍 Testing HRIMS API - Get employees by TIN Number...');
+  console.log(`Parameters: TINNumber=${tinNumber}, PageNumber=0, PageSize=10`);
+
+  const tinPayload = {
+    RequestId: "205",
+    RequestPayloadData: {
+      PageNumber: 0,
+      PageSize: 10,
+      RequestBody: tinNumber
+    }
+  };
+
+  testResults.tests.push({
+    name: 'Get employees by TIN Number',
+    status: 'running',
+    details: `Testing employee retrieval by institution TIN number with RequestId: 205, TIN: ${tinNumber}`,
+    requestPayload: tinPayload,
+    endpoint: `${HRIMS_CONFIG.BASE_URL}/Employees`,
+    headers: {
+      'ApiKey': HRIMS_CONFIG.API_KEY,
+      'Token': HRIMS_CONFIG.TOKEN,
+      'Content-Type': 'application/json'
+    }
+  });
+
+  try {
+    console.log('📤 Sending TIN request:', tinPayload);
+
+    const response = await fetch(`${HRIMS_CONFIG.BASE_URL}/Employees`, {
+      method: 'POST',
+      headers: {
+        'ApiKey': HRIMS_CONFIG.API_KEY,
+        'Token': HRIMS_CONFIG.TOKEN,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(tinPayload),
+      signal: AbortSignal.timeout(30000)
+    });
+
+    console.log(`📥 Response status: ${response.status} ${response.statusText}`);
+
+    if (response.ok) {
+      const data = await response.json();
+      console.log('✅ TIN fetch successful');
+
+      testResults.tests[4] = {
+        ...testResults.tests[4],
+        status: 'success',
+        details: `Successfully fetched employees for TIN ${tinNumber} from HRIMS API`,
+        responsePayload: data,
+        responseInfo: {
+          status: response.status,
+          statusText: response.statusText,
+          headers: Object.fromEntries(response.headers.entries()),
+          dataStructure: {
+            hasData: !!data,
+            dataKeys: data ? Object.keys(data) : [],
+            dataType: typeof data,
+            responseSize: JSON.stringify(data).length,
+            employeeCount: data?.data?.length || 0
+          }
+        }
+      };
+    } else {
+      const errorText = await response.text();
+      console.error('❌ TIN API error:', errorText);
+
+      testResults.tests[4] = {
+        ...testResults.tests[4],
+        status: 'failed',
+        details: `TIN API returned error status ${response.status}`,
+        responsePayload: errorText,
+        responseInfo: {
+          status: response.status,
+          statusText: response.statusText,
+          headers: Object.fromEntries(response.headers.entries())
+        }
+      };
+    }
+
+  } catch (error) {
+    console.error('🚨 TIN fetch connection failed:', error);
+
+    testResults.tests[4] = {
+      ...testResults.tests[4],
+      status: 'failed',
+      details: 'Failed to connect to HRIMS API for TIN fetch',
       error: {
         name: error instanceof Error ? error.name : 'Unknown Error',
         message: error instanceof Error ? error.message : 'Unknown error occurred'

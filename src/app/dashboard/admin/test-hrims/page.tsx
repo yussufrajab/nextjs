@@ -27,6 +27,8 @@ interface TestParameters {
   pageNumber: number;
   pageSize: number;
   payrollNumber: string;
+  voteCode: string;
+  tinNumber: string;
 }
 
 export default function TestHRIMSPage() {
@@ -37,7 +39,9 @@ export default function TestHRIMSPage() {
   const [parameters, setParameters] = useState<TestParameters>({
     pageNumber: 0,
     pageSize: 100,
-    payrollNumber: '536151'
+    payrollNumber: '536151',
+    voteCode: '004',
+    tinNumber: '119060370'
   });
 
   const runHRIMSTests = async () => {
@@ -133,7 +137,7 @@ export default function TestHRIMSPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div className="space-y-2">
               <Label htmlFor="pageNumber">Page Number (Test 1)</Label>
               <Input
@@ -173,6 +177,32 @@ export default function TestHRIMSPage() {
               <p className="text-xs text-gray-500">Employee payroll number</p>
             </div>
           </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="voteCode">Vote Code (Test 4)</Label>
+              <Input
+                id="voteCode"
+                type="text"
+                value={parameters.voteCode}
+                onChange={(e) => setParameters({ ...parameters, voteCode: e.target.value })}
+                placeholder="004"
+              />
+              <p className="text-xs text-gray-500">Institution vote code for fetching employees</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="tinNumber">TIN Number (Test 5)</Label>
+              <Input
+                id="tinNumber"
+                type="text"
+                value={parameters.tinNumber}
+                onChange={(e) => setParameters({ ...parameters, tinNumber: e.target.value })}
+                placeholder="119060370"
+              />
+              <p className="text-xs text-gray-500">Institution TIN for fetching employees</p>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
@@ -205,6 +235,8 @@ export default function TestHRIMSPage() {
               <li>Employee list fetching (RequestId: 201) - with page {parameters.pageNumber}, size {parameters.pageSize}</li>
               <li>Specific employee data fetching (RequestId: 202) - for payroll# {parameters.payrollNumber}</li>
               <li>Employee photo fetching (RequestId: 203) - for payroll# {parameters.payrollNumber}</li>
+              <li>Employees by Vote Code (RequestId: 204) - for votecode {parameters.voteCode}</li>
+              <li>Employees by TIN Number (RequestId: 205) - for TIN {parameters.tinNumber}</li>
             </ul>
           </div>
         </CardContent>

@@ -178,7 +178,7 @@ const EmployeeDetailsCard = ({ emp, onBack, userRole, userInstitutionId }: { emp
             <div><Label className="text-muted-foreground">Rank (Cadre):</Label><p className="font-medium text-foreground">{emp.cadre || 'N/A'}</p></div>
             <div><Label className="text-muted-foreground">Salary Scale:</Label><p className="font-medium text-foreground">{emp.salaryScale || 'N/A'}</p></div>
             <div><Label className="text-muted-foreground">Ministry:</Label><p className="font-medium text-foreground">{emp.ministry || 'N/A'}</p></div>
-            <div><Label className="text-muted-foreground">Institution:</Label><p className="font-medium text-foreground">{typeof emp.institution === 'object' ? emp.Institution.name : emp.institution || 'N/A'}</p></div>
+            <div><Label className="text-muted-foreground">Institution:</Label><p className="font-medium text-foreground">{emp.Institution?.name || 'N/A'}</p></div>
             <div><Label className="text-muted-foreground">Department:</Label><p className="font-medium text-foreground">{emp.department || 'N/A'}</p></div>
             <div><Label className="text-muted-foreground">Appointment Type:</Label><p className="font-medium text-foreground">{emp.appointmentType || 'N/A'}</p></div>
             <div><Label className="text-muted-foreground">Contract Type:</Label><p className="font-medium text-foreground">{emp.contractType || 'N/A'}</p></div>
@@ -557,7 +557,7 @@ export default function ProfilePage() {
                                     <TableCell className="font-medium">{emp.name}</TableCell>
                                     <TableCell>{emp.gender}</TableCell>
                                     <TableCell>{emp.zanId}</TableCell>
-                                    <TableCell>{typeof emp.institution === 'object' ? emp.Institution.name : emp.institution || 'N/A'}</TableCell>
+                                    <TableCell>{emp.Institution?.name || 'N/A'}</TableCell>
                                     <TableCell>{emp.cadre || 'N/A'}</TableCell>
                                     <TableCell>
                                       <span className={`font-medium ${getStatusColor(emp.status)}`}>
