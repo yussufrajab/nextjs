@@ -103,7 +103,9 @@
       "Bash(do echo \"=== $file ===\" grep -A1 \"Submitted:</Label>\" \"$file\")",
       "Bash(PORT=3000 npm run build:*)",
       "Bash(PORT=3000 pm2 start:*)",
-      "Bash(pm2 start:*)"
+      "Bash(pm2 start:*)",
+      "Bash(ss:*)",
+      "WebFetch(domain:10.0.225.14)"
     ],
     "deny": []
   }

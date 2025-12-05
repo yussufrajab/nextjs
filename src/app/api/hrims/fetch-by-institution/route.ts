@@ -10,24 +10,36 @@ const HRIMS_CONFIG = {
 };
 
 async function fetchFromHRIMS(requestId: string, requestPayloadData: any): Promise<any> {
-  const response = await fetch(`${HRIMS_CONFIG.BASE_URL}/Employees`, {
-    method: 'POST',
-    headers: {
-      'ApiKey': HRIMS_CONFIG.API_KEY,
-      'Token': HRIMS_CONFIG.TOKEN,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      RequestId: requestId,
-      RequestPayloadData: requestPayloadData
-    })
-  });
+  // Set 10 minute timeout for large datasets
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 600000); // 10 minutes
 
-  if (!response.ok) {
-    throw new Error(`HRIMS API error: ${response.status} ${response.statusText}`);
+  try {
+    const response = await fetch(`${HRIMS_CONFIG.BASE_URL}/Employees`, {
+      method: 'POST',
+      headers: {
+        'ApiKey': HRIMS_CONFIG.API_KEY,
+        'Token': HRIMS_CONFIG.TOKEN,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        RequestId: requestId,
+        RequestPayloadData: requestPayloadData
+      }),
+      signal: controller.signal
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      throw new Error(`HRIMS API error: ${response.status} ${response.statusText}`);
+    }
+
+    return response.json();
+  } catch (error) {
+    clearTimeout(timeoutId);
+    throw error;
   }
-
-  return response.json();
 }
 
 async function saveEmployeeFromDetailedData(hrimsData: any, institutionId: string) {
@@ -221,7 +233,7 @@ export async function POST(req: NextRequest) {
     // Fetch employees from HRIMS using the appropriate RequestId
     const employeeListResponse = await fetchFromHRIMS(requestId, {
       PageNumber: 0,
-      PageSize: 100,
+      PageSize: 10000,
       RequestBody: identifier
     });
 
