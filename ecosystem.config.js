@@ -2,9 +2,9 @@ module.exports = {
   apps: [
     {
       name: 'csms-app',
-      script: 'node_modules/.bin/next',
+      script: 'npm',
       args: 'start',
-      cwd: '/www/wwwroot/nexxt',
+      cwd: '/home/production/nextjs',
       instances: 1,
       exec_mode: 'fork',
       env: {
