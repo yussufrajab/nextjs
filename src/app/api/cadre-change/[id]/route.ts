@@ -14,15 +14,16 @@ const updateSchema = z.object({
   documents: z.array(z.string()).optional(),
 });
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const body = await req.json();
-    console.log('Updating cadre change request:', params.id, body);
-    
+    console.log('Updating cadre change request:', id, body);
+
     const validatedData = updateSchema.parse(body);
-    
+
     const updatedRequest = await db.cadreChangeRequest.update({
-      where: { id: params.id },
+      where: { id },
       data: validatedData,
       include: {
         Employee: { 
@@ -84,10 +85,11 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   }
 }
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const request = await db.cadreChangeRequest.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         Employee: { 
           select: { 

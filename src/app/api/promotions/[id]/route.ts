@@ -16,14 +16,15 @@ const updateSchema = z.object({
   studiedOutsideCountry: z.boolean().optional(),
 });
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const body = await req.json();
     const validatedData = updateSchema.parse(body);
-    
+
     // Check if promotion exists
     const existingRequest = await db.promotionRequest.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: { Employee: true }
     });
 
@@ -39,7 +40,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       const result = await db.$transaction(async (tx) => {
         // Update the promotion request
         const updatedRequest = await tx.promotionRequest.update({
-          where: { id: params.id },
+          where: { id },
           data: validatedData,
           include: {
             Employee: { select: { name: true, zanId: true, department: true, cadre: true }},
@@ -80,7 +81,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     } else {
       // Regular update without employee cadre change
       const updatedRequest = await db.promotionRequest.update({
-        where: { id: params.id },
+        where: { id },
         data: validatedData,
         include: {
           Employee: { select: { name: true, zanId: true, department: true, cadre: true }},

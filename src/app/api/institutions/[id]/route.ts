@@ -12,9 +12,10 @@ const institutionSchema = z.object({
 
 export async function PUT(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await req.json();
     const validatedData = institutionSchema.parse(body);
 
@@ -24,7 +25,7 @@ export async function PUT(
         where: {
           tinNumber: validatedData.tinNumber.trim(),
           NOT: {
-            id: params.id
+            id
           }
         }
       });
@@ -38,7 +39,7 @@ export async function PUT(
     }
 
     const updatedInstitution = await db.Institution.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         name: validatedData.name,
         email: validatedData.email?.trim() || null,
@@ -70,11 +71,12 @@ export async function PUT(
 
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     await db.Institution.delete({
-      where: { id: params.id },
+      where: { id },
     });
     return new NextResponse(null, { status: 204 });
   } catch (error) {

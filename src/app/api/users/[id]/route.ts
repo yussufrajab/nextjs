@@ -18,8 +18,9 @@ const userUpdateSchema = z.object({
   password: z.string().min(6).optional(),
 });
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const body = await req.json();
     const validatedData = userUpdateSchema.parse(body);
 
@@ -29,7 +30,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     }
 
     const updatedUser = await db.User.update({
-      where: { id: params.id },
+      where: { id },
       data: validatedData,
       select: { id: true, name: true, username: true, email: true, phoneNumber: true, role: true, active: true, Institution: { select: { name: true } } },
     });
@@ -66,10 +67,11 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   }
 }
 
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     await db.User.delete({
-      where: { id: params.id },
+      where: { id },
     });
     return new NextResponse(null, { status: 204 });
   } catch (error) {

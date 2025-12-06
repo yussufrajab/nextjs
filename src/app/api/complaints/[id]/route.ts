@@ -13,13 +13,14 @@ const updateComplaintSchema = z.object({
   reviewedById: z.string().optional(),
 });
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const body = await req.json();
     const validatedData = updateComplaintSchema.parse(body);
 
     const updatedComplaint = await db.complaint.update({
-      where: { id: params.id },
+      where: { id },
       data: validatedData,
       include: {
         User_Complaint_complainantIdToUser: {
