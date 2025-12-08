@@ -13,7 +13,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import React, { useState, useEffect } from 'react';
-import { Search, Download, Loader2, Building, Users, Database } from 'lucide-react';
+import { Search, Loader2, Building, Users, Database } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Pagination } from '@/components/shared/pagination';
 
@@ -59,6 +59,7 @@ export default function FetchDataPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [identifierType, setIdentifierType] = useState<'votecode' | 'tin'>('votecode');
+  const [hrimsPageSize, setHrimsPageSize] = useState(100);
 
   const itemsPerPage = 10;
 
@@ -169,54 +170,6 @@ export default function FetchDataPage() {
     }
   };
 
-  const handleBulkFetch = async () => {
-    if (!selectedInstitution?.voteNumber) {
-      toast({
-        title: "Error",
-        description: "Institution vote number is required",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsFetching(true);
-    try {
-      const response = await fetch('/api/hrims/bulk-fetch', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          institutionVoteNumber: selectedInstitution.voteNumber,
-        }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to start bulk fetch');
-      }
-
-      const result = await response.json();
-
-      if (result.success) {
-        toast({
-          title: "Bulk Fetch Started",
-          description: `Started fetching all employees from ${selectedInstitution.name}. This may take a few minutes.`,
-        });
-      } else {
-        throw new Error(result.message || 'Failed to start bulk fetch');
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to start bulk fetch",
-        variant: "destructive"
-      });
-    } finally {
-      setIsFetching(false);
-    }
-  };
-
   const handleFetchByInstitution = async () => {
     // Validate based on selected identifier type
     if (identifierType === 'votecode' && !selectedInstitution?.voteNumber) {
@@ -239,6 +192,11 @@ export default function FetchDataPage() {
 
     setIsFetching(true);
     try {
+      toast({
+        title: "Fetching Data",
+        description: `Starting to fetch employees from ${selectedInstitution.name} using ${identifierType === 'votecode' ? 'Vote Code' : 'TIN'}. This may take a few minutes for large institutions...`,
+      });
+
       const response = await fetch('/api/hrims/fetch-by-institution', {
         method: 'POST',
         headers: {
@@ -249,6 +207,7 @@ export default function FetchDataPage() {
           voteNumber: selectedInstitution.voteNumber,
           tinNumber: selectedInstitution.tinNumber,
           institutionId: selectedInstitution.id,
+          pageSize: hrimsPageSize,
         }),
       });
 
@@ -262,7 +221,7 @@ export default function FetchDataPage() {
       if (result.success) {
         toast({
           title: "Fetch Successful",
-          description: `Fetched ${result.data.employeeCount} employees from ${selectedInstitution.name} using ${result.data.usedIdentifier}.`,
+          description: `Fetched ${result.data.employeeCount} employees from ${selectedInstitution.name} using ${result.data.usedIdentifier}. Pages fetched: ${result.data.pagesFetched}, Total records: ${result.data.totalFetched}${result.data.skippedCount > 0 ? `, Skipped: ${result.data.skippedCount}` : ''}.`,
         });
 
         // Optionally show summary of results
@@ -418,7 +377,29 @@ export default function FetchDataPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Page Size Selector */}
+            <div className="border rounded-lg p-4 bg-blue-50">
+              <Label htmlFor="hrimsPageSize" className="text-base font-semibold mb-2 block">HRIMS Pagination Settings</Label>
+              <div className="flex items-center gap-4">
+                <div className="flex-1">
+                  <Label htmlFor="hrimsPageSize" className="text-sm mb-1 block">Records per Page</Label>
+                  <Input
+                    id="hrimsPageSize"
+                    type="number"
+                    min="10"
+                    max="500"
+                    value={hrimsPageSize}
+                    onChange={(e) => setHrimsPageSize(parseInt(e.target.value) || 100)}
+                    className="w-32"
+                  />
+                </div>
+                <p className="text-xs text-gray-600 flex-1">
+                  Number of records to fetch per page from HRIMS. The system will automatically fetch all pages. Lower values are more reliable for large datasets.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Button
                 onClick={() => setIsEmployeeDialogOpen(true)}
                 disabled={isFetching}
@@ -427,17 +408,6 @@ export default function FetchDataPage() {
                 <Users className="h-4 w-4" />
                 {isFetching ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                 Fetch Single Employee
-              </Button>
-
-              <Button
-                onClick={handleBulkFetch}
-                disabled={isFetching}
-                variant="outline"
-                className="flex items-center gap-2"
-              >
-                <Download className="h-4 w-4" />
-                {isFetching ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                Bulk Fetch All Employees
               </Button>
 
               <Button
@@ -454,7 +424,7 @@ export default function FetchDataPage() {
 
             {fetchResults.length > 0 && (
               <div className="border rounded-lg p-4 bg-green-50">
-                <h4 className="font-medium text-green-800 mb-2">Fetched Employees ({fetchResults.length})</h4>
+                <h4 className="font-medium text-green-800 mb-2">Sample of Fetched Employees (showing first {fetchResults.length})</h4>
                 <div className="space-y-2">
                   {fetchResults.map((employee, index) => (
                     <div key={index} className="text-sm text-green-700 border-b border-green-200 pb-2 last:border-0">
@@ -465,6 +435,9 @@ export default function FetchDataPage() {
                     </div>
                   ))}
                 </div>
+                <p className="text-xs text-green-600 mt-3 italic">
+                  This is a preview of the first few employees. Check the success notification for the total count.
+                </p>
               </div>
             )}
           </CardContent>

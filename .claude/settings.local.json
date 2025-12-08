@@ -105,7 +105,10 @@
       "Bash(PORT=3000 pm2 start:*)",
       "Bash(pm2 start:*)",
       "Bash(ss:*)",
-      "WebFetch(domain:10.0.225.14)"
+      "WebFetch(domain:10.0.225.14)",
+      "Bash(xargs:*)",
+      "Bash(ls:*)",
+      "Bash(tail:*)"
     ],
     "deny": []
   }

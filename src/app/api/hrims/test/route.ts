@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
 
   // Set defaults if not provided
   const pageNumber = params.pageNumber ?? 0;
-  const pageSize = params.pageSize ?? 100;
+  const pageSize = params.pageSize ?? 10; // Use smaller default for testing to avoid timeouts
   const payrollNumber = params.payrollNumber ?? '536151';
   const voteCode = params.voteCode ?? '004';
   const tinNumber = params.tinNumber ?? '119060370';
@@ -316,23 +316,23 @@ export async function POST(request: NextRequest) {
     };
   }
 
-  // Test 4: Get employees by Vote Code
+  // Test 4: Get employees by Vote Code (with pagination)
   console.log('🔍 Testing HRIMS API - Get employees by Vote Code...');
-  console.log(`Parameters: VoteCode=${voteCode}, PageNumber=0, PageSize=10`);
+  console.log(`Parameters: VoteCode=${voteCode}, PageNumber=${pageNumber}, PageSize=${pageSize}`);
 
   const voteCodePayload = {
     RequestId: "204",
     RequestPayloadData: {
-      PageNumber: 0,
-      PageSize: 10,
+      PageNumber: pageNumber,
+      PageSize: pageSize,
       RequestBody: voteCode
     }
   };
 
   testResults.tests.push({
-    name: 'Get employees by Vote Code',
+    name: 'Get employees by Vote Code (Paginated)',
     status: 'running',
-    details: `Testing employee retrieval by institution vote code with RequestId: 204, VoteCode: ${voteCode}`,
+    details: `Testing employee retrieval by institution vote code with RequestId: 204, VoteCode: ${voteCode}, Page: ${pageNumber}, Size: ${pageSize}`,
     requestPayload: voteCodePayload,
     endpoint: `${HRIMS_CONFIG.BASE_URL}/Employees`,
     headers: {
@@ -353,7 +353,7 @@ export async function POST(request: NextRequest) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(voteCodePayload),
-      signal: AbortSignal.timeout(30000)
+      signal: AbortSignal.timeout(120000) // 2 minute timeout for paginated requests
     });
 
     console.log(`📥 Response status: ${response.status} ${response.statusText}`);
@@ -365,7 +365,7 @@ export async function POST(request: NextRequest) {
       testResults.tests[3] = {
         ...testResults.tests[3],
         status: 'success',
-        details: `Successfully fetched employees for vote code ${voteCode} from HRIMS API`,
+        details: `Successfully fetched employees for vote code ${voteCode} from HRIMS API (Page ${data.currentPage || pageNumber}, ${data?.data?.length || 0} records)`,
         responsePayload: data,
         responseInfo: {
           status: response.status,
@@ -376,7 +376,12 @@ export async function POST(request: NextRequest) {
             dataKeys: data ? Object.keys(data) : [],
             dataType: typeof data,
             responseSize: JSON.stringify(data).length,
-            employeeCount: data?.data?.length || 0
+            employeeCount: data?.data?.length || 0,
+            paginationInfo: {
+              currentPage: data?.currentPage,
+              currentDataSize: data?.currentDataSize,
+              overallDataSize: data?.overallDataSize
+            }
           }
         }
       };
@@ -411,23 +416,23 @@ export async function POST(request: NextRequest) {
     };
   }
 
-  // Test 5: Get employees by TIN Number
+  // Test 5: Get employees by TIN Number (with pagination)
   console.log('🔍 Testing HRIMS API - Get employees by TIN Number...');
-  console.log(`Parameters: TINNumber=${tinNumber}, PageNumber=0, PageSize=10`);
+  console.log(`Parameters: TINNumber=${tinNumber}, PageNumber=${pageNumber}, PageSize=${pageSize}`);
 
   const tinPayload = {
     RequestId: "205",
     RequestPayloadData: {
-      PageNumber: 0,
-      PageSize: 10,
+      PageNumber: pageNumber,
+      PageSize: pageSize,
       RequestBody: tinNumber
     }
   };
 
   testResults.tests.push({
-    name: 'Get employees by TIN Number',
+    name: 'Get employees by TIN Number (Paginated)',
     status: 'running',
-    details: `Testing employee retrieval by institution TIN number with RequestId: 205, TIN: ${tinNumber}`,
+    details: `Testing employee retrieval by institution TIN number with RequestId: 205, TIN: ${tinNumber}, Page: ${pageNumber}, Size: ${pageSize}`,
     requestPayload: tinPayload,
     endpoint: `${HRIMS_CONFIG.BASE_URL}/Employees`,
     headers: {
@@ -448,7 +453,7 @@ export async function POST(request: NextRequest) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(tinPayload),
-      signal: AbortSignal.timeout(30000)
+      signal: AbortSignal.timeout(120000) // 2 minute timeout for paginated requests
     });
 
     console.log(`📥 Response status: ${response.status} ${response.statusText}`);
@@ -460,7 +465,7 @@ export async function POST(request: NextRequest) {
       testResults.tests[4] = {
         ...testResults.tests[4],
         status: 'success',
-        details: `Successfully fetched employees for TIN ${tinNumber} from HRIMS API`,
+        details: `Successfully fetched employees for TIN ${tinNumber} from HRIMS API (Page ${data.currentPage || pageNumber}, ${data?.data?.length || 0} records)`,
         responsePayload: data,
         responseInfo: {
           status: response.status,
@@ -471,7 +476,12 @@ export async function POST(request: NextRequest) {
             dataKeys: data ? Object.keys(data) : [],
             dataType: typeof data,
             responseSize: JSON.stringify(data).length,
-            employeeCount: data?.data?.length || 0
+            employeeCount: data?.data?.length || 0,
+            paginationInfo: {
+              currentPage: data?.currentPage,
+              currentDataSize: data?.currentDataSize,
+              overallDataSize: data?.overallDataSize
+            }
           }
         }
       };

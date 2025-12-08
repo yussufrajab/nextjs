@@ -38,7 +38,7 @@ export default function TestHRIMSPage() {
   // Test parameters
   const [parameters, setParameters] = useState<TestParameters>({
     pageNumber: 0,
-    pageSize: 100,
+    pageSize: 10,
     payrollNumber: '536151',
     voteCode: '004',
     tinNumber: '119060370'
@@ -152,17 +152,17 @@ export default function TestHRIMSPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="pageSize">Page Size (Test 1)</Label>
+              <Label htmlFor="pageSize">Page Size (Tests 1, 4, 5)</Label>
               <Input
                 id="pageSize"
                 type="number"
                 min="1"
-                max="1000"
+                max="100"
                 value={parameters.pageSize}
-                onChange={(e) => setParameters({ ...parameters, pageSize: parseInt(e.target.value) || 100 })}
-                placeholder="100"
+                onChange={(e) => setParameters({ ...parameters, pageSize: parseInt(e.target.value) || 10 })}
+                placeholder="10"
               />
-              <p className="text-xs text-gray-500">Number of records per page</p>
+              <p className="text-xs text-gray-500">Records per page (10-20 recommended for testing, larger values may timeout)</p>
             </div>
 
             <div className="space-y-2">
@@ -235,9 +235,15 @@ export default function TestHRIMSPage() {
               <li>Employee list fetching (RequestId: 201) - with page {parameters.pageNumber}, size {parameters.pageSize}</li>
               <li>Specific employee data fetching (RequestId: 202) - for payroll# {parameters.payrollNumber}</li>
               <li>Employee photo fetching (RequestId: 203) - for payroll# {parameters.payrollNumber}</li>
-              <li>Employees by Vote Code (RequestId: 204) - for votecode {parameters.voteCode}</li>
-              <li>Employees by TIN Number (RequestId: 205) - for TIN {parameters.tinNumber}</li>
+              <li>Employees by Vote Code (RequestId: 204) - paginated (page {parameters.pageNumber}, size {parameters.pageSize}) for votecode {parameters.voteCode}</li>
+              <li>Employees by TIN Number (RequestId: 205) - paginated (page {parameters.pageNumber}, size {parameters.pageSize}) for TIN {parameters.tinNumber}</li>
             </ul>
+            <p className="mt-3 text-blue-700 font-medium">
+              💡 Tests 4 & 5 now include pagination metadata (overallDataSize, currentDataSize, currentPage) in the response.
+            </p>
+            <p className="mt-2 text-amber-700 text-xs">
+              ⚠️ Use page size 10-20 for testing. Larger values may cause timeouts for institutions with many employees. The actual fetch operation will automatically loop through all pages.
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -296,6 +302,20 @@ export default function TestHRIMSPage() {
                           <p><strong>HTTP Status:</strong> {(test as any).responseInfo.status} {(test as any).responseInfo.statusText}</p>
                           <p><strong>Response Size:</strong> {(test as any).responseInfo.dataStructure?.responseSize} characters</p>
                           <p><strong>Data Keys:</strong> {(test as any).responseInfo.dataStructure?.dataKeys?.join(', ') || 'None'}</p>
+                          {(test as any).responseInfo.dataStructure?.employeeCount !== undefined && (
+                            <p><strong>Employee Count:</strong> {(test as any).responseInfo.dataStructure.employeeCount}</p>
+                          )}
+                          {(test as any).responseInfo.dataStructure?.paginationInfo && (
+                            <div className="border-t border-green-300 pt-2 mt-2">
+                              <p className="font-semibold text-green-900 mb-1">📄 Pagination Info:</p>
+                              <p><strong>Current Page:</strong> {(test as any).responseInfo.dataStructure.paginationInfo.currentPage}</p>
+                              <p><strong>Current Data Size:</strong> {(test as any).responseInfo.dataStructure.paginationInfo.currentDataSize}</p>
+                              <p><strong>Overall Data Size:</strong> {(test as any).responseInfo.dataStructure.paginationInfo.overallDataSize}</p>
+                              {(test as any).responseInfo.dataStructure.paginationInfo.overallDataSize > (test as any).responseInfo.dataStructure.paginationInfo.currentDataSize && (
+                                <p className="text-blue-700 mt-1">💡 More pages available to fetch</p>
+                              )}
+                            </div>
+                          )}
                           {(test as any).responseInfo.dataStructure?.hasPhotoData !== undefined && (
                             <p><strong>Has Photo Data:</strong> {(test as any).responseInfo.dataStructure.hasPhotoData ? 'Yes' : 'No'}</p>
                           )}

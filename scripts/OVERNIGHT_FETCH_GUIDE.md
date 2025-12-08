@@ -3,7 +3,7 @@
 ## Changes Made
 
 ### 1. API Route Timeout Extension (`/home/nextjs/src/app/api/hrims/fetch-by-institution/route.ts`)
-- **Increased timeout from default (~30 seconds) to 10 minutes (600,000ms)**
+- **Increased timeout from default (~30 seconds) to 5 minutes (300,000ms)**
 - Added AbortController for proper timeout handling
 - Better error handling for timeout scenarios
 
@@ -115,7 +115,7 @@ If some institutions still fail after retries:
 
 - The script skips employees without valid ZanIDs (data quality issue in HRIMS)
 - Some ministries returned 0 employees in previous runs - this is HRIMS data issue
-- The 5-minute timeout should handle even the largest institutions
+- The 5-minute timeout should handle most institutions
 - Retry logic handles temporary network issues automatically
 
 ---
