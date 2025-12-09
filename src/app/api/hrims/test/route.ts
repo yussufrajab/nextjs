@@ -228,15 +228,13 @@ export async function POST(request: NextRequest) {
 
   const photoPayload = {
     RequestId: "203",
-    RequestPayloadData: {
-      RequestBody: payrollNumber
-    }
+    SearchCriteria: "111660"
   };
 
   testResults.tests.push({
     name: 'Get employee photo',
     status: 'running',
-    details: `Testing employee photo retrieval with RequestId: 203, PayrollNumber: ${payrollNumber}`,
+    details: `Testing employee photo retrieval with RequestId: 203, SearchCriteria: 111660`,
     requestPayload: photoPayload,
     endpoint: `${HRIMS_CONFIG.BASE_URL}/Employees`,
     headers: {
@@ -269,7 +267,7 @@ export async function POST(request: NextRequest) {
       testResults.tests[2] = {
         ...testResults.tests[2],
         status: 'success',
-        details: `Successfully fetched employee photo for payroll# ${payrollNumber} from HRIMS API`,
+        details: `Successfully fetched employee photo with SearchCriteria: 111660 from HRIMS API`,
         responsePayload: data,
         responseInfo: {
           status: response.status,
@@ -509,6 +507,97 @@ export async function POST(request: NextRequest) {
       ...testResults.tests[4],
       status: 'failed',
       details: 'Failed to connect to HRIMS API for TIN fetch',
+      error: {
+        name: error instanceof Error ? error.name : 'Unknown Error',
+        message: error instanceof Error ? error.message : 'Unknown error occurred'
+      }
+    };
+  }
+
+  // Test 6: Get employee documents by PayrollNumber
+  console.log('🔍 Testing HRIMS API - Get employee documents...');
+  console.log(`Parameters: PayrollNumber=${payrollNumber}`);
+
+  const documentsPayload = {
+    RequestId: "206",
+    SearchCriteria: "149391"
+  };
+
+  testResults.tests.push({
+    name: 'Get employee documents',
+    status: 'running',
+    details: `Testing employee document retrieval with RequestId: 206, PayrollNumber: 149391`,
+    requestPayload: documentsPayload,
+    endpoint: `${HRIMS_CONFIG.BASE_URL}/Employees`,
+    headers: {
+      'ApiKey': HRIMS_CONFIG.API_KEY,
+      'Token': HRIMS_CONFIG.TOKEN,
+      'Content-Type': 'application/json'
+    }
+  });
+
+  try {
+    console.log('📤 Sending employee documents request:', documentsPayload);
+
+    const response = await fetch(`${HRIMS_CONFIG.BASE_URL}/Employees`, {
+      method: 'POST',
+      headers: {
+        'ApiKey': HRIMS_CONFIG.API_KEY,
+        'Token': HRIMS_CONFIG.TOKEN,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(documentsPayload),
+      signal: AbortSignal.timeout(480000) // 2 minute timeout for document retrieval
+    });
+
+    console.log(`📥 Response status: ${response.status} ${response.statusText}`);
+
+    if (response.ok) {
+      const data = await response.json();
+      console.log('✅ Employee documents API responded successfully');
+
+      testResults.tests[5] = {
+        ...testResults.tests[5],
+        status: 'success',
+        details: `Successfully retrieved employee documents from HRIMS API for payroll number 149391`,
+        responsePayload: data,
+        responseInfo: {
+          status: response.status,
+          statusText: response.statusText,
+          headers: Object.fromEntries(response.headers.entries()),
+          dataStructure: {
+            hasData: !!data,
+            dataKeys: data ? Object.keys(data) : [],
+            dataType: typeof data,
+            responseSize: JSON.stringify(data).length,
+            documentFields: data?.data ? Object.keys(data.data) : []
+          }
+        }
+      };
+    } else {
+      const errorText = await response.text();
+      console.error('❌ Employee documents API error:', errorText);
+
+      testResults.tests[5] = {
+        ...testResults.tests[5],
+        status: 'failed',
+        details: `Employee documents API returned error status ${response.status}`,
+        responsePayload: errorText,
+        responseInfo: {
+          status: response.status,
+          statusText: response.statusText,
+          headers: Object.fromEntries(response.headers.entries())
+        }
+      };
+    }
+
+  } catch (error) {
+    console.error('🚨 Employee documents fetch connection failed:', error);
+
+    testResults.tests[5] = {
+      ...testResults.tests[5],
+      status: 'failed',
+      details: 'Failed to connect to HRIMS API for employee documents',
       error: {
         name: error instanceof Error ? error.name : 'Unknown Error',
         message: error instanceof Error ? error.message : 'Unknown error occurred'

@@ -1,0 +1,727 @@
+
+================================================================================
+  🚀 HRIMS Data Fetch Script (Axios Implementation)
+================================================================================
+Started at: 2025-12-07 20:35:16
+Timeout per institution: 30 minutes
+Retries: DISABLED (single attempt only)
+================================================================================
+
+[2025-12-07 20:35:16] ℹ️  Loading institutions from database...
+[2025-12-07 20:35:16] ℹ️  Found 72 institutions
+
+
+[1/72] ======================================================================
+[1/72] Institution: AFISI YA MKURUGENZI WA MASHTAKA
+[1/72] ======================================================================
+[2025-12-07 20:35:16] ℹ️  Fetching: AFISI YA MKURUGENZI WA MASHTAKA
+[2025-12-07 20:35:16] ℹ️    Using votecode: 029
+[2025-12-07 20:37:36] ✅ AFISI YA MKURUGENZI WA MASHTAKA: Fetched 153 employees (2m 20s)
+[2025-12-07 20:37:36] ℹ️  Pausing 15s before next institution...
+
+
+[2/72] ======================================================================
+[2/72] Institution: AFISI YA MWANASHERIA MKUU
+[2/72] ======================================================================
+[2025-12-07 20:37:51] ℹ️  Fetching: AFISI YA MWANASHERIA MKUU
+[2025-12-07 20:37:51] ℹ️    Using votecode: 028
+[2025-12-07 20:40:12] ✅ AFISI YA MWANASHERIA MKUU: Fetched 146 employees (2m 20s)
+[2025-12-07 20:40:12] ℹ️  Pausing 15s before next institution...
+
+
+[3/72] ======================================================================
+[3/72] Institution: AFISI YA RAISI KAZI, UCHUMI NA UWEKEZAJI
+[3/72] ======================================================================
+[2025-12-07 20:40:27] ℹ️  Fetching: AFISI YA RAISI KAZI, UCHUMI NA UWEKEZAJI
+[2025-12-07 20:40:27] ℹ️    Using votecode: 006
+[2025-12-07 20:43:25] ✅ AFISI YA RAISI KAZI, UCHUMI NA UWEKEZAJI: Fetched 183 employees (2m 57s)
+[2025-12-07 20:43:25] ℹ️  Pausing 15s before next institution...
+
+
+[4/72] ======================================================================
+[4/72] Institution: Baraza la Jiji
+[4/72] ======================================================================
+[2025-12-07 20:43:40] ℹ️  Fetching: Baraza la Jiji
+[2025-12-07 20:43:40] ℹ️    Using votecode: 201
+[2025-12-07 20:44:07] ✅ Baraza la Jiji: Fetched 26 employees (0m 26s)
+[2025-12-07 20:44:07] ℹ️  Pausing 15s before next institution...
+
+
+[5/72] ======================================================================
+[5/72] Institution: Baraza la Manispaa Magharibi A
+[5/72] ======================================================================
+[2025-12-07 20:44:22] ℹ️  Fetching: Baraza la Manispaa Magharibi A
+[2025-12-07 20:44:22] ℹ️    Using votecode: 203
+[2025-12-07 20:46:38] ✅ Baraza la Manispaa Magharibi A: Fetched 148 employees (2m 16s)
+[2025-12-07 20:46:38] ℹ️  Pausing 15s before next institution...
+
+
+[6/72] ======================================================================
+[6/72] Institution: Baraza la Manispaa Magharibi B
+[6/72] ======================================================================
+[2025-12-07 20:46:53] ℹ️  Fetching: Baraza la Manispaa Magharibi B
+[2025-12-07 20:46:53] ℹ️    Using votecode: 204
+[2025-12-07 20:49:28] ✅ Baraza la Manispaa Magharibi B: Fetched 168 employees (2m 35s)
+[2025-12-07 20:49:28] ℹ️  Pausing 15s before next institution...
+
+
+[7/72] ======================================================================
+[7/72] Institution: Baraza la Manispaa Mjini Unguja
+[7/72] ======================================================================
+[2025-12-07 20:49:43] ℹ️  Fetching: Baraza la Manispaa Mjini Unguja
+[2025-12-07 20:49:43] ℹ️    Using votecode: 202
+[2025-12-07 20:56:42] ✅ Baraza la Manispaa Mjini Unguja: Fetched 456 employees (6m 58s)
+[2025-12-07 20:56:42] ℹ️  Pausing 15s before next institution...
+
+
+[8/72] ======================================================================
+[8/72] Institution: Baraza la Mitihani
+[8/72] ======================================================================
+[2025-12-07 20:56:57] ℹ️  Fetching: Baraza la Mitihani
+[2025-12-07 20:56:57] ℹ️    Using votecode: 547
+[2025-12-07 20:58:05] ✅ Baraza la Mitihani: Fetched 75 employees (1m 8s)
+[2025-12-07 20:58:05] ℹ️  Pausing 15s before next institution...
+
+
+[9/72] ======================================================================
+[9/72] Institution: Baraza la Mji Chake Chake
+[9/72] ======================================================================
+[2025-12-07 20:58:20] ℹ️  Fetching: Baraza la Mji Chake Chake
+[2025-12-07 20:58:20] ℹ️    Using votecode: 210
+[2025-12-07 21:01:37] ✅ Baraza la Mji Chake Chake: Fetched 220 employees (3m 16s)
+[2025-12-07 21:01:37] ℹ️  Pausing 15s before next institution...
+
+
+[10/72] ======================================================================
+[10/72] Institution: Baraza la Mji Kaskazini A Unguja
+[10/72] ======================================================================
+[2025-12-07 21:01:52] ℹ️  Fetching: Baraza la Mji Kaskazini A Unguja
+[2025-12-07 21:01:52] ℹ️    Using votecode: 207
+[2025-12-07 21:04:11] ✅ Baraza la Mji Kaskazini A Unguja: Fetched 155 employees (2m 18s)
+[2025-12-07 21:04:11] ℹ️  Pausing 15s before next institution...
+
+
+[11/72] ======================================================================
+[11/72] Institution: Baraza la Mji Kaskazini B Unguja
+[11/72] ======================================================================
+[2025-12-07 21:04:26] ℹ️  Fetching: Baraza la Mji Kaskazini B Unguja
+[2025-12-07 21:04:26] ℹ️    Using votecode: 208
+[2025-12-07 21:06:47] ✅ Baraza la Mji Kaskazini B Unguja: Fetched 153 employees (2m 21s)
+[2025-12-07 21:06:47] ℹ️  Pausing 15s before next institution...
+
+
+[12/72] ======================================================================
+[12/72] Institution: Baraza la Mji Kati Unguja
+[12/72] ======================================================================
+[2025-12-07 21:07:02] ℹ️  Fetching: Baraza la Mji Kati Unguja
+[2025-12-07 21:07:02] ℹ️    Using votecode: 205
+[2025-12-07 21:08:34] ✅ Baraza la Mji Kati Unguja: Fetched 59 employees (1m 31s)
+[2025-12-07 21:08:34] ℹ️  Pausing 15s before next institution...
+
+
+[13/72] ======================================================================
+[13/72] Institution: Baraza la Mji Mkoani
+[13/72] ======================================================================
+[2025-12-07 21:08:49] ℹ️  Fetching: Baraza la Mji Mkoani
+[2025-12-07 21:08:49] ℹ️    Using votecode: 209
+[2025-12-07 21:10:33] ✅ Baraza la Mji Mkoani: Fetched 112 employees (1m 44s)
+[2025-12-07 21:10:33] ℹ️  Pausing 15s before next institution...
+
+
+[14/72] ======================================================================
+[14/72] Institution: Baraza la Mji Wete
+[14/72] ======================================================================
+[2025-12-07 21:10:48] ℹ️  Fetching: Baraza la Mji Wete
+[2025-12-07 21:10:48] ℹ️    Using votecode: 211
+[2025-12-07 21:13:09] ✅ Baraza la Mji Wete: Fetched 168 employees (2m 20s)
+[2025-12-07 21:13:09] ℹ️  Pausing 15s before next institution...
+
+
+[15/72] ======================================================================
+[15/72] Institution: Bodi ya Huduma za Maktaba
+[15/72] ======================================================================
+[2025-12-07 21:13:24] ℹ️  Fetching: Bodi ya Huduma za Maktaba
+[2025-12-07 21:13:24] ℹ️    Using votecode: 543
+[2025-12-07 21:14:39] ✅ Bodi ya Huduma za Maktaba: Fetched 89 employees (1m 15s)
+[2025-12-07 21:14:39] ℹ️  Pausing 15s before next institution...
+
+
+[16/72] ======================================================================
+[16/72] Institution: Chuo cha Kiislamu
+[16/72] ======================================================================
+[2025-12-07 21:14:54] ⚠️  Skipping: No vote number or TIN number
+
+[17/72] ======================================================================
+[17/72] Institution: Halmashauri ya Wilaya ya Kusini Unguja
+[17/72] ======================================================================
+[2025-12-07 21:14:54] ℹ️  Fetching: Halmashauri ya Wilaya ya Kusini Unguja
+[2025-12-07 21:14:54] ℹ️    Using votecode: 206
+[2025-12-07 21:16:01] ✅ Halmashauri ya Wilaya ya Kusini Unguja: Fetched 73 employees (1m 6s)
+[2025-12-07 21:16:01] ℹ️  Pausing 15s before next institution...
+
+
+[18/72] ======================================================================
+[18/72] Institution: Halmashauri ya Wilaya ya Micheweni
+[18/72] ======================================================================
+[2025-12-07 21:16:16] ℹ️  Fetching: Halmashauri ya Wilaya ya Micheweni
+[2025-12-07 21:16:16] ℹ️    Using votecode: 212
+[2025-12-07 21:17:21] ✅ Halmashauri ya Wilaya ya Micheweni: Fetched 83 employees (1m 5s)
+[2025-12-07 21:17:21] ℹ️  Pausing 15s before next institution...
+
+
+[19/72] ======================================================================
+[19/72] Institution: Hospitali ya Mnazi Mmoja
+[19/72] ======================================================================
+[2025-12-07 21:17:36] ℹ️  Fetching: Hospitali ya Mnazi Mmoja
+[2025-12-07 21:17:36] ℹ️    Using votecode: 025
+[2025-12-07 21:32:36] ❌ Hospitali ya Mnazi Mmoja: Request timeout - institution data too large
+[2025-12-07 21:32:36] ℹ️  Pausing 15s before next institution...
+
+
+[20/72] ======================================================================
+[20/72] Institution: JKU
+[20/72] ======================================================================
+[2025-12-07 21:32:51] ⚠️  Skipping: No vote number or TIN number
+
+[21/72] ======================================================================
+[21/72] Institution: KAMISHENI YA ARDHI ZANZIBAR
+[21/72] ======================================================================
+[2025-12-07 21:32:51] ℹ️  Fetching: KAMISHENI YA ARDHI ZANZIBAR
+[2025-12-07 21:32:51] ℹ️    Using votecode: 520
+[2025-12-07 21:35:48] ✅ KAMISHENI YA ARDHI ZANZIBAR: Fetched 198 employees (2m 56s)
+[2025-12-07 21:35:48] ℹ️  Pausing 15s before next institution...
+
+
+[22/72] ======================================================================
+[22/72] Institution: Kamisheni ya Kazi
+[22/72] ======================================================================
+[2025-12-07 21:36:03] ℹ️  Fetching: Kamisheni ya Kazi
+[2025-12-07 21:36:03] ℹ️    Using votecode: 573
+[2025-12-07 21:37:24] ✅ Kamisheni ya Kazi: Fetched 93 employees (1m 21s)
+[2025-12-07 21:37:24] ℹ️  Pausing 15s before next institution...
+
+
+[23/72] ======================================================================
+[23/72] Institution: KAMISHENI YA KUKABILIANA NA MAAFA ZANZIBAR
+[23/72] ======================================================================
+[2025-12-07 21:37:39] ℹ️  Fetching: KAMISHENI YA KUKABILIANA NA MAAFA ZANZIBAR
+[2025-12-07 21:37:39] ℹ️    Using votecode: 510
+[2025-12-07 21:38:33] ✅ KAMISHENI YA KUKABILIANA NA MAAFA ZANZIBAR: Fetched 51 employees (0m 54s)
+[2025-12-07 21:38:33] ℹ️  Pausing 15s before next institution...
+
+
+[24/72] ======================================================================
+[24/72] Institution: KAMISHENI YA UTALII ZANZIBAR
+[24/72] ======================================================================
+[2025-12-07 21:38:48] ⚠️  Skipping: No vote number or TIN number
+
+[25/72] ======================================================================
+[25/72] Institution: KAMISHENI YA UTUMISHI WA UMMA
+[25/72] ======================================================================
+[2025-12-07 21:38:48] ℹ️  Fetching: KAMISHENI YA UTUMISHI WA UMMA
+[2025-12-07 21:38:48] ℹ️    Using votecode: 036
+[2025-12-07 21:39:29] ✅ KAMISHENI YA UTUMISHI WA UMMA: Fetched 53 employees (0m 40s)
+[2025-12-07 21:39:29] ℹ️  Pausing 15s before next institution...
+
+
+[26/72] ======================================================================
+[26/72] Institution: Magereza
+[26/72] ======================================================================
+[2025-12-07 21:39:44] ⚠️  Skipping: No vote number or TIN number
+
+[27/72] ======================================================================
+[27/72] Institution: MAMLAKA YA KUDHIBITI NA KUPAMBANA NA DAWA ZA KULEVYA ZANZIBAR
+[27/72] ======================================================================
+[2025-12-07 21:39:44] ℹ️  Fetching: MAMLAKA YA KUDHIBITI NA KUPAMBANA NA DAWA ZA KULEVYA ZANZIBAR
+[2025-12-07 21:39:44] ℹ️    Using votecode: 032
+[2025-12-07 21:40:43] ✅ MAMLAKA YA KUDHIBITI NA KUPAMBANA NA DAWA ZA KULEVYA ZANZIBAR: Fetched 63 employees (0m 59s)
+[2025-12-07 21:40:43] ℹ️  Pausing 15s before next institution...
+
+
+[28/72] ======================================================================
+[28/72] Institution: MAMLAKA YA KUZUIA RUSHWA NA UHUJUMU WA UCHUMI ZANZIBAR
+[28/72] ======================================================================
+[2025-12-07 21:40:58] ℹ️  Fetching: MAMLAKA YA KUZUIA RUSHWA NA UHUJUMU WA UCHUMI ZANZIBAR
+[2025-12-07 21:40:58] ℹ️    Using votecode: 035
+[2025-12-07 21:43:55] ✅ MAMLAKA YA KUZUIA RUSHWA NA UHUJUMU WA UCHUMI ZANZIBAR: Fetched 211 employees (2m 56s)
+[2025-12-07 21:43:55] ℹ️  Pausing 15s before next institution...
+
+
+[29/72] ======================================================================
+[29/72] Institution: Mamlaka ya Serikali Mtandao (eGAZ)
+[29/72] ======================================================================
+[2025-12-07 21:44:10] ℹ️  Fetching: Mamlaka ya Serikali Mtandao (eGAZ)
+[2025-12-07 21:44:10] ℹ️    Using votecode: 038
+[2025-12-07 21:45:38] ✅ Mamlaka ya Serikali Mtandao (eGAZ): Fetched 102 employees (1m 28s)
+[2025-12-07 21:45:38] ℹ️  Pausing 15s before next institution...
+
+
+[30/72] ======================================================================
+[30/72] Institution: Mamlaka ya Uwezeshaji Wananchi Kiuchumi (ZEA)
+[30/72] ======================================================================
+[2025-12-07 21:45:53] ℹ️  Fetching: Mamlaka ya Uwezeshaji Wananchi Kiuchumi (ZEA)
+[2025-12-07 21:45:53] ℹ️    Using votecode: 105
+[2025-12-07 21:47:41] ✅ Mamlaka ya Uwezeshaji Wananchi Kiuchumi (ZEA): Fetched 104 employees (1m 47s)
+[2025-12-07 21:47:41] ℹ️  Pausing 15s before next institution...
+
+
+[31/72] ======================================================================
+[31/72] Institution: Ofisi ya Hatimiliki (COSOZA)
+[31/72] ======================================================================
+[2025-12-07 21:47:56] ℹ️  Fetching: Ofisi ya Hatimiliki (COSOZA)
+[2025-12-07 21:47:56] ℹ️    Using votecode: 558
+[2025-12-07 21:48:24] ✅ Ofisi ya Hatimiliki (COSOZA): Fetched 24 employees (0m 27s)
+[2025-12-07 21:48:24] ℹ️  Pausing 15s before next institution...
+
+
+[32/72] ======================================================================
+[32/72] Institution: OFISI YA MAKAMO WA KWANZA WA RAISI
+[32/72] ======================================================================
+[2025-12-07 21:48:39] ℹ️  Fetching: OFISI YA MAKAMO WA KWANZA WA RAISI
+[2025-12-07 21:48:39] ℹ️    Using votecode: 002
+[2025-12-07 21:52:42] ✅ OFISI YA MAKAMO WA KWANZA WA RAISI: Fetched 246 employees (4m 3s)
+[2025-12-07 21:52:42] ℹ️  Pausing 15s before next institution...
+
+
+[33/72] ======================================================================
+[33/72] Institution: OFISI YA MAKAMO WA PILI WA RAISI
+[33/72] ======================================================================
+[2025-12-07 21:52:57] ℹ️  Fetching: OFISI YA MAKAMO WA PILI WA RAISI
+[2025-12-07 21:52:57] ℹ️    Using votecode: 003
+[2025-12-07 21:59:00] ✅ OFISI YA MAKAMO WA PILI WA RAISI: Fetched 360 employees (6m 2s)
+[2025-12-07 21:59:00] ℹ️  Pausing 15s before next institution...
+
+
+[34/72] ======================================================================
+[34/72] Institution: Ofisi ya Mhasibu Mkuu wa Serikali
+[34/72] ======================================================================
+[2025-12-07 21:59:15] ⚠️  Skipping: No vote number or TIN number
+
+[35/72] ======================================================================
+[35/72] Institution: OFISI YA MKAGUZI MKUU WA NDANI WA SERIKALI
+[35/72] ======================================================================
+[2025-12-07 21:59:15] ℹ️  Fetching: OFISI YA MKAGUZI MKUU WA NDANI WA SERIKALI
+[2025-12-07 21:59:15] ℹ️    Using votecode: 052
+[2025-12-07 22:01:46] ✅ OFISI YA MKAGUZI MKUU WA NDANI WA SERIKALI: Fetched 154 employees (2m 31s)
+[2025-12-07 22:01:46] ℹ️  Pausing 15s before next institution...
+
+
+[36/72] ======================================================================
+[36/72] Institution: Ofisi ya Mkaguzi wa Elimu
+[36/72] ======================================================================
+[2025-12-07 22:02:01] ℹ️  Fetching: Ofisi ya Mkaguzi wa Elimu
+[2025-12-07 22:02:01] ℹ️    Using votecode: 546
+[2025-12-07 22:03:56] ✅ Ofisi ya Mkaguzi wa Elimu: Fetched 109 employees (1m 54s)
+[2025-12-07 22:03:56] ℹ️  Pausing 15s before next institution...
+
+
+[37/72] ======================================================================
+[37/72] Institution: Ofisi ya Mkuu wa Mkoa wa Kaskazini Pemba
+[37/72] ======================================================================
+[2025-12-07 22:04:11] ℹ️  Fetching: Ofisi ya Mkuu wa Mkoa wa Kaskazini Pemba
+[2025-12-07 22:04:11] ℹ️    Using votecode: 051
+[2025-12-07 22:04:47] ✅ Ofisi ya Mkuu wa Mkoa wa Kaskazini Pemba: Fetched 35 employees (0m 35s)
+[2025-12-07 22:04:47] ℹ️  Pausing 15s before next institution...
+
+
+[38/72] ======================================================================
+[38/72] Institution: Ofisi ya Mkuu wa Mkoa wa Kaskazini Unguja
+[38/72] ======================================================================
+[2025-12-07 22:05:02] ℹ️  Fetching: Ofisi ya Mkuu wa Mkoa wa Kaskazini Unguja
+[2025-12-07 22:05:02] ℹ️    Using votecode: 048
+[2025-12-07 22:06:15] ✅ Ofisi ya Mkuu wa Mkoa wa Kaskazini Unguja: Fetched 71 employees (1m 12s)
+[2025-12-07 22:06:15] ℹ️  Pausing 15s before next institution...
+
+
+[39/72] ======================================================================
+[39/72] Institution: Ofisi ya Mkuu wa Mkoa wa Kusini Pemba
+[39/72] ======================================================================
+[2025-12-07 22:06:30] ℹ️  Fetching: Ofisi ya Mkuu wa Mkoa wa Kusini Pemba
+[2025-12-07 22:06:30] ℹ️    Using votecode: 050
+[2025-12-07 22:07:21] ✅ Ofisi ya Mkuu wa Mkoa wa Kusini Pemba: Fetched 61 employees (0m 50s)
+[2025-12-07 22:07:21] ℹ️  Pausing 15s before next institution...
+
+
+[40/72] ======================================================================
+[40/72] Institution: Ofisi ya Mkuu wa Mkoa wa Kusini Unguja
+[40/72] ======================================================================
+[2025-12-07 22:07:36] ℹ️  Fetching: Ofisi ya Mkuu wa Mkoa wa Kusini Unguja
+[2025-12-07 22:07:36] ℹ️    Using votecode: 049
+[2025-12-07 22:08:44] ✅ Ofisi ya Mkuu wa Mkoa wa Kusini Unguja: Fetched 74 employees (1m 8s)
+[2025-12-07 22:08:44] ℹ️  Pausing 15s before next institution...
+
+
+[41/72] ======================================================================
+[41/72] Institution: Ofisi ya Mkuu wa Mkoa wa Mjini Magharibi Unguja
+[41/72] ======================================================================
+[2025-12-07 22:08:59] ℹ️  Fetching: Ofisi ya Mkuu wa Mkoa wa Mjini Magharibi Unguja
+[2025-12-07 22:08:59] ℹ️    Using votecode: 047
+[2025-12-07 22:10:01] ✅ Ofisi ya Mkuu wa Mkoa wa Mjini Magharibi Unguja: Fetched 63 employees (1m 2s)
+[2025-12-07 22:10:01] ℹ️  Pausing 15s before next institution...
+
+
+[42/72] ======================================================================
+[42/72] Institution: Ofisi ya Msajili wa Hazina
+[42/72] ======================================================================
+[2025-12-07 22:10:16] ℹ️  Fetching: Ofisi ya Msajili wa Hazina
+[2025-12-07 22:10:16] ℹ️    Using votecode: 106
+[2025-12-07 22:11:12] ✅ Ofisi ya Msajili wa Hazina: Fetched 60 employees (0m 55s)
+[2025-12-07 22:11:12] ℹ️  Pausing 15s before next institution...
+
+
+[43/72] ======================================================================
+[43/72] Institution: OFISI YA MUFTI MKUU WA ZANZIBAR
+[43/72] ======================================================================
+[2025-12-07 22:11:27] ⚠️  Skipping: No vote number or TIN number
+
+[44/72] ======================================================================
+[44/72] Institution: OFISI YA RAIS, FEDHA NA MIPANGO
+[44/72] ======================================================================
+[2025-12-07 22:11:27] ℹ️  Fetching: OFISI YA RAIS, FEDHA NA MIPANGO
+[2025-12-07 22:11:27] ℹ️    Using votecode: 567
+[2025-12-07 22:19:34] ✅ OFISI YA RAIS, FEDHA NA MIPANGO: Fetched 544 employees (8m 7s)
+[2025-12-07 22:19:34] ℹ️  Pausing 15s before next institution...
+
+
+[45/72] ======================================================================
+[45/72] Institution: OFISI YA RAIS - IKULU
+[45/72] ======================================================================
+[2025-12-07 22:19:49] ℹ️  Fetching: OFISI YA RAIS - IKULU
+[2025-12-07 22:19:49] ℹ️    Using votecode: 567
+[2025-12-07 22:25:08] ✅ OFISI YA RAIS - IKULU: Fetched 544 employees (5m 19s)
+[2025-12-07 22:25:08] ℹ️  Pausing 15s before next institution...
+
+
+[46/72] ======================================================================
+[46/72] Institution: OFISI YA RAIS - KATIBA SHERIA UTUMISHI NA UTAWALA BORA
+[46/72] ======================================================================
+[2025-12-07 22:25:23] ℹ️  Fetching: OFISI YA RAIS - KATIBA SHERIA UTUMISHI NA UTAWALA BORA
+[2025-12-07 22:25:23] ℹ️    Using votecode: 005
+[2025-12-07 22:29:54] ✅ OFISI YA RAIS - KATIBA SHERIA UTUMISHI NA UTAWALA BORA: Fetched 282 employees (4m 30s)
+[2025-12-07 22:29:54] ℹ️  Pausing 15s before next institution...
+
+
+[47/72] ======================================================================
+[47/72] Institution: OFISI YA RAIS, TAWALA ZA MIKOA, SERIKALI ZA MITAA NA IDARA MAALUMU ZA SMZ
+[47/72] ======================================================================
+[2025-12-07 22:30:09] ℹ️  Fetching: OFISI YA RAIS, TAWALA ZA MIKOA, SERIKALI ZA MITAA NA IDARA MAALUMU ZA SMZ
+[2025-12-07 22:30:09] ℹ️    Using votecode: 004
+[2025-12-07 22:33:12] ✅ OFISI YA RAIS, TAWALA ZA MIKOA, SERIKALI ZA MITAA NA IDARA MAALUMU ZA SMZ: Fetched 188 employees (3m 3s)
+[2025-12-07 22:33:12] ℹ️  Pausing 15s before next institution...
+
+
+[48/72] ======================================================================
+[48/72] Institution: Skuli ya Sheria Zanzibar
+[48/72] ======================================================================
+[2025-12-07 22:33:27] ℹ️  Fetching: Skuli ya Sheria Zanzibar
+[2025-12-07 22:33:27] ℹ️    Using votecode: 570
+[2025-12-07 22:33:52] ✅ Skuli ya Sheria Zanzibar: Fetched 23 employees (0m 25s)
+[2025-12-07 22:33:52] ℹ️  Pausing 15s before next institution...
+
+
+[49/72] ======================================================================
+[49/72] Institution: TAASISI YA ELIMU ZANZIBAR
+[49/72] ======================================================================
+[2025-12-07 22:34:07] ℹ️  Fetching: TAASISI YA ELIMU ZANZIBAR
+[2025-12-07 22:34:07] ℹ️    Using votecode: 542
+[2025-12-07 22:35:16] ✅ TAASISI YA ELIMU ZANZIBAR: Fetched 72 employees (1m 8s)
+[2025-12-07 22:35:16] ℹ️  Pausing 15s before next institution...
+
+
+[50/72] ======================================================================
+[50/72] Institution: TAASISI YA NYARAKA NA KUMBUKUMBU
+[50/72] ======================================================================
+[2025-12-07 22:35:31] ℹ️  Fetching: TAASISI YA NYARAKA NA KUMBUKUMBU
+[2025-12-07 22:35:31] ℹ️    Using votecode: 057
+[2025-12-07 22:37:03] ✅ TAASISI YA NYARAKA NA KUMBUKUMBU: Fetched 96 employees (1m 31s)
+[2025-12-07 22:37:03] ℹ️  Pausing 15s before next institution...
+
+
+[51/72] ======================================================================
+[51/72] Institution: Taasisi ya Utafiti wa Uvuvi (ZAFIRI)
+[51/72] ======================================================================
+[2025-12-07 22:37:18] ℹ️  Fetching: Taasisi ya Utafiti wa Uvuvi (ZAFIRI)
+[2025-12-07 22:37:18] ℹ️    Using votecode: 526
+[2025-12-07 22:43:03] ✅ Taasisi ya Utafiti wa Uvuvi (ZAFIRI): Fetched 339 employees (5m 45s)
+[2025-12-07 22:43:03] ℹ️  Pausing 15s before next institution...
+
+
+[52/72] ======================================================================
+[52/72] Institution: Tume ya kusimamia Nidhamu
+[52/72] ======================================================================
+[2025-12-07 22:43:18] ⚠️  Skipping: No vote number or TIN number
+
+[53/72] ======================================================================
+[53/72] Institution: TUME YA MAADILI YA VIONGOZI WA UMMA
+[53/72] ======================================================================
+[2025-12-07 22:43:18] ℹ️  Fetching: TUME YA MAADILI YA VIONGOZI WA UMMA
+[2025-12-07 22:43:18] ℹ️    Using votecode: 113
+[2025-12-07 22:44:18] ✅ TUME YA MAADILI YA VIONGOZI WA UMMA: Fetched 80 employees (0m 59s)
+[2025-12-07 22:44:18] ℹ️  Pausing 15s before next institution...
+
+
+[54/72] ======================================================================
+[54/72] Institution: Tume ya Mipango
+[54/72] ======================================================================
+[2025-12-07 22:44:33] ℹ️  Fetching: Tume ya Mipango
+[2025-12-07 22:44:33] ℹ️    Using votecode: 024
+[2025-12-07 22:46:24] ✅ Tume ya Mipango: Fetched 119 employees (1m 51s)
+[2025-12-07 22:46:24] ℹ️  Pausing 15s before next institution...
+
+
+[55/72] ======================================================================
+[55/72] Institution: TUME YA UCHAGUZI YA ZANZIBAR
+[55/72] ======================================================================
+[2025-12-07 22:46:39] ℹ️  Fetching: TUME YA UCHAGUZI YA ZANZIBAR
+[2025-12-07 22:46:39] ℹ️    Using votecode: 031
+[2025-12-07 22:48:18] ✅ TUME YA UCHAGUZI YA ZANZIBAR: Fetched 108 employees (1m 38s)
+[2025-12-07 22:48:18] ℹ️  Pausing 15s before next institution...
+
+
+[56/72] ======================================================================
+[56/72] Institution: Tume ya Ushindani Halali wa Biashara
+[56/72] ======================================================================
+[2025-12-07 22:48:33] ℹ️  Fetching: Tume ya Ushindani Halali wa Biashara
+[2025-12-07 22:48:33] ℹ️    Using votecode: 518
+[2025-12-07 22:49:35] ✅ Tume ya Ushindani Halali wa Biashara: Fetched 66 employees (1m 2s)
+[2025-12-07 22:49:35] ℹ️  Pausing 15s before next institution...
+
+
+[57/72] ======================================================================
+[57/72] Institution: TUME YA UTUMISHI SERIKALINI
+[57/72] ======================================================================
+[2025-12-07 22:49:50] ℹ️  Fetching: TUME YA UTUMISHI SERIKALINI
+[2025-12-07 22:49:50] ℹ️    Using votecode: 037
+[2025-12-07 22:50:27] ✅ TUME YA UTUMISHI SERIKALINI: Fetched 41 employees (0m 37s)
+[2025-12-07 22:50:27] ℹ️  Pausing 15s before next institution...
+
+
+[58/72] ======================================================================
+[58/72] Institution: Wakala wa Barabara
+[58/72] ======================================================================
+[2025-12-07 22:50:42] ℹ️  Fetching: Wakala wa Barabara
+[2025-12-07 22:50:42] ℹ️    Using votecode: 559
+[2025-12-07 22:58:04] ✅ Wakala wa Barabara: Fetched 475 employees (7m 22s)
+[2025-12-07 22:58:04] ℹ️  Pausing 15s before next institution...
+
+
+[59/72] ======================================================================
+[59/72] Institution: WAKALA WA MAJENGO ZANZIBAR
+[59/72] ======================================================================
+[2025-12-07 22:58:19] ℹ️  Fetching: WAKALA WA MAJENGO ZANZIBAR
+[2025-12-07 22:58:19] ℹ️    Using votecode: 522
+[2025-12-07 23:00:46] ✅ WAKALA WA MAJENGO ZANZIBAR: Fetched 161 employees (2m 26s)
+[2025-12-07 23:00:46] ℹ️  Pausing 15s before next institution...
+
+
+[60/72] ======================================================================
+[60/72] Institution: Wakala wa Matrekta
+[60/72] ======================================================================
+[2025-12-07 23:01:01] ℹ️  Fetching: Wakala wa Matrekta
+[2025-12-07 23:01:01] ℹ️    Using votecode: 527
+[2025-12-07 23:02:45] ✅ Wakala wa Matrekta: Fetched 114 employees (1m 43s)
+[2025-12-07 23:02:45] ℹ️  Pausing 15s before next institution...
+
+
+[61/72] ======================================================================
+[61/72] Institution: Wakala wa Vipimo Zanzibar
+[61/72] ======================================================================
+[2025-12-07 23:03:00] ℹ️  Fetching: Wakala wa Vipimo Zanzibar
+[2025-12-07 23:03:00] ℹ️    Using votecode: 519
+[2025-12-07 23:03:23] ✅ Wakala wa Vipimo Zanzibar: Fetched 25 employees (0m 23s)
+[2025-12-07 23:03:23] ℹ️  Pausing 15s before next institution...
+
+
+[62/72] ======================================================================
+[62/72] Institution: WIZARA YA AFYA
+[62/72] ======================================================================
+[2025-12-07 23:03:38] ℹ️  Fetching: WIZARA YA AFYA
+[2025-12-07 23:03:38] ℹ️    Using votecode: 008
+[2025-12-07 23:18:38] ❌ WIZARA YA AFYA: Request timeout - institution data too large
+[2025-12-07 23:18:38] ℹ️  Pausing 15s before next institution...
+
+
+[63/72] ======================================================================
+[63/72] Institution: WIZARA YA ARDHI NA MAENDELEO YA MAKAAZI ZANZIBAR
+[63/72] ======================================================================
+[2025-12-07 23:18:53] ℹ️  Fetching: WIZARA YA ARDHI NA MAENDELEO YA MAKAAZI ZANZIBAR
+[2025-12-07 23:18:53] ℹ️    Using votecode: 014
+[2025-12-07 23:20:48] ✅ WIZARA YA ARDHI NA MAENDELEO YA MAKAAZI ZANZIBAR: Fetched 142 employees (1m 55s)
+[2025-12-07 23:20:48] ℹ️  Pausing 15s before next institution...
+
+
+[64/72] ======================================================================
+[64/72] Institution: WIZARA YA BIASHARA NA MAENDELEO YA VIWANDA
+[64/72] ======================================================================
+[2025-12-07 23:21:03] ℹ️  Fetching: WIZARA YA BIASHARA NA MAENDELEO YA VIWANDA
+[2025-12-07 23:21:03] ℹ️    Using votecode: 017
+[2025-12-07 23:23:12] ✅ WIZARA YA BIASHARA NA MAENDELEO YA VIWANDA: Fetched 151 employees (2m 8s)
+[2025-12-07 23:23:12] ℹ️  Pausing 15s before next institution...
+
+
+[65/72] ======================================================================
+[65/72] Institution: WIZARA YA ELIMU NA MAFUNZO YA AMALI
+[65/72] ======================================================================
+[2025-12-07 23:23:27] ℹ️  Fetching: WIZARA YA ELIMU NA MAFUNZO YA AMALI
+[2025-12-07 23:23:27] ℹ️    Using votecode: 011
+[2025-12-07 23:38:27] ❌ WIZARA YA ELIMU NA MAFUNZO YA AMALI: Request timeout - institution data too large
+[2025-12-07 23:38:27] ℹ️  Pausing 15s before next institution...
+
+
+[66/72] ======================================================================
+[66/72] Institution: WIZARA YA HABARI, VIJANA, UTAMADUNI NA MICHEZO
+[66/72] ======================================================================
+[2025-12-07 23:38:42] ℹ️  Fetching: WIZARA YA HABARI, VIJANA, UTAMADUNI NA MICHEZO
+[2025-12-07 23:38:42] ℹ️    Using votecode: 018
+[2025-12-07 23:45:35] ✅ WIZARA YA HABARI, VIJANA, UTAMADUNI NA MICHEZO: Fetched 504 employees (6m 52s)
+[2025-12-07 23:45:35] ℹ️  Pausing 15s before next institution...
+
+
+[67/72] ======================================================================
+[67/72] Institution: WIZARA YA KILIMO UMWAGILIAJI MALIASILI NA MIFUGO
+[67/72] ======================================================================
+[2025-12-07 23:45:50] ℹ️  Fetching: WIZARA YA KILIMO UMWAGILIAJI MALIASILI NA MIFUGO
+[2025-12-07 23:45:50] ℹ️    Using votecode: 012
+[2025-12-08 00:00:50] ❌ WIZARA YA KILIMO UMWAGILIAJI MALIASILI NA MIFUGO: Request timeout - institution data too large
+[2025-12-08 00:00:50] ℹ️  Pausing 15s before next institution...
+
+
+[68/72] ======================================================================
+[68/72] Institution: WIZARA YA MAENDELEO YA JAMII,JINSIA,WAZEE NA WATOTO
+[68/72] ======================================================================
+[2025-12-08 00:01:05] ℹ️  Fetching: WIZARA YA MAENDELEO YA JAMII,JINSIA,WAZEE NA WATOTO
+[2025-12-08 00:01:05] ℹ️    Using votecode: 019
+[2025-12-08 00:06:26] ✅ WIZARA YA MAENDELEO YA JAMII,JINSIA,WAZEE NA WATOTO: Fetched 322 employees (5m 21s)
+[2025-12-08 00:06:26] ℹ️  Pausing 15s before next institution...
+
+
+[69/72] ======================================================================
+[69/72] Institution: WIZARA YA MAJI NISHATI NA MADINI
+[69/72] ======================================================================
+[2025-12-08 00:06:41] ℹ️  Fetching: WIZARA YA MAJI NISHATI NA MADINI
+[2025-12-08 00:06:41] ℹ️    Using votecode: 015
+[2025-12-08 00:09:38] ✅ WIZARA YA MAJI NISHATI NA MADINI: Fetched 216 employees (2m 56s)
+[2025-12-08 00:09:38] ℹ️  Pausing 15s before next institution...
+
+
+[70/72] ======================================================================
+[70/72] Institution: WIZARA YA UCHUMI WA BULUU NA UVUVI
+[70/72] ======================================================================
+[2025-12-08 00:09:53] ℹ️  Fetching: WIZARA YA UCHUMI WA BULUU NA UVUVI
+[2025-12-08 00:09:53] ℹ️    Using votecode: 013
+[2025-12-08 00:14:09] ✅ WIZARA YA UCHUMI WA BULUU NA UVUVI: Fetched 308 employees (4m 15s)
+[2025-12-08 00:14:09] ℹ️  Pausing 15s before next institution...
+
+
+[71/72] ======================================================================
+[71/72] Institution: WIZARA YA UJENZI MAWASILIANO NA UCHUKUZI
+[71/72] ======================================================================
+[2025-12-08 00:14:24] ℹ️  Fetching: WIZARA YA UJENZI MAWASILIANO NA UCHUKUZI
+[2025-12-08 00:14:24] ℹ️    Using votecode: 016
+[2025-12-08 00:17:52] ✅ WIZARA YA UJENZI MAWASILIANO NA UCHUKUZI: Fetched 204 employees (3m 28s)
+[2025-12-08 00:17:52] ℹ️  Pausing 15s before next institution...
+
+
+[72/72] ======================================================================
+[72/72] Institution: WIZARA YA UTALII NA MAMBO YA KALE
+[72/72] ======================================================================
+[2025-12-08 00:18:07] ℹ️  Fetching: WIZARA YA UTALII NA MAMBO YA KALE
+[2025-12-08 00:18:07] ℹ️    Using votecode: 010
+[2025-12-08 00:22:54] ✅ WIZARA YA UTALII NA MAMBO YA KALE: Fetched 307 employees (4m 47s)
+
+================================================================================
+  📊 FETCH SUMMARY
+================================================================================
+Completed at: 2025-12-08 00:22:54
+Total duration: 227m 38s
+
+Total institutions: 72
+✅ Successfully fetched: 61
+❌ Failed: 4
+⏭️  Skipped (no identifier): 7
+👥 Total employees fetched: 10030
+⏱️  Average fetch time: 3m 14s
+================================================================================
+
+✅ Successful Fetches:
+--------------------------------------------------------------------------------
+  1. OFISI YA RAIS, FEDHA NA MIPANGO                       544 employees (votecode: 567) [8m 7s]
+  2. OFISI YA RAIS - IKULU                                 544 employees (votecode: 567) [5m 19s]
+  3. WIZARA YA HABARI, VIJANA, UTAMADUNI NA MICHEZO        504 employees (votecode: 018) [6m 52s]
+  4. Wakala wa Barabara                                    475 employees (votecode: 559) [7m 22s]
+  5. Baraza la Manispaa Mjini Unguja                       456 employees (votecode: 202) [6m 58s]
+  6. OFISI YA MAKAMO WA PILI WA RAISI                      360 employees (votecode: 003) [6m 2s]
+  7. Taasisi ya Utafiti wa Uvuvi (ZAFIRI)                  339 employees (votecode: 526) [5m 45s]
+  8. WIZARA YA MAENDELEO YA JAMII,JINSIA,WAZEE NA WATOTO    322 employees (votecode: 019) [5m 21s]
+  9. WIZARA YA UCHUMI WA BULUU NA UVUVI                    308 employees (votecode: 013) [4m 15s]
+ 10. WIZARA YA UTALII NA MAMBO YA KALE                     307 employees (votecode: 010) [4m 47s]
+ 11. OFISI YA RAIS - KATIBA SHERIA UTUMISHI NA UTAWALA BORA    282 employees (votecode: 005) [4m 30s]
+ 12. OFISI YA MAKAMO WA KWANZA WA RAISI                    246 employees (votecode: 002) [4m 3s]
+ 13. Baraza la Mji Chake Chake                             220 employees (votecode: 210) [3m 16s]
+ 14. WIZARA YA MAJI NISHATI NA MADINI                      216 employees (votecode: 015) [2m 56s]
+ 15. MAMLAKA YA KUZUIA RUSHWA NA UHUJUMU WA UCHUMI ZANZIBAR    211 employees (votecode: 035) [2m 56s]
+ 16. WIZARA YA UJENZI MAWASILIANO NA UCHUKUZI              204 employees (votecode: 016) [3m 28s]
+ 17. KAMISHENI YA ARDHI ZANZIBAR                           198 employees (votecode: 520) [2m 56s]
+ 18. OFISI YA RAIS, TAWALA ZA MIKOA, SERIKALI ZA MITAA NA IDARA MAALUMU ZA SMZ    188 employees (votecode: 004) [3m 3s]
+ 19. AFISI YA RAISI KAZI, UCHUMI NA UWEKEZAJI              183 employees (votecode: 006) [2m 57s]
+ 20. Baraza la Manispaa Magharibi B                        168 employees (votecode: 204) [2m 35s]
+ 21. Baraza la Mji Wete                                    168 employees (votecode: 211) [2m 20s]
+ 22. WAKALA WA MAJENGO ZANZIBAR                            161 employees (votecode: 522) [2m 26s]
+ 23. Baraza la Mji Kaskazini A Unguja                      155 employees (votecode: 207) [2m 18s]
+ 24. OFISI YA MKAGUZI MKUU WA NDANI WA SERIKALI            154 employees (votecode: 052) [2m 31s]
+ 25. AFISI YA MKURUGENZI WA MASHTAKA                       153 employees (votecode: 029) [2m 20s]
+ 26. Baraza la Mji Kaskazini B Unguja                      153 employees (votecode: 208) [2m 21s]
+ 27. WIZARA YA BIASHARA NA MAENDELEO YA VIWANDA            151 employees (votecode: 017) [2m 8s]
+ 28. Baraza la Manispaa Magharibi A                        148 employees (votecode: 203) [2m 16s]
+ 29. AFISI YA MWANASHERIA MKUU                             146 employees (votecode: 028) [2m 20s]
+ 30. WIZARA YA ARDHI NA MAENDELEO YA MAKAAZI ZANZIBAR      142 employees (votecode: 014) [1m 55s]
+ 31. Tume ya Mipango                                       119 employees (votecode: 024) [1m 51s]
+ 32. Wakala wa Matrekta                                    114 employees (votecode: 527) [1m 43s]
+ 33. Baraza la Mji Mkoani                                  112 employees (votecode: 209) [1m 44s]
+ 34. Ofisi ya Mkaguzi wa Elimu                             109 employees (votecode: 546) [1m 54s]
+ 35. TUME YA UCHAGUZI YA ZANZIBAR                          108 employees (votecode: 031) [1m 38s]
+ 36. Mamlaka ya Uwezeshaji Wananchi Kiuchumi (ZEA)         104 employees (votecode: 105) [1m 47s]
+ 37. Mamlaka ya Serikali Mtandao (eGAZ)                    102 employees (votecode: 038) [1m 28s]
+ 38. TAASISI YA NYARAKA NA KUMBUKUMBU                       96 employees (votecode: 057) [1m 31s]
+ 39. Kamisheni ya Kazi                                      93 employees (votecode: 573) [1m 21s]
+ 40. Bodi ya Huduma za Maktaba                              89 employees (votecode: 543) [1m 15s]
+ 41. Halmashauri ya Wilaya ya Micheweni                     83 employees (votecode: 212) [1m 5s]
+ 42. TUME YA MAADILI YA VIONGOZI WA UMMA                    80 employees (votecode: 113) [0m 59s]
+ 43. Baraza la Mitihani                                     75 employees (votecode: 547) [1m 8s]
+ 44. Ofisi ya Mkuu wa Mkoa wa Kusini Unguja                 74 employees (votecode: 049) [1m 8s]
+ 45. Halmashauri ya Wilaya ya Kusini Unguja                 73 employees (votecode: 206) [1m 6s]
+ 46. TAASISI YA ELIMU ZANZIBAR                              72 employees (votecode: 542) [1m 8s]
+ 47. Ofisi ya Mkuu wa Mkoa wa Kaskazini Unguja              71 employees (votecode: 048) [1m 12s]
+ 48. Tume ya Ushindani Halali wa Biashara                   66 employees (votecode: 518) [1m 2s]
+ 49. MAMLAKA YA KUDHIBITI NA KUPAMBANA NA DAWA ZA KULEVYA ZANZIBAR     63 employees (votecode: 032) [0m 59s]
+ 50. Ofisi ya Mkuu wa Mkoa wa Mjini Magharibi Unguja        63 employees (votecode: 047) [1m 2s]
+ 51. Ofisi ya Mkuu wa Mkoa wa Kusini Pemba                  61 employees (votecode: 050) [0m 50s]
+ 52. Ofisi ya Msajili wa Hazina                             60 employees (votecode: 106) [0m 55s]
+ 53. Baraza la Mji Kati Unguja                              59 employees (votecode: 205) [1m 31s]
+ 54. KAMISHENI YA UTUMISHI WA UMMA                          53 employees (votecode: 036) [0m 40s]
+ 55. KAMISHENI YA KUKABILIANA NA MAAFA ZANZIBAR             51 employees (votecode: 510) [0m 54s]
+ 56. TUME YA UTUMISHI SERIKALINI                            41 employees (votecode: 037) [0m 37s]
+ 57. Ofisi ya Mkuu wa Mkoa wa Kaskazini Pemba               35 employees (votecode: 051) [0m 35s]
+ 58. Baraza la Jiji                                         26 employees (votecode: 201) [0m 26s]
+ 59. Wakala wa Vipimo Zanzibar                              25 employees (votecode: 519) [0m 23s]
+ 60. Ofisi ya Hatimiliki (COSOZA)                           24 employees (votecode: 558) [0m 27s]
+ 61. Skuli ya Sheria Zanzibar                               23 employees (votecode: 570) [0m 25s]
+
+❌ Failed Fetches:
+--------------------------------------------------------------------------------
+  1. Chuo cha Kiislamu - No identifier available
+  2. Hospitali ya Mnazi Mmoja - Request timeout - institution data too large
+  3. JKU - No identifier available
+  4. KAMISHENI YA UTALII ZANZIBAR - No identifier available
+  5. Magereza - No identifier available
+  6. Ofisi ya Mhasibu Mkuu wa Serikali - No identifier available
+  7. OFISI YA MUFTI MKUU WA ZANZIBAR - No identifier available
+  8. Tume ya kusimamia Nidhamu - No identifier available
+  9. WIZARA YA AFYA - Request timeout - institution data too large
+ 10. WIZARA YA ELIMU NA MAFUNZO YA AMALI - Request timeout - institution data too large
+ 11. WIZARA YA KILIMO UMWAGILIAJI MALIASILI NA MIFUGO - Request timeout - institution data too large
+
+================================================================================
+📊 Total Employees in Database: 8,446
+================================================================================
+

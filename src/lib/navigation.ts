@@ -23,6 +23,8 @@ import {
   Building,
   Download,
   Activity,
+  Camera,
+  FileText,
 } from 'lucide-react';
 import type { NavItem, Role } from './types';
 import { ROLES } from './constants';
@@ -60,6 +62,20 @@ export const NAV_ITEMS: NavItem[] = [
             icon: Download,
             roles: [ROLES.ADMIN as Role],
             description: 'Fetch employee data from HRIMS system.'
+        },
+        {
+            title: 'Get Photos',
+            href: '/dashboard/admin/get-photo',
+            icon: Camera,
+            roles: [ROLES.ADMIN as Role],
+            description: 'Bulk fetch employee photos from HRIMS by institution.'
+        },
+        {
+            title: 'Get Documents',
+            href: '/dashboard/admin/get-documents',
+            icon: FileText,
+            roles: [ROLES.ADMIN as Role],
+            description: 'Bulk fetch employee documents and certificates from HRIMS.'
         },
         {
             title: 'Test HRIMS',

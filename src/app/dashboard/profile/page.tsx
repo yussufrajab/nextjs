@@ -104,9 +104,59 @@ const EmployeeDetailsCard = ({ emp, onBack, userRole, userInstitutionId }: { emp
   });
 
   const [certificates, setCertificates] = useState(emp.certificates || []);
+  const [profileImageUrl, setProfileImageUrl] = useState(emp.profileImageUrl);
+  const [isFetchingPhoto, setIsFetchingPhoto] = useState(false);
 
   // Check if user can upload documents (HRO or CSC roles)
   const canUploadDocuments = userRole && ['HRO', 'HHRMD', 'HRMO', 'DO', 'CSCS', 'PO', 'ADMIN'].includes(userRole);
+
+  // Auto-fetch photo from HRIMS if not already stored
+  useEffect(() => {
+    const fetchPhotoFromHRIMS = async () => {
+      // Only fetch if:
+      // 1. Photo is missing, OR
+      // 2. Photo doesn't start with "data:image" (base64) or "/api/files/employee-photos/" (MinIO)
+      // 3. Employee has a payroll number
+      const hasExistingPhoto = profileImageUrl &&
+        (profileImageUrl.startsWith('data:image') || profileImageUrl.startsWith('/api/files/employee-photos/'));
+
+      if (!hasExistingPhoto && emp.payrollNumber && !isFetchingPhoto) {
+        setIsFetchingPhoto(true);
+
+        try {
+          console.log(`Fetching photo from HRIMS for employee ${emp.name}...`);
+
+          const response = await fetch(`/api/employees/${emp.id}/fetch-photo`, {
+            method: 'POST'
+          });
+
+          const result = await response.json();
+
+          if (result.success && result.data.photoUrl) {
+            setProfileImageUrl(result.data.photoUrl);
+
+            // Show success toast only if photo was newly fetched
+            if (!result.data.alreadyExists) {
+              toast({
+                title: "Photo Updated",
+                description: `Profile photo fetched from HRIMS successfully`,
+              });
+            }
+          } else if (response.status === 404) {
+            console.log('No photo available in HRIMS for this employee');
+          } else {
+            console.error('Failed to fetch photo:', result.message);
+          }
+        } catch (error) {
+          console.error('Error fetching photo from HRIMS:', error);
+        } finally {
+          setIsFetchingPhoto(false);
+        }
+      }
+    };
+
+    fetchPhotoFromHRIMS();
+  }, [emp.id, emp.payrollNumber, profileImageUrl]); // Removed isFetchingPhoto to prevent infinite loop
 
   const handleDocumentUploadSuccess = (documentType: string, documentUrl: string) => {
     setDocumentUrls(prev => ({
@@ -137,10 +187,17 @@ const EmployeeDetailsCard = ({ emp, onBack, userRole, userInstitutionId }: { emp
           <span className="sr-only">Back to list</span>
         </Button>
         <div className="flex-grow text-center pr-8">
-            <Avatar className="h-24 w-24 mb-4 shadow-md mx-auto">
-            <AvatarImage src={emp.profileImageUrl || `https://placehold.co/100x100.png?text=${getInitials(emp.name)}`} alt={emp.name} data-ai-hint="employee photo"/>
-            <AvatarFallback>{getInitials(emp.name)}</AvatarFallback>
-            </Avatar>
+            <div className="relative inline-block">
+              <Avatar className="h-24 w-24 mb-4 shadow-md mx-auto">
+                <AvatarImage src={profileImageUrl || `https://placehold.co/100x100.png?text=${getInitials(emp.name)}`} alt={emp.name} data-ai-hint="employee photo"/>
+                <AvatarFallback>{getInitials(emp.name)}</AvatarFallback>
+              </Avatar>
+              {isFetchingPhoto && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full mb-4">
+                  <Loader2 className="h-8 w-8 animate-spin text-white" />
+                </div>
+              )}
+            </div>
             <CardTitle className="text-2xl font-headline">{emp.name}</CardTitle>
             <CardDescription>ZanID: {emp.zanId} | Status: <span className={`font-semibold ${getStatusColor(emp.status)}`}>{emp.status || 'N/A'}</span></CardDescription>
         </div>
@@ -463,9 +520,9 @@ export default function ProfilePage() {
             <CardContent className="space-y-4">
                 <div>
                   <Label htmlFor="search">Search</Label>
-                  <Input 
+                  <Input
                     id="search"
-                    placeholder="Search by name, ZAN-ID, institution, or rank..."
+                    placeholder="Search by name, ZAN-ID, payroll number, institution, or rank..."
                     value={searchTerm}
                     onChange={e => setSearchTerm(e.target.value)}
                   />
@@ -546,7 +603,7 @@ export default function ProfilePage() {
                             <TableHead>Gender</TableHead>
                             <TableHead>ZAN-ID</TableHead>
                             <TableHead>Institution</TableHead>
-                            <TableHead>Rank</TableHead>
+                            <TableHead>Payroll Number</TableHead>
                             <TableHead>Status</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -558,7 +615,7 @@ export default function ProfilePage() {
                                     <TableCell>{emp.gender}</TableCell>
                                     <TableCell>{emp.zanId}</TableCell>
                                     <TableCell>{emp.Institution?.name || 'N/A'}</TableCell>
-                                    <TableCell>{emp.cadre || 'N/A'}</TableCell>
+                                    <TableCell>{emp.payrollNumber || 'N/A'}</TableCell>
                                     <TableCell>
                                       <span className={`font-medium ${getStatusColor(emp.status)}`}>
                                         {emp.status || 'N/A'}

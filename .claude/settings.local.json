@@ -108,7 +108,9 @@
       "WebFetch(domain:10.0.225.14)",
       "Bash(xargs:*)",
       "Bash(ls:*)",
-      "Bash(tail:*)"
+      "Bash(tail:*)",
+      "Bash(git stash:*)",
+      "Bash(tee:*)"
     ],
     "deny": []
   }
