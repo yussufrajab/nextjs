@@ -11,8 +11,10 @@ interface TestParameters {
   pageNumber?: number;
   pageSize?: number;
   payrollNumber?: string;
+  photoSearchCriteria?: string;
   voteCode?: string;
   tinNumber?: string;
+  documentsSearchCriteria?: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -28,109 +30,17 @@ export async function POST(request: NextRequest) {
   const pageNumber = params.pageNumber ?? 0;
   const pageSize = params.pageSize ?? 10; // Use smaller default for testing to avoid timeouts
   const payrollNumber = params.payrollNumber ?? '536151';
+  const photoSearchCriteria = params.photoSearchCriteria ?? '111660';
   const voteCode = params.voteCode ?? '004';
   const tinNumber = params.tinNumber ?? '119060370';
+  const documentsSearchCriteria = params.documentsSearchCriteria ?? '149391';
 
   const testResults = {
     timestamp: new Date().toISOString(),
     tests: [] as any[]
   };
 
-  // Test 1: Get list of employees
-  console.log('🔍 Testing HRIMS API - Get list of employees...');
-  console.log(`Parameters: PageNumber=${pageNumber}, PageSize=${pageSize}`);
-
-  const listEmployeesPayload = {
-    RequestId: "201",
-    RequestPayloadData: {
-      PageNumber: pageNumber,
-      PageSize: pageSize
-    }
-  };
-
-  testResults.tests.push({
-    name: 'Get list of employees',
-    status: 'running',
-    details: `Testing employee list retrieval with RequestId: 201, PageNumber: ${pageNumber}, PageSize: ${pageSize}`,
-    requestPayload: listEmployeesPayload,
-    endpoint: `${HRIMS_CONFIG.BASE_URL}/Employees`,
-    headers: {
-      'ApiKey': HRIMS_CONFIG.API_KEY,
-      'Token': HRIMS_CONFIG.TOKEN,
-      'Content-Type': 'application/json'
-    }
-  });
-
-  try {
-    console.log('📤 Sending employee list request:', listEmployeesPayload);
-
-    const response = await fetch(`${HRIMS_CONFIG.BASE_URL}/Employees`, {
-      method: 'POST',
-      headers: {
-        'ApiKey': HRIMS_CONFIG.API_KEY,
-        'Token': HRIMS_CONFIG.TOKEN,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(listEmployeesPayload),
-      signal: AbortSignal.timeout(30000) // 30 second timeout
-    });
-
-    console.log(`📥 Response status: ${response.status} ${response.statusText}`);
-
-    if (response.ok) {
-      const data = await response.json();
-      console.log('✅ Employee list API responded successfully');
-
-      testResults.tests[0] = {
-        ...testResults.tests[0],
-        status: 'success',
-        details: `Successfully retrieved employee list from HRIMS API (Page ${pageNumber}, Size ${pageSize})`,
-        responsePayload: data,
-        responseInfo: {
-          status: response.status,
-          statusText: response.statusText,
-          headers: Object.fromEntries(response.headers.entries()),
-          dataStructure: {
-            hasData: !!data,
-            dataKeys: data ? Object.keys(data) : [],
-            dataType: typeof data,
-            responseSize: JSON.stringify(data).length
-          }
-        }
-      };
-
-    } else {
-      const errorText = await response.text();
-      console.error('❌ Employee list API error:', errorText);
-
-      testResults.tests[0] = {
-        ...testResults.tests[0],
-        status: 'failed',
-        details: `Employee list API returned error status ${response.status}`,
-        responsePayload: errorText,
-        responseInfo: {
-          status: response.status,
-          statusText: response.statusText,
-          headers: Object.fromEntries(response.headers.entries())
-        }
-      };
-    }
-
-  } catch (error) {
-    console.error('🚨 Employee list connection failed:', error);
-
-    testResults.tests[0] = {
-      ...testResults.tests[0],
-      status: 'failed',
-      details: 'Failed to connect to HRIMS API for employee list',
-      error: {
-        name: error instanceof Error ? error.name : 'Unknown Error',
-        message: error instanceof Error ? error.message : 'Unknown error occurred'
-      }
-    };
-  }
-
-  // Test 2: Get information about a single employee by PayrollNumber
+  // Test 1: Get information about a single employee by PayrollNumber
   console.log('🔍 Testing HRIMS API - Get single employee by PayrollNumber...');
   console.log(`Parameters: PayrollNumber=${payrollNumber}`);
 
@@ -174,8 +84,8 @@ export async function POST(request: NextRequest) {
       const data = await response.json();
       console.log('✅ Specific employee fetch successful');
 
-      testResults.tests[1] = {
-        ...testResults.tests[1],
+      testResults.tests[0] = {
+        ...testResults.tests[0],
         status: 'success',
         details: `Successfully fetched specific employee data for payroll# ${payrollNumber} from HRIMS API`,
         responsePayload: data,
@@ -195,8 +105,8 @@ export async function POST(request: NextRequest) {
       const errorText = await response.text();
       console.error('❌ Specific employee API error:', errorText);
 
-      testResults.tests[1] = {
-        ...testResults.tests[1],
+      testResults.tests[0] = {
+        ...testResults.tests[0],
         status: 'failed',
         details: `Single employee API returned error status ${response.status}`,
         responsePayload: errorText,
@@ -211,8 +121,8 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('🚨 Specific employee connection failed:', error);
 
-    testResults.tests[1] = {
-      ...testResults.tests[1],
+    testResults.tests[0] = {
+      ...testResults.tests[0],
       status: 'failed',
       details: 'Failed to connect to HRIMS API for specific employee',
       error: {
@@ -222,19 +132,19 @@ export async function POST(request: NextRequest) {
     };
   }
 
-  // Test 3: Get employee photo
+  // Test 2: Get employee photo
   console.log('🔍 Testing HRIMS API - Get employee photo...');
-  console.log(`Parameters: PayrollNumber=${payrollNumber}`);
+  console.log(`Parameters: SearchCriteria=${photoSearchCriteria}`);
 
   const photoPayload = {
     RequestId: "203",
-    SearchCriteria: "111660"
+    SearchCriteria: photoSearchCriteria
   };
 
   testResults.tests.push({
     name: 'Get employee photo',
     status: 'running',
-    details: `Testing employee photo retrieval with RequestId: 203, SearchCriteria: 111660`,
+    details: `Testing employee photo retrieval with RequestId: 203, SearchCriteria: ${photoSearchCriteria}`,
     requestPayload: photoPayload,
     endpoint: `${HRIMS_CONFIG.BASE_URL}/Employees`,
     headers: {
@@ -264,10 +174,10 @@ export async function POST(request: NextRequest) {
       const data = await response.json();
       console.log('✅ Photo fetch successful');
 
-      testResults.tests[2] = {
-        ...testResults.tests[2],
+      testResults.tests[1] = {
+        ...testResults.tests[1],
         status: 'success',
-        details: `Successfully fetched employee photo with SearchCriteria: 111660 from HRIMS API`,
+        details: `Successfully fetched employee photo with SearchCriteria: ${photoSearchCriteria} from HRIMS API`,
         responsePayload: data,
         responseInfo: {
           status: response.status,
@@ -287,8 +197,8 @@ export async function POST(request: NextRequest) {
       const errorText = await response.text();
       console.error('❌ Photo API error:', errorText);
 
-      testResults.tests[2] = {
-        ...testResults.tests[2],
+      testResults.tests[1] = {
+        ...testResults.tests[1],
         status: 'failed',
         details: `Employee photo API returned error status ${response.status}`,
         responsePayload: errorText,
@@ -303,8 +213,8 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('🚨 Photo fetch connection failed:', error);
 
-    testResults.tests[2] = {
-      ...testResults.tests[2],
+    testResults.tests[1] = {
+      ...testResults.tests[1],
       status: 'failed',
       details: 'Failed to connect to HRIMS API for employee photo',
       error: {
@@ -314,7 +224,7 @@ export async function POST(request: NextRequest) {
     };
   }
 
-  // Test 4: Get employees by Vote Code (with pagination)
+  // Test 3: Get employees by Vote Code (with pagination)
   console.log('🔍 Testing HRIMS API - Get employees by Vote Code...');
   console.log(`Parameters: VoteCode=${voteCode}, PageNumber=${pageNumber}, PageSize=${pageSize}`);
 
@@ -360,8 +270,8 @@ export async function POST(request: NextRequest) {
       const data = await response.json();
       console.log('✅ Vote code fetch successful');
 
-      testResults.tests[3] = {
-        ...testResults.tests[3],
+      testResults.tests[2] = {
+        ...testResults.tests[2],
         status: 'success',
         details: `Successfully fetched employees for vote code ${voteCode} from HRIMS API (Page ${data.currentPage || pageNumber}, ${data?.data?.length || 0} records)`,
         responsePayload: data,
@@ -387,8 +297,8 @@ export async function POST(request: NextRequest) {
       const errorText = await response.text();
       console.error('❌ Vote code API error:', errorText);
 
-      testResults.tests[3] = {
-        ...testResults.tests[3],
+      testResults.tests[2] = {
+        ...testResults.tests[2],
         status: 'failed',
         details: `Vote code API returned error status ${response.status}`,
         responsePayload: errorText,
@@ -403,8 +313,8 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('🚨 Vote code fetch connection failed:', error);
 
-    testResults.tests[3] = {
-      ...testResults.tests[3],
+    testResults.tests[2] = {
+      ...testResults.tests[2],
       status: 'failed',
       details: 'Failed to connect to HRIMS API for vote code fetch',
       error: {
@@ -414,7 +324,7 @@ export async function POST(request: NextRequest) {
     };
   }
 
-  // Test 5: Get employees by TIN Number (with pagination)
+  // Test 4: Get employees by TIN Number (with pagination)
   console.log('🔍 Testing HRIMS API - Get employees by TIN Number...');
   console.log(`Parameters: TINNumber=${tinNumber}, PageNumber=${pageNumber}, PageSize=${pageSize}`);
 
@@ -460,8 +370,8 @@ export async function POST(request: NextRequest) {
       const data = await response.json();
       console.log('✅ TIN fetch successful');
 
-      testResults.tests[4] = {
-        ...testResults.tests[4],
+      testResults.tests[3] = {
+        ...testResults.tests[3],
         status: 'success',
         details: `Successfully fetched employees for TIN ${tinNumber} from HRIMS API (Page ${data.currentPage || pageNumber}, ${data?.data?.length || 0} records)`,
         responsePayload: data,
@@ -487,8 +397,8 @@ export async function POST(request: NextRequest) {
       const errorText = await response.text();
       console.error('❌ TIN API error:', errorText);
 
-      testResults.tests[4] = {
-        ...testResults.tests[4],
+      testResults.tests[3] = {
+        ...testResults.tests[3],
         status: 'failed',
         details: `TIN API returned error status ${response.status}`,
         responsePayload: errorText,
@@ -503,8 +413,8 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('🚨 TIN fetch connection failed:', error);
 
-    testResults.tests[4] = {
-      ...testResults.tests[4],
+    testResults.tests[3] = {
+      ...testResults.tests[3],
       status: 'failed',
       details: 'Failed to connect to HRIMS API for TIN fetch',
       error: {
@@ -514,19 +424,19 @@ export async function POST(request: NextRequest) {
     };
   }
 
-  // Test 6: Get employee documents by PayrollNumber
+  // Test 5: Get employee documents by PayrollNumber
   console.log('🔍 Testing HRIMS API - Get employee documents...');
-  console.log(`Parameters: PayrollNumber=${payrollNumber}`);
+  console.log(`Parameters: SearchCriteria=${documentsSearchCriteria}`);
 
   const documentsPayload = {
     RequestId: "206",
-    SearchCriteria: "149391"
+    SearchCriteria: documentsSearchCriteria
   };
 
   testResults.tests.push({
     name: 'Get employee documents',
     status: 'running',
-    details: `Testing employee document retrieval with RequestId: 206, PayrollNumber: 149391`,
+    details: `Testing employee document retrieval with RequestId: 206, SearchCriteria: ${documentsSearchCriteria}`,
     requestPayload: documentsPayload,
     endpoint: `${HRIMS_CONFIG.BASE_URL}/Employees`,
     headers: {
@@ -556,10 +466,10 @@ export async function POST(request: NextRequest) {
       const data = await response.json();
       console.log('✅ Employee documents API responded successfully');
 
-      testResults.tests[5] = {
-        ...testResults.tests[5],
+      testResults.tests[4] = {
+        ...testResults.tests[4],
         status: 'success',
-        details: `Successfully retrieved employee documents from HRIMS API for payroll number 149391`,
+        details: `Successfully retrieved employee documents from HRIMS API for SearchCriteria ${documentsSearchCriteria}`,
         responsePayload: data,
         responseInfo: {
           status: response.status,
@@ -578,8 +488,8 @@ export async function POST(request: NextRequest) {
       const errorText = await response.text();
       console.error('❌ Employee documents API error:', errorText);
 
-      testResults.tests[5] = {
-        ...testResults.tests[5],
+      testResults.tests[4] = {
+        ...testResults.tests[4],
         status: 'failed',
         details: `Employee documents API returned error status ${response.status}`,
         responsePayload: errorText,
@@ -594,8 +504,8 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('🚨 Employee documents fetch connection failed:', error);
 
-    testResults.tests[5] = {
-      ...testResults.tests[5],
+    testResults.tests[4] = {
+      ...testResults.tests[4],
       status: 'failed',
       details: 'Failed to connect to HRIMS API for employee documents',
       error: {

@@ -27,8 +27,10 @@ interface TestParameters {
   pageNumber: number;
   pageSize: number;
   payrollNumber: string;
+  photoSearchCriteria: string;
   voteCode: string;
   tinNumber: string;
+  documentsSearchCriteria: string;
 }
 
 export default function TestHRIMSPage() {
@@ -40,8 +42,10 @@ export default function TestHRIMSPage() {
     pageNumber: 0,
     pageSize: 10,
     payrollNumber: '536151',
+    photoSearchCriteria: '111660',
     voteCode: '004',
-    tinNumber: '119060370'
+    tinNumber: '119060370',
+    documentsSearchCriteria: '149391'
   });
 
   const runHRIMSTests = async () => {
@@ -139,20 +143,69 @@ export default function TestHRIMSPage() {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div className="space-y-2">
-              <Label htmlFor="pageNumber">Page Number (Test 1)</Label>
+              <Label htmlFor="payrollNumber">Payroll Number (Test 1)</Label>
               <Input
-                id="pageNumber"
-                type="number"
-                min="0"
-                value={parameters.pageNumber}
-                onChange={(e) => setParameters({ ...parameters, pageNumber: parseInt(e.target.value) || 0 })}
-                placeholder="0"
+                id="payrollNumber"
+                type="text"
+                value={parameters.payrollNumber}
+                onChange={(e) => setParameters({ ...parameters, payrollNumber: e.target.value })}
+                placeholder="536151"
               />
-              <p className="text-xs text-gray-500">For employee list pagination</p>
+              <p className="text-xs text-gray-500">For specific employee data</p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="pageSize">Page Size (Tests 1, 4, 5)</Label>
+              <Label htmlFor="photoSearchCriteria">Photo Search (Test 2)</Label>
+              <Input
+                id="photoSearchCriteria"
+                type="text"
+                value={parameters.photoSearchCriteria}
+                onChange={(e) => setParameters({ ...parameters, photoSearchCriteria: e.target.value })}
+                placeholder="111660"
+              />
+              <p className="text-xs text-gray-500">Employee ID for photo</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="voteCode">Vote Code (Test 3)</Label>
+              <Input
+                id="voteCode"
+                type="text"
+                value={parameters.voteCode}
+                onChange={(e) => setParameters({ ...parameters, voteCode: e.target.value })}
+                placeholder="004"
+              />
+              <p className="text-xs text-gray-500">Institution vote code</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div className="space-y-2">
+              <Label htmlFor="tinNumber">TIN Number (Test 4)</Label>
+              <Input
+                id="tinNumber"
+                type="text"
+                value={parameters.tinNumber}
+                onChange={(e) => setParameters({ ...parameters, tinNumber: e.target.value })}
+                placeholder="119060370"
+              />
+              <p className="text-xs text-gray-500">Institution TIN</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="documentsSearchCriteria">Documents Search (Test 5)</Label>
+              <Input
+                id="documentsSearchCriteria"
+                type="text"
+                value={parameters.documentsSearchCriteria}
+                onChange={(e) => setParameters({ ...parameters, documentsSearchCriteria: e.target.value })}
+                placeholder="149391"
+              />
+              <p className="text-xs text-gray-500">Employee ID for documents</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="pageSize">Page Size (Tests 3, 4)</Label>
               <Input
                 id="pageSize"
                 type="number"
@@ -162,45 +215,22 @@ export default function TestHRIMSPage() {
                 onChange={(e) => setParameters({ ...parameters, pageSize: parseInt(e.target.value) || 10 })}
                 placeholder="10"
               />
-              <p className="text-xs text-gray-500">Records per page (10-20 recommended for testing, larger values may timeout)</p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="payrollNumber">Payroll Number (Tests 2 & 3)</Label>
-              <Input
-                id="payrollNumber"
-                type="text"
-                value={parameters.payrollNumber}
-                onChange={(e) => setParameters({ ...parameters, payrollNumber: e.target.value })}
-                placeholder="536151"
-              />
-              <p className="text-xs text-gray-500">Employee payroll number</p>
+              <p className="text-xs text-gray-500">Records per page</p>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="voteCode">Vote Code (Test 4)</Label>
+              <Label htmlFor="pageNumber">Page Number (Tests 3, 4)</Label>
               <Input
-                id="voteCode"
-                type="text"
-                value={parameters.voteCode}
-                onChange={(e) => setParameters({ ...parameters, voteCode: e.target.value })}
-                placeholder="004"
+                id="pageNumber"
+                type="number"
+                min="0"
+                value={parameters.pageNumber}
+                onChange={(e) => setParameters({ ...parameters, pageNumber: parseInt(e.target.value) || 0 })}
+                placeholder="0"
               />
-              <p className="text-xs text-gray-500">Institution vote code for fetching employees</p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="tinNumber">TIN Number (Test 5)</Label>
-              <Input
-                id="tinNumber"
-                type="text"
-                value={parameters.tinNumber}
-                onChange={(e) => setParameters({ ...parameters, tinNumber: e.target.value })}
-                placeholder="119060370"
-              />
-              <p className="text-xs text-gray-500">Institution TIN for fetching employees</p>
+              <p className="text-xs text-gray-500">For pagination</p>
             </div>
           </div>
         </CardContent>
@@ -231,15 +261,14 @@ export default function TestHRIMSPage() {
           <div className="mt-4 text-sm text-gray-600">
             <p><strong>Tests will verify:</strong></p>
             <ul className="list-disc list-inside mt-2 space-y-1">
-              <li>Basic connectivity to HRIMS API (http://10.0.217.11:8135)</li>
-              <li>Employee list fetching (RequestId: 201) - with page {parameters.pageNumber}, size {parameters.pageSize}</li>
-              <li>Specific employee data fetching (RequestId: 202) - for payroll# {parameters.payrollNumber}</li>
-              <li>Employee photo fetching (RequestId: 203) - for payroll# {parameters.payrollNumber}</li>
-              <li>Employees by Vote Code (RequestId: 204) - paginated (page {parameters.pageNumber}, size {parameters.pageSize}) for votecode {parameters.voteCode}</li>
-              <li>Employees by TIN Number (RequestId: 205) - paginated (page {parameters.pageNumber}, size {parameters.pageSize}) for TIN {parameters.tinNumber}</li>
+              <li><strong>Test 1:</strong> Specific employee data fetching (RequestId: 202) - for payroll# {parameters.payrollNumber}</li>
+              <li><strong>Test 2:</strong> Employee photo fetching (RequestId: 203) - for ID {parameters.photoSearchCriteria}</li>
+              <li><strong>Test 3:</strong> Employees by Vote Code (RequestId: 204) - paginated (page {parameters.pageNumber}, size {parameters.pageSize}) for votecode {parameters.voteCode}</li>
+              <li><strong>Test 4:</strong> Employees by TIN Number (RequestId: 205) - paginated (page {parameters.pageNumber}, size {parameters.pageSize}) for TIN {parameters.tinNumber}</li>
+              <li><strong>Test 5:</strong> Employee documents fetching (RequestId: 206) - for ID {parameters.documentsSearchCriteria}</li>
             </ul>
             <p className="mt-3 text-blue-700 font-medium">
-              💡 Tests 4 & 5 now include pagination metadata (overallDataSize, currentDataSize, currentPage) in the response.
+              💡 Tests 3 & 4 include pagination metadata (overallDataSize, currentDataSize, currentPage) in the response.
             </p>
             <p className="mt-2 text-amber-700 text-xs">
               ⚠️ Use page size 10-20 for testing. Larger values may cause timeouts for institutions with many employees. The actual fetch operation will automatically loop through all pages.
