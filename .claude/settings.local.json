@@ -110,7 +110,8 @@
       "Bash(ls:*)",
       "Bash(tail:*)",
       "Bash(git stash:*)",
-      "Bash(tee:*)"
+      "Bash(tee:*)",
+      "Bash(sudo iptables:*)"
     ],
     "deny": []
   }
