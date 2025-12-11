@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { db as prisma } from '@/lib/db';
+import { uploadFile } from '@/lib/minio';
 
 // HRIMS API Configuration
 const HRIMS_CONFIG = {
@@ -76,13 +75,15 @@ export async function POST(request: NextRequest) {
         continue;
       }
 
-      // Check if photo already exists
-      if (profileImageUrl && profileImageUrl.startsWith('data:image')) {
+      // Check if photo already exists (either base64 or MinIO URL)
+      if (profileImageUrl &&
+          (profileImageUrl.startsWith('data:image') ||
+           profileImageUrl.startsWith('/api/files/employee-photos/'))) {
         results.push({
           employeeName: name,
           payrollNumber,
           status: 'skipped',
-          message: 'Photo already exists'
+          message: 'Photo already exists in storage'
         });
         skippedCount++;
         continue;
@@ -146,27 +147,67 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
-        // Ensure proper data URI format
-        let photoDataUri = photoBase64;
-        if (!photoBase64.startsWith('data:image')) {
-          photoDataUri = `data:image/jpeg;base64,${photoBase64}`;
+        // Convert base64 to buffer
+        let base64Data = photoBase64;
+        let mimeType = 'image/jpeg'; // default
+
+        // Extract base64 data if it has data URI prefix
+        if (photoBase64.startsWith('data:image')) {
+          const matches = photoBase64.match(/^data:([^;]+);base64,(.+)$/);
+          if (matches) {
+            mimeType = matches[1];
+            base64Data = matches[2];
+          }
         }
 
-        // Store photo in database
+        const photoBuffer = Buffer.from(base64Data, 'base64');
+
+        // Determine file extension
+        const extensionMap: { [key: string]: string } = {
+          'image/jpeg': 'jpg',
+          'image/jpg': 'jpg',
+          'image/png': 'png',
+          'image/gif': 'gif',
+          'image/webp': 'webp'
+        };
+        const extension = extensionMap[mimeType.toLowerCase()] || 'jpg';
+
+        // Upload to MinIO
+        const fileName = `${id}.${extension}`;
+        const filePath = `employee-photos/${fileName}`;
+
+        try {
+          await uploadFile(photoBuffer, filePath, mimeType);
+          console.log(`💾 Photo uploaded to MinIO: ${filePath}`);
+        } catch (uploadError) {
+          console.error(`❌ Failed to upload photo to MinIO for ${name}:`, uploadError);
+          results.push({
+            employeeName: name,
+            payrollNumber,
+            status: 'failed',
+            message: 'Failed to upload photo to storage'
+          });
+          failedCount++;
+          continue;
+        }
+
+        // Store MinIO URL in database
+        const minioUrl = `/api/files/employee-photos/${fileName}`;
+
         await prisma.employee.update({
           where: { id: id },
-          data: { profileImageUrl: photoDataUri }
+          data: { profileImageUrl: minioUrl }
         });
 
         results.push({
           employeeName: name,
           payrollNumber,
           status: 'success',
-          message: 'Photo fetched and stored'
+          message: 'Photo fetched and stored in MinIO'
         });
         successCount++;
 
-        console.log(`✅ Photo stored for ${name} (${payrollNumber})`);
+        console.log(`✅ Photo stored in MinIO for ${name} (${payrollNumber})`);
 
       } catch (error) {
         results.push({

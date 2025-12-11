@@ -31,6 +31,7 @@ interface TestParameters {
   voteCode: string;
   tinNumber: string;
   documentsSearchCriteria: string;
+  selectedTests: string[]; // Array of test IDs to run
 }
 
 export default function TestHRIMSPage() {
@@ -45,17 +46,56 @@ export default function TestHRIMSPage() {
     photoSearchCriteria: '111660',
     voteCode: '004',
     tinNumber: '119060370',
-    documentsSearchCriteria: '149391'
+    documentsSearchCriteria: '149391',
+    selectedTests: ['test1', 'test2', 'test3', 'test4', 'test5'] // All tests by default
   });
 
+  // Toggle test selection
+  const toggleTest = (testId: string) => {
+    setParameters(prev => ({
+      ...prev,
+      selectedTests: prev.selectedTests.includes(testId)
+        ? prev.selectedTests.filter(id => id !== testId)
+        : [...prev.selectedTests, testId]
+    }));
+  };
+
+  // Select/deselect all tests
+  const toggleAllTests = () => {
+    setParameters(prev => ({
+      ...prev,
+      selectedTests: prev.selectedTests.length === 5 ? [] : ['test1', 'test2', 'test3', 'test4', 'test5']
+    }));
+  };
+
+  // Quick select presets
+  const selectOnlyTest5 = () => {
+    setParameters(prev => ({ ...prev, selectedTests: ['test5'] }));
+  };
+
+  const selectQuickTests = () => {
+    setParameters(prev => ({ ...prev, selectedTests: ['test1', 'test2'] }));
+  };
+
   const runHRIMSTests = async () => {
+    // Validate that at least one test is selected
+    if (parameters.selectedTests.length === 0) {
+      toast({
+        title: "No Tests Selected",
+        description: "Please select at least one test to run",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsRunning(true);
     setTestResults(null);
 
     try {
+      const testCount = parameters.selectedTests.length;
       toast({
         title: "Running Tests",
-        description: "Testing HRIMS API connectivity and data fetching...",
+        description: `Testing ${testCount} selected HRIMS API ${testCount === 1 ? 'endpoint' : 'endpoints'}...`,
       });
 
       const response = await fetch('/api/hrims/test', {
@@ -72,11 +112,11 @@ export default function TestHRIMSPage() {
 
       const result = await response.json();
 
-      if (result.success) {
+      if (result.success && result.data) {
         setTestResults(result.data);
 
-        const successCount = result.data.tests.filter((t: TestResult) => t.status === 'success').length;
-        const totalCount = result.data.tests.length;
+        const successCount = result.data.tests?.filter((t: TestResult) => t && t.status === 'success').length || 0;
+        const totalCount = result.data.tests?.length || 0;
 
         toast({
           title: "Tests Completed",
@@ -131,6 +171,158 @@ export default function TestHRIMSPage() {
         title="Test HRIMS Integration"
         description="Test connectivity and data fetching from the HRIMS external API with custom parameters"
       />
+
+      {/* Test Selection */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Select Tests to Run</CardTitle>
+          <CardDescription>
+            Choose which HRIMS API tests to execute. Run tests individually to avoid server overload.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2 pb-3 border-b">
+              <input
+                type="checkbox"
+                id="select-all"
+                checked={parameters.selectedTests.length === 5}
+                onChange={toggleAllTests}
+                className="h-4 w-4 rounded border-gray-300"
+              />
+              <Label htmlFor="select-all" className="font-semibold cursor-pointer">
+                Select/Deselect All Tests
+              </Label>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-gray-50">
+                <input
+                  type="checkbox"
+                  id="test1"
+                  checked={parameters.selectedTests.includes('test1')}
+                  onChange={() => toggleTest('test1')}
+                  className="h-4 w-4 rounded border-gray-300 mt-1"
+                />
+                <div className="flex-1">
+                  <Label htmlFor="test1" className="font-medium cursor-pointer">
+                    Test 1: Single Employee Data
+                  </Label>
+                  <p className="text-xs text-gray-500 mt-1">RequestId: 202 - Fetch employee by payroll number</p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-gray-50">
+                <input
+                  type="checkbox"
+                  id="test2"
+                  checked={parameters.selectedTests.includes('test2')}
+                  onChange={() => toggleTest('test2')}
+                  className="h-4 w-4 rounded border-gray-300 mt-1"
+                />
+                <div className="flex-1">
+                  <Label htmlFor="test2" className="font-medium cursor-pointer">
+                    Test 2: Employee Photo
+                  </Label>
+                  <p className="text-xs text-gray-500 mt-1">RequestId: 203 - Fetch employee photo</p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-gray-50">
+                <input
+                  type="checkbox"
+                  id="test3"
+                  checked={parameters.selectedTests.includes('test3')}
+                  onChange={() => toggleTest('test3')}
+                  className="h-4 w-4 rounded border-gray-300 mt-1"
+                />
+                <div className="flex-1">
+                  <Label htmlFor="test3" className="font-medium cursor-pointer">
+                    Test 3: Employees by Vote Code
+                  </Label>
+                  <p className="text-xs text-gray-500 mt-1">RequestId: 204 - Paginated fetch (can be slow)</p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-gray-50">
+                <input
+                  type="checkbox"
+                  id="test4"
+                  checked={parameters.selectedTests.includes('test4')}
+                  onChange={() => toggleTest('test4')}
+                  className="h-4 w-4 rounded border-gray-300 mt-1"
+                />
+                <div className="flex-1">
+                  <Label htmlFor="test4" className="font-medium cursor-pointer">
+                    Test 4: Employees by TIN Number
+                  </Label>
+                  <p className="text-xs text-gray-500 mt-1">RequestId: 205 - Paginated fetch (can be slow)</p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-gray-50 md:col-span-2">
+                <input
+                  type="checkbox"
+                  id="test5"
+                  checked={parameters.selectedTests.includes('test5')}
+                  onChange={() => toggleTest('test5')}
+                  className="h-4 w-4 rounded border-gray-300 mt-1"
+                />
+                <div className="flex-1">
+                  <Label htmlFor="test5" className="font-medium cursor-pointer">
+                    Test 5: Employee Documents (RequestId 206)
+                  </Label>
+                  <p className="text-xs text-gray-500 mt-1">RequestId: 206 - Fetch employee documents (works best when run alone)</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="border-t pt-4 mt-2">
+              <p className="text-sm font-medium mb-2">Quick Select:</p>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={selectOnlyTest5}
+                  className="text-xs"
+                >
+                  Only Test 5 (Documents)
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={selectQuickTests}
+                  className="text-xs"
+                >
+                  Quick Tests (1 & 2)
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={toggleAllTests}
+                  className="text-xs"
+                >
+                  {parameters.selectedTests.length === 5 ? 'Deselect All' : 'Select All'}
+                </Button>
+              </div>
+            </div>
+
+            {parameters.selectedTests.length > 0 && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <p className="text-sm text-blue-800">
+                  <strong>{parameters.selectedTests.length}</strong> test{parameters.selectedTests.length !== 1 ? 's' : ''} selected
+                  {parameters.selectedTests.length > 1 && (
+                    <span className="ml-2 text-blue-600">• Tests will run sequentially with delays between them</span>
+                  )}
+                </p>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Test Parameters Configuration */}
       <Card className="mb-6">
@@ -278,7 +470,7 @@ export default function TestHRIMSPage() {
       </Card>
 
       {/* Test Results */}
-      {testResults && (
+      {testResults && testResults.tests && testResults.tests.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle>Test Results</CardTitle>
@@ -287,7 +479,7 @@ export default function TestHRIMSPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {testResults.tests.map((test, index) => (
+            {testResults.tests?.filter(test => test != null).map((test, index) => (
               <div key={index} className="border rounded-lg p-4">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">

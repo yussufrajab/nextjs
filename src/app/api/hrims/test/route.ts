@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Utility function to add delay between tests
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 // HRIMS API Configuration
 const HRIMS_CONFIG = {
   BASE_URL: "http://10.0.217.11:8135/api",
@@ -15,6 +18,7 @@ interface TestParameters {
   voteCode?: string;
   tinNumber?: string;
   documentsSearchCriteria?: string;
+  selectedTests?: string[]; // Array of test IDs to run
 }
 
 export async function POST(request: NextRequest) {
@@ -34,13 +38,17 @@ export async function POST(request: NextRequest) {
   const voteCode = params.voteCode ?? '004';
   const tinNumber = params.tinNumber ?? '119060370';
   const documentsSearchCriteria = params.documentsSearchCriteria ?? '149391';
+  const selectedTests = params.selectedTests ?? ['test1', 'test2', 'test3', 'test4', 'test5'];
 
   const testResults = {
     timestamp: new Date().toISOString(),
     tests: [] as any[]
   };
 
+  console.log(`🧪 Running selected tests: ${selectedTests.join(', ')}`);
+
   // Test 1: Get information about a single employee by PayrollNumber
+  if (selectedTests.includes('test1')) {
   console.log('🔍 Testing HRIMS API - Get single employee by PayrollNumber...');
   console.log(`Parameters: PayrollNumber=${payrollNumber}`);
 
@@ -132,7 +140,15 @@ export async function POST(request: NextRequest) {
     };
   }
 
+  // Wait before next test if more tests are selected
+  if (selectedTests.filter(t => ['test2', 'test3', 'test4', 'test5'].includes(t)).length > 0) {
+    console.log('⏳ Waiting 2 seconds before next test...');
+    await delay(2000);
+  }
+  } // End test1
+
   // Test 2: Get employee photo
+  if (selectedTests.includes('test2')) {
   console.log('🔍 Testing HRIMS API - Get employee photo...');
   console.log(`Parameters: SearchCriteria=${photoSearchCriteria}`);
 
@@ -224,7 +240,15 @@ export async function POST(request: NextRequest) {
     };
   }
 
+  // Wait before next test if more tests are selected
+  if (selectedTests.filter(t => ['test3', 'test4', 'test5'].includes(t)).length > 0) {
+    console.log('⏳ Waiting 2 seconds before next test...');
+    await delay(2000);
+  }
+  } // End test2
+
   // Test 3: Get employees by Vote Code (with pagination)
+  if (selectedTests.includes('test3')) {
   console.log('🔍 Testing HRIMS API - Get employees by Vote Code...');
   console.log(`Parameters: VoteCode=${voteCode}, PageNumber=${pageNumber}, PageSize=${pageSize}`);
 
@@ -324,7 +348,15 @@ export async function POST(request: NextRequest) {
     };
   }
 
+  // Wait longer after heavy paginated query if more tests are selected
+  if (selectedTests.filter(t => ['test4', 'test5'].includes(t)).length > 0) {
+    console.log('⏳ Waiting 3 seconds before next test (after heavy paginated query)...');
+    await delay(3000);
+  }
+  } // End test3
+
   // Test 4: Get employees by TIN Number (with pagination)
+  if (selectedTests.includes('test4')) {
   console.log('🔍 Testing HRIMS API - Get employees by TIN Number...');
   console.log(`Parameters: TINNumber=${tinNumber}, PageNumber=${pageNumber}, PageSize=${pageSize}`);
 
@@ -424,7 +456,15 @@ export async function POST(request: NextRequest) {
     };
   }
 
+  // Wait longer after heavy paginated query before testing documents if test5 is selected
+  if (selectedTests.includes('test5')) {
+    console.log('⏳ Waiting 5 seconds before document test (critical - let HRIMS server fully recover)...');
+    await delay(5000);
+  }
+  } // End test4
+
   // Test 5: Get employee documents by PayrollNumber
+  if (selectedTests.includes('test5')) {
   console.log('🔍 Testing HRIMS API - Get employee documents...');
   console.log(`Parameters: SearchCriteria=${documentsSearchCriteria}`);
 
@@ -457,7 +497,7 @@ export async function POST(request: NextRequest) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(documentsPayload),
-      signal: AbortSignal.timeout(480000) // 2 minute timeout for document retrieval
+      signal: AbortSignal.timeout(60000) // 60 second timeout for document retrieval (same as employee page)
     });
 
     console.log(`📥 Response status: ${response.status} ${response.statusText}`);
@@ -514,8 +554,9 @@ export async function POST(request: NextRequest) {
       }
     };
   }
+  } // End test5
 
-  console.log('🏁 All HRIMS API tests completed');
+  console.log(`🏁 Completed ${testResults.tests.length} HRIMS API test(s)`);
 
   return NextResponse.json({
     success: true,

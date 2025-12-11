@@ -82,17 +82,8 @@ const getStatusColor = (status?: string | null) => {
   }
 };
 
-const CERTIFICATE_ORDER: string[] = [
-  'Certificate of primary education',
-  'Certificate of Secondary education (Form IV)',
-  'Advanced Certificate of Secondary education (Form VII)', 
-  'Certificate',
-  'Diploma',
-  'Advanced Diploma',
-  'Bachelor Degree',
-  'Master Degree',
-  'PHd'
-];
+// Removed predefined certificate order - we now display all certificates
+// from HRIMS with their original names, including duplicates with numeric suffixes
 
 // Component to render the detailed profile view
 const EmployeeDetailsCard = ({ emp, onBack, userRole, userInstitutionId }: { emp: Employee, onBack: () => void, userRole?: string, userInstitutionId?: string }) => {
@@ -106,6 +97,19 @@ const EmployeeDetailsCard = ({ emp, onBack, userRole, userInstitutionId }: { emp
   const [certificates, setCertificates] = useState(emp.certificates || []);
   const [profileImageUrl, setProfileImageUrl] = useState(emp.profileImageUrl);
   const [isFetchingPhoto, setIsFetchingPhoto] = useState(false);
+  const [isFetchingDocuments, setIsFetchingDocuments] = useState(false);
+
+  // Sync state with emp prop when it changes (e.g., after data refresh)
+  useEffect(() => {
+    setDocumentUrls({
+      'ardhil-hali': emp.ardhilHaliUrl,
+      'confirmation-letter': emp.confirmationLetterUrl,
+      'job-contract': emp.jobContractUrl,
+      'birth-certificate': emp.birthCertificateUrl
+    });
+    setCertificates(emp.certificates || []);
+    setProfileImageUrl(emp.profileImageUrl);
+  }, [emp.id, emp.ardhilHaliUrl, emp.confirmationLetterUrl, emp.jobContractUrl, emp.birthCertificateUrl, emp.certificates, emp.profileImageUrl]);
 
   // Check if user can upload documents (HRO or CSC roles)
   const canUploadDocuments = userRole && ['HRO', 'HHRMD', 'HRMO', 'DO', 'CSCS', 'PO', 'ADMIN'].includes(userRole);
@@ -158,6 +162,87 @@ const EmployeeDetailsCard = ({ emp, onBack, userRole, userInstitutionId }: { emp
     fetchPhotoFromHRIMS();
   }, [emp.id, emp.payrollNumber, profileImageUrl]); // Removed isFetchingPhoto to prevent infinite loop
 
+  // Auto-fetch documents from HRIMS if not already stored
+  useEffect(() => {
+    const fetchDocumentsFromHRIMS = async () => {
+      // Only fetch if:
+      // 1. Any document is missing or not from MinIO
+      // 2. Employee has a payroll number
+      const hasAllDocuments =
+        documentUrls['ardhil-hali']?.startsWith('/api/files/employee-documents/') &&
+        documentUrls['confirmation-letter']?.startsWith('/api/files/employee-documents/') &&
+        documentUrls['job-contract']?.startsWith('/api/files/employee-documents/') &&
+        documentUrls['birth-certificate']?.startsWith('/api/files/employee-documents/');
+
+      if (!hasAllDocuments && emp.payrollNumber && !isFetchingDocuments) {
+        setIsFetchingDocuments(true);
+
+        try {
+          console.log(`Fetching documents from HRIMS for employee ${emp.name}...`);
+
+          const response = await fetch(`/api/employees/${emp.id}/fetch-documents`, {
+            method: 'POST'
+          });
+
+          const result = await response.json();
+
+          if (result.success && result.data) {
+            // Update document URLs with fetched documents
+            if (result.data.documentsStored) {
+              setDocumentUrls(prev => ({
+                ...prev,
+                ...{
+                  'ardhil-hali': result.data.documentsStored.ardhilHali || prev['ardhil-hali'],
+                  'confirmation-letter': result.data.documentsStored.confirmationLetter || prev['confirmation-letter'],
+                  'job-contract': result.data.documentsStored.jobContract || prev['job-contract'],
+                  'birth-certificate': result.data.documentsStored.birthCertificate || prev['birth-certificate']
+                }
+              }));
+            }
+
+            // Update certificates if any were fetched
+            if (result.data.certificatesStored && result.data.certificatesStored.length > 0) {
+              setCertificates(prev => {
+                // Add all new certificates from HRIMS without replacing existing ones
+                // Each certificate has a unique type (including numeric suffixes for duplicates)
+                const newCerts = [...prev];
+                result.data.certificatesStored.forEach((newCert: any) => {
+                  // Check if this exact certificate (by ID) already exists
+                  const existingIndex = newCerts.findIndex(c => c.id === newCert.id);
+                  if (existingIndex >= 0) {
+                    // Update existing certificate
+                    newCerts[existingIndex] = newCert;
+                  } else {
+                    // Add new certificate
+                    newCerts.push(newCert);
+                  }
+                });
+                return newCerts;
+              });
+            }
+
+            if (result.data.totalProcessed > 0) {
+              toast({
+                title: "Documents Updated",
+                description: `${result.data.totalProcessed} document(s) fetched from HRIMS successfully`,
+              });
+            }
+          } else if (response.status === 404) {
+            console.log('No documents available in HRIMS for this employee');
+          } else {
+            console.error('Failed to fetch documents:', result.message);
+          }
+        } catch (error) {
+          console.error('Error fetching documents from HRIMS:', error);
+        } finally {
+          setIsFetchingDocuments(false);
+        }
+      }
+    };
+
+    fetchDocumentsFromHRIMS();
+  }, [emp.id, emp.payrollNumber]); // Only trigger when employee changes
+
   const handleDocumentUploadSuccess = (documentType: string, documentUrl: string) => {
     setDocumentUrls(prev => ({
       ...prev,
@@ -167,10 +252,17 @@ const EmployeeDetailsCard = ({ emp, onBack, userRole, userInstitutionId }: { emp
 
   const handleCertificateUploadSuccess = (certificate: any) => {
     setCertificates(prev => {
-      // Remove existing certificate of the same type if any
-      const filtered = prev.filter(cert => cert.type !== certificate.type);
-      // Add the new certificate
-      return [...filtered, certificate];
+      // Check if this exact certificate (by ID) already exists
+      const existingIndex = prev.findIndex(cert => cert.id === certificate.id);
+      if (existingIndex >= 0) {
+        // Update existing certificate
+        const updated = [...prev];
+        updated[existingIndex] = certificate;
+        return updated;
+      } else {
+        // Add new certificate
+        return [...prev, certificate];
+      }
     });
   };
 
@@ -252,6 +344,12 @@ const EmployeeDetailsCard = ({ emp, onBack, userRole, userInstitutionId }: { emp
         <div className="flex items-center mb-4">
           <FileText className="h-6 w-6 mr-3 text-primary" />
           <h3 className="text-xl font-semibold font-headline text-foreground">Employee Documents</h3>
+          {isFetchingDocuments && (
+            <div className="ml-auto flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Fetching documents from HRIMS...</span>
+            </div>
+          )}
         </div>
         <Card className="bg-secondary/20 shadow-sm mb-6">
           <CardHeader className="pb-3 pt-4">
@@ -318,14 +416,14 @@ const EmployeeDetailsCard = ({ emp, onBack, userRole, userInstitutionId }: { emp
              )}
            </CardHeader>
           <CardContent className="pt-0 pb-4 space-y-3">
-            {CERTIFICATE_ORDER.map((certType) => {
-              const cert = certificates.find(c => c.type === certType);
-              return (
+            {/* Display all certificates with their original HRIMS names */}
+            {certificates && certificates.length > 0 ? (
+              certificates.map((cert) => (
                 <CertificateUpload
-                  key={certType}
+                  key={cert.id}
                   employeeId={emp.id}
-                  certificateType={certType}
-                  certificateTitle={certType}
+                  certificateType={cert.type}
+                  certificateTitle={cert.type}
                   currentCertificate={cert}
                   canUpload={canUploadDocuments || false}
                   userRole={userRole}
@@ -333,8 +431,12 @@ const EmployeeDetailsCard = ({ emp, onBack, userRole, userInstitutionId }: { emp
                   onUploadSuccess={handleCertificateUploadSuccess}
                   onDeleteSuccess={handleCertificateDeleteSuccess}
                 />
-              );
-            })}
+              ))
+            ) : (
+              <div className="text-sm text-muted-foreground italic text-center py-4">
+                No certificates available. {canUploadDocuments ? 'Upload certificates or they will be automatically fetched from HRIMS if available.' : 'Certificates will be automatically fetched from HRIMS if available.'}
+              </div>
+            )}
           </CardContent>
         </Card>
       </section>

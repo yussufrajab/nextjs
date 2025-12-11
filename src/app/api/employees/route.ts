@@ -83,9 +83,16 @@ export async function GET(req: Request) {
 
     console.log(`Found ${employees.length} employees out of ${total} total`);
 
+    // Map EmployeeCertificate to certificates to match TypeScript interface
+    const mappedEmployees = employees.map(emp => ({
+      ...emp,
+      certificates: emp.EmployeeCertificate,
+      EmployeeCertificate: undefined
+    }));
+
     return NextResponse.json({
       success: true,
-      data: employees,
+      data: mappedEmployees,
       pagination: {
         page,
         size,

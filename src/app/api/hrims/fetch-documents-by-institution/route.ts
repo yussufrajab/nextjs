@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { db as prisma } from '@/lib/db';
 import { uploadFile } from '@/lib/minio';
 
-const prisma = new PrismaClient();
+// Utility function to add delay between requests
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 // HRIMS API Configuration
 const HRIMS_CONFIG = {
@@ -29,16 +30,17 @@ interface DocumentResult {
   message?: string;
 }
 
-// Fetch document from HRIMS
-async function fetchDocumentFromHRIMS(
-  requestId: string,
+// Fetch documents from HRIMS using RequestId 206
+async function fetchDocumentsFromHRIMS(
   payrollNumber: string
-): Promise<{ success: boolean; data?: string; error?: string }> {
+): Promise<{ success: boolean; data?: any; error?: string }> {
   try {
     const payload = {
-      RequestId: requestId,
+      RequestId: "206",
       SearchCriteria: payrollNumber
     };
+
+    console.log(`Fetching documents for payroll number: ${payrollNumber}`);
 
     const response = await fetch(`${HRIMS_CONFIG.BASE_URL}/Employees`, {
       method: 'POST',
@@ -48,7 +50,7 @@ async function fetchDocumentFromHRIMS(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(payload),
-      signal: AbortSignal.timeout(30000) // 30 second timeout
+      signal: AbortSignal.timeout(60000) // 60 second timeout for documents
     });
 
     if (!response.ok) {
@@ -56,27 +58,10 @@ async function fetchDocumentFromHRIMS(
     }
 
     const hrimsData = await response.json();
+    console.log(`HRIMS Response for ${payrollNumber}:`, JSON.stringify(hrimsData).substring(0, 200) + '...');
 
-    // Extract document data - try different possible structures
-    let documentData: string | null = null;
-
-    if (hrimsData.data && typeof hrimsData.data === 'string') {
-      documentData = hrimsData.data;
-    } else if (hrimsData.data && hrimsData.data.Document) {
-      documentData = hrimsData.data.Document;
-    } else if (hrimsData.Document) {
-      documentData = hrimsData.Document;
-    } else if (hrimsData.data && hrimsData.data.FileContent) {
-      documentData = hrimsData.data.FileContent;
-    } else if (hrimsData.FileContent) {
-      documentData = hrimsData.FileContent;
-    }
-
-    if (!documentData) {
-      return { success: false, error: 'No document data in response' };
-    }
-
-    return { success: true, data: documentData };
+    // Return the full response data for processing
+    return { success: true, data: hrimsData };
   } catch (error) {
     return {
       success: false,
@@ -118,12 +103,12 @@ async function storeDocumentInMinIO(
   }
 }
 
-// Process documents for a single employee
+// Process documents for a single employee using RequestId 206
 async function processEmployeeDocuments(
   employee: {
     id: string;
     name: string;
-    payrollNumber: string;
+    payrollNumber: string | null;
     ardhilHaliUrl: string | null;
     confirmationLetterUrl: string | null;
     jobContractUrl: string | null;
@@ -133,52 +118,128 @@ async function processEmployeeDocuments(
   const result: DocumentResult = {
     employeeId: employee.id,
     employeeName: employee.name,
-    payrollNumber: employee.payrollNumber,
+    payrollNumber: employee.payrollNumber || 'N/A',
     documentsStored: {},
     certificatesStored: [],
     status: 'failed',
   };
 
-  let successCount = 0;
-  let attemptCount = 0;
+  // Skip if no payroll number
+  if (!employee.payrollNumber) {
+    result.message = 'No payroll number available';
+    return result;
+  }
 
-  // Document types to fetch (RequestId mapping)
-  const documentTypes = [
-    { name: 'ardhilHali', requestId: '204', field: 'ardhilHaliUrl', current: employee.ardhilHaliUrl },
-    { name: 'confirmationLetter', requestId: '205', field: 'confirmationLetterUrl', current: employee.confirmationLetterUrl },
-    { name: 'jobContract', requestId: '206', field: 'jobContractUrl', current: employee.jobContractUrl },
-    { name: 'birthCertificate', requestId: '207', field: 'birthCertificateUrl', current: employee.birthCertificateUrl },
-  ];
+  // Fetch documents from HRIMS using RequestId 206
+  const fetchResult = await fetchDocumentsFromHRIMS(employee.payrollNumber);
 
+  if (!fetchResult.success || !fetchResult.data) {
+    result.message = fetchResult.error || 'Failed to fetch documents from HRIMS';
+    return result;
+  }
+
+  const hrimsData = fetchResult.data;
   const updateData: any = {};
+  let documentsProcessed = 0;
 
-  // Fetch each document type
-  for (const docType of documentTypes) {
-    // Skip if already exists in MinIO
-    if (docType.current && docType.current.startsWith('/api/files/employee-documents/')) {
+  // Extract documents data from response - it's an array of attachment objects
+  const attachments = Array.isArray(hrimsData.data) ? hrimsData.data : [];
+
+  if (attachments.length === 0) {
+    result.message = 'No documents found in HRIMS response';
+    return result;
+  }
+
+  console.log(`Found ${attachments.length} attachments for ${employee.name}`);
+
+  // Document type mapping: HRIMS attachmentType -> Database field
+  const documentTypeMapping: Record<string, { field: string; dbKey: string; label: string }> = {
+    'ardhilhali': { field: 'ardhilHaliUrl', dbKey: 'ardhilHali', label: 'Ardhil Hali' },
+    'ardhilhaliurl': { field: 'ardhilHaliUrl', dbKey: 'ardhilHali', label: 'Ardhil Hali' },
+    'comfirmationletter': { field: 'confirmationLetterUrl', dbKey: 'confirmationLetter', label: 'Confirmation Letter' },
+    'confirmationletter': { field: 'confirmationLetterUrl', dbKey: 'confirmationLetter', label: 'Confirmation Letter' },
+    'employmentcontract': { field: 'jobContractUrl', dbKey: 'jobContract', label: 'Job Contract' },
+    'jobcontract': { field: 'jobContractUrl', dbKey: 'jobContract', label: 'Job Contract' },
+    'birthcertificate': { field: 'birthCertificateUrl', dbKey: 'birthCertificate', label: 'Birth Certificate' },
+  };
+
+  // Process each attachment
+  for (const attachment of attachments) {
+    const attachmentType = attachment.attachmentType || '';
+    const attachmentContent = attachment.attachmentContent || '';
+
+    if (!attachmentContent) {
       continue;
     }
 
-    attemptCount++;
+    // Normalize attachment type for matching
+    const normalizedType = attachmentType.toLowerCase().replace(/[\s_-]/g, '');
 
-    const fetchResult = await fetchDocumentFromHRIMS(docType.requestId, employee.payrollNumber);
+    // Check if it's a core document type
+    const docMapping = documentTypeMapping[normalizedType];
 
-    if (fetchResult.success && fetchResult.data) {
+    if (docMapping) {
+      // Check if already stored in MinIO
+      const currentUrl = employee[docMapping.field as keyof typeof employee] as string | null;
+      if (currentUrl && currentUrl.startsWith('/api/files/employee-documents/')) {
+        result.documentsStored[docMapping.dbKey as keyof typeof result.documentsStored] = currentUrl;
+        continue;
+      }
+
+      // Store document in MinIO
       const storeResult = await storeDocumentInMinIO(
         employee.id,
-        docType.name,
-        fetchResult.data
+        docMapping.dbKey,
+        attachmentContent
       );
 
       if (storeResult.success && storeResult.url) {
-        result.documentsStored[docType.name as keyof typeof result.documentsStored] = storeResult.url;
-        updateData[docType.field] = storeResult.url;
-        successCount++;
+        result.documentsStored[docMapping.dbKey as keyof typeof result.documentsStored] = storeResult.url;
+        updateData[docMapping.field] = storeResult.url;
+        documentsProcessed++;
+        console.log(`✓ Stored ${docMapping.label} for ${employee.name}`);
+      } else {
+        console.error(`✗ Failed to store ${docMapping.label}:`, storeResult.error);
+      }
+    } else if (attachmentType.toLowerCase().includes('educational') ||
+               attachmentType.toLowerCase().includes('certification') ||
+               attachmentType.toLowerCase().includes('certificate')) {
+      // It's an educational certificate - check if already exists in database
+      const certificateType = attachmentType;
+
+      // Check if certificate already exists in database
+      const existingCert = await prisma.employeeCertificate.findFirst({
+        where: {
+          employeeId: employee.id,
+          type: certificateType,
+        },
+      });
+
+      if (existingCert && existingCert.url && existingCert.url.startsWith('/api/files/')) {
+        console.log(`⏭ Skipping certificate "${certificateType}" - already stored in MinIO for ${employee.name}`);
+        result.certificatesStored.push({
+          type: certificateType,
+          fileUrl: existingCert.url,
+        });
+        continue;
+      }
+
+      // Store new certificate
+      const storeResult = await storeDocumentInMinIO(
+        employee.id,
+        `certificate_${attachmentType.replace(/[\s_-]/g, '_')}`,
+        attachmentContent
+      );
+
+      if (storeResult.success && storeResult.url) {
+        result.certificatesStored.push({
+          type: attachmentType,
+          fileUrl: storeResult.url,
+        });
+        documentsProcessed++;
+        console.log(`✓ Stored certificate: ${attachmentType} for ${employee.name}`);
       }
     }
-
-    // Add small delay between requests
-    await new Promise(resolve => setTimeout(resolve, 100));
   }
 
   // Update employee record if we stored any documents
@@ -188,21 +249,66 @@ async function processEmployeeDocuments(
         where: { id: employee.id },
         data: updateData
       });
+      console.log(`✓ Updated database for ${employee.name}`);
     } catch (error) {
-      console.error(`Failed to update employee ${employee.id}:`, error);
+      console.error(`✗ Failed to update employee ${employee.id}:`, error);
+    }
+  }
+
+  // Save certificates to database if any
+  if (result.certificatesStored.length > 0) {
+    try {
+      for (const cert of result.certificatesStored) {
+        // Check if certificate already exists
+        const existing = await prisma.employeeCertificate.findFirst({
+          where: {
+            employeeId: employee.id,
+            type: cert.type,
+          },
+        });
+
+        if (existing) {
+          // If URL matches, it was already stored - skip update
+          if (existing.url === cert.fileUrl) {
+            console.log(`ℹ️ Certificate "${cert.type}" already exists in database for ${employee.name}`);
+          } else {
+            // Update existing certificate with new URL
+            await prisma.employeeCertificate.update({
+              where: { id: existing.id },
+              data: {
+                url: cert.fileUrl,
+                name: cert.type,
+              },
+            });
+            console.log(`🔄 Updated certificate "${cert.type}" with new URL for ${employee.name}`);
+          }
+        } else {
+          // Create new certificate
+          await prisma.employeeCertificate.create({
+            data: {
+              id: `${employee.id}_${cert.type.replace(/\s+/g, '_')}`,
+              employeeId: employee.id,
+              type: cert.type,
+              name: cert.type,
+              url: cert.fileUrl,
+            },
+          });
+          console.log(`➕ Created new certificate "${cert.type}" for ${employee.name}`);
+        }
+      }
+      console.log(`✓ Processed ${result.certificatesStored.length} certificates for ${employee.name}`);
+    } catch (error) {
+      console.error(`✗ Failed to save certificates for ${employee.id}:`, error);
     }
   }
 
   // Determine overall status
-  if (successCount === 0) {
+  if (documentsProcessed === 0) {
     result.status = 'failed';
-    result.message = 'No documents found in HRIMS';
-  } else if (successCount < attemptCount) {
-    result.status = 'partial';
-    result.message = `${successCount}/${attemptCount} documents stored`;
+    result.message = 'No documents found in HRIMS response';
   } else {
     result.status = 'success';
-    result.message = `All ${successCount} documents stored successfully`;
+    result.message = `Successfully stored ${documentsProcessed} document(s)`;
   }
 
   return result;
@@ -260,7 +366,9 @@ export async function POST(request: NextRequest) {
     let failedCount = 0;
 
     // Process each employee
-    for (const employee of employees) {
+    for (let i = 0; i < employees.length; i++) {
+      const employee = employees[i];
+
       if (!employee.payrollNumber) {
         results.push({
           employeeId: employee.id,
@@ -289,6 +397,13 @@ export async function POST(request: NextRequest) {
       console.log(
         `Processed ${employee.name}: ${result.status} (${Object.keys(result.documentsStored).length} documents)`
       );
+
+      // Add delay between HRIMS requests to prevent server overload
+      // Skip delay after the last employee
+      if (i < employees.length - 1) {
+        await delay(1500); // 1.5 second delay between requests
+        console.log(`Waiting 1.5s before next request...`);
+      }
     }
 
     return NextResponse.json({

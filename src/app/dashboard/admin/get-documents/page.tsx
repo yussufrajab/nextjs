@@ -60,8 +60,8 @@ export default function GetDocumentsPage() {
       try {
         const response = await fetch('/api/institutions');
         if (response.ok) {
-          const data = await response.json();
-          setInstitutions(data);
+          const result = await response.json();
+          setInstitutions(result.data || []);
         } else {
           toast({
             title: 'Error',

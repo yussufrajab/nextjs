@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { db as prisma } from '@/lib/db';
 import { uploadFile } from '@/lib/minio';
-
-const prisma = new PrismaClient();
 
 // HRIMS API Configuration
 const HRIMS_CONFIG = {

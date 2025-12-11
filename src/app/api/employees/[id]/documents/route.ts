@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { uploadFile, generateObjectKey } from '@/lib/minio';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { db as prisma } from '@/lib/db';
 
 // Document type mapping to database fields
 const DOCUMENT_FIELD_MAPPING = {
