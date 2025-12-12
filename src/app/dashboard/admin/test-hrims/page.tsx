@@ -32,6 +32,7 @@ interface TestParameters {
   tinNumber: string;
   documentsSearchCriteria: string;
   selectedTests: string[]; // Array of test IDs to run
+  selectedDocumentTypes: string[]; // Document types for Test 5: "2"=Ardhilihal, "3"=Employment Contract, "4"=Birth Certificate
 }
 
 export default function TestHRIMSPage() {
@@ -47,7 +48,8 @@ export default function TestHRIMSPage() {
     voteCode: '004',
     tinNumber: '119060370',
     documentsSearchCriteria: '149391',
-    selectedTests: ['test1', 'test2', 'test3', 'test4', 'test5'] // All tests by default
+    selectedTests: ['test1', 'test2', 'test3', 'test4', 'test5'], // All tests by default
+    selectedDocumentTypes: ['2', '3', '4'] // All document types by default
   });
 
   // Toggle test selection
@@ -57,6 +59,16 @@ export default function TestHRIMSPage() {
       selectedTests: prev.selectedTests.includes(testId)
         ? prev.selectedTests.filter(id => id !== testId)
         : [...prev.selectedTests, testId]
+    }));
+  };
+
+  // Toggle document type selection
+  const toggleDocumentType = (docType: string) => {
+    setParameters(prev => ({
+      ...prev,
+      selectedDocumentTypes: prev.selectedDocumentTypes.includes(docType)
+        ? prev.selectedDocumentTypes.filter(type => type !== docType)
+        : [...prev.selectedDocumentTypes, docType]
     }));
   };
 
@@ -260,7 +272,7 @@ export default function TestHRIMSPage() {
                 </div>
               </div>
 
-              <div className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-gray-50 md:col-span-2">
+              <div className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-gray-50 md:col-span-2 bg-amber-50 border-amber-300">
                 <input
                   type="checkbox"
                   id="test5"
@@ -270,9 +282,9 @@ export default function TestHRIMSPage() {
                 />
                 <div className="flex-1">
                   <Label htmlFor="test5" className="font-medium cursor-pointer">
-                    Test 5: Employee Documents (RequestId 206)
+                    Test 5: Employee Documents (RequestId 206) - Multiple Calls by Document Type
                   </Label>
-                  <p className="text-xs text-gray-500 mt-1">RequestId: 206 - Fetch employee documents (works best when run alone)</p>
+                  <p className="text-xs text-gray-500 mt-1">Direct HRIMS API calls - HRIMS now splits documents by type (Ardhilihal, Employment Contract, Birth Certificate) to reduce payload. Each selected document type makes a separate API call to prevent timeouts.</p>
                 </div>
               </div>
             </div>
@@ -394,6 +406,52 @@ export default function TestHRIMSPage() {
                 placeholder="149391"
               />
               <p className="text-xs text-gray-500">Employee ID for documents</p>
+
+              {/* Document Type Selection for Test 5 */}
+              <div className="mt-3 p-3 border rounded-lg bg-amber-50 border-amber-300">
+                <Label className="font-medium mb-2 block">Document Types to Fetch:</Label>
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="docType2"
+                      checked={parameters.selectedDocumentTypes.includes('2')}
+                      onChange={() => toggleDocumentType('2')}
+                      className="h-4 w-4 rounded border-gray-300"
+                    />
+                    <Label htmlFor="docType2" className="text-sm cursor-pointer">
+                      Ardhilihal (RequestBody: 2)
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="docType3"
+                      checked={parameters.selectedDocumentTypes.includes('3')}
+                      onChange={() => toggleDocumentType('3')}
+                      className="h-4 w-4 rounded border-gray-300"
+                    />
+                    <Label htmlFor="docType3" className="text-sm cursor-pointer">
+                      Employment Contract (RequestBody: 3)
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="docType4"
+                      checked={parameters.selectedDocumentTypes.includes('4')}
+                      onChange={() => toggleDocumentType('4')}
+                      className="h-4 w-4 rounded border-gray-300"
+                    />
+                    <Label htmlFor="docType4" className="text-sm cursor-pointer">
+                      Birth Certificate (RequestBody: 4)
+                    </Label>
+                  </div>
+                </div>
+                <p className="text-xs text-amber-700 mt-2">
+                  HRIMS now splits documents by type to reduce payload and prevent timeouts. Select which document types to fetch.
+                </p>
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -457,10 +515,13 @@ export default function TestHRIMSPage() {
               <li><strong>Test 2:</strong> Employee photo fetching (RequestId: 203) - for ID {parameters.photoSearchCriteria}</li>
               <li><strong>Test 3:</strong> Employees by Vote Code (RequestId: 204) - paginated (page {parameters.pageNumber}, size {parameters.pageSize}) for votecode {parameters.voteCode}</li>
               <li><strong>Test 4:</strong> Employees by TIN Number (RequestId: 205) - paginated (page {parameters.pageNumber}, size {parameters.pageSize}) for TIN {parameters.tinNumber}</li>
-              <li><strong>Test 5:</strong> Employee documents fetching (RequestId: 206) - for ID {parameters.documentsSearchCriteria}</li>
+              <li><strong>Test 5:</strong> Employee documents fetching (RequestId: 206) - Direct HRIMS API call for PayrollNumber {parameters.documentsSearchCriteria}. Fetches {parameters.selectedDocumentTypes.length} document type(s): {parameters.selectedDocumentTypes.map(t => t === '2' ? 'Ardhilihal' : t === '3' ? 'Employment Contract' : 'Birth Certificate').join(', ')}</li>
             </ul>
             <p className="mt-3 text-blue-700 font-medium">
               💡 Tests 3 & 4 include pagination metadata (overallDataSize, currentDataSize, currentPage) in the response.
+            </p>
+            <p className="mt-2 text-amber-700 font-medium">
+              ⚠️ Test 5 makes direct HRIMS API calls to verify integration. HRIMS now splits documents by type (Ardhilihal, Employment Contract, Birth Certificate) to reduce payload and prevent timeouts. Each selected document type makes a separate API call. Note: The profile page works because it uses cached documents from MinIO.
             </p>
             <p className="mt-2 text-amber-700 text-xs">
               ⚠️ Use page size 10-20 for testing. Larger values may cause timeouts for institutions with many employees. The actual fetch operation will automatically loop through all pages.

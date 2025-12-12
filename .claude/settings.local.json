@@ -111,7 +111,12 @@
       "Bash(tail:*)",
       "Bash(git stash:*)",
       "Bash(tee:*)",
-      "Bash(sudo iptables:*)"
+      "Bash(sudo iptables:*)",
+      "Bash(sudo ufw allow:*)",
+      "Bash(sudo ufw status:*)",
+      "Bash(mc alias list:*)",
+      "Bash(mc mb:*)",
+      "Bash(mc anonymous set:*)"
     ],
     "deny": []
   }
