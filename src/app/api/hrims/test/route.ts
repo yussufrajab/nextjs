@@ -463,20 +463,24 @@ export async function POST(request: NextRequest) {
   }
   } // End test4
 
-  // Test 5: Get employee documents by PayrollNumber
+  // Test 5: Get employee documents by PayrollNumber (Direct HRIMS API call)
   if (selectedTests.includes('test5')) {
-  console.log('🔍 Testing HRIMS API - Get employee documents...');
+  console.log('🔍 Testing HRIMS API - Get employee documents (Direct API call)...');
   console.log(`Parameters: SearchCriteria=${documentsSearchCriteria}`);
+  console.log(`⚠️ NOTE: This test calls HRIMS directly (no cache). HRIMS may timeout for employees with many documents.`);
 
   const documentsPayload = {
     RequestId: "206",
     SearchCriteria: documentsSearchCriteria
   };
 
+  // Determine the correct test index based on which tests are selected
+  const testIndex = testResults.tests.length;
+
   testResults.tests.push({
-    name: 'Get employee documents',
+    name: 'Get employee documents (Direct HRIMS API)',
     status: 'running',
-    details: `Testing employee document retrieval with RequestId: 206, SearchCriteria: ${documentsSearchCriteria}`,
+    details: `Testing employee document retrieval with RequestId: 206, SearchCriteria: ${documentsSearchCriteria}. Timeout: 120 seconds (HRIMS needs time to encode documents to base64).`,
     requestPayload: documentsPayload,
     endpoint: `${HRIMS_CONFIG.BASE_URL}/Employees`,
     headers: {
@@ -487,7 +491,8 @@ export async function POST(request: NextRequest) {
   });
 
   try {
-    console.log('📤 Sending employee documents request:', documentsPayload);
+    console.log('📤 Sending employee documents request to HRIMS:', documentsPayload);
+    console.log('⏱️ Waiting up to 120 seconds for HRIMS response (documents are encoded to base64)...');
 
     const response = await fetch(`${HRIMS_CONFIG.BASE_URL}/Employees`, {
       method: 'POST',
@@ -497,41 +502,73 @@ export async function POST(request: NextRequest) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(documentsPayload),
-      signal: AbortSignal.timeout(60000) // 60 second timeout for document retrieval (same as employee page)
+      signal: AbortSignal.timeout(120000) // 120 second timeout - HRIMS needs time to encode documents to base64
     });
 
     console.log(`📥 Response status: ${response.status} ${response.statusText}`);
 
     if (response.ok) {
       const data = await response.json();
-      console.log('✅ Employee documents API responded successfully');
 
-      testResults.tests[4] = {
-        ...testResults.tests[4],
-        status: 'success',
-        details: `Successfully retrieved employee documents from HRIMS API for SearchCriteria ${documentsSearchCriteria}`,
-        responsePayload: data,
-        responseInfo: {
-          status: response.status,
-          statusText: response.statusText,
-          headers: Object.fromEntries(response.headers.entries()),
-          dataStructure: {
-            hasData: !!data,
-            dataKeys: data ? Object.keys(data) : [],
-            dataType: typeof data,
-            responseSize: JSON.stringify(data).length,
-            documentFields: data?.data ? Object.keys(data.data) : []
+      // Check if HRIMS returned an error in the response body
+      if (data.code === 500 || data.status === 'Failure') {
+        console.error('❌ HRIMS internal error:', data.message);
+
+        // Check if it's a timeout error from HRIMS
+        const isTimeoutError = data.description && data.description.includes('Timeout');
+
+        testResults.tests[testIndex] = {
+          ...testResults.tests[testIndex],
+          status: 'failed',
+          details: isTimeoutError
+            ? `HRIMS server timeout: ${data.description}. The HRIMS server couldn't process this request in time. Try: 1) Use a different payroll number with fewer documents, 2) Check HRIMS server performance, 3) Note that the profile page works because it uses cached documents from MinIO.`
+            : `HRIMS API error: ${data.message} - ${data.description}`,
+          responsePayload: data,
+          responseInfo: {
+            status: response.status,
+            statusText: response.statusText,
+            hrimsErrorCode: data.code,
+            hrimsStatus: data.status,
+            hrimsMessage: data.message,
+            hrimsDescription: data.description,
+            suggestion: isTimeoutError ? 'Try a different payroll number or check HRIMS server' : 'Check HRIMS API documentation'
           }
-        }
-      };
+        };
+      } else {
+        console.log('✅ Employee documents API responded successfully');
+
+        // Count documents in response
+        const attachments = Array.isArray(data.data) ? data.data : [];
+        const documentCount = attachments.length;
+
+        testResults.tests[testIndex] = {
+          ...testResults.tests[testIndex],
+          status: 'success',
+          details: `Successfully retrieved employee documents from HRIMS API for SearchCriteria ${documentsSearchCriteria}. Received ${documentCount} document(s) with base64 encoded content.`,
+          responsePayload: data,
+          responseInfo: {
+            status: response.status,
+            statusText: response.statusText,
+            headers: Object.fromEntries(response.headers.entries()),
+            dataStructure: {
+              hasData: !!data,
+              dataKeys: data ? Object.keys(data) : [],
+              dataType: typeof data,
+              responseSize: JSON.stringify(data).length,
+              documentCount: documentCount,
+              documentFields: attachments.length > 0 ? Object.keys(attachments[0]) : []
+            }
+          }
+        };
+      }
     } else {
       const errorText = await response.text();
       console.error('❌ Employee documents API error:', errorText);
 
-      testResults.tests[4] = {
-        ...testResults.tests[4],
+      testResults.tests[testIndex] = {
+        ...testResults.tests[testIndex],
         status: 'failed',
-        details: `Employee documents API returned error status ${response.status}`,
+        details: `Employee documents API returned HTTP error status ${response.status}`,
         responsePayload: errorText,
         responseInfo: {
           status: response.status,
@@ -544,8 +581,8 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('🚨 Employee documents fetch connection failed:', error);
 
-    testResults.tests[4] = {
-      ...testResults.tests[4],
+    testResults.tests[testIndex] = {
+      ...testResults.tests[testIndex],
       status: 'failed',
       details: 'Failed to connect to HRIMS API for employee documents',
       error: {

@@ -210,7 +210,7 @@ export async function POST(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(documentsPayload),
-      signal: AbortSignal.timeout(60000) // 60 second timeout for documents
+      signal: AbortSignal.timeout(120000) // 120 second timeout - HRIMS needs time to encode documents to base64
     });
 
     if (!hrimsResponse.ok) {
