@@ -282,9 +282,9 @@ export default function TestHRIMSPage() {
                 />
                 <div className="flex-1">
                   <Label htmlFor="test5" className="font-medium cursor-pointer">
-                    Test 5: Employee Documents (RequestId 206) - Multiple Calls by Document Type
+                    Test 5: Employee Documents (RequestId 206) - Multiple Calls by Document Type (120s timeout)
                   </Label>
-                  <p className="text-xs text-gray-500 mt-1">Direct HRIMS API calls - HRIMS now splits documents by type (Ardhilihal, Employment Contract, Birth Certificate) to reduce payload. Each selected document type makes a separate API call to prevent timeouts.</p>
+                  <p className="text-xs text-gray-500 mt-1">Direct HRIMS API calls - HRIMS now splits documents by type (Ardhilihal, Employment Contract, Birth Certificate) to reduce payload. Each selected document type makes a separate API call with 120s timeout to prevent timeouts.</p>
                 </div>
               </div>
             </div>
@@ -515,13 +515,13 @@ export default function TestHRIMSPage() {
               <li><strong>Test 2:</strong> Employee photo fetching (RequestId: 203) - for ID {parameters.photoSearchCriteria}</li>
               <li><strong>Test 3:</strong> Employees by Vote Code (RequestId: 204) - paginated (page {parameters.pageNumber}, size {parameters.pageSize}) for votecode {parameters.voteCode}</li>
               <li><strong>Test 4:</strong> Employees by TIN Number (RequestId: 205) - paginated (page {parameters.pageNumber}, size {parameters.pageSize}) for TIN {parameters.tinNumber}</li>
-              <li><strong>Test 5:</strong> Employee documents fetching (RequestId: 206) - Direct HRIMS API call for PayrollNumber {parameters.documentsSearchCriteria}. Fetches {parameters.selectedDocumentTypes.length} document type(s): {parameters.selectedDocumentTypes.map(t => t === '2' ? 'Ardhilihal' : t === '3' ? 'Employment Contract' : 'Birth Certificate').join(', ')}</li>
+              <li><strong>Test 5:</strong> Employee documents fetching (RequestId: 206) - Direct HRIMS API call for PayrollNumber {parameters.documentsSearchCriteria}. Fetches {parameters.selectedDocumentTypes.length} document type(s): {parameters.selectedDocumentTypes.map(t => t === '2' ? 'Ardhilihal' : t === '3' ? 'Employment Contract' : 'Birth Certificate').join(', ')}. Each type uses 120s timeout.</li>
             </ul>
             <p className="mt-3 text-blue-700 font-medium">
               💡 Tests 3 & 4 include pagination metadata (overallDataSize, currentDataSize, currentPage) in the response.
             </p>
             <p className="mt-2 text-amber-700 font-medium">
-              ⚠️ Test 5 makes direct HRIMS API calls to verify integration. HRIMS now splits documents by type (Ardhilihal, Employment Contract, Birth Certificate) to reduce payload and prevent timeouts. Each selected document type makes a separate API call. Note: The profile page works because it uses cached documents from MinIO.
+              ⚠️ Test 5 makes direct HRIMS API calls to verify integration. HRIMS now splits documents by type (Ardhilihal, Employment Contract, Birth Certificate) to reduce payload and prevent timeouts. Each selected document type makes a separate API call with 120s timeout. Note: The profile page works because it uses cached documents from MinIO.
             </p>
             <p className="mt-2 text-amber-700 text-xs">
               ⚠️ Use page size 10-20 for testing. Larger values may cause timeouts for institutions with many employees. The actual fetch operation will automatically loop through all pages.
