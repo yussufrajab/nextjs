@@ -21,6 +21,18 @@ const VALID_CERTIFICATE_TYPES = [
   'PHd'
 ] as const;
 
+// Document types for HRIMS RequestId 206
+const DOCUMENT_TYPES = [
+  { code: '2', name: 'Ardhilihal', dbField: 'ardhilHaliUrl', dbKey: 'ardhilHali' },
+  { code: '3', name: 'Employment Contract', dbField: 'jobContractUrl', dbKey: 'jobContract' },
+  { code: '4', name: 'Birth Certificate', dbField: 'birthCertificateUrl', dbKey: 'birthCertificate' },
+  { code: '23', name: 'Confirmation Letter', dbField: 'confirmationLetterUrl', dbKey: 'confirmationLetter' },
+  { code: '8', name: 'Educational Certificate', dbField: null, dbKey: null } // Stored as certificate, not core document
+] as const;
+
+// Helper function for delays between requests
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 /**
  * Maps HRIMS certificate names to our standardized certificate types
  * Returns the mapped certificate type or null if no match found
@@ -195,53 +207,88 @@ export async function POST(
     }
 
     console.log(`📄 Fetching documents for employee ${employee.name} (Payroll: ${employee.payrollNumber})`);
+    console.log(`⚠️ Making ${DOCUMENT_TYPES.length} separate HRIMS API calls (one per document type)`);
 
-    // Fetch documents from HRIMS using RequestId 206
-    const documentsPayload = {
-      RequestId: "206",
-      SearchCriteria: employee.payrollNumber
-    };
+    const allAttachments: any[] = [];
 
-    const hrimsResponse = await fetch(`${HRIMS_CONFIG.BASE_URL}/Employees`, {
-      method: 'POST',
-      headers: {
-        'ApiKey': HRIMS_CONFIG.API_KEY,
-        'Token': HRIMS_CONFIG.TOKEN,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(documentsPayload),
-      signal: AbortSignal.timeout(120000) // 120 second timeout - HRIMS needs time to encode documents to base64
-    });
+    // Make separate API call for each document type
+    for (let i = 0; i < DOCUMENT_TYPES.length; i++) {
+      const docType = DOCUMENT_TYPES[i];
 
-    if (!hrimsResponse.ok) {
-      console.error(`❌ HRIMS API error: ${hrimsResponse.status} ${hrimsResponse.statusText}`);
-      return NextResponse.json(
-        {
-          success: false,
-          message: `HRIMS API returned error: ${hrimsResponse.status}`,
-          error: hrimsResponse.statusText
-        },
-        { status: 502 }
-      );
+      // Skip if document already exists in MinIO
+      const currentUrl = employee[docType.dbField as keyof typeof employee] as string | null;
+      if (currentUrl && currentUrl.startsWith('/api/files/employee-documents/')) {
+        console.log(`⏭️ Skipping ${docType.name} - already stored in MinIO`);
+        continue;
+      }
+
+      console.log(`\n📄 Fetching document type: ${docType.name} (RequestBody: ${docType.code})...`);
+
+      const documentsPayload = {
+        RequestId: "206",
+        SearchCriteria: employee.payrollNumber,
+        RequestPayloadData: {
+          RequestBody: docType.code
+        }
+      };
+
+      try {
+        const hrimsResponse = await fetch(`${HRIMS_CONFIG.BASE_URL}/Employees`, {
+          method: 'POST',
+          headers: {
+            'ApiKey': HRIMS_CONFIG.API_KEY,
+            'Token': HRIMS_CONFIG.TOKEN,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(documentsPayload),
+          signal: AbortSignal.timeout(120000) // 120 second timeout
+        });
+
+        if (!hrimsResponse.ok) {
+          console.error(`❌ HRIMS API error for ${docType.name}: ${hrimsResponse.status} ${hrimsResponse.statusText}`);
+          continue; // Skip to next document type
+        }
+
+        const hrimsData = await hrimsResponse.json();
+
+        // Check for HRIMS internal errors
+        if (hrimsData.code === 500 || hrimsData.status === 'Failure') {
+          console.error(`❌ HRIMS internal error for ${docType.name}:`, hrimsData.message);
+          continue; // Skip to next document type
+        }
+
+        console.log(`✅ Received response from HRIMS for ${docType.name}`);
+
+        // Extract attachments and add to allAttachments array
+        const attachments = Array.isArray(hrimsData.data) ? hrimsData.data : [];
+        if (attachments.length > 0) {
+          console.log(`📦 Found ${attachments.length} attachment(s) for ${docType.name}`);
+          allAttachments.push(...attachments);
+        } else {
+          console.log(`⚠️ No attachments found for ${docType.name}`);
+        }
+
+        // Add delay between requests (except after last request)
+        if (i < DOCUMENT_TYPES.length - 1) {
+          console.log('⏳ Waiting 2 seconds before next request...');
+          await delay(2000);
+        }
+
+      } catch (error) {
+        console.error(`🚨 Error fetching ${docType.name}:`, error instanceof Error ? error.message : 'Unknown error');
+        continue; // Skip to next document type
+      }
     }
 
-    const hrimsData = await hrimsResponse.json();
-    console.log('✅ Received response from HRIMS');
-    console.log('HRIMS Response structure:', JSON.stringify(hrimsData).substring(0, 500) + '...');
-
-    // Extract documents data from response - it's an array of attachment objects
-    const attachments = Array.isArray(hrimsData.data) ? hrimsData.data : [];
-
-    if (attachments.length === 0) {
-      console.log('⚠️ No attachments found in HRIMS response');
+    if (allAttachments.length === 0) {
+      console.log('⚠️ No documents found across all HRIMS requests');
       return NextResponse.json({
         success: false,
-        message: 'No documents found in HRIMS response',
-        hrimsResponse: hrimsData
+        message: 'No documents found in HRIMS',
       }, { status: 404 });
     }
 
-    console.log(`📦 Found ${attachments.length} attachments`);
+    console.log(`📦 Total attachments collected: ${allAttachments.length}`);
 
     // Document type mapping: HRIMS attachmentType -> Database field
     const documentTypeMapping: Record<string, { field: string; dbKey: string; label: string }> = {
@@ -260,7 +307,7 @@ export async function POST(
     let documentsProcessed = 0;
 
     // Process each attachment
-    for (const attachment of attachments) {
+    for (const attachment of allAttachments) {
       const attachmentType = attachment.attachmentType || '';
       const attachmentContent = attachment.attachmentContent || '';
 

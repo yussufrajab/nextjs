@@ -116,7 +116,9 @@
       "Bash(sudo ufw status:*)",
       "Bash(mc alias list:*)",
       "Bash(mc mb:*)",
-      "Bash(mc anonymous set:*)"
+      "Bash(mc anonymous set:*)",
+      "Bash(echo:*)",
+      "Bash(PORT=3000 npm run dev:*)"
     ],
     "deny": []
   }

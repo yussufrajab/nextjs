@@ -19,7 +19,7 @@ interface TestParameters {
   tinNumber?: string;
   documentsSearchCriteria?: string;
   selectedTests?: string[]; // Array of test IDs to run
-  selectedDocumentTypes?: string[]; // Document types for Test 5: "2"=Ardhilihal, "3"=Employment Contract, "4"=Birth Certificate
+  selectedDocumentTypes?: string[]; // Document types for Test 5: "2"=Ardhilihal, "3"=Employment Contract, "4"=Birth Certificate, "8"=Educational Certificate, "23"=Confirmation Letter
 }
 
 export async function POST(request: NextRequest) {
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
   const tinNumber = params.tinNumber ?? '119060370';
   const documentsSearchCriteria = params.documentsSearchCriteria ?? '149391';
   const selectedTests = params.selectedTests ?? ['test1', 'test2', 'test3', 'test4', 'test5'];
-  const selectedDocumentTypes = params.selectedDocumentTypes ?? ['2', '3', '4']; // All document types by default
+  const selectedDocumentTypes = params.selectedDocumentTypes ?? ['2', '3', '4', '8', '23']; // All document types by default
 
   const testResults = {
     timestamp: new Date().toISOString(),
@@ -475,7 +475,9 @@ export async function POST(request: NextRequest) {
   const documentTypeNames: Record<string, string> = {
     '2': 'Ardhilihal',
     '3': 'Employment Contract',
-    '4': 'Birth Certificate'
+    '4': 'Birth Certificate',
+    '8': 'Educational Certificate',
+    '23': 'Confirmation Letter'
   };
 
   // Make a separate API call for each selected document type

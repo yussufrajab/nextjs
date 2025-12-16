@@ -32,7 +32,7 @@ interface TestParameters {
   tinNumber: string;
   documentsSearchCriteria: string;
   selectedTests: string[]; // Array of test IDs to run
-  selectedDocumentTypes: string[]; // Document types for Test 5: "2"=Ardhilihal, "3"=Employment Contract, "4"=Birth Certificate
+  selectedDocumentTypes: string[]; // Document types for Test 5: "2"=Ardhilihal, "3"=Employment Contract, "4"=Birth Certificate, "8"=Educational Certificate, "23"=Confirmation Letter
 }
 
 export default function TestHRIMSPage() {
@@ -49,7 +49,7 @@ export default function TestHRIMSPage() {
     tinNumber: '119060370',
     documentsSearchCriteria: '149391',
     selectedTests: ['test1', 'test2', 'test3', 'test4', 'test5'], // All tests by default
-    selectedDocumentTypes: ['2', '3', '4'] // All document types by default
+    selectedDocumentTypes: ['2', '3', '4', '8', '23'] // All document types by default
   });
 
   // Toggle test selection
@@ -284,7 +284,7 @@ export default function TestHRIMSPage() {
                   <Label htmlFor="test5" className="font-medium cursor-pointer">
                     Test 5: Employee Documents (RequestId 206) - Multiple Calls by Document Type (120s timeout)
                   </Label>
-                  <p className="text-xs text-gray-500 mt-1">Direct HRIMS API calls - HRIMS now splits documents by type (Ardhilihal, Employment Contract, Birth Certificate) to reduce payload. Each selected document type makes a separate API call with 120s timeout to prevent timeouts.</p>
+                  <p className="text-xs text-gray-500 mt-1">Direct HRIMS API calls - HRIMS now splits documents by type (Ardhilihal, Employment Contract, Birth Certificate, Educational Certificate, Confirmation Letter) to reduce payload. Each selected document type makes a separate API call with 120s timeout to prevent timeouts.</p>
                 </div>
               </div>
             </div>
@@ -447,6 +447,30 @@ export default function TestHRIMSPage() {
                       Birth Certificate (RequestBody: 4)
                     </Label>
                   </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="docType8"
+                      checked={parameters.selectedDocumentTypes.includes('8')}
+                      onChange={() => toggleDocumentType('8')}
+                      className="h-4 w-4 rounded border-gray-300"
+                    />
+                    <Label htmlFor="docType8" className="text-sm cursor-pointer">
+                      Educational Certificate (RequestBody: 8)
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="docType23"
+                      checked={parameters.selectedDocumentTypes.includes('23')}
+                      onChange={() => toggleDocumentType('23')}
+                      className="h-4 w-4 rounded border-gray-300"
+                    />
+                    <Label htmlFor="docType23" className="text-sm cursor-pointer">
+                      Confirmation Letter (RequestBody: 23)
+                    </Label>
+                  </div>
                 </div>
                 <p className="text-xs text-amber-700 mt-2">
                   HRIMS now splits documents by type to reduce payload and prevent timeouts. Select which document types to fetch.
@@ -515,13 +539,13 @@ export default function TestHRIMSPage() {
               <li><strong>Test 2:</strong> Employee photo fetching (RequestId: 203) - for ID {parameters.photoSearchCriteria}</li>
               <li><strong>Test 3:</strong> Employees by Vote Code (RequestId: 204) - paginated (page {parameters.pageNumber}, size {parameters.pageSize}) for votecode {parameters.voteCode}</li>
               <li><strong>Test 4:</strong> Employees by TIN Number (RequestId: 205) - paginated (page {parameters.pageNumber}, size {parameters.pageSize}) for TIN {parameters.tinNumber}</li>
-              <li><strong>Test 5:</strong> Employee documents fetching (RequestId: 206) - Direct HRIMS API call for PayrollNumber {parameters.documentsSearchCriteria}. Fetches {parameters.selectedDocumentTypes.length} document type(s): {parameters.selectedDocumentTypes.map(t => t === '2' ? 'Ardhilihal' : t === '3' ? 'Employment Contract' : 'Birth Certificate').join(', ')}. Each type uses 120s timeout.</li>
+              <li><strong>Test 5:</strong> Employee documents fetching (RequestId: 206) - Direct HRIMS API call for PayrollNumber {parameters.documentsSearchCriteria}. Fetches {parameters.selectedDocumentTypes.length} document type(s): {parameters.selectedDocumentTypes.map(t => t === '2' ? 'Ardhilihal' : t === '3' ? 'Employment Contract' : t === '4' ? 'Birth Certificate' : t === '8' ? 'Educational Certificate' : 'Confirmation Letter').join(', ')}. Each type uses 120s timeout.</li>
             </ul>
             <p className="mt-3 text-blue-700 font-medium">
               💡 Tests 3 & 4 include pagination metadata (overallDataSize, currentDataSize, currentPage) in the response.
             </p>
             <p className="mt-2 text-amber-700 font-medium">
-              ⚠️ Test 5 makes direct HRIMS API calls to verify integration. HRIMS now splits documents by type (Ardhilihal, Employment Contract, Birth Certificate) to reduce payload and prevent timeouts. Each selected document type makes a separate API call with 120s timeout. Note: The profile page works because it uses cached documents from MinIO.
+              ⚠️ Test 5 makes direct HRIMS API calls to verify integration. HRIMS now splits documents by type (Ardhilihal, Employment Contract, Birth Certificate, Educational Certificate, Confirmation Letter) to reduce payload and prevent timeouts. Each selected document type makes a separate API call with 120s timeout. Note: The profile page works because it uses cached documents from MinIO.
             </p>
             <p className="mt-2 text-amber-700 text-xs">
               ⚠️ Use page size 10-20 for testing. Larger values may cause timeouts for institutions with many employees. The actual fetch operation will automatically loop through all pages.

@@ -4,11 +4,14 @@ import { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/shared/page-header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, FileText, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { Loader2, FileText, CheckCircle, XCircle, AlertCircle, Building } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { Pagination } from '@/components/shared/pagination';
 
 interface Institution {
   id: string;
@@ -49,10 +52,26 @@ interface FetchResponse {
 
 export default function GetDocumentsPage() {
   const [institutions, setInstitutions] = useState<Institution[]>([]);
+  const [filteredInstitutions, setFilteredInstitutions] = useState<Institution[]>([]);
   const [selectedInstitution, setSelectedInstitution] = useState<Institution | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isFetchingInstitutions, setIsFetchingInstitutions] = useState(true);
   const [results, setResults] = useState<FetchResponse | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [progress, setProgress] = useState<{
+    current: number;
+    total: number;
+    employee?: string;
+    status?: string;
+    summary?: {
+      successful: number;
+      partial: number;
+      failed: number;
+    };
+  } | null>(null);
+
+  const itemsPerPage = 10;
 
   // Fetch institutions on mount
   useEffect(() => {
@@ -62,6 +81,7 @@ export default function GetDocumentsPage() {
         if (response.ok) {
           const result = await response.json();
           setInstitutions(result.data || []);
+          setFilteredInstitutions(result.data || []);
         } else {
           toast({
             title: 'Error',
@@ -84,6 +104,29 @@ export default function GetDocumentsPage() {
     fetchInstitutions();
   }, []);
 
+  // Filter institutions based on search
+  useEffect(() => {
+    if (!searchTerm) {
+      setFilteredInstitutions(institutions);
+    } else {
+      const filtered = institutions.filter(inst =>
+        inst.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        inst.voteNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        inst.tinNumber?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredInstitutions(filtered);
+    }
+    setCurrentPage(1);
+  }, [searchTerm, institutions]);
+
+  // Paginated institutions
+  const paginatedInstitutions = filteredInstitutions.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const totalInstitutionPages = Math.ceil(filteredInstitutions.length / itemsPerPage);
+
   const handleFetchDocuments = async () => {
     if (!selectedInstitution) {
       toast({
@@ -96,6 +139,7 @@ export default function GetDocumentsPage() {
 
     setIsLoading(true);
     setResults(null);
+    setProgress(null);
 
     try {
       const response = await fetch('/api/hrims/fetch-documents-by-institution', {
@@ -108,108 +152,284 @@ export default function GetDocumentsPage() {
         }),
       });
 
-      const data = await response.json();
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to fetch documents');
+      }
 
-      if (response.ok && data.success) {
-        setResults(data);
-        toast({
-          title: 'Success',
-          description: `Processed ${data.summary.total} employees. ${data.summary.successful} successful.`,
-        });
+      // Check if response is streaming
+      const contentType = response.headers.get('content-type');
+      if (contentType?.includes('text/event-stream')) {
+        // Handle streaming response
+        const reader = response.body?.getReader();
+        const decoder = new TextDecoder();
+
+        if (!reader) {
+          throw new Error('No response body');
+        }
+
+        let buffer = '';
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = JSON.parse(line.slice(6));
+
+              if (data.type === 'progress') {
+                setProgress({
+                  current: data.current,
+                  total: data.total,
+                  employee: data.employee,
+                  status: data.status,
+                  summary: data.summary,
+                });
+              } else if (data.type === 'complete') {
+                setResults(data);
+                toast({
+                  title: 'Success',
+                  description: `Processed ${data.summary.total} employees. ${data.summary.successful} successful.`,
+                });
+              }
+            }
+          }
+        }
       } else {
-        toast({
-          title: 'Error',
-          description: data.message || 'Failed to fetch documents',
-          variant: 'destructive',
-        });
+        // Handle regular JSON response (for backward compatibility)
+        const data = await response.json();
+        if (data.success) {
+          setResults(data);
+          toast({
+            title: 'Success',
+            description: `Processed ${data.summary.total} employees. ${data.summary.successful} successful.`,
+          });
+        } else {
+          throw new Error(data.message || 'Failed to fetch documents');
+        }
       }
     } catch (error) {
       console.error('Error fetching documents:', error);
       toast({
         title: 'Error',
-        description: 'An error occurred while fetching documents',
+        description: error instanceof Error ? error.message : 'An error occurred while fetching documents',
         variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
+      setProgress(null);
     }
   };
 
+  if (isFetchingInstitutions) {
+    return (
+      <div>
+        <PageHeader title="Fetch Employee Documents from HRIMS" description="Loading..." />
+        <Card>
+          <CardContent className="py-10">
+            <div className="flex items-center justify-center">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div>
       <PageHeader
-        title="Fetch Employee Documents"
-        description="Fetch and store employee documents and certificates from HRIMS to MinIO storage"
+        title="Fetch Employee Documents from HRIMS"
+        description="Bulk fetch and store employee documents and certificates from HRIMS by institution"
       />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Select Institution</CardTitle>
-          <CardDescription>
-            Choose an institution to fetch documents for all employees
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="institution">Institution</Label>
-            {isFetchingInstitutions ? (
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span>Loading institutions...</span>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        {/* Institution Selection */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Building className="h-5 w-5" />
+              Select Institution
+            </CardTitle>
+            <CardDescription>
+              Choose an institution to fetch employee documents
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="search">Search Institutions</Label>
+                <Input
+                  id="search"
+                  type="text"
+                  placeholder="Search by name, vote number, or TIN..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full"
+                />
               </div>
-            ) : (
-              <Select
-                value={selectedInstitution?.id}
-                onValueChange={(value) => {
-                  const institution = institutions.find((i) => i.id === value);
-                  setSelectedInstitution(institution || null);
-                }}
-              >
-                <SelectTrigger id="institution">
-                  <SelectValue placeholder="Select an institution" />
-                </SelectTrigger>
-                <SelectContent>
-                  {institutions.map((institution) => (
-                    <SelectItem key={institution.id} value={institution.id}>
-                      {institution.name}
-                      {institution.voteNumber && ` (Vote: ${institution.voteNumber})`}
-                      {institution.tinNumber && ` (TIN: ${institution.tinNumber})`}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          </div>
 
-          <Button
-            onClick={handleFetchDocuments}
-            disabled={!selectedInstitution || isLoading}
-            className="w-full"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Fetching Documents...
-              </>
-            ) : (
-              <>
-                <FileText className="mr-2 h-4 w-4" />
-                Fetch Documents
-              </>
-            )}
-          </Button>
+              <div className="border rounded-lg max-h-96 overflow-y-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Institution</TableHead>
+                      <TableHead>Vote Code</TableHead>
+                      <TableHead>TIN</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedInstitutions.length > 0 ? (
+                      paginatedInstitutions.map((inst) => (
+                        <TableRow
+                          key={inst.id}
+                          className={`cursor-pointer ${selectedInstitution?.id === inst.id ? 'bg-primary/10' : ''}`}
+                          onClick={() => setSelectedInstitution(inst)}
+                        >
+                          <TableCell className="font-medium">{inst.name}</TableCell>
+                          <TableCell>{inst.voteNumber || 'N/A'}</TableCell>
+                          <TableCell>{inst.tinNumber || 'N/A'}</TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={3} className="text-center text-muted-foreground">
+                          No institutions found
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
 
-          {isLoading && (
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                This may take several minutes depending on the number of employees.
-                Please do not close this page.
-              </AlertDescription>
-            </Alert>
-          )}
-        </CardContent>
-      </Card>
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalInstitutionPages}
+                onPageChange={setCurrentPage}
+                totalItems={filteredInstitutions.length}
+                itemsPerPage={itemsPerPage}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Fetch Configuration */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Fetch Configuration
+            </CardTitle>
+            <CardDescription>
+              Configure document fetch settings
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              {selectedInstitution ? (
+                <>
+                  <div className="bg-secondary/20 p-4 rounded-lg">
+                    <p className="text-sm font-medium mb-1">Selected Institution:</p>
+                    <p className="text-lg font-bold">{selectedInstitution.name}</p>
+                    <div className="mt-2 text-sm text-muted-foreground">
+                      <p>Vote Code: {selectedInstitution.voteNumber || 'N/A'}</p>
+                      <p>TIN: {selectedInstitution.tinNumber || 'N/A'}</p>
+                    </div>
+                  </div>
+
+                  <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <p className="text-sm text-blue-800 dark:text-blue-300">
+                      <strong>How it works:</strong><br/>
+                      This will fetch documents and certificates from HRIMS for all employees in this institution.
+                      Documents include CV, confirmation letter, job contract, and birth certificate.
+                      All files will be stored in MinIO storage.
+                    </p>
+                  </div>
+
+                  <Button
+                    onClick={handleFetchDocuments}
+                    disabled={isLoading}
+                    className="w-full"
+                    size="lg"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Fetching Documents...
+                      </>
+                    ) : (
+                      <>
+                        <FileText className="mr-2 h-4 w-4" />
+                        Fetch Employee Documents
+                      </>
+                    )}
+                  </Button>
+
+                  {/* Progress Display */}
+                  {isLoading && progress && (
+                    <div className="space-y-3 mt-4">
+                      <Alert>
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription>
+                          Processing {progress.total} employees. Please do not close this page.
+                        </AlertDescription>
+                      </Alert>
+
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="font-medium">
+                            {progress.employee ? `Processing: ${progress.employee}` : 'Starting...'}
+                          </span>
+                          <span className="text-muted-foreground">
+                            {progress.current} / {progress.total}
+                          </span>
+                        </div>
+                        <Progress value={(progress.current / progress.total) * 100} className="h-2" />
+                        {progress.summary && (
+                          <div className="flex gap-4 text-xs text-muted-foreground">
+                            <span className="text-green-600">
+                              ✓ {progress.summary.successful} successful
+                            </span>
+                            {progress.summary.partial > 0 && (
+                              <span className="text-yellow-600">
+                                ⚠ {progress.summary.partial} partial
+                              </span>
+                            )}
+                            {progress.summary.failed > 0 && (
+                              <span className="text-red-600">
+                                ✗ {progress.summary.failed} failed
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {isLoading && !progress && (
+                    <Alert className="mt-4">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        Initializing document fetch. This may take several minutes.
+                        Please do not close this page.
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </>
+              ) : (
+                <div className="text-center text-muted-foreground py-10">
+                  <Building className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <p>Select an institution to begin</p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       {results && (
         <Card>

@@ -6,8 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Progress } from '@/components/ui/progress';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import React, { useState, useEffect } from 'react';
-import { Search, Loader2, Building, Image, Camera } from 'lucide-react';
+import { Search, Loader2, Building, Image, Camera, AlertCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Pagination } from '@/components/shared/pagination';
 import { Badge } from '@/components/ui/badge';
@@ -43,6 +45,17 @@ export default function GetPhotoPage() {
     success: number;
     failed: number;
     skipped: number;
+  } | null>(null);
+  const [progress, setProgress] = useState<{
+    current: number;
+    total: number;
+    employee?: string;
+    status?: string;
+    summary?: {
+      success: number;
+      failed: number;
+      skipped: number;
+    };
   } | null>(null);
 
   const itemsPerPage = 10;
@@ -108,13 +121,9 @@ export default function GetPhotoPage() {
     setIsFetching(true);
     setFetchResults([]);
     setSummary(null);
+    setProgress(null);
 
     try {
-      toast({
-        title: "Fetching Photos",
-        description: `Starting to fetch employee photos from ${selectedInstitution.name}. This may take several minutes...`,
-      });
-
       const response = await fetch('/api/hrims/fetch-photos-by-institution', {
         method: 'POST',
         headers: {
@@ -126,22 +135,66 @@ export default function GetPhotoPage() {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to fetch photos');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to fetch photos');
       }
 
-      const result = await response.json();
+      // Check if response is streaming
+      const contentType = response.headers.get('content-type');
+      if (contentType?.includes('text/event-stream')) {
+        // Handle streaming response
+        const reader = response.body?.getReader();
+        const decoder = new TextDecoder();
 
-      if (result.success) {
-        setFetchResults(result.data.results || []);
-        setSummary(result.data.summary);
+        if (!reader) {
+          throw new Error('No response body');
+        }
 
-        toast({
-          title: "Photo Fetch Complete",
-          description: `Processed ${result.data.summary.total} employees. Success: ${result.data.summary.success}, Failed: ${result.data.summary.failed}, Skipped: ${result.data.summary.skipped}`,
-        });
+        let buffer = '';
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = JSON.parse(line.slice(6));
+
+              if (data.type === 'progress') {
+                setProgress({
+                  current: data.current,
+                  total: data.total,
+                  employee: data.employee,
+                  status: data.status,
+                  summary: data.summary,
+                });
+              } else if (data.type === 'complete') {
+                setFetchResults(data.data.results || []);
+                setSummary(data.data.summary);
+                toast({
+                  title: "Photo Fetch Complete",
+                  description: `Processed ${data.data.summary.total} employees. Success: ${data.data.summary.success}, Failed: ${data.data.summary.failed}, Skipped: ${data.data.summary.skipped}`,
+                });
+              }
+            }
+          }
+        }
       } else {
-        throw new Error(result.message || 'Failed to fetch photos');
+        // Handle regular JSON response (for backward compatibility)
+        const result = await response.json();
+        if (result.success) {
+          setFetchResults(result.data.results || []);
+          setSummary(result.data.summary);
+          toast({
+            title: "Photo Fetch Complete",
+            description: `Processed ${result.data.summary.total} employees. Success: ${result.data.summary.success}, Failed: ${result.data.summary.failed}, Skipped: ${result.data.summary.skipped}`,
+          });
+        } else {
+          throw new Error(result.message || 'Failed to fetch photos');
+        }
       }
     } catch (error) {
       toast({
@@ -151,6 +204,7 @@ export default function GetPhotoPage() {
       });
     } finally {
       setIsFetching(false);
+      setProgress(null);
     }
   };
 
@@ -296,6 +350,57 @@ export default function GetPhotoPage() {
                       </>
                     )}
                   </Button>
+
+                  {/* Progress Display */}
+                  {isFetching && progress && (
+                    <div className="space-y-3 mt-4">
+                      <Alert>
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription>
+                          Processing {progress.total} employees. Please do not close this page.
+                        </AlertDescription>
+                      </Alert>
+
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="font-medium">
+                            {progress.employee ? `Processing: ${progress.employee}` : 'Starting...'}
+                          </span>
+                          <span className="text-muted-foreground">
+                            {progress.current} / {progress.total}
+                          </span>
+                        </div>
+                        <Progress value={(progress.current / progress.total) * 100} className="h-2" />
+                        {progress.summary && (
+                          <div className="flex gap-4 text-xs text-muted-foreground">
+                            <span className="text-green-600">
+                              ✓ {progress.summary.success} successful
+                            </span>
+                            {progress.summary.skipped > 0 && (
+                              <span className="text-yellow-600">
+                                ⊘ {progress.summary.skipped} skipped
+                              </span>
+                            )}
+                            {progress.summary.failed > 0 && (
+                              <span className="text-red-600">
+                                ✗ {progress.summary.failed} failed
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {isFetching && !progress && (
+                    <Alert className="mt-4">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        Initializing photo fetch. This may take several minutes.
+                        Please do not close this page.
+                      </AlertDescription>
+                    </Alert>
+                  )}
                 </>
               ) : (
                 <div className="text-center text-muted-foreground py-10">

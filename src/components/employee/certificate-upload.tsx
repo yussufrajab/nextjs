@@ -307,16 +307,6 @@ export function CertificateUpload({
                         <Download className="h-3 w-3 mr-2" />
                         Download
                       </DropdownMenuItem>
-                      {canUpload && (
-                        <DropdownMenuItem 
-                          onClick={handleDelete}
-                          className="text-destructive focus:text-destructive"
-                          disabled={isDeleting}
-                        >
-                          <Trash2 className="h-3 w-3 mr-2" />
-                          {isDeleting ? 'Deleting...' : 'Delete'}
-                        </DropdownMenuItem>
-                      )}
                     </DropdownMenuContent>
                   </DropdownMenu>
                     )}
