@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { v4 as uuidv4 } from 'uuid';
+import { uploadFile } from '@/lib/minio';
 
 // HRIMS API Configuration
 const HRIMS_CONFIG = {
@@ -176,50 +177,83 @@ async function saveEmployeeToDatabase(hrimsData: any, institutionId: string) {
   }
 }
 
-async function processDocuments(zanId: string, payrollNumber: string, employeeId: string, institutionVoteNumber: string) {
+// Document types for HRIMS RequestId 206
+const DOCUMENT_TYPES = [
+  { code: '2', name: 'Ardhilihal', dbField: 'ardhilHaliUrl', dbKey: 'ardhilHali' },
+  { code: '3', name: 'Employment Contract', dbField: 'jobContractUrl', dbKey: 'jobContract' },
+  { code: '4', name: 'Birth Certificate', dbField: 'birthCertificateUrl', dbKey: 'birthCertificate' }
+] as const;
+
+async function processDocuments(payrollNumber: string, employeeId: string) {
   try {
-    // Fetch documents from HRIMS
-    const documentsResponse = await fetchFromHRIMS("202", {
-      RequestBody: payrollNumber || zanId
-    });
-
-    if (!documentsResponse.success || !documentsResponse.data?.documents) {
-      return 0;
-    }
-
+    console.log(`📄 Fetching documents for employee (Payroll: ${payrollNumber})`);
     let savedDocuments = 0;
 
-    for (const doc of documentsResponse.data.documents) {
+    // Fetch each document type separately using RequestId 206
+    for (const docType of DOCUMENT_TYPES) {
       try {
-        // Map HRIMS document types to our system
-        const documentTypeMap: { [key: string]: string } = {
-          'ardhilHali': 'ardhilHaliUrl',
-          'confirmationLetter': 'confirmationLetterUrl',
-          'jobContract': 'jobContractUrl',
-          'birthCertificate': 'birthCertificateUrl'
+        const payload = {
+          RequestId: "206",
+          SearchCriteria: payrollNumber,
+          RequestPayloadData: {
+            RequestBody: docType.code
+          }
         };
 
-        const fieldName = documentTypeMap[doc.type];
-        if (!fieldName) continue;
+        const response = await fetch(`${HRIMS_CONFIG.BASE_URL}/Employees`, {
+          method: 'POST',
+          headers: {
+            'ApiKey': HRIMS_CONFIG.API_KEY,
+            'Token': HRIMS_CONFIG.TOKEN,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+          signal: AbortSignal.timeout(30000) // 30 second timeout
+        });
 
-        // Convert base64 to file and upload to storage
-        // For now, we'll store the base64 content directly
-        // In production, you would upload to MinIO or another storage service
+        if (!response.ok) {
+          console.error(`❌ HRIMS API error for ${docType.name}: ${response.status}`);
+          continue;
+        }
 
-        const fileName = `${employeeId}_${doc.type}_${Date.now()}.pdf`;
-        const documentUrl = `data:${doc.contentType};base64,${doc.content}`;
+        const hrimsData = await response.json();
 
-        // Update employee record with document URL
+        // Check for HRIMS internal errors
+        if (hrimsData.code === 500 || hrimsData.status === 'Failure') {
+          console.error(`❌ HRIMS internal error for ${docType.name}:`, hrimsData.message);
+          continue;
+        }
+
+        // Extract attachments
+        const attachments = Array.isArray(hrimsData.data) ? hrimsData.data : [];
+        if (attachments.length === 0) {
+          console.log(`⚠️ No ${docType.name} found`);
+          continue;
+        }
+
+        // Take first attachment (most recent)
+        const doc = attachments[0];
+
+        // Convert base64 to buffer and upload to MinIO
+        const buffer = Buffer.from(doc.content, 'base64');
+        const fileName = `${employeeId}_${docType.dbKey}.pdf`;
+        const filePath = `employee-documents/${fileName}`;
+
+        await uploadFile(buffer, filePath, 'application/pdf');
+        console.log(`✅ Uploaded ${docType.name} to MinIO: ${filePath}`);
+
+        // Update employee record with MinIO URL
+        const minioUrl = `/api/files/employee-documents/${fileName}`;
         await db.Employee.update({
           where: { id: employeeId },
           data: {
-            [fieldName]: documentUrl
+            [docType.dbField]: minioUrl
           }
         });
 
         savedDocuments++;
       } catch (error) {
-        console.error(`Error processing document ${doc.id}:`, error);
+        console.error(`Error processing ${docType.name}:`, error);
       }
     }
 
@@ -230,42 +264,94 @@ async function processDocuments(zanId: string, payrollNumber: string, employeeId
   }
 }
 
-async function processCertificates(zanId: string, payrollNumber: string, employeeId: string, institutionVoteNumber: string) {
+async function processPhoto(payrollNumber: string, employeeId: string) {
   try {
-    // Fetch certificates from HRIMS
-    const certificatesResponse = await fetchFromHRIMS("203", {
-      RequestBody: payrollNumber || zanId
+    console.log(`📸 Fetching photo for employee (Payroll: ${payrollNumber})`);
+
+    const photoPayload = {
+      RequestId: "203",
+      SearchCriteria: payrollNumber
+    };
+
+    const photoResponse = await fetch(`${HRIMS_CONFIG.BASE_URL}/Employees`, {
+      method: 'POST',
+      headers: {
+        'ApiKey': HRIMS_CONFIG.API_KEY,
+        'Token': HRIMS_CONFIG.TOKEN,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(photoPayload),
+      signal: AbortSignal.timeout(30000)
     });
 
-    if (!certificatesResponse.success || !certificatesResponse.data?.certificates) {
-      return 0;
+    if (!photoResponse.ok) {
+      console.error(`❌ HRIMS API error for photo: ${photoResponse.status}`);
+      return false;
     }
 
-    let savedCertificates = 0;
+    const photoData = await photoResponse.json();
+    let photoBase64: string | null = null;
 
-    for (const cert of certificatesResponse.data.certificates) {
-      try {
-        // Save certificate to database
-        await db.employeeCertificate.create({
-          data: {
-            id: uuidv4(),
-            employeeId: employeeId,
-            type: cert.type,
-            name: cert.name,
-            url: `data:${cert.contentType};base64,${cert.content}`,
-          }
-        });
+    // Extract photo from response (try multiple possible fields)
+    if (photoData.data && typeof photoData.data === 'string') {
+      photoBase64 = photoData.data;
+    } else if (photoData.photo && photoData.photo.content) {
+      photoBase64 = photoData.photo.content;
+    } else if (photoData.data && photoData.data.photo && photoData.data.photo.content) {
+      photoBase64 = photoData.data.photo.content;
+    } else if (photoData.data && photoData.data.Picture) {
+      photoBase64 = photoData.data.Picture;
+    } else if (photoData.Picture) {
+      photoBase64 = photoData.Picture;
+    }
 
-        savedCertificates++;
-      } catch (error) {
-        console.error(`Error processing certificate ${cert.id}:`, error);
+    if (!photoBase64) {
+      console.log('⚠️ No photo data in HRIMS response');
+      return false;
+    }
+
+    // Convert base64 to buffer
+    let base64Data = photoBase64;
+    let mimeType = 'image/jpeg';
+
+    if (photoBase64.startsWith('data:image')) {
+      const matches = photoBase64.match(/^data:([^;]+);base64,(.+)$/);
+      if (matches) {
+        mimeType = matches[1];
+        base64Data = matches[2];
       }
     }
 
-    return savedCertificates;
+    const photoBuffer = Buffer.from(base64Data, 'base64');
+
+    // Determine file extension
+    const extensionMap: { [key: string]: string } = {
+      'image/jpeg': 'jpg',
+      'image/jpg': 'jpg',
+      'image/png': 'png',
+      'image/gif': 'gif',
+      'image/webp': 'webp'
+    };
+    const extension = extensionMap[mimeType.toLowerCase()] || 'jpg';
+
+    // Upload to MinIO
+    const fileName = `${employeeId}.${extension}`;
+    const filePath = `employee-photos/${fileName}`;
+
+    await uploadFile(photoBuffer, filePath, mimeType);
+    console.log(`✅ Photo uploaded to MinIO: ${filePath}`);
+
+    // Store MinIO URL in database
+    const minioUrl = `/api/files/employee-photos/${fileName}`;
+    await db.Employee.update({
+      where: { id: employeeId },
+      data: { profileImageUrl: minioUrl }
+    });
+
+    return true;
   } catch (error) {
-    console.error('Error processing certificates:', error);
-    return 0;
+    console.error('Error processing photo:', error);
+    return false;
   }
 }
 
@@ -326,15 +412,30 @@ export async function POST(req: NextRequest) {
     console.log('Saving employee to database...');
     const employeeId = await saveEmployeeToDatabase(employeeResponse.data, institution.id);
 
-    // Process documents in background (skip for now as format may be different)
-    console.log('Skipping documents processing - will implement after testing basic employee fetch');
-    const documentsCount = 0;
-
-    // Process certificates in background (skip for now as format may be different)
-    console.log('Skipping certificates processing - will implement after testing basic employee fetch');
-    const certificatesCount = 0;
-
     const personalInfo = employeeResponse.data.personalInfo;
+    const employeePayrollNumber = personalInfo.payrollNumber || payrollNumber;
+
+    // Process photo and documents in parallel
+    let photoStored = false;
+    let documentsCount = 0;
+
+    if (employeePayrollNumber) {
+      console.log('📦 Processing photo and documents...');
+
+      // Run photo and documents fetch in parallel for better performance
+      const [photoResult, docsCount] = await Promise.all([
+        processPhoto(employeePayrollNumber, employeeId),
+        processDocuments(employeePayrollNumber, employeeId)
+      ]);
+
+      photoStored = photoResult;
+      documentsCount = docsCount;
+
+      console.log(`✅ Completed: Photo=${photoStored ? 'stored' : 'not found'}, Documents=${documentsCount} stored`);
+    } else {
+      console.log('⚠️ No payroll number available - skipping photo and documents fetch');
+    }
+
     const currentEmployment = employeeResponse.data.employmentHistories?.find((emp: any) => emp.isCurrent) || employeeResponse.data.employmentHistories?.[0];
 
     return NextResponse.json({
@@ -351,7 +452,7 @@ export async function POST(req: NextRequest) {
           status: personalInfo.isEmployeeConfirmed ? 'Confirmed' : 'On Probation',
         },
         documents: documentsCount,
-        certificates: certificatesCount,
+        photo: photoStored,
         hrimsData: {
           employmentHistories: employeeResponse.data.employmentHistories?.length || 0,
           educationHistories: employeeResponse.data.educationHistories?.length || 0,

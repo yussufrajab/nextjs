@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Progress } from '@/components/ui/progress';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -13,7 +15,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import React, { useState, useEffect } from 'react';
-import { Search, Loader2, Building, Users, Database } from 'lucide-react';
+import { Search, Loader2, Building, Users, Database, AlertCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Pagination } from '@/components/shared/pagination';
 
@@ -27,15 +29,12 @@ export interface Institution {
 }
 
 export interface EmployeeFetchResult {
-  employee: {
-    zanId: string;
-    name: string;
-    payrollNumber?: string;
-    cadre?: string;
-    status?: string;
-  };
-  documents: number;
-  certificates: number;
+  zanId: string;
+  name: string;
+  payrollNumber?: string;
+  cadre?: string;
+  status?: string;
+  ministry?: string;
 }
 
 const employeeSearchSchema = z.object({
@@ -60,6 +59,17 @@ export default function FetchDataPage() {
   const [totalPages, setTotalPages] = useState(0);
   const [identifierType, setIdentifierType] = useState<'votecode' | 'tin'>('votecode');
   const [hrimsPageSize, setHrimsPageSize] = useState(100);
+  const [progress, setProgress] = useState<{
+    phase: 'fetching' | 'saving';
+    message: string;
+    currentPage?: number;
+    totalFetched?: number;
+    estimatedTotal?: number;
+    saved?: number;
+    skipped?: number;
+    total?: number;
+    progressPercent?: number;
+  } | null>(null);
 
   const itemsPerPage = 10;
 
@@ -150,12 +160,22 @@ export default function FetchDataPage() {
       const result = await response.json();
 
       if (result.success) {
-        setFetchResults([result.data]);
+        setFetchResults([result.data.Employee]);
+
+        const successParts = ['Employee data fetched and stored successfully.'];
+        if (result.data.photo) {
+          successParts.push('Photo stored in MinIO.');
+        }
+        if (result.data.documents > 0) {
+          successParts.push(`${result.data.documents} document(s) stored in MinIO.`);
+        }
+
         toast({
           title: "Success",
-          description: `Employee data fetched and stored successfully. ${result.data.documents} documents and ${result.data.certificates} certificates processed.`,
+          description: successParts.join(' '),
         });
         form.reset();
+        setIsEmployeeDialogOpen(false);
       } else {
         throw new Error(result.message || 'Failed to fetch employee data');
       }
@@ -191,12 +211,10 @@ export default function FetchDataPage() {
     }
 
     setIsFetching(true);
-    try {
-      toast({
-        title: "Fetching Data",
-        description: `Starting to fetch employees from ${selectedInstitution.name} using ${identifierType === 'votecode' ? 'Vote Code' : 'TIN'}. This may take a few minutes for large institutions...`,
-      });
+    setProgress(null);
+    setFetchResults([]);
 
+    try {
       const response = await fetch('/api/hrims/fetch-by-institution', {
         method: 'POST',
         headers: {
@@ -212,24 +230,77 @@ export default function FetchDataPage() {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to fetch employees by institution');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to fetch employees by institution');
       }
 
-      const result = await response.json();
+      // Check if response is streaming
+      const contentType = response.headers.get('content-type');
+      if (contentType?.includes('text/event-stream')) {
+        // Handle streaming response
+        const reader = response.body?.getReader();
+        const decoder = new TextDecoder();
 
-      if (result.success) {
-        toast({
-          title: "Fetch Successful",
-          description: `Fetched ${result.data.employeeCount} employees from ${selectedInstitution.name} using ${result.data.usedIdentifier}. Pages fetched: ${result.data.pagesFetched}, Total records: ${result.data.totalFetched}${result.data.skippedCount > 0 ? `, Skipped: ${result.data.skippedCount}` : ''}.`,
-        });
+        if (!reader) {
+          throw new Error('No response body');
+        }
 
-        // Optionally show summary of results
-        if (result.data.employeeCount > 0) {
-          setFetchResults(result.data.employees || []);
+        let buffer = '';
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = JSON.parse(line.slice(6));
+
+              if (data.type === 'progress') {
+                setProgress({
+                  phase: data.phase,
+                  message: data.message,
+                  currentPage: data.currentPage,
+                  totalFetched: data.totalFetched,
+                  estimatedTotal: data.estimatedTotal,
+                  saved: data.saved,
+                  skipped: data.skipped,
+                  total: data.total,
+                  progressPercent: data.progressPercent,
+                });
+              } else if (data.type === 'complete') {
+                const result = data;
+                toast({
+                  title: "Fetch Successful",
+                  description: `Fetched ${result.data.employeeCount} employees from ${selectedInstitution.name} using ${result.data.usedIdentifier}. Pages: ${result.data.pagesFetched}, Total: ${result.data.totalFetched}${result.data.skippedCount > 0 ? `, Skipped: ${result.data.skippedCount}` : ''}.`,
+                });
+
+                if (result.data.employeeCount > 0) {
+                  setFetchResults(result.data.employees || []);
+                }
+              } else if (data.type === 'error') {
+                throw new Error(data.message);
+              }
+            }
+          }
         }
       } else {
-        throw new Error(result.message || 'Failed to fetch employees');
+        // Handle regular JSON response (for backward compatibility)
+        const result = await response.json();
+        if (result.success) {
+          toast({
+            title: "Fetch Successful",
+            description: `Fetched ${result.data.employeeCount} employees from ${selectedInstitution.name}`,
+          });
+
+          if (result.data.employeeCount > 0) {
+            setFetchResults(result.data.employees || []);
+          }
+        } else {
+          throw new Error(result.message || 'Failed to fetch employees');
+        }
       }
     } catch (error) {
       toast({
@@ -239,6 +310,7 @@ export default function FetchDataPage() {
       });
     } finally {
       setIsFetching(false);
+      setProgress(null);
     }
   };
 
@@ -422,22 +494,93 @@ export default function FetchDataPage() {
               </Button>
             </div>
 
+            {/* Progress Display */}
+            {isFetching && progress && (
+              <div className="space-y-3 mt-4">
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    {progress.phase === 'fetching' ? 'Fetching employees from HRIMS...' : 'Saving employees to database...'}
+                  </AlertDescription>
+                </Alert>
+
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="font-medium">{progress.message}</span>
+                    {progress.phase === 'fetching' && progress.totalFetched !== undefined && progress.estimatedTotal !== undefined && (
+                      <span className="text-muted-foreground">
+                        {progress.totalFetched} / {progress.estimatedTotal}
+                      </span>
+                    )}
+                    {progress.phase === 'saving' && progress.saved !== undefined && progress.total !== undefined && (
+                      <span className="text-muted-foreground">
+                        {progress.saved + (progress.skipped || 0)} / {progress.total}
+                      </span>
+                    )}
+                  </div>
+
+                  {progress.progressPercent !== undefined && (
+                    <Progress value={progress.progressPercent} className="h-2" />
+                  )}
+
+                  <div className="flex gap-4 text-xs text-muted-foreground">
+                    {progress.phase === 'fetching' && (
+                      <>
+                        {progress.currentPage !== undefined && (
+                          <span>Page: {progress.currentPage}</span>
+                        )}
+                        {progress.totalFetched !== undefined && (
+                          <span className="text-blue-600">Fetched: {progress.totalFetched}</span>
+                        )}
+                      </>
+                    )}
+                    {progress.phase === 'saving' && (
+                      <>
+                        {progress.saved !== undefined && (
+                          <span className="text-green-600">✓ {progress.saved} saved</span>
+                        )}
+                        {progress.skipped !== undefined && progress.skipped > 0 && (
+                          <span className="text-yellow-600">⊘ {progress.skipped} skipped</span>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {isFetching && !progress && (
+              <Alert className="mt-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  Initializing data fetch. This may take several minutes for large institutions.
+                  Please do not close this page.
+                </AlertDescription>
+              </Alert>
+            )}
+
             {fetchResults.length > 0 && (
               <div className="border rounded-lg p-4 bg-green-50">
-                <h4 className="font-medium text-green-800 mb-2">Sample of Fetched Employees (showing first {fetchResults.length})</h4>
+                <h4 className="font-medium text-green-800 mb-2">
+                  {fetchResults.length === 1 ? 'Fetched Employee' : `Sample of Fetched Employees (showing first ${fetchResults.length})`}
+                </h4>
                 <div className="space-y-2">
                   {fetchResults.map((employee, index) => (
                     <div key={index} className="text-sm text-green-700 border-b border-green-200 pb-2 last:border-0">
-                      <p><strong>{employee.name}</strong> (ZanID: {employee.zanId})</p>
+                      <p><strong>{employee.name}</strong></p>
+                      <p>ZanID: {employee.zanId}</p>
+                      {employee.payrollNumber && <p>Payroll Number: {employee.payrollNumber}</p>}
                       {employee.cadre && <p>Cadre: {employee.cadre}</p>}
                       {employee.ministry && <p>Ministry: {employee.ministry}</p>}
                       <p>Status: {employee.status}</p>
                     </div>
                   ))}
                 </div>
-                <p className="text-xs text-green-600 mt-3 italic">
-                  This is a preview of the first few employees. Check the success notification for the total count.
-                </p>
+                {fetchResults.length > 1 && (
+                  <p className="text-xs text-green-600 mt-3 italic">
+                    This is a preview of the first few employees. Check the success notification for the total count.
+                  </p>
+                )}
               </div>
             )}
           </CardContent>
