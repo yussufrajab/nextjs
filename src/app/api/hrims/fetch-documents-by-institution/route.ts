@@ -3,7 +3,7 @@ import { db as prisma } from '@/lib/db';
 import { uploadFile } from '@/lib/minio';
 
 // Configure route for long-running operations
-export const maxDuration = 300; // 5 minutes (increase if needed)
+export const maxDuration = 900; // 15 minutes for large institutions
 export const dynamic = 'force-dynamic';
 
 // Utility function to add delay between requests
@@ -20,7 +20,9 @@ const HRIMS_CONFIG = {
 const DOCUMENT_TYPES = [
   { code: '2', name: 'Ardhilihal', dbField: 'ardhilHaliUrl', dbKey: 'ardhilHali' },
   { code: '3', name: 'Employment Contract', dbField: 'jobContractUrl', dbKey: 'jobContract' },
-  { code: '4', name: 'Birth Certificate', dbField: 'birthCertificateUrl', dbKey: 'birthCertificate' }
+  { code: '4', name: 'Birth Certificate', dbField: 'birthCertificateUrl', dbKey: 'birthCertificate' },
+  { code: '23', name: 'Confirmation Letter', dbField: 'confirmationLetterUrl', dbKey: 'confirmationLetter' },
+  { code: '8', name: 'Educational Certificate', dbField: null, dbKey: null } // Stored as certificate, not core document
 ] as const;
 
 interface DocumentResult {

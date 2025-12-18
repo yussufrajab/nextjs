@@ -18,6 +18,7 @@ import { DocumentUpload } from '@/components/employee/document-upload';
 import { CertificateUpload } from '@/components/employee/certificate-upload';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableCaption } from '@/components/ui/table';
 import { Pagination } from '@/components/shared/pagination';
+import { useSearchParams } from 'next/navigation';
 
 // Helper function to get initials for avatar
 const getInitials = (name?: string) => {
@@ -447,7 +448,9 @@ const EmployeeDetailsCard = ({ emp, onBack, userRole, userInstitutionId }: { emp
 
 export default function ProfilePage() {
   const { user, role, isLoading: authLoading } = useAuth();
-  
+  const searchParams = useSearchParams();
+  const employeeIdParam = searchParams.get('employeeId');
+
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -518,9 +521,48 @@ export default function ProfilePage() {
     }
   }, [role, user?.institutionId, isCommissionUser, itemsPerPage]);
 
+  // Fetch specific employee if employeeId is provided in URL
   useEffect(() => {
     if (authLoading) return;
-    
+    if (!employeeIdParam) return;
+
+    const fetchSpecificEmployee = async () => {
+      setPageLoading(true);
+      try {
+        // Fetch the specific employee by ID
+        const params = new URLSearchParams({
+          id: employeeIdParam,
+          userRole: role || '',
+          userInstitutionId: user?.institutionId || ''
+        });
+        const response = await fetch(`/api/employees?${params.toString()}`);
+        if (!response.ok) throw new Error("Could not load employee.");
+        const result = await response.json();
+
+        if (!result.success || !result.data || result.data.length === 0) {
+          throw new Error("Employee not found");
+        }
+
+        // The API returns the employee in an array
+        setSelectedEmployee(result.data[0]);
+      } catch (error) {
+        toast({
+          title: "Employee Not Found",
+          description: "The requested employee profile could not be found.",
+          variant: "destructive"
+        });
+      } finally {
+        setPageLoading(false);
+      }
+    };
+
+    fetchSpecificEmployee();
+  }, [employeeIdParam, authLoading, role, user?.institutionId]);
+
+  useEffect(() => {
+    if (authLoading) return;
+    if (employeeIdParam) return; // Skip if we're loading a specific employee
+
     if (role === ROLES.EMPLOYEE && user?.employeeId) {
         const fetchOwnProfile = async () => {
             setPageLoading(true);
@@ -529,11 +571,11 @@ export default function ProfilePage() {
                 const response = await fetch(`/api/employees/search?zanId=${user.zanId}&userRole=${user.role}&userInstitutionId=${user.institutionId}`); // A bit of a hack, would be better to have a dedicated /api/profile
                 if (!response.ok) throw new Error("Could not load your profile.");
                 const result = await response.json();
-                
+
                 if (!result.success || !result.data || result.data.length === 0) {
                     throw new Error("Employee profile not found");
                 }
-                
+
                 setSelectedEmployee(result.data[0]);
             } catch (error) {
                 toast({ title: "Profile Not Found", description: "Your employee profile could not be loaded. Please contact HR.", variant: "destructive" });
@@ -547,7 +589,7 @@ export default function ProfilePage() {
     } else {
       setPageLoading(false);
     }
-  }, [user, role, authLoading, isCommissionUser, isInstitutionalViewer, fetchEmployees]);
+  }, [user, role, authLoading, isCommissionUser, isInstitutionalViewer, fetchEmployees, employeeIdParam]);
   
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {

@@ -7,13 +7,62 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const userRole = searchParams.get('userRole');
     const userInstitutionId = searchParams.get('userInstitutionId');
+    const employeeId = searchParams.get('id');
     const q = searchParams.get('q');
     const status = searchParams.get('status');
     const gender = searchParams.get('gender');
     const page = parseInt(searchParams.get('page') || '1');
     const size = parseInt(searchParams.get('size') || '200'); // Default to 200 for latest profiles
 
-    console.log('Employees API called with params:', { userRole, userInstitutionId, q, status, gender, page, size });
+    console.log('Employees API called with params:', { userRole, userInstitutionId, employeeId, q, status, gender, page, size });
+
+    // If a specific employee ID is requested, fetch that employee directly
+    if (employeeId) {
+      const employee = await db.Employee.findUnique({
+        where: { id: employeeId },
+        include: {
+          Institution: {
+            select: {
+              id: true,
+              name: true
+            }
+          },
+          EmployeeCertificate: {
+            select: {
+              id: true,
+              type: true,
+              name: true,
+              url: true
+            }
+          }
+        }
+      });
+
+      if (!employee) {
+        return NextResponse.json({
+          success: false,
+          message: 'Employee not found'
+        }, { status: 404 });
+      }
+
+      // Map EmployeeCertificate to certificates
+      const mappedEmployee = {
+        ...employee,
+        certificates: employee.EmployeeCertificate,
+        EmployeeCertificate: undefined
+      };
+
+      return NextResponse.json({
+        success: true,
+        data: [mappedEmployee],
+        pagination: {
+          page: 1,
+          size: 1,
+          total: 1,
+          totalPages: 1
+        }
+      });
+    }
 
     // Build where clause based on parameters
     let whereClause: any = {};
@@ -28,6 +77,13 @@ export async function GET(req: Request) {
       console.log('CSC role detected - showing ALL institutions data for role:', userRole);
     } else if (!userRole) {
       console.log('No user role provided - showing ALL employees (default behavior)');
+    }
+
+    // If a specific institution ID is provided, filter by that institution
+    const institutionId = searchParams.get('institutionId')
+    if (institutionId) {
+      whereClause.institutionId = institutionId
+      console.log('Filtering by specific institution:', institutionId)
     }
 
     // If search query provided, search by name, zanId, payrollNumber, cadre, or institution name

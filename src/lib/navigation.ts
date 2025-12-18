@@ -38,6 +38,13 @@ export const NAV_ITEMS: NavItem[] = [
     description: 'Overview of your activities and quick access to modules.',
   },
   {
+    title: 'Institutions',
+    href: '/dashboard/institutions',
+    icon: Building,
+    roles: [ROLES.HHRMD, ROLES.CSCS, ROLES.DO, ROLES.HRMO],
+    description: 'View institutions and their employees.',
+  },
+  {
     title: 'Admin Management',
     icon: ShieldCheck,
     roles: [ROLES.ADMIN as Role],
