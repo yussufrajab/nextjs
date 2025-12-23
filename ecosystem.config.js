@@ -4,7 +4,7 @@ module.exports = {
       name: 'csms-app',
       script: 'npm',
       args: 'start',
-      cwd: '/home/production/nextjs',
+      cwd: '/home/latest',
       instances: 1,
       exec_mode: 'fork',
       env: {
@@ -22,9 +22,7 @@ module.exports = {
       restart_delay: 4000,
       max_restarts: 10,
       min_uptime: '10s',
-      kill_timeout: 5000,
-      wait_ready: true,
-      listen_timeout: 10000
+      kill_timeout: 5000
     }
   ]
 };
