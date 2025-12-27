@@ -15,6 +15,10 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Enable instrumentation hook for cron jobs
+  experimental: {
+    instrumentationHook: true,
+  },
   // Allow cross-origin requests from production domain
   allowedDevOrigins: ['csms.zanajira.go.tz'],
   // Environment variables for build time

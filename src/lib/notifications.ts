@@ -202,4 +202,35 @@ export const NotificationTemplates = {
     message: `Welcome to the Civil Service Management System (CSMS). This system will help you manage your employment requests.`,
     link: `/dashboard`,
   }),
+
+  // Password Expiration Notifications
+  passwordExpiring14Days: (daysRemaining: number, expiresAt: Date) => ({
+    message: `Your password will expire in ${daysRemaining} days (on ${expiresAt.toLocaleDateString()}). Please change it soon to avoid account disruption.`,
+    link: `/change-password-required`,
+  }),
+
+  passwordExpiring7Days: (daysRemaining: number, expiresAt: Date) => ({
+    message: `Your password will expire in ${daysRemaining} days (on ${expiresAt.toLocaleDateString()}). Please change it as soon as possible.`,
+    link: `/change-password-required`,
+  }),
+
+  passwordExpiring3Days: (daysRemaining: number, expiresAt: Date) => ({
+    message: `URGENT: Your password will expire in ${daysRemaining} days (on ${expiresAt.toLocaleDateString()}). Change it immediately to maintain access.`,
+    link: `/change-password-required`,
+  }),
+
+  passwordExpiring1Day: (expiresAt: Date) => ({
+    message: `CRITICAL: Your password expires tomorrow (${expiresAt.toLocaleDateString()}). Change it now to avoid being locked out.`,
+    link: `/change-password-required`,
+  }),
+
+  passwordExpired: (graceDaysRemaining: number) => ({
+    message: `Your password has expired. You have ${graceDaysRemaining} days of grace period remaining. You must change your password on your next login.`,
+    link: `/change-password-required`,
+  }),
+
+  passwordExpiredFinal: () => ({
+    message: `Your password has expired and the grace period has ended. You cannot access the system until an administrator resets your password.`,
+    link: null,
+  }),
 };

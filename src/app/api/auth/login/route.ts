@@ -117,6 +117,61 @@ export async function POST(req: Request) {
       );
     }
 
+    // Check password expiration (non-temporary passwords only)
+    if (!user.isTemporaryPassword) {
+      const {
+        isPasswordExpired,
+        isInGracePeriod,
+        getPasswordExpirationStatus
+      } = await import('@/lib/password-expiration-utils');
+
+      const expirationStatus = getPasswordExpirationStatus({
+        role: user.role,
+        passwordExpiresAt: user.passwordExpiresAt,
+        gracePeriodStartedAt: user.gracePeriodStartedAt,
+        lastExpirationWarningLevel: user.lastExpirationWarningLevel,
+      });
+
+      // If expired beyond grace period, deny login
+      if (expirationStatus.isExpired && !expirationStatus.isInGracePeriod) {
+        console.log('Password expired beyond grace period for user:', username);
+
+        await logLoginAttempt({
+          success: false,
+          username: user.username,
+          userId: user.id,
+          userRole: user.role,
+          ipAddress,
+          userAgent,
+          failureReason: 'Password expired beyond grace period',
+        });
+
+        return NextResponse.json(
+          {
+            success: false,
+            message: 'Your password has expired. Please contact an administrator to reset your password.',
+          },
+          { status: 401 }
+        );
+      }
+
+      // If in grace period, allow login but set mustChangePassword
+      if (expirationStatus.isInGracePeriod) {
+        console.log(`User ${username} logging in with expired password (grace period: ${expirationStatus.gracePeriodDaysRemaining} days remaining)`);
+
+        // Update user to require password change
+        await db.User.update({
+          where: { id: user.id },
+          data: {
+            mustChangePassword: true,
+          },
+        });
+
+        // Update user object for response
+        user.mustChangePassword = true;
+      }
+    }
+
     console.log('Login successful for user:', username);
 
     // For simplicity, we'll skip JWT tokens and use session-based auth

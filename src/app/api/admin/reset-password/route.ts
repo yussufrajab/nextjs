@@ -102,8 +102,38 @@ export async function POST(req: Request) {
         mustChangePassword: true,
         failedPasswordChangeAttempts: 0,
         passwordChangeLockoutUntil: null,
+        // Reset expiration tracking (temporary passwords have their own expiry)
+        passwordExpiresAt: null,
+        lastExpirationWarningLevel: 0,
+        gracePeriodStartedAt: null,
         // Keep existing password history
         updatedAt: new Date(),
+      },
+    });
+
+    // Log password reset in audit trail
+    const { logAuditEvent, AuditEventCategory, AuditSeverity, getClientIp } = await import('@/lib/audit-logger');
+    const ipAddress = getClientIp(req.headers);
+    const userAgent = req.headers.get('user-agent');
+
+    await logAuditEvent({
+      eventType: 'ADMIN_PASSWORD_RESET',
+      eventCategory: AuditEventCategory.SECURITY,
+      severity: AuditSeverity.WARNING,
+      userId: adminId || null,
+      username: admin?.username || 'unknown',
+      userRole: admin?.role || null,
+      ipAddress,
+      userAgent,
+      attemptedRoute: '/api/admin/reset-password',
+      requestMethod: 'POST',
+      isAuthenticated: true,
+      wasBlocked: false,
+      blockReason: null,
+      additionalData: {
+        targetUserId: userId,
+        targetUsername: user.username,
+        wasGenerated,
       },
     });
 

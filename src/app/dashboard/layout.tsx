@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DebugLogger } from '@/lib/debug-logger';
+import { PasswordExpirationBanner } from '@/components/auth/password-expiration-banner';
 
 export default function DashboardLayout({
   children,
@@ -64,6 +65,7 @@ export default function DashboardLayout({
       <SidebarInset className="flex flex-col">
         <AppHeader />
         <main className="flex-1 overflow-y-auto p-4 md:p-8 bg-background">
+          <PasswordExpirationBanner />
           {children}
         </main>
       </SidebarInset>

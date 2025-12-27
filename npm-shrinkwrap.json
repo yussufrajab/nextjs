@@ -33,6 +33,7 @@
         "@radix-ui/react-toast": "^1.2.6",
         "@radix-ui/react-tooltip": "^1.1.8",
         "@types/minio": "^7.1.0",
+        "@types/node-cron": "^3.0.11",
         "bcryptjs": "^2.4.3",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
@@ -45,6 +46,7 @@
         "lucide-react": "^0.475.0",
         "minio": "^8.0.5",
         "next": "^16.0.7",
+        "node-cron": "^4.2.1",
         "node-fetch": "^2.7.0",
         "patch-package": "^8.0.0",
         "react": "^19.2.1",
@@ -4606,6 +4608,12 @@
         "undici-types": "~6.19.2"
       }
     },
+    "node_modules/@types/node-cron": {
+      "version": "3.0.11",
+      "resolved": "https://registry.npmjs.org/@types/node-cron/-/node-cron-3.0.11.tgz",
+      "integrity": "sha512-0ikrnug3/IyneSHqCBeslAhlK2aBfYek1fGo4bP4QnZPmiqSGRK+Oy7ZMisLWkesffJvQ1cqAcBnJC+8+nxIAg==",
+      "license": "MIT"
+    },
     "node_modules/@types/prop-types": {
       "version": "15.7.14",
       "resolved": "https://registry.npmjs.org/@types/prop-types/-/prop-types-15.7.14.tgz",
@@ -8655,6 +8663,15 @@
       },
       "engines": {
         "node": "^10 || ^12 || >=14"
+      }
+    },
+    "node_modules/node-cron": {
+      "version": "4.2.1",
+      "resolved": "https://registry.npmjs.org/node-cron/-/node-cron-4.2.1.tgz",
+      "integrity": "sha512-lgimEHPE/QDgFlywTd8yTR61ptugX3Qer29efeyWw2rv259HtGBNn1vZVmp8lB9uo9wC0t/AT4iGqXxia+CJFg==",
+      "license": "ISC",
+      "engines": {
+        "node": ">=6.0.0"
       }
     },
     "node_modules/node-domexception": {

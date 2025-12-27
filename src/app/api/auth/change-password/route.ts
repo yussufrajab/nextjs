@@ -189,6 +189,30 @@ export async function POST(req: Request) {
       },
     });
 
+    // Reset password expiration
+    const { resetPasswordExpiration, calculatePasswordExpirationDate } = await import('@/lib/password-expiration-utils');
+    await resetPasswordExpiration(userId, user.role);
+
+    // Log password change with audit
+    const { logAuditEvent, AuditEventCategory, AuditSeverity } = await import('@/lib/audit-logger');
+    await logAuditEvent({
+      eventType: 'PASSWORD_CHANGED',
+      eventCategory: AuditEventCategory.SECURITY,
+      severity: AuditSeverity.INFO,
+      userId: user.id,
+      username: user.username,
+      userRole: user.role,
+      attemptedRoute: '/api/auth/change-password',
+      requestMethod: 'POST',
+      isAuthenticated: true,
+      wasBlocked: false,
+      blockReason: null,
+      additionalData: {
+        wasTemporaryPassword: user.isTemporaryPassword,
+        newExpirationDate: calculatePasswordExpirationDate(new Date(), user.role),
+      },
+    });
+
     console.log('Password changed successfully for user:', userId);
 
     return NextResponse.json({

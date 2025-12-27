@@ -279,6 +279,10 @@ model User {
   lastPasswordChange                                                  DateTime?
   failedPasswordChangeAttempts                                        Int                       @default(0)
   passwordChangeLockoutUntil                                          DateTime?
+  // Password Expiration Fields
+  passwordExpiresAt                                                   DateTime?
+  lastExpirationWarningLevel                                          Int?                      @default(0)
+  gracePeriodStartedAt                                                DateTime?
   CadreChangeRequest_CadreChangeRequest_reviewedByIdToUser            CadreChangeRequest[]      @relation("CadreChangeRequest_reviewedByIdToUser")
   CadreChangeRequest_CadreChangeRequest_submittedByIdToUser           CadreChangeRequest[]      @relation("CadreChangeRequest_submittedByIdToUser")
   Complaint_Complaint_complainantIdToUser                             Complaint[]               @relation("Complaint_complainantIdToUser")
