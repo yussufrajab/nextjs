@@ -54,6 +54,73 @@ export async function POST(req: Request) {
       );
     }
 
+    // Auto-unlock expired standard lockouts
+    const { autoUnlockExpiredAccounts, isAccountLocked, getRemainingLockoutTime, getAccountLockoutStatus, incrementFailedLoginAttempts, resetFailedLoginAttempts } = await import('@/lib/account-lockout-utils');
+    await autoUnlockExpiredAccounts();
+
+    // Refresh user data after auto-unlock
+    const refreshedUser = await db.User.findUnique({
+      where: { id: user.id },
+      select: {
+        id: true,
+        username: true,
+        password: true,
+        role: true,
+        active: true,
+        employeeId: true,
+        institutionId: true,
+        isTemporaryPassword: true,
+        temporaryPasswordExpiry: true,
+        mustChangePassword: true,
+        passwordExpiresAt: true,
+        gracePeriodStartedAt: true,
+        lastExpirationWarningLevel: true,
+        failedLoginAttempts: true,
+        loginLockedUntil: true,
+        loginLockoutReason: true,
+        loginLockoutType: true,
+        isManuallyLocked: true,
+      },
+    });
+
+    if (!refreshedUser) {
+      return NextResponse.json(
+        { success: false, message: 'User not found' },
+        { status: 401 }
+      );
+    }
+
+    // Update user reference
+    user = refreshedUser;
+
+    // Check if account is locked
+    if (isAccountLocked(user)) {
+      const lockoutStatus = getAccountLockoutStatus(user);
+      console.log('Account locked for user:', username);
+
+      await logLoginAttempt({
+        success: false,
+        username: user.username,
+        userId: user.id,
+        userRole: user.role,
+        ipAddress,
+        userAgent,
+        failureReason: `Account locked (${lockoutStatus.lockoutReason})`,
+      });
+
+      let message = 'Your account has been locked. ';
+      if (lockoutStatus.canAutoUnlock && lockoutStatus.remainingMinutes > 0) {
+        message += `Please try again in ${lockoutStatus.remainingMinutes} minutes.`;
+      } else {
+        message += 'Please contact an administrator to unlock your account.';
+      }
+
+      return NextResponse.json(
+        { success: false, message },
+        { status: 403 }
+      );
+    }
+
     if (!user.active) {
       console.log('User account is inactive:', username);
 
@@ -80,6 +147,9 @@ export async function POST(req: Request) {
     if (!isPasswordValid) {
       console.log('Invalid password for user:', username);
 
+      // Increment failed login attempts
+      const lockoutResult = await incrementFailedLoginAttempts(user.id, ipAddress, userAgent);
+
       // Log failed login attempt
       await logLoginAttempt({
         success: false,
@@ -91,11 +161,26 @@ export async function POST(req: Request) {
         failureReason: 'Invalid password',
       });
 
+      let message = 'Invalid username/email or password';
+      if (lockoutResult.locked) {
+        message = 'Too many failed login attempts. Your account has been locked. ';
+        if (lockoutResult.lockoutType === 'standard') {
+          message += 'Please try again in 30 minutes.';
+        } else {
+          message += 'Please contact an administrator to unlock your account.';
+        }
+      } else if (lockoutResult.remainingAttempts > 0) {
+        message += `. ${lockoutResult.remainingAttempts} attempt(s) remaining before account lockout.`;
+      }
+
       return NextResponse.json(
-        { success: false, message: 'Invalid username/email or password' },
+        { success: false, message },
         { status: 401 }
       );
     }
+
+    // Reset failed login attempts on successful login
+    await resetFailedLoginAttempts(user.id);
 
     // Check password status
     const now = new Date();

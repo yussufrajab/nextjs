@@ -233,4 +233,25 @@ export const NotificationTemplates = {
     message: `Your password has expired and the grace period has ended. You cannot access the system until an administrator resets your password.`,
     link: null,
   }),
+
+  // Account Lockout Notifications
+  accountLockedFailedAttempts: (attempts: number, lockoutType: string) => ({
+    message: `Your account has been locked after ${attempts} failed login attempts. ${lockoutType === 'standard' ? 'It will automatically unlock in 30 minutes.' : 'Please contact an administrator to unlock your account.'}`,
+    link: null,
+  }),
+
+  accountLockedByAdmin: (reason: string) => ({
+    message: `Your account has been locked by an administrator. Reason: ${reason}. Please contact support for assistance.`,
+    link: null,
+  }),
+
+  accountUnlocked: () => ({
+    message: `Your account has been unlocked by an administrator. You can now log in to the system.`,
+    link: '/login',
+  }),
+
+  accountAutoUnlocked: () => ({
+    message: `Your account lockout period has expired. You can now log in to the system.`,
+    link: '/login',
+  }),
 };

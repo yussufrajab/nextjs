@@ -283,6 +283,15 @@ model User {
   passwordExpiresAt                                                   DateTime?
   lastExpirationWarningLevel                                          Int?                      @default(0)
   gracePeriodStartedAt                                                DateTime?
+  // Account Lockout Fields
+  failedLoginAttempts                                                 Int                       @default(0)
+  loginLockedUntil                                                    DateTime?
+  loginLockoutReason                                                  String?
+  loginLockoutType                                                    String?
+  isManuallyLocked                                                    Boolean                   @default(false)
+  lockedBy                                                            String?
+  lockedAt                                                            DateTime?
+  lockoutNotes                                                        String?
   CadreChangeRequest_CadreChangeRequest_reviewedByIdToUser            CadreChangeRequest[]      @relation("CadreChangeRequest_reviewedByIdToUser")
   CadreChangeRequest_CadreChangeRequest_submittedByIdToUser           CadreChangeRequest[]      @relation("CadreChangeRequest_submittedByIdToUser")
   Complaint_Complaint_complainantIdToUser                             Complaint[]               @relation("Complaint_complainantIdToUser")
