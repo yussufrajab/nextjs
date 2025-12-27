@@ -9,13 +9,22 @@ export interface User {
   email?: string;
   phoneNumber?: string;
   role: Role;
-  employeeId?: string | null; 
+  employeeId?: string | null;
   institutionId: string;
   institution?: { name: string } | string;
   zanId?: string; // Optional: for users who are also employees and have a ZanID
   active: boolean;
   createdAt: Date;
   updatedAt: Date;
+
+  // Password Policy Fields
+  passwordHistory?: string[];
+  isTemporaryPassword?: boolean;
+  temporaryPasswordExpiry?: Date | string | null;
+  mustChangePassword?: boolean;
+  lastPasswordChange?: Date | string | null;
+  failedPasswordChangeAttempts?: number;
+  passwordChangeLockoutUntil?: Date | string | null;
 }
 
 export interface EmployeeCertificate {

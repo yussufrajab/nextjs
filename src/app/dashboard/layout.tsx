@@ -14,16 +14,33 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { isAuthenticated, isLoading, role } = useAuth();
+  const { isAuthenticated, isLoading, role, user } = useAuth();
   const router = useRouter();
 
   React.useEffect(() => {
     DebugLogger.log('DASHBOARD_LAYOUT_AUTH_STATE', { isLoading, isAuthenticated, role });
+
+    // Check authentication first
     if (!isLoading && !isAuthenticated) {
       DebugLogger.log('DASHBOARD_LAYOUT_REDIRECTING_TO_LOGIN');
       router.replace('/login');
+      return;
     }
-  }, [isLoading, isAuthenticated, router, role]);
+
+    // Check if password change is required (middleware check to catch bypasses)
+    if (!isLoading && isAuthenticated && user) {
+      const needsPasswordChange = user.mustChangePassword || user.isTemporaryPassword;
+
+      if (needsPasswordChange) {
+        DebugLogger.log('DASHBOARD_LAYOUT_PASSWORD_CHANGE_REQUIRED', {
+          userId: user.id,
+          mustChangePassword: user.mustChangePassword,
+          isTemporaryPassword: user.isTemporaryPassword,
+        });
+        router.replace('/change-password-required');
+      }
+    }
+  }, [isLoading, isAuthenticated, user, router, role]);
 
   if (isLoading || !isAuthenticated) {
     // Show a loading state or a skeleton screen

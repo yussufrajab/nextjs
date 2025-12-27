@@ -125,7 +125,12 @@
       "Bash(pm2 startup:*)",
       "Bash(systemctl status:*)",
       "Bash(xargs ls:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(npm install:*)",
+      "Bash(npx prisma migrate dev:*)",
+      "Bash(npx prisma db push:*)",
+      "Bash(PGPASSWORD=Zanzibar@24 psql:*)",
+      "Bash(node test-audit-db.js:*)"
     ],
     "deny": []
   }

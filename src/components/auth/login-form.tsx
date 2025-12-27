@@ -54,6 +54,21 @@ export function LoginForm() {
     console.log('LoginForm onSubmit - returned user:', user);
 
     if (user) {
+      // Check if password change is required
+      // @ts-ignore - password status fields added by password policy
+      if (user.mustChangePassword || user.isTemporaryPassword) {
+        console.log('Password change required for user:', user.id);
+        toast({
+          title: 'Password Change Required',
+          description: 'You must change your password to continue.',
+          variant: 'default',
+        });
+        // Redirect to password change page
+        router.push('/change-password-required');
+        setIsLoading(false);
+        return;
+      }
+
       toast({
         title: 'Login Successful',
         description: `Welcome back, ${user.name}!`,

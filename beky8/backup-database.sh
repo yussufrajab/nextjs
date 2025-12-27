@@ -1,86 +1,101 @@
 #!/bin/bash
 
-# Database Backup Script for Prisma-managed PostgreSQL
-# This script creates a backup of the nody database
+# Database backup script for HR Management System
+# This script creates a backup of the PostgreSQL database using credentials from .env
 
-set -e  # Exit on error
+set -e  # Exit on any error
 
-# Color codes for output
+# Colors for output
+RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# Database configuration
-DB_HOST="localhost"
-DB_USER="postgres"
-DB_PASSWORD="Mamlaka2020"
-DB_NAME="nody"
-BACKUP_DIR="/home/nextjs/beky8"
+echo -e "${GREEN}HR Management System Database Backup Script${NC}"
+echo "=============================================="
 
-# Create backup directory if it doesn't exist
-mkdir -p "$BACKUP_DIR"
-
-# Generate backup filename with timestamp
-BACKUP_FILE="${BACKUP_DIR}/nody_backup_$(date +%Y%m%d_%H%M%S).backup"
-
-# Export password for PostgreSQL commands
-export PGPASSWORD="$DB_PASSWORD"
-
-echo "========================================="
-echo "  Database Backup Script"
-echo "========================================="
-echo ""
-echo -e "${GREEN}[INFO]${NC} Starting backup of database: $DB_NAME"
-echo -e "${GREEN}[INFO]${NC} Backup location: $BACKUP_FILE"
-echo ""
-
-# Get current database statistics
-EMPLOYEE_COUNT=$(psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -t -c "SELECT COUNT(*) FROM \"Employee\";" 2>/dev/null | tr -d ' ' || echo "0")
-INSTITUTION_COUNT=$(psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -t -c "SELECT COUNT(*) FROM \"Institution\";" 2>/dev/null | tr -d ' ' || echo "0")
-USER_COUNT=$(psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -t -c "SELECT COUNT(*) FROM \"User\";" 2>/dev/null | tr -d ' ' || echo "0")
-
-echo "Database Statistics:"
-echo "  - Employees: $EMPLOYEE_COUNT"
-echo "  - Institutions: $INSTITUTION_COUNT"
-echo "  - Users: $USER_COUNT"
-echo ""
-
-# Create the backup
-echo -e "${GREEN}[INFO]${NC} Creating backup..."
-pg_dump -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -F c -b -v -f "$BACKUP_FILE" 2>&1 | grep -E "dumping|saving" || true
-
-# Check if backup was created successfully
-if [ -f "$BACKUP_FILE" ]; then
-    BACKUP_SIZE=$(du -h "$BACKUP_FILE" | cut -f1)
-    echo ""
-    echo "========================================="
-    echo -e "${GREEN}✓ Backup completed successfully!${NC}"
-    echo "========================================="
-    echo "Backup file: $(basename $BACKUP_FILE)"
-    echo "File size: $BACKUP_SIZE"
-    echo "Location: $BACKUP_DIR"
-    echo ""
-
-    # List recent backups
-    echo "Recent backups in $BACKUP_DIR:"
-    ls -lht ${BACKUP_DIR}/nody_backup_*.backup 2>/dev/null | head -n 5 | awk '{print "  " $9 " (" $5 ")"}'
-    echo ""
-
-    # Cleanup old backups (keep last 10)
-    BACKUP_COUNT=$(ls ${BACKUP_DIR}/nody_backup_*.backup 2>/dev/null | wc -l)
-    if [ "$BACKUP_COUNT" -gt 10 ]; then
-        echo -e "${YELLOW}[INFO]${NC} Cleaning up old backups (keeping latest 10)..."
-        ls -t ${BACKUP_DIR}/nody_backup_*.backup | tail -n +11 | xargs rm -f
-        echo -e "${GREEN}[INFO]${NC} Cleanup completed."
-    fi
-else
-    echo ""
-    echo -e "${RED}[ERROR]${NC} Backup failed!"
+# Check if .env file exists
+if [ ! -f ".env" ]; then
+    echo -e "${RED}Error: .env file not found${NC}"
+    echo "Please ensure you're running this script from the project root directory"
     exit 1
 fi
 
-# Unset password
+# Parse DATABASE_URL from .env file
+DATABASE_URL=$(grep "^DATABASE_URL=" .env | cut -d '=' -f2- | tr -d '"')
+
+if [ -z "$DATABASE_URL" ]; then
+    echo -e "${RED}Error: DATABASE_URL not found in .env file${NC}"
+    exit 1
+fi
+
+# Extract database connection details from DATABASE_URL
+# Format: postgresql://user:password@host:port/database?schema=public
+DB_USER=$(echo "$DATABASE_URL" | sed -n 's/.*:\/\/\([^:]*\):.*/\1/p')
+DB_PASSWORD=$(echo "$DATABASE_URL" | sed -n 's/.*:\/\/[^:]*:\([^@]*\)@.*/\1/p')
+DB_HOST=$(echo "$DATABASE_URL" | sed -n 's/.*@\([^:]*\):.*/\1/p')
+DB_PORT=$(echo "$DATABASE_URL" | sed -n 's/.*:\([0-9]*\)\/.*/\1/p')
+DB_NAME=$(echo "$DATABASE_URL" | sed -n 's/.*\/\([^?]*\).*/\1/p')
+
+echo -e "${YELLOW}Database connection details:${NC}"
+echo "Host: $DB_HOST:$DB_PORT"
+echo "Database: $DB_NAME"
+echo "User: $DB_USER"
+echo
+
+# Create backups directory if it doesn't exist
+BACKUP_DIR="./backups"
+mkdir -p "$BACKUP_DIR"
+
+# Generate timestamp for backup filename
+TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+BACKUP_FILENAME="hr_backup_${TIMESTAMP}.sql"
+BACKUP_PATH="$BACKUP_DIR/$BACKUP_FILENAME"
+
+# Set PGPASSWORD environment variable
+export PGPASSWORD="$DB_PASSWORD"
+
+echo -e "${YELLOW}Creating database backup...${NC}"
+
+# Create the backup using pg_dump
+if pg_dump -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" --no-password > "$BACKUP_PATH"; then
+    echo -e "${GREEN}✓ Database backup created successfully${NC}"
+else
+    echo -e "${RED}Error: Failed to create database backup${NC}"
+    exit 1
+fi
+
+# Get backup file size
+BACKUP_SIZE=$(du -h "$BACKUP_PATH" | cut -f1)
+
+echo -e "${GREEN}Backup completed!${NC}"
+echo "File: $BACKUP_PATH"
+echo "Size: $BACKUP_SIZE"
+
+# Create compressed version
+echo -e "${YELLOW}Creating compressed backup...${NC}"
+COMPRESSED_BACKUP="${BACKUP_PATH}.gz"
+if gzip -c "$BACKUP_PATH" > "$COMPRESSED_BACKUP"; then
+    COMPRESSED_SIZE=$(du -h "$COMPRESSED_BACKUP" | cut -f1)
+    echo -e "${GREEN}✓ Compressed backup created${NC}"
+    echo "Compressed file: $COMPRESSED_BACKUP"
+    echo "Compressed size: $COMPRESSED_SIZE"
+else
+    echo -e "${YELLOW}Warning: Failed to create compressed backup${NC}"
+fi
+
+# Clean up environment variable
 unset PGPASSWORD
 
-echo -e "${GREEN}[INFO]${NC} Backup process completed."
-echo ""
+echo
+echo -e "${GREEN}Backup process completed successfully!${NC}"
+echo "=============================================="
+echo "Available backups:"
+echo "- SQL backup: $BACKUP_PATH ($BACKUP_SIZE)"
+if [ -f "$COMPRESSED_BACKUP" ]; then
+    echo "- Compressed backup: $COMPRESSED_BACKUP ($COMPRESSED_SIZE)"
+fi
+echo
+echo -e "${YELLOW}To restore this backup on another system:${NC}"
+echo "1. Copy the backup file to the target system"
+echo "2. Run: ./restore-database.sh $BACKUP_FILENAME"

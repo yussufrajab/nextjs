@@ -90,6 +90,13 @@ export const NAV_ITEMS: NavItem[] = [
             icon: AlertTriangle,
             roles: [ROLES.ADMIN as Role],
             description: 'Test HRIMS API connectivity and data fetching.'
+        },
+        {
+            title: 'Audit Trail',
+            href: '/dashboard/admin/audit-trail',
+            icon: ShieldAlert,
+            roles: [ROLES.ADMIN as Role],
+            description: 'Monitor security events and unauthorized access attempts.'
         }
     ]
   },

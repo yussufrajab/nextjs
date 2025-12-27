@@ -1,24 +1,31 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/db';
-import bcrypt from 'bcryptjs';
+import {
+  validatePasswordComplexity,
+  isCommonPassword,
+  checkPasswordHistory,
+  hashPassword,
+  comparePassword,
+  isLockedOut,
+  getRemainingLockoutTime,
+  calculateLockoutExpiry,
+  PASSWORD_MIN_LENGTH,
+  PASSWORD_HISTORY_LENGTH,
+  MAX_PASSWORD_CHANGE_ATTEMPTS,
+} from '@/lib/password-utils';
 
 const changePasswordSchema = z.object({
   userId: z.string().min(1, 'User ID is required'),
   currentPassword: z.string().min(1, 'Current password is required'),
-  newPassword: z
-    .string()
-    .min(8, 'Password must be at least 8 characters')
-    .regex(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-      'Password must contain at least one uppercase letter, one lowercase letter, and one number'
-    ),
+  newPassword: z.string().min(1, 'New password is required'),
 });
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { userId, currentPassword, newPassword } = changePasswordSchema.parse(body);
+    const { userId, currentPassword, newPassword } =
+      changePasswordSchema.parse(body);
 
     console.log('Password change attempt for user ID:', userId);
 
@@ -43,26 +50,141 @@ export async function POST(req: Request) {
       );
     }
 
+    // Check if user is locked out from password changes
+    if (isLockedOut(user.passwordChangeLockoutUntil)) {
+      const remainingMinutes = getRemainingLockoutTime(
+        user.passwordChangeLockoutUntil
+      );
+      console.log(
+        `User ${userId} is locked out. ${remainingMinutes} minutes remaining.`
+      );
+      return NextResponse.json(
+        {
+          success: false,
+          message: `Too many failed attempts. Please try again in ${remainingMinutes} minute${remainingMinutes !== 1 ? 's' : ''}.`,
+        },
+        { status: 429 }
+      );
+    }
+
     // Verify current password
-    const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    const isPasswordValid = await comparePassword(
+      currentPassword,
+      user.password
+    );
 
     if (!isPasswordValid) {
       console.log('Invalid current password for user:', userId);
+
+      // Increment failed attempts
+      const newAttempts = (user.failedPasswordChangeAttempts || 0) + 1;
+      const updateData: {
+        failedPasswordChangeAttempts: number;
+        passwordChangeLockoutUntil?: Date;
+      } = {
+        failedPasswordChangeAttempts: newAttempts,
+      };
+
+      // Lock account if max attempts reached
+      if (newAttempts >= MAX_PASSWORD_CHANGE_ATTEMPTS) {
+        updateData.passwordChangeLockoutUntil = calculateLockoutExpiry();
+        console.log(`User ${userId} locked out after ${newAttempts} failed attempts`);
+      }
+
+      await db.User.update({
+        where: { id: userId },
+        data: updateData,
+      });
+
       return NextResponse.json(
-        { success: false, message: 'Current password is incorrect' },
+        {
+          success: false,
+          message:
+            newAttempts >= MAX_PASSWORD_CHANGE_ATTEMPTS
+              ? `Too many failed attempts. Your account has been locked for 30 minutes.`
+              : `Current password is incorrect. ${MAX_PASSWORD_CHANGE_ATTEMPTS - newAttempts} attempt${MAX_PASSWORD_CHANGE_ATTEMPTS - newAttempts !== 1 ? 's' : ''} remaining.`,
+        },
         { status: 401 }
       );
     }
 
-    // Hash the new password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(newPassword, salt);
+    // Validate new password complexity
+    if (!validatePasswordComplexity(newPassword)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: `Password must be at least ${PASSWORD_MIN_LENGTH} characters and contain at least one uppercase letter, lowercase letter, number, or special character.`,
+        },
+        { status: 400 }
+      );
+    }
 
-    // Update user's password
+    // Check if password is too common
+    if (isCommonPassword(newPassword)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            'This password is too common and easily guessable. Please choose a stronger password.',
+        },
+        { status: 400 }
+      );
+    }
+
+    // Check against password history
+    const passwordHistory = user.passwordHistory || [];
+    const matchesHistory = await checkPasswordHistory(
+      newPassword,
+      passwordHistory
+    );
+
+    if (matchesHistory) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: `You cannot reuse any of your last ${PASSWORD_HISTORY_LENGTH} passwords. Please choose a different password.`,
+        },
+        { status: 400 }
+      );
+    }
+
+    // Check if new password is same as current password
+    const sameAsCurrentPassword = await comparePassword(
+      newPassword,
+      user.password
+    );
+
+    if (sameAsCurrentPassword) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'New password must be different from your current password.',
+        },
+        { status: 400 }
+      );
+    }
+
+    // Hash the new password
+    const hashedPassword = await hashPassword(newPassword);
+
+    // Update password history (prepend current password, keep last 3)
+    const updatedHistory = [user.password, ...passwordHistory].slice(
+      0,
+      PASSWORD_HISTORY_LENGTH
+    );
+
+    // Update user's password and clear temporary password flags
     await db.User.update({
       where: { id: userId },
       data: {
         password: hashedPassword,
+        passwordHistory: updatedHistory,
+        isTemporaryPassword: false,
+        mustChangePassword: false,
+        temporaryPasswordExpiry: null,
+        failedPasswordChangeAttempts: 0,
+        passwordChangeLockoutUntil: null,
+        lastPasswordChange: new Date(),
         updatedAt: new Date(),
       },
     });

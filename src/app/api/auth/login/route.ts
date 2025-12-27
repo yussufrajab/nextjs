@@ -3,6 +3,8 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import { createNotification, NotificationTemplates } from '@/lib/notifications';
+import { comparePassword } from '@/lib/password-utils';
+import { logLoginAttempt, getClientIp } from '@/lib/audit-logger';
 
 const loginSchema = z.object({
   username: z.string().min(1, 'Username or email is required.'),
@@ -16,9 +18,13 @@ export async function POST(req: Request) {
 
     console.log('Login attempt for username/email:', username);
 
+    // Get client info for audit logging
+    const ipAddress = getClientIp(req.headers);
+    const userAgent = req.headers.get('user-agent');
+
     // Check if the input is an email (contains @) or username
     const isEmail = username.includes('@');
-    
+
     // Find user in database by either email or username
     const user = await db.User.findFirst({
       where: isEmail
@@ -32,6 +38,16 @@ export async function POST(req: Request) {
 
     if (!user) {
       console.log('User not found:', username);
+
+      // Log failed login attempt
+      await logLoginAttempt({
+        success: false,
+        username,
+        ipAddress,
+        userAgent,
+        failureReason: 'User not found',
+      });
+
       return NextResponse.json(
         { success: false, message: 'Invalid username/email or password' },
         { status: 401 }
@@ -40,6 +56,18 @@ export async function POST(req: Request) {
 
     if (!user.active) {
       console.log('User account is inactive:', username);
+
+      // Log failed login attempt
+      await logLoginAttempt({
+        success: false,
+        username: user.username,
+        userId: user.id,
+        userRole: user.role,
+        ipAddress,
+        userAgent,
+        failureReason: 'Account is inactive',
+      });
+
       return NextResponse.json(
         { success: false, message: 'Account is inactive' },
         { status: 401 }
@@ -47,12 +75,44 @@ export async function POST(req: Request) {
     }
 
     // Verify password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    
+    const isPasswordValid = await comparePassword(password, user.password);
+
     if (!isPasswordValid) {
       console.log('Invalid password for user:', username);
+
+      // Log failed login attempt
+      await logLoginAttempt({
+        success: false,
+        username: user.username,
+        userId: user.id,
+        userRole: user.role,
+        ipAddress,
+        userAgent,
+        failureReason: 'Invalid password',
+      });
+
       return NextResponse.json(
         { success: false, message: 'Invalid username/email or password' },
+        { status: 401 }
+      );
+    }
+
+    // Check password status
+    const now = new Date();
+    const isTemporaryPasswordExpired =
+      user.isTemporaryPassword &&
+      user.temporaryPasswordExpiry &&
+      new Date(user.temporaryPasswordExpiry) < now;
+
+    // If temporary password has expired, deny login
+    if (isTemporaryPasswordExpired) {
+      console.log('Temporary password expired for user:', username);
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            'Your temporary password has expired. Please contact an administrator to reset your password.',
+        },
         { status: 401 }
       );
     }
@@ -81,8 +141,20 @@ export async function POST(req: Request) {
         employeeId: user.employeeId,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
-        lastLoginDate: new Date()
+        lastLoginDate: new Date(),
+        // Add password status flags
+        mustChangePassword: user.mustChangePassword || false,
+        isTemporaryPassword: user.isTemporaryPassword || false,
+        temporaryPasswordExpiry: user.temporaryPasswordExpiry,
       }
+    };
+
+    // Password status for frontend to handle redirects
+    const passwordStatus = {
+      mustChange: user.mustChangePassword || false,
+      isTemporary: user.isTemporaryPassword || false,
+      expiresAt: user.temporaryPasswordExpiry,
+      isExpired: false, // Already checked above, would have returned error
     };
 
     // Check if this is a first-time login (check if user has any existing notifications)
@@ -101,9 +173,20 @@ export async function POST(req: Request) {
       });
     }
 
+    // Log successful login attempt
+    await logLoginAttempt({
+      success: true,
+      username: user.username,
+      userId: user.id,
+      userRole: user.role,
+      ipAddress,
+      userAgent,
+    });
+
     return NextResponse.json({
       success: true,
       data: authData,
+      passwordStatus,
       message: 'Login successful'
     });
 

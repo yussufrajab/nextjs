@@ -23,6 +23,9 @@ import { Badge } from '@/components/ui/badge';
 import { Pagination } from '@/components/shared/pagination';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { apiClient } from '@/lib/api-client';
+import { PasswordStrengthMeter } from '@/components/auth/password-strength-meter';
+import { validatePasswordComplexity, isCommonPassword } from '@/lib/password-utils';
+import { RouteGuard } from '@/components/auth/route-guard';
 
 
 const userSchema = z.object({
@@ -35,7 +38,15 @@ const userSchema = z.object({
     .regex(/^\d{10}$/, "Phone number must contain only digits."),
   role: z.string().min(1, "Role is required"),
   institutionId: z.string().min(1, "Institution is required."),
-  password: z.string().min(6, "Password must be at least 6 characters.").optional(),
+  password: z.string()
+    .min(8, "Password must be at least 8 characters.")
+    .refine((pwd) => validatePasswordComplexity(pwd), {
+      message: "Password must contain at least one uppercase, lowercase, number, or special character."
+    })
+    .refine((pwd) => !isCommonPassword(pwd), {
+      message: "This password is too common and easily guessable. Please choose a stronger password."
+    })
+    .optional(),
 });
 
 const userEditSchema = z.object({
@@ -48,7 +59,15 @@ const userEditSchema = z.object({
     .regex(/^\d{10}$/, "Phone number must contain only digits."),
   role: z.string().min(1, "Role is required"),
   institutionId: z.string().min(1, "Institution is required."),
-  password: z.string().min(6, "Password must be at least 6 characters.").optional(),
+  password: z.string()
+    .min(8, "Password must be at least 8 characters.")
+    .refine((pwd) => validatePasswordComplexity(pwd), {
+      message: "Password must contain at least one uppercase, lowercase, number, or special character."
+    })
+    .refine((pwd) => !isCommonPassword(pwd), {
+      message: "This password is too common and easily guessable. Please choose a stronger password."
+    })
+    .optional(),
 });
 
 type UserFormValues = z.infer<typeof userSchema>;
@@ -271,11 +290,12 @@ export default function UserManagementPage() {
   );
 
   return (
-    <div>
-      <PageHeader
-        title="User Management"
-        description="Create, update, and manage user accounts and access levels."
-        actions={
+    <RouteGuard>
+      <div>
+        <PageHeader
+          title="User Management"
+          description="Create, update, and manage user accounts and access levels."
+          actions={
           <Button onClick={openCreateDialog}>
             <PlusCircle className="mr-2 h-4 w-4" /> Add New User
           </Button>
@@ -428,7 +448,31 @@ export default function UserManagementPage() {
                 <FormItem><FormLabel>Phone Number</FormLabel><FormControl><Input placeholder="e.g., 0777123456" maxLength={10} {...field} /></FormControl><FormMessage /></FormItem>
               )}/>
               <FormField name="password" control={form.control} render={({ field }) => (
-                <FormItem><FormLabel>Password</FormLabel><FormControl><Input type="password" placeholder={editingUser ? "New password (optional)" : "Enter temporary password"} {...field} /></FormControl><FormMessage /></FormItem>
+                <FormItem>
+                  <FormLabel>
+                    {editingUser ? "Password (Optional)" : "Temporary Password"}
+                    {!editingUser && <span className="text-red-500 ml-1">*</span>}
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      placeholder={editingUser ? "New password (optional)" : "Enter temporary password"}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                  {field.value && (
+                    <PasswordStrengthMeter
+                      password={field.value}
+                      showRequirements
+                    />
+                  )}
+                  {!editingUser && (
+                    <p className="text-sm text-muted-foreground mt-1">
+                      User must change this password on first login. Password expires in 7 days.
+                    </p>
+                  )}
+                </FormItem>
               )}/>
               <FormField name="role" control={form.control} render={({ field }) => (
                 <FormItem>
@@ -516,6 +560,7 @@ export default function UserManagementPage() {
           </Form>
         </DialogContent>
       </Dialog>
-    </div>
+      </div>
+    </RouteGuard>
   );
 }

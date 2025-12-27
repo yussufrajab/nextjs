@@ -1,145 +1,123 @@
 #!/bin/bash
 
-# Database Restore Script for Prisma-managed PostgreSQL
-# This script restores the nody database from a backup file
+# Prisma Database Restore Script for Ubuntu VPS
+# This script restores the nody database using Prisma migrations (recommended approach)
 
-set -e  # Exit on error
+set -e
 
-# Color codes for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
-
-# Database configuration
-DB_HOST="localhost"
-DB_USER="postgres"
-DB_PASSWORD="Mamlaka2020"
+# Configuration
 DB_NAME="nody"
-BACKUP_DIR="/home/nextjs/beky8"
+DB_USER="postgres"
+DB_HOST="localhost"
+DB_PORT="5432"
+APP_DIR="/www/wwwroot/nexxt/beky/scripts"
+BACKUP_DIR="./backups"
 
-# Function to print colored messages
-print_info() {
-    echo -e "${GREEN}[INFO]${NC} $1"
-}
-
-print_warning() {
-    echo -e "${YELLOW}[WARNING]${NC} $1"
-}
-
-print_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
-}
-
-# Export password for PostgreSQL commands
-export PGPASSWORD="$DB_PASSWORD"
-
-echo "========================================="
-echo "  Database Restore Script"
-echo "========================================="
-echo ""
-
-# Check if backup file is provided or find the latest one
-if [ -z "$1" ]; then
-    print_info "No backup file specified. Looking for the latest backup..."
-    BACKUP_FILE=$(ls -t ${BACKUP_DIR}/nody_backup_*.backup 2>/dev/null | head -n 1)
-
-    if [ -z "$BACKUP_FILE" ]; then
-        print_error "No backup files found in ${BACKUP_DIR}"
-        exit 1
-    fi
-
-    print_info "Found latest backup: $(basename $BACKUP_FILE)"
-else
-    BACKUP_FILE="$1"
-
-    if [ ! -f "$BACKUP_FILE" ]; then
-        print_error "Backup file not found: $BACKUP_FILE"
-        exit 1
-    fi
-fi
-
-# Display backup file info
-print_info "Backup file: $BACKUP_FILE"
-print_info "File size: $(du -h "$BACKUP_FILE" | cut -f1)"
-echo ""
-
-# Ask for confirmation
-read -p "This will DROP and RECREATE the database '$DB_NAME'. Continue? (yes/no): " -r
-echo
-if [[ ! $REPLY =~ ^[Yy][Ee][Ss]$ ]]; then
-    print_warning "Restore cancelled."
-    exit 0
-fi
-
-print_info "Starting database restore process..."
-echo ""
-
-# Step 1: Terminate existing connections to the database
-print_info "Step 1/5: Terminating existing connections..."
-psql -h "$DB_HOST" -U "$DB_USER" -d postgres -c "
-    SELECT pg_terminate_backend(pg_stat_activity.pid)
-    FROM pg_stat_activity
-    WHERE pg_stat_activity.datname = '$DB_NAME'
-    AND pid <> pg_backend_pid();
-" > /dev/null 2>&1 || true
-
-# Step 2: Drop the database if it exists
-print_info "Step 2/5: Dropping existing database..."
-psql -h "$DB_HOST" -U "$DB_USER" -d postgres -c "DROP DATABASE IF EXISTS $DB_NAME;" > /dev/null 2>&1
-
-# Step 3: Create a fresh database
-print_info "Step 3/5: Creating fresh database..."
-psql -h "$DB_HOST" -U "$DB_USER" -d postgres -c "CREATE DATABASE $DB_NAME;" > /dev/null 2>&1
-
-# Step 4: Restore from backup
-print_info "Step 4/5: Restoring data from backup..."
-pg_restore -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -v "$BACKUP_FILE" 2>&1 | grep -E "processing|creating|restoring" || true
-
-# Step 5: Verify the restore
-print_info "Step 5/5: Verifying restore..."
-
-# Count tables
-TABLE_COUNT=$(psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -t -c "
-    SELECT COUNT(*)
-    FROM information_schema.tables
-    WHERE table_schema = 'public' AND table_type = 'BASE TABLE';
-" | tr -d ' ')
-
-# Count employees
-EMPLOYEE_COUNT=$(psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -t -c "
-    SELECT COUNT(*) FROM \"Employee\";
-" 2>/dev/null | tr -d ' ' || echo "0")
-
-# Count institutions
-INSTITUTION_COUNT=$(psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -t -c "
-    SELECT COUNT(*) FROM \"Institution\";
-" 2>/dev/null | tr -d ' ' || echo "0")
-
-echo ""
-print_info "Restore completed successfully!"
-echo ""
-echo "========================================="
-echo "  Restore Summary"
-echo "========================================="
+echo "=== Prisma Database Restore Script ==="
 echo "Database: $DB_NAME"
-echo "Tables: $TABLE_COUNT"
-echo "Employees: $EMPLOYEE_COUNT"
-echo "Institutions: $INSTITUTION_COUNT"
-echo "========================================="
-echo ""
-
-# Optional: Run Prisma migrations
-read -p "Do you want to apply Prisma migrations? (yes/no): " -r
+echo "User: $DB_USER"
+echo "App Directory: $APP_DIR"
 echo
-if [[ $REPLY =~ ^[Yy][Ee][Ss]$ ]]; then
-    print_info "Running Prisma migrations..."
-    cd /home/nextjs
-    npx prisma migrate deploy
-    print_info "Prisma migrations completed!"
+
+# Check if we're in the right directory
+if [ ! -f "package.json" ]; then
+  echo "❌ Error: package.json not found. Please run this script from your Next.js project directory."
+  exit 1
 fi
 
-# Unset password
-unset PGPASSWORD
+# Check if Prisma files exist
+if [ ! -f "prisma/schema.prisma" ]; then
+  echo "❌ Error: Prisma schema not found. Please ensure Prisma files are extracted."
+  exit 1
+fi
 
-print_info "All done! Database restored successfully."
+if [ ! -d "prisma/migrations" ]; then
+  echo "❌ Error: Prisma migrations directory not found."
+  exit 1
+fi
+
+# Check if .env file exists
+if [ ! -f ".env" ]; then
+  echo "❌ Error: .env file not found. Please create it with DATABASE_URL."
+  exit 1
+fi
+
+# Verify DATABASE_URL is set
+if ! grep -q "DATABASE_URL" .env; then
+  echo "❌ Error: DATABASE_URL not found in .env file."
+  exit 1
+fi
+
+echo "✅ Prisma files and configuration found."
+
+# Install dependencies
+echo "📦 Installing npm dependencies..."
+npm install
+
+# Generate Prisma client
+echo "🔧 Generating Prisma client..."
+npx prisma generate
+
+# Check database connection
+echo "🔍 Checking database connection..."
+npx prisma db ping
+
+if [ $? -ne 0 ]; then
+  echo "❌ Database connection failed. Please check your DATABASE_URL and ensure PostgreSQL is running."
+  exit 1
+fi
+
+echo "✅ Database connection successful."
+
+# Option 1: Deploy migrations (recommended for production)
+echo "🚀 Deploying Prisma migrations..."
+npx prisma migrate deploy
+
+if [ $? -eq 0 ]; then
+  echo "✅ Migrations deployed successfully!"
+else
+  echo "❌ Migration deployment failed!"
+  exit 1
+fi
+
+# Check migration status
+echo "📋 Checking migration status..."
+npx prisma migrate status
+
+# Option to seed the database (if seed file exists)
+if [ -f "prisma/seed.ts" ] || [ -f "prisma/seed.js" ]; then
+  echo
+  read -p "🌱 Seed file found. Do you want to seed the database? (y/n): " -n 1 -r
+  echo
+  if [[ $REPLY =~ ^[Yy]$ ]]; then
+    echo "🌱 Seeding database..."
+    npx prisma db seed
+    
+    if [ $? -eq 0 ]; then
+      echo "✅ Database seeded successfully!"
+    else
+      echo "❌ Database seeding failed!"
+    fi
+  fi
+fi
+
+# Verify tables were created
+echo "🔍 Verifying database structure..."
+npx prisma db pull --print
+
+echo
+echo "=== Restore Complete! ==="
+echo "✅ Prisma migrations deployed successfully"
+echo "✅ Database structure verified"
+echo "✅ Prisma client generated"
+echo
+echo "📋 Database Information:"
+echo "- Database: $DB_NAME"
+echo "- User: $DB_USER"
+echo "- Host: $DB_HOST:$DB_PORT"
+echo
+echo "🔧 Useful commands:"
+echo "- View data: npx prisma studio"
+echo "- Reset DB: npx prisma migrate reset"
+echo "- Generate client: npx prisma generate"
+echo "- Deploy migrations: npx prisma migrate deploy"

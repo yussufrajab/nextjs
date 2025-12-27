@@ -271,6 +271,14 @@ model User {
   updatedAt                                                           DateTime
   phoneNumber                                                         String?
   email                                                               String?
+  // Password Policy Fields
+  passwordHistory                                                     String[]                  @default([])
+  isTemporaryPassword                                                 Boolean                   @default(false)
+  temporaryPasswordExpiry                                             DateTime?
+  mustChangePassword                                                  Boolean                   @default(false)
+  lastPasswordChange                                                  DateTime?
+  failedPasswordChangeAttempts                                        Int                       @default(0)
+  passwordChangeLockoutUntil                                          DateTime?
   CadreChangeRequest_CadreChangeRequest_reviewedByIdToUser            CadreChangeRequest[]      @relation("CadreChangeRequest_reviewedByIdToUser")
   CadreChangeRequest_CadreChangeRequest_submittedByIdToUser           CadreChangeRequest[]      @relation("CadreChangeRequest_submittedByIdToUser")
   Complaint_Complaint_complainantIdToUser                             Complaint[]               @relation("Complaint_complainantIdToUser")
@@ -292,4 +300,32 @@ model User {
   ServiceExtensionRequest_ServiceExtensionRequest_submittedByIdToUser ServiceExtensionRequest[] @relation("ServiceExtensionRequest_submittedByIdToUser")
   Employee                                                            Employee?                 @relation(fields: [employeeId], references: [id])
   Institution                                                         Institution               @relation(fields: [institutionId], references: [id])
+  AuditLog                                                            AuditLog[]
+}
+
+model AuditLog {
+  id                String   @id @default(cuid())
+  eventType         String   // e.g., "UNAUTHORIZED_ACCESS", "LOGIN_FAILED", "ACCESS_DENIED"
+  eventCategory     String   // e.g., "SECURITY", "ACCESS", "AUTHENTICATION"
+  severity          String   // e.g., "INFO", "WARNING", "ERROR", "CRITICAL"
+  userId            String?  // User who attempted access (null if unauthenticated)
+  username          String?  // Username for quick reference
+  userRole          String?  // Role of the user attempting access
+  ipAddress         String?  // IP address of the request
+  userAgent         String?  // Browser/client information
+  attemptedRoute    String   // The route they tried to access
+  requestMethod     String?  // HTTP method (GET, POST, etc.)
+  isAuthenticated   Boolean  @default(false)
+  wasBlocked        Boolean  @default(true)
+  blockReason       String?  // Why access was denied
+  timestamp         DateTime @default(now())
+  additionalData    Json?    // Any extra contextual information
+
+  User              User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([timestamp])
+  @@index([eventType])
+  @@index([severity])
+  @@index([attemptedRoute])
 }

@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { ROLES } from '@/lib/constants';
 import bcrypt from 'bcryptjs';
 import { randomBytes } from 'crypto';
+import { hashPassword, calculateTemporaryPasswordExpiry } from '@/lib/password-utils';
 
 const employeeLoginSchema = z.object({
   zanId: z.string().min(1),
@@ -91,12 +92,12 @@ export async function POST(req: Request) {
 
         // Generate default password (using ZAN ID as default for security)
         const defaultPassword = employee.zanId;
-        const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+        const hashedPassword = await hashPassword(defaultPassword);
 
         // Generate unique id for user
         const userId = `emp_${randomBytes(16).toString('hex')}`;
 
-        // Create user account
+        // Create user account with temporary password flags
         user = await db.User.create({
           data: {
             id: userId,
@@ -107,6 +108,13 @@ export async function POST(req: Request) {
             active: true,
             employeeId: employee.id,
             institutionId: employee.institutionId,
+            // Set temporary password flags
+            isTemporaryPassword: true,
+            temporaryPasswordExpiry: calculateTemporaryPasswordExpiry(),
+            mustChangePassword: true,
+            passwordHistory: [],
+            lastPasswordChange: new Date(),
+            failedPasswordChangeAttempts: 0,
             updatedAt: new Date(),
           },
           select: {
