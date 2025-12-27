@@ -80,6 +80,7 @@ export async function GET(request: NextRequest) {
     const startDateStr = searchParams.get('startDate');
     const endDateStr = searchParams.get('endDate');
     const eventType = searchParams.get('eventType');
+    const eventCategory = searchParams.get('eventCategory');
     const severity = searchParams.get('severity');
     const userId = searchParams.get('userId');
     const username = searchParams.get('username');
@@ -90,6 +91,7 @@ export async function GET(request: NextRequest) {
     if (startDateStr) filters.startDate = new Date(startDateStr);
     if (endDateStr) filters.endDate = new Date(endDateStr);
     if (eventType) filters.eventType = eventType;
+    if (eventCategory) filters.eventCategory = eventCategory;
     if (severity) filters.severity = severity;
     if (userId) filters.userId = userId;
     if (username) filters.username = username;

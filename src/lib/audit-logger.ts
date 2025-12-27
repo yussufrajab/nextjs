@@ -32,6 +32,12 @@ export enum AuditEventType {
   MULTIPLE_FAILED_ATTEMPTS = 'MULTIPLE_FAILED_ATTEMPTS',
   SUSPICIOUS_REQUEST = 'SUSPICIOUS_REQUEST',
   POTENTIAL_BREACH = 'POTENTIAL_BREACH',
+
+  // Request Management Events
+  REQUEST_APPROVED = 'REQUEST_APPROVED',
+  REQUEST_REJECTED = 'REQUEST_REJECTED',
+  REQUEST_SUBMITTED = 'REQUEST_SUBMITTED',
+  REQUEST_UPDATED = 'REQUEST_UPDATED',
 }
 
 export enum AuditEventCategory {
@@ -40,6 +46,7 @@ export enum AuditEventCategory {
   AUTHENTICATION = 'AUTHENTICATION',
   AUTHORIZATION = 'AUTHORIZATION',
   SYSTEM = 'SYSTEM',
+  DATA_MODIFICATION = 'DATA_MODIFICATION',
 }
 
 export enum AuditSeverity {
@@ -278,6 +285,7 @@ export async function getAuditLogs(filters?: {
   startDate?: Date;
   endDate?: Date;
   eventType?: string;
+  eventCategory?: string;
   severity?: string;
   userId?: string;
   username?: string;
@@ -294,6 +302,7 @@ export async function getAuditLogs(filters?: {
   }
 
   if (filters?.eventType) where.eventType = filters.eventType;
+  if (filters?.eventCategory) where.eventCategory = filters.eventCategory;
   if (filters?.severity) where.severity = filters.severity;
   if (filters?.userId) where.userId = filters.userId;
   if (filters?.username) where.username = { contains: filters.username, mode: 'insensitive' };
@@ -381,12 +390,104 @@ export async function getAuditStatistics(filters?: {
   };
 }
 
+/**
+ * Log request approval
+ */
+export async function logRequestApproval(data: {
+  requestType: string;
+  requestId: string;
+  employeeId?: string;
+  employeeName?: string;
+  employeeZanId?: string;
+  approvedById: string;
+  approvedByUsername: string;
+  approvedByRole: string;
+  reviewStage?: string;
+  ipAddress?: string | null;
+  userAgent?: string | null;
+  additionalData?: Record<string, any>;
+}): Promise<void> {
+  await logAuditEvent({
+    eventType: AuditEventType.REQUEST_APPROVED,
+    eventCategory: AuditEventCategory.DATA_MODIFICATION,
+    severity: AuditSeverity.INFO,
+    userId: data.approvedById,
+    username: data.approvedByUsername,
+    userRole: data.approvedByRole,
+    ipAddress: data.ipAddress,
+    userAgent: data.userAgent,
+    attemptedRoute: `/api/${data.requestType.toLowerCase()}/${data.requestId}`,
+    requestMethod: 'PUT',
+    isAuthenticated: true,
+    wasBlocked: false,
+    blockReason: null,
+    additionalData: {
+      requestType: data.requestType,
+      requestId: data.requestId,
+      employeeId: data.employeeId,
+      employeeName: data.employeeName,
+      employeeZanId: data.employeeZanId,
+      reviewStage: data.reviewStage,
+      action: 'APPROVED',
+      ...data.additionalData,
+    },
+  });
+}
+
+/**
+ * Log request rejection
+ */
+export async function logRequestRejection(data: {
+  requestType: string;
+  requestId: string;
+  employeeId?: string;
+  employeeName?: string;
+  employeeZanId?: string;
+  rejectedById: string;
+  rejectedByUsername: string;
+  rejectedByRole: string;
+  rejectionReason?: string;
+  reviewStage?: string;
+  ipAddress?: string | null;
+  userAgent?: string | null;
+  additionalData?: Record<string, any>;
+}): Promise<void> {
+  await logAuditEvent({
+    eventType: AuditEventType.REQUEST_REJECTED,
+    eventCategory: AuditEventCategory.DATA_MODIFICATION,
+    severity: AuditSeverity.WARNING,
+    userId: data.rejectedById,
+    username: data.rejectedByUsername,
+    userRole: data.rejectedByRole,
+    ipAddress: data.ipAddress,
+    userAgent: data.userAgent,
+    attemptedRoute: `/api/${data.requestType.toLowerCase()}/${data.requestId}`,
+    requestMethod: 'PUT',
+    isAuthenticated: true,
+    wasBlocked: false,
+    blockReason: data.rejectionReason || null,
+    additionalData: {
+      requestType: data.requestType,
+      requestId: data.requestId,
+      employeeId: data.employeeId,
+      employeeName: data.employeeName,
+      employeeZanId: data.employeeZanId,
+      rejectionReason: data.rejectionReason,
+      reviewStage: data.reviewStage,
+      action: 'REJECTED',
+      ...data.additionalData,
+    },
+  });
+}
+
 export default {
   logAuditEvent,
   logUnauthorizedAccess,
   logAccessDenied,
   logForbiddenRoute,
   logLoginAttempt,
+  logRequestApproval,
+  logRequestRejection,
   getClientIp,
   getAuditLogs,
   getAuditStatistics,

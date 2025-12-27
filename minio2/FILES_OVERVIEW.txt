@@ -1,0 +1,102 @@
+MinIO Migration Package - File Overview
+========================================
+
+This package contains everything needed to migrate MinIO to a new VPS server.
+
+📁 FILES INCLUDED (11 files):
+
+1. README.md (START HERE!)
+   - Overview of all files and quick start guide
+   - Summary of current configuration
+
+2. MIGRATION_GUIDE.md (COMPLETE GUIDE)
+   - Detailed step-by-step migration instructions
+   - Troubleshooting section
+   - Security recommendations
+   - Post-migration checklist
+
+3. QUICK_REFERENCE.md (COMMAND REFERENCE)
+   - Essential commands for daily operations
+   - Quick troubleshooting tips
+   - Common tasks reference
+
+4. env-variables.txt (CONFIGURATION)
+   - Environment variables for .env.local
+   - MinIO credentials and settings
+
+5. mc-alias-setup.sh (EXECUTABLE SCRIPT)
+   - Configures MinIO client (mc) on new server
+   - Run after installing mc
+
+6. bucket-policies.sh (EXECUTABLE SCRIPT)
+   - Creates all required buckets
+   - Sets correct policies for each bucket
+   - Run after MinIO server is up
+
+7. server-startup.sh (EXECUTABLE SCRIPT)
+   - Manual MinIO server startup script
+   - Useful for testing
+
+8. systemd-service.txt (SERVICE CONFIGURATION)
+   - systemd service file for MinIO
+   - Copy to /etc/systemd/system/minio.service
+   - Enables automatic startup
+
+9. bucket-list.txt (REFERENCE)
+   - List of all buckets and their policies
+   - Verification commands
+
+10. mc-config-backup.json (BACKUP)
+    - MinIO client configuration backup
+    - Can be copied to /root/.mc/config.json on new server
+
+11. FILES_OVERVIEW.txt (THIS FILE)
+    - Summary of all files in this package
+    - Quick reference for what's included
+
+========================================
+MIGRATION STEPS SUMMARY:
+========================================
+
+1. Read README.md first
+2. Follow MIGRATION_GUIDE.md for detailed steps
+3. Use QUICK_REFERENCE.md for commands
+4. Keep this folder for reference
+
+========================================
+CURRENT SERVER INFO:
+========================================
+
+MinIO Server: /usr/local/bin/minio
+Data Directory: /minio/data
+API Port: 9000
+Console Port: 9001
+
+Credentials:
+  Access Key: csmsadmin
+  Secret Key: Mamlaka2020MinIO
+
+Buckets (5):
+  - attachments (download)
+  - certificates (download)
+  - csms-files (private)
+  - documents (download)
+  - photos (download)
+
+========================================
+NEXT STEPS:
+========================================
+
+1. Copy this entire folder to your new server:
+   scp -r /home/latest/minio2 root@NEW_SERVER_IP:/root/
+
+2. On new server, navigate to the folder:
+   cd /root/minio2
+
+3. Read and follow MIGRATION_GUIDE.md
+
+========================================
+
+Created: December 17, 2025
+Package Size: ~52KB
+Total Files: 11

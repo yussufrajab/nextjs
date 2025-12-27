@@ -25,6 +25,38 @@ export interface User {
   lastPasswordChange?: Date | string | null;
   failedPasswordChangeAttempts?: number;
   passwordChangeLockoutUntil?: Date | string | null;
+
+  // Password Expiration Fields
+  passwordExpiresAt?: Date | string | null;
+  lastExpirationWarningLevel?: number;
+  gracePeriodStartedAt?: Date | string | null;
+
+  // Account Lockout Fields
+  failedLoginAttempts?: number;
+  loginLockedUntil?: Date | string | null;
+  loginLockoutReason?: string | null;
+  loginLockoutType?: string | null;
+  isManuallyLocked?: boolean;
+  lockedBy?: string | null;
+  lockedAt?: Date | string | null;
+  lockoutNotes?: string | null;
+
+  // Session Inactivity Fields
+  lastActivity?: Date | string | null;
+}
+
+export interface Session {
+  id: string;
+  userId: string;
+  sessionToken: string;
+  ipAddress?: string | null;
+  userAgent?: string | null;
+  deviceInfo?: string | null;
+  location?: string | null;
+  createdAt: Date | string;
+  lastActivity: Date | string;
+  expiresAt: Date | string;
+  isSuspicious: boolean;
 }
 
 export interface EmployeeCertificate {

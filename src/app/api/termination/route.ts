@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { shouldApplyInstitutionFilter } from '@/lib/role-utils';
 import { v4 as uuidv4 } from 'uuid';
+import { logRequestApproval, logRequestRejection, getClientIp } from '@/lib/audit-logger';
 
 export async function GET(req: Request) {
   try {
@@ -138,11 +139,16 @@ export async function PATCH(req: Request) {
     const { id, ...updateData } = body;
 
     if (!id) {
-      return NextResponse.json({ 
-        success: false, 
-        message: 'Request ID is required' 
+      return NextResponse.json({
+        success: false,
+        message: 'Request ID is required'
       }, { status: 400 });
     }
+
+    // Get IP and user agent for audit logging
+    const headers = new Headers(req.headers);
+    const ipAddress = getClientIp(headers);
+    const userAgent = headers.get('user-agent');
 
     // No date conversion needed for separation requests
 
@@ -190,7 +196,68 @@ export async function PATCH(req: Request) {
       console.log(`Employee ${updatedRequest.Employee.name} status updated from "${currentEmployeeStatus}" to "${newStatus}" after ${updatedRequest.type.toLowerCase()} approval`);
     }
 
-    
+    // Log audit event for approvals and rejections
+    if (updateData.reviewedById && updateData.status) {
+      const reviewer = await db.User.findUnique({
+        where: { id: updateData.reviewedById },
+        select: { username: true, role: true }
+      });
+
+      if (reviewer) {
+        const statusLower = updateData.status.toLowerCase();
+        const isApproval = statusLower.includes('approved') && !statusLower.includes('rejected');
+        const isRejection = statusLower.includes('rejected');
+        const requestType = updatedRequest.type === 'TERMINATION' ? 'Termination' : 'Dismissal';
+
+        console.log('[AUDIT] Termination/Dismissal status update:', {
+          status: updateData.status,
+          isApproval,
+          isRejection,
+          reviewedById: updateData.reviewedById,
+          reviewer: reviewer.username,
+        });
+
+        if (isApproval) {
+          await logRequestApproval({
+            requestType,
+            requestId: id,
+            employeeId: updatedRequest.employeeId,
+            employeeName: updatedRequest.Employee?.name,
+            employeeZanId: updatedRequest.Employee?.zanId,
+            approvedById: updateData.reviewedById,
+            approvedByUsername: reviewer.username,
+            approvedByRole: reviewer.role || 'Unknown',
+            reviewStage: updateData.reviewStage,
+            ipAddress,
+            userAgent,
+            additionalData: {
+              type: updatedRequest.type,
+              reason: updatedRequest.reason,
+            },
+          });
+        } else if (isRejection) {
+          await logRequestRejection({
+            requestType,
+            requestId: id,
+            employeeId: updatedRequest.employeeId,
+            employeeName: updatedRequest.Employee?.name,
+            employeeZanId: updatedRequest.Employee?.zanId,
+            rejectedById: updateData.reviewedById,
+            rejectedByUsername: reviewer.username,
+            rejectedByRole: reviewer.role || 'Unknown',
+            rejectionReason: updateData.rejectionReason,
+            reviewStage: updateData.reviewStage,
+            ipAddress,
+            userAgent,
+            additionalData: {
+              type: updatedRequest.type,
+            },
+          });
+        }
+      }
+    }
+
+
     // Transform the data to match frontend expectations
     const transformedRequest = {
       ...updatedRequest,

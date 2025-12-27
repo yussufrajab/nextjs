@@ -24,14 +24,14 @@ export async function POST(req: Request) {
 
     console.log('Password reset request for user ID:', userId);
 
-    // TODO: In production, verify that the caller is an admin
-    // For now, we'll check if adminId is provided and exists
+    // Verify that the caller is an admin
+    let admin = null;
     if (adminId) {
-      const admin = await db.User.findUnique({
+      admin = await db.User.findUnique({
         where: { id: adminId },
       });
 
-      if (!admin || !['ADMIN', 'SUPER_ADMIN', 'HR'].includes(admin.role)) {
+      if (!admin || admin.role !== 'Admin') {
         return NextResponse.json(
           { success: false, message: 'Unauthorized. Only admins can reset passwords.' },
           { status: 403 }

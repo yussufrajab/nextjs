@@ -292,6 +292,8 @@ model User {
   lockedBy                                                            String?
   lockedAt                                                            DateTime?
   lockoutNotes                                                        String?
+  // Session Inactivity Fields
+  lastActivity                                                        DateTime?
   CadreChangeRequest_CadreChangeRequest_reviewedByIdToUser            CadreChangeRequest[]      @relation("CadreChangeRequest_reviewedByIdToUser")
   CadreChangeRequest_CadreChangeRequest_submittedByIdToUser           CadreChangeRequest[]      @relation("CadreChangeRequest_submittedByIdToUser")
   Complaint_Complaint_complainantIdToUser                             Complaint[]               @relation("Complaint_complainantIdToUser")
@@ -314,6 +316,7 @@ model User {
   Employee                                                            Employee?                 @relation(fields: [employeeId], references: [id])
   Institution                                                         Institution               @relation(fields: [institutionId], references: [id])
   AuditLog                                                            AuditLog[]
+  Session                                                             Session[]
 }
 
 model AuditLog {
@@ -339,6 +342,27 @@ model AuditLog {
   @@index([userId])
   @@index([timestamp])
   @@index([eventType])
+  @@index([eventCategory])
   @@index([severity])
   @@index([attemptedRoute])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  sessionToken String   @unique
+  ipAddress    String?
+  userAgent    String?
+  deviceInfo   String?  // Browser, OS, device type
+  location     String?  // Approximate location from IP
+  createdAt    DateTime @default(now())
+  lastActivity DateTime @default(now())
+  expiresAt    DateTime
+  isSuspicious Boolean  @default(false) // Flagged if login looks suspicious
+
+  User         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([sessionToken])
+  @@index([expiresAt])
 }

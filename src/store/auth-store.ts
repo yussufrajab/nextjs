@@ -40,6 +40,7 @@ interface AuthState {
   isAuthenticated: boolean;
   accessToken: string | null;
   refreshToken: string | null;
+  sessionToken: string | null; // Session token for concurrent session management
   login: (username: string, password: string) => Promise<User | null>;
   logout: () => Promise<void>;
   setUserManually: (user: User) => void;
@@ -56,6 +57,7 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       accessToken: null,
       refreshToken: null,
+      sessionToken: null,
       
       login: async (username: string, password: string) => {
         try {
@@ -202,13 +204,18 @@ export const useAuthStore = create<AuthState>()(
           if (token) {
             apiClient.setToken(token);
           }
-          
+
+          // Extract session token from backend response
+          const sessionToken = backendResponse?.sessionToken || null;
+          console.log('Session token:', sessionToken ? 'present' : 'missing');
+
           set({
             user,
             role: userRole,
             isAuthenticated: true,
             accessToken: token || null,
             refreshToken: refreshToken || null,
+            sessionToken: sessionToken,
           });
 
           // Set auth cookie for middleware
@@ -233,8 +240,12 @@ export const useAuthStore = create<AuthState>()(
 
       logout: async () => {
         try {
-          // Call backend logout endpoint
-          await apiClient.logout();
+          // Get current user ID and session token before clearing state
+          const currentUserId = get().user?.id;
+          const currentSessionToken = get().sessionToken;
+
+          // Call backend logout endpoint with userId and sessionToken
+          await apiClient.logout(currentUserId, currentSessionToken);
         } catch (error) {
           console.error('Logout error:', error);
         } finally {
@@ -245,6 +256,7 @@ export const useAuthStore = create<AuthState>()(
           if (typeof window !== 'undefined') {
             localStorage.removeItem('accessToken');
             localStorage.removeItem('refreshToken');
+            localStorage.removeItem('sessionToken');
           }
 
           // Clear auth cookie
@@ -257,6 +269,7 @@ export const useAuthStore = create<AuthState>()(
             isAuthenticated: false,
             accessToken: null,
             refreshToken: null,
+            sessionToken: null,
           });
         }
       },
@@ -399,6 +412,7 @@ export const useAuthStore = create<AuthState>()(
           isAuthenticated: state.isAuthenticated,
           accessToken: state.accessToken,
           refreshToken: state.refreshToken,
+          sessionToken: state.sessionToken,
         };
         
         console.log('State being persisted:', persistedState);

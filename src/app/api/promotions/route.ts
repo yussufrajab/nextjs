@@ -5,6 +5,7 @@ import { validateEmployeeStatusForRequest } from '@/lib/employee-status-validati
 import { createNotificationForRole, NotificationTemplates } from '@/lib/notifications';
 import { ROLES } from '@/lib/constants';
 import { v4 as uuidv4 } from 'uuid';
+import { logRequestApproval, logRequestRejection, getClientIp } from '@/lib/audit-logger';
 
 export async function GET(req: Request) {
   try {
@@ -219,12 +220,19 @@ export async function PATCH(req: Request) {
     const body = await req.json();
     const { id, ...updateData } = body;
 
+    console.log('🔵 PATCH /api/promotions called with:', { id, updateData });
+
     if (!id) {
-      return NextResponse.json({ 
-        success: false, 
-        message: 'Request ID is required' 
+      return NextResponse.json({
+        success: false,
+        message: 'Request ID is required'
       }, { status: 400 });
     }
+
+    // Get IP and user agent for audit logging
+    const headers = new Headers(req.headers);
+    const ipAddress = getClientIp(headers);
+    const userAgent = headers.get('user-agent');
 
     const updatedRequest = await db.promotionRequest.update({
       where: { id },
@@ -275,6 +283,68 @@ export async function PATCH(req: Request) {
       console.log(`Employee ${updatedRequest.Employee.name} cadre updated to "${updatedRequest.proposedCadre}" after promotion approval`);
     }
 
+    // Log audit event for approvals and rejections
+    if (updateData.reviewedById && updateData.status) {
+      const reviewer = await db.User.findUnique({
+        where: { id: updateData.reviewedById },
+        select: { username: true, role: true }
+      });
+
+      if (reviewer) {
+        // Check if status contains "Approved" or "Rejected" (case-insensitive)
+        const statusLower = updateData.status.toLowerCase();
+        const isApproval = statusLower.includes('approved') && !statusLower.includes('rejected');
+        const isRejection = statusLower.includes('rejected');
+
+        console.log('[AUDIT] Promotion status update:', {
+          status: updateData.status,
+          isApproval,
+          isRejection,
+          reviewedById: updateData.reviewedById,
+          reviewer: reviewer.username,
+        });
+
+        if (isApproval) {
+          await logRequestApproval({
+            requestType: 'Promotion',
+            requestId: id,
+            employeeId: updatedRequest.employeeId,
+            employeeName: updatedRequest.Employee?.name,
+            employeeZanId: updatedRequest.Employee?.zanId,
+            approvedById: updateData.reviewedById,
+            approvedByUsername: reviewer.username,
+            approvedByRole: reviewer.role || 'Unknown',
+            reviewStage: updateData.reviewStage,
+            ipAddress,
+            userAgent,
+            additionalData: {
+              proposedCadre: updatedRequest.proposedCadre,
+              currentCadre: updatedRequest.Employee?.cadre,
+            },
+          });
+        } else if (isRejection) {
+          await logRequestRejection({
+            requestType: 'Promotion',
+            requestId: id,
+            employeeId: updatedRequest.employeeId,
+            employeeName: updatedRequest.Employee?.name,
+            employeeZanId: updatedRequest.Employee?.zanId,
+            rejectedById: updateData.reviewedById,
+            rejectedByUsername: reviewer.username,
+            rejectedByRole: reviewer.role || 'Unknown',
+            rejectionReason: updateData.rejectionReason || updateData.commissionDecisionReason,
+            reviewStage: updateData.reviewStage,
+            ipAddress,
+            userAgent,
+            additionalData: {
+              proposedCadre: updatedRequest.proposedCadre,
+              currentCadre: updatedRequest.Employee?.cadre,
+            },
+          });
+        }
+      }
+    }
+
     // Transform the data to match frontend expectations
     const transformedRequest = {
       ...updatedRequest,
@@ -291,8 +361,8 @@ export async function PATCH(req: Request) {
 
   } catch (error) {
     console.error("[PROMOTIONS_PATCH]", error);
-    return NextResponse.json({ 
-      success: false, 
+    return NextResponse.json({
+      success: false,
       message: 'Internal Server Error',
       error: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });

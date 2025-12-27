@@ -165,6 +165,47 @@ export async function POST(req: Request) {
       );
     }
 
+    // Set initial activity timestamp for session timeout tracking
+    await db.User.update({
+      where: { id: user.id },
+      data: { lastActivity: new Date() },
+    });
+
+    // Get client info for session creation
+    const ipAddress = req.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
+                     req.headers.get('x-real-ip') ||
+                     null;
+    const userAgent = req.headers.get('user-agent') || null;
+
+    // Detect suspicious login and create session
+    const { detectSuspiciousLogin, getLoginSummary } = await import('@/lib/suspicious-login-detector');
+    const { createSession } = await import('@/lib/session-manager');
+    const { createNotification } = await import('@/lib/notifications');
+
+    const suspiciousCheck = await detectSuspiciousLogin({
+      userId: user.id,
+      ipAddress,
+      userAgent,
+    });
+
+    // Create session with suspicious flag
+    const session = await createSession(
+      user.id,
+      ipAddress,
+      userAgent,
+      suspiciousCheck.isSuspicious
+    );
+
+    // Notify user if login is suspicious
+    if (suspiciousCheck.shouldNotify) {
+      const loginInfo = getLoginSummary({ userId: user.id, ipAddress, userAgent });
+      await createNotification({
+        userId: user.id,
+        message: `New login detected from ${loginInfo.device} at ${loginInfo.location} on ${loginInfo.time}. If this wasn't you, please contact HR immediately.`,
+        link: '/dashboard/profile',
+      });
+    }
+
     // Successful authentication - return user data
     const userData = {
       id: user.id,
@@ -185,6 +226,7 @@ export async function POST(req: Request) {
       success: true,
       message: 'Login successful',
       user: userData,
+      sessionToken: session.sessionToken, // Include session token
     });
 
   } catch (error) {

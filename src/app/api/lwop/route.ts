@@ -5,6 +5,7 @@ import { validateEmployeeStatusForRequest } from '@/lib/employee-status-validati
 import { createNotificationForRole, NotificationTemplates } from '@/lib/notifications';
 import { ROLES } from '@/lib/constants';
 import { v4 as uuidv4 } from 'uuid';
+import { logRequestApproval, logRequestRejection, getClientIp } from '@/lib/audit-logger';
 
 export async function GET(req: Request) {
   try {
@@ -175,11 +176,16 @@ export async function PATCH(req: Request) {
     const { id, ...updateData } = body;
 
     if (!id) {
-      return NextResponse.json({ 
-        success: false, 
-        message: 'Request ID is required' 
+      return NextResponse.json({
+        success: false,
+        message: 'Request ID is required'
       }, { status: 400 });
     }
+
+    // Get IP and user agent for audit logging
+    const headers = new Headers(req.headers);
+    const ipAddress = getClientIp(headers);
+    const userAgent = headers.get('user-agent');
 
     // No date conversion needed for this schema
 
@@ -213,6 +219,67 @@ export async function PATCH(req: Request) {
         data: { status: "On LWOP" }
       });
       console.log(`Employee ${updatedRequest.Employee.name} status updated to "On LWOP" after LWOP approval`);
+    }
+
+    // Log audit event for approvals and rejections
+    if (updateData.reviewedById && updateData.status) {
+      const reviewer = await db.User.findUnique({
+        where: { id: updateData.reviewedById },
+        select: { username: true, role: true }
+      });
+
+      if (reviewer) {
+        const statusLower = updateData.status.toLowerCase();
+        const isApproval = statusLower.includes('approved') && !statusLower.includes('rejected');
+        const isRejection = statusLower.includes('rejected');
+
+        console.log('[AUDIT] LWOP status update:', {
+          status: updateData.status,
+          isApproval,
+          isRejection,
+          reviewedById: updateData.reviewedById,
+          reviewer: reviewer.username,
+        });
+
+        if (isApproval) {
+          await logRequestApproval({
+            requestType: 'LWOP',
+            requestId: id,
+            employeeId: updatedRequest.employeeId,
+            employeeName: updatedRequest.Employee?.name,
+            employeeZanId: updatedRequest.Employee?.zanId,
+            approvedById: updateData.reviewedById,
+            approvedByUsername: reviewer.username,
+            approvedByRole: reviewer.role || 'Unknown',
+            reviewStage: updateData.reviewStage,
+            ipAddress,
+            userAgent,
+            additionalData: {
+              duration: updatedRequest.duration,
+              reason: updatedRequest.reason,
+            },
+          });
+        } else if (isRejection) {
+          await logRequestRejection({
+            requestType: 'LWOP',
+            requestId: id,
+            employeeId: updatedRequest.employeeId,
+            employeeName: updatedRequest.Employee?.name,
+            employeeZanId: updatedRequest.Employee?.zanId,
+            rejectedById: updateData.reviewedById,
+            rejectedByUsername: reviewer.username,
+            rejectedByRole: reviewer.role || 'Unknown',
+            rejectionReason: updateData.rejectionReason,
+            reviewStage: updateData.reviewStage,
+            ipAddress,
+            userAgent,
+            additionalData: {
+              duration: updatedRequest.duration,
+              reason: updatedRequest.reason,
+            },
+          });
+        }
+      }
     }
 
     // Transform the data to match frontend expectations

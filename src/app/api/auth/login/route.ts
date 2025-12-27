@@ -90,12 +90,12 @@ export async function POST(req: Request) {
       );
     }
 
-    // Update user reference
-    user = refreshedUser;
+    // Use refreshed user data for subsequent checks
+    const currentUser = refreshedUser;
 
     // Check if account is locked
-    if (isAccountLocked(user)) {
-      const lockoutStatus = getAccountLockoutStatus(user);
+    if (isAccountLocked(currentUser)) {
+      const lockoutStatus = getAccountLockoutStatus(currentUser);
       console.log('Account locked for user:', username);
 
       await logLoginAttempt({
@@ -142,13 +142,13 @@ export async function POST(req: Request) {
     }
 
     // Verify password
-    const isPasswordValid = await comparePassword(password, user.password);
+    const isPasswordValid = await comparePassword(password, currentUser.password);
 
     if (!isPasswordValid) {
       console.log('Invalid password for user:', username);
 
       // Increment failed login attempts
-      const lockoutResult = await incrementFailedLoginAttempts(user.id, ipAddress, userAgent);
+      const lockoutResult = await incrementFailedLoginAttempts(currentUser.id, ipAddress, userAgent);
 
       // Log failed login attempt
       await logLoginAttempt({
@@ -180,14 +180,20 @@ export async function POST(req: Request) {
     }
 
     // Reset failed login attempts on successful login
-    await resetFailedLoginAttempts(user.id);
+    await resetFailedLoginAttempts(currentUser.id);
+
+    // Set initial activity timestamp for session timeout tracking
+    await db.User.update({
+      where: { id: currentUser.id },
+      data: { lastActivity: new Date() },
+    });
 
     // Check password status
     const now = new Date();
     const isTemporaryPasswordExpired =
-      user.isTemporaryPassword &&
-      user.temporaryPasswordExpiry &&
-      new Date(user.temporaryPasswordExpiry) < now;
+      currentUser.isTemporaryPassword &&
+      currentUser.temporaryPasswordExpiry &&
+      new Date(currentUser.temporaryPasswordExpiry) < now;
 
     // If temporary password has expired, deny login
     if (isTemporaryPasswordExpired) {
@@ -203,7 +209,7 @@ export async function POST(req: Request) {
     }
 
     // Check password expiration (non-temporary passwords only)
-    if (!user.isTemporaryPassword) {
+    if (!currentUser.isTemporaryPassword) {
       const {
         isPasswordExpired,
         isInGracePeriod,
@@ -211,10 +217,10 @@ export async function POST(req: Request) {
       } = await import('@/lib/password-expiration-utils');
 
       const expirationStatus = getPasswordExpirationStatus({
-        role: user.role,
-        passwordExpiresAt: user.passwordExpiresAt,
-        gracePeriodStartedAt: user.gracePeriodStartedAt,
-        lastExpirationWarningLevel: user.lastExpirationWarningLevel,
+        role: currentUser.role,
+        passwordExpiresAt: currentUser.passwordExpiresAt,
+        gracePeriodStartedAt: currentUser.gracePeriodStartedAt,
+        lastExpirationWarningLevel: currentUser.lastExpirationWarningLevel,
       });
 
       // If expired beyond grace period, deny login
@@ -246,14 +252,11 @@ export async function POST(req: Request) {
 
         // Update user to require password change
         await db.User.update({
-          where: { id: user.id },
+          where: { id: currentUser.id },
           data: {
             mustChangePassword: true,
           },
         });
-
-        // Update user object for response
-        user.mustChangePassword = true;
       }
     }
 
@@ -267,39 +270,39 @@ export async function POST(req: Request) {
       tokenType: 'Bearer',
       expiresIn: null,
       user: {
-        id: user.id,
-        fullName: user.name, // Frontend expects fullName
+        id: currentUser.id,
+        fullName: user.name, // Frontend expects fullName (from original user with includes)
         name: user.name,
-        username: user.username,
-        role: user.role,
-        institutionId: user.institutionId,
+        username: currentUser.username,
+        role: currentUser.role,
+        institutionId: currentUser.institutionId,
         institutionName: user.Institution?.name || '',
         Institution: user.Institution,
         Employee: user.Employee,
-        isEnabled: user.active, // Frontend expects isEnabled
-        active: user.active,
-        employeeId: user.employeeId,
+        isEnabled: currentUser.active, // Frontend expects isEnabled
+        active: currentUser.active,
+        employeeId: currentUser.employeeId,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
         lastLoginDate: new Date(),
         // Add password status flags
-        mustChangePassword: user.mustChangePassword || false,
-        isTemporaryPassword: user.isTemporaryPassword || false,
-        temporaryPasswordExpiry: user.temporaryPasswordExpiry,
+        mustChangePassword: currentUser.mustChangePassword || false,
+        isTemporaryPassword: currentUser.isTemporaryPassword || false,
+        temporaryPasswordExpiry: currentUser.temporaryPasswordExpiry,
       }
     };
 
     // Password status for frontend to handle redirects
     const passwordStatus = {
-      mustChange: user.mustChangePassword || false,
-      isTemporary: user.isTemporaryPassword || false,
-      expiresAt: user.temporaryPasswordExpiry,
+      mustChange: currentUser.mustChangePassword || false,
+      isTemporary: currentUser.isTemporaryPassword || false,
+      expiresAt: currentUser.temporaryPasswordExpiry,
       isExpired: false, // Already checked above, would have returned error
     };
 
     // Check if this is a first-time login (check if user has any existing notifications)
     const existingNotifications = await db.notification.findMany({
-      where: { userId: user.id },
+      where: { userId: currentUser.id },
       take: 1,
     });
 
@@ -307,7 +310,7 @@ export async function POST(req: Request) {
     if (existingNotifications.length === 0) {
       const welcomeNotification = NotificationTemplates.welcomeMessage();
       await createNotification({
-        userId: user.id,
+        userId: currentUser.id,
         message: welcomeNotification.message,
         link: welcomeNotification.link,
       });
@@ -316,17 +319,47 @@ export async function POST(req: Request) {
     // Log successful login attempt
     await logLoginAttempt({
       success: true,
-      username: user.username,
-      userId: user.id,
-      userRole: user.role,
+      username: currentUser.username,
+      userId: currentUser.id,
+      userRole: currentUser.role,
       ipAddress,
       userAgent,
     });
+
+    // Detect suspicious login and create session
+    const { detectSuspiciousLogin, getLoginSummary } = await import('@/lib/suspicious-login-detector');
+    const { createSession } = await import('@/lib/session-manager');
+    const { createNotification: createSuspiciousNotification } = await import('@/lib/notifications');
+
+    const suspiciousCheck = await detectSuspiciousLogin({
+      userId: currentUser.id,
+      ipAddress,
+      userAgent,
+    });
+
+    // Create session with suspicious flag
+    const session = await createSession(
+      currentUser.id,
+      ipAddress,
+      userAgent,
+      suspiciousCheck.isSuspicious
+    );
+
+    // Notify user if login is suspicious
+    if (suspiciousCheck.shouldNotify) {
+      const loginInfo = getLoginSummary({ userId: currentUser.id, ipAddress, userAgent });
+      await createSuspiciousNotification({
+        userId: currentUser.id,
+        message: `New login detected from ${loginInfo.device} at ${loginInfo.location} on ${loginInfo.time}. If this wasn't you, please change your password immediately.`,
+        link: '/dashboard/profile',
+      });
+    }
 
     return NextResponse.json({
       success: true,
       data: authData,
       passwordStatus,
+      sessionToken: session.sessionToken, // Include session token in response
       message: 'Login successful'
     });
 

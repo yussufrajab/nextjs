@@ -29,6 +29,17 @@ interface AuditLog {
   wasBlocked: boolean;
   blockReason?: string | null;
   timestamp: string;
+  additionalData?: {
+    requestType?: string;
+    requestId?: string;
+    employeeId?: string;
+    employeeName?: string;
+    employeeZanId?: string;
+    reviewStage?: string;
+    action?: string;
+    rejectionReason?: string;
+    [key: string]: any;
+  } | null;
 }
 
 interface AuditStats {
@@ -78,6 +89,7 @@ export default function AuditTrailPage() {
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
   const [severityFilter, setSeverityFilter] = useState<string>('all');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [eventTypeFilter, setEventTypeFilter] = useState<string>('all');
   const [dateRange, setDateRange] = useState<{ start: string; end: string }>({
     start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Last 7 days
@@ -103,6 +115,7 @@ export default function AuditTrailPage() {
       if (dateRange.start) params.append('startDate', new Date(dateRange.start).toISOString());
       if (dateRange.end) params.append('endDate', new Date(dateRange.end + 'T23:59:59').toISOString());
       if (severityFilter && severityFilter !== 'all') params.append('severity', severityFilter);
+      if (categoryFilter && categoryFilter !== 'all') params.append('eventCategory', categoryFilter);
       if (eventTypeFilter && eventTypeFilter !== 'all') params.append('eventType', eventTypeFilter);
       if (searchTerm) params.append('username', searchTerm);
 
@@ -155,7 +168,7 @@ export default function AuditTrailPage() {
   useEffect(() => {
     fetchAuditLogs();
     fetchStats();
-  }, [currentPage, severityFilter, eventTypeFilter, dateRange]);
+  }, [currentPage, severityFilter, categoryFilter, eventTypeFilter, dateRange]);
 
   const handleSearch = () => {
     setCurrentPage(1);
@@ -182,7 +195,7 @@ export default function AuditTrailPage() {
       <div className="space-y-6">
         <PageHeader
           title="Audit Trail"
-          description="Monitor security events and unauthorized access attempts"
+          description="Monitor security events, unauthorized access attempts, and data modifications (request approvals/rejections)"
         />
 
         {/* Statistics Cards */}
@@ -241,7 +254,7 @@ export default function AuditTrailPage() {
             <CardDescription>Filter and search audit logs</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
               <div className="md:col-span-2">
                 <label className="text-sm font-medium mb-1.5 block">Search Username/IP</label>
                 <div className="flex gap-2">
@@ -255,6 +268,24 @@ export default function AuditTrailPage() {
                     <Search className="h-4 w-4" />
                   </Button>
                 </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium mb-1.5 block">Category</label>
+                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    <SelectItem value="SECURITY">Security</SelectItem>
+                    <SelectItem value="AUTHENTICATION">Authentication</SelectItem>
+                    <SelectItem value="AUTHORIZATION">Authorization</SelectItem>
+                    <SelectItem value="ACCESS">Access</SelectItem>
+                    <SelectItem value="DATA_MODIFICATION">Data Modification</SelectItem>
+                    <SelectItem value="SYSTEM">System</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div>
@@ -285,6 +316,11 @@ export default function AuditTrailPage() {
                     <SelectItem value="ACCESS_DENIED">Access Denied</SelectItem>
                     <SelectItem value="FORBIDDEN_ROUTE">Forbidden Route</SelectItem>
                     <SelectItem value="LOGIN_FAILED">Login Failed</SelectItem>
+                    <SelectItem value="LOGIN_SUCCESS">Login Success</SelectItem>
+                    <SelectItem value="REQUEST_APPROVED">Request Approved</SelectItem>
+                    <SelectItem value="REQUEST_REJECTED">Request Rejected</SelectItem>
+                    <SelectItem value="REQUEST_SUBMITTED">Request Submitted</SelectItem>
+                    <SelectItem value="REQUEST_UPDATED">Request Updated</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -352,42 +388,79 @@ export default function AuditTrailPage() {
                         <TableHead>Event Type</TableHead>
                         <TableHead>User</TableHead>
                         <TableHead>Role</TableHead>
-                        <TableHead>Route</TableHead>
+                        <TableHead>Details</TableHead>
                         <TableHead>IP Address</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead>Reason</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {logs.map((log) => (
-                        <TableRow key={log.id}>
-                          <TableCell className="font-mono text-xs">
-                            {format(new Date(log.timestamp), 'yyyy-MM-dd HH:mm:ss')}
-                          </TableCell>
-                          <TableCell>{getSeverityBadge(log.severity)}</TableCell>
-                          <TableCell className="font-medium">{log.eventType}</TableCell>
-                          <TableCell>{log.username || log.userId || 'Anonymous'}</TableCell>
-                          <TableCell>
-                            {log.userRole ? (
-                              <Badge variant="outline">{log.userRole}</Badge>
-                            ) : (
-                              <span className="text-muted-foreground text-sm">-</span>
-                            )}
-                          </TableCell>
-                          <TableCell className="font-mono text-xs">{log.attemptedRoute}</TableCell>
-                          <TableCell className="font-mono text-xs">{log.ipAddress || '-'}</TableCell>
-                          <TableCell>
-                            {log.wasBlocked ? (
-                              <Badge variant="destructive">Blocked</Badge>
-                            ) : (
-                              <Badge variant="default">Allowed</Badge>
-                            )}
-                          </TableCell>
-                          <TableCell className="max-w-xs truncate text-xs text-muted-foreground">
-                            {log.blockReason || '-'}
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                      {logs.map((log) => {
+                        const isRequestEvent = log.eventType === 'REQUEST_APPROVED' || log.eventType === 'REQUEST_REJECTED';
+
+                        return (
+                          <TableRow key={log.id}>
+                            <TableCell className="font-mono text-xs">
+                              {format(new Date(log.timestamp), 'yyyy-MM-dd HH:mm:ss')}
+                            </TableCell>
+                            <TableCell>{getSeverityBadge(log.severity)}</TableCell>
+                            <TableCell className="font-medium">{log.eventType}</TableCell>
+                            <TableCell>{log.username || log.userId || 'Anonymous'}</TableCell>
+                            <TableCell>
+                              {log.userRole ? (
+                                <Badge variant="outline">{log.userRole}</Badge>
+                              ) : (
+                                <span className="text-muted-foreground text-sm">-</span>
+                              )}
+                            </TableCell>
+                            <TableCell className="max-w-md">
+                              {isRequestEvent && log.additionalData ? (
+                                <div className="text-xs space-y-1">
+                                  <div className="font-medium">
+                                    {log.additionalData.requestType} Request
+                                  </div>
+                                  {log.additionalData.employeeName && (
+                                    <div className="text-muted-foreground">
+                                      Employee: {log.additionalData.employeeName}
+                                      {log.additionalData.employeeZanId && ` (${log.additionalData.employeeZanId})`}
+                                    </div>
+                                  )}
+                                  {log.additionalData.reviewStage && (
+                                    <div className="text-muted-foreground">
+                                      Stage: {log.additionalData.reviewStage}
+                                    </div>
+                                  )}
+                                  {log.eventType === 'REQUEST_REJECTED' && log.blockReason && (
+                                    <div className="text-orange-600">
+                                      Reason: {log.blockReason}
+                                    </div>
+                                  )}
+                                </div>
+                              ) : (
+                                <div className="text-xs space-y-1">
+                                  <div className="font-mono truncate">{log.attemptedRoute}</div>
+                                  {log.blockReason && (
+                                    <div className="text-muted-foreground truncate">
+                                      {log.blockReason}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </TableCell>
+                            <TableCell className="font-mono text-xs">{log.ipAddress || '-'}</TableCell>
+                            <TableCell>
+                              {log.eventType === 'REQUEST_APPROVED' ? (
+                                <Badge variant="default" className="bg-green-600">Approved</Badge>
+                              ) : log.eventType === 'REQUEST_REJECTED' ? (
+                                <Badge variant="destructive">Rejected</Badge>
+                              ) : log.wasBlocked ? (
+                                <Badge variant="destructive">Blocked</Badge>
+                              ) : (
+                                <Badge variant="default">Allowed</Badge>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 </div>

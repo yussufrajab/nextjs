@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DebugLogger } from '@/lib/debug-logger';
 import { PasswordExpirationBanner } from '@/components/auth/password-expiration-banner';
+import { useInactivityTimeout } from '@/hooks/use-inactivity-timeout';
 
 export default function DashboardLayout({
   children,
@@ -17,6 +18,11 @@ export default function DashboardLayout({
 }) {
   const { isAuthenticated, isLoading, role, user } = useAuth();
   const router = useRouter();
+
+  // Enable session inactivity timeout (7 minutes)
+  useInactivityTimeout({
+    enabled: isAuthenticated && !isLoading,
+  });
 
   React.useEffect(() => {
     DebugLogger.log('DASHBOARD_LAYOUT_AUTH_STATE', { isLoading, isAuthenticated, role });
