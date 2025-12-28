@@ -355,13 +355,34 @@ export async function POST(req: Request) {
       });
     }
 
-    return NextResponse.json({
+    // Generate and set CSRF token for protection against CSRF attacks
+    const {
+      generateCSRFToken,
+      signCSRFToken,
+      getCSRFCookieOptions,
+      CSRF_COOKIE_NAME
+    } = await import('@/lib/csrf-utils');
+
+    const csrfToken = generateCSRFToken();
+    const signedCSRFToken = signCSRFToken(csrfToken);
+    const csrfCookieOptions = getCSRFCookieOptions();
+
+    console.log('[LOGIN] Generated CSRF token for user:', currentUser.username);
+
+    // Create response with CSRF token cookie
+    const response = NextResponse.json({
       success: true,
       data: authData,
       passwordStatus,
       sessionToken: session.sessionToken, // Include session token in response
+      csrfToken: signedCSRFToken, // Include CSRF token in response for client-side storage
       message: 'Login successful'
     });
+
+    // Set CSRF token cookie (readable by JavaScript, but protected by SameSite)
+    response.cookies.set(CSRF_COOKIE_NAME, signedCSRFToken, csrfCookieOptions);
+
+    return response;
 
   } catch (error) {
     if (error instanceof z.ZodError) {

@@ -133,7 +133,8 @@
       "Bash(node test-audit-db.js:*)",
       "Bash(pm2 flush:*)",
       "Bash(timeout 120 bash:*)",
-      "Bash(node test-audit-logs.js:*)"
+      "Bash(node test-audit-logs.js:*)",
+      "Bash(/home/latest/test-security-headers.sh:*)"
     ],
     "deny": []
   }

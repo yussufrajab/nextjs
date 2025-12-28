@@ -102,7 +102,7 @@ This policy applies to:
 
 **Systems:**
 - CSMS application (https://csms.zanajira.go.tz)
-- Employee portal (https://csms.zanajira.go.tz/employee-login)
+- Employee portal (https://employee.zanajira.go.tz)
 - PostgreSQL database
 - MinIO object storage
 - HRIMS integration
@@ -121,7 +121,7 @@ This policy is authorized by the Civil Service Commission of Zanzibar and is bin
 
 This policy shall be reviewed:
 
-- Annually on January 1st
+- Annually on January 21st
 - Following significant security incidents
 - Upon major system changes
 - When regulatory requirements change
@@ -171,7 +171,7 @@ The CSMS security program aims to achieve the following objectives:
 **Implementation:**
 - Input validation on all forms
 - Database constraints and foreign keys
-- **Comprehensive audit trails for all modifications** (IMPLEMENTED)
+- Audit trails for all modifications 
 - Checksums for file uploads
 - Transaction logging
 - Regular data integrity checks
@@ -193,14 +193,14 @@ The CSMS security program aims to achieve the following objectives:
 - 99.5% uptime target
 - Regular system maintenance
 - Backup and disaster recovery plans
-- **Automated monitoring and alerting** (IMPLEMENTED)
+- Automated monitoring and alerting 
 - Redundancy for critical components
 - Performance optimization
 - DDoS protection
 
 **Service Levels:**
 - System availability: 24/7/365
-- Support hours: Monday-Friday, 8:00-17:00 EAT
+- Support hours: Monday-Friday, 8:00-15:00 EAT
 - Emergency support: 24/7
 - Maximum planned downtime: 4 hours/month
 - Recovery Time Objective (RTO): 4 hours
@@ -214,7 +214,7 @@ The CSMS security program aims to achieve the following objectives:
 
 **Implementation:**
 - Unique user accounts (no shared accounts)
-- **Comprehensive audit logging system** (IMPLEMENTED)
+- Comprehensive audit logging system
   - Login/logout tracking
   - Request approval/rejection logging
   - Data modification tracking
@@ -278,13 +278,10 @@ This Password Policy establishes requirements for password creation, management,
 
 #### 5.2.1 Password Complexity
 
-**Current Implemented Requirements:**
-- **Minimum length**: 6 characters
-- **Character types**: Currently no strict requirements
+**Enhanced Implemented Requirements :**
 
-**Recommended Enhanced Requirements (Planned for Phase 2):**
-- **Minimum length**: 12 characters
-- **Character types**: Must include at least three of:
+- **Minimum length**: 8 characters
+- **Character types**: Must include at least one of:
   - Uppercase letters (A-Z)
   - Lowercase letters (a-z)
   - Numbers (0-9)
@@ -312,10 +309,10 @@ This Password Policy establishes requirements for password creation, management,
    - Current password required
    - New password must meet complexity requirements
    - Confirmation required
-   - **Password expiration automatically updated** (IMPLEMENTED)
+   - Password expiration automatically 
 
 3. **Password Validation**:
-   - Real-time strength indicator (if available)
+   - Real-time strength indicator 
    - Complexity check before acceptance
    - History check (prevent reuse)
 
@@ -570,7 +567,7 @@ Critical functions require multiple people to prevent fraud or error.
 - HRO cannot approve own institution's requests
 - User creation and approval separate
 - Sensitive operations require dual authorization
-- **All approval actions logged** (IMPLEMENTED)
+- All approval actions logged
 
 #### 6.2.3 Need-to-Know
 
@@ -594,7 +591,7 @@ Multiple layers of security controls.
 - Application-level authentication
 - Database access controls
 - API authorization checks
-- **Audit logging at each layer** (IMPLEMENTED)
+- Audit logging at each layer
 - Session management
 - Inactivity timeout
 - Suspicious login detection
@@ -607,19 +604,19 @@ Multiple layers of security controls.
 - Username or email + password
 - Session-based authentication
 - HTTP-only secure cookies
-- **Session timeout: 24 hours or 7 minutes inactivity** (IMPLEMENTED)
-- **Maximum 3 concurrent sessions** (IMPLEMENTED)
-- **Failed attempt tracking** (IMPLEMENTED)
-- **Account lockout after 5 failed attempts** (IMPLEMENTED)
+- Session timeout:  7 minutes inactivity 
+- Maximum 3 concurrent sessions
+- Failed attempt tracking
+- Account lockout after 5 failed attempts
 
 **Employee Login:**
-- **Three-Factor Credential System** (IMPLEMENTED):
+- **Three-Factor Credential System**:
   - ZanID + Payroll Number + ZSSF Number
   - All three credentials verified simultaneously
   - Read-only session
   - Limited functionality
-- **Session tracking** (IMPLEMENTED)
-- **Suspicious login detection** (IMPLEMENTED)
+- **Session tracking** 
+- **Suspicious login detection** 
 
 **API Authentication (Future):**
 - API keys for service accounts
@@ -659,7 +656,7 @@ Session:
   - createdAt: Session creation time
 ```
 
-### 6.4 Concurrent Session Management - **IMPLEMENTED**
+### 6.4 Concurrent Session Management 
 
 #### 6.4.1 Session Limits
 
@@ -711,7 +708,7 @@ Session:
 - Shows device, location, last activity
 - Option to terminate individual sessions (planned)
 
-### 6.5 Suspicious Login Detection - **IMPLEMENTED**
+### 6.5 Suspicious Login Detection 
 
 #### 6.5.1 Detection Criteria
 
@@ -745,15 +742,17 @@ Session:
 - Non-blocking (doesn't prevent login)
 - Creates notifications for suspicious activity
 
-#### 6.5.2 Response Actions - **IMPLEMENTED**
+#### 6.5.2 Response Actions 
 
 **Automated Responses:**
+
 - ✓ Mark session as suspicious (`isSuspicious = true`)
 - ✓ Log detailed audit event with reasons
 - ✓ Track IP addresses and devices
 - ✓ Create user notification (for high-risk logins)
 
 **User Notification Triggers:**
+
 - New IP AND new device
 - Concurrent logins from different IPs
 - Rapid successive logins from different IPs
@@ -1844,7 +1843,7 @@ getAuditStatistics(filters?: {
 - Events grouped by severity
 - Custom date range analysis
 
-#### 9.8.3 Admin Interface (Planned)
+#### 9.8.3 Admin Interface
 
 **Audit Trail Dashboard:**
 - Real-time event feed
@@ -1856,7 +1855,7 @@ getAuditStatistics(filters?: {
 - Export to CSV/PDF
 - Event detail view
 
-**Status:** Planned (API implemented, UI pending)
+**Status:** implemented
 
 ### 9.9 Real-Time Monitoring and Alerting
 

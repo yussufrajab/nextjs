@@ -41,12 +41,14 @@ interface AuthState {
   accessToken: string | null;
   refreshToken: string | null;
   sessionToken: string | null; // Session token for concurrent session management
+  csrfToken: string | null; // CSRF token for protection against CSRF attacks
   login: (username: string, password: string) => Promise<User | null>;
   logout: () => Promise<void>;
   setUserManually: (user: User) => void;
   refreshAuthToken: () => Promise<boolean>;
   initializeAuth: () => void;
   updateTokenFromApiClient: (newAccessToken: string) => void;
+  getCSRFToken: () => string | null; // Helper to get CSRF token
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -58,6 +60,7 @@ export const useAuthStore = create<AuthState>()(
       accessToken: null,
       refreshToken: null,
       sessionToken: null,
+      csrfToken: null,
       
       login: async (username: string, password: string) => {
         try {
@@ -209,6 +212,10 @@ export const useAuthStore = create<AuthState>()(
           const sessionToken = backendResponse?.sessionToken || null;
           console.log('Session token:', sessionToken ? 'present' : 'missing');
 
+          // Extract CSRF token from backend response
+          const csrfToken = backendResponse?.csrfToken || null;
+          console.log('CSRF token:', csrfToken ? 'present' : 'missing');
+
           set({
             user,
             role: userRole,
@@ -216,6 +223,7 @@ export const useAuthStore = create<AuthState>()(
             accessToken: token || null,
             refreshToken: refreshToken || null,
             sessionToken: sessionToken,
+            csrfToken: csrfToken,
           });
 
           // Set auth cookie for middleware
@@ -259,8 +267,11 @@ export const useAuthStore = create<AuthState>()(
             localStorage.removeItem('sessionToken');
           }
 
-          // Clear auth cookie
+          // Clear auth cookie and CSRF cookie
           clearAuthCookie();
+          if (typeof window !== 'undefined') {
+            document.cookie = 'csrf-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+          }
 
           // Reset store state
           set({
@@ -270,6 +281,7 @@ export const useAuthStore = create<AuthState>()(
             accessToken: null,
             refreshToken: null,
             sessionToken: null,
+            csrfToken: null,
           });
         }
       },
@@ -382,6 +394,11 @@ export const useAuthStore = create<AuthState>()(
           localStorage.setItem('accessToken', newAccessToken);
         }
       },
+
+      // Helper to get CSRF token
+      getCSRFToken: () => {
+        return get().csrfToken;
+      },
     }),
     {
       name: 'auth-storage',
@@ -413,6 +430,7 @@ export const useAuthStore = create<AuthState>()(
           accessToken: state.accessToken,
           refreshToken: state.refreshToken,
           sessionToken: state.sessionToken,
+          csrfToken: state.csrfToken,
         };
         
         console.log('State being persisted:', persistedState);
