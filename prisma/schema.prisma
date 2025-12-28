@@ -25,6 +25,11 @@ model CadreChangeRequest {
   Employee                                    Employee @relation(fields: [employeeId], references: [id])
   User_CadreChangeRequest_reviewedByIdToUser  User?    @relation("CadreChangeRequest_reviewedByIdToUser", fields: [reviewedById], references: [id])
   User_CadreChangeRequest_submittedByIdToUser User     @relation("CadreChangeRequest_submittedByIdToUser", fields: [submittedById], references: [id])
+
+  @@index([status])
+  @@index([reviewStage])
+  @@index([employeeId])
+  @@index([createdAt(sort: Desc)])
 }
 
 model Complaint {
@@ -47,6 +52,10 @@ model Complaint {
   updatedAt                          DateTime
   User_Complaint_complainantIdToUser User     @relation("Complaint_complainantIdToUser", fields: [complainantId], references: [id])
   User_Complaint_reviewedByIdToUser  User?    @relation("Complaint_reviewedByIdToUser", fields: [reviewedById], references: [id])
+
+  @@index([status])
+  @@index([reviewStage])
+  @@index([createdAt(sort: Desc)])
 }
 
 model ConfirmationRequest {
@@ -65,6 +74,11 @@ model ConfirmationRequest {
   Employee                                     Employee  @relation(fields: [employeeId], references: [id])
   User_ConfirmationRequest_reviewedByIdToUser  User?     @relation("ConfirmationRequest_reviewedByIdToUser", fields: [reviewedById], references: [id])
   User_ConfirmationRequest_submittedByIdToUser User      @relation("ConfirmationRequest_submittedByIdToUser", fields: [submittedById], references: [id])
+
+  @@index([status])
+  @@index([reviewStage])
+  @@index([employeeId])
+  @@index([createdAt(sort: Desc)])
 }
 
 model Employee {
@@ -111,6 +125,13 @@ model Employee {
   SeparationRequest       SeparationRequest[]
   ServiceExtensionRequest ServiceExtensionRequest[]
   User                    User?
+
+  // Performance indexes for search optimization
+  @@index([name])
+  @@index([payrollNumber])
+  @@index([employmentDate(sort: Desc)])
+  @@index([status, institutionId])
+  @@index([institutionId])
 }
 
 model EmployeeCertificate {
@@ -151,6 +172,11 @@ model LwopRequest {
   Employee                             Employee  @relation(fields: [employeeId], references: [id])
   User_LwopRequest_reviewedByIdToUser  User?     @relation("LwopRequest_reviewedByIdToUser", fields: [reviewedById], references: [id])
   User_LwopRequest_submittedByIdToUser User      @relation("LwopRequest_submittedByIdToUser", fields: [submittedById], references: [id])
+
+  @@index([status])
+  @@index([reviewStage])
+  @@index([employeeId])
+  @@index([createdAt(sort: Desc)])
 }
 
 model Notification {
@@ -181,6 +207,11 @@ model PromotionRequest {
   Employee                                  Employee @relation(fields: [employeeId], references: [id])
   User_PromotionRequest_reviewedByIdToUser  User?    @relation("PromotionRequest_reviewedByIdToUser", fields: [reviewedById], references: [id])
   User_PromotionRequest_submittedByIdToUser User     @relation("PromotionRequest_submittedByIdToUser", fields: [submittedById], references: [id])
+
+  @@index([status])
+  @@index([reviewStage])
+  @@index([employeeId])
+  @@index([createdAt(sort: Desc)])
 }
 
 model ResignationRequest {
@@ -199,6 +230,11 @@ model ResignationRequest {
   Employee                                    Employee @relation(fields: [employeeId], references: [id])
   User_ResignationRequest_reviewedByIdToUser  User?    @relation("ResignationRequest_reviewedByIdToUser", fields: [reviewedById], references: [id])
   User_ResignationRequest_submittedByIdToUser User     @relation("ResignationRequest_submittedByIdToUser", fields: [submittedById], references: [id])
+
+  @@index([status])
+  @@index([reviewStage])
+  @@index([employeeId])
+  @@index([createdAt(sort: Desc)])
 }
 
 model RetirementRequest {
@@ -219,6 +255,11 @@ model RetirementRequest {
   Employee                                   Employee @relation(fields: [employeeId], references: [id])
   User_RetirementRequest_reviewedByIdToUser  User?    @relation("RetirementRequest_reviewedByIdToUser", fields: [reviewedById], references: [id])
   User_RetirementRequest_submittedByIdToUser User     @relation("RetirementRequest_submittedByIdToUser", fields: [submittedById], references: [id])
+
+  @@index([status])
+  @@index([reviewStage])
+  @@index([employeeId])
+  @@index([createdAt(sort: Desc)])
 }
 
 model SeparationRequest {
@@ -237,6 +278,11 @@ model SeparationRequest {
   Employee                                   Employee @relation(fields: [employeeId], references: [id])
   User_SeparationRequest_reviewedByIdToUser  User?    @relation("SeparationRequest_reviewedByIdToUser", fields: [reviewedById], references: [id])
   User_SeparationRequest_submittedByIdToUser User     @relation("SeparationRequest_submittedByIdToUser", fields: [submittedById], references: [id])
+
+  @@index([status])
+  @@index([reviewStage])
+  @@index([employeeId])
+  @@index([createdAt(sort: Desc)])
 }
 
 model ServiceExtensionRequest {
@@ -256,6 +302,11 @@ model ServiceExtensionRequest {
   Employee                                         Employee @relation(fields: [employeeId], references: [id])
   User_ServiceExtensionRequest_reviewedByIdToUser  User?    @relation("ServiceExtensionRequest_reviewedByIdToUser", fields: [reviewedById], references: [id])
   User_ServiceExtensionRequest_submittedByIdToUser User     @relation("ServiceExtensionRequest_submittedByIdToUser", fields: [submittedById], references: [id])
+
+  @@index([status])
+  @@index([reviewStage])
+  @@index([employeeId])
+  @@index([createdAt(sort: Desc)])
 }
 
 model User {

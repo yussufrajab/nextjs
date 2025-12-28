@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { v4 as uuidv4 } from 'uuid';
 
+// Cache configuration for institution data
+const CACHE_TTL = 300; // 5 minutes cache (institutions rarely change)
+
 export async function GET(req: Request) {
   try {
     console.log('Institutions API called');
@@ -20,10 +23,14 @@ export async function GET(req: Request) {
 
     console.log(`Found ${institutions.length} institutions`);
 
+    // Set cache headers for institutions (changes infrequently)
+    const headers = new Headers();
+    headers.set('Cache-Control', `public, s-maxage=${CACHE_TTL}, stale-while-revalidate=${CACHE_TTL * 2}`);
+
     return NextResponse.json({
       success: true,
       data: institutions
-    });
+    }, { headers });
   } catch (error) {
     console.error("[INSTITUTIONS_GET]", error);
     return NextResponse.json({ 

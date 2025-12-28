@@ -64,7 +64,7 @@ export function FileUpload({
     if (disabled || uploading) return;
 
     const fileArray = Array.from(files);
-    
+
     // Validate files
     for (const file of fileArray) {
       // Check file size
@@ -102,60 +102,95 @@ export function FileUpload({
       setUploadProgress(0);
 
       const uploadedKeys: string[] = [];
+      const failedFiles: string[] = [];
 
-      for (let i = 0; i < fileArray.length; i++) {
-        const file = fileArray[i];
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('folder', folder);
+      // Upload files in parallel for better performance
+      const uploadFile = async (file: File, index: number) => {
+        try {
+          const formData = new FormData();
+          formData.append('file', file);
+          formData.append('folder', folder);
 
-        // Simulate progress for UI
-        const progressInterval = setInterval(() => {
-          setUploadProgress(prev => Math.min(prev + 10, 90));
-        }, 100);
+          // For session-based auth, no token needed - cookies handle authentication
+          const headers: HeadersInit = {};
 
-        // For session-based auth, no token needed - cookies handle authentication
-        console.log('FileUpload - Using session-based auth');
-        console.log('FileUpload - User role from auth hook:', user?.role);
-        
-        const headers: HeadersInit = {};
+          const response = await fetch('/api/files/upload', {
+            method: 'POST',
+            body: formData,
+            headers,
+            credentials: 'include'
+          });
 
-        const response = await fetch('/api/files/upload', {
-          method: 'POST',
-          body: formData,
-          headers,
-          credentials: 'include'
-        });
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Upload failed');
+          }
 
-        clearInterval(progressInterval);
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Upload failed');
+          const result = await response.json();
+          if (result.success) {
+            return { success: true, objectKey: result.data.objectKey, fileName: file.name };
+          } else {
+            throw new Error(result.message || 'Upload failed');
+          }
+        } catch (error: any) {
+          console.error(`Upload error for ${file.name}:`, error);
+          return { success: false, error: error.message, fileName: file.name };
         }
+      };
 
-        const result = await response.json();
+      // Upload all files in parallel using Promise.allSettled
+      // This ensures all uploads are attempted even if some fail
+      const uploadPromises = fileArray.map((file, index) => uploadFile(file, index));
+
+      // Track progress as uploads complete
+      let completedCount = 0;
+      const results = await Promise.all(
+        uploadPromises.map(promise =>
+          promise.then(result => {
+            completedCount++;
+            setUploadProgress((completedCount / fileArray.length) * 100);
+            return result;
+          })
+        )
+      );
+
+      // Process results
+      results.forEach(result => {
         if (result.success) {
-          uploadedKeys.push(result.data.objectKey);
+          uploadedKeys.push(result.objectKey);
         } else {
-          throw new Error(result.message || 'Upload failed');
+          failedFiles.push(result.fileName);
         }
-
-        setUploadProgress(((i + 1) / fileArray.length) * 100);
-      }
-
-      // Update value
-      if (multiple) {
-        const currentKeys = Array.isArray(value) ? value : [];
-        onChange?.([ ...currentKeys, ...uploadedKeys]);
-      } else {
-        onChange?.(uploadedKeys[0]);
-      }
-
-      toast({
-        title: 'Success',
-        description: `${uploadedKeys.length} file${uploadedKeys.length === 1 ? '' : 's'} uploaded successfully`,
       });
+
+      // Update value with successfully uploaded files
+      if (uploadedKeys.length > 0) {
+        if (multiple) {
+          const currentKeys = Array.isArray(value) ? value : [];
+          onChange?.([ ...currentKeys, ...uploadedKeys]);
+        } else {
+          onChange?.(uploadedKeys[0]);
+        }
+      }
+
+      // Show appropriate toast based on results
+      if (uploadedKeys.length > 0 && failedFiles.length === 0) {
+        // All uploads successful
+        toast({
+          title: 'Success',
+          description: `${uploadedKeys.length} file${uploadedKeys.length === 1 ? '' : 's'} uploaded successfully`,
+        });
+      } else if (uploadedKeys.length > 0 && failedFiles.length > 0) {
+        // Partial success
+        toast({
+          title: 'Partial Upload',
+          description: `${uploadedKeys.length} file(s) uploaded. ${failedFiles.length} file(s) failed: ${failedFiles.join(', ')}`,
+          variant: 'default',
+        });
+      } else {
+        // All uploads failed
+        throw new Error(`All uploads failed. Files: ${failedFiles.join(', ')}`);
+      }
 
     } catch (error: any) {
       console.error('Upload error:', error);
@@ -171,7 +206,7 @@ export function FileUpload({
         fileInputRef.current.value = '';
       }
     }
-  }, [disabled, uploading, maxSize, multiple, folder, value, onChange]);
+  }, [disabled, uploading, maxSize, multiple, folder, value, onChange, user]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();

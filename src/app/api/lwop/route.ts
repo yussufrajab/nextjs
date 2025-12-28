@@ -7,6 +7,9 @@ import { ROLES } from '@/lib/constants';
 import { v4 as uuidv4 } from 'uuid';
 import { logRequestApproval, logRequestRejection, getClientIp } from '@/lib/audit-logger';
 
+// Cache configuration for LWOP requests
+const CACHE_TTL = 30; // 30 seconds cache (request status changes frequently)
+
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
@@ -61,7 +64,11 @@ export async function GET(req: Request) {
       User_LwopRequest_reviewedByIdToUser: undefined
     }));
 
-    return NextResponse.json(transformedRequests);
+    // Set cache headers for LWOP requests
+    const headers = new Headers();
+    headers.set('Cache-Control', `public, s-maxage=${CACHE_TTL}, stale-while-revalidate=${CACHE_TTL * 2}`);
+
+    return NextResponse.json(transformedRequests, { headers });
   } catch (error) {
     console.error("[LWOP_GET]", error);
     return NextResponse.json({ success: false, message: 'Internal Server Error' }, { status: 500 });

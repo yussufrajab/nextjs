@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { shouldApplyInstitutionFilter, isCSCRole } from '@/lib/role-utils';
 
+// Cache configuration for employee data
+const CACHE_TTL = 60; // 60 seconds cache (employee data changes infrequently)
+
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
@@ -52,6 +55,10 @@ export async function GET(req: Request) {
         EmployeeCertificate: undefined
       };
 
+      // Set cache headers for single employee lookup
+      const headers = new Headers();
+      headers.set('Cache-Control', `public, s-maxage=${CACHE_TTL}, stale-while-revalidate=${CACHE_TTL * 2}`);
+
       return NextResponse.json({
         success: true,
         data: [mappedEmployee],
@@ -61,7 +68,7 @@ export async function GET(req: Request) {
           total: 1,
           totalPages: 1
         }
-      });
+      }, { headers });
     }
 
     // Build where clause based on parameters
@@ -146,6 +153,10 @@ export async function GET(req: Request) {
       EmployeeCertificate: undefined
     }));
 
+    // Set cache headers for employee list
+    const headers = new Headers();
+    headers.set('Cache-Control', `public, s-maxage=${CACHE_TTL}, stale-while-revalidate=${CACHE_TTL * 2}`);
+
     return NextResponse.json({
       success: true,
       data: mappedEmployees,
@@ -155,7 +166,7 @@ export async function GET(req: Request) {
         total,
         totalPages: Math.ceil(total / size)
       }
-    });
+    }, { headers });
 
   } catch (error) {
     console.error("[EMPLOYEES_GET]", error);
