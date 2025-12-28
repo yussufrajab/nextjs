@@ -26,9 +26,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { format, parseISO, isValid, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
 import type { Role as UserRoleType } from '@/lib/types';
 import { Pagination } from '@/components/shared/pagination';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
-import * as XLSX from 'xlsx';
+import { loadPdfExporter, loadExcelExporter } from '@/lib/export-utils';
 
 
 // Augment jsPDF with autoTable
@@ -78,6 +76,7 @@ export default function TrackStatusPage() {
   
   const [selectedRequestDetails, setSelectedRequestDetails] = useState<TrackedRequest | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   const isTableView = role === ROLES.HRO || role === ROLES.CSCS || role === ROLES.HRRP || role === ROLES.HHRMD || role === ROLES.HRMO || role === ROLES.DO;
 
@@ -169,7 +168,7 @@ export default function TrackStatusPage() {
     setIsDetailsModalOpen(true);
   };
   
-  const handleExport = (format: 'pdf' | 'excel') => {
+  const handleExport = async (format: 'pdf' | 'excel') => {
     if (filteredRequests.length === 0) {
       toast({ title: "Export Error", description: "There is no data to export.", variant: "destructive" });
       return;
@@ -179,34 +178,52 @@ export default function TrackStatusPage() {
     const dataKeys = ["id", "employeeName", "zanId", "employeeInstitution", "gender", "requestType", "submissionDate", "status"];
     const title = "Request Status Report";
 
-    if (format === 'pdf') {
-      const doc = new jsPDF({ orientation: 'landscape' });
-      doc.setFontSize(18);
-      doc.text(title, 14, 22);
-      
-      const tableColumn = headers;
-      const tableRows: any[][] = [];
-      filteredRequests.forEach(item => {
-        const rowData = dataKeys.map(key => (item as any)[key] !== undefined ? String((item as any)[key]) : '');
-        tableRows.push(rowData);
+    setIsExporting(true);
+    try {
+      if (format === 'pdf') {
+        // Dynamically load jsPDF library (lazy loading)
+        const jsPDF = await loadPdfExporter();
+
+        const doc = new jsPDF({ orientation: 'landscape' });
+        doc.setFontSize(18);
+        doc.text(title, 14, 22);
+
+        const tableColumn = headers;
+        const tableRows: any[][] = [];
+        filteredRequests.forEach(item => {
+          const rowData = dataKeys.map(key => (item as any)[key] !== undefined ? String((item as any)[key]) : '');
+          tableRows.push(rowData);
+        });
+
+        doc.autoTable({
+          head: [tableColumn],
+          body: tableRows,
+          startY: 30,
+          theme: 'grid',
+          headStyles: { fillColor: [22, 160, 133] },
+        });
+        doc.save(`${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_report.pdf`);
+        toast({ title: "PDF Exported", description: "Report exported to PDF successfully." });
+      } else if (format === 'excel') {
+        // Dynamically load XLSX library (lazy loading)
+        const XLSX = await loadExcelExporter();
+
+        const wsData = [headers, ...filteredRequests.map(item => dataKeys.map(key => (item as any)[key] ?? ''))];
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Requests");
+        XLSX.writeFile(wb, `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_report.xlsx`);
+        toast({ title: "Excel Exported", description: "Report exported to Excel successfully." });
+      }
+    } catch (error) {
+      console.error('Export error:', error);
+      toast({
+        title: "Export Error",
+        description: `Failed to export ${format.toUpperCase()}. Please try again.`,
+        variant: "destructive"
       });
-      
-      doc.autoTable({
-        head: [tableColumn],
-        body: tableRows,
-        startY: 30,
-        theme: 'grid',
-        headStyles: { fillColor: [22, 160, 133] },
-      });
-      doc.save(`${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_report.pdf`);
-      toast({ title: "PDF Exported", description: "Report exported to PDF successfully." });
-    } else if (format === 'excel') {
-      const wsData = [headers, ...filteredRequests.map(item => dataKeys.map(key => (item as any)[key] ?? ''))];
-      const ws = XLSX.utils.aoa_to_sheet(wsData);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Requests");
-      XLSX.writeFile(wb, `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_report.xlsx`);
-      toast({ title: "Excel Exported", description: "Report exported to Excel successfully." });
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -313,11 +330,11 @@ export default function TrackStatusPage() {
                 </div>
                 {filteredRequests.length > 0 && (
                     <div className="flex space-x-2 mt-4 md:mt-0">
-                        <Button variant="outline" size="sm" onClick={() => handleExport('pdf')}>
-                            <FileDown className="mr-2 h-4 w-4" /> PDF
+                        <Button variant="outline" size="sm" onClick={() => handleExport('pdf')} disabled={isExporting}>
+                            {isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileDown className="mr-2 h-4 w-4" />} PDF
                         </Button>
-                        <Button variant="outline" size="sm" onClick={() => handleExport('excel')}>
-                            <FileDown className="mr-2 h-4 w-4" /> Excel
+                        <Button variant="outline" size="sm" onClick={() => handleExport('excel')} disabled={isExporting}>
+                            {isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileDown className="mr-2 h-4 w-4" />} Excel
                         </Button>
                     </div>
                 )}

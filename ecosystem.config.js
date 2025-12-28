@@ -1,28 +1,33 @@
+/**
+ * PM2 Ecosystem Configuration
+ * Manages background worker process in production
+ *
+ * Usage:
+ *   pm2 start ecosystem.config.js
+ *   pm2 status
+ *   pm2 logs redis-worker
+ *   pm2 stop redis-worker
+ *   pm2 restart redis-worker
+ */
+
 module.exports = {
   apps: [
     {
-      name: 'csms-app',
+      name: 'redis-worker',
       script: 'npm',
-      args: 'start',
+      args: 'run worker',
       cwd: '/home/latest',
       instances: 1,
-      exec_mode: 'fork',
+      autorestart: true,
+      watch: false,
+      max_memory_restart: '500M',
       env: {
         NODE_ENV: 'production',
-        PORT: 9002
       },
-      env_production: {
-        NODE_ENV: 'production',
-        PORT: 9002
-      },
-      log_file: '/var/log/pm2/csms-app.log',
-      out_file: '/var/log/pm2/csms-app-out.log',
-      error_file: '/var/log/pm2/csms-app-error.log',
+      error_file: './logs/worker-error.log',
+      out_file: './logs/worker-out.log',
       log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
-      restart_delay: 4000,
-      max_restarts: 10,
-      min_uptime: '10s',
-      kill_timeout: 5000
-    }
-  ]
+      merge_logs: true,
+    },
+  ],
 };

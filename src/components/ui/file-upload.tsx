@@ -104,55 +104,82 @@ export function FileUpload({
       const uploadedKeys: string[] = [];
       const failedFiles: string[] = [];
 
-      // Upload files in parallel for better performance
+      // Calculate total size for weighted progress
+      const totalSize = fileArray.reduce((sum, file) => sum + file.size, 0);
+      const fileProgress: { [key: number]: number } = {};
+
+      // Upload files with real progress tracking using XMLHttpRequest
       const uploadFile = async (file: File, index: number) => {
-        try {
-          const formData = new FormData();
-          formData.append('file', file);
-          formData.append('folder', folder);
+        return new Promise<{ success: boolean; objectKey?: string; fileName: string; error?: string }>((resolve) => {
+          try {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('folder', folder);
 
-          // For session-based auth, no token needed - cookies handle authentication
-          const headers: HeadersInit = {};
+            const xhr = new XMLHttpRequest();
 
-          const response = await fetch('/api/files/upload', {
-            method: 'POST',
-            body: formData,
-            headers,
-            credentials: 'include'
-          });
+            // Track upload progress for this specific file
+            xhr.upload.addEventListener('progress', (e) => {
+              if (e.lengthComputable) {
+                // Store progress for this file (0-100)
+                fileProgress[index] = (e.loaded / e.total) * 100;
 
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Upload failed');
+                // Calculate weighted average progress across all files
+                let totalProgress = 0;
+                fileArray.forEach((f, i) => {
+                  const progress = fileProgress[i] || 0;
+                  const weight = f.size / totalSize;
+                  totalProgress += progress * weight;
+                });
+
+                setUploadProgress(totalProgress);
+              }
+            });
+
+            xhr.addEventListener('load', async () => {
+              if (xhr.status >= 200 && xhr.status < 300) {
+                try {
+                  const result = JSON.parse(xhr.responseText);
+                  if (result.success) {
+                    resolve({ success: true, objectKey: result.data.objectKey, fileName: file.name });
+                  } else {
+                    resolve({ success: false, error: result.message || 'Upload failed', fileName: file.name });
+                  }
+                } catch (error: any) {
+                  resolve({ success: false, error: 'Invalid server response', fileName: file.name });
+                }
+              } else {
+                try {
+                  const errorData = JSON.parse(xhr.responseText);
+                  resolve({ success: false, error: errorData.message || 'Upload failed', fileName: file.name });
+                } catch {
+                  resolve({ success: false, error: `Upload failed with status ${xhr.status}`, fileName: file.name });
+                }
+              }
+            });
+
+            xhr.addEventListener('error', () => {
+              resolve({ success: false, error: 'Network error occurred', fileName: file.name });
+            });
+
+            xhr.addEventListener('abort', () => {
+              resolve({ success: false, error: 'Upload was cancelled', fileName: file.name });
+            });
+
+            xhr.open('POST', '/api/files/upload');
+            xhr.withCredentials = true; // Include cookies for session-based auth
+            xhr.send(formData);
+
+          } catch (error: any) {
+            console.error(`Upload error for ${file.name}:`, error);
+            resolve({ success: false, error: error.message, fileName: file.name });
           }
-
-          const result = await response.json();
-          if (result.success) {
-            return { success: true, objectKey: result.data.objectKey, fileName: file.name };
-          } else {
-            throw new Error(result.message || 'Upload failed');
-          }
-        } catch (error: any) {
-          console.error(`Upload error for ${file.name}:`, error);
-          return { success: false, error: error.message, fileName: file.name };
-        }
+        });
       };
 
-      // Upload all files in parallel using Promise.allSettled
-      // This ensures all uploads are attempted even if some fail
+      // Upload all files in parallel
       const uploadPromises = fileArray.map((file, index) => uploadFile(file, index));
-
-      // Track progress as uploads complete
-      let completedCount = 0;
-      const results = await Promise.all(
-        uploadPromises.map(promise =>
-          promise.then(result => {
-            completedCount++;
-            setUploadProgress((completedCount / fileArray.length) * 100);
-            return result;
-          })
-        )
-      );
+      const results = await Promise.all(uploadPromises);
 
       // Process results
       results.forEach(result => {

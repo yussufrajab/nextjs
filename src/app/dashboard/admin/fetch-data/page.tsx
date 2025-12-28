@@ -215,6 +215,7 @@ export default function FetchDataPage() {
     setFetchResults([]);
 
     try {
+      // Step 1: Create the background job
       const response = await fetch('/api/hrims/fetch-by-institution', {
         method: 'POST',
         headers: {
@@ -231,75 +232,89 @@ export default function FetchDataPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to fetch employees by institution');
+        throw new Error(errorData.message || 'Failed to queue fetch job');
       }
 
-      // Check if response is streaming
-      const contentType = response.headers.get('content-type');
-      if (contentType?.includes('text/event-stream')) {
-        // Handle streaming response
-        const reader = response.body?.getReader();
-        const decoder = new TextDecoder();
+      const jobData = await response.json();
 
-        if (!reader) {
-          throw new Error('No response body');
-        }
+      if (!jobData.success || !jobData.jobId) {
+        throw new Error(jobData.message || 'Failed to create background job');
+      }
 
-        let buffer = '';
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
+      // Show initial toast that job is queued
+      toast({
+        title: "Sync Job Started",
+        description: `Background sync started for ${selectedInstitution.name}. Progress will update in real-time.`,
+      });
 
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split('\n\n');
-          buffer = lines.pop() || '';
+      // Step 2: Connect to SSE endpoint for progress updates
+      const sseResponse = await fetch(`/api/hrims/sync-status/${jobData.jobId}`);
 
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              const data = JSON.parse(line.slice(6));
+      if (!sseResponse.ok) {
+        throw new Error('Failed to connect to progress stream');
+      }
 
-              if (data.type === 'progress') {
-                setProgress({
-                  phase: data.phase,
-                  message: data.message,
-                  currentPage: data.currentPage,
-                  totalFetched: data.totalFetched,
-                  estimatedTotal: data.estimatedTotal,
-                  saved: data.saved,
-                  skipped: data.skipped,
-                  total: data.total,
-                  progressPercent: data.progressPercent,
-                });
-              } else if (data.type === 'complete') {
-                const result = data;
-                toast({
-                  title: "Fetch Successful",
-                  description: `Fetched ${result.data.employeeCount} employees from ${selectedInstitution.name} using ${result.data.usedIdentifier}. Pages: ${result.data.pagesFetched}, Total: ${result.data.totalFetched}${result.data.skippedCount > 0 ? `, Skipped: ${result.data.skippedCount}` : ''}.`,
-                });
+      // Handle SSE streaming response
+      const reader = sseResponse.body?.getReader();
+      const decoder = new TextDecoder();
 
-                if (result.data.employeeCount > 0) {
-                  setFetchResults(result.data.employees || []);
-                }
-              } else if (data.type === 'error') {
-                throw new Error(data.message);
-              }
+      if (!reader) {
+        throw new Error('No response body');
+      }
+
+      let buffer = '';
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+
+          // Parse SSE event
+          const eventMatch = line.match(/^event: (.+)\ndata: (.+)$/s);
+          if (!eventMatch) continue;
+
+          const [, eventType, dataStr] = eventMatch;
+          const data = JSON.parse(dataStr);
+
+          if (eventType === 'progress') {
+            const progressData = data.progress;
+            if (progressData) {
+              setProgress({
+                phase: progressData.phase,
+                message: progressData.message,
+                currentPage: progressData.currentPage,
+                totalFetched: progressData.totalFetched,
+                estimatedTotal: progressData.estimatedTotal,
+                saved: progressData.saved,
+                skipped: progressData.skipped,
+                total: progressData.total,
+                progressPercent: progressData.progressPercent,
+              });
             }
-          }
-        }
-      } else {
-        // Handle regular JSON response (for backward compatibility)
-        const result = await response.json();
-        if (result.success) {
-          toast({
-            title: "Fetch Successful",
-            description: `Fetched ${result.data.employeeCount} employees from ${selectedInstitution.name}`,
-          });
+          } else if (eventType === 'complete') {
+            const result = data.result;
+            toast({
+              title: "Fetch Successful",
+              description: `Fetched ${result.employeeCount} employees from ${selectedInstitution.name}. Pages: ${result.pagesFetched}, Total: ${result.totalFetched}${result.skippedCount > 0 ? `, Skipped: ${result.skippedCount}` : ''}.`,
+            });
 
-          if (result.data.employeeCount > 0) {
-            setFetchResults(result.data.employees || []);
+            if (result.employeeCount > 0) {
+              setFetchResults(result.employees || []);
+            }
+          } else if (eventType === 'error') {
+            throw new Error(data.error || 'Job failed');
+          } else if (eventType === 'heartbeat') {
+            // Ignore heartbeat events
+            continue;
+          } else if (eventType === 'status') {
+            // Initial status event - ignore or log
+            console.log('Job status:', data.state);
           }
-        } else {
-          throw new Error(result.message || 'Failed to fetch employees');
         }
       }
     } catch (error) {
