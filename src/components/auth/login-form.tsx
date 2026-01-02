@@ -55,7 +55,6 @@ export function LoginForm() {
 
     if (user) {
       // Check if password change is required
-      // @ts-ignore - password status fields added by password policy
       if (user.mustChangePassword || user.isTemporaryPassword) {
         console.log('Password change required for user:', user.id);
         toast({
