@@ -10,9 +10,6 @@ const nextConfig: NextConfig = {
   // Remove X-Powered-By header for security
   poweredByHeader: false,
 
-  typescript: {
-    ignoreBuildErrors: true,
-  },
   images: {
     remotePatterns: [
       {

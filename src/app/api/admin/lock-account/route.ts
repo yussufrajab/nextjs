@@ -70,7 +70,7 @@ export async function POST(req: Request) {
     await createNotification({
       userId: user.id,
       message: `Your account has been locked by an administrator. Reason: ${reason}. Please contact support for assistance.`,
-      link: null,
+      link: undefined,
     });
 
     console.log(`Account locked for user ${user.username} by admin ${admin.username}`);

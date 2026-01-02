@@ -42,6 +42,7 @@ export async function GET(req: Request) {
             zssfNumber: true,
             department: true,
             cadre: true,
+            status: true,
             dateOfBirth: true,
             employmentDate: true,
             Institution: { select: { id: true, name: true } }
@@ -91,7 +92,7 @@ export async function POST(req: Request) {
     }
 
     // Get employee details to check status
-    const employee = await db.Employee.findUnique({
+    const employee = await db.employee.findUnique({
       where: { id: body.employeeId },
       select: { id: true, name: true, status: true }
     });
@@ -132,6 +133,7 @@ export async function POST(req: Request) {
             zssfNumber: true,
             department: true,
             cadre: true,
+            status: true,
             dateOfBirth: true,
             employmentDate: true,
             Institution: { select: { id: true, name: true } }
@@ -197,6 +199,7 @@ export async function PATCH(req: Request) {
             zssfNumber: true,
             department: true,
             cadre: true,
+            status: true,
             dateOfBirth: true,
             employmentDate: true,
             Institution: { select: { id: true, name: true } }
@@ -215,7 +218,7 @@ export async function PATCH(req: Request) {
     if (updateData.status === 'Approved by Commission') {
       try {
         // Update employee status from "On Probation" to "Confirmed"
-        await db.Employee.update({
+        await db.employee.update({
           where: { id: updatedRequest.employeeId },
           data: {
             status: 'Confirmed',
@@ -232,7 +235,7 @@ export async function PATCH(req: Request) {
 
     // Log audit event for approvals and rejections
     if (updateData.reviewedById && updateData.status) {
-      const reviewer = await db.User.findUnique({
+      const reviewer = await db.user.findUnique({
         where: { id: updateData.reviewedById },
         select: { username: true, role: true }
       });

@@ -614,6 +614,3 @@ class ApiClient {
 
 // Export singleton instance
 export const apiClient = new ApiClient();
-
-// Export types for use in components
-export type { ApiResponse, LoginResponse, Employee, Request, Complaint, Institution, User };

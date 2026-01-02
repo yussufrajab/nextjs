@@ -117,7 +117,7 @@ export default function UserManagementPage() {
       // Transform the data to include institution name
       const transformedUsers = data.map((user: any) => ({
         ...user,
-        institution: user.Institution || 'N/A'  // Backend returns Institution (capital I) as string
+        institution: user.institution || 'N/A'  // Backend returns Institution (capital I) as string
       }));
       setUsers(transformedUsers);
     } catch (error) {
@@ -309,7 +309,7 @@ export default function UserManagementPage() {
     user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (user.email && user.email.toLowerCase().includes(searchQuery.toLowerCase())) ||
     (user.zanId && user.zanId.toLowerCase().includes(searchQuery.toLowerCase())) ||
-    user.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (user.role && user.role.toLowerCase().includes(searchQuery.toLowerCase())) ||
     (user.phoneNumber && user.phoneNumber.includes(searchQuery)) ||
     (user.institution && user.institution.toLowerCase().includes(searchQuery.toLowerCase()))
   );
@@ -568,8 +568,8 @@ export default function UserManagementPage() {
                   <Select onValueChange={handleRoleChange} defaultValue={field.value}>
                     <FormControl><SelectTrigger><SelectValue placeholder="Select a role" /></SelectTrigger></FormControl>
                     <SelectContent>
-                      {Object.values(ROLES).map(role => (
-                        <SelectItem key={role} value={role}>
+                      {Object.values(ROLES).filter(role => role !== null).map(role => (
+                        <SelectItem key={role!} value={role!}>
                           {role}
                           {CSC_INTERNAL_ROLES.includes(role) && (
                             <span className="text-xs text-muted-foreground ml-2">(CSC Internal)</span>

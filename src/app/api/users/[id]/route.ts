@@ -29,7 +29,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       validatedData.password = await bcrypt.hash(validatedData.password, salt);
     }
 
-    const updatedUser = await db.User.update({
+    const updatedUser = await db.user.update({
       where: { id },
       data: validatedData,
       select: { id: true, name: true, username: true, email: true, phoneNumber: true, role: true, active: true, Institution: { select: { name: true } } },
@@ -70,7 +70,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    await db.User.delete({
+    await db.user.delete({
       where: { id },
     });
     return new NextResponse(null, { status: 204 });

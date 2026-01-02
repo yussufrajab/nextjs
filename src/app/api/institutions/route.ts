@@ -9,7 +9,7 @@ export async function GET(req: Request) {
   try {
     console.log('Institutions API called');
 
-    const institutions = await db.Institution.findMany({
+    const institutions = await db.institution.findMany({
       select: {
         id: true,
         name: true,
@@ -54,7 +54,7 @@ export async function POST(req: Request) {
     }
 
     // Check if institution with the same name already exists
-    const existingInstitution = await db.Institution.findFirst({
+    const existingInstitution = await db.institution.findFirst({
       where: {
         name: {
           equals: name.trim(),
@@ -72,7 +72,7 @@ export async function POST(req: Request) {
 
     // Check if institution with the same tin number already exists (only if tin number is provided)
     if (tinNumber && tinNumber.trim().length > 0) {
-      const existingTinNumber = await db.Institution.findFirst({
+      const existingTinNumber = await db.institution.findFirst({
         where: {
           tinNumber: tinNumber.trim()
         }
@@ -86,7 +86,7 @@ export async function POST(req: Request) {
       }
     }
 
-    const newInstitution = await db.Institution.create({
+    const newInstitution = await db.institution.create({
       data: {
         id: uuidv4(),
         name: name.trim(),

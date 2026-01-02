@@ -293,10 +293,10 @@ export default function TerminationAndDismissalPage() {
 
       // Show immediate success feedback
       if (actionDescription && request) {
-        toast({ 
-          title: "Status Updated", 
-          description: `${actionDescription} for ${request.Employee.name}. Status: ${payload.status}`,
-          duration: 3000 
+        toast({
+          title: "Status Updated",
+          description: `${actionDescription} for ${request.Employee?.name || 'employee'}. Status: ${payload.status}`,
+          duration: 3000
         });
       }
 
@@ -486,9 +486,9 @@ export default function TerminationAndDismissalPage() {
     setPendingRequests(optimisticUpdate);
 
     // Show immediate success feedback
-    toast({ 
-      title: "Request Corrected & Resubmitted", 
-      description: `${request.type} request for ${request.Employee.name} has been corrected and resubmitted. Status: Pending DO/HHRMD Review`,
+    toast({
+      title: "Request Corrected & Resubmitted",
+      description: `${request.type} request for ${request.Employee?.name || 'employee'} has been corrected and resubmitted. Status: Pending DO/HHRMD Review`,
       duration: 4000
     });
 
@@ -574,9 +574,9 @@ export default function TerminationAndDismissalPage() {
                       <div><Label className="text-muted-foreground">ZSSF Number:</Label> <p className="font-semibold text-foreground">{employeeDetails.zssfNumber || 'N/A'}</p></div>
                       <div><Label className="text-muted-foreground">Department:</Label> <p className="font-semibold text-foreground">{employeeDetails.department || 'N/A'}</p></div>
                       <div><Label className="text-muted-foreground">Cadre/Position:</Label> <p className="font-semibold text-foreground">{employeeDetails.cadre || 'N/A'}</p></div>
-                      <div><Label className="text-muted-foreground">Employment Date:</Label> <p className="font-semibold text-foreground">{employeeDetails.employmentDate ? format(parseISO(employeeDetails.employmentDate), 'MMMM do, yyyy') : 'N/A'}</p></div>
-                      <div><Label className="text-muted-foreground">Date of Birth:</Label> <p className="font-semibold text-foreground">{employeeDetails.dateOfBirth ? format(parseISO(employeeDetails.dateOfBirth), 'MMMM do, yyyy') : 'N/A'}</p></div>
-                      <div><Label className="text-muted-foreground">Institution:</Label> <p className="font-semibold text-foreground">{employeeDetails.institution?.name || 'N/A'}</p></div>
+                      <div><Label className="text-muted-foreground">Employment Date:</Label> <p className="font-semibold text-foreground">{employeeDetails.employmentDate ? format(typeof employeeDetails.employmentDate === 'string' ? parseISO(employeeDetails.employmentDate) : employeeDetails.employmentDate, 'MMMM do, yyyy') : 'N/A'}</p></div>
+                      <div><Label className="text-muted-foreground">Date of Birth:</Label> <p className="font-semibold text-foreground">{employeeDetails.dateOfBirth ? format(typeof employeeDetails.dateOfBirth === 'string' ? parseISO(employeeDetails.dateOfBirth) : employeeDetails.dateOfBirth, 'MMMM do, yyyy') : 'N/A'}</p></div>
+                      <div><Label className="text-muted-foreground">Institution:</Label> <p className="font-semibold text-foreground">{typeof employeeDetails.institution === 'object' ? employeeDetails.institution?.name : (employeeDetails.institution || 'N/A')}</p></div>
                       <div className="md:col-span-2 lg:col-span-3"><Label className="text-muted-foreground">Current Status:</Label> <p className={`font-semibold ${cannotSubmitTermination ? 'text-destructive' : employeeDetails.status === 'On Probation' ? 'text-orange-600' : 'text-green-600'}`}>{employeeDetails.status || 'N/A'}</p></div>
                     </div>
                   </div>
@@ -613,7 +613,7 @@ export default function TerminationAndDismissalPage() {
                     <FileUpload
                       folder="termination"
                       value={letterOfRequestFile}
-                      onChange={setLetterOfRequestFile}
+                      onChange={(key) => setLetterOfRequestFile(Array.isArray(key) ? key[0] : key)}
                       onPreview={handlePreviewFile}
                       disabled={isSubmitting || cannotSubmitTermination || hasPendingTermination}
                       required
@@ -627,7 +627,7 @@ export default function TerminationAndDismissalPage() {
                       <FileUpload
                         folder="termination"
                         value={terminationSupportingDocFile}
-                        onChange={setTerminationSupportingDocFile}
+                        onChange={(key) => setTerminationSupportingDocFile(Array.isArray(key) ? key[0] : key)}
                         onPreview={handlePreviewFile}
                         disabled={isSubmitting || cannotSubmitTermination || hasPendingTermination}
                         required
@@ -644,7 +644,7 @@ export default function TerminationAndDismissalPage() {
                         <FileUpload
                           folder="termination"
                           value={misconductEvidenceFile}
-                          onChange={setMisconductEvidenceFile}
+                          onChange={(key) => setMisconductEvidenceFile(Array.isArray(key) ? key[0] : key)}
                           onPreview={handlePreviewFile}
                           disabled={isSubmitting || cannotSubmitTermination || hasPendingTermination}
                           required
@@ -655,7 +655,7 @@ export default function TerminationAndDismissalPage() {
                         <FileUpload
                           folder="termination"
                           value={summonNoticeFile}
-                          onChange={setSummonNoticeFile}
+                          onChange={(key) => setSummonNoticeFile(Array.isArray(key) ? key[0] : key)}
                           onPreview={handlePreviewFile}
                           disabled={isSubmitting || cannotSubmitTermination || hasPendingTermination}
                           required
@@ -666,7 +666,7 @@ export default function TerminationAndDismissalPage() {
                         <FileUpload
                           folder="termination"
                           value={suspensionLetterFile}
-                          onChange={setSuspensionLetterFile}
+                          onChange={(key) => setSuspensionLetterFile(Array.isArray(key) ? key[0] : key)}
                           onPreview={handlePreviewFile}
                           disabled={isSubmitting || cannotSubmitTermination || hasPendingTermination}
                           required
@@ -678,7 +678,7 @@ export default function TerminationAndDismissalPage() {
                         <FileUpload
                           folder="termination"
                           value={warningLettersFile}
-                          onChange={setWarningLettersFile}
+                          onChange={(key) => setWarningLettersFile(Array.isArray(key) ? key[0] : key)}
                           onPreview={handlePreviewFile}
                           disabled={isSubmitting || cannotSubmitTermination || hasPendingTermination}
                         />
@@ -688,7 +688,7 @@ export default function TerminationAndDismissalPage() {
                         <FileUpload
                           folder="termination"
                           value={employeeExplanationLetterFile}
-                          onChange={setEmployeeExplanationLetterFile}
+                          onChange={(key) => setEmployeeExplanationLetterFile(Array.isArray(key) ? key[0] : key)}
                           onPreview={handlePreviewFile}
                           disabled={isSubmitting || cannotSubmitTermination || hasPendingTermination}
                         />
@@ -698,7 +698,7 @@ export default function TerminationAndDismissalPage() {
                         <FileUpload
                           folder="termination"
                           value={otherAdditionalDocumentsFile}
-                          onChange={setOtherAdditionalDocumentsFile}
+                          onChange={(key) => setOtherAdditionalDocumentsFile(Array.isArray(key) ? key[0] : key)}
                           onPreview={handlePreviewFile}
                           disabled={isSubmitting || cannotSubmitTermination || hasPendingTermination}
                         />
@@ -749,7 +749,7 @@ export default function TerminationAndDismissalPage() {
                 <div key={request.id} className="mb-4 border p-4 rounded-md space-y-2 shadow-sm bg-background hover:shadow-md transition-shadow">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="font-semibold text-base flex items-center gap-2">
-                      {request.type} for: {request.Employee.name} (ZanID: {request.Employee.zanId})
+                      {request.type} for: {request.Employee?.name || 'N/A'} (ZanID: {request.Employee?.zanId || 'N/A'})
                       {(request.status.includes('Approved by Commission') || request.status.includes('Rejected by Commission')) && (
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                           request.status.includes('Approved by Commission') 
@@ -863,7 +863,7 @@ export default function TerminationAndDismissalPage() {
                 <div key={request.id} className="mb-4 border p-4 rounded-md space-y-2 shadow-sm bg-background hover:shadow-md transition-shadow">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="font-semibold text-base flex items-center gap-2">
-                      {request.type} for: {request.Employee.name} (ZanID: {request.Employee.zanId})
+                      {request.type} for: {request.Employee?.name || 'N/A'} (ZanID: {request.Employee?.zanId || 'N/A'})
                       {(request.status.includes('Approved by Commission') || request.status.includes('Rejected by Commission')) && (
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                           request.status.includes('Approved by Commission') 
@@ -968,18 +968,18 @@ export default function TerminationAndDismissalPage() {
             <DialogHeader>
               <DialogTitle>{selectedRequest.type} Request Details: {selectedRequest.id}</DialogTitle>
               <DialogDescription>
-                For <strong>{selectedRequest.Employee.name}</strong> (ZanID: {selectedRequest.Employee.zanId}).
+                For <strong>{selectedRequest.Employee?.name || 'N/A'}</strong> (ZanID: {selectedRequest.Employee?.zanId || 'N/A'}).
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4 text-sm max-h-[70vh] overflow-y-auto">
                 <div className="space-y-1 border-b pb-3 mb-3">
                     <h4 className="font-semibold text-base text-foreground mb-2">Employee Information</h4>
-                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">Name:</Label><p className="col-span-2 font-medium">{selectedRequest.Employee.name}</p></div>
-                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">ZanID:</Label><p className="col-span-2 font-medium">{selectedRequest.Employee.zanId}</p></div>
-                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">Payroll #:</Label><p className="col-span-2 font-medium">{selectedRequest.Employee.payrollNumber || 'N/A'}</p></div>
-                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">ZSSF #:</Label><p className="col-span-2 font-medium">{selectedRequest.Employee.zssfNumber || 'N/A'}</p></div>
-                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">Department:</Label><p className="col-span-2 font-medium">{selectedRequest.Employee.department}</p></div>
-                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">Institution:</Label><p className="col-span-2 font-medium">{selectedRequest.Employee.institution?.name || 'N/A'}</p></div>
+                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">Name:</Label><p className="col-span-2 font-medium">{selectedRequest.Employee?.name}</p></div>
+                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">ZanID:</Label><p className="col-span-2 font-medium">{selectedRequest.Employee?.zanId}</p></div>
+                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">Payroll #:</Label><p className="col-span-2 font-medium">{selectedRequest.Employee?.payrollNumber || 'N/A'}</p></div>
+                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">ZSSF #:</Label><p className="col-span-2 font-medium">{selectedRequest.Employee?.zssfNumber || 'N/A'}</p></div>
+                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">Department:</Label><p className="col-span-2 font-medium">{selectedRequest.Employee?.department}</p></div>
+                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">Institution:</Label><p className="col-span-2 font-medium">{typeof selectedRequest.Employee?.institution === 'object' ? selectedRequest.Employee.institution?.name : (selectedRequest.Employee?.institution || 'N/A')}</p></div>
                 </div>
                  <div className="space-y-1">
                      <h4 className="font-semibold text-base text-foreground mb-2">Request Information</h4>
@@ -1082,7 +1082,7 @@ export default function TerminationAndDismissalPage() {
                 <DialogHeader>
                     <DialogTitle>Reject Request: {currentRequestToAction.id}</DialogTitle>
                     <DialogDescription>
-                        Please provide the reason for rejecting the request for <strong>{currentRequestToAction.Employee.name}</strong>. This reason will be visible to the HRO.
+                        Please provide the reason for rejecting the request for <strong>{currentRequestToAction.Employee?.name}</strong>. This reason will be visible to the HRO.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="py-4">
@@ -1107,7 +1107,7 @@ export default function TerminationAndDismissalPage() {
             <DialogHeader>
               <DialogTitle>Correct {requestToCorrect.type} Request: {requestToCorrect.id}</DialogTitle>
               <DialogDescription>
-                Update the details for <strong>{requestToCorrect.Employee.name}</strong>'s {requestToCorrect.type.toLowerCase()} request and upload new documents.
+                Update the details for <strong>{requestToCorrect.Employee?.name}</strong>'s {requestToCorrect.type.toLowerCase()} request and upload new documents.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-6 py-4">
@@ -1132,7 +1132,7 @@ export default function TerminationAndDismissalPage() {
                   <FileUpload
                     folder="termination"
                     value={correctedLetterOfRequestFile}
-                    onChange={setCorrectedLetterOfRequestFile}
+                    onChange={(key) => setCorrectedLetterOfRequestFile(Array.isArray(key) ? key[0] : key)}
                     onPreview={handlePreviewFile}
                     required
                   />
@@ -1150,7 +1150,7 @@ export default function TerminationAndDismissalPage() {
                       <FileUpload
                         folder="termination"
                         value={correctedMisconductEvidenceFile}
-                        onChange={setCorrectedMisconductEvidenceFile}
+                        onChange={(key) => setCorrectedMisconductEvidenceFile(Array.isArray(key) ? key[0] : key)}
                         onPreview={handlePreviewFile}
                         required
                       />
@@ -1163,7 +1163,7 @@ export default function TerminationAndDismissalPage() {
                       <FileUpload
                         folder="termination"
                         value={correctedSummonNoticeFile}
-                        onChange={setCorrectedSummonNoticeFile}
+                        onChange={(key) => setCorrectedSummonNoticeFile(Array.isArray(key) ? key[0] : key)}
                         onPreview={handlePreviewFile}
                         required
                       />
@@ -1176,7 +1176,7 @@ export default function TerminationAndDismissalPage() {
                       <FileUpload
                         folder="termination"
                         value={correctedSuspensionLetterFile}
-                        onChange={setCorrectedSuspensionLetterFile}
+                        onChange={(key) => setCorrectedSuspensionLetterFile(Array.isArray(key) ? key[0] : key)}
                         onPreview={handlePreviewFile}
                         required
                       />
@@ -1191,7 +1191,7 @@ export default function TerminationAndDismissalPage() {
                       <FileUpload
                         folder="termination"
                         value={correctedWarningLettersFile}
-                        onChange={setCorrectedWarningLettersFile}
+                        onChange={(key) => setCorrectedWarningLettersFile(Array.isArray(key) ? key[0] : key)}
                         onPreview={handlePreviewFile}
                       />
                     </div>
@@ -1203,7 +1203,7 @@ export default function TerminationAndDismissalPage() {
                       <FileUpload
                         folder="termination"
                         value={correctedEmployeeExplanationLetterFile}
-                        onChange={setCorrectedEmployeeExplanationLetterFile}
+                        onChange={(key) => setCorrectedEmployeeExplanationLetterFile(Array.isArray(key) ? key[0] : key)}
                         onPreview={handlePreviewFile}
                       />
                     </div>
@@ -1215,7 +1215,7 @@ export default function TerminationAndDismissalPage() {
                       <FileUpload
                         folder="termination"
                         value={correctedOtherAdditionalDocumentsFile}
-                        onChange={setCorrectedOtherAdditionalDocumentsFile}
+                        onChange={(key) => setCorrectedOtherAdditionalDocumentsFile(Array.isArray(key) ? key[0] : key)}
                         onPreview={handlePreviewFile}
                       />
                     </div>
@@ -1232,7 +1232,7 @@ export default function TerminationAndDismissalPage() {
                     <FileUpload
                       folder="termination"
                       value={correctedSupportingDocumentFile}
-                      onChange={setCorrectedSupportingDocumentFile}
+                      onChange={(key) => setCorrectedSupportingDocumentFile(Array.isArray(key) ? key[0] : key)}
                       onPreview={handlePreviewFile}
                     />
                   </div>

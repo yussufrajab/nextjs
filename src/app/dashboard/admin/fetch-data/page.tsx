@@ -191,8 +191,18 @@ export default function FetchDataPage() {
   };
 
   const handleFetchByInstitution = async () => {
+    // Check if institution is selected
+    if (!selectedInstitution) {
+      toast({
+        title: "Error",
+        description: "Please select an institution",
+        variant: "destructive"
+      });
+      return;
+    }
+
     // Validate based on selected identifier type
-    if (identifierType === 'votecode' && !selectedInstitution?.voteNumber) {
+    if (identifierType === 'votecode' && !selectedInstitution.voteNumber) {
       toast({
         title: "Error",
         description: "Institution must have a vote number to use this option",
@@ -201,7 +211,7 @@ export default function FetchDataPage() {
       return;
     }
 
-    if (identifierType === 'tin' && !selectedInstitution?.tinNumber) {
+    if (identifierType === 'tin' && !selectedInstitution.tinNumber) {
       toast({
         title: "Error",
         description: "Institution must have a TIN number to use this option",

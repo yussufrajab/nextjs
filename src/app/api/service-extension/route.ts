@@ -80,7 +80,7 @@ export async function POST(req: Request) {
     }
 
     // Get employee details to check status
-    const employee = await db.Employee.findUnique({
+    const employee = await db.employee.findUnique({
       where: { id: body.employeeId },
       select: { id: true, name: true, status: true }
     });
@@ -219,7 +219,7 @@ export async function PATCH(req: Request) {
         }
 
         // Update employee's retirement date
-        await db.Employee.update({
+        await db.employee.update({
           where: { id: updatedRequest.employeeId },
           data: {
             retirementDate: newRetirementDate
@@ -235,7 +235,7 @@ export async function PATCH(req: Request) {
 
     // Log audit event for approvals and rejections
     if (updateData.reviewedById && updateData.status) {
-      const reviewer = await db.User.findUnique({
+      const reviewer = await db.user.findUnique({
         where: { id: updateData.reviewedById },
         select: { username: true, role: true }
       });

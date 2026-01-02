@@ -26,7 +26,7 @@ export async function POST(req: Request) {
     const isEmail = username.includes('@');
 
     // Find user in database by either email or username
-    const user = await db.User.findFirst({
+    const user = await db.user.findFirst({
       where: isEmail
         ? { email: username }
         : { username: username },
@@ -59,7 +59,7 @@ export async function POST(req: Request) {
     await autoUnlockExpiredAccounts();
 
     // Refresh user data after auto-unlock
-    const refreshedUser = await db.User.findUnique({
+    const refreshedUser = await db.user.findUnique({
       where: { id: user.id },
       select: {
         id: true,
@@ -80,6 +80,9 @@ export async function POST(req: Request) {
         loginLockoutReason: true,
         loginLockoutType: true,
         isManuallyLocked: true,
+        lockedBy: true,
+        lockedAt: true,
+        lockoutNotes: true,
       },
     });
 
@@ -183,7 +186,7 @@ export async function POST(req: Request) {
     await resetFailedLoginAttempts(currentUser.id);
 
     // Set initial activity timestamp for session timeout tracking
-    await db.User.update({
+    await db.user.update({
       where: { id: currentUser.id },
       data: { lastActivity: new Date() },
     });
@@ -251,7 +254,7 @@ export async function POST(req: Request) {
         console.log(`User ${username} logging in with expired password (grace period: ${expirationStatus.gracePeriodDaysRemaining} days remaining)`);
 
         // Update user to require password change
-        await db.User.update({
+        await db.user.update({
           where: { id: currentUser.id },
           data: {
             mustChangePassword: true,

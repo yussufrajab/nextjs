@@ -30,7 +30,7 @@ export async function POST(req: Request) {
     console.log('Password change attempt for user ID:', userId);
 
     // Find user in database
-    const user = await db.User.findUnique({
+    const user = await db.user.findUnique({
       where: { id: userId },
     });
 
@@ -91,7 +91,7 @@ export async function POST(req: Request) {
         console.log(`User ${userId} locked out after ${newAttempts} failed attempts`);
       }
 
-      await db.User.update({
+      await db.user.update({
         where: { id: userId },
         data: updateData,
       });
@@ -174,7 +174,7 @@ export async function POST(req: Request) {
     );
 
     // Update user's password and clear temporary password flags
-    await db.User.update({
+    await db.user.update({
       where: { id: userId },
       data: {
         password: hashedPassword,

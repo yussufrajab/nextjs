@@ -43,7 +43,6 @@ const RecentActivitiesSkeleton = () => (
     <PageHeader
       title="Recent Activities"
       description="An overview of the latest requests and their statuses."
-      icon={Activity}
     />
     <Card>
       <CardHeader>
@@ -162,7 +161,6 @@ export default function RecentActivitiesPage() {
       <PageHeader
         title={shouldShowInstitution ? `Recent Activities - ${institutionName}` : "Recent Activities"}
         description="An overview of the latest requests and their statuses."
-        icon={Activity}
       />
 
       <Card>

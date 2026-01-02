@@ -183,7 +183,7 @@ export function FileUpload({
 
       // Process results
       results.forEach(result => {
-        if (result.success) {
+        if (result.success && result.objectKey) {
           uploadedKeys.push(result.objectKey);
         } else {
           failedFiles.push(result.fileName);

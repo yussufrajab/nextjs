@@ -21,7 +21,7 @@ export async function GET(req: Request) {
 
     // If a specific employee ID is requested, fetch that employee directly
     if (employeeId) {
-      const employee = await db.Employee.findUnique({
+      const employee = await db.employee.findUnique({
         where: { id: employeeId },
         include: {
           Institution: {
@@ -115,10 +115,10 @@ export async function GET(req: Request) {
     }
 
     // Get total count for pagination
-    const total = await db.Employee.count({ where: whereClause }).catch(() => 0);
+    const total = await db.employee.count({ where: whereClause }).catch(() => 0);
 
     // Get employees with pagination (latest 200 by default, ordered by most recent updates)
-    const employees = await db.Employee.findMany({
+    const employees = await db.employee.findMany({
       where: whereClause,
       include: {
         Institution: {

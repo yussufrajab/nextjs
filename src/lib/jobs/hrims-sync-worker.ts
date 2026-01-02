@@ -67,7 +67,7 @@ async function saveEmployeeFromDetailedData(hrimsData: any, institutionId: strin
     const currentSalary = hrimsData.salaryInformation?.find((sal: any) => sal.isCurrent) || hrimsData.salaryInformation?.[0];
     const highestEducation = hrimsData.educationHistories?.find((edu: any) => edu.isEmploymentHighest) || hrimsData.educationHistories?.[0];
 
-    const existingEmployee = await db.Employee.findUnique({
+    const existingEmployee = await db.employee.findUnique({
       where: { zanId: personalInfo.zanIdNumber }
     });
 
@@ -147,7 +147,7 @@ async function saveEmployeeFromDetailedData(hrimsData: any, institutionId: strin
 
     const { institutionId: instId, ...employeeDataWithoutInstId } = dbEmployeeData;
 
-    await db.Employee.upsert({
+    await db.employee.upsert({
       where: { zanId: personalInfo.zanIdNumber },
       update: dbEmployeeData,
       create: {

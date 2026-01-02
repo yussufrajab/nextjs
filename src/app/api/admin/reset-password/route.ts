@@ -27,7 +27,7 @@ export async function POST(req: Request) {
     // Verify that the caller is an admin
     let admin = null;
     if (adminId) {
-      admin = await db.User.findUnique({
+      admin = await db.user.findUnique({
         where: { id: adminId },
       });
 
@@ -40,7 +40,7 @@ export async function POST(req: Request) {
     }
 
     // Find the user to reset
-    const user = await db.User.findUnique({
+    const user = await db.user.findUnique({
       where: { id: userId },
     });
 
@@ -93,7 +93,7 @@ export async function POST(req: Request) {
     const hashedPassword = await hashPassword(newPassword);
 
     // Update user with temporary password flags
-    await db.User.update({
+    await db.user.update({
       where: { id: userId },
       data: {
         password: hashedPassword,

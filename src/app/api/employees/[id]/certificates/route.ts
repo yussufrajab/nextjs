@@ -40,7 +40,7 @@ export async function POST(
     }
 
     // Verify employee exists
-    const employee = await prisma.Employee.findUnique({
+    const employee = await prisma.employee.findUnique({
       where: { id: employeeId }
     });
 
@@ -183,7 +183,7 @@ export async function GET(
     const { id: employeeId } = await params;
 
     // Fetch employee to check access permissions
-    const employee = await prisma.Employee.findUnique({
+    const employee = await prisma.employee.findUnique({
       where: { id: employeeId },
       select: {
         id: true,

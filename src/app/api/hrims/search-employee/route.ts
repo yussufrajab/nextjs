@@ -35,7 +35,7 @@ export async function GET(req: Request) {
     console.log('Employee search request:', { ...validatedRequest, timestamp: new Date().toISOString() });
 
     // Find institution by vote number
-    const institution = await db.Institution.findFirst({
+    const institution = await db.institution.findFirst({
       where: {
         voteNumber: validatedRequest.institutionVoteNumber
       }
@@ -62,7 +62,7 @@ export async function GET(req: Request) {
     }
 
     // Find employee with optional includes
-    const employee = await db.Employee.findFirst({
+    const employee = await db.employee.findFirst({
       where: searchCriteria,
       include: {
         Institution: {
@@ -182,7 +182,7 @@ export async function POST(req: Request) {
     console.log('Employee search request (POST):', { ...validatedRequest, timestamp: new Date().toISOString() });
 
     // Find institution by vote number
-    const institution = await db.Institution.findFirst({
+    const institution = await db.institution.findFirst({
       where: {
         voteNumber: validatedRequest.institutionVoteNumber
       }
@@ -209,7 +209,7 @@ export async function POST(req: Request) {
     }
 
     // Find employee with optional includes
-    const employee = await db.Employee.findFirst({
+    const employee = await db.employee.findFirst({
       where: searchCriteria,
       include: {
         Institution: {

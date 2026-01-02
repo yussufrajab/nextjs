@@ -165,7 +165,7 @@ export async function GET(req: Request) {
       pendingResignationsResult,
       pendingServiceExtensionsResult
     ] = await Promise.allSettled([
-      db.Employee.count({ where: employeeCountWhereClause }),
+      db.employee.count({ where: employeeCountWhereClause }),
       db.confirmationRequest.count({
         where: shouldFilter
           ? { status: { in: getConfirmationStatuses(userRole) }, ...requestEmployeeWhereClause }
@@ -176,7 +176,7 @@ export async function GET(req: Request) {
           ? { status: { in: getPromotionStatuses(userRole) }, ...requestEmployeeWhereClause }
           : { status: { in: getPromotionStatuses(userRole) } }
       }),
-      db.Employee.count({
+      db.employee.count({
         where: shouldFilter
           ? { status: 'On LWOP', ...employeeCountWhereClause }
           : { status: 'On LWOP' }

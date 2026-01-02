@@ -53,7 +53,7 @@ async function handleUpdate(req: Request, { params }: { params: Promise<{ id: st
 
     // If status is updated, create a notification for the employee
     if (validatedData.status) {
-      const userToNotify = await db.User.findUnique({
+      const userToNotify = await db.user.findUnique({
         where: { employeeId: updatedRequest.employeeId },
         select: { id: true }
       });
@@ -71,7 +71,7 @@ async function handleUpdate(req: Request, { params }: { params: Promise<{ id: st
 
       // Log audit event for approvals and rejections
       if (validatedData.reviewedById && validatedData.status) {
-        const reviewer = await db.User.findUnique({
+        const reviewer = await db.user.findUnique({
           where: { id: validatedData.reviewedById },
           select: { username: true, role: true }
         });
@@ -118,7 +118,7 @@ async function handleUpdate(req: Request, { params }: { params: Promise<{ id: st
               rejectedById: validatedData.reviewedById,
               rejectedByUsername: reviewer.username,
               rejectedByRole: reviewer.role || 'Unknown',
-              rejectionReason: validatedData.rejectionReason,
+              rejectionReason: validatedData.rejectionReason ?? undefined,
               reviewStage: validatedData.reviewStage,
               ipAddress,
               userAgent,
@@ -137,7 +137,7 @@ async function handleUpdate(req: Request, { params }: { params: Promise<{ id: st
         validatedData.status.toLowerCase().includes('commission') &&
         validatedData.status.toLowerCase().includes('approved') &&
         updatedRequest.Employee) {
-      await db.Employee.update({
+      await db.employee.update({
         where: { id: updatedRequest.Employee.id },
         data: { cadre: updatedRequest.newCadre }
       });

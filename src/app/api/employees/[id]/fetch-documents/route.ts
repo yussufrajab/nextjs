@@ -470,7 +470,7 @@ export async function POST(
           id: savedCert.id,
           type: savedCert.type,
           name: savedCert.name,
-          url: savedCert.url
+          url: savedCert.url ?? ''
         });
       }
       console.log(`✅ Processed ${certificatesStored.length} certificates for ${employee.name}`);
@@ -480,8 +480,7 @@ export async function POST(
       console.log('⚠️ No documents found in HRIMS response');
       return NextResponse.json({
         success: false,
-        message: 'No documents found in HRIMS response',
-        hrimsResponse: hrimsData
+        message: 'No documents found in HRIMS response'
       }, { status: 404 });
     }
 

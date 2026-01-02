@@ -27,7 +27,7 @@ export async function createNotification(data: NotificationData) {
 
 export async function createNotificationForRole(role: string, message: string, link?: string) {
   try {
-    const users = await db.User.findMany({
+    const users = await db.user.findMany({
       where: { role: role, active: true },
       select: { id: true },
     });

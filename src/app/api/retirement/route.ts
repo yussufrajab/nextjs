@@ -198,7 +198,7 @@ export async function PATCH(req: Request) {
 
     // If retirement request is approved by Commission, update employee status
     if (updateData.status === "Approved by Commission" && updatedRequest.Employee) {
-      await db.Employee.update({
+      await db.employee.update({
         where: { id: updatedRequest.Employee.id },
         data: { status: "Retired" }
       });
@@ -207,7 +207,7 @@ export async function PATCH(req: Request) {
 
     // Log audit event for approvals and rejections
     if (updateData.reviewedById && updateData.status) {
-      const reviewer = await db.User.findUnique({
+      const reviewer = await db.user.findUnique({
         where: { id: updateData.reviewedById },
         select: { username: true, role: true }
       });

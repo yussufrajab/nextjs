@@ -20,7 +20,7 @@ const userSchema = z.object({
 
 export async function GET() {
   try {
-    const users = await db.User.findMany({
+    const users = await db.user.findMany({
       orderBy: { name: 'asc' },
       include: {
         Institution: {
@@ -84,7 +84,7 @@ export async function POST(req: Request) {
     // Hash the password (provided by admin as temporary password)
     const hashedPassword = await hashPassword(password);
 
-    const newUser = await db.User.create({
+    const newUser = await db.user.create({
       data: {
         id: uuidv4(),
         name,

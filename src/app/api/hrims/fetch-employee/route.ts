@@ -111,7 +111,7 @@ async function saveEmployeeToDatabase(hrimsData: any, institutionId: string) {
     const highestEducation = hrimsData.educationHistories?.[0];
 
     // Find or create employee
-    const existingEmployee = await db.Employee.findUnique({
+    const existingEmployee = await db.employee.findUnique({
       where: { zanId: personalInfo.zanIdNumber }
     });
 
@@ -164,7 +164,7 @@ async function saveEmployeeToDatabase(hrimsData: any, institutionId: string) {
     });
 
     // Save/update employee
-    await db.Employee.upsert({
+    await db.employee.upsert({
       where: { zanId: personalInfo.zanIdNumber },
       update: dbEmployeeData,
       create: dbEmployeeData,
@@ -244,7 +244,7 @@ async function processDocuments(payrollNumber: string, employeeId: string) {
 
         // Update employee record with MinIO URL
         const minioUrl = `/api/files/employee-documents/${fileName}`;
-        await db.Employee.update({
+        await db.employee.update({
           where: { id: employeeId },
           data: {
             [docType.dbField]: minioUrl
@@ -343,7 +343,7 @@ async function processPhoto(payrollNumber: string, employeeId: string) {
 
     // Store MinIO URL in database
     const minioUrl = `/api/files/employee-photos/${fileName}`;
-    await db.Employee.update({
+    await db.employee.update({
       where: { id: employeeId },
       data: { profileImageUrl: minioUrl }
     });
@@ -376,7 +376,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Find institution by vote number
-    const institution = await db.Institution.findFirst({
+    const institution = await db.institution.findFirst({
       where: { voteNumber: institutionVoteNumber }
     });
 

@@ -233,7 +233,7 @@ export default function DismissalPage() {
         cadre: employeeDetails.cadre || 'N/A',
         employmentDate: employeeDetails.employmentDate?.toString() || 'N/A',
         dateOfBirth: employeeDetails.dateOfBirth?.toString() || 'N/A',
-        institution: typeof employeeDetails.institution === 'object' ? employeeDetails.Institution.name : employeeDetails.institution || 'N/A',
+        institution: typeof employeeDetails.institution === 'object' ? employeeDetails.institution.name : employeeDetails.institution || 'N/A',
         reasonSummary: reasonDismissal,
         proposedDate: proposedDateDismissal,
         submissionDate: format(new Date(), 'yyyy-MM-dd'),
@@ -368,7 +368,7 @@ export default function DismissalPage() {
                       <div><Label className="text-muted-foreground">Cadre/Position:</Label> <p className="font-semibold text-foreground">{employeeDetails.cadre || 'N/A'}</p></div>
                       <div><Label className="text-muted-foreground">Employment Date:</Label> <p className="font-semibold text-foreground">{employeeDetails.employmentDate ? format(parseISO(employeeDetails.employmentDate.toString()), 'PPP') : 'N/A'}</p></div>
                       <div><Label className="text-muted-foreground">Date of Birth:</Label> <p className="font-semibold text-foreground">{employeeDetails.dateOfBirth ? format(parseISO(employeeDetails.dateOfBirth.toString()), 'PPP') : 'N/A'}</p></div>
-                      <div className="lg:col-span-1"><Label className="text-muted-foreground">Institution:</Label> <p className="font-semibold text-foreground">{typeof employeeDetails.institution === 'object' ? employeeDetails.Institution.name : employeeDetails.institution || 'N/A'}</p></div>
+                      <div className="lg:col-span-1"><Label className="text-muted-foreground">Institution:</Label> <p className="font-semibold text-foreground">{typeof employeeDetails.institution === 'object' ? employeeDetails.institution.name : employeeDetails.institution || 'N/A'}</p></div>
                       <div className="md:col-span-2 lg:col-span-3"><Label className="text-muted-foreground">Current Status:</Label> <p className={`font-semibold ${isDismissalAllowed ? 'text-green-600' : 'text-red-600'}`}>{employeeDetails.status || 'N/A'}</p></div>
                     </div>
                   </div>
@@ -484,7 +484,12 @@ export default function DismissalPage() {
                   <h3 className="font-semibold text-base">Dismissal for: {request.employeeName} (ZanID: {request.zanId})</h3>
                   <p className="text-sm text-muted-foreground">Reason: {request.reasonSummary}</p>
                   <p className="text-sm text-muted-foreground">Proposed Date: {request.proposedDate ? format(parseISO(request.proposedDate), 'PPP') : 'N/A'}</p>
-                  <p className="text-sm text-muted-foreground">Submitted: {request.submissionDate ? format(parseISO(request.submissionDate), 'PPP') : 'N/A'} by {typeof request.submittedBy === 'object' ? request.submittedBy?.name : request.submittedBy || 'N/A'}</p>
+                  <p className="text-sm text-muted-foreground">Submitted: {request.submissionDate ? format(parseISO(request.submissionDate), 'PPP') : 'N/A'} by {(() => {
+                    const submitter = request.submittedBy;
+                    if (typeof submitter === 'object' && submitter !== null && 'name' in submitter) return (submitter as { name: string }).name;
+                    if (typeof submitter === 'string') return submitter;
+                    return 'N/A';
+                  })()}</p>
                   <div className="flex items-center space-x-2">
                     <p className="text-sm"><span className="font-medium">Status:</span></p>
                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
@@ -586,7 +591,12 @@ export default function DismissalPage() {
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Institution:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{typeof selectedRequest.institution === 'object' ? selectedRequest.institution?.name : selectedRequest.institution || 'N/A'}</p>
+                        <p className="col-span-2 font-medium text-foreground">{(() => {
+                          const inst = selectedRequest.institution;
+                          if (typeof inst === 'object' && inst !== null && 'name' in inst) return (inst as { name: string }).name;
+                          if (typeof inst === 'string') return inst;
+                          return 'N/A';
+                        })()}</p>
                     </div>
                 </div>
                  <div className="space-y-1">
@@ -601,7 +611,12 @@ export default function DismissalPage() {
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-2">
                         <Label className="text-right font-semibold">Submitted:</Label>
-                        <p className="col-span-2">{selectedRequest.submissionDate ? format(parseISO(selectedRequest.submissionDate), 'PPP') : 'N/A'} by {typeof selectedRequest.submittedBy === 'object' ? selectedRequest.submittedBy?.name : selectedRequest.submittedBy || 'N/A'}</p>
+                        <p className="col-span-2">{selectedRequest.submissionDate ? format(parseISO(selectedRequest.submissionDate), 'PPP') : 'N/A'} by {(() => {
+                          const submitter = selectedRequest.submittedBy;
+                          if (typeof submitter === 'object' && submitter !== null && 'name' in submitter) return (submitter as { name: string }).name;
+                          if (typeof submitter === 'string') return submitter;
+                          return 'N/A';
+                        })()}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-2">
                         <Label className="text-right font-semibold">Status:</Label>

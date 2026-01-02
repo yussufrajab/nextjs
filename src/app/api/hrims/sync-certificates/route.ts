@@ -53,7 +53,7 @@ export async function POST(req: Request) {
     const validatedRequest = hrimsCertificatesRequestSchema.parse(body);
 
     // Find institution by vote number
-    const institution = await db.Institution.findFirst({
+    const institution = await db.institution.findFirst({
       where: {
         voteNumber: validatedRequest.institutionVoteNumber
       }
@@ -67,7 +67,7 @@ export async function POST(req: Request) {
     }
 
     // Find employee to ensure they exist
-    const employee = await db.Employee.findFirst({
+    const employee = await db.employee.findFirst({
       where: {
         OR: [
           { zanId: validatedRequest.zanId },

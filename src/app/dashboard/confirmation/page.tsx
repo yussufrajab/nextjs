@@ -300,7 +300,9 @@ export default function ConfirmationPage() {
     // Check if IPA certificate is required based on employment date
     if (employee.employmentDate) {
       try {
-        const employmentDate = parseISO(employee.employmentDate);
+        const employmentDate = typeof employee.employmentDate === 'string'
+          ? parseISO(employee.employmentDate)
+          : employee.employmentDate;
         const cutoffDate = new Date('2014-05-01');
         if (isAfter(employmentDate, cutoffDate)) {
           setIsIpaRequired(true);
@@ -350,7 +352,8 @@ export default function ConfirmationPage() {
       id: `temp-${Date.now()}`, // Temporary ID until server responds
       employee: {
         ...employeeToConfirm,
-        institution: { name: typeof employeeToConfirm.institution === 'object' ? employeeToConfirm.Institution.name : employeeToConfirm.institution || 'N/A' }
+        phoneNumber: employeeToConfirm.phoneNumber ?? undefined,
+        institution: { name: typeof employeeToConfirm.institution === 'object' ? employeeToConfirm.institution.name : employeeToConfirm.institution || 'N/A' }
       },
       submittedBy: { name: user.name },
       status: 'Pending HRMO/HHRMD Review',
@@ -503,8 +506,8 @@ export default function ConfirmationPage() {
   const handleConfirmResubmit = async (request: ConfirmationRequest | null) => {
     if (!request || !user) return;
 
-    if (correctedEvaluationFormFile === '' || correctedLetterOfRequestFile === '' || 
-        ((requestToCorrect?.Employee.employmentDate && isAfter(parseISO(requestToCorrect.Employee.employmentDate), new Date('2014-05-01')) || 
+    if (correctedEvaluationFormFile === '' || correctedLetterOfRequestFile === '' ||
+        ((requestToCorrect?.Employee?.employmentDate && isAfter(typeof requestToCorrect.Employee.employmentDate === 'string' ? parseISO(requestToCorrect.Employee.employmentDate) : requestToCorrect.Employee.employmentDate, new Date('2014-05-01')) ||
           requestToCorrect?.documents.includes('IPA Certificate')) && correctedIpaCertificateFile === '')) {
       toast({ title: "Submission Error", description: "All required documents must be attached.", variant: "destructive" });
       return;
@@ -651,7 +654,7 @@ export default function ConfirmationPage() {
                     <Label className="flex items-center mb-2"><FileText className="mr-2 h-4 w-4 text-primary" />Upload Evaluation Form</Label>
                     <FileUpload
                       value={evaluationFormFile}
-                      onChange={setEvaluationFormFile}
+                      onChange={(key) => setEvaluationFormFile(Array.isArray(key) ? key[0] : key)}
                       folder="confirmation/evaluation-forms"
                       accept=".pdf"
                       maxSize={2}
@@ -663,7 +666,7 @@ export default function ConfirmationPage() {
                         <Label className="flex items-center mb-2"><Award className="mr-2 h-4 w-4 text-primary" />Upload IPA Certificate</Label>
                         <FileUpload
                           value={ipaCertificateFile}
-                          onChange={setIpaCertificateFile}
+                          onChange={(key) => setIpaCertificateFile(Array.isArray(key) ? key[0] : key)}
                           folder="confirmation/ipa-certificates"
                           accept=".pdf"
                           maxSize={2}
@@ -675,7 +678,7 @@ export default function ConfirmationPage() {
                     <Label className="flex items-center mb-2"><CheckCircle className="mr-2 h-4 w-4 text-primary" />Upload Letter of Request</Label>
                     <FileUpload
                       value={letterOfRequestFile}
-                      onChange={setLetterOfRequestFile}
+                      onChange={(key) => setLetterOfRequestFile(Array.isArray(key) ? key[0] : key)}
                       folder="confirmation/letters"
                       accept=".pdf"
                       maxSize={2}
@@ -848,16 +851,16 @@ export default function ConfirmationPage() {
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">ZSSF #:</Label><p className="col-span-2 font-medium">{selectedEmployeeData?.zssfNumber || 'N/A'}</p></div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">Department:</Label><p className="col-span-2 font-medium">{selectedEmployeeData?.department || 'N/A'}</p></div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">Cadre:</Label><p className="col-span-2 font-medium">{selectedEmployeeData?.cadre || 'N/A'}</p></div>
-                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">Employment Date:</Label><p className="col-span-2 font-medium">{selectedEmployeeData?.employmentDate ? format(parseISO(selectedEmployeeData.employmentDate), 'PPP') : 'N/A'}</p></div>
-                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">DOB:</Label><p className="col-span-2 font-medium">{selectedEmployeeData?.dateOfBirth ? format(parseISO(selectedEmployeeData.dateOfBirth), 'PPP') : 'N/A'}</p></div>
-                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">Institution:</Label><p className="col-span-2 font-medium">{selectedEmployeeData?.Institution?.name || selectedEmployeeData?.institution?.name || 'N/A'}</p></div>
+                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">Employment Date:</Label><p className="col-span-2 font-medium">{selectedEmployeeData?.employmentDate ? format(typeof selectedEmployeeData.employmentDate === 'string' ? parseISO(selectedEmployeeData.employmentDate) : selectedEmployeeData.employmentDate, 'PPP') : 'N/A'}</p></div>
+                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">DOB:</Label><p className="col-span-2 font-medium">{selectedEmployeeData?.dateOfBirth ? format(typeof selectedEmployeeData.dateOfBirth === 'string' ? parseISO(selectedEmployeeData.dateOfBirth) : selectedEmployeeData.dateOfBirth, 'PPP') : 'N/A'}</p></div>
+                    <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1"><Label className="text-right text-muted-foreground">Institution:</Label><p className="col-span-2 font-medium">{selectedEmployeeData?.institution ? (typeof selectedEmployeeData.institution === 'string' ? selectedEmployeeData.institution : selectedEmployeeData.institution.name) : 'N/A'}</p></div>
                 </div>
 
                 <div className="space-y-1">
                     <h4 className="font-semibold text-base text-foreground mb-2">Request Information</h4>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-2"><Label className="text-right font-semibold">Submitted:</Label><p className="col-span-2">{format(parseISO(selectedRequest.createdAt), 'PPP')} by {selectedRequest.submittedBy?.name || 'N/A'}</p></div>
                      {selectedRequest.decisionDate && <div className="grid grid-cols-3 items-center gap-x-4 gap-y-2"><Label className="text-right font-semibold">Initial Review:</Label><p className="col-span-2">{format(parseISO(selectedRequest.decisionDate), 'PPP')}</p></div>}
-                    {selectedRequest.commissionDecisionDate && <div className="grid grid-cols-3 items-center gap-x-4 gap-y-2"><Label className="text-right font-semibold">Commission Date:</Label><p className="col-span-2">{format(parseISO(typeof selectedRequest.commissionDecisionDate === 'string' ? selectedRequest.commissionDecisionDate : selectedRequest.commissionDecisionDate.toISOString()), 'PPP')}</p></div>}
+                    {selectedRequest.commissionDecisionDate && <div className="grid grid-cols-3 items-center gap-x-4 gap-y-2"><Label className="text-right font-semibold">Commission Date:</Label><p className="col-span-2">{format(typeof selectedRequest.commissionDecisionDate === 'string' ? parseISO(selectedRequest.commissionDecisionDate) : selectedRequest.commissionDecisionDate, 'PPP')}</p></div>}
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-2"><Label className="text-right font-semibold">Status:</Label><p className="col-span-2 text-primary">{selectedRequest.status}</p></div>
                     {selectedRequest.rejectionReason && <div className="grid grid-cols-3 items-start gap-x-4 gap-y-2"><Label className="text-right font-semibold text-destructive pt-1">Rejection Reason:</Label><p className="col-span-2 text-destructive">{selectedRequest.rejectionReason}</p></div>}
                 </div>
@@ -975,19 +978,19 @@ export default function ConfirmationPage() {
                 <Label className="flex items-center mb-2"><FileText className="mr-2 h-4 w-4 text-primary" />Upload Corrected Evaluation Form</Label>
                 <FileUpload
                   value={correctedEvaluationFormFile}
-                  onChange={setCorrectedEvaluationFormFile}
+                  onChange={(key) => setCorrectedEvaluationFormFile(Array.isArray(key) ? key[0] : key)}
                   folder="confirmation/evaluation-forms"
                   accept=".pdf"
                   maxSize={2}
                 />
               </div>
-              {(requestToCorrect.Employee.employmentDate && isAfter(parseISO(requestToCorrect.Employee.employmentDate), new Date('2014-05-01')) || 
-                requestToCorrect.documents.includes('IPA Certificate')) && (
+              {(requestToCorrect?.Employee?.employmentDate && isAfter(typeof requestToCorrect.Employee.employmentDate === 'string' ? parseISO(requestToCorrect.Employee.employmentDate) : requestToCorrect.Employee.employmentDate, new Date('2014-05-01')) ||
+                requestToCorrect?.documents.includes('IPA Certificate')) && (
                 <div>
                   <Label className="flex items-center mb-2"><Award className="mr-2 h-4 w-4 text-primary" />Upload Corrected IPA Certificate</Label>
                   <FileUpload
                     value={correctedIpaCertificateFile}
-                    onChange={setCorrectedIpaCertificateFile}
+                    onChange={(key) => setCorrectedIpaCertificateFile(Array.isArray(key) ? key[0] : key)}
                     folder="confirmation/ipa-certificates"
                     accept=".pdf"
                     maxSize={2}
@@ -998,7 +1001,7 @@ export default function ConfirmationPage() {
                 <Label className="flex items-center mb-2"><CheckCircle className="mr-2 h-4 w-4 text-primary" />Upload Corrected Letter of Request</Label>
                 <FileUpload
                   value={correctedLetterOfRequestFile}
-                  onChange={setCorrectedLetterOfRequestFile}
+                  onChange={(key) => setCorrectedLetterOfRequestFile(Array.isArray(key) ? key[0] : key)}
                   folder="confirmation/letters"
                   accept=".pdf"
                   maxSize={2}

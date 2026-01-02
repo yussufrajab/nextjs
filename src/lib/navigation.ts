@@ -46,6 +46,7 @@ export const NAV_ITEMS: NavItem[] = [
   },
   {
     title: 'Admin Management',
+    href: '#',
     icon: ShieldCheck,
     roles: [ROLES.ADMIN as Role],
     children: [

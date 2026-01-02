@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Verify institution exists
-    const institution = await db.Institution.findUnique({
+    const institution = await db.institution.findUnique({
       where: { id: institutionId }
     });
 

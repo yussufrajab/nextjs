@@ -37,7 +37,7 @@ export async function POST(req: Request) {
     });
 
     // Find employee with matching credentials
-    const employee = await db.Employee.findFirst({
+    const employee = await db.employee.findFirst({
       where: {
         zanId: normalizedZanId,
         zssfNumber: normalizedZssfNumber,
@@ -85,7 +85,7 @@ export async function POST(req: Request) {
         // Check if username already exists and make it unique if necessary
         let username = baseUsername;
         let counter = 1;
-        while (await db.User.findUnique({ where: { username } })) {
+        while (await db.user.findUnique({ where: { username } })) {
           username = `${baseUsername}${counter}`;
           counter++;
         }
@@ -98,13 +98,13 @@ export async function POST(req: Request) {
         const userId = `emp_${randomBytes(16).toString('hex')}`;
 
         // Create user account with temporary password flags
-        user = await db.User.create({
+        user = await db.user.create({
           data: {
             id: userId,
             username,
             password: hashedPassword,
             name: employee.name,
-            role: ROLES.EMPLOYEE,
+            role: ROLES.EMPLOYEE as string,
             active: true,
             employeeId: employee.id,
             institutionId: employee.institutionId,
@@ -166,7 +166,7 @@ export async function POST(req: Request) {
     }
 
     // Set initial activity timestamp for session timeout tracking
-    await db.User.update({
+    await db.user.update({
       where: { id: user.id },
       data: { lastActivity: new Date() },
     });

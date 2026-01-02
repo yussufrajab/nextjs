@@ -122,7 +122,7 @@ export default function TrackStatusPage() {
     if (isTableView) {
       let params = new URLSearchParams();
       params.set('limit', '100'); // Always get 100 latest requests
-      if (role === ROLES.HRO && user?.institution?.name) {
+      if (role === ROLES.HRO && user?.institution) {
           params.append('institutionName', typeof user.institution === 'object' ? user.institution.name : user.institution);
           setInstitutionFilter(typeof user.institution === 'object' ? user.institution.name : user.institution);
       }
@@ -139,7 +139,7 @@ export default function TrackStatusPage() {
 
   const handleEmployeeClear = () => {
     setSelectedEmployee(null);
-    setTrackedRequests([]);
+    setAllRequests([]);
     setFilteredRequests([]);
   };
 
@@ -156,7 +156,7 @@ export default function TrackStatusPage() {
         params.set('limit', '100');
     }
     
-    if (role === ROLES.HRO && user?.institution?.name) {
+    if (role === ROLES.HRO && user?.institution) {
       params.set('institutionName', typeof user.institution === 'object' ? user.institution.name : user.institution);
     }
     

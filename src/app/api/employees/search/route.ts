@@ -91,7 +91,7 @@ export async function GET(req: Request) {
       }
     }
 
-    const employees = await db.Employee.findMany({
+    const employees = await db.employee.findMany({
       where: whereClause,
       include: {
         Institution: {

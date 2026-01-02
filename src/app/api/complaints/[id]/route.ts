@@ -68,7 +68,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     // If the complainant has an employeeId, fetch employee details separately
     let employeeDetails = null;
     if (updatedComplaint.User_Complaint_complainantIdToUser.employeeId) {
-      employeeDetails = await db.Employee.findUnique({
+      employeeDetails = await db.employee.findUnique({
         where: { id: updatedComplaint.User_Complaint_complainantIdToUser.employeeId },
         select: {
           zanId: true,

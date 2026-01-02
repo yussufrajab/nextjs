@@ -21,7 +21,7 @@ export async function PUT(
 
     // Check if another institution has the same tin number (only if tin number is provided)
     if (validatedData.tinNumber && validatedData.tinNumber.trim().length > 0) {
-      const existingTinNumber = await db.Institution.findFirst({
+      const existingTinNumber = await db.institution.findFirst({
         where: {
           tinNumber: validatedData.tinNumber.trim(),
           NOT: {
@@ -38,7 +38,7 @@ export async function PUT(
       }
     }
 
-    const updatedInstitution = await db.Institution.update({
+    const updatedInstitution = await db.institution.update({
       where: { id },
       data: {
         name: validatedData.name,
@@ -75,7 +75,7 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    await db.Institution.delete({
+    await db.institution.delete({
       where: { id },
     });
     return new NextResponse(null, { status: 204 });

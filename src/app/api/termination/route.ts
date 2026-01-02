@@ -188,7 +188,7 @@ export async function PATCH(req: Request) {
         newStatus = updatedRequest.type === "DISMISSAL" ? "Dismissed" : "Terminated";
       }
 
-      await db.Employee.update({
+      await db.employee.update({
         where: { id: updatedRequest.Employee.id },
         data: { status: newStatus }
       });
@@ -198,7 +198,7 @@ export async function PATCH(req: Request) {
 
     // Log audit event for approvals and rejections
     if (updateData.reviewedById && updateData.status) {
-      const reviewer = await db.User.findUnique({
+      const reviewer = await db.user.findUnique({
         where: { id: updateData.reviewedById },
         select: { username: true, role: true }
       });

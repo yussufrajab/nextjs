@@ -222,8 +222,7 @@ export function middleware(request: NextRequest) {
     console.log('[Middleware] Checking access:', { pathname, role, isAuthenticated, userId });
 
     // Get client info for audit logging
-    const ipAddress = request.ip ||
-                     request.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
+    const ipAddress = request.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
                      request.headers.get('x-real-ip') ||
                      null;
     const userAgent = request.headers.get('user-agent') || null;

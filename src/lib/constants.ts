@@ -60,24 +60,24 @@ const commissionName = 'TUME YA UTUMISHI SERIKALINI';
 
 export const USERS: Omit<User, 'id'>[] = [
   // Commission Users
-  { username: "akassim", name: "Amina Kassim", role: ROLES.ADMIN as Role, institution: commissionName },
-  { username: "zhaji", name: "Zaituni Haji", role: ROLES.CSCS as Role, institution: commissionName },
-  { username: "skhamis", name: "Safia Khamis", role: ROLES.HHRMD as Role, institution: commissionName },
-  { username: "fiddi", name: "Fauzia Iddi", role: ROLES.HRMO as Role, institution: commissionName },
-  { username: "mussi", name: "Maimuna Ussi", role: ROLES.DO as Role, institution: commissionName },
-  { username: "mishak", name: "Mwanakombo Is-hak", role: ROLES.PO as Role, institution: commissionName },
-  { username: "khamadi", name: "Khamis Hamadi", role: ROLES.HRRP as Role, institution: commissionName },
+  { username: "akassim", name: "Amina Kassim", password: "password123", role: ROLES.ADMIN as Role, institution: commissionName, institutionId: "1", active: true, createdAt: new Date(), updatedAt: new Date() },
+  { username: "zhaji", name: "Zaituni Haji", password: "password123", role: ROLES.CSCS as Role, institution: commissionName, institutionId: "1", active: true, createdAt: new Date(), updatedAt: new Date() },
+  { username: "skhamis", name: "Safia Khamis", password: "password123", role: ROLES.HHRMD as Role, institution: commissionName, institutionId: "1", active: true, createdAt: new Date(), updatedAt: new Date() },
+  { username: "fiddi", name: "Fauzia Iddi", password: "password123", role: ROLES.HRMO as Role, institution: commissionName, institutionId: "1", active: true, createdAt: new Date(), updatedAt: new Date() },
+  { username: "mussi", name: "Maimuna Ussi", password: "password123", role: ROLES.DO as Role, institution: commissionName, institutionId: "1", active: true, createdAt: new Date(), updatedAt: new Date() },
+  { username: "mishak", name: "Mwanakombo Is-hak", password: "password123", role: ROLES.PO as Role, institution: commissionName, institutionId: "1", active: true, createdAt: new Date(), updatedAt: new Date() },
+  { username: "khamadi", name: "Khamis Hamadi", password: "password123", role: ROLES.HRRP as Role, institution: commissionName, institutionId: "1", active: true, createdAt: new Date(), updatedAt: new Date() },
   
   // HROs (including one for the commission)
-  { username: "hro_commission", name: "HRO (Tume)", role: ROLES.HRO as Role, institution: commissionName },
-  { username: "kmnyonge", name: "Khamis Mnyonge", role: ROLES.HRO as Role, institution: 'OFISI YA RAIS, FEDHA NA MIPANGO' },
-  { username: "ahmedm", name: "Ahmed Mohammed", role: ROLES.HRO as Role, institution: 'WIZARA YA ELIMU NA MAFUNZO YA AMALI' },
-  { username: "mariamj", name: "Mariam Juma", role: ROLES.HRO as Role, institution: 'WIZARA YA AFYA' },
+  { username: "hro_commission", name: "HRO (Tume)", password: "password123", role: ROLES.HRO as Role, institution: commissionName, institutionId: "1", active: true, createdAt: new Date(), updatedAt: new Date() },
+  { username: "kmnyonge", name: "Khamis Mnyonge", password: "password123", role: ROLES.HRO as Role, institution: 'OFISI YA RAIS, FEDHA NA MIPANGO', institutionId: "2", active: true, createdAt: new Date(), updatedAt: new Date() },
+  { username: "ahmedm", name: "Ahmed Mohammed", password: "password123", role: ROLES.HRO as Role, institution: 'WIZARA YA ELIMU NA MAFUNZO YA AMALI', institutionId: "3", active: true, createdAt: new Date(), updatedAt: new Date() },
+  { username: "mariamj", name: "Mariam Juma", password: "password123", role: ROLES.HRO as Role, institution: 'WIZARA YA AFYA', institutionId: "4", active: true, createdAt: new Date(), updatedAt: new Date() },
   
   // Employee users
-  { username: "alijuma", name: "Ali Juma Ali", role: ROLES.EMPLOYEE as Role, employeeId: "emp1", institution: 'OFISI YA RAIS, FEDHA NA MIPANGO' },
-  { username: "khadijanassor", name: "Khadija Nassor", role: ROLES.EMPLOYEE as Role, employeeId: "emp8", institution: 'WIZARA YA ELIMU NA MAFUNZO YA AMALI' },
-  { username: "yussufmakame", name: "Yussuf Makame", role: ROLES.EMPLOYEE as Role, employeeId: "emp9", institution: 'WIZARA YA ELIMU NA MAFUNZO YA AMALI' },
+  { username: "alijuma", name: "Ali Juma Ali", password: "password123", role: ROLES.EMPLOYEE as Role, employeeId: "emp1", institution: 'OFISI YA RAIS, FEDHA NA MIPANGO', institutionId: "2", active: true, createdAt: new Date(), updatedAt: new Date() },
+  { username: "khadijanassor", name: "Khadija Nassor", password: "password123", role: ROLES.EMPLOYEE as Role, employeeId: "emp8", institution: 'WIZARA YA ELIMU NA MAFUNZO YA AMALI', institutionId: "3", active: true, createdAt: new Date(), updatedAt: new Date() },
+  { username: "yussufmakame", name: "Yussuf Makame", password: "password123", role: ROLES.EMPLOYEE as Role, employeeId: "emp9", institution: 'WIZARA YA ELIMU NA MAFUNZO YA AMALI', institutionId: "3", active: true, createdAt: new Date(), updatedAt: new Date() },
 ];
 
 export const EMPLOYEES: Employee[] = [
@@ -116,8 +116,8 @@ export const EMPLOYEES: Employee[] = [
     birthCertificateUrl: "https://placehold.co/birth-cert-ali.pdf",
     profileImageUrl: "https://placehold.co/100x100.png?text=AJA",
     certificates: [
-      { type: "Bachelor Degree", name: "B.A. Public Administration", url: "https://placehold.co/bachelor-ali.pdf" },
-      { type: "Certificate", name: "Certificate in Office Management", url: "https://placehold.co/cert-ali.pdf" },
+      { id: "cert1", employeeId: "emp1", type: "Bachelor Degree", name: "B.A. Public Administration", url: "https://placehold.co/bachelor-ali.pdf" },
+      { id: "cert2", employeeId: "emp1", type: "Certificate", name: "Certificate in Office Management", url: "https://placehold.co/cert-ali.pdf" },
     ],
   },
   { 
@@ -155,8 +155,8 @@ export const EMPLOYEES: Employee[] = [
     birthCertificateUrl: undefined,
     profileImageUrl: "https://placehold.co/100x100.png?text=SJA",
     certificates: [
-      { type: "Master Degree", name: "MSc Human Resource Management", url: "https://placehold.co/masters-safia.pdf" },
-      { type: "Bachelor Degree", name: "BSc Business Administration", url: "https://placehold.co/bachelor-safia.pdf" },
+      { id: "cert3", employeeId: "emp2", type: "Master Degree", name: "MSc Human Resource Management", url: "https://placehold.co/masters-safia.pdf" },
+      { id: "cert4", employeeId: "emp2", type: "Bachelor Degree", name: "BSc Business Administration", url: "https://placehold.co/bachelor-safia.pdf" },
     ],
   },
   { 
@@ -193,7 +193,7 @@ export const EMPLOYEES: Employee[] = [
     jobContractUrl: undefined,
     birthCertificateUrl: "https://placehold.co/birth-cert-fatma.pdf",
     certificates: [
-      { type: "Diploma", name: "Diploma in Accountancy", url: "https://placehold.co/diploma-fatma.pdf" },
+      { id: "cert5", employeeId: "emp3", type: "Diploma", name: "Diploma in Accountancy", url: "https://placehold.co/diploma-fatma.pdf" },
     ],
   },
   { 
