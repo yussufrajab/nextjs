@@ -15,7 +15,8 @@
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
     "test:watch": "vitest --watch",
-    "test:coverage": "vitest --coverage"
+    "test:coverage": "vitest --coverage",
+    "prepare": "husky"
   },
   "dependencies": {
     "@genkit-ai/googleai": "^1.8.0",
@@ -88,7 +89,9 @@
     "@vitejs/plugin-react": "^5.1.2",
     "@vitest/coverage-v8": "^4.0.16",
     "genkit-cli": "^1.8.0",
+    "husky": "^9.1.7",
     "jsdom": "^27.4.0",
+    "lint-staged": "^16.2.7",
     "msw": "^2.12.7",
     "postcss": "^8",
     "prisma": "^6.19.1",
