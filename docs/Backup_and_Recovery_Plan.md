@@ -1,13 +1,14 @@
 # Backup and Recovery Plan
+
 ## Civil Service Management System (CSMS)
 
 ---
 
 ### Document Control
 
-| **Version** | **Date** | **Author** | **Changes** |
-|-------------|----------|------------|-------------|
-| 1.0 | 2025-01-15 | CSMS Operations Team | Initial backup and recovery plan |
+| **Version** | **Date**   | **Author**           | **Changes**                      |
+| ----------- | ---------- | -------------------- | -------------------------------- |
+| 1.0         | 2025-01-15 | CSMS Operations Team | Initial backup and recovery plan |
 
 **Document Classification**: RESTRICTED
 **Distribution**: Operations Team, Database Administrators, System Administrators
@@ -31,10 +32,13 @@
 ## 1. Introduction
 
 ### 1.1 Purpose
+
 This Backup and Recovery Plan defines the strategy, procedures, and responsibilities for protecting CSMS data through regular backups and ensuring timely recovery in the event of data loss or system failure.
 
 ### 1.2 Scope
+
 This plan covers:
+
 - PostgreSQL database backups
 - MinIO object storage backups
 - Application configuration backups
@@ -43,6 +47,7 @@ This plan covers:
 - Recovery time and point objectives
 
 ### 1.3 Objectives
+
 - **Protect Data**: Ensure all critical data is backed up regularly
 - **Enable Recovery**: Facilitate quick and complete data recovery
 - **Minimize Downtime**: Reduce system unavailability during recovery
@@ -52,6 +57,7 @@ This plan covers:
 ### 1.4 Backup Components
 
 **What Gets Backed Up**:
+
 1. **PostgreSQL Database** (nody)
    - All tables and data
    - Database schema
@@ -83,6 +89,7 @@ This plan covers:
 ### 2.1 Backup Approach
 
 **3-2-1 Backup Strategy**:
+
 - **3** copies of data (original + 2 backups)
 - **2** different media types (disk + offsite/cloud)
 - **1** copy offsite (secure location)
@@ -90,18 +97,21 @@ This plan covers:
 **Backup Types**:
 
 #### 2.1.1 Full Backup
+
 - **What**: Complete copy of all data
 - **When**: Weekly (Sunday)
 - **Retention**: 12 weeks
 - **Purpose**: Complete restore point
 
 #### 2.1.2 Incremental Backup
+
 - **What**: Only changes since last backup
 - **When**: Daily
 - **Retention**: 30 days
 - **Purpose**: Point-in-time recovery
 
 #### 2.1.3 Configuration Backup
+
 - **What**: System and application configurations
 - **When**: Weekly (Sunday)
 - **Retention**: 12 weeks
@@ -110,18 +120,21 @@ This plan covers:
 ### 2.2 Backup Locations
 
 **Primary Backup Location**:
+
 - **Path**: `/var/backups/csms/`
 - **Storage**: Local disk (200GB allocated)
 - **Access**: Root only
 - **Encryption**: Sensitive configurations encrypted with GPG
 
 **Secondary Backup Location (Offsite)**:
+
 - **Type**: Network Attached Storage (NAS) or Cloud Storage
 - **Path**: `/mnt/backup-nas/csms/` or S3 bucket
 - **Sync**: Daily (rsync or aws s3 sync)
 - **Encryption**: Encrypted in transit and at rest
 
 **Backup Rotation**:
+
 - Daily backups: Keep last 30 days
 - Weekly backups: Keep last 12 weeks
 - Monthly backups: Keep last 12 months
@@ -129,28 +142,31 @@ This plan covers:
 
 ### 2.3 Data Classification
 
-| Data Type | Criticality | Backup Frequency | Retention |
-|-----------|-------------|------------------|-----------|
-| **Database (User, Employee, Requests)** | Critical | Daily | 30 days + 12 weeks + 12 months |
-| **Documents (MinIO)** | Critical | Weekly | 4 weeks + 12 months |
-| **Application Logs** | High | Daily | 30 days |
-| **Configuration Files** | High | Weekly | 12 weeks |
-| **Application Code** | Medium | On commit (Git) | Indefinite |
-| **Monitoring Metrics** | Medium | Weekly | 90 days |
+| Data Type                               | Criticality | Backup Frequency | Retention                      |
+| --------------------------------------- | ----------- | ---------------- | ------------------------------ |
+| **Database (User, Employee, Requests)** | Critical    | Daily            | 30 days + 12 weeks + 12 months |
+| **Documents (MinIO)**                   | Critical    | Weekly           | 4 weeks + 12 months            |
+| **Application Logs**                    | High        | Daily            | 30 days                        |
+| **Configuration Files**                 | High        | Weekly           | 12 weeks                       |
+| **Application Code**                    | Medium      | On commit (Git)  | Indefinite                     |
+| **Monitoring Metrics**                  | Medium      | Weekly           | 90 days                        |
 
 ### 2.4 Backup Security
 
 **Access Control**:
+
 - Backup files owned by root
 - Permissions: 600 (read/write owner only)
 - Encrypted sensitive data (passwords, API keys)
 
 **Encryption**:
+
 - Configuration backups: GPG symmetric encryption (AES-256)
 - Database backups: Compressed (gzip) - consider encryption for production
 - Transit encryption: TLS 1.2+ for network transfers
 
 **Audit**:
+
 - Backup access logged
 - Backup verification logged
 - Failed backups alerted
@@ -161,24 +177,26 @@ This plan covers:
 
 ### 3.1 Automated Backup Schedule
 
-| Backup Type | Frequency | Time (EAT) | Script Location | Duration |
-|-------------|-----------|------------|-----------------|----------|
-| **Database Incremental** | Daily | 02:00 | `/usr/local/bin/backup-csms-db.sh` | ~10 min |
-| **Database Full** | Weekly (Sunday) | 03:00 | `/usr/local/bin/backup-csms-db-full.sh` | ~30 min |
-| **MinIO Storage** | Weekly (Saturday) | 03:00 | `/usr/local/bin/backup-csms-minio.sh` | ~45 min |
-| **Configuration** | Weekly (Sunday) | 04:00 | `/usr/local/bin/backup-csms-config.sh` | ~5 min |
-| **Offsite Sync** | Daily | 05:00 | `/usr/local/bin/sync-backups-offsite.sh` | ~30 min |
+| Backup Type              | Frequency         | Time (EAT) | Script Location                          | Duration |
+| ------------------------ | ----------------- | ---------- | ---------------------------------------- | -------- |
+| **Database Incremental** | Daily             | 02:00      | `/usr/local/bin/backup-csms-db.sh`       | ~10 min  |
+| **Database Full**        | Weekly (Sunday)   | 03:00      | `/usr/local/bin/backup-csms-db-full.sh`  | ~30 min  |
+| **MinIO Storage**        | Weekly (Saturday) | 03:00      | `/usr/local/bin/backup-csms-minio.sh`    | ~45 min  |
+| **Configuration**        | Weekly (Sunday)   | 04:00      | `/usr/local/bin/backup-csms-config.sh`   | ~5 min   |
+| **Offsite Sync**         | Daily             | 05:00      | `/usr/local/bin/sync-backups-offsite.sh` | ~30 min  |
 
 ### 3.2 Backup Windows
 
 **Production Backup Window**: 02:00 - 06:00 EAT (4 hours)
 
 **Rationale**:
+
 - Lowest system usage (minimal user activity)
 - Allows 4 hours for all backups to complete
 - Before business hours (08:00 start)
 
 **Impact**:
+
 - Database backup: No user impact (online backup)
 - MinIO backup: No user impact (mirroring)
 - Configuration backup: No user impact
@@ -186,6 +204,7 @@ This plan covers:
 ### 3.3 Cron Schedule
 
 **Database Administrator's Crontab**:
+
 ```bash
 # Database incremental backup - Daily at 02:00
 0 2 * * * /usr/local/bin/backup-csms-db.sh >> /var/log/csms/backup-cron.log 2>&1
@@ -313,7 +332,8 @@ exit 0
 
 **Script**: `/usr/local/bin/backup-csms-db-full.sh`
 
-*(Similar to incremental, with modifications)*:
+_(Similar to incremental, with modifications)_:
+
 ```bash
 # Configuration changes
 RETENTION_WEEKS=12
@@ -495,6 +515,7 @@ exit 0
 **When**: Complete database loss or corruption
 
 **Prerequisites**:
+
 - Identify backup to restore from
 - Ensure sufficient disk space
 - Notify stakeholders of downtime
@@ -573,10 +594,12 @@ unset PGPASSWORD
 **When**: Need to recover to specific point in time
 
 **Requirements**:
+
 - WAL (Write-Ahead Log) archiving enabled
 - Continuous archiving configured
 
 **Procedure**:
+
 ```bash
 # Stop PostgreSQL
 sudo systemctl stop postgresql
@@ -711,12 +734,12 @@ Maximum acceptable downtime measured in time
 
 ### 6.2 CSMS Recovery Objectives
 
-| Component | RPO | RTO | Justification |
-|-----------|-----|-----|---------------|
-| **Database** | 24 hours | 4 hours | Daily backups, acceptable to lose up to 1 day of data |
-| **MinIO Storage** | 7 days | 4 hours | Weekly backups, documents can be re-uploaded if needed |
-| **Configuration** | 7 days | 2 hours | Weekly backups, changes are infrequent |
-| **Application** | 0 | 1 hour | Code in Git, can redeploy anytime |
+| Component         | RPO      | RTO     | Justification                                          |
+| ----------------- | -------- | ------- | ------------------------------------------------------ |
+| **Database**      | 24 hours | 4 hours | Daily backups, acceptable to lose up to 1 day of data  |
+| **MinIO Storage** | 7 days   | 4 hours | Weekly backups, documents can be re-uploaded if needed |
+| **Configuration** | 7 days   | 2 hours | Weekly backups, changes are infrequent                 |
+| **Application**   | 0        | 1 hour  | Code in Git, can redeploy anytime                      |
 
 ### 6.3 Recovery Scenarios
 
@@ -727,6 +750,7 @@ Maximum acceptable downtime measured in time
 **RTO**: 4 hours
 
 **Recovery Steps**:
+
 1. Stop application (5 min)
 2. Restore database (30-60 min)
 3. Verify restore (30 min)
@@ -743,6 +767,7 @@ Maximum acceptable downtime measured in time
 **RTO**: 4 hours
 
 **Recovery Steps**:
+
 1. Provision new MinIO instance (1 hour)
 2. Restore bucket (1-2 hours)
 3. Update configuration (30 min)
@@ -757,6 +782,7 @@ Maximum acceptable downtime measured in time
 **RTO**: 8 hours
 
 **Recovery Steps**:
+
 1. Provision new server (2 hours)
 2. Install software (1 hour)
 3. Restore configurations (1 hour)
@@ -769,15 +795,18 @@ Maximum acceptable downtime measured in time
 ### 6.4 Recovery Priority
 
 **Priority 1 (Critical)** - Restore within 4 hours:
+
 - Database
 - Application
 - Authentication
 
 **Priority 2 (High)** - Restore within 8 hours:
+
 - Document storage
 - Email notifications
 
 **Priority 3 (Medium)** - Restore within 24 hours:
+
 - Audit logs
 - Performance metrics
 - Reports
@@ -862,6 +891,7 @@ exit 0
 **What**: Restore last week's backup to test database
 
 **Procedure**:
+
 ```bash
 #!/bin/bash
 # Weekly restore test to staging environment
@@ -893,12 +923,14 @@ unset PGPASSWORD
 **Participants**: Operations team, DBA
 
 **Objectives**:
+
 - Test complete recovery process
 - Verify RTO/RPO targets
 - Train team on recovery procedures
 - Identify process improvements
 
 **Procedure**:
+
 1. **Planning** (1 week before):
    - Schedule drill
    - Notify participants
@@ -931,6 +963,7 @@ unset PGPASSWORD
 **Scenario**: Complete data center loss
 
 **Test Plan**:
+
 1. **T+0**: Disaster declared
 2. **T+1 hour**: Provision new infrastructure
 3. **T+2 hours**: Restore configurations
@@ -939,6 +972,7 @@ unset PGPASSWORD
 6. **T+8 hours**: Full verification complete
 
 **Success Criteria**:
+
 - System restored within RTO
 - Data loss within RPO
 - All functionality operational
@@ -947,6 +981,7 @@ unset PGPASSWORD
 ### 7.3 Test Documentation
 
 **Test Report Template**:
+
 ```
 BACKUP RECOVERY TEST REPORT
 
@@ -1002,21 +1037,21 @@ Approved By: __________ Date: __________
 
 ### 8.1 Backup Responsibilities
 
-| Role | Responsibilities |
-|------|------------------|
-| **Database Administrator** | - Configure and maintain database backups<br>- Monitor backup success<br>- Perform database recovery<br>- Test database restores |
-| **System Administrator** | - Configure and maintain storage backups<br>- Monitor backup systems<br>- Maintain backup infrastructure<br>- Perform storage recovery |
-| **Operations Manager** | - Oversee backup strategy<br>- Ensure compliance with retention policies<br>- Approve backup procedures<br>- Report to management |
-| **Security Officer** | - Ensure backup security<br>- Manage encryption keys<br>- Control backup access<br>- Audit backup procedures |
+| Role                       | Responsibilities                                                                                                                       |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| **Database Administrator** | - Configure and maintain database backups<br>- Monitor backup success<br>- Perform database recovery<br>- Test database restores       |
+| **System Administrator**   | - Configure and maintain storage backups<br>- Monitor backup systems<br>- Maintain backup infrastructure<br>- Perform storage recovery |
+| **Operations Manager**     | - Oversee backup strategy<br>- Ensure compliance with retention policies<br>- Approve backup procedures<br>- Report to management      |
+| **Security Officer**       | - Ensure backup security<br>- Manage encryption keys<br>- Control backup access<br>- Audit backup procedures                           |
 
 ### 8.2 Recovery Responsibilities
 
-| Role | Authority | Backup Recovery | Full Recovery |
-|------|-----------|-----------------|---------------|
-| **Database Administrator** | Execute | ✓ | Support |
-| **System Administrator** | Execute | Support | ✓ |
-| **Operations Manager** | Approve | Support | Coordinate |
-| **IT Director** | Authorize | Notify | Approve |
+| Role                       | Authority | Backup Recovery | Full Recovery |
+| -------------------------- | --------- | --------------- | ------------- |
+| **Database Administrator** | Execute   | ✓               | Support       |
+| **System Administrator**   | Execute   | Support         | ✓             |
+| **Operations Manager**     | Approve   | Support         | Coordinate    |
+| **IT Director**            | Authorize | Notify          | Approve       |
 
 ### 8.3 Contact Information
 
@@ -1035,6 +1070,7 @@ Approved By: __________ Date: __________
 ### 9.1 Monitoring Metrics
 
 **Daily Monitoring**:
+
 - Backup completion status (Success/Failure)
 - Backup duration (compare to baseline)
 - Backup file size (detect anomalies)
@@ -1042,12 +1078,14 @@ Approved By: __________ Date: __________
 - Verification test results
 
 **Weekly Monitoring**:
+
 - Backup retention compliance
 - Offsite sync status
 - Restore test results
 - Storage capacity trends
 
 **Monthly Monitoring**:
+
 - Backup strategy effectiveness
 - Recovery drill results
 - RTO/RPO compliance
@@ -1056,24 +1094,28 @@ Approved By: __________ Date: __________
 ### 9.2 Alerting
 
 **Critical Alerts** (Immediate notification):
+
 - Backup failure
 - Backup integrity check failure
 - Disk space < 10%
 - Offsite sync failure
 
 **Warning Alerts** (Next business day):
+
 - Backup duration > 2x baseline
 - Backup size anomaly (> 50% difference)
 - Disk space < 20%
 - Old backups not cleaned up
 
 **Email Alerts To**:
+
 - ops-team@csms.zanajira.go.tz
 - dba@csms.zanajira.go.tz
 
 ### 9.3 Backup Dashboard
 
 **Key Metrics Display**:
+
 - Last successful backup (timestamp)
 - Backup success rate (last 7 days)
 - Current disk usage
@@ -1081,6 +1123,7 @@ Approved By: __________ Date: __________
 - Next scheduled backup
 
 **Sample Dashboard**:
+
 ```
 ╔══════════════════════════════════════════════╗
 ║        CSMS Backup Status Dashboard          ║
@@ -1117,31 +1160,34 @@ Examples:
 
 ### Appendix B: Retention Policy Summary
 
-| Backup Type | Frequency | Retention | Location |
-|-------------|-----------|-----------|----------|
-| Database Daily | Daily | 30 days | Local + Offsite |
-| Database Weekly | Weekly | 12 weeks | Local + Offsite |
-| Database Monthly | Monthly | 12 months | Offsite |
-| Database Yearly | Yearly | 7 years | Offsite (archive) |
-| Storage Weekly | Weekly | 4 weeks | Local + Offsite |
-| Storage Monthly | Monthly | 12 months | Offsite |
-| Config Weekly | Weekly | 12 weeks | Local + Offsite (encrypted) |
+| Backup Type      | Frequency | Retention | Location                    |
+| ---------------- | --------- | --------- | --------------------------- |
+| Database Daily   | Daily     | 30 days   | Local + Offsite             |
+| Database Weekly  | Weekly    | 12 weeks  | Local + Offsite             |
+| Database Monthly | Monthly   | 12 months | Offsite                     |
+| Database Yearly  | Yearly    | 7 years   | Offsite (archive)           |
+| Storage Weekly   | Weekly    | 4 weeks   | Local + Offsite             |
+| Storage Monthly  | Monthly   | 12 months | Offsite                     |
+| Config Weekly    | Weekly    | 12 weeks  | Local + Offsite (encrypted) |
 
 ### Appendix C: Backup Checklist
 
 **Daily**:
+
 - [ ] Verify database backup completed
 - [ ] Check backup logs for errors
 - [ ] Verify backup file size
 - [ ] Check disk space
 
 **Weekly**:
+
 - [ ] Verify offsite sync completed
 - [ ] Perform restore test
 - [ ] Review retention compliance
 - [ ] Clean up old backups
 
 **Monthly**:
+
 - [ ] Conduct recovery drill
 - [ ] Review backup strategy
 - [ ] Test disaster recovery plan

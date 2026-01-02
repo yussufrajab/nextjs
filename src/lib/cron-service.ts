@@ -6,7 +6,11 @@ import {
   shouldSendWarning,
   PASSWORD_GRACE_PERIOD_DAYS,
 } from '@/lib/password-expiration-utils';
-import { logAuditEvent, AuditEventCategory, AuditSeverity } from '@/lib/audit-logger';
+import {
+  logAuditEvent,
+  AuditEventCategory,
+  AuditSeverity,
+} from '@/lib/audit-logger';
 
 let cronJobRunning = false;
 
@@ -15,7 +19,9 @@ let cronJobRunning = false;
  */
 export async function checkPasswordExpirations(): Promise<void> {
   if (cronJobRunning) {
-    console.log('[CRON] Password expiration check already running, skipping...');
+    console.log(
+      '[CRON] Password expiration check already running, skipping...'
+    );
     return;
   }
 
@@ -43,7 +49,9 @@ export async function checkPasswordExpirations(): Promise<void> {
       },
     });
 
-    console.log(`[CRON] Checking ${users.length} active users for password expiration...`);
+    console.log(
+      `[CRON] Checking ${users.length} active users for password expiration...`
+    );
 
     let warningsSent = 0;
     let gracePeriodStarted = 0;
@@ -66,7 +74,8 @@ export async function checkPasswordExpirations(): Promise<void> {
           await createNotification({
             userId: user.id,
             message: NotificationTemplates.passwordExpiredFinal().message,
-            link: NotificationTemplates.passwordExpiredFinal().link || undefined,
+            link:
+              NotificationTemplates.passwordExpiredFinal().link || undefined,
           });
 
           await logAuditEvent({
@@ -88,7 +97,9 @@ export async function checkPasswordExpirations(): Promise<void> {
           });
 
           accountsLocked++;
-          console.log(`[CRON] Locked account for user ${user.username} - password expired beyond grace period`);
+          console.log(
+            `[CRON] Locked account for user ${user.username} - password expired beyond grace period`
+          );
           continue;
         }
 
@@ -109,8 +120,13 @@ export async function checkPasswordExpirations(): Promise<void> {
 
               await createNotification({
                 userId: user.id,
-                message: NotificationTemplates.passwordExpired(status.gracePeriodDaysRemaining).message,
-                link: NotificationTemplates.passwordExpired(status.gracePeriodDaysRemaining).link || undefined,
+                message: NotificationTemplates.passwordExpired(
+                  status.gracePeriodDaysRemaining
+                ).message,
+                link:
+                  NotificationTemplates.passwordExpired(
+                    status.gracePeriodDaysRemaining
+                  ).link || undefined,
               });
 
               await logAuditEvent({
@@ -127,12 +143,17 @@ export async function checkPasswordExpirations(): Promise<void> {
                 blockReason: null,
                 additionalData: {
                   gracePeriodDays: PASSWORD_GRACE_PERIOD_DAYS,
-                  gracePeriodEndsAt: new Date(now.getTime() + PASSWORD_GRACE_PERIOD_DAYS * 24 * 60 * 60 * 1000),
+                  gracePeriodEndsAt: new Date(
+                    now.getTime() +
+                      PASSWORD_GRACE_PERIOD_DAYS * 24 * 60 * 60 * 1000
+                  ),
                 },
               });
 
               gracePeriodStarted++;
-              console.log(`[CRON] Started grace period for user ${user.username}`);
+              console.log(
+                `[CRON] Started grace period for user ${user.username}`
+              );
             }
           }
           continue;
@@ -149,16 +170,29 @@ export async function checkPasswordExpirations(): Promise<void> {
 
           switch (currentWarningLevel) {
             case 1: // 14 days
-              notificationTemplate = NotificationTemplates.passwordExpiring14Days(daysRemaining, expiresAt);
+              notificationTemplate =
+                NotificationTemplates.passwordExpiring14Days(
+                  daysRemaining,
+                  expiresAt
+                );
               break;
             case 2: // 7 days
-              notificationTemplate = NotificationTemplates.passwordExpiring7Days(daysRemaining, expiresAt);
+              notificationTemplate =
+                NotificationTemplates.passwordExpiring7Days(
+                  daysRemaining,
+                  expiresAt
+                );
               break;
             case 3: // 3 days
-              notificationTemplate = NotificationTemplates.passwordExpiring3Days(daysRemaining, expiresAt);
+              notificationTemplate =
+                NotificationTemplates.passwordExpiring3Days(
+                  daysRemaining,
+                  expiresAt
+                );
               break;
             case 4: // 1 day
-              notificationTemplate = NotificationTemplates.passwordExpiring1Day(expiresAt);
+              notificationTemplate =
+                NotificationTemplates.passwordExpiring1Day(expiresAt);
               break;
             default:
               continue;
@@ -180,7 +214,10 @@ export async function checkPasswordExpirations(): Promise<void> {
           await logAuditEvent({
             eventType: 'PASSWORD_EXPIRATION_WARNING',
             eventCategory: AuditEventCategory.SECURITY,
-            severity: currentWarningLevel >= 3 ? AuditSeverity.WARNING : AuditSeverity.INFO,
+            severity:
+              currentWarningLevel >= 3
+                ? AuditSeverity.WARNING
+                : AuditSeverity.INFO,
             userId: user.id,
             username: user.username,
             userRole: user.role,
@@ -197,7 +234,9 @@ export async function checkPasswordExpirations(): Promise<void> {
           });
 
           warningsSent++;
-          console.log(`[CRON] Sent ${daysRemaining}-day warning to user ${user.username}`);
+          console.log(
+            `[CRON] Sent ${daysRemaining}-day warning to user ${user.username}`
+          );
         }
       } catch (error) {
         console.error(`[CRON] Error processing user ${user.username}:`, error);
@@ -207,7 +246,9 @@ export async function checkPasswordExpirations(): Promise<void> {
 
     const duration = Date.now() - startTime;
     console.log(`[CRON] Password expiration check completed in ${duration}ms`);
-    console.log(`[CRON] Results: ${warningsSent} warnings sent, ${gracePeriodStarted} grace periods started, ${accountsLocked} accounts locked`);
+    console.log(
+      `[CRON] Results: ${warningsSent} warnings sent, ${gracePeriodStarted} grace periods started, ${accountsLocked} accounts locked`
+    );
 
     // Log successful cron execution
     await logAuditEvent({
@@ -269,7 +310,9 @@ export function startPasswordExpirationCron(): void {
   // Run once on startup (optional - can be removed if not desired)
   // Useful for development/testing
   if (process.env.NODE_ENV === 'development') {
-    console.log('[CRON] Running initial password expiration check (development mode)');
+    console.log(
+      '[CRON] Running initial password expiration check (development mode)'
+    );
     setTimeout(() => {
       checkPasswordExpirations();
     }, 5000); // Wait 5 seconds after startup

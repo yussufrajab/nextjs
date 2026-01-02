@@ -32,7 +32,10 @@ export async function GET(
     try {
       fileStream = await downloadFile(filePath);
     } catch (downloadError) {
-      console.error(`Failed to download file from MinIO: ${filePath}`, downloadError);
+      console.error(
+        `Failed to download file from MinIO: ${filePath}`,
+        downloadError
+      );
       return NextResponse.json(
         { success: false, message: 'Photo not found' },
         { status: 404 }
@@ -49,11 +52,11 @@ export async function GET(
     // Determine content type from file extension
     const extension = filename.split('.').pop()?.toLowerCase();
     const contentTypeMap: { [key: string]: string } = {
-      'jpg': 'image/jpeg',
-      'jpeg': 'image/jpeg',
-      'png': 'image/png',
-      'gif': 'image/gif',
-      'webp': 'image/webp'
+      jpg: 'image/jpeg',
+      jpeg: 'image/jpeg',
+      png: 'image/png',
+      gif: 'image/gif',
+      webp: 'image/webp',
     };
     const contentType = contentTypeMap[extension || 'jpg'] || 'image/jpeg';
 
@@ -67,14 +70,13 @@ export async function GET(
         'Content-Length': fileBuffer.length.toString(),
       },
     });
-
   } catch (error) {
     console.error('Error serving employee photo:', error);
     return NextResponse.json(
       {
         success: false,
         message: 'Failed to serve photo',
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );

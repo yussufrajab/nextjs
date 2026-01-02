@@ -15,14 +15,16 @@ async function checkAuditLogs() {
       _count: true,
       orderBy: {
         _count: {
-          eventType: 'desc'
-        }
-      }
+          eventType: 'desc',
+        },
+      },
     });
 
     console.log('Logs by type:');
-    byType.forEach(item => {
-      console.log(`  ${item.eventType} (${item.eventCategory}): ${item._count}`);
+    byType.forEach((item) => {
+      console.log(
+        `  ${item.eventType} (${item.eventCategory}): ${item._count}`
+      );
     });
 
     // Get recent REQUEST_APPROVED and REQUEST_REJECTED logs
@@ -31,11 +33,11 @@ async function checkAuditLogs() {
       where: {
         OR: [
           { eventType: 'REQUEST_APPROVED' },
-          { eventType: 'REQUEST_REJECTED' }
-        ]
+          { eventType: 'REQUEST_REJECTED' },
+        ],
       },
       orderBy: {
-        timestamp: 'desc'
+        timestamp: 'desc',
       },
       take: 5,
       select: {
@@ -43,21 +45,24 @@ async function checkAuditLogs() {
         username: true,
         userRole: true,
         timestamp: true,
-        additionalData: true
-      }
+        additionalData: true,
+      },
     });
 
     if (recentRequests.length === 0) {
       console.log('  ❌ No REQUEST_APPROVED or REQUEST_REJECTED logs found!');
     } else {
-      recentRequests.forEach(log => {
-        console.log(`  ${log.eventType} by ${log.username} (${log.userRole}) at ${log.timestamp}`);
+      recentRequests.forEach((log) => {
+        console.log(
+          `  ${log.eventType} by ${log.username} (${log.userRole}) at ${log.timestamp}`
+        );
         if (log.additionalData) {
-          console.log(`    Request: ${log.additionalData.requestType}, Employee: ${log.additionalData.employeeName}`);
+          console.log(
+            `    Request: ${log.additionalData.requestType}, Employee: ${log.additionalData.employeeName}`
+          );
         }
       });
     }
-
   } catch (error) {
     console.error('Error:', error);
   } finally {

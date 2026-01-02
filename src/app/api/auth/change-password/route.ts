@@ -88,7 +88,9 @@ export async function POST(req: Request) {
       // Lock account if max attempts reached
       if (newAttempts >= MAX_PASSWORD_CHANGE_ATTEMPTS) {
         updateData.passwordChangeLockoutUntil = calculateLockoutExpiry();
-        console.log(`User ${userId} locked out after ${newAttempts} failed attempts`);
+        console.log(
+          `User ${userId} locked out after ${newAttempts} failed attempts`
+        );
       }
 
       await db.user.update({
@@ -190,11 +192,13 @@ export async function POST(req: Request) {
     });
 
     // Reset password expiration
-    const { resetPasswordExpiration, calculatePasswordExpirationDate } = await import('@/lib/password-expiration-utils');
+    const { resetPasswordExpiration, calculatePasswordExpirationDate } =
+      await import('@/lib/password-expiration-utils');
     await resetPasswordExpiration(userId, user.role);
 
     // Log password change with audit
-    const { logAuditEvent, AuditEventCategory, AuditSeverity } = await import('@/lib/audit-logger');
+    const { logAuditEvent, AuditEventCategory, AuditSeverity } =
+      await import('@/lib/audit-logger');
     await logAuditEvent({
       eventType: 'PASSWORD_CHANGED',
       eventCategory: AuditEventCategory.SECURITY,
@@ -209,7 +213,10 @@ export async function POST(req: Request) {
       blockReason: null,
       additionalData: {
         wasTemporaryPassword: user.isTemporaryPassword,
-        newExpirationDate: calculatePasswordExpirationDate(new Date(), user.role),
+        newExpirationDate: calculatePasswordExpirationDate(
+          new Date(),
+          user.role
+        ),
       },
     });
 

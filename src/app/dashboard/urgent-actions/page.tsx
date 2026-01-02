@@ -1,12 +1,24 @@
-
 'use client';
 
 import React, { useMemo, useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { ROLES } from '@/lib/constants';
 import { PageHeader } from '@/components/shared/page-header';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { differenceInMonths, parseISO, format } from 'date-fns';
 import type { Employee } from '@/lib/types';
 import { Pagination } from '@/components/shared/pagination';
@@ -43,39 +55,49 @@ export default function UrgentActionsPage() {
 
   useEffect(() => {
     if (!isAuthorized || !user?.institutionId) {
-        setIsLoading(false);
-        return;
+      setIsLoading(false);
+      return;
     }
 
     const fetchUrgentActions = async () => {
-        setIsLoading(true);
-        try {
-            // Use server-side pagination
-            const response = await fetch(`/api/employees/urgent-actions?userRole=${role}&userInstitutionId=${user.institutionId}&page=${currentPage}&limit=${itemsPerPage}`);
-            if (!response.ok) {
-                throw new Error("Failed to fetch urgent actions data");
-            }
-            const result = await response.json();
-            if (result.success && result.data) {
-                setProbationOverdue(result.data.probationOverdue || []);
-                setNearingRetirement(result.data.nearingRetirement || []);
-
-                // Set pagination data
-                if (result.data.pagination) {
-                    setTotalProbation(result.data.pagination.totalProbation || 0);
-                    setTotalRetirement(result.data.pagination.totalRetirement || 0);
-                    setTotalPagesProbation(result.data.pagination.totalPagesProbation || 1);
-                    setTotalPagesRetirement(result.data.pagination.totalPagesRetirement || 1);
-                }
-            } else {
-                setProbationOverdue([]);
-                setNearingRetirement([]);
-            }
-        } catch (error) {
-            toast({ title: "Error", description: "Could not load urgent actions.", variant: "destructive" });
-        } finally {
-            setIsLoading(false);
+      setIsLoading(true);
+      try {
+        // Use server-side pagination
+        const response = await fetch(
+          `/api/employees/urgent-actions?userRole=${role}&userInstitutionId=${user.institutionId}&page=${currentPage}&limit=${itemsPerPage}`
+        );
+        if (!response.ok) {
+          throw new Error('Failed to fetch urgent actions data');
         }
+        const result = await response.json();
+        if (result.success && result.data) {
+          setProbationOverdue(result.data.probationOverdue || []);
+          setNearingRetirement(result.data.nearingRetirement || []);
+
+          // Set pagination data
+          if (result.data.pagination) {
+            setTotalProbation(result.data.pagination.totalProbation || 0);
+            setTotalRetirement(result.data.pagination.totalRetirement || 0);
+            setTotalPagesProbation(
+              result.data.pagination.totalPagesProbation || 1
+            );
+            setTotalPagesRetirement(
+              result.data.pagination.totalPagesRetirement || 1
+            );
+          }
+        } else {
+          setProbationOverdue([]);
+          setNearingRetirement([]);
+        }
+      } catch (error) {
+        toast({
+          title: 'Error',
+          description: 'Could not load urgent actions.',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsLoading(false);
+      }
     };
     fetchUrgentActions();
   }, [isAuthorized, user?.institutionId, currentPage, role]);
@@ -92,27 +114,36 @@ export default function UrgentActionsPage() {
       </div>
     );
   }
-  
+
   if (isLoading) {
     return (
-        <div>
-            <PageHeader title="Urgent Actions" description="Loading urgent items for your institution..."/>
-            <div className="flex justify-center items-center h-64">
-                <Loader2 className="h-8 w-8 animate-spin" />
-            </div>
+      <div>
+        <PageHeader
+          title="Urgent Actions"
+          description="Loading urgent items for your institution..."
+        />
+        <div className="flex justify-center items-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin" />
         </div>
-    )
+      </div>
+    );
   }
 
   return (
     <div>
-      <PageHeader title="Urgent Actions" description={`Urgent items for your institution.`} />
+      <PageHeader
+        title="Urgent Actions"
+        description={`Urgent items for your institution.`}
+      />
 
       <div className="space-y-8">
         <Card>
           <CardHeader>
             <CardTitle>Overdue Confirmations</CardTitle>
-            <CardDescription>Employees on probation for 12 or more months who need confirmation.</CardDescription>
+            <CardDescription>
+              Employees on probation for 12 or more months who need
+              confirmation.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
@@ -126,17 +157,33 @@ export default function UrgentActionsPage() {
               </TableHeader>
               <TableBody>
                 {probationOverdue.length > 0 ? (
-                  probationOverdue.map(emp => (
+                  probationOverdue.map((emp) => (
                     <TableRow key={emp.id}>
                       <TableCell>{emp.name}</TableCell>
                       <TableCell>{emp.zanId}</TableCell>
-                      <TableCell>{emp.employmentDate ? format(parseISO(emp.employmentDate.toString()), 'PPP') : 'N/A'}</TableCell>
-                      <TableCell>{emp.employmentDate ? differenceInMonths(new Date(), parseISO(emp.employmentDate.toString())) : 'N/A'}</TableCell>
+                      <TableCell>
+                        {emp.employmentDate
+                          ? format(
+                              parseISO(emp.employmentDate.toString()),
+                              'PPP'
+                            )
+                          : 'N/A'}
+                      </TableCell>
+                      <TableCell>
+                        {emp.employmentDate
+                          ? differenceInMonths(
+                              new Date(),
+                              parseISO(emp.employmentDate.toString())
+                            )
+                          : 'N/A'}
+                      </TableCell>
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center">No employees with overdue confirmations.</TableCell>
+                    <TableCell colSpan={4} className="text-center">
+                      No employees with overdue confirmations.
+                    </TableCell>
                   </TableRow>
                 )}
               </TableBody>
@@ -154,7 +201,10 @@ export default function UrgentActionsPage() {
         <Card>
           <CardHeader>
             <CardTitle>Employees Nearing Retirement</CardTitle>
-            <CardDescription>Employees aged 59.5 years or older who need to begin the retirement process.</CardDescription>
+            <CardDescription>
+              Employees aged 59.5 years or older who need to begin the
+              retirement process.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
@@ -168,17 +218,25 @@ export default function UrgentActionsPage() {
               </TableHeader>
               <TableBody>
                 {nearingRetirement.length > 0 ? (
-                  nearingRetirement.map(emp => (
+                  nearingRetirement.map((emp) => (
                     <TableRow key={emp.id}>
                       <TableCell>{emp.name}</TableCell>
                       <TableCell>{emp.zanId}</TableCell>
-                      <TableCell>{emp.dateOfBirth ? format(parseISO(emp.dateOfBirth.toString()), 'PPP') : 'N/A'}</TableCell>
-                      <TableCell>{calculateAge(emp.dateOfBirth as string)}</TableCell>
+                      <TableCell>
+                        {emp.dateOfBirth
+                          ? format(parseISO(emp.dateOfBirth.toString()), 'PPP')
+                          : 'N/A'}
+                      </TableCell>
+                      <TableCell>
+                        {calculateAge(emp.dateOfBirth as string)}
+                      </TableCell>
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center">No employees nearing retirement.</TableCell>
+                    <TableCell colSpan={4} className="text-center">
+                      No employees nearing retirement.
+                    </TableCell>
                   </TableRow>
                 )}
               </TableBody>

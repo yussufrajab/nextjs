@@ -7,6 +7,7 @@ Replaced simulated upload progress with **real byte-level progress tracking** in
 ## Problem Solved
 
 ### Before (Simulated Progress)
+
 - Progress was based on **completed file count**, not actual bytes uploaded
 - Users saw discrete jumps: 0% → 50% → 100% for 2 files
 - Large files appeared "stuck" at 0% then jumped to 100% when complete
@@ -14,6 +15,7 @@ Replaced simulated upload progress with **real byte-level progress tracking** in
 - Poor UX on slow connections
 
 ### After (Real Progress)
+
 - Progress tracks **actual bytes uploaded** in real-time
 - Smooth, continuous progress bar updates as data uploads
 - Large files show gradual progress throughout upload
@@ -60,6 +62,7 @@ setUploadProgress(totalProgress);
 ```
 
 **Example:** If uploading two files:
+
 - File 1: 1MB (at 50% = 0.5MB uploaded)
 - File 2: 3MB (at 100% = 3MB uploaded)
 - Total progress: (0.5MB + 3MB) / 4MB = **87.5%**
@@ -76,11 +79,19 @@ xhr.addEventListener('load', async () => {
 });
 
 xhr.addEventListener('error', () => {
-  resolve({ success: false, error: 'Network error occurred', fileName: file.name });
+  resolve({
+    success: false,
+    error: 'Network error occurred',
+    fileName: file.name,
+  });
 });
 
 xhr.addEventListener('abort', () => {
-  resolve({ success: false, error: 'Upload was cancelled', fileName: file.name });
+  resolve({
+    success: false,
+    error: 'Upload was cancelled',
+    fileName: file.name,
+  });
 });
 ```
 
@@ -95,12 +106,14 @@ xhr.withCredentials = true; // Include cookies for session-based auth
 ## Benefits
 
 ### User Experience
+
 - ✅ **Accurate Progress**: Shows actual upload percentage, not estimated
 - ✅ **Smooth Updates**: Progress bar updates continuously, not in discrete jumps
 - ✅ **Better Feedback**: Users know exactly how much data remains
 - ✅ **Confidence**: No more "is it stuck?" moments with large files
 
 ### Technical
+
 - ✅ **Parallel Uploads**: Multiple files upload simultaneously with aggregated progress
 - ✅ **Error Resilience**: Handles network errors, aborts, and server errors gracefully
 - ✅ **Backward Compatible**: Works with existing session-based auth
@@ -109,16 +122,20 @@ xhr.withCredentials = true; // Include cookies for session-based auth
 ## User Impact Scenarios
 
 ### Scenario 1: Single Large File (5MB PDF)
+
 **Before:** 0% for 3-4 seconds → jumps to 100%
 **After:** 0% → 10% → 20% → ... → 90% → 100% (smooth progression)
 
 ### Scenario 2: Multiple Files (2MB + 4MB + 1MB)
+
 **Before:** 0% → 33% → 66% → 100% (based on file count)
 **After:** Weighted progress based on total bytes:
+
 - 2MB file at 100% + 4MB file at 50% + 1MB file at 0% = **57% total**
 - Accurately reflects 4MB out of 7MB uploaded
 
 ### Scenario 3: Slow Connection
+
 **Before:** Appears frozen at 0%, user doesn't know if upload is working
 **After:** Progress updates every few hundred milliseconds, clear visual feedback
 

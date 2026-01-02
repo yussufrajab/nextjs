@@ -6,7 +6,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getJobStatus, getQueueEvents, HRIMS_SYNC_QUEUE_NAME } from '@/lib/jobs/hrims-sync-queue';
+import {
+  getJobStatus,
+  getQueueEvents,
+  HRIMS_SYNC_QUEUE_NAME,
+} from '@/lib/jobs/hrims-sync-queue';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // 5 minutes max
@@ -74,7 +78,13 @@ export async function GET(
         const queueEvents = getQueueEvents();
 
         // Listen for progress updates
-        const handleProgress = async ({ jobId: eventJobId, data }: { jobId: string; data: any }) => {
+        const handleProgress = async ({
+          jobId: eventJobId,
+          data,
+        }: {
+          jobId: string;
+          data: any;
+        }) => {
           if (eventJobId === jobId) {
             sendEvent('progress', {
               jobId,
@@ -84,7 +94,13 @@ export async function GET(
         };
 
         // Listen for job completion
-        const handleCompleted = async ({ jobId: eventJobId, returnvalue }: { jobId: string; returnvalue: any }) => {
+        const handleCompleted = async ({
+          jobId: eventJobId,
+          returnvalue,
+        }: {
+          jobId: string;
+          returnvalue: any;
+        }) => {
           if (eventJobId === jobId) {
             sendEvent('complete', {
               jobId,
@@ -97,7 +113,13 @@ export async function GET(
         };
 
         // Listen for job failure
-        const handleFailed = async ({ jobId: eventJobId, failedReason }: { jobId: string; failedReason: string }) => {
+        const handleFailed = async ({
+          jobId: eventJobId,
+          failedReason,
+        }: {
+          jobId: string;
+          failedReason: string;
+        }) => {
           if (eventJobId === jobId) {
             sendEvent('error', {
               jobId,
@@ -137,12 +159,12 @@ export async function GET(
           cleanup();
           controller.close();
         });
-
       } catch (error) {
         console.error('SSE stream error:', error);
         sendEvent('error', {
           jobId,
-          error: error instanceof Error ? error.message : 'Unknown error occurred',
+          error:
+            error instanceof Error ? error.message : 'Unknown error occurred',
         });
         controller.close();
       }
@@ -154,7 +176,7 @@ export async function GET(
     headers: {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache, no-transform',
-      'Connection': 'keep-alive',
+      Connection: 'keep-alive',
       'X-Accel-Buffering': 'no', // Disable buffering in nginx
     },
   });

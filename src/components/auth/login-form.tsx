@@ -49,7 +49,12 @@ export function LoginForm() {
   async function onSubmit(data: LoginFormValues) {
     setIsLoading(true);
     console.log('LoginForm onSubmit - data:', data);
-    console.log('Username:', data.username, 'Password length:', data.password?.length);
+    console.log(
+      'Username:',
+      data.username,
+      'Password length:',
+      data.password?.length
+    );
     const user = await login(data.username, data.password);
     console.log('LoginForm onSubmit - returned user:', user);
 
@@ -110,7 +115,11 @@ export function LoginForm() {
             <FormItem>
               <FormLabel>Password</FormLabel>
               <FormControl>
-                <Input type="password" placeholder="Enter your password" {...field} />
+                <Input
+                  type="password"
+                  placeholder="Enter your password"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

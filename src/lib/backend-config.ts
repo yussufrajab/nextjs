@@ -5,7 +5,7 @@
 
 export const BACKEND_CONFIG = {
   baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9002/api',
-  
+
   // Authentication endpoints
   auth: {
     login: '/auth/login',
@@ -152,7 +152,7 @@ export const MIGRATION_STATUS = {
   // Implemented in Next.js API routes
   implemented: [
     'auth.login',
-    'auth.logout', 
+    'auth.logout',
     'auth.employeeLogin',
     'auth.session',
     'employees.list',
@@ -200,10 +200,7 @@ export const MIGRATION_STATUS = {
   ],
 
   // May need additional implementation
-  needsImplementation: [
-    'reports.generate',
-    'reports.export',
-  ],
+  needsImplementation: ['reports.generate', 'reports.export'],
 };
 
 export default BACKEND_CONFIG;

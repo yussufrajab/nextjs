@@ -45,6 +45,7 @@ cd /home/nextjs/scripts
 ```
 
 This will:
+
 1. Check if the dev server is running
 2. Ask for confirmation
 3. Run the fetch script with logging
@@ -66,6 +67,7 @@ nohup ./run-hrims-fetch.sh > fetch-output.log 2>&1 &
 ```
 
 Monitor progress:
+
 ```bash
 tail -f /home/nextjs/logs/hrims-fetch-*.log
 ```
@@ -73,6 +75,7 @@ tail -f /home/nextjs/logs/hrims-fetch-*.log
 ## Prerequisites
 
 1. **Dev server must be running:**
+
    ```bash
    pm2 start csms-dev
    # or
@@ -100,11 +103,13 @@ tail -f /home/nextjs/logs/hrims-fetch-*.log
 ## Output Examples
 
 ### Success Output
+
 ```
 [2025-12-07 05:00:00] ✅ WIZARA YA AFYA: Fetched 1,234 employees (5m 23s)
 ```
 
 ### Retry Output
+
 ```
 [2025-12-07 05:05:00] ❌ Hospitali ya Mnazi Mmoja: Timeout after 8 minutes
 [2025-12-07 05:05:00] ⚠️  Waiting 15s before retry...
@@ -112,6 +117,7 @@ tail -f /home/nextjs/logs/hrims-fetch-*.log
 ```
 
 ### Final Summary
+
 ```
 ===================================================================================
   📊 FETCH SUMMARY
@@ -133,21 +139,25 @@ Total institutions: 72
 The script handles various error scenarios:
 
 ### Timeouts
+
 - Automatically retries up to 2 times
 - 15-second delay between retries
 - Clear error messages indicating timeout duration
 
 ### Network Errors
+
 - Detects connection failures
 - Provides specific error messages
 - Continues with next institution after retries exhausted
 
 ### API Errors
+
 - Captures HTTP error responses
 - Logs error details
 - Marks institution as failed but continues
 
 ### Database Errors
+
 - Validates institution data
 - Skips institutions without identifiers
 - Maintains database connection throughout
@@ -155,7 +165,9 @@ The script handles various error scenarios:
 ## Troubleshooting
 
 ### Issue: "Dev server is not running"
+
 **Solution:**
+
 ```bash
 pm2 start csms-dev
 # Wait 5 seconds for server to start
@@ -163,26 +175,33 @@ pm2 start csms-dev
 ```
 
 ### Issue: "Timeout after 8 minutes"
+
 **Possible causes:**
+
 - Institution has too many employees (>5000)
 - HRIMS API is slow or unresponsive
 - Network connectivity issues
 
 **Solutions:**
+
 1. Script will automatically retry 2 times
 2. If still failing, fetch that institution manually via admin dashboard
 3. Check HRIMS API status
 4. Increase timeout in script configuration if needed
 
 ### Issue: "No vote number or TIN number"
+
 **Explanation:** Some institutions don't have identifiers in the database.
 
 **Solution:**
+
 1. Add identifiers via admin dashboard
 2. Or skip these institutions - they cannot be fetched from HRIMS
 
 ### Issue: Script stops unexpectedly
+
 **Solution:**
+
 ```bash
 # Check the log file for errors
 tail -100 /home/nextjs/logs/hrims-fetch-*.log
@@ -197,17 +216,20 @@ pm2 restart csms-dev
 ## Monitoring
 
 ### Real-time Progress
+
 ```bash
 # Watch the latest log file
 tail -f /home/nextjs/logs/hrims-fetch-$(date +%Y%m%d)*.log
 ```
 
 ### Check Employee Count
+
 ```bash
 PGPASSWORD=Mamlaka2020 psql -h localhost -U postgres -d nody -c "SELECT COUNT(*) FROM \"Employee\";"
 ```
 
 ### Check Fetch Status
+
 ```bash
 # If running in background
 ps aux | grep "fetch-hrims-data"
@@ -250,12 +272,14 @@ HAVING COUNT(e.id) = 0;
 ## Best Practices
 
 1. **Backup before fetching:**
+
    ```bash
    cd /home/nextjs/beky8
    ./backup-database.sh
    ```
 
 2. **Clear old data if needed:**
+
    ```bash
    # Delete only employees (keeps requests)
    PGPASSWORD=Mamlaka2020 psql -h localhost -U postgres -d nody -c "
@@ -272,6 +296,7 @@ HAVING COUNT(e.id) = 0;
    - Minimizes impact on users
 
 4. **Monitor system resources:**
+
    ```bash
    # CPU and memory usage
    top -p $(pgrep -f fetch-hrims-data)
@@ -290,6 +315,7 @@ HAVING COUNT(e.id) = 0;
 To modify script behavior, edit `fetch-hrims-data.ts`:
 
 ### Change Timeout
+
 ```typescript
 const CONFIG = {
   TIMEOUT: 600000, // 10 minutes instead of 8
@@ -298,6 +324,7 @@ const CONFIG = {
 ```
 
 ### Change Retry Logic
+
 ```typescript
 const CONFIG = {
   MAX_RETRIES: 3, // 3 retries instead of 2
@@ -307,6 +334,7 @@ const CONFIG = {
 ```
 
 ### Change Pause Between Institutions
+
 ```typescript
 const CONFIG = {
   PAUSE_BETWEEN_INSTITUTIONS: 30000, // 30 seconds instead of 15
@@ -317,6 +345,7 @@ const CONFIG = {
 ## Support
 
 For issues or questions:
+
 1. Check this documentation
 2. Review log files in `/home/nextjs/logs/`
 3. Verify dev server status: `pm2 status`

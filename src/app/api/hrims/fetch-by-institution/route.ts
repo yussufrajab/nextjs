@@ -14,12 +14,21 @@ export const dynamic = 'force-dynamic';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { identifierType, voteNumber, tinNumber, institutionId, pageSize = 100 } = body;
+    const {
+      identifierType,
+      voteNumber,
+      tinNumber,
+      institutionId,
+      pageSize = 100,
+    } = body;
 
     // Validation
     if (!identifierType || !['votecode', 'tin'].includes(identifierType)) {
       return NextResponse.json(
-        { success: false, message: 'Valid identifier type must be provided (votecode or tin)' },
+        {
+          success: false,
+          message: 'Valid identifier type must be provided (votecode or tin)',
+        },
         { status: 400 }
       );
     }
@@ -33,7 +42,7 @@ export async function POST(req: NextRequest) {
 
     // Verify institution exists
     const institution = await db.institution.findUnique({
-      where: { id: institutionId }
+      where: { id: institutionId },
     });
 
     if (!institution) {
@@ -51,23 +60,29 @@ export async function POST(req: NextRequest) {
     if (identifierType === 'tin') {
       if (!tinNumber) {
         return NextResponse.json(
-          { success: false, message: 'TIN number is required for the selected identifier type' },
+          {
+            success: false,
+            message: 'TIN number is required for the selected identifier type',
+          },
           { status: 400 }
         );
       }
-      requestId = "205";
+      requestId = '205';
       identifier = tinNumber;
-      identifierLabel = "TIN";
+      identifierLabel = 'TIN';
     } else {
       if (!voteNumber) {
         return NextResponse.json(
-          { success: false, message: 'Vote number is required for the selected identifier type' },
+          {
+            success: false,
+            message: 'Vote number is required for the selected identifier type',
+          },
           { status: 400 }
         );
       }
-      requestId = "204";
+      requestId = '204';
       identifier = voteNumber;
-      identifierLabel = "Vote Code";
+      identifierLabel = 'Vote Code';
     }
 
     // Create and queue the background job
@@ -93,14 +108,14 @@ export async function POST(req: NextRequest) {
       institutionName: institution.name,
       statusUrl: `/api/hrims/sync-status/${jobId}`,
     });
-
   } catch (error) {
     console.error('Error queueing HRIMS sync job:', error);
 
     return NextResponse.json(
       {
         success: false,
-        message: error instanceof Error ? error.message : 'Internal server error'
+        message:
+          error instanceof Error ? error.message : 'Internal server error',
       },
       { status: 500 }
     );

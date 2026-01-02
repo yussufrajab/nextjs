@@ -29,11 +29,17 @@ describe('employee-status-validation', () => {
 
       it('should allow all request types when status is null', () => {
         const requestTypes: RequestType[] = [
-          'confirmation', 'lwop', 'promotion', 'cadre-change',
-          'service-extension', 'resignation', 'retirement', 'termination'
+          'confirmation',
+          'lwop',
+          'promotion',
+          'cadre-change',
+          'service-extension',
+          'resignation',
+          'retirement',
+          'termination',
         ];
 
-        requestTypes.forEach(type => {
+        requestTypes.forEach((type) => {
           const result = validateEmployeeStatusForRequest(null, type);
           expect(result.isValid).toBe(true);
         });
@@ -80,9 +86,14 @@ describe('employee-status-validation', () => {
       });
 
       it('should reject service extension with special message', () => {
-        const result = validateEmployeeStatusForRequest(status, 'service-extension');
+        const result = validateEmployeeStatusForRequest(
+          status,
+          'service-extension'
+        );
         expect(result.isValid).toBe(false);
-        expect(result.message).toBe('Employees on probation are not eligible for service extension.');
+        expect(result.message).toBe(
+          'Employees on probation are not eligible for service extension.'
+        );
       });
 
       it('should reject retirement request', () => {
@@ -138,7 +149,10 @@ describe('employee-status-validation', () => {
       });
 
       it('should reject service extension request', () => {
-        const result = validateEmployeeStatusForRequest(status, 'service-extension');
+        const result = validateEmployeeStatusForRequest(
+          status,
+          'service-extension'
+        );
         expect(result.isValid).toBe(false);
         expect(result.message).toContain('On LWOP');
       });
@@ -148,7 +162,10 @@ describe('employee-status-validation', () => {
       const status: EmployeeStatus = 'Retired';
 
       it('should allow service extension request only', () => {
-        const result = validateEmployeeStatusForRequest(status, 'service-extension');
+        const result = validateEmployeeStatusForRequest(
+          status,
+          'service-extension'
+        );
         expect(result.isValid).toBe(true);
       });
 
@@ -199,17 +216,25 @@ describe('employee-status-validation', () => {
       const status: EmployeeStatus = 'Resigned';
 
       it('should allow service extension request only', () => {
-        const result = validateEmployeeStatusForRequest(status, 'service-extension');
+        const result = validateEmployeeStatusForRequest(
+          status,
+          'service-extension'
+        );
         expect(result.isValid).toBe(true);
       });
 
       it('should reject all other request types', () => {
         const restrictedTypes: RequestType[] = [
-          'confirmation', 'lwop', 'promotion', 'cadre-change',
-          'resignation', 'retirement', 'termination'
+          'confirmation',
+          'lwop',
+          'promotion',
+          'cadre-change',
+          'resignation',
+          'retirement',
+          'termination',
         ];
 
-        restrictedTypes.forEach(type => {
+        restrictedTypes.forEach((type) => {
           const result = validateEmployeeStatusForRequest(status, type);
           expect(result.isValid).toBe(false);
           expect(result.message).toContain('Resigned');
@@ -221,17 +246,25 @@ describe('employee-status-validation', () => {
       const status: EmployeeStatus = 'Terminated';
 
       it('should allow service extension request only', () => {
-        const result = validateEmployeeStatusForRequest(status, 'service-extension');
+        const result = validateEmployeeStatusForRequest(
+          status,
+          'service-extension'
+        );
         expect(result.isValid).toBe(true);
       });
 
       it('should reject all other request types', () => {
         const restrictedTypes: RequestType[] = [
-          'confirmation', 'lwop', 'promotion', 'cadre-change',
-          'resignation', 'retirement', 'termination'
+          'confirmation',
+          'lwop',
+          'promotion',
+          'cadre-change',
+          'resignation',
+          'retirement',
+          'termination',
         ];
 
-        restrictedTypes.forEach(type => {
+        restrictedTypes.forEach((type) => {
           const result = validateEmployeeStatusForRequest(status, type);
           expect(result.isValid).toBe(false);
           expect(result.message).toContain('Terminated');
@@ -243,17 +276,25 @@ describe('employee-status-validation', () => {
       const status: EmployeeStatus = 'Dismissed';
 
       it('should allow service extension request only', () => {
-        const result = validateEmployeeStatusForRequest(status, 'service-extension');
+        const result = validateEmployeeStatusForRequest(
+          status,
+          'service-extension'
+        );
         expect(result.isValid).toBe(true);
       });
 
       it('should reject all other request types', () => {
         const restrictedTypes: RequestType[] = [
-          'confirmation', 'lwop', 'promotion', 'cadre-change',
-          'resignation', 'retirement', 'termination'
+          'confirmation',
+          'lwop',
+          'promotion',
+          'cadre-change',
+          'resignation',
+          'retirement',
+          'termination',
         ];
 
-        restrictedTypes.forEach(type => {
+        restrictedTypes.forEach((type) => {
           const result = validateEmployeeStatusForRequest(status, type);
           expect(result.isValid).toBe(false);
           expect(result.message).toContain('Dismissed');
@@ -266,11 +307,17 @@ describe('employee-status-validation', () => {
 
       it('should allow all request types', () => {
         const allTypes: RequestType[] = [
-          'confirmation', 'lwop', 'promotion', 'cadre-change',
-          'service-extension', 'resignation', 'retirement', 'termination'
+          'confirmation',
+          'lwop',
+          'promotion',
+          'cadre-change',
+          'service-extension',
+          'resignation',
+          'retirement',
+          'termination',
         ];
 
-        allTypes.forEach(type => {
+        allTypes.forEach((type) => {
           const result = validateEmployeeStatusForRequest(status, type);
           expect(result.isValid).toBe(true);
           expect(result.message).toBeUndefined();
@@ -282,11 +329,17 @@ describe('employee-status-validation', () => {
       it('should allow all requests for unknown/custom status', () => {
         const customStatus = 'Custom Status';
         const allTypes: RequestType[] = [
-          'confirmation', 'lwop', 'promotion', 'cadre-change',
-          'service-extension', 'resignation', 'retirement', 'termination'
+          'confirmation',
+          'lwop',
+          'promotion',
+          'cadre-change',
+          'service-extension',
+          'resignation',
+          'retirement',
+          'termination',
         ];
 
-        allTypes.forEach(type => {
+        allTypes.forEach((type) => {
           const result = validateEmployeeStatusForRequest(customStatus, type);
           expect(result.isValid).toBe(true);
         });
@@ -303,7 +356,10 @@ describe('employee-status-validation', () => {
       });
 
       it('should use display names for request types', () => {
-        const result = validateEmployeeStatusForRequest('On Probation', 'cadre-change');
+        const result = validateEmployeeStatusForRequest(
+          'On Probation',
+          'cadre-change'
+        );
         expect(result.isValid).toBe(false);
         expect(result.message).toContain('Cadre Change'); // Display name, not "cadre-change"
       });
@@ -399,7 +455,9 @@ describe('employee-status-validation', () => {
       expect(isRequestTypeAllowed('On Probation', 'lwop')).toBe(false);
       expect(isRequestTypeAllowed('On Probation', 'promotion')).toBe(false);
       expect(isRequestTypeAllowed('On Probation', 'cadre-change')).toBe(false);
-      expect(isRequestTypeAllowed('On Probation', 'service-extension')).toBe(false);
+      expect(isRequestTypeAllowed('On Probation', 'service-extension')).toBe(
+        false
+      );
       expect(isRequestTypeAllowed('On Probation', 'retirement')).toBe(false);
     });
 
@@ -416,22 +474,34 @@ describe('employee-status-validation', () => {
 
     it('should return true for all types when status is null', () => {
       const allTypes: RequestType[] = [
-        'confirmation', 'lwop', 'promotion', 'cadre-change',
-        'service-extension', 'resignation', 'retirement', 'termination'
+        'confirmation',
+        'lwop',
+        'promotion',
+        'cadre-change',
+        'service-extension',
+        'resignation',
+        'retirement',
+        'termination',
       ];
 
-      allTypes.forEach(type => {
+      allTypes.forEach((type) => {
         expect(isRequestTypeAllowed(null, type)).toBe(true);
       });
     });
 
     it('should return true for all types when status is undefined', () => {
       const allTypes: RequestType[] = [
-        'confirmation', 'lwop', 'promotion', 'cadre-change',
-        'service-extension', 'resignation', 'retirement', 'termination'
+        'confirmation',
+        'lwop',
+        'promotion',
+        'cadre-change',
+        'service-extension',
+        'resignation',
+        'retirement',
+        'termination',
       ];
 
-      allTypes.forEach(type => {
+      allTypes.forEach((type) => {
         expect(isRequestTypeAllowed(undefined, type)).toBe(true);
       });
     });
@@ -458,16 +528,29 @@ describe('employee-status-validation', () => {
     });
 
     it('should have consistent restrictions for final statuses', () => {
-      const finalStatuses: EmployeeStatus[] = ['Retired', 'Resigned', 'Terminated', 'Dismissed'];
+      const finalStatuses: EmployeeStatus[] = [
+        'Retired',
+        'Resigned',
+        'Terminated',
+        'Dismissed',
+      ];
       const allowedTypes: RequestType[] = ['service-extension'];
-      const deniedTypes: RequestType[] = ['confirmation', 'lwop', 'promotion', 'cadre-change', 'resignation', 'retirement', 'termination'];
+      const deniedTypes: RequestType[] = [
+        'confirmation',
+        'lwop',
+        'promotion',
+        'cadre-change',
+        'resignation',
+        'retirement',
+        'termination',
+      ];
 
-      finalStatuses.forEach(status => {
-        allowedTypes.forEach(type => {
+      finalStatuses.forEach((status) => {
+        allowedTypes.forEach((type) => {
           expect(isRequestTypeAllowed(status, type)).toBe(true);
         });
 
-        deniedTypes.forEach(type => {
+        deniedTypes.forEach((type) => {
           expect(isRequestTypeAllowed(status, type)).toBe(false);
         });
       });

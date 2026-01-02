@@ -14,7 +14,8 @@ import { randomBytes, createHmac } from 'crypto';
 export const CSRF_TOKEN_LENGTH = 32; // 32 bytes = 256 bits
 export const CSRF_COOKIE_NAME = 'csrf-token';
 export const CSRF_HEADER_NAME = 'x-csrf-token';
-export const CSRF_SECRET_ENV = process.env.CSRF_SECRET || 'default-csrf-secret-change-in-production';
+export const CSRF_SECRET_ENV =
+  process.env.CSRF_SECRET || 'default-csrf-secret-change-in-production';
 
 /**
  * Generate a cryptographically secure CSRF token
@@ -103,7 +104,7 @@ export function validateCSRFTokens(
   if (!cookieToken || !headerToken) {
     console.warn('[CSRF] Missing CSRF token:', {
       hasCookie: !!cookieToken,
-      hasHeader: !!headerToken
+      hasHeader: !!headerToken,
     });
     return false;
   }
@@ -135,7 +136,9 @@ export function requiresCSRFProtection(method: string): boolean {
 /**
  * Get CSRF token cookie options
  */
-export function getCSRFCookieOptions(isProduction: boolean = process.env.NODE_ENV === 'production') {
+export function getCSRFCookieOptions(
+  isProduction: boolean = process.env.NODE_ENV === 'production'
+) {
   return {
     httpOnly: false, // JavaScript needs to read this token
     secure: isProduction, // HTTPS only in production
@@ -182,7 +185,8 @@ export async function logCSRFViolation(
 ): Promise<void> {
   try {
     // Import audit logger (dynamic to avoid circular dependencies)
-    const { logAuditEvent, AuditEventCategory, AuditSeverity } = await import('@/lib/audit-logger');
+    const { logAuditEvent, AuditEventCategory, AuditSeverity } =
+      await import('@/lib/audit-logger');
 
     await logAuditEvent({
       eventType: 'CSRF_VIOLATION',

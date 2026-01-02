@@ -1,18 +1,19 @@
 # HIGH-LEVEL DESIGN (HLD) DOCUMENT
+
 ## CIVIL SERVICE MANAGEMENT SYSTEM (CSMS)
 
 ---
 
 ## Document Control
 
-| Item | Details |
-|------|---------|
+| Item               | Details                                                      |
+| ------------------ | ------------------------------------------------------------ |
 | **Document Title** | High-Level Design Document - Civil Service Management System |
-| **Project Name** | Civil Service Management System (CSMS) |
-| **Version** | 1.0 |
-| **Date** | December 25, 2025 |
-| **Prepared By** | CSMS Development Team |
-| **Status** | Final |
+| **Project Name**   | Civil Service Management System (CSMS)                       |
+| **Version**        | 1.0                                                          |
+| **Date**           | December 25, 2025                                            |
+| **Prepared By**    | CSMS Development Team                                        |
+| **Status**         | Final                                                        |
 
 ---
 
@@ -36,10 +37,13 @@
 ## 1. Introduction
 
 ### 1.1 Purpose
+
 This High-Level Design (HLD) document describes the architectural design of the Civil Service Management System (CSMS) for the Revolutionary Government of Zanzibar. It provides a comprehensive view of the system architecture, components, deployment topology, and technology choices.
 
 ### 1.2 Scope
+
 The CSMS is a full-stack web application that manages the complete lifecycle of civil service employees in Zanzibar, including:
+
 - Employee profile management and data synchronization
 - Eight types of HR request workflows (Confirmation, Promotion, LWOP, Cadre Change, Retirement, Resignation, Service Extension, Termination)
 - Complaint management with AI-powered standardization
@@ -49,6 +53,7 @@ The CSMS is a full-stack web application that manages the complete lifecycle of 
 - Integration with external HRIMS system
 
 ### 1.3 Intended Audience
+
 - Technical Architects
 - Software Developers
 - System Administrators
@@ -58,6 +63,7 @@ The CSMS is a full-stack web application that manages the complete lifecycle of 
 - Stakeholders
 
 ### 1.4 Document Conventions
+
 - **Component**: A logical module of the system
 - **Service**: A backend API endpoint or business logic unit
 - **Entity**: A database model representing business data
@@ -110,13 +116,13 @@ The Civil Service Management System (CSMS) serves as the central HR management p
 
 ### 2.2 Key Users and Roles
 
-| Role Category | Roles | Access Level | Primary Functions |
-|--------------|-------|--------------|-------------------|
-| **CSC Oversight** | HHRMD, HRMO, CSCS, DO | All Institutions | Approve/reject requests, system-wide oversight |
-| **Planning** | PO | All Institutions (Read-only) | View reports, analytics |
-| **Institution Staff** | HRO, HRRP | Own Institution Only | Submit requests, manage employees |
-| **System Admin** | ADMIN | System-wide | User management, institution management |
-| **End Users** | EMPLOYEE | Own Data Only | View profile, submit complaints |
+| Role Category         | Roles                 | Access Level                 | Primary Functions                              |
+| --------------------- | --------------------- | ---------------------------- | ---------------------------------------------- |
+| **CSC Oversight**     | HHRMD, HRMO, CSCS, DO | All Institutions             | Approve/reject requests, system-wide oversight |
+| **Planning**          | PO                    | All Institutions (Read-only) | View reports, analytics                        |
+| **Institution Staff** | HRO, HRRP             | Own Institution Only         | Submit requests, manage employees              |
+| **System Admin**      | ADMIN                 | System-wide                  | User management, institution management        |
+| **End Users**         | EMPLOYEE              | Own Data Only                | View profile, submit complaints                |
 
 ### 2.3 Business Processes Supported
 
@@ -146,6 +152,7 @@ Employee Lifecycle Management
 The CSMS follows a **Full-Stack Monolithic Architecture** using Next.js, consolidating frontend, backend, and API layers in a single deployable application.
 
 **Architecture Pattern**: Layered Architecture with the following layers:
+
 1. **Presentation Layer** (React Components)
 2. **Application Layer** (Next.js API Routes)
 3. **Business Logic Layer** (Service functions and utilities)
@@ -760,6 +767,7 @@ Legend:
 #### 5.2.1 Core Tables
 
 **User Table**
+
 - Stores authentication and authorization data
 - Links to Employee (1-to-1, optional)
 - Links to Institution (Many-to-1)
@@ -767,6 +775,7 @@ Legend:
 - Stores bcrypt-hashed passwords
 
 **Employee Table**
+
 - Central employee master data
 - Links to Institution (Many-to-1)
 - Links to User (1-to-1, optional for employee self-service)
@@ -775,6 +784,7 @@ Legend:
 - References document URLs in MinIO
 
 **Institution Table**
+
 - Government agencies/ministries
 - Unique name and TIN number
 - Links to Users and Employees
@@ -782,6 +792,7 @@ Legend:
 #### 5.2.2 Request Tables (8 types)
 
 All request tables follow a common pattern:
+
 - **id**: UUID primary key
 - **status**: Workflow state (PENDING_FIRST_REVIEW, PENDING_FINAL_APPROVAL, APPROVED, REJECTED)
 - **reviewStage**: Current reviewer role (HHRMD, HRMO, DO, CSCS)
@@ -793,6 +804,7 @@ All request tables follow a common pattern:
 - **createdAt/updatedAt**: Timestamps
 
 **Request Types:**
+
 1. **PromotionRequest**: Career advancement (experience/education-based)
 2. **ConfirmationRequest**: Probation completion
 3. **LwopRequest**: Leave Without Pay
@@ -805,17 +817,20 @@ All request tables follow a common pattern:
 #### 5.2.3 Supporting Tables
 
 **EmployeeCertificate**
+
 - Stores employee qualifications
 - Links to Employee
 - Cascade delete when employee deleted
 
 **Complaint**
+
 - Employee grievances
 - Supports multiple complaint types
 - Workflow similar to requests
 - Links to complainant (User) and reviewer
 
 **Notification**
+
 - User notifications
 - Links to User
 - Bilingual support (English/Swahili)
@@ -929,34 +944,34 @@ EmployeeCertificate.employeeId
 
 #### 6.2.1 Frontend Technologies
 
-| Technology | Version | Purpose | Justification |
-|-----------|---------|---------|---------------|
-| **Next.js** | 16.0.7 | Full-stack framework | - SSR/SSG capabilities<br>- Built-in API routes<br>- File-based routing<br>- Optimized production builds<br>- Great developer experience |
-| **React** | 19.2.1 | UI library | - Component-based architecture<br>- Large ecosystem<br>- Strong TypeScript support<br>- Excellent performance |
-| **TypeScript** | 5.x | Type safety | - Compile-time error checking<br>- Better IDE support<br>- Self-documenting code<br>- Refactoring safety |
-| **Tailwind CSS** | 3.4.1 | CSS framework | - Utility-first approach<br>- Fast development<br>- Consistent design system<br>- Small bundle size |
-| **Radix UI** | Latest | Headless components | - Accessibility built-in<br>- Unstyled primitives<br>- Full keyboard navigation<br>- ARIA compliant |
-| **shadcn/ui** | Latest | Component library | - Pre-built accessible components<br>- Based on Radix UI<br>- Customizable with Tailwind<br>- Copy-paste approach |
-| **Zustand** | 4.5.4 | State management | - Lightweight (minimal boilerplate)<br>- Built-in persistence<br>- TypeScript support<br>- Simple API |
-| **React Hook Form** | 7.54.2 | Form management | - Performance (uncontrolled inputs)<br>- Easy validation integration<br>- Type-safe<br>- Reduced re-renders |
-| **Zod** | 3.24.2 | Schema validation | - TypeScript-first validation<br>- Infer types from schemas<br>- Composable validators<br>- Error messages |
+| Technology          | Version | Purpose              | Justification                                                                                                                            |
+| ------------------- | ------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| **Next.js**         | 16.0.7  | Full-stack framework | - SSR/SSG capabilities<br>- Built-in API routes<br>- File-based routing<br>- Optimized production builds<br>- Great developer experience |
+| **React**           | 19.2.1  | UI library           | - Component-based architecture<br>- Large ecosystem<br>- Strong TypeScript support<br>- Excellent performance                            |
+| **TypeScript**      | 5.x     | Type safety          | - Compile-time error checking<br>- Better IDE support<br>- Self-documenting code<br>- Refactoring safety                                 |
+| **Tailwind CSS**    | 3.4.1   | CSS framework        | - Utility-first approach<br>- Fast development<br>- Consistent design system<br>- Small bundle size                                      |
+| **Radix UI**        | Latest  | Headless components  | - Accessibility built-in<br>- Unstyled primitives<br>- Full keyboard navigation<br>- ARIA compliant                                      |
+| **shadcn/ui**       | Latest  | Component library    | - Pre-built accessible components<br>- Based on Radix UI<br>- Customizable with Tailwind<br>- Copy-paste approach                        |
+| **Zustand**         | 4.5.4   | State management     | - Lightweight (minimal boilerplate)<br>- Built-in persistence<br>- TypeScript support<br>- Simple API                                    |
+| **React Hook Form** | 7.54.2  | Form management      | - Performance (uncontrolled inputs)<br>- Easy validation integration<br>- Type-safe<br>- Reduced re-renders                              |
+| **Zod**             | 3.24.2  | Schema validation    | - TypeScript-first validation<br>- Infer types from schemas<br>- Composable validators<br>- Error messages                               |
 
 #### 6.2.2 Backend Technologies
 
-| Technology | Version | Purpose | Justification |
-|-----------|---------|---------|---------------|
-| **Next.js API Routes** | 16.0.7 | Backend API | - Same codebase as frontend<br>- Type sharing<br>- Simplified deployment<br>- Serverless-ready |
-| **Prisma** | 6.19.1 | ORM | - Type-safe database access<br>- Auto-generated types<br>- Migration management<br>- Great DX with Prisma Studio |
-| **PostgreSQL** | 14+ | Database | - ACID compliance<br>- JSON support for arrays<br>- Mature and stable<br>- Government-grade reliability |
-| **bcryptjs** | 2.4.3 | Password hashing | - Industry standard<br>- Configurable rounds<br>- Salt generation<br>- Secure by default |
+| Technology             | Version | Purpose          | Justification                                                                                                    |
+| ---------------------- | ------- | ---------------- | ---------------------------------------------------------------------------------------------------------------- |
+| **Next.js API Routes** | 16.0.7  | Backend API      | - Same codebase as frontend<br>- Type sharing<br>- Simplified deployment<br>- Serverless-ready                   |
+| **Prisma**             | 6.19.1  | ORM              | - Type-safe database access<br>- Auto-generated types<br>- Migration management<br>- Great DX with Prisma Studio |
+| **PostgreSQL**         | 14+     | Database         | - ACID compliance<br>- JSON support for arrays<br>- Mature and stable<br>- Government-grade reliability          |
+| **bcryptjs**           | 2.4.3   | Password hashing | - Industry standard<br>- Configurable rounds<br>- Salt generation<br>- Secure by default                         |
 
 #### 6.2.3 Storage & Integration
 
-| Technology | Version | Purpose | Justification |
-|-----------|---------|---------|---------------|
-| **MinIO** | 8.0.5 | Object storage | - S3-compatible API<br>- Self-hosted option<br>- Scalable<br>- Cost-effective |
-| **Google Genkit** | 1.8.0 | AI framework | - Structured AI flows<br>- Type-safe prompts<br>- Built-in observability<br>- Google ecosystem integration |
-| **Gemini API** | Latest | Generative AI | - High-quality text generation<br>- Multilingual support<br>- Google infrastructure<br>- Competitive pricing |
+| Technology        | Version | Purpose        | Justification                                                                                                |
+| ----------------- | ------- | -------------- | ------------------------------------------------------------------------------------------------------------ |
+| **MinIO**         | 8.0.5   | Object storage | - S3-compatible API<br>- Self-hosted option<br>- Scalable<br>- Cost-effective                                |
+| **Google Genkit** | 1.8.0   | AI framework   | - Structured AI flows<br>- Type-safe prompts<br>- Built-in observability<br>- Google ecosystem integration   |
+| **Gemini API**    | Latest  | Generative AI  | - High-quality text generation<br>- Multilingual support<br>- Google infrastructure<br>- Competitive pricing |
 
 ### 6.3 Development Stack
 
@@ -1338,41 +1353,42 @@ MinIO Server (Distributed Mode):
 
 ### 8.3 Authorization Matrix
 
-| Resource/Action | HRO | HRRP | HHRMD | HRMO | DO | PO | CSCS | ADMIN | EMPLOYEE |
-|----------------|-----|------|-------|------|----|----|------|-------|----------|
-| **Employees** |
-| View Own Institution | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | - | - |
-| View All Institutions | - | - | ✓ | ✓ | ✓ | ✓ | ✓ | - | - |
-| View Own Profile | - | - | - | - | - | - | - | - | ✓ |
-| **Confirmation Requests** |
-| Create | ✓ | ✓ | - | - | - | - | - | - | - |
-| First Review | - | - | ✓ | ✓ | - | - | - | - | - |
-| Final Approval | - | - | - | - | - | - | ✓ | - | - |
-| **Promotion Requests** |
-| Create | ✓ | ✓ | - | - | - | - | - | - | - |
-| First Review | - | - | ✓ | ✓ | - | - | - | - | - |
-| Final Approval | - | - | - | - | - | - | ✓ | - | - |
-| **LWOP Requests** |
-| Create | ✓ | ✓ | - | - | - | - | - | - | - |
-| First Review | - | - | ✓ | ✓ | - | - | - | - | - |
-| Final Approval | - | - | - | - | - | - | ✓ | - | - |
-| **Complaints** |
-| Create | - | - | - | - | - | - | - | - | ✓ |
-| Review | - | - | - | - | ✓ | - | - | - | - |
-| Approve/Reject | - | - | ✓ | - | - | - | - | - | - |
-| **Reports** |
-| View | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | - | - |
-| Export | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | - | - |
-| **User Management** |
-| View Users | - | - | - | - | - | - | - | ✓ | - |
-| Create Users | - | - | - | - | - | - | - | ✓ | - |
-| Edit Users | - | - | - | - | - | - | - | ✓ | - |
-| Deactivate Users | - | - | - | - | - | - | - | ✓ | - |
+| Resource/Action            | HRO | HRRP | HHRMD | HRMO | DO  | PO  | CSCS | ADMIN | EMPLOYEE |
+| -------------------------- | --- | ---- | ----- | ---- | --- | --- | ---- | ----- | -------- |
+| **Employees**              |
+| View Own Institution       | ✓   | ✓    | ✓     | ✓    | ✓   | ✓   | ✓    | -     | -        |
+| View All Institutions      | -   | -    | ✓     | ✓    | ✓   | ✓   | ✓    | -     | -        |
+| View Own Profile           | -   | -    | -     | -    | -   | -   | -    | -     | ✓        |
+| **Confirmation Requests**  |
+| Create                     | ✓   | ✓    | -     | -    | -   | -   | -    | -     | -        |
+| First Review               | -   | -    | ✓     | ✓    | -   | -   | -    | -     | -        |
+| Final Approval             | -   | -    | -     | -    | -   | -   | ✓    | -     | -        |
+| **Promotion Requests**     |
+| Create                     | ✓   | ✓    | -     | -    | -   | -   | -    | -     | -        |
+| First Review               | -   | -    | ✓     | ✓    | -   | -   | -    | -     | -        |
+| Final Approval             | -   | -    | -     | -    | -   | -   | ✓    | -     | -        |
+| **LWOP Requests**          |
+| Create                     | ✓   | ✓    | -     | -    | -   | -   | -    | -     | -        |
+| First Review               | -   | -    | ✓     | ✓    | -   | -   | -    | -     | -        |
+| Final Approval             | -   | -    | -     | -    | -   | -   | ✓    | -     | -        |
+| **Complaints**             |
+| Create                     | -   | -    | -     | -    | -   | -   | -    | -     | ✓        |
+| Review                     | -   | -    | -     | -    | ✓   | -   | -    | -     | -        |
+| Approve/Reject             | -   | -    | ✓     | -    | -   | -   | -    | -     | -        |
+| **Reports**                |
+| View                       | ✓   | ✓    | ✓     | ✓    | ✓   | ✓   | ✓    | -     | -        |
+| Export                     | ✓   | ✓    | ✓     | ✓    | ✓   | ✓   | ✓    | -     | -        |
+| **User Management**        |
+| View Users                 | -   | -    | -     | -    | -   | -   | -    | ✓     | -        |
+| Create Users               | -   | -    | -     | -    | -   | -   | -    | ✓     | -        |
+| Edit Users                 | -   | -    | -     | -    | -   | -   | -    | ✓     | -        |
+| Deactivate Users           | -   | -    | -     | -    | -   | -   | -    | ✓     | -        |
 | **Institution Management** |
-| View | - | - | - | - | - | - | - | ✓ | - |
-| Create/Edit | - | - | - | - | - | - | - | ✓ | - |
+| View                       | -   | -    | -     | -    | -   | -   | -    | ✓     | -        |
+| Create/Edit                | -   | -    | -     | -    | -   | -   | -    | ✓     | -        |
 
 Legend:
+
 - ✓ = Allowed
 - - = Not Allowed
 
@@ -1634,13 +1650,13 @@ Data Protection Strategy
 
 ### 9.4 Integration Points Summary
 
-| Integration | Type | Protocol | Purpose |
-|------------|------|----------|---------|
-| **HRIMS** | External API | HTTP/REST | Employee data synchronization |
-| **MinIO** | Self-hosted | S3 API | Document/file storage |
-| **Google Gemini** | Cloud API | HTTPS/REST | AI-powered complaint rewriting |
-| **Prisma** | ORM | TCP (PostgreSQL wire protocol) | Database access |
-| **Client-Server** | Internal | HTTP/REST | Frontend-backend communication |
+| Integration       | Type         | Protocol                       | Purpose                        |
+| ----------------- | ------------ | ------------------------------ | ------------------------------ |
+| **HRIMS**         | External API | HTTP/REST                      | Employee data synchronization  |
+| **MinIO**         | Self-hosted  | S3 API                         | Document/file storage          |
+| **Google Gemini** | Cloud API    | HTTPS/REST                     | AI-powered complaint rewriting |
+| **Prisma**        | ORM          | TCP (PostgreSQL wire protocol) | Database access                |
+| **Client-Server** | Internal     | HTTP/REST                      | Frontend-backend communication |
 
 ---
 
@@ -1648,14 +1664,14 @@ Data Protection Strategy
 
 ### 10.1 Performance Targets
 
-| Metric | Target | Current Status |
-|--------|--------|----------------|
-| **Page Load Time** | < 2 seconds | Optimized with Next.js SSR |
-| **API Response Time** | < 500ms (95th percentile) | Prisma query optimization |
-| **Concurrent Users** | 500+ | Supported with 3 app instances |
-| **Database Queries** | < 100ms (average) | Indexed foreign keys |
-| **File Upload** | < 5s for 2MB PDF | Direct MinIO upload |
-| **Search Performance** | < 1s for employee search | Database indexing on zanId |
+| Metric                 | Target                    | Current Status                 |
+| ---------------------- | ------------------------- | ------------------------------ |
+| **Page Load Time**     | < 2 seconds               | Optimized with Next.js SSR     |
+| **API Response Time**  | < 500ms (95th percentile) | Prisma query optimization      |
+| **Concurrent Users**   | 500+                      | Supported with 3 app instances |
+| **Database Queries**   | < 100ms (average)         | Indexed foreign keys           |
+| **File Upload**        | < 5s for 2MB PDF          | Direct MinIO upload            |
+| **Search Performance** | < 1s for employee search  | Database indexing on zanId     |
 
 ### 10.2 Scalability Strategy
 
@@ -1834,6 +1850,7 @@ Monitoring Stack (Recommended)
 **Decision**: Next.js 16 with App Router (instead of separate frontend/backend)
 
 **Rationale**:
+
 1. **Unified Codebase**: Frontend and backend in single repository, simplifying development and deployment
 2. **Type Safety**: Shared TypeScript types between frontend and backend eliminates API contract mismatches
 3. **Developer Experience**: Hot Module Replacement (HMR), fast refresh, built-in routing
@@ -1843,6 +1860,7 @@ Monitoring Stack (Recommended)
 7. **Cost-Effective**: Reduced infrastructure (no need for separate backend service)
 
 **Trade-offs**:
+
 - **Scaling Complexity**: Monolithic architecture may require careful refactoring if microservices needed later
 - **Team Structure**: Full-stack developers required (not specialized frontend/backend teams)
 
@@ -1851,6 +1869,7 @@ Monitoring Stack (Recommended)
 **Decision**: PostgreSQL 14+ (instead of MySQL, MongoDB, or other databases)
 
 **Rationale**:
+
 1. **ACID Compliance**: Critical for financial and HR data integrity
 2. **JSON Support**: Array fields for documents[], flexible schema evolution
 3. **Government Standard**: Widely used in government systems, proven reliability
@@ -1860,6 +1879,7 @@ Monitoring Stack (Recommended)
 7. **Prisma Compatibility**: First-class support in Prisma ORM
 
 **Trade-offs**:
+
 - **Learning Curve**: More complex than simpler databases
 - **Setup Complexity**: Requires proper configuration for performance
 
@@ -1868,6 +1888,7 @@ Monitoring Stack (Recommended)
 **Decision**: Prisma 6.19.1 (instead of TypeORM, Sequelize, or raw SQL)
 
 **Rationale**:
+
 1. **Type Safety**: Auto-generated types from schema, compile-time safety
 2. **Developer Experience**: Prisma Studio for visual database browsing
 3. **Migration Management**: Version-controlled schema changes
@@ -1877,6 +1898,7 @@ Monitoring Stack (Recommended)
 7. **Modern Approach**: Schema-first design, automatic migration generation
 
 **Trade-offs**:
+
 - **Flexibility**: Less control than raw SQL for complex queries
 - **Learning Investment**: Different paradigm from traditional ORMs
 
@@ -1885,6 +1907,7 @@ Monitoring Stack (Recommended)
 **Decision**: Zustand 4.5.4 (instead of Redux, MobX, or Context API)
 
 **Rationale**:
+
 1. **Simplicity**: Minimal boilerplate, easy to learn
 2. **Bundle Size**: ~1KB minified, compared to Redux (~10KB)
 3. **Performance**: Selective subscriptions, no unnecessary re-renders
@@ -1894,6 +1917,7 @@ Monitoring Stack (Recommended)
 7. **DevTools**: Compatible with Redux DevTools
 
 **Trade-offs**:
+
 - **Community Size**: Smaller than Redux (but growing rapidly)
 - **Middleware Ecosystem**: Fewer plugins compared to Redux
 
@@ -1902,6 +1926,7 @@ Monitoring Stack (Recommended)
 **Decision**: Tailwind CSS 3.4.1 (instead of Bootstrap, Material-UI, or CSS Modules)
 
 **Rationale**:
+
 1. **Utility-First**: Rapid development, no context switching to CSS files
 2. **Consistency**: Design system enforced through utility classes
 3. **Bundle Size**: PurgeCSS removes unused styles automatically
@@ -1911,6 +1936,7 @@ Monitoring Stack (Recommended)
 7. **No Class Name Conflicts**: Scoped by nature of utility classes
 
 **Trade-offs**:
+
 - **HTML Verbosity**: Many classes in markup (mitigated by components)
 - **Learning Curve**: Different mental model from traditional CSS
 
@@ -1919,6 +1945,7 @@ Monitoring Stack (Recommended)
 **Decision**: Radix UI primitives with shadcn/ui components (instead of Material-UI, Chakra UI)
 
 **Rationale**:
+
 1. **Accessibility**: WCAG 2.1 compliant, full keyboard navigation
 2. **Unstyled Primitives**: Full design control with Tailwind
 3. **Copy-Paste Approach**: No npm bloat, components in your codebase
@@ -1928,6 +1955,7 @@ Monitoring Stack (Recommended)
 7. **Composability**: Build complex components from primitives
 
 **Trade-offs**:
+
 - **Manual Updates**: Copy-paste means manual updates for new component versions
 - **Setup Time**: Slightly longer initial setup than UI libraries
 
@@ -1936,6 +1964,7 @@ Monitoring Stack (Recommended)
 **Decision**: MinIO 8.0.5 (instead of AWS S3, Azure Blob, or local filesystem)
 
 **Rationale**:
+
 1. **S3 Compatibility**: Standard API, easy migration to cloud if needed
 2. **Self-Hosted**: Data sovereignty, no third-party dependencies
 3. **Cost-Effective**: No per-GB storage fees, one-time infrastructure cost
@@ -1945,6 +1974,7 @@ Monitoring Stack (Recommended)
 7. **Easy Integration**: Official Node.js SDK with TypeScript support
 
 **Trade-offs**:
+
 - **Infrastructure Management**: Requires server setup and maintenance
 - **Backup Responsibility**: Manual backup strategy needed
 
@@ -1953,6 +1983,7 @@ Monitoring Stack (Recommended)
 **Decision**: Google Genkit 1.8.0 (instead of LangChain, direct OpenAI API)
 
 **Rationale**:
+
 1. **Type Safety**: TypeScript-first, structured prompts and responses
 2. **Observability**: Built-in logging and tracing for AI calls
 3. **Local Development**: Genkit Dev UI for testing flows
@@ -1962,6 +1993,7 @@ Monitoring Stack (Recommended)
 7. **Framework Agnostic**: Can swap AI providers easily
 
 **Trade-offs**:
+
 - **Newer Framework**: Smaller community compared to LangChain
 - **Google Ecosystem**: Tighter coupling to Google Cloud services
 
@@ -1970,6 +2002,7 @@ Monitoring Stack (Recommended)
 **Decision**: bcryptjs 2.4.3 (instead of Argon2, scrypt, or plain bcrypt)
 
 **Rationale**:
+
 1. **Industry Standard**: Widely trusted for password hashing
 2. **Pure JavaScript**: No native bindings, cross-platform compatibility
 3. **Configurable Rounds**: Adjust security level (currently 10 rounds)
@@ -1978,22 +2011,23 @@ Monitoring Stack (Recommended)
 6. **Battle-Tested**: Decades of use, proven security
 
 **Trade-offs**:
+
 - **Performance**: Slower than native bcrypt (but security is priority)
 - **Not Latest**: Argon2 is more modern, but bcrypt is sufficient
 
 ### 11.10 Architecture Decision Summary
 
-| Decision Point | Chosen Technology | Alternative Considered | Reason for Choice |
-|---------------|------------------|----------------------|-------------------|
-| **Framework** | Next.js 16 | React + Express | Full-stack DX, unified codebase |
-| **Database** | PostgreSQL | MySQL, MongoDB | ACID compliance, JSON support |
-| **ORM** | Prisma | TypeORM, Sequelize | Type safety, modern DX |
-| **State** | Zustand | Redux, Context API | Simplicity, performance |
-| **Styling** | Tailwind CSS | Bootstrap, CSS Modules | Utility-first, consistency |
-| **UI Library** | Radix UI + shadcn | Material-UI, Chakra | Accessibility, customization |
-| **Storage** | MinIO | AWS S3, local FS | Self-hosted, S3-compatible |
-| **AI** | Google Genkit + Gemini | LangChain + OpenAI | Type safety, Google ecosystem |
-| **Auth** | bcrypt + Sessions | Passport.js, Auth0 | Simplicity, self-contained |
+| Decision Point | Chosen Technology      | Alternative Considered | Reason for Choice               |
+| -------------- | ---------------------- | ---------------------- | ------------------------------- |
+| **Framework**  | Next.js 16             | React + Express        | Full-stack DX, unified codebase |
+| **Database**   | PostgreSQL             | MySQL, MongoDB         | ACID compliance, JSON support   |
+| **ORM**        | Prisma                 | TypeORM, Sequelize     | Type safety, modern DX          |
+| **State**      | Zustand                | Redux, Context API     | Simplicity, performance         |
+| **Styling**    | Tailwind CSS           | Bootstrap, CSS Modules | Utility-first, consistency      |
+| **UI Library** | Radix UI + shadcn      | Material-UI, Chakra    | Accessibility, customization    |
+| **Storage**    | MinIO                  | AWS S3, local FS       | Self-hosted, S3-compatible      |
+| **AI**         | Google Genkit + Gemini | LangChain + OpenAI     | Type safety, Google ecosystem   |
+| **Auth**       | bcrypt + Sessions      | Passport.js, Auth0     | Simplicity, self-contained      |
 
 ---
 
@@ -2001,41 +2035,41 @@ Monitoring Stack (Recommended)
 
 ### 12.1 Glossary
 
-| Term | Definition |
-|------|------------|
-| **CSMS** | Civil Service Management System - the HR management platform for Zanzibar |
-| **CSC** | Civil Service Commission - oversight body for civil service |
-| **HHRMD** | Head of Human Resource Management Department |
-| **HRMO** | Human Resource Management Officer |
-| **HRO** | Human Resource Officer (institution-level) |
-| **HRRP** | Human Resource Responsible Personnel |
-| **DO** | Disciplinary Officer |
-| **PO** | Planning Officer |
-| **CSCS** | Civil Service Commission Secretary |
-| **LWOP** | Leave Without Pay |
-| **HRIMS** | Human Resource Information Management System (external employee database) |
-| **ZanID** | Zanzibar National Identification Number |
-| **ZSSF** | Zanzibar Social Security Fund |
-| **Cadre** | Job classification/position category in civil service |
-| **MinIO** | S3-compatible object storage system |
-| **Prisma** | Modern database ORM (Object-Relational Mapping) tool |
-| **Genkit** | Google's AI development framework |
-| **API Route** | Backend endpoint in Next.js App Router |
-| **SSR** | Server-Side Rendering |
-| **SSG** | Static Site Generation |
+| Term          | Definition                                                                |
+| ------------- | ------------------------------------------------------------------------- |
+| **CSMS**      | Civil Service Management System - the HR management platform for Zanzibar |
+| **CSC**       | Civil Service Commission - oversight body for civil service               |
+| **HHRMD**     | Head of Human Resource Management Department                              |
+| **HRMO**      | Human Resource Management Officer                                         |
+| **HRO**       | Human Resource Officer (institution-level)                                |
+| **HRRP**      | Human Resource Responsible Personnel                                      |
+| **DO**        | Disciplinary Officer                                                      |
+| **PO**        | Planning Officer                                                          |
+| **CSCS**      | Civil Service Commission Secretary                                        |
+| **LWOP**      | Leave Without Pay                                                         |
+| **HRIMS**     | Human Resource Information Management System (external employee database) |
+| **ZanID**     | Zanzibar National Identification Number                                   |
+| **ZSSF**      | Zanzibar Social Security Fund                                             |
+| **Cadre**     | Job classification/position category in civil service                     |
+| **MinIO**     | S3-compatible object storage system                                       |
+| **Prisma**    | Modern database ORM (Object-Relational Mapping) tool                      |
+| **Genkit**    | Google's AI development framework                                         |
+| **API Route** | Backend endpoint in Next.js App Router                                    |
+| **SSR**       | Server-Side Rendering                                                     |
+| **SSG**       | Static Site Generation                                                    |
 
 ### 12.2 System Requirements
 
 #### 12.2.1 Browser Compatibility
 
-| Browser | Minimum Version | Status |
-|---------|----------------|--------|
-| Google Chrome | 90+ | ✓ Fully Supported |
-| Mozilla Firefox | 88+ | ✓ Fully Supported |
-| Microsoft Edge | 90+ | ✓ Fully Supported |
-| Safari | 14+ | ✓ Fully Supported |
-| Opera | 76+ | ✓ Fully Supported |
-| Internet Explorer | - | ✗ Not Supported |
+| Browser           | Minimum Version | Status            |
+| ----------------- | --------------- | ----------------- |
+| Google Chrome     | 90+             | ✓ Fully Supported |
+| Mozilla Firefox   | 88+             | ✓ Fully Supported |
+| Microsoft Edge    | 90+             | ✓ Fully Supported |
+| Safari            | 14+             | ✓ Fully Supported |
+| Opera             | 76+             | ✓ Fully Supported |
+| Internet Explorer | -               | ✗ Not Supported   |
 
 #### 12.2.2 Development Environment
 
@@ -2167,16 +2201,16 @@ Post-Deployment
 
 ### 12.7 Key Design Patterns Used
 
-| Pattern | Where Used | Purpose |
-|---------|-----------|---------|
-| **Repository Pattern** | Prisma ORM access | Abstract database operations |
-| **Factory Pattern** | API client creation | Centralized HTTP client configuration |
-| **Observer Pattern** | Zustand store | State change subscriptions |
-| **Strategy Pattern** | Role-based filtering | Different filtering strategies per role |
-| **Singleton Pattern** | Prisma client, MinIO client | Single instance shared across app |
-| **Provider Pattern** | Auth context | Inject auth state to React tree |
-| **HOC Pattern** | Protected routes | Wrap pages with authentication check |
-| **Composition Pattern** | UI components | Build complex UIs from primitives |
+| Pattern                 | Where Used                  | Purpose                                 |
+| ----------------------- | --------------------------- | --------------------------------------- |
+| **Repository Pattern**  | Prisma ORM access           | Abstract database operations            |
+| **Factory Pattern**     | API client creation         | Centralized HTTP client configuration   |
+| **Observer Pattern**    | Zustand store               | State change subscriptions              |
+| **Strategy Pattern**    | Role-based filtering        | Different filtering strategies per role |
+| **Singleton Pattern**   | Prisma client, MinIO client | Single instance shared across app       |
+| **Provider Pattern**    | Auth context                | Inject auth state to React tree         |
+| **HOC Pattern**         | Protected routes            | Wrap pages with authentication check    |
+| **Composition Pattern** | UI components               | Build complex UIs from primitives       |
 
 ### 12.8 Future Enhancement Recommendations
 
@@ -2208,19 +2242,19 @@ Long-Term (12+ months)
 
 ### 12.9 Contact Information
 
-| Role | Responsibility | Contact |
-|------|---------------|---------|
-| **Technical Lead** | Architecture, code review | TBD |
-| **DevOps Engineer** | Deployment, infrastructure | TBD |
-| **Database Admin** | Database management, backups | TBD |
-| **Project Manager** | Timeline, stakeholder communication | TBD |
-| **Quality Assurance** | Testing, UAT coordination | TBD |
+| Role                  | Responsibility                      | Contact |
+| --------------------- | ----------------------------------- | ------- |
+| **Technical Lead**    | Architecture, code review           | TBD     |
+| **DevOps Engineer**   | Deployment, infrastructure          | TBD     |
+| **Database Admin**    | Database management, backups        | TBD     |
+| **Project Manager**   | Timeline, stakeholder communication | TBD     |
+| **Quality Assurance** | Testing, UAT coordination           | TBD     |
 
 ### 12.10 Document Revision History
 
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 1.0 | 2025-12-25 | CSMS Team | Initial HLD document creation |
+| Version | Date       | Author    | Changes                       |
+| ------- | ---------- | --------- | ----------------------------- |
+| 1.0     | 2025-12-25 | CSMS Team | Initial HLD document creation |
 
 ---
 

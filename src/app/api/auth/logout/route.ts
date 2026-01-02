@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { clearUserActivity } from '@/lib/session-timeout-utils';
-import { terminateSession, terminateAllUserSessions } from '@/lib/session-manager';
+import {
+  terminateSession,
+  terminateAllUserSessions,
+} from '@/lib/session-manager';
 
 export async function POST(req: Request) {
   try {
@@ -14,11 +17,17 @@ export async function POST(req: Request) {
     if (logoutAll && userId) {
       // Terminate all sessions for this user
       const count = await terminateAllUserSessions(userId);
-      console.log(`[LOGOUT] Terminated all ${count} session(s) for user:`, userId);
+      console.log(
+        `[LOGOUT] Terminated all ${count} session(s) for user:`,
+        userId
+      );
     } else if (sessionToken) {
       // Terminate specific session
       await terminateSession(sessionToken);
-      console.log('[LOGOUT] Terminated session for token:', sessionToken.substring(0, 10) + '...');
+      console.log(
+        '[LOGOUT] Terminated session for token:',
+        sessionToken.substring(0, 10) + '...'
+      );
     }
 
     // Clear user's activity timestamp
@@ -29,13 +38,16 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       success: true,
-      message: 'Logged out successfully'
+      message: 'Logged out successfully',
     });
   } catch (error) {
-    console.error("[LOGOUT_POST]", error);
-    return NextResponse.json({
-      success: false,
-      message: 'Internal Server Error'
-    }, { status: 500 });
+    console.error('[LOGOUT_POST]', error);
+    return NextResponse.json(
+      {
+        success: false,
+        message: 'Internal Server Error',
+      },
+      { status: 500 }
+    );
   }
 }

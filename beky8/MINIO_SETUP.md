@@ -17,6 +17,7 @@ npm run minio:setup
 ```
 
 This will:
+
 - Download the MinIO binary for your OS/architecture
 - Install it to `/usr/local/bin/` (or local directory if no permissions)
 - Create the data directory for file storage
@@ -35,6 +36,7 @@ MINIO_BUCKET_NAME=csms-files
 ```
 
 **Important for Production:**
+
 - Change `MINIO_ACCESS_KEY` and `MINIO_SECRET_KEY` to secure values
 - Set `MINIO_USE_SSL=true` if using HTTPS
 - Update `MINIO_ENDPOINT` to your production domain
@@ -48,10 +50,12 @@ npm run minio:start
 ```
 
 This will start MinIO with:
+
 - **API Endpoint**: http://localhost:9000
 - **Console**: http://localhost:9001
 
 Access the MinIO Console at http://localhost:9001 and login with:
+
 - Username: `minioadmin` (or your configured `MINIO_ACCESS_KEY`)
 - Password: `minioadmin` (or your configured `MINIO_SECRET_KEY`)
 
@@ -62,6 +66,7 @@ Access the MinIO Console at http://localhost:9001 and login with:
 The application includes the following file management endpoints:
 
 #### 1. Upload File
+
 ```
 POST /api/files/upload
 Content-Type: multipart/form-data
@@ -85,6 +90,7 @@ Response:
 ```
 
 #### 2. Download File
+
 ```
 GET /api/files/download/[...objectKey]
 
@@ -94,6 +100,7 @@ Response: File download with Content-Disposition: attachment
 ```
 
 #### 3. Preview File
+
 ```
 GET /api/files/preview/[...objectKey]?mode=inline&expiry=3600
 
@@ -106,6 +113,7 @@ Response (presigned): { "presignedUrl": "...", "contentType": "...", ... }
 ```
 
 #### 4. Check File Exists
+
 ```
 GET /api/files/exists/[...objectKey]
 
@@ -136,7 +144,7 @@ import {
   ensureBucketExists,
   generateObjectKey,
   minioClient,
-  DEFAULT_BUCKET
+  DEFAULT_BUCKET,
 } from '@/lib/minio';
 ```
 
@@ -174,27 +182,35 @@ console.log('Files:', files);
 ## MinIO Client Functions
 
 ### `uploadFile(file, objectKey, contentType, bucketName?)`
+
 Upload a file to MinIO.
 
 ### `downloadFile(objectKey, bucketName?)`
+
 Download a file from MinIO (returns a stream).
 
 ### `getFileMetadata(objectKey, bucketName?)`
+
 Get file metadata (size, content type, last modified).
 
 ### `generatePresignedUrl(objectKey, expiry?, bucketName?)`
+
 Generate a temporary signed URL for file access.
 
 ### `deleteFile(objectKey, bucketName?)`
+
 Delete a file from MinIO.
 
 ### `listFiles(prefix?, bucketName?)`
+
 List files in a bucket (optionally filtered by prefix).
 
 ### `ensureBucketExists(bucketName?)`
+
 Create bucket if it doesn't exist.
 
 ### `generateObjectKey(folder, originalName)`
+
 Generate a unique object key for file storage.
 
 ## Data Directory
@@ -228,6 +244,7 @@ WantedBy=multi-user.target
 ```
 
 Then:
+
 ```bash
 sudo systemctl daemon-reload
 sudo systemctl enable minio
@@ -268,16 +285,19 @@ docker run -d \
 ## Troubleshooting
 
 ### MinIO won't start
+
 - Check if port 9000/9001 is already in use: `lsof -i :9000`
 - Verify MinIO binary has execute permissions: `chmod +x /usr/local/bin/minio`
 - Check data directory permissions
 
 ### Connection refused errors
+
 - Ensure MinIO server is running: `ps aux | grep minio`
 - Verify endpoint and port in `.env` file
 - Check firewall settings
 
 ### Files not uploading
+
 - Verify bucket exists (should auto-create on first upload)
 - Check access key and secret key configuration
 - Review file size limits in upload API route
@@ -292,6 +312,7 @@ docker run -d \
 ## Support
 
 For issues specific to this integration, check:
+
 1. MinIO client configuration in `src/lib/minio.ts`
 2. API routes in `src/app/api/files/`
 3. Environment variables in `.env`

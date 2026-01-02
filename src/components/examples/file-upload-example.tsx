@@ -21,7 +21,7 @@ export function FileUploadExample() {
   const handleSubmit = () => {
     console.log('Single file:', singleFile);
     console.log('Multiple files:', multipleFiles);
-    
+
     toast({
       title: 'Success',
       description: 'Files have been added to the request',
@@ -78,17 +78,17 @@ export function FileUploadExample() {
                 {singleFile || 'No file selected'}
               </p>
             </div>
-            
+
             <div>
               <h4 className="font-medium">Multiple Files:</h4>
               <p className="text-sm text-muted-foreground">
-                {multipleFiles.length > 0 
+                {multipleFiles.length > 0
                   ? `${multipleFiles.length} files selected`
                   : 'No files selected'}
               </p>
             </div>
 
-            <Button 
+            <Button
               onClick={handleSubmit}
               disabled={!singleFile && multipleFiles.length === 0}
             >

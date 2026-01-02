@@ -3,8 +3,10 @@ import { db } from '@/lib/db';
 import { z } from 'zod';
 
 const institutionSchema = z.object({
-  name: z.string().min(3, { message: "Institution name must be at least 3 characters long." }),
-  email: z.string().email().optional().or(z.literal("")),
+  name: z.string().min(3, {
+    message: 'Institution name must be at least 3 characters long.',
+  }),
+  email: z.string().email().optional().or(z.literal('')),
   phoneNumber: z.string().optional(),
   voteNumber: z.string().optional(),
   tinNumber: z.string().optional(),
@@ -25,16 +27,19 @@ export async function PUT(
         where: {
           tinNumber: validatedData.tinNumber.trim(),
           NOT: {
-            id
-          }
-        }
+            id,
+          },
+        },
       });
 
       if (existingTinNumber) {
-        return NextResponse.json({
-          success: false,
-          message: 'An institution with this Tin Number already exists'
-        }, { status: 409 });
+        return NextResponse.json(
+          {
+            success: false,
+            message: 'An institution with this Tin Number already exists',
+          },
+          { status: 409 }
+        );
       }
     }
 
@@ -51,19 +56,24 @@ export async function PUT(
 
     return NextResponse.json(updatedInstitution);
   } catch (error) {
-    console.error("[INSTITUTION_PUT]", error);
+    console.error('[INSTITUTION_PUT]', error);
     if (error instanceof z.ZodError) {
       return new NextResponse(JSON.stringify(error.errors), { status: 400 });
     }
     if ((error as any).code === 'P2002') {
       const target = (error as any).meta?.target;
       if (target && target.includes('tinNumber')) {
-        return new NextResponse('Institution with this Tin Number already exists', { status: 409 });
+        return new NextResponse(
+          'Institution with this Tin Number already exists',
+          { status: 409 }
+        );
       }
-      return new NextResponse('Institution with this name already exists', { status: 409 });
+      return new NextResponse('Institution with this name already exists', {
+        status: 409,
+      });
     }
     if ((error as any).code === 'P2025') {
-        return new NextResponse('Institution not found', { status: 404 });
+      return new NextResponse('Institution not found', { status: 404 });
     }
     return new NextResponse('Internal Server Error', { status: 500 });
   }
@@ -80,13 +90,16 @@ export async function DELETE(
     });
     return new NextResponse(null, { status: 204 });
   } catch (error) {
-    console.error("[INSTITUTION_DELETE]", error);
+    console.error('[INSTITUTION_DELETE]', error);
     if ((error as any).code === 'P2025') {
-        return new NextResponse('Institution not found', { status: 404 });
+      return new NextResponse('Institution not found', { status: 404 });
     }
     // Foreign key constraint error (if institutions are linked to users)
     if ((error as any).code === 'P2003') {
-        return new NextResponse('Cannot delete institution. It may have associated users or data.', { status: 409 });
+      return new NextResponse(
+        'Cannot delete institution. It may have associated users or data.',
+        { status: 409 }
+      );
     }
     return new NextResponse('Internal Server Error', { status: 500 });
   }

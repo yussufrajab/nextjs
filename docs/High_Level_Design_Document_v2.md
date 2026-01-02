@@ -1,4 +1,5 @@
 # HIGH-LEVEL DESIGN DOCUMENT
+
 ## CIVIL SERVICE MANAGEMENT SYSTEM (CSMS)
 
 **Version 2.0 | December 25, 2025**
@@ -7,16 +8,16 @@
 
 ## Document Control
 
-| Item | Details |
-|------|---------|
-| **Document Title** | High-Level Design Document |
-| **Project Name** | Civil Service Management System (CSMS) |
-| **Version** | 2.0 |
-| **Date Prepared** | December 25, 2025 |
-| **Prepared By** | System Design Team |
-| **Reviewed By** | Lead Architect, Project Manager |
-| **Approved By** | IT Department Head |
-| **Status** | Final |
+| Item               | Details                                |
+| ------------------ | -------------------------------------- |
+| **Document Title** | High-Level Design Document             |
+| **Project Name**   | Civil Service Management System (CSMS) |
+| **Version**        | 2.0                                    |
+| **Date Prepared**  | December 25, 2025                      |
+| **Prepared By**    | System Design Team                     |
+| **Reviewed By**    | Lead Architect, Project Manager        |
+| **Approved By**    | IT Department Head                     |
+| **Status**         | Final                                  |
 
 ---
 
@@ -25,6 +26,7 @@
 The Civil Service Management System (CSMS) is a comprehensive web-based application designed to modernize and streamline HR processes for the Civil Service Commission of Zanzibar. This High-Level Design document provides an architectural overview of the system, including component diagrams, deployment architecture, and technology stack rationale.
 
 **Key Design Principles:**
+
 - **Simplicity:** Monolithic full-stack architecture for easier deployment and maintenance
 - **Security-First:** Multi-layered security with JWT authentication and RBAC
 - **Performance:** Optimized for fast response times and concurrent user access
@@ -58,6 +60,7 @@ The CSMS is designed to digitize and automate HR lifecycle management for Zanzib
 ### 1.2 Scope
 
 **In Scope:**
+
 - Employee profile management (50,000+ employees)
 - HR workflow automation (9 request types)
 - Document management and storage
@@ -69,6 +72,7 @@ The CSMS is designed to digitize and automate HR lifecycle management for Zanzib
 - Audit trail
 
 **Out of Scope:**
+
 - Payroll processing
 - Time and attendance tracking
 - Performance appraisal system
@@ -76,15 +80,15 @@ The CSMS is designed to digitize and automate HR lifecycle management for Zanzib
 
 ### 1.3 Stakeholders
 
-| Role | Responsibilities |
-|------|------------------|
-| **HRO** | HR Officers at institutions - Submit requests |
+| Role      | Responsibilities                                         |
+| --------- | -------------------------------------------------------- |
+| **HRO**   | HR Officers at institutions - Submit requests            |
 | **HHRMD** | Head of HR Management Division - Review/approve requests |
-| **HRMO** | HR Management Officers - Process requests |
-| **DO** | Director's Office - Final approvals |
-| **CSCS** | Civil Service Commission Secretary - Policy oversight |
-| **EMP** | Employees - Self-service portal |
-| **ADMIN** | System Administrators - System configuration |
+| **HRMO**  | HR Management Officers - Process requests                |
+| **DO**    | Director's Office - Final approvals                      |
+| **CSCS**  | Civil Service Commission Secretary - Policy oversight    |
+| **EMP**   | Employees - Self-service portal                          |
+| **ADMIN** | System Administrators - System configuration             |
 
 ---
 
@@ -183,6 +187,7 @@ The system follows a 6-tier layered architecture pattern, combining frontend and
 ### 2.3 Layered Architecture Details
 
 #### Layer 1: Presentation Layer
+
 - **Technology:** React 19, TypeScript 5
 - **UI Framework:** Radix UI, shadcn/ui components
 - **Styling:** Tailwind CSS
@@ -194,6 +199,7 @@ The system follows a 6-tier layered architecture pattern, combining frontend and
   - Real-time UI updates
 
 #### Layer 2: API Layer
+
 - **Technology:** Next.js API Routes
 - **Pattern:** RESTful API
 - **Responsibilities:**
@@ -203,6 +209,7 @@ The system follows a 6-tier layered architecture pattern, combining frontend and
   - Rate limiting
 
 #### Layer 3: Middleware Layer
+
 - **Components:**
   - Authentication middleware (JWT)
   - Authorization middleware (RBAC)
@@ -216,6 +223,7 @@ The system follows a 6-tier layered architecture pattern, combining frontend and
   - Error standardization
 
 #### Layer 4: Business Logic Layer
+
 - **Components:**
   - Workflow engines
   - Business rules
@@ -229,6 +237,7 @@ The system follows a 6-tier layered architecture pattern, combining frontend and
   - Integration coordination
 
 #### Layer 5: Data Access Layer
+
 - **Technology:** Prisma ORM
 - **Pattern:** Repository pattern
 - **Responsibilities:**
@@ -238,6 +247,7 @@ The system follows a 6-tier layered architecture pattern, combining frontend and
   - Connection pooling
 
 #### Layer 6: Data Layer
+
 - **Components:**
   - PostgreSQL (structured data)
   - MinIO (object storage)
@@ -456,39 +466,39 @@ USER REQUEST FLOW
 
 #### 3.3.1 Frontend Components
 
-| Component | Technology | Purpose |
-|-----------|------------|---------|
-| **Authentication Pages** | Next.js Pages, React | User login, employee login |
-| **Dashboard** | React, Recharts | Metrics, overview, analytics |
-| **Request Forms** | React Hook Form, Zod | Submit/review HR requests |
-| **Complaint Management** | React, AI Integration | Submit/track complaints |
-| **Profile Management** | React, MinIO | View/edit employee profiles |
-| **Admin Panel** | React, Radix UI | User/institution management |
-| **Reports** | jsPDF, XLSX | Generate/export reports |
+| Component                | Technology            | Purpose                      |
+| ------------------------ | --------------------- | ---------------------------- |
+| **Authentication Pages** | Next.js Pages, React  | User login, employee login   |
+| **Dashboard**            | React, Recharts       | Metrics, overview, analytics |
+| **Request Forms**        | React Hook Form, Zod  | Submit/review HR requests    |
+| **Complaint Management** | React, AI Integration | Submit/track complaints      |
+| **Profile Management**   | React, MinIO          | View/edit employee profiles  |
+| **Admin Panel**          | React, Radix UI       | User/institution management  |
+| **Reports**              | jsPDF, XLSX           | Generate/export reports      |
 
 #### 3.3.2 Backend Components
 
-| Component | Technology | Purpose |
-|-----------|------------|---------|
-| **Authentication API** | Next.js API, JWT | Login, logout, session management |
-| **Request APIs** | Next.js API, Prisma | CRUD for 9 request types |
-| **Employee API** | Next.js API, Prisma | Employee data management |
-| **File API** | Next.js API, MinIO | Upload, download, preview files |
-| **HRIMS API** | Next.js API, Fetch | External system integration |
-| **Dashboard API** | Next.js API, Prisma | Metrics and analytics |
-| **Notification API** | Next.js API, SMTP | Email and in-app notifications |
+| Component              | Technology          | Purpose                           |
+| ---------------------- | ------------------- | --------------------------------- |
+| **Authentication API** | Next.js API, JWT    | Login, logout, session management |
+| **Request APIs**       | Next.js API, Prisma | CRUD for 9 request types          |
+| **Employee API**       | Next.js API, Prisma | Employee data management          |
+| **File API**           | Next.js API, MinIO  | Upload, download, preview files   |
+| **HRIMS API**          | Next.js API, Fetch  | External system integration       |
+| **Dashboard API**      | Next.js API, Prisma | Metrics and analytics             |
+| **Notification API**   | Next.js API, SMTP   | Email and in-app notifications    |
 
 #### 3.3.3 Shared Libraries
 
-| Library | Location | Purpose |
-|---------|----------|---------|
-| **Auth Store** | `/src/store/auth-store.ts` | Zustand auth state |
-| **API Client** | `/src/lib/api-client.ts` | HTTP client wrapper |
-| **MinIO Client** | `/src/lib/minio.ts` | Object storage operations |
-| **Database Client** | `/src/lib/db.ts` | Prisma client instance |
-| **Utilities** | `/src/lib/utils.ts` | Helper functions |
-| **Constants** | `/src/lib/constants.ts` | App-wide constants |
-| **Role Utils** | `/src/lib/role-utils.ts` | RBAC utilities |
+| Library             | Location                   | Purpose                   |
+| ------------------- | -------------------------- | ------------------------- |
+| **Auth Store**      | `/src/store/auth-store.ts` | Zustand auth state        |
+| **API Client**      | `/src/lib/api-client.ts`   | HTTP client wrapper       |
+| **MinIO Client**    | `/src/lib/minio.ts`        | Object storage operations |
+| **Database Client** | `/src/lib/db.ts`           | Prisma client instance    |
+| **Utilities**       | `/src/lib/utils.ts`        | Helper functions          |
+| **Constants**       | `/src/lib/constants.ts`    | App-wide constants        |
+| **Role Utils**      | `/src/lib/role-utils.ts`   | RBAC utilities            |
 
 ---
 
@@ -543,25 +553,25 @@ USER REQUEST FLOW
 
 **Hardware Specifications:**
 
-| Component | Specification |
-|-----------|--------------|
-| **CPU** | 8 cores @ 2.5+ GHz |
-| **RAM** | 16 GB |
-| **Storage** | 1 TB SSD (RAID 1) |
-| **Network** | 1 Gbps |
+| Component      | Specification      |
+| -------------- | ------------------ |
+| **CPU**        | 8 cores @ 2.5+ GHz |
+| **RAM**        | 16 GB              |
+| **Storage**    | 1 TB SSD (RAID 1)  |
+| **Network**    | 1 Gbps             |
 | **Redundancy** | RAID 1 (mirroring) |
 
 **Software Stack:**
 
-| Component | Version | Purpose |
-|-----------|---------|---------|
-| **OS** | Ubuntu Server 24.04 LTS | Operating system |
-| **Node.js** | 18.x LTS | Runtime environment |
-| **Next.js** | 16.x | Web framework |
-| **PostgreSQL** | 15.x | Database |
-| **MinIO** | Latest | Object storage |
-| **Nginx** | 1.24+ | Web server |
-| **PM2** | Latest | Process manager |
+| Component      | Version                 | Purpose             |
+| -------------- | ----------------------- | ------------------- |
+| **OS**         | Ubuntu Server 24.04 LTS | Operating system    |
+| **Node.js**    | 18.x LTS                | Runtime environment |
+| **Next.js**    | 16.x                    | Web framework       |
+| **PostgreSQL** | 15.x                    | Database            |
+| **MinIO**      | Latest                  | Object storage      |
+| **Nginx**      | 1.24+                   | Web server          |
+| **PM2**        | Latest                  | Process manager     |
 
 ### 4.3 Network Architecture
 
@@ -593,14 +603,14 @@ Internet (Public)
 
 **Firewall Rules:**
 
-| Port | Service | Access | Source |
-|------|---------|--------|--------|
-| 443 | HTTPS | Allow | 0.0.0.0/0 (Public) |
-| 80 | HTTP | Allow | 0.0.0.0/0 (Redirect to 443) |
-| 22 | SSH | Allow | Admin IPs only |
-| 9002 | Next.js | Deny | External (localhost only) |
-| 5432 | PostgreSQL | Deny | External (localhost only) |
-| 9001 | MinIO | Deny | External (localhost only) |
+| Port | Service    | Access | Source                      |
+| ---- | ---------- | ------ | --------------------------- |
+| 443  | HTTPS      | Allow  | 0.0.0.0/0 (Public)          |
+| 80   | HTTP       | Allow  | 0.0.0.0/0 (Redirect to 443) |
+| 22   | SSH        | Allow  | Admin IPs only              |
+| 9002 | Next.js    | Deny   | External (localhost only)   |
+| 5432 | PostgreSQL | Deny   | External (localhost only)   |
+| 9001 | MinIO      | Deny   | External (localhost only)   |
 
 ### 4.4 Deployment Process
 
@@ -695,25 +705,27 @@ GOOGLE_API_KEY=your-google-api-key
 
 ```javascript
 module.exports = {
-  apps: [{
-    name: 'csms',
-    script: 'node_modules/next/dist/bin/next',
-    args: 'start -p 9002',
-    instances: 2,
-    exec_mode: 'cluster',
-    watch: false,
-    max_memory_restart: '1G',
-    env: {
-      NODE_ENV: 'production',
-      PORT: 9002
+  apps: [
+    {
+      name: 'csms',
+      script: 'node_modules/next/dist/bin/next',
+      args: 'start -p 9002',
+      instances: 2,
+      exec_mode: 'cluster',
+      watch: false,
+      max_memory_restart: '1G',
+      env: {
+        NODE_ENV: 'production',
+        PORT: 9002,
+      },
+      error_file: './logs/pm2-error.log',
+      out_file: './logs/pm2-out.log',
+      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
+      autorestart: true,
+      max_restarts: 10,
+      min_uptime: '10s',
     },
-    error_file: './logs/pm2-error.log',
-    out_file: './logs/pm2-out.log',
-    log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
-    autorestart: true,
-    max_restarts: 10,
-    min_uptime: '10s'
-  }]
+  ],
 };
 ```
 
@@ -771,6 +783,7 @@ module.exports = {
 #### 5.2.1 Frontend Technologies
 
 **Next.js 16**
+
 - ✅ **Full-stack capability:** Single codebase for frontend + backend
 - ✅ **Server-Side Rendering (SSR):** Better SEO and initial page load
 - ✅ **API Routes:** No need for separate backend service
@@ -780,6 +793,7 @@ module.exports = {
 - ✅ **Large ecosystem:** Extensive React library ecosystem
 
 **TypeScript 5**
+
 - ✅ **Type safety:** Catch errors at compile-time
 - ✅ **Better IDE support:** IntelliSense, autocomplete
 - ✅ **Self-documenting:** Types serve as documentation
@@ -787,6 +801,7 @@ module.exports = {
 - ✅ **Team collaboration:** Clear interfaces and contracts
 
 **Tailwind CSS**
+
 - ✅ **Rapid development:** Utility-first approach
 - ✅ **Small bundle size:** PurgeCSS removes unused styles
 - ✅ **Consistency:** Design system built-in
@@ -794,6 +809,7 @@ module.exports = {
 - ✅ **Customizable:** Easy to extend and configure
 
 **Radix UI + shadcn/ui**
+
 - ✅ **Accessibility:** WCAG 2.1 AA compliant
 - ✅ **Unstyled:** Full control over styling
 - ✅ **Keyboard navigation:** Full keyboard support
@@ -801,6 +817,7 @@ module.exports = {
 - ✅ **Focus management:** Automatic focus handling
 
 **React Hook Form + Zod**
+
 - ✅ **Performance:** Minimal re-renders
 - ✅ **Type-safe validation:** Zod schemas
 - ✅ **Better UX:** Async validation, field-level errors
@@ -810,6 +827,7 @@ module.exports = {
 #### 5.2.2 Backend Technologies
 
 **PostgreSQL 15**
+
 - ✅ **ACID compliance:** Critical for HR data integrity
 - ✅ **Performance:** Handles millions of rows efficiently
 - ✅ **Reliability:** Battle-tested, 30+ years
@@ -819,6 +837,7 @@ module.exports = {
 - ✅ **Community:** Huge community and resources
 
 **Prisma ORM**
+
 - ✅ **Type-safe queries:** Auto-generated TypeScript types
 - ✅ **Developer experience:** Intuitive API, Prisma Studio
 - ✅ **Migrations:** Declarative schema migrations
@@ -827,6 +846,7 @@ module.exports = {
 - ✅ **Active development:** Regular updates and improvements
 
 **MinIO**
+
 - ✅ **S3-compatible:** Standard API, easy migration
 - ✅ **On-premises:** Data sovereignty (critical for government)
 - ✅ **Performance:** High throughput for large files
@@ -836,6 +856,7 @@ module.exports = {
 - ✅ **Versioning:** File versioning support
 
 **Google Genkit**
+
 - ✅ **AI Integration:** Easy AI feature integration
 - ✅ **Type-safe:** TypeScript-first framework
 - ✅ **Local development:** Built-in dev UI
@@ -845,6 +866,7 @@ module.exports = {
 #### 5.2.3 Infrastructure Technologies
 
 **Ubuntu Server 24.04 LTS**
+
 - ✅ **Long-term support:** 5 years of updates
 - ✅ **Stability:** Production-proven
 - ✅ **Security:** Regular security patches
@@ -852,6 +874,7 @@ module.exports = {
 - ✅ **Free:** No licensing costs
 
 **Nginx**
+
 - ✅ **Performance:** High-concurrency handling
 - ✅ **Reverse proxy:** Load balancing ready
 - ✅ **SSL/TLS:** Let's Encrypt integration
@@ -859,6 +882,7 @@ module.exports = {
 - ✅ **Reliable:** Industry standard
 
 **PM2**
+
 - ✅ **Process management:** Auto-restart, clustering
 - ✅ **Monitoring:** Built-in monitoring
 - ✅ **Zero-downtime:** Graceful reloads
@@ -867,17 +891,17 @@ module.exports = {
 
 ### 5.3 Technology Comparison
 
-| Category | Chosen | Alternatives Considered | Why Chosen |
-|----------|--------|-------------------------|------------|
-| **Frontend Framework** | Next.js | Create React App, Vite | Full-stack, SSR, API routes |
-| **Backend Framework** | Next.js API | Express, NestJS | Same codebase, simpler deployment |
-| **Database** | PostgreSQL | MySQL, MongoDB | ACID, reliability, JSONB |
-| **ORM** | Prisma | TypeORM, Drizzle | Type safety, DX, migrations |
-| **Storage** | MinIO | AWS S3, File System | On-prem, S3-compatible, free |
-| **Styling** | Tailwind CSS | CSS Modules, Styled Components | Rapid dev, utility-first |
-| **UI Components** | Radix UI | Material-UI, Chakra UI | Unstyled, accessible |
-| **State Management** | Zustand | Redux, Context API | Simple, lightweight |
-| **Validation** | Zod | Yup, Joi | Type-safe, composable |
+| Category               | Chosen       | Alternatives Considered        | Why Chosen                        |
+| ---------------------- | ------------ | ------------------------------ | --------------------------------- |
+| **Frontend Framework** | Next.js      | Create React App, Vite         | Full-stack, SSR, API routes       |
+| **Backend Framework**  | Next.js API  | Express, NestJS                | Same codebase, simpler deployment |
+| **Database**           | PostgreSQL   | MySQL, MongoDB                 | ACID, reliability, JSONB          |
+| **ORM**                | Prisma       | TypeORM, Drizzle               | Type safety, DX, migrations       |
+| **Storage**            | MinIO        | AWS S3, File System            | On-prem, S3-compatible, free      |
+| **Styling**            | Tailwind CSS | CSS Modules, Styled Components | Rapid dev, utility-first          |
+| **UI Components**      | Radix UI     | Material-UI, Chakra UI         | Unstyled, accessible              |
+| **State Management**   | Zustand      | Redux, Context API             | Simple, lightweight               |
+| **Validation**         | Zod          | Yup, Joi                       | Type-safe, composable             |
 
 ### 5.4 Dependency Summary
 
@@ -921,6 +945,7 @@ module.exports = {
 **Total Tables:** 15 core tables
 
 **Table Categories:**
+
 1. **Core Entities** (3 tables)
    - User
    - Employee
@@ -1032,12 +1057,14 @@ User
 ### 6.4 Storage Architecture
 
 **PostgreSQL Database:**
+
 - **Purpose:** Structured relational data
 - **Size:** ~12 GB (current), projected 72 GB (5 years)
 - **Records:** 50,000+ employees, 5,000+ requests/year
 - **Backup:** Daily automated backups
 
 **MinIO Object Storage:**
+
 - **Purpose:** Unstructured files (photos, documents, PDFs)
 - **Size:** ~85 GB (current), projected 740 GB (5 years)
 - **Buckets:**
@@ -1232,28 +1259,28 @@ EMP (Employee)
 
 **Permission Matrix:**
 
-| Resource | HRO | HHRMD | HRMO | DO | CSCS | EMP | ADMIN |
-|----------|-----|-------|------|----|----|-----|-------|
-| View Own Profile | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Edit Own Profile | ✗ | ✗ | ✗ | ✗ | ✗ | Limited | ✓ |
-| Submit Request | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ | ✓ |
-| Review Request | ✗ | ✓ | ✓ | ✓ | ✓ | ✗ | ✓ |
-| Approve Request | ✗ | ✓ | ✗ | ✓ | ✓ | ✗ | ✓ |
-| View All Employees | Inst | ✓ | ✓ | ✓ | ✓ | ✗ | ✓ |
-| Manage Users | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✓ |
-| View Reports | ✗ | ✓ | ✓ | ✓ | ✓ | ✗ | ✓ |
-| Submit Complaint | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Resource           | HRO  | HHRMD | HRMO | DO  | CSCS | EMP     | ADMIN |
+| ------------------ | ---- | ----- | ---- | --- | ---- | ------- | ----- |
+| View Own Profile   | ✓    | ✓     | ✓    | ✓   | ✓    | ✓       | ✓     |
+| Edit Own Profile   | ✗    | ✗     | ✗    | ✗   | ✗    | Limited | ✓     |
+| Submit Request     | ✓    | ✗     | ✗    | ✗   | ✗    | ✗       | ✓     |
+| Review Request     | ✗    | ✓     | ✓    | ✓   | ✓    | ✗       | ✓     |
+| Approve Request    | ✗    | ✓     | ✗    | ✓   | ✓    | ✗       | ✓     |
+| View All Employees | Inst | ✓     | ✓    | ✓   | ✓    | ✗       | ✓     |
+| Manage Users       | ✗    | ✗     | ✗    | ✗   | ✗    | ✗       | ✓     |
+| View Reports       | ✗    | ✓     | ✓    | ✓   | ✓    | ✗       | ✓     |
+| Submit Complaint   | ✓    | ✓     | ✓    | ✓   | ✓    | ✓       | ✓     |
 
 ### 7.4 Data Protection
 
 **Encryption Standards:**
 
-| Data Type | Method | Key Length |
-|-----------|--------|------------|
-| Passwords | bcrypt | Cost factor: 10 |
-| JWT Tokens | HMAC-SHA256 | 256-bit |
-| HTTPS/TLS | TLS 1.2/1.3 | AES-256-GCM |
-| MinIO Files | AES | 256-bit |
+| Data Type   | Method      | Key Length      |
+| ----------- | ----------- | --------------- |
+| Passwords   | bcrypt      | Cost factor: 10 |
+| JWT Tokens  | HMAC-SHA256 | 256-bit         |
+| HTTPS/TLS   | TLS 1.2/1.3 | AES-256-GCM     |
+| MinIO Files | AES         | 256-bit         |
 
 **Sensitive Data Handling:**
 
@@ -1274,6 +1301,7 @@ File Upload → Validation → MinIO Storage → Presigned URL (24h)
 ### 7.5 Audit Trail
 
 **Logged Events:**
+
 - User login/logout
 - Password changes
 - Request submissions
@@ -1285,6 +1313,7 @@ File Upload → Validation → MinIO Storage → Presigned URL (24h)
 - Critical system changes
 
 **Audit Log Structure:**
+
 ```typescript
 {
   timestamp: "2025-12-25T10:30:00Z",
@@ -1373,15 +1402,16 @@ Return Response to User
 
 **API Endpoints:**
 
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/api/hrims/sync-employee` | POST | Sync single employee |
-| `/api/hrims/sync-documents` | POST | Sync employee documents |
-| `/api/hrims/sync-certificates` | POST | Sync certificates |
-| `/api/hrims/fetch-by-institution` | POST | Bulk fetch by institution |
-| `/api/hrims/bulk-fetch` | POST | Bulk fetch multiple employees |
+| Endpoint                          | Method | Purpose                       |
+| --------------------------------- | ------ | ----------------------------- |
+| `/api/hrims/sync-employee`        | POST   | Sync single employee          |
+| `/api/hrims/sync-documents`       | POST   | Sync employee documents       |
+| `/api/hrims/sync-certificates`    | POST   | Sync certificates             |
+| `/api/hrims/fetch-by-institution` | POST   | Bulk fetch by institution     |
+| `/api/hrims/bulk-fetch`           | POST   | Bulk fetch multiple employees |
 
 **Security:**
+
 - OAuth 2.0 / API Key authentication
 - HTTPS only
 - Rate limiting (100 requests/minute)
@@ -1393,6 +1423,7 @@ Return Response to User
 **Purpose:** Send notifications and alerts to users
 
 **Use Cases:**
+
 - User registration
 - Password reset OTP
 - Request status updates
@@ -1401,6 +1432,7 @@ Return Response to User
 - System alerts
 
 **Configuration:**
+
 ```typescript
 {
   host: process.env.SMTP_HOST,
@@ -1483,20 +1515,21 @@ Display to user
 
 ### 9.1 Performance Targets
 
-| Operation | Target | Current | Status |
-|-----------|--------|---------|--------|
-| **Page Load (First Paint)** | < 2s | 1.5s | ✅ |
-| **Login** | < 1.5s | 1.2s | ✅ |
-| **Dashboard Load** | < 5s | 3.8s | ✅ |
-| **Employee Search** | < 1s | 0.6s | ✅ |
-| **Form Submission** | < 2s | 1.4s | ✅ |
-| **File Upload (2MB)** | < 5s | 3.5s | ✅ |
-| **Report Generation** | < 30s | 18s | ✅ |
-| **API Response Time** | < 500ms | 280ms | ✅ |
+| Operation                   | Target  | Current | Status |
+| --------------------------- | ------- | ------- | ------ |
+| **Page Load (First Paint)** | < 2s    | 1.5s    | ✅     |
+| **Login**                   | < 1.5s  | 1.2s    | ✅     |
+| **Dashboard Load**          | < 5s    | 3.8s    | ✅     |
+| **Employee Search**         | < 1s    | 0.6s    | ✅     |
+| **Form Submission**         | < 2s    | 1.4s    | ✅     |
+| **File Upload (2MB)**       | < 5s    | 3.5s    | ✅     |
+| **Report Generation**       | < 30s   | 18s     | ✅     |
+| **API Response Time**       | < 500ms | 280ms   | ✅     |
 
 ### 9.2 Scalability Plan
 
 **Current Capacity:**
+
 - Concurrent Users: 50 (90% headroom to 500)
 - Database Records: 50,000 employees
 - File Storage: 85 GB (90% headroom to 1 TB)
@@ -1536,13 +1569,15 @@ Phase 1 (Current)     Phase 2 (2-3 years)   Phase 3 (5+ years)
 ### 9.3 Performance Optimization
 
 **Database Optimizations:**
+
 - ✅ Proper indexing on frequently queried fields
 - ✅ Connection pooling (Prisma)
-- ✅ Selective field loading (avoid SELECT *)
+- ✅ Selective field loading (avoid SELECT \*)
 - ✅ Pagination for large result sets
 - ✅ Query optimization (avoid N+1)
 
 **Application Optimizations:**
+
 - ✅ Server-Side Rendering (SSR)
 - ✅ Code splitting (Next.js automatic)
 - ✅ Lazy loading components
@@ -1550,6 +1585,7 @@ Phase 1 (Current)     Phase 2 (2-3 years)   Phase 3 (5+ years)
 - ✅ API response caching
 
 **Network Optimizations:**
+
 - ✅ Gzip compression (Nginx)
 - ✅ Browser caching headers
 - ✅ HTTP/2 (Nginx)
@@ -1562,6 +1598,7 @@ Phase 1 (Current)     Phase 2 (2-3 years)   Phase 3 (5+ years)
 ### Appendix A: System Requirements
 
 **Minimum Server Requirements:**
+
 - CPU: 4 cores @ 2.0 GHz
 - RAM: 8 GB
 - Storage: 500 GB SSD
@@ -1569,6 +1606,7 @@ Phase 1 (Current)     Phase 2 (2-3 years)   Phase 3 (5+ years)
 - OS: Ubuntu 20.04+
 
 **Recommended Server Requirements:**
+
 - CPU: 8 cores @ 2.5+ GHz
 - RAM: 16 GB
 - Storage: 1 TB SSD (RAID 1)
@@ -1576,6 +1614,7 @@ Phase 1 (Current)     Phase 2 (2-3 years)   Phase 3 (5+ years)
 - OS: Ubuntu 24.04 LTS
 
 **Client Requirements:**
+
 - Modern web browser (Chrome 90+, Firefox 88+, Safari 14+, Edge 90+)
 - JavaScript enabled
 - Minimum screen resolution: 1280x720
@@ -1583,15 +1622,15 @@ Phase 1 (Current)     Phase 2 (2-3 years)   Phase 3 (5+ years)
 
 ### Appendix B: Port Reference
 
-| Port | Service | Protocol | Access | Purpose |
-|------|---------|----------|--------|---------|
-| 443 | HTTPS | TCP | Public | Web application (SSL) |
-| 80 | HTTP | TCP | Public | Redirect to HTTPS |
-| 22 | SSH | TCP | Restricted | Server administration |
-| 9002 | Next.js | TCP | Internal | Application server |
-| 5432 | PostgreSQL | TCP | Internal | Database |
-| 9001 | MinIO | TCP | Internal | Object storage console |
-| 9000 | MinIO API | TCP | Internal | Object storage API |
+| Port | Service    | Protocol | Access     | Purpose                |
+| ---- | ---------- | -------- | ---------- | ---------------------- |
+| 443  | HTTPS      | TCP      | Public     | Web application (SSL)  |
+| 80   | HTTP       | TCP      | Public     | Redirect to HTTPS      |
+| 22   | SSH        | TCP      | Restricted | Server administration  |
+| 9002 | Next.js    | TCP      | Internal   | Application server     |
+| 5432 | PostgreSQL | TCP      | Internal   | Database               |
+| 9001 | MinIO      | TCP      | Internal   | Object storage console |
+| 9000 | MinIO API  | TCP      | Internal   | Object storage API     |
 
 ### Appendix C: File Structure
 
@@ -1618,28 +1657,29 @@ Phase 1 (Current)     Phase 2 (2-3 years)   Phase 3 (5+ years)
 
 ### Appendix D: Glossary
 
-| Term | Definition |
-|------|------------|
-| **ACID** | Atomicity, Consistency, Isolation, Durability |
-| **API** | Application Programming Interface |
-| **bcrypt** | Password hashing algorithm |
-| **CDN** | Content Delivery Network |
-| **CSRF** | Cross-Site Request Forgery |
-| **HRIMS** | Human Resource Information Management System |
-| **JWT** | JSON Web Token |
-| **LTS** | Long-Term Support |
-| **MinIO** | S3-compatible object storage |
-| **ORM** | Object-Relational Mapping |
-| **RBAC** | Role-Based Access Control |
-| **REST** | Representational State Transfer |
-| **SSR** | Server-Side Rendering |
-| **TLS** | Transport Layer Security |
-| **XSS** | Cross-Site Scripting |
-| **Zod** | TypeScript-first schema validation |
+| Term       | Definition                                    |
+| ---------- | --------------------------------------------- |
+| **ACID**   | Atomicity, Consistency, Isolation, Durability |
+| **API**    | Application Programming Interface             |
+| **bcrypt** | Password hashing algorithm                    |
+| **CDN**    | Content Delivery Network                      |
+| **CSRF**   | Cross-Site Request Forgery                    |
+| **HRIMS**  | Human Resource Information Management System  |
+| **JWT**    | JSON Web Token                                |
+| **LTS**    | Long-Term Support                             |
+| **MinIO**  | S3-compatible object storage                  |
+| **ORM**    | Object-Relational Mapping                     |
+| **RBAC**   | Role-Based Access Control                     |
+| **REST**   | Representational State Transfer               |
+| **SSR**    | Server-Side Rendering                         |
+| **TLS**    | Transport Layer Security                      |
+| **XSS**    | Cross-Site Scripting                          |
+| **Zod**    | TypeScript-first schema validation            |
 
 ### Appendix E: External References
 
 **Documentation:**
+
 - Next.js: https://nextjs.org/docs
 - React: https://react.dev
 - TypeScript: https://www.typescriptlang.org/docs
@@ -1650,6 +1690,7 @@ Phase 1 (Current)     Phase 2 (2-3 years)   Phase 3 (5+ years)
 - Radix UI: https://www.radix-ui.com/docs
 
 **Security:**
+
 - OWASP Top 10: https://owasp.org/www-project-top-ten
 - Let's Encrypt: https://letsencrypt.org
 - JWT Best Practices: https://tools.ietf.org/html/rfc8725
@@ -1657,6 +1698,7 @@ Phase 1 (Current)     Phase 2 (2-3 years)   Phase 3 (5+ years)
 ### Appendix F: Diagram Conventions
 
 **Symbols Used:**
+
 - `[ ]` - Component/Module
 - `→` - Data flow / Dependency
 - `↓` - Process flow
@@ -1670,39 +1712,42 @@ Phase 1 (Current)     Phase 2 (2-3 years)   Phase 3 (5+ years)
 ## Document Approval
 
 **Prepared By:**
-- Name: _______________________
+
+- Name: \***\*\*\*\*\***\_\_\_\***\*\*\*\*\***
 - Title: System Architect
-- Signature: _______________________
-- Date: _______________________
+- Signature: \***\*\*\*\*\***\_\_\_\***\*\*\*\*\***
+- Date: \***\*\*\*\*\***\_\_\_\***\*\*\*\*\***
 
 **Reviewed By:**
-- Name: _______________________
+
+- Name: \***\*\*\*\*\***\_\_\_\***\*\*\*\*\***
 - Title: Project Manager
-- Signature: _______________________
-- Date: _______________________
+- Signature: \***\*\*\*\*\***\_\_\_\***\*\*\*\*\***
+- Date: \***\*\*\*\*\***\_\_\_\***\*\*\*\*\***
 
 **Approved By:**
-- Name: _______________________
+
+- Name: \***\*\*\*\*\***\_\_\_\***\*\*\*\*\***
 - Title: IT Department Head
-- Signature: _______________________
-- Date: _______________________
+- Signature: \***\*\*\*\*\***\_\_\_\***\*\*\*\*\***
+- Date: \***\*\*\*\*\***\_\_\_\***\*\*\*\*\***
 
 ---
 
 ## Revision History
 
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 1.0 | Dec 15, 2025 | Design Team | Initial draft |
-| 1.5 | Dec 20, 2025 | Design Team | Added integration architecture |
-| 2.0 | Dec 25, 2025 | Design Team | Final version - comprehensive HLD |
+| Version | Date         | Author      | Changes                           |
+| ------- | ------------ | ----------- | --------------------------------- |
+| 1.0     | Dec 15, 2025 | Design Team | Initial draft                     |
+| 1.5     | Dec 20, 2025 | Design Team | Added integration architecture    |
+| 2.0     | Dec 25, 2025 | Design Team | Final version - comprehensive HLD |
 
 ---
 
 **END OF HIGH-LEVEL DESIGN DOCUMENT**
 
-*This document is confidential and proprietary to the Civil Service Commission of Zanzibar.*
+_This document is confidential and proprietary to the Civil Service Commission of Zanzibar._
 
-*For technical questions, contact: architecture@csms.go.tz*
+_For technical questions, contact: architecture@csms.go.tz_
 
-*Version 2.0 | December 25, 2025*
+_Version 2.0 | December 25, 2025_

@@ -45,7 +45,10 @@ export async function validateCSRF(request: NextRequest | Request): Promise<{
     const { userId, username } = extractUserInfo(request);
     const ipAddress = getClientIp(request.headers);
     const userAgent = request.headers.get('user-agent');
-    const url = request instanceof NextRequest ? request.nextUrl.pathname : new URL(request.url).pathname;
+    const url =
+      request instanceof NextRequest
+        ? request.nextUrl.pathname
+        : new URL(request.url).pathname;
 
     // Determine reason for failure
     let reason = 'Unknown';
@@ -68,22 +71,12 @@ export async function validateCSRF(request: NextRequest | Request): Promise<{
     });
 
     // Log CSRF violation to audit trail
-    await logCSRFViolation(
-      userId,
-      username,
-      ipAddress,
-      userAgent,
-      url,
-      reason
-    );
+    await logCSRFViolation(userId, username, ipAddress, userAgent, url, reason);
 
     // Return error response
     return {
       valid: false,
-      response: NextResponse.json(
-        createCSRFError(reason),
-        { status: 403 }
-      ),
+      response: NextResponse.json(createCSRFError(reason), { status: 403 }),
     };
   }
 
@@ -110,11 +103,14 @@ function getCookieToken(request: NextRequest | Request): string | undefined {
  * Helper to parse cookie header
  */
 function parseCookies(cookieHeader: string): Record<string, string> {
-  return cookieHeader.split(';').reduce((cookies, cookie) => {
-    const [name, ...rest] = cookie.split('=');
-    cookies[name.trim()] = rest.join('=').trim();
-    return cookies;
-  }, {} as Record<string, string>);
+  return cookieHeader.split(';').reduce(
+    (cookies, cookie) => {
+      const [name, ...rest] = cookie.split('=');
+      cookies[name.trim()] = rest.join('=').trim();
+      return cookies;
+    },
+    {} as Record<string, string>
+  );
 }
 
 /**

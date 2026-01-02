@@ -68,7 +68,7 @@ interface FetchStats {
 // ============================================================================
 
 function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function formatDuration(seconds: number): string {
@@ -160,7 +160,8 @@ async function fetchInstitutionData(
     };
   }
 
-  const retryText = retryAttempt > 0 ? ` (Retry ${retryAttempt}/${CONFIG.MAX_RETRIES})` : '';
+  const retryText =
+    retryAttempt > 0 ? ` (Retry ${retryAttempt}/${CONFIG.MAX_RETRIES})` : '';
   logInfo(`Fetching: ${institution.name}${retryText}`, logFile);
   logInfo(`  Using ${identifierType}: ${identifier}`, logFile);
   logInfo(`  Page size: ${CONFIG.PAGE_SIZE}`, logFile);
@@ -193,7 +194,7 @@ async function fetchInstitutionData(
 
       logSuccess(
         `${institution.name}: Fetched ${employeeCount} employees ` +
-        `(${pagesFetched} pages, ${skippedCount} skipped, ${formatDuration(durationSeconds)})`,
+          `(${pagesFetched} pages, ${skippedCount} skipped, ${formatDuration(durationSeconds)})`,
         logFile
       );
 
@@ -215,7 +216,10 @@ async function fetchInstitutionData(
 
       // Retry on certain errors
       if (CONFIG.ENABLE_RETRIES && retryAttempt < CONFIG.MAX_RETRIES) {
-        logInfo(`  ⏳ Waiting ${CONFIG.RETRY_DELAY / 1000}s before retry...`, logFile);
+        logInfo(
+          `  ⏳ Waiting ${CONFIG.RETRY_DELAY / 1000}s before retry...`,
+          logFile
+        );
         await sleep(CONFIG.RETRY_DELAY);
         return fetchInstitutionData(institution, retryAttempt + 1, logFile);
       }
@@ -239,8 +243,9 @@ async function fetchInstitutionData(
       if (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT') {
         errorMessage = `Timeout after ${CONFIG.TIMEOUT / 60000} minutes`;
       } else if (error.response) {
-        errorMessage = error.response.data?.message ||
-                      `HTTP ${error.response.status}: ${error.response.statusText}`;
+        errorMessage =
+          error.response.data?.message ||
+          `HTTP ${error.response.status}: ${error.response.statusText}`;
       } else if (error.request) {
         errorMessage = 'No response from server';
       } else {
@@ -256,9 +261,14 @@ async function fetchInstitutionData(
     if (
       CONFIG.ENABLE_RETRIES &&
       retryAttempt < CONFIG.MAX_RETRIES &&
-      (errorMessage.includes('timeout') || errorMessage.includes('ECONNREFUSED') || errorMessage.includes('No response'))
+      (errorMessage.includes('timeout') ||
+        errorMessage.includes('ECONNREFUSED') ||
+        errorMessage.includes('No response'))
     ) {
-      logInfo(`  ⏳ Waiting ${CONFIG.RETRY_DELAY / 1000}s before retry...`, logFile);
+      logInfo(
+        `  ⏳ Waiting ${CONFIG.RETRY_DELAY / 1000}s before retry...`,
+        logFile
+      );
       await sleep(CONFIG.RETRY_DELAY);
       return fetchInstitutionData(institution, retryAttempt + 1, logFile);
     }
@@ -300,11 +310,17 @@ async function main() {
   logInfo(`Log file: ${logFilePath}`, logFile);
   logInfo('', logFile);
   logInfo('CONFIGURATION:', logFile);
-  logInfo(`  - Timeout per institution: ${CONFIG.TIMEOUT / 60000} minutes`, logFile);
+  logInfo(
+    `  - Timeout per institution: ${CONFIG.TIMEOUT / 60000} minutes`,
+    logFile
+  );
   logInfo(`  - Page size: ${CONFIG.PAGE_SIZE}`, logFile);
   logInfo(`  - Max retries: ${CONFIG.MAX_RETRIES}`, logFile);
   logInfo(`  - Retry enabled: ${CONFIG.ENABLE_RETRIES}`, logFile);
-  logInfo(`  - Pause between institutions: ${CONFIG.PAUSE_BETWEEN_INSTITUTIONS / 1000}s`, logFile);
+  logInfo(
+    `  - Pause between institutions: ${CONFIG.PAUSE_BETWEEN_INSTITUTIONS / 1000}s`,
+    logFile
+  );
   logDivider('=', 80, logFile);
   logInfo('', logFile);
 
@@ -370,17 +386,20 @@ async function main() {
     stats.totalDuration += result.duration || 0;
 
     // Show running progress
-    const progressPct = ((i + 1) / institutions.length * 100).toFixed(1);
+    const progressPct = (((i + 1) / institutions.length) * 100).toFixed(1);
     logInfo(
       `📈 Progress: ${i + 1}/${institutions.length} (${progressPct}%) | ` +
-      `✅ ${stats.successful} | ❌ ${stats.failed} | ⏭️ ${stats.skipped}`,
+        `✅ ${stats.successful} | ❌ ${stats.failed} | ⏭️ ${stats.skipped}`,
       logFile
     );
 
     // Pause between institutions (except for the last one)
     if (i < institutions.length - 1) {
       const pauseSeconds = CONFIG.PAUSE_BETWEEN_INSTITUTIONS / 1000;
-      logInfo(`⏳ Pausing ${pauseSeconds}s before next institution...\n`, logFile);
+      logInfo(
+        `⏳ Pausing ${pauseSeconds}s before next institution...\n`,
+        logFile
+      );
       await sleep(CONFIG.PAUSE_BETWEEN_INSTITUTIONS);
     }
   }
@@ -401,10 +420,17 @@ async function main() {
   logInfo(`✅ Successfully fetched: ${stats.successful}`, logFile);
   logInfo(`❌ Failed: ${stats.failed}`, logFile);
   logInfo(`⏭️  Skipped (no identifier): ${stats.skipped}`, logFile);
-  logInfo(`👥 Total employees fetched: ${stats.totalEmployees.toLocaleString()}`, logFile);
+  logInfo(
+    `👥 Total employees fetched: ${stats.totalEmployees.toLocaleString()}`,
+    logFile
+  );
 
-  const avgFetchTime = stats.successful > 0 ? stats.totalDuration / stats.successful : 0;
-  logInfo(`⏱️  Average fetch time: ${formatDuration(Math.floor(avgFetchTime))}`, logFile);
+  const avgFetchTime =
+    stats.successful > 0 ? stats.totalDuration / stats.successful : 0;
+  logInfo(
+    `⏱️  Average fetch time: ${formatDuration(Math.floor(avgFetchTime))}`,
+    logFile
+  );
   logDivider('=', 80, logFile);
 
   // ============================================================================
@@ -416,7 +442,7 @@ async function main() {
     logDivider('-', 80, logFile);
 
     const successfulResults = results
-      .filter(r => r.success)
+      .filter((r) => r.success)
       .sort((a, b) => (b.employeeCount || 0) - (a.employeeCount || 0));
 
     successfulResults.forEach((r, i) => {
@@ -427,7 +453,7 @@ async function main() {
 
       logInfo(
         `${String(i + 1).padStart(3)}. ${r.institutionName.padEnd(50)} | ` +
-        `${employeeCountStr} employees | ${durationStr}${pagesStr}${skippedStr}`,
+          `${employeeCountStr} employees | ${durationStr}${pagesStr}${skippedStr}`,
         logFile
       );
     });
@@ -441,10 +467,15 @@ async function main() {
     logInfo('❌ FAILED FETCHES:', logFile);
     logDivider('-', 80, logFile);
 
-    const failedResults = results.filter(r => !r.success && r.error !== 'No identifier available');
+    const failedResults = results.filter(
+      (r) => !r.success && r.error !== 'No identifier available'
+    );
 
     failedResults.forEach((r, i) => {
-      const retryInfo = r.retryAttempt && r.retryAttempt > 0 ? ` (after ${r.retryAttempt} retries)` : '';
+      const retryInfo =
+        r.retryAttempt && r.retryAttempt > 0
+          ? ` (after ${r.retryAttempt} retries)`
+          : '';
       logInfo(`${String(i + 1).padStart(3)}. ${r.institutionName}`, logFile);
       logInfo(`     Error: ${r.error}${retryInfo}`, logFile);
     });
@@ -458,7 +489,9 @@ async function main() {
     logInfo('⏭️  SKIPPED INSTITUTIONS (No identifier):', logFile);
     logDivider('-', 80, logFile);
 
-    const skippedResults = results.filter(r => r.error === 'No identifier available');
+    const skippedResults = results.filter(
+      (r) => r.error === 'No identifier available'
+    );
 
     skippedResults.forEach((r, i) => {
       logInfo(`${String(i + 1).padStart(3)}. ${r.institutionName}`, logFile);
@@ -476,8 +509,14 @@ async function main() {
     logDivider('=', 80, logFile);
     logInfo('📊 DATABASE STATISTICS', logFile);
     logDivider('=', 80, logFile);
-    logInfo(`Total employees in database: ${totalEmployeesInDb.toLocaleString()}`, logFile);
-    logInfo(`Total institutions in database: ${totalInstitutionsInDb}`, logFile);
+    logInfo(
+      `Total employees in database: ${totalEmployeesInDb.toLocaleString()}`,
+      logFile
+    );
+    logInfo(
+      `Total institutions in database: ${totalInstitutionsInDb}`,
+      logFile
+    );
     logDivider('=', 80, logFile);
   } catch (error) {
     logError(`Failed to get database statistics: ${error}`, logFile);

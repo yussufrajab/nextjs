@@ -1,4 +1,5 @@
 # aaPanel Configuration Guide for CSMS
+
 ## Serving Next.js App via https://test.zanajira.go.tz/
 
 This guide will help you configure aaPanel to serve your Next.js application through a custom domain with SSL.
@@ -28,6 +29,7 @@ This guide will help you configure aaPanel to serve your Next.js application thr
 3. Save and wait for DNS propagation (5-30 minutes)
 
 4. Verify DNS propagation:
+
    ```bash
    # Run this on your local machine or server
    nslookup test.zanajira.go.tz
@@ -183,6 +185,7 @@ server {
 Before setting up SSL, test that the reverse proxy works:
 
 1. **Test from command line**:
+
    ```bash
    curl -H "Host: test.zanajira.go.tz" http://102.207.206.28/
    # Should return your Next.js app HTML
@@ -246,11 +249,13 @@ If you have a certificate from your organization:
 Your Next.js app needs to know it's running behind a proxy:
 
 1. **Edit your .env file**:
+
    ```bash
    nano /home/latest/.env
    ```
 
 2. **Add or update these variables**:
+
    ```env
    # Application URL
    NEXT_PUBLIC_APP_URL=https://test.zanajira.go.tz
@@ -313,6 +318,7 @@ curl -v https://test.zanajira.go.tz/ 2>&1 | grep -E "SSL|Server|HTTP"
 ### Issue: DNS not resolving
 
 **Solution**:
+
 ```bash
 # Clear local DNS cache
 sudo systemd-resolve --flush-caches
@@ -329,6 +335,7 @@ nslookup test.zanajira.go.tz 8.8.8.8
 **Cause**: Nginx can't reach the Next.js app on port 9002
 
 **Solution**:
+
 ```bash
 # Check if app is running
 pm2 status
@@ -350,6 +357,7 @@ pm2 logs csms-app --lines 50
 **Cause**: Request taking too long
 
 **Solution**: Increase timeout in Nginx configuration:
+
 ```nginx
 proxy_connect_timeout 300s;
 proxy_send_timeout 300s;
@@ -359,6 +367,7 @@ proxy_read_timeout 300s;
 ### Issue: SSL Certificate Error
 
 **Solution**:
+
 ```bash
 # Check certificate expiry
 echo | openssl s_client -servername test.zanajira.go.tz -connect 102.207.206.28:443 2>/dev/null | openssl x509 -noout -dates
@@ -372,6 +381,7 @@ echo | openssl s_client -servername test.zanajira.go.tz -connect 102.207.206.28:
 **Cause**: Assets loading via HTTP instead of HTTPS
 
 **Solution**:
+
 1. Check NEXTAUTH_URL in .env is HTTPS
 2. Ensure all assets use relative URLs
 3. Check browser console for specific mixed content
@@ -379,6 +389,7 @@ echo | openssl s_client -servername test.zanajira.go.tz -connect 102.207.206.28:
 ### Issue: File Upload Not Working
 
 **Solution**: Increase client body size in Nginx:
+
 ```nginx
 client_max_body_size 50M;  # Adjust as needed
 ```
@@ -388,6 +399,7 @@ client_max_body_size 50M;  # Adjust as needed
 **Cause**: WebSocket headers not forwarded
 
 **Solution**: Ensure these headers are in Nginx config:
+
 ```nginx
 proxy_set_header Upgrade $http_upgrade;
 proxy_set_header Connection 'upgrade';
@@ -398,16 +410,19 @@ proxy_set_header Connection 'upgrade';
 ## Monitoring and Maintenance
 
 ### Check Nginx Access Logs
+
 ```bash
 tail -f /www/wwwlogs/test.zanajira.go.tz.log
 ```
 
 ### Check Nginx Error Logs
+
 ```bash
 tail -f /www/wwwlogs/test.zanajira.go.tz.error.log
 ```
 
 ### Monitor Application
+
 ```bash
 pm2 monit
 ```
@@ -417,6 +432,7 @@ pm2 monit
 Let's Encrypt certificates expire every 90 days. aaPanel should auto-renew them.
 
 **Verify auto-renewal is configured**:
+
 - aaPanel usually has this enabled by default
 - Check: aaPanel → Cron → Look for SSL renewal task
 
@@ -500,6 +516,7 @@ location /api/auth/login {
 **Logs**: /www/wwwlogs/test.zanajira.go.tz.log
 
 **Useful Commands**:
+
 ```bash
 # Check DNS
 dig test.zanajira.go.tz +short

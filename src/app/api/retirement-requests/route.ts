@@ -8,38 +8,51 @@ export async function GET(req: Request) {
     const userRole = searchParams.get('userRole');
     const userInstitutionId = searchParams.get('userInstitutionId');
 
-    let whereClause: any = {};
+    const whereClause: any = {};
 
     // Apply institution filtering based on role
     if (shouldApplyInstitutionFilter(userRole, userInstitutionId)) {
-      console.log(`Applying institution filter for role ${userRole} with institutionId ${userInstitutionId}`);
+      console.log(
+        `Applying institution filter for role ${userRole} with institutionId ${userInstitutionId}`
+      );
       whereClause.Employee = {
-        institutionId: userInstitutionId
+        institutionId: userInstitutionId,
       };
     } else {
-      console.log(`Role ${userRole} is a CSC role - showing all retirement requests across institutions`);
+      console.log(
+        `Role ${userRole} is a CSC role - showing all retirement requests across institutions`
+      );
     }
 
-    const requests = await db.retirementRequest.findMany({
-      where: whereClause,
-      include: {
-        Employee: {
-          select: {
-            id: true,
-            name: true,
-            zanId: true,
-            Institution: { select: { id: true, name: true } }
-          }
+    const requests = await db.retirementRequest
+      .findMany({
+        where: whereClause,
+        include: {
+          Employee: {
+            select: {
+              id: true,
+              name: true,
+              zanId: true,
+              Institution: { select: { id: true, name: true } },
+            },
+          },
+          User_RetirementRequest_submittedByIdToUser: {
+            select: { id: true, name: true, username: true },
+          },
+          User_RetirementRequest_reviewedByIdToUser: {
+            select: { id: true, name: true, username: true },
+          },
         },
-        User_RetirementRequest_submittedByIdToUser: { select: { id: true, name: true, username: true } },
-        User_RetirementRequest_reviewedByIdToUser: { select: { id: true, name: true, username: true } }
-      },
-      orderBy: { createdAt: 'desc' }
-    }).catch(() => []);
+        orderBy: { createdAt: 'desc' },
+      })
+      .catch(() => []);
 
     return NextResponse.json({ success: true, data: requests });
   } catch (error) {
-    console.error("[RETIREMENT_REQUESTS_GET]", error);
-    return NextResponse.json({ success: false, message: 'Internal Server Error' }, { status: 500 });
+    console.error('[RETIREMENT_REQUESTS_GET]', error);
+    return NextResponse.json(
+      { success: false, message: 'Internal Server Error' },
+      { status: 500 }
+    );
   }
 }

@@ -53,25 +53,32 @@ interface FetchResult {
 }
 
 async function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function fetchPhotosForInstitution(institution: Institution): Promise<FetchResult> {
+async function fetchPhotosForInstitution(
+  institution: Institution
+): Promise<FetchResult> {
   const startTime = Date.now();
 
   console.log(`\n📸 Processing: ${institution.name}`);
-  console.log(`   Vote: ${institution.voteNumber || 'N/A'} | TIN: ${institution.tinNumber || 'N/A'}`);
+  console.log(
+    `   Vote: ${institution.voteNumber || 'N/A'} | TIN: ${institution.tinNumber || 'N/A'}`
+  );
 
   try {
-    const response = await fetch(`${API_BASE_URL}/api/hrims/fetch-photos-by-institution`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        institutionId: institution.id,
-      }),
-    });
+    const response = await fetch(
+      `${API_BASE_URL}/api/hrims/fetch-photos-by-institution`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          institutionId: institution.id,
+        }),
+      }
+    );
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -109,7 +116,9 @@ async function fetchPhotosForInstitution(institution: Institution): Promise<Fetc
             if (data.type === 'progress') {
               latestProgress = data;
               // Show inline progress
-              process.stdout.write(`\r   Progress: ${data.current}/${data.total} - ${data.employee || 'Processing...'}`);
+              process.stdout.write(
+                `\r   Progress: ${data.current}/${data.total} - ${data.employee || 'Processing...'}`
+              );
             } else if (data.type === 'complete') {
               finalResult = data;
               console.log(''); // New line after progress
@@ -122,7 +131,9 @@ async function fetchPhotosForInstitution(institution: Institution): Promise<Fetc
 
       if (finalResult && finalResult.success) {
         const summary = finalResult.data.summary;
-        console.log(`   ✅ Complete: ${summary.success} success, ${summary.failed} failed, ${summary.skipped} skipped`);
+        console.log(
+          `   ✅ Complete: ${summary.success} success, ${summary.failed} failed, ${summary.skipped} skipped`
+        );
         console.log(`   ⏱️  Duration: ${(duration / 1000).toFixed(1)}s`);
 
         return {
@@ -142,7 +153,9 @@ async function fetchPhotosForInstitution(institution: Institution): Promise<Fetc
 
       if (result.success) {
         const summary = result.data.summary;
-        console.log(`   ✅ Complete: ${summary.success} success, ${summary.failed} failed, ${summary.skipped} skipped`);
+        console.log(
+          `   ✅ Complete: ${summary.success} success, ${summary.failed} failed, ${summary.skipped} skipped`
+        );
         console.log(`   ⏱️  Duration: ${(duration / 1000).toFixed(1)}s`);
 
         return {
@@ -158,7 +171,8 @@ async function fetchPhotosForInstitution(institution: Institution): Promise<Fetc
     }
   } catch (error) {
     const duration = Date.now() - startTime;
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error';
 
     console.log(`   ❌ Failed: ${errorMessage}`);
     console.log(`   ⏱️  Duration: ${(duration / 1000).toFixed(1)}s`);
@@ -206,14 +220,18 @@ async function main() {
     for (let i = 0; i < institutions.length; i++) {
       const institution = institutions[i];
 
-      console.log(`\n[${i + 1}/${institutions.length}] Institution: ${institution.name}`);
+      console.log(
+        `\n[${i + 1}/${institutions.length}] Institution: ${institution.name}`
+      );
 
       const result = await fetchPhotosForInstitution(institution);
       results.push(result);
 
       // Add delay before next institution (except for the last one)
       if (i < institutions.length - 1) {
-        console.log(`   ⏳ Waiting ${DELAY_BETWEEN_INSTITUTIONS / 1000}s before next institution...`);
+        console.log(
+          `   ⏳ Waiting ${DELAY_BETWEEN_INSTITUTIONS / 1000}s before next institution...`
+        );
         await sleep(DELAY_BETWEEN_INSTITUTIONS);
       }
     }
@@ -224,21 +242,35 @@ async function main() {
     console.log('\n📊 FINAL SUMMARY\n');
     console.log('─'.repeat(80));
 
-    const successCount = results.filter(r => r.status === 'success').length;
-    const failedCount = results.filter(r => r.status === 'failed').length;
-    const skippedCount = results.filter(r => r.status === 'skipped').length;
+    const successCount = results.filter((r) => r.status === 'success').length;
+    const failedCount = results.filter((r) => r.status === 'failed').length;
+    const skippedCount = results.filter((r) => r.status === 'skipped').length;
 
     console.log(`Total Institutions: ${institutions.length}`);
     console.log(`  ✅ Success: ${successCount}`);
     console.log(`  ❌ Failed: ${failedCount}`);
     console.log(`  ⊘  Skipped: ${skippedCount}`);
-    console.log(`  ⏱️  Total Duration: ${(totalDuration / 1000 / 60).toFixed(1)} minutes\n`);
+    console.log(
+      `  ⏱️  Total Duration: ${(totalDuration / 1000 / 60).toFixed(1)} minutes\n`
+    );
 
     // Employee-level summary
-    const totalEmployees = results.reduce((sum, r) => sum + (r.summary?.total || 0), 0);
-    const totalSuccess = results.reduce((sum, r) => sum + (r.summary?.success || 0), 0);
-    const totalFailed = results.reduce((sum, r) => sum + (r.summary?.failed || 0), 0);
-    const totalSkipped = results.reduce((sum, r) => sum + (r.summary?.skipped || 0), 0);
+    const totalEmployees = results.reduce(
+      (sum, r) => sum + (r.summary?.total || 0),
+      0
+    );
+    const totalSuccess = results.reduce(
+      (sum, r) => sum + (r.summary?.success || 0),
+      0
+    );
+    const totalFailed = results.reduce(
+      (sum, r) => sum + (r.summary?.failed || 0),
+      0
+    );
+    const totalSkipped = results.reduce(
+      (sum, r) => sum + (r.summary?.skipped || 0),
+      0
+    );
 
     console.log('Employee Photo Results:');
     console.log(`  Total Employees Processed: ${totalEmployees}`);
@@ -250,8 +282,8 @@ async function main() {
     if (failedCount > 0) {
       console.log('❌ Failed Institutions:');
       results
-        .filter(r => r.status === 'failed')
-        .forEach(r => {
+        .filter((r) => r.status === 'failed')
+        .forEach((r) => {
           console.log(`   • ${r.institutionName}: ${r.error}`);
         });
       console.log('');
@@ -259,7 +291,6 @@ async function main() {
 
     console.log('═'.repeat(80));
     console.log('\n✅ Bulk photo fetch completed!\n');
-
   } catch (error) {
     console.error('\n🚨 Fatal error:', error);
     process.exit(1);

@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Search, Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
@@ -16,11 +16,11 @@ interface EmployeeSearchProps {
   disabled?: boolean;
 }
 
-export function EmployeeSearch({ 
-  onEmployeeFound, 
-  onClear, 
-  placeholder = "Enter ZANID or Payroll Number",
-  disabled = false 
+export function EmployeeSearch({
+  onEmployeeFound,
+  onClear,
+  placeholder = 'Enter ZANID or Payroll Number',
+  disabled = false,
 }: EmployeeSearchProps) {
   const { role, user } = useAuth();
   const [searchValue, setSearchValue] = useState('');
@@ -29,9 +29,9 @@ export function EmployeeSearch({
   const handleSearch = async () => {
     if (!searchValue.trim()) {
       toast({
-        title: "Search Required",
-        description: "Please enter a ZANID or Payroll Number",
-        variant: "destructive",
+        title: 'Search Required',
+        description: 'Please enter a ZANID or Payroll Number',
+        variant: 'destructive',
       });
       return;
     }
@@ -39,14 +39,21 @@ export function EmployeeSearch({
     setIsSearching(true);
     try {
       const cleanSearchValue = searchValue.trim();
-      console.log(`Searching for employee with identifier: ${cleanSearchValue}`);
-      
+      console.log(
+        `Searching for employee with identifier: ${cleanSearchValue}`
+      );
+
       const userParams = `&userRole=${role}&userInstitutionId=${user?.institutionId || ''}`;
-      const response = await fetch(`/api/employees/search?identifier=${cleanSearchValue}${userParams}`);
-      
+      const response = await fetch(
+        `/api/employees/search?identifier=${cleanSearchValue}${userParams}`
+      );
+
       if (!response.ok) {
         const errorText = await response.text();
-        console.error(`Search failed with status ${response.status}:`, errorText);
+        console.error(
+          `Search failed with status ${response.status}:`,
+          errorText
+        );
         throw new Error(`Search failed: ${response.status}`);
       }
 
@@ -59,38 +66,42 @@ export function EmployeeSearch({
 
       if (!result.data || result.data.length === 0) {
         toast({
-          title: "Employee Not Found",
-          description: "No employee found with the provided ZANID or Payroll Number",
-          variant: "destructive",
+          title: 'Employee Not Found',
+          description:
+            'No employee found with the provided ZANID or Payroll Number',
+          variant: 'destructive',
         });
         return;
       }
 
       if (result.data.length > 1) {
         toast({
-          title: "Multiple Employees Found",
-          description: "Multiple employees found. Please use a more specific identifier.",
-          variant: "destructive",
+          title: 'Multiple Employees Found',
+          description:
+            'Multiple employees found. Please use a more specific identifier.',
+          variant: 'destructive',
         });
         return;
       }
 
       const employee = result.data[0];
       console.log('Found employee:', employee);
-      
+
       onEmployeeFound(employee);
-      
+
       toast({
-        title: "Employee Found",
+        title: 'Employee Found',
         description: `Found: ${employee.name}`,
       });
-
     } catch (error) {
       console.error('Error searching for employee:', error);
       toast({
-        title: "Search Error",
-        description: error instanceof Error ? error.message : "Failed to search for employee",
-        variant: "destructive",
+        title: 'Search Error',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'Failed to search for employee',
+        variant: 'destructive',
       });
     } finally {
       setIsSearching(false);
@@ -123,8 +134,8 @@ export function EmployeeSearch({
             disabled={disabled || isSearching}
             className="flex-1"
           />
-          <Button 
-            onClick={handleSearch} 
+          <Button
+            onClick={handleSearch}
             disabled={disabled || isSearching || !searchValue.trim()}
             size="default"
           >
@@ -136,8 +147,8 @@ export function EmployeeSearch({
             {isSearching ? 'Searching...' : 'Search'}
           </Button>
           {searchValue && (
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={handleClear}
               disabled={disabled || isSearching}
               size="default"

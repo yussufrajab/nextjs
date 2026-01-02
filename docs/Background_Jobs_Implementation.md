@@ -68,12 +68,13 @@ export function createRedisConnection(): Redis {
     host: process.env.REDIS_HOST || 'localhost',
     port: parseInt(process.env.REDIS_PORT || '6379'),
     maxRetriesPerRequest: null, // Required for BullMQ
-    enableReadyCheck: false,    // Required for BullMQ
+    enableReadyCheck: false, // Required for BullMQ
   });
 }
 ```
 
 **Key Features:**
+
 - Singleton pattern for connection management
 - Configurable via environment variables
 - BullMQ-optimized configuration
@@ -105,6 +106,7 @@ export interface HRIMSSyncProgress {
 ```
 
 **Key Features:**
+
 - Type-safe job data and progress interfaces
 - Queue singleton with automatic initialization
 - Configurable retry strategy (3 attempts, exponential backoff)
@@ -122,8 +124,8 @@ export function createHRIMSSyncWorker(): Worker {
       connection: createRedisConnection(),
       concurrency: 2, // Process 2 jobs in parallel
       limiter: {
-        max: 5,        // Max 5 jobs
-        duration: 60000 // per minute
+        max: 5, // Max 5 jobs
+        duration: 60000, // per minute
       },
     }
   );
@@ -133,6 +135,7 @@ export function createHRIMSSyncWorker(): Worker {
 ```
 
 **Key Features:**
+
 - Parallel job processing (concurrency: 2)
 - Rate limiting (5 jobs/minute)
 - Real-time progress updates via `job.updateProgress()`
@@ -140,6 +143,7 @@ export function createHRIMSSyncWorker(): Worker {
 - Graceful shutdown support
 
 **Job Processing Flow:**
+
 1. Validate job data
 2. Fetch employees from HRIMS API (paginated)
 3. Update progress after each page
@@ -152,6 +156,7 @@ export function createHRIMSSyncWorker(): Worker {
 #### Create Job: `POST /api/hrims/fetch-by-institution`
 
 **Request:**
+
 ```json
 {
   "institutionId": "uuid",
@@ -162,6 +167,7 @@ export function createHRIMSSyncWorker(): Worker {
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -173,6 +179,7 @@ export function createHRIMSSyncWorker(): Worker {
 ```
 
 **Behavior:**
+
 - Validates input data
 - Verifies institution exists
 - Creates job and adds to queue
@@ -183,6 +190,7 @@ export function createHRIMSSyncWorker(): Worker {
 **Response:** Server-Sent Events (SSE) stream
 
 **Event Types:**
+
 ```
 event: status
 data: {"jobId": "...", "state": "active", "progress": {...}}
@@ -201,6 +209,7 @@ data: {"timestamp": 1234567890}
 ```
 
 **Features:**
+
 - Real-time progress streaming
 - Heartbeat every 15 seconds
 - Automatic cleanup on client disconnect
@@ -209,6 +218,7 @@ data: {"timestamp": 1234567890}
 ### 5. Frontend Integration
 
 **Job Creation:**
+
 ```typescript
 // Step 1: Create job
 const response = await fetch('/api/hrims/fetch-by-institution', {
@@ -217,14 +227,15 @@ const response = await fetch('/api/hrims/fetch-by-institution', {
     institutionId,
     identifierType,
     voteNumber,
-    pageSize: 100
-  })
+    pageSize: 100,
+  }),
 });
 
 const { jobId } = await response.json();
 ```
 
 **Progress Tracking:**
+
 ```typescript
 // Step 2: Connect to SSE for progress
 const sseResponse = await fetch(`/api/hrims/sync-status/${jobId}`);
@@ -259,6 +270,7 @@ npm run worker
 ```
 
 Output:
+
 ```
 🚀 Starting HRIMS Sync Worker...
 ✅ HRIMS Sync Worker started
@@ -293,6 +305,7 @@ REDIS_PORT=6379
 ## Benefits
 
 ### Before (Blocking Requests)
+
 - ❌ HTTP requests blocked for 5-15 minutes
 - ❌ Client timeout risks
 - ❌ No scalability for concurrent syncs
@@ -300,6 +313,7 @@ REDIS_PORT=6379
 - ⚠️ Progress visible but connection must stay open
 
 ### After (Background Jobs)
+
 - ✅ Immediate response (job queued)
 - ✅ No timeout issues
 - ✅ Scalable (2 concurrent jobs, rate limited)
@@ -419,6 +433,7 @@ GET bull:hrims-sync:job-id
 ## Files Modified/Created
 
 ### Created Files
+
 - `/home/latest/src/lib/redis.ts` - Redis connection
 - `/home/latest/src/lib/jobs/hrims-sync-queue.ts` - Job queue
 - `/home/latest/src/lib/jobs/hrims-sync-worker.ts` - Worker process
@@ -426,6 +441,7 @@ GET bull:hrims-sync:job-id
 - `/home/latest/scripts/start-worker.ts` - Worker startup script
 
 ### Modified Files
+
 - `/home/latest/src/app/api/hrims/fetch-by-institution/route.ts` - Job-based API
 - `/home/latest/src/app/dashboard/admin/fetch-data/page.tsx` - Frontend integration
 - `/home/latest/package.json` - Added worker script
@@ -433,6 +449,7 @@ GET bull:hrims-sync:job-id
 ## Future Enhancements
 
 ### Potential Improvements
+
 1. **Job Prioritization** - Priority queue for urgent syncs
 2. **Scheduled Jobs** - Cron-based automatic syncs
 3. **Job Analytics** - Dashboard for job statistics
@@ -442,6 +459,7 @@ GET bull:hrims-sync:job-id
 7. **Retry Configuration** - Per-job retry settings
 
 ### Monitoring & Observability
+
 1. **Prometheus Metrics** - Job success rate, duration, queue length
 2. **Grafana Dashboards** - Visual monitoring
 3. **Error Tracking** - Sentry integration
@@ -452,6 +470,7 @@ GET bull:hrims-sync:job-id
 The background job queue system successfully eliminates blocking HTTP requests while providing real-time progress tracking. The architecture is scalable, fault-tolerant, and production-ready.
 
 **Key Achievements:**
+
 - ✅ Non-blocking architecture
 - ✅ Real-time progress tracking via SSE
 - ✅ Fault-tolerant with automatic retries
@@ -460,6 +479,7 @@ The background job queue system successfully eliminates blocking HTTP requests w
 - ✅ Full build success with no errors
 
 **Next Steps:**
+
 1. Deploy Redis to production
 2. Start worker process on server
 3. Monitor job processing in production

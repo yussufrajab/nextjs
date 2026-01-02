@@ -7,7 +7,7 @@ import { useApiInit } from '@/hooks/use-api-init';
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isHydrated, setIsHydrated] = useState(false);
   const { user, role, isAuthenticated } = useAuthStore(); // Access store to ensure it's initialized
-  
+
   // Initialize API client with stored tokens
   useApiInit();
 
@@ -19,7 +19,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   if (!isHydrated) {
     // Optionally, return a loading state or null
-    return null; 
+    return null;
   }
 
   return <>{children}</>;

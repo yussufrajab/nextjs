@@ -32,6 +32,7 @@ Photos are stored as **base64-encoded data URIs** directly in the PostgreSQL dat
 ### Why Data URIs?
 
 **Advantages:**
+
 - ✅ **Simple**: One database query gets everything including photo
 - ✅ **Fast**: No additional HTTP requests for images
 - ✅ **Atomic**: Photo and employee data stay in sync
@@ -40,6 +41,7 @@ Photos are stored as **base64-encoded data URIs** directly in the PostgreSQL dat
 - ✅ **No file system**: No need to manage file storage/cleanup
 
 **Considerations:**
+
 - ⚠️ Average photo size: 50-200 KB (base64 encoded)
 - ⚠️ Base64 encoding increases size by ~33%
 - ⚠️ Stored in database, not file system
@@ -105,23 +107,23 @@ export async function POST(
   // Get employee data
   const employee = await prisma.employee.findUnique({
     where: { id: employeeId },
-    select: { id: true, payrollNumber: true, name: true }
+    select: { id: true, payrollNumber: true, name: true },
   });
 
   // Fetch photo from HRIMS
   const photoPayload = {
-    RequestId: "203",
-    SearchCriteria: employee.payrollNumber
+    RequestId: '203',
+    SearchCriteria: employee.payrollNumber,
   };
 
   const response = await fetch(`${HRIMS_URL}/Employees`, {
     method: 'POST',
     headers: {
-      'ApiKey': HRIMS_API_KEY,
-      'Token': HRIMS_TOKEN,
+      ApiKey: HRIMS_API_KEY,
+      Token: HRIMS_TOKEN,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(photoPayload)
+    body: JSON.stringify(photoPayload),
   });
 
   const photoData = await response.json();
@@ -136,12 +138,12 @@ export async function POST(
   // Store in database
   await prisma.employee.update({
     where: { id: employeeId },
-    data: { profileImageUrl: photoDataUri }
+    data: { profileImageUrl: photoDataUri },
   });
 
   return NextResponse.json({
     success: true,
-    data: { photoUrl: photoDataUri }
+    data: { photoUrl: photoDataUri },
   });
 }
 ```
@@ -207,15 +209,16 @@ When a user views an employee profile, the system automatically checks if a phot
 useEffect(() => {
   const fetchPhotoFromHRIMS = async () => {
     // Check if photo is missing or not in base64 format
-    if ((!profileImageUrl || !profileImageUrl.startsWith('data:image'))
-        && emp.payrollNumber
-        && !isFetchingPhoto) {
-
+    if (
+      (!profileImageUrl || !profileImageUrl.startsWith('data:image')) &&
+      emp.payrollNumber &&
+      !isFetchingPhoto
+    ) {
       setIsFetchingPhoto(true);
 
       try {
         const response = await fetch(`/api/employees/${emp.id}/fetch-photo`, {
-          method: 'POST'
+          method: 'POST',
         });
 
         const result = await response.json();
@@ -225,8 +228,8 @@ useEffect(() => {
 
           if (!result.data.alreadyExists) {
             toast({
-              title: "Photo Updated",
-              description: "Profile photo fetched from HRIMS successfully"
+              title: 'Photo Updated',
+              description: 'Profile photo fetched from HRIMS successfully',
             });
           }
         }
@@ -243,6 +246,7 @@ useEffect(() => {
 ```
 
 **This means:**
+
 - **First view**: Automatically fetches photo from HRIMS and stores in database
 - **Subsequent views**: Loads instantly from database (no HRIMS call needed)
 - **All users**: HRO, HHRMD, DO, CSCS, Employee, etc. can trigger auto-fetch
@@ -347,12 +351,14 @@ LIMIT 100;
 **File**: `/src/app/dashboard/profile/page.tsx`
 
 **Lines 107-108**: State management
+
 ```tsx
 const [profileImageUrl, setProfileImageUrl] = useState(emp.profileImageUrl);
 const [isFetchingPhoto, setIsFetchingPhoto] = useState(false);
 ```
 
 **Lines 114-156**: Auto-fetch logic
+
 ```tsx
 useEffect(() => {
   const fetchPhotoFromHRIMS = async () => {
@@ -363,11 +369,14 @@ useEffect(() => {
 ```
 
 **Lines 187-197**: Display component
+
 ```tsx
 <div className="relative inline-block">
   <Avatar className="h-24 w-24 mb-4 shadow-md mx-auto">
     <AvatarImage
-      src={profileImageUrl || `https://placehold.co/100x100.png?text=${initials}`}
+      src={
+        profileImageUrl || `https://placehold.co/100x100.png?text=${initials}`
+      }
       alt={emp.name}
     />
     <AvatarFallback>{getInitials(emp.name)}</AvatarFallback>
@@ -385,6 +394,7 @@ useEffect(() => {
 **File**: `/src/app/api/employees/[id]/fetch-photo/route.ts`
 
 Key functions:
+
 - Validates employee exists and has payroll number
 - Checks if photo already exists (skips if present)
 - Fetches from HRIMS using RequestId 203
@@ -397,6 +407,7 @@ Key functions:
 **File**: `/scripts/fetch-all-photos.ts`
 
 Features:
+
 - Processes all institutions or specific institution
 - Fetches photos for all employees in database
 - Configurable delay between requests
@@ -404,6 +415,7 @@ Features:
 - JSON export of results
 
 **Usage**:
+
 ```bash
 # Fetch for all institutions
 npx tsx scripts/fetch-all-photos.ts --skip-existing
@@ -421,26 +433,27 @@ npx tsx scripts/fetch-all-photos.ts --dry-run
 
 ### Loading Time
 
-| Scenario | Time | Description |
-|----------|------|-------------|
-| Photo exists in DB | 50-100ms | Single database query |
-| Photo needs fetching | 300-500ms | DB query + HRIMS fetch + DB update |
-| Bulk fetch (100 employees) | ~10 seconds | With 100ms delay between requests |
-| Bulk fetch (1000 employees) | ~1.7 minutes | With 100ms delay between requests |
+| Scenario                    | Time         | Description                        |
+| --------------------------- | ------------ | ---------------------------------- |
+| Photo exists in DB          | 50-100ms     | Single database query              |
+| Photo needs fetching        | 300-500ms    | DB query + HRIMS fetch + DB update |
+| Bulk fetch (100 employees)  | ~10 seconds  | With 100ms delay between requests  |
+| Bulk fetch (1000 employees) | ~1.7 minutes | With 100ms delay between requests  |
 
 ### Storage Impact
 
-| Metric | Value |
-|--------|-------|
-| Average photo size (original) | ~40-150 KB |
-| Average photo size (base64) | ~50-200 KB |
-| Base64 overhead | +33% |
-| Storage per 1000 employees | ~50-200 MB |
-| Storage per 10,000 employees | ~500 MB - 2 GB |
+| Metric                        | Value          |
+| ----------------------------- | -------------- |
+| Average photo size (original) | ~40-150 KB     |
+| Average photo size (base64)   | ~50-200 KB     |
+| Base64 overhead               | +33%           |
+| Storage per 1000 employees    | ~50-200 MB     |
+| Storage per 10,000 employees  | ~500 MB - 2 GB |
 
 ### Network Efficiency
 
 **Traditional Approach** (file-based):
+
 ```
 1. GET /api/employees          → 200 KB (employee data)
 2. GET /images/emp1.jpg         → 50 KB
@@ -450,12 +463,14 @@ Total: 4 requests, 350 KB
 ```
 
 **Data URI Approach** (current):
+
 ```
 1. GET /api/employees           → 350 KB (employee data + photos)
 Total: 1 request, 350 KB
 ```
 
 **Benefits:**
+
 - Fewer HTTP requests = Faster loading
 - No image server required
 - Works offline once loaded
@@ -470,6 +485,7 @@ Total: 1 request, 350 KB
 **URL**: http://10.0.225.14:9002/dashboard/admin/get-photo
 
 **Features:**
+
 - Select institution from list
 - Bulk fetch photos for all employees
 - Real-time progress tracking
@@ -482,6 +498,7 @@ Total: 1 request, 350 KB
 **File**: `/scripts/fetch-all-photos.ts`
 
 **Command Line Options:**
+
 ```bash
 --institution-id <id>    # Specific institution only
 --skip-existing          # Skip employees with photos
@@ -491,6 +508,7 @@ Total: 1 request, 350 KB
 ```
 
 **Examples:**
+
 ```bash
 # Fetch all missing photos
 npx tsx scripts/fetch-all-photos.ts --skip-existing
@@ -505,6 +523,7 @@ npx tsx scripts/fetch-all-photos.ts --institution-id abc123 --delay 200
 ### Scheduled Execution
 
 **Cron Job** (Daily at 2 AM):
+
 ```bash
 # Edit crontab
 crontab -e
@@ -514,6 +533,7 @@ crontab -e
 ```
 
 **PM2 Schedule**:
+
 ```bash
 pm2 start scripts/fetch-photos.sh --name photo-fetch --cron "0 2 * * *" --no-autorestart
 ```
@@ -527,16 +547,20 @@ pm2 start scripts/fetch-photos.sh --name photo-fetch --cron "0 2 * * *" --no-aut
 **Possible Causes:**
 
 1. **Photo not in database**
+
    ```sql
    SELECT profileImageUrl FROM "Employee" WHERE id = 'employee-id';
    ```
+
    Solution: Wait for auto-fetch or manually trigger fetch
 
 2. **Invalid data URI format**
+
    ```sql
    SELECT profileImageUrl FROM "Employee"
    WHERE profileImageUrl NOT LIKE 'data:image%';
    ```
+
    Solution: Re-fetch from HRIMS
 
 3. **Employee has no payroll number**
@@ -548,6 +572,7 @@ pm2 start scripts/fetch-photos.sh --name photo-fetch --cron "0 2 * * *" --no-aut
 ### HRIMS Connection Issues
 
 **Check HRIMS connectivity:**
+
 ```bash
 curl -X POST http://10.0.217.11:8135/api/Employees \
   -H "ApiKey: YOUR_API_KEY" \
@@ -557,6 +582,7 @@ curl -X POST http://10.0.217.11:8135/api/Employees \
 ```
 
 **Common Issues:**
+
 - HRIMS server down or unreachable
 - Invalid API credentials
 - Network firewall blocking requests
@@ -565,11 +591,13 @@ curl -X POST http://10.0.217.11:8135/api/Employees \
 ### Photo Fetch Fails
 
 **Check API logs:**
+
 ```bash
 pm2 logs csms-dev | grep -i "photo"
 ```
 
 **Check database:**
+
 ```sql
 SELECT id, name, payrollNumber,
        CASE
@@ -584,6 +612,7 @@ WHERE id = 'employee-id';
 ### Script Issues
 
 **Test script:**
+
 ```bash
 # Dry run
 npx tsx scripts/fetch-all-photos.ts --dry-run --batch-size 5
@@ -608,6 +637,7 @@ cat logs/photo-fetch-*.json | jq '.summary'
 **Request**: No body required
 
 **Response**:
+
 ```json
 {
   "success": true,
@@ -629,6 +659,7 @@ cat logs/photo-fetch-*.json | jq '.summary'
 **Description**: Bulk fetches photos for all employees in an institution
 
 **Request**:
+
 ```json
 {
   "institutionId": "abc123"
@@ -636,6 +667,7 @@ cat logs/photo-fetch-*.json | jq '.summary'
 ```
 
 **Response**:
+
 ```json
 {
   "success": true,
@@ -701,18 +733,19 @@ cat logs/photo-fetch-*.json | jq '.summary'
 
 ## Changelog
 
-| Date | Version | Changes |
-|------|---------|---------|
-| 2025-12-09 | 1.0.0 | Initial documentation |
-| 2025-12-09 | 1.1.0 | Added auto-fetch feature |
-| 2025-12-09 | 1.2.0 | Added bulk fetch script |
-| 2025-12-09 | 1.3.0 | Fixed Next.js 15 params compatibility |
+| Date       | Version | Changes                               |
+| ---------- | ------- | ------------------------------------- |
+| 2025-12-09 | 1.0.0   | Initial documentation                 |
+| 2025-12-09 | 1.1.0   | Added auto-fetch feature              |
+| 2025-12-09 | 1.2.0   | Added bulk fetch script               |
+| 2025-12-09 | 1.3.0   | Fixed Next.js 15 params compatibility |
 
 ---
 
 ## Support
 
 For questions or issues:
+
 1. Check this documentation first
 2. Review logs: `logs/photo-fetch-*.json`
 3. Check PM2 logs: `pm2 logs csms-dev`

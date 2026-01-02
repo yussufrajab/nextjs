@@ -17,6 +17,7 @@ This directory contains the database backup and restore scripts for the CSMS (Ci
 **Total Institutions:** 72
 
 ### Backup Contents:
+
 - ✅ All tables (Employee, Institution, User, etc.)
 - ✅ All data and relationships
 - ✅ Indexes and constraints
@@ -86,12 +87,14 @@ PGPASSWORD=Mamlaka2020 pg_dump -h localhost -U postgres -d nody -F c -b -v -f "$
 1. **Data Loss Warning:** Restoring will **COMPLETELY REPLACE** the current database with the backup data. All current data will be lost!
 
 2. **Prisma Compatibility:** This database is managed by Prisma ORM. After restoring, you may need to run Prisma migrations:
+
    ```bash
    cd /home/nextjs
    npx prisma migrate deploy
    ```
 
 3. **Active Connections:** The restore script automatically terminates active database connections. Make sure to stop the application before restoring:
+
    ```bash
    pm2 stop csms-dev
    ```
@@ -115,6 +118,7 @@ pg_restore -l /home/nextjs/beky8/nody_backup_20251207_045738.backup | grep TABLE
 ## 📋 Database Schema (Prisma-managed)
 
 Main tables included in the backup:
+
 - **Employee** - Employee records (9,101 records)
 - **Institution** - Organizations (72 records)
 - **User** - System users
@@ -133,19 +137,25 @@ Main tables included in the backup:
 ## 🆘 Troubleshooting
 
 ### Issue: "database is being accessed by other users"
+
 **Solution:** Stop the application first:
+
 ```bash
 pm2 stop csms-dev
 ```
 
 ### Issue: "pg_restore: error: could not execute query"
+
 **Solution:** Make sure PostgreSQL is running and accessible:
+
 ```bash
 sudo systemctl status postgresql
 ```
 
 ### Issue: "permission denied"
+
 **Solution:** Make sure the restore script is executable:
+
 ```bash
 chmod +x /home/nextjs/beky8/restore-database.sh
 ```
@@ -153,6 +163,7 @@ chmod +x /home/nextjs/beky8/restore-database.sh
 ## 📞 Support
 
 For issues or questions:
+
 1. Check the error messages in the restore output
 2. Verify PostgreSQL is running: `sudo systemctl status postgresql`
 3. Check database credentials in `/home/nextjs/.env`

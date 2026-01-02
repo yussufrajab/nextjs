@@ -2,7 +2,11 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
-import { logRequestApproval, logRequestRejection, getClientIp } from '@/lib/audit-logger';
+import {
+  logRequestApproval,
+  logRequestRejection,
+  getClientIp,
+} from '@/lib/audit-logger';
 
 const updateSchema = z.object({
   status: z.string().optional(),
@@ -13,7 +17,10 @@ const updateSchema = z.object({
   commissionDecisionDate: z.string().datetime().optional(),
 });
 
-async function handleUpdate(req: Request, { params }: { params: Promise<{ id: string }> }) {
+async function handleUpdate(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     const { id } = await params;
     const body = await req.json();
@@ -29,13 +36,13 @@ async function handleUpdate(req: Request, { params }: { params: Promise<{ id: st
       data: validatedData,
       include: {
         Employee: { select: { name: true, zanId: true } },
-      }
+      },
     });
 
     if (validatedData.status) {
       const userToNotify = await db.user.findUnique({
         where: { employeeId: updatedRequest.employeeId },
-        select: { id: true }
+        select: { id: true },
       });
 
       if (userToNotify) {
@@ -53,13 +60,15 @@ async function handleUpdate(req: Request, { params }: { params: Promise<{ id: st
       if (validatedData.reviewedById && validatedData.status) {
         const reviewer = await db.user.findUnique({
           where: { id: validatedData.reviewedById },
-          select: { username: true, role: true }
+          select: { username: true, role: true },
         });
 
         if (reviewer) {
           // Check if status contains "Approved" or "Rejected" (case-insensitive)
           const statusLower = validatedData.status.toLowerCase();
-          const isApproval = statusLower.includes('approved') && !statusLower.includes('rejected');
+          const isApproval =
+            statusLower.includes('approved') &&
+            !statusLower.includes('rejected');
           const isRejection = statusLower.includes('rejected');
 
           console.log('[AUDIT] Confirmation status update:', {
@@ -105,7 +114,7 @@ async function handleUpdate(req: Request, { params }: { params: Promise<{ id: st
 
     return NextResponse.json(updatedRequest);
   } catch (error) {
-    console.error("[CONFIRMATION_PUT]", error);
+    console.error('[CONFIRMATION_PUT]', error);
     if (error instanceof z.ZodError) {
       return new NextResponse(JSON.stringify(error.errors), { status: 400 });
     }

@@ -63,7 +63,7 @@ function parseArguments(): MigrationConfig {
     skipMigrated: true,
     preserveBackup: false,
     retryAttempts: 3,
-    delayMs: 50
+    delayMs: 50,
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -130,7 +130,9 @@ Examples:
 }
 
 // Convert base64 data URI to buffer
-function base64ToBuffer(dataUri: string): { buffer: Buffer; mimeType: string } | null {
+function base64ToBuffer(
+  dataUri: string
+): { buffer: Buffer; mimeType: string } | null {
   try {
     // Extract base64 data and mime type
     const matches = dataUri.match(/^data:([^;]+);base64,(.+)$/);
@@ -156,7 +158,7 @@ function getExtensionFromMimeType(mimeType: string): string {
     'image/jpg': 'jpg',
     'image/png': 'png',
     'image/gif': 'gif',
-    'image/webp': 'webp'
+    'image/webp': 'webp',
   };
 
   return mimeMap[mimeType.toLowerCase()] || 'jpg';
@@ -181,12 +183,15 @@ async function uploadPhotoToMinIO(
       return `/api/files/employee-photos/${fileName}`;
     } catch (error) {
       if (attempt === retryAttempts) {
-        console.error(`Failed to upload after ${retryAttempts} attempts:`, error);
+        console.error(
+          `Failed to upload after ${retryAttempts} attempts:`,
+          error
+        );
         return null;
       }
 
       // Wait before retry
-      await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+      await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
     }
   }
 
@@ -195,7 +200,12 @@ async function uploadPhotoToMinIO(
 
 // Migrate a single employee photo
 async function migrateEmployeePhoto(
-  employee: { id: string; name: string; payrollNumber: string; profileImageUrl: string },
+  employee: {
+    id: string;
+    name: string;
+    payrollNumber: string;
+    profileImageUrl: string;
+  },
   config: MigrationConfig
 ): Promise<MigrationResult> {
   const result: MigrationResult = {
@@ -203,12 +213,15 @@ async function migrateEmployeePhoto(
     employeeName: employee.name,
     payrollNumber: employee.payrollNumber,
     status: 'failed',
-    oldUrl: employee.profileImageUrl
+    oldUrl: employee.profileImageUrl,
   };
 
   try {
     // Check if already migrated (URL doesn't start with data:image)
-    if (config.skipMigrated && !employee.profileImageUrl.startsWith('data:image')) {
+    if (
+      config.skipMigrated &&
+      !employee.profileImageUrl.startsWith('data:image')
+    ) {
       result.status = 'skipped';
       result.error = 'Already migrated to MinIO';
       return result;
@@ -255,17 +268,16 @@ async function migrateEmployeePhoto(
           // For now, we'll just update the main field
         }
       : {
-          profileImageUrl: minioUrl
+          profileImageUrl: minioUrl,
         };
 
     await prisma.employee.update({
       where: { id: employee.id },
-      data: updateData
+      data: updateData,
     });
 
     result.status = 'success';
     return result;
-
   } catch (error) {
     result.status = 'failed';
     result.error = error instanceof Error ? error.message : String(error);
@@ -282,7 +294,9 @@ async function migratePhotos() {
 
   // Print configuration
   console.log('📋 Configuration:');
-  console.log(`   Batch size: ${config.batchSize === 0 ? 'All' : config.batchSize}`);
+  console.log(
+    `   Batch size: ${config.batchSize === 0 ? 'All' : config.batchSize}`
+  );
   console.log(`   Dry run: ${config.dryRun}`);
   console.log(`   Skip migrated: ${config.skipMigrated}`);
   console.log(`   Preserve backup: ${config.preserveBackup}`);
@@ -293,13 +307,13 @@ async function migratePhotos() {
   const whereClause = config.skipMigrated
     ? {
         profileImageUrl: {
-          startsWith: 'data:image'
-        }
+          startsWith: 'data:image',
+        },
       }
     : {
         profileImageUrl: {
-          not: null
-        }
+          not: null,
+        },
       };
 
   // First, count total photos to migrate
@@ -329,14 +343,17 @@ async function migratePhotos() {
   while (true) {
     // Check if we've reached the batch size limit
     if (config.batchSize > 0 && processedCount >= config.batchSize) {
-      console.log(`\n⚠️  Batch size limit (${config.batchSize}) reached. Stopping.`);
+      console.log(
+        `\n⚠️  Batch size limit (${config.batchSize}) reached. Stopping.`
+      );
       break;
     }
 
     // Fetch next batch
-    const batchTake = config.batchSize > 0
-      ? Math.min(pageSize, config.batchSize - processedCount)
-      : pageSize;
+    const batchTake =
+      config.batchSize > 0
+        ? Math.min(pageSize, config.batchSize - processedCount)
+        : pageSize;
 
     const employees = await prisma.employee.findMany({
       where: whereClause,
@@ -344,13 +361,13 @@ async function migratePhotos() {
         id: true,
         name: true,
         payrollNumber: true,
-        profileImageUrl: true
+        profileImageUrl: true,
       },
       take: batchTake,
       ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
       orderBy: {
-        id: 'asc'
-      }
+        id: 'asc',
+      },
     });
 
     // If no more employees, break
@@ -363,7 +380,9 @@ async function migratePhotos() {
       const employee = employees[i];
       processedCount++;
 
-      process.stdout.write(`   [${processedCount}/${totalCount}] 📸 Migrating photo for ${employee.name} (${employee.payrollNumber})...`);
+      process.stdout.write(
+        `   [${processedCount}/${totalCount}] 📸 Migrating photo for ${employee.name} (${employee.payrollNumber})...`
+      );
 
       const result = await migrateEmployeePhoto(employee, config);
       results.push(result);
@@ -381,7 +400,7 @@ async function migratePhotos() {
 
       // Delay between migrations to avoid overwhelming the system
       if (config.delayMs > 0) {
-        await new Promise(resolve => setTimeout(resolve, config.delayMs));
+        await new Promise((resolve) => setTimeout(resolve, config.delayMs));
       }
     }
 
@@ -418,7 +437,7 @@ async function migratePhotos() {
     failed: failedCount,
     skipped: skippedCount,
     results,
-    duration
+    duration,
   };
 
   await mkdir('logs', { recursive: true });
@@ -428,21 +447,24 @@ async function migratePhotos() {
   console.log(`💾 Results saved to: ${logFileName}\n`);
 
   if (failedCount > 0) {
-    console.log('⚠️  Some photos failed to migrate. Check the log file for details.');
+    console.log(
+      '⚠️  Some photos failed to migrate. Check the log file for details.'
+    );
     console.log('   You can re-run the script to retry failed migrations.\n');
   }
 
   if (!config.dryRun && successCount > 0) {
     console.log('✨ Migration completed successfully!');
-    console.log('   Photos are now stored in MinIO and served from /api/files/employee-photos/\n');
+    console.log(
+      '   Photos are now stored in MinIO and served from /api/files/employee-photos/\n'
+    );
   }
 
   await prisma.$disconnect();
 }
 
 // Run migration
-migratePhotos()
-  .catch((error) => {
-    console.error('❌ Migration script failed:', error);
-    process.exit(1);
-  });
+migratePhotos().catch((error) => {
+  console.error('❌ Migration script failed:', error);
+  process.exit(1);
+});

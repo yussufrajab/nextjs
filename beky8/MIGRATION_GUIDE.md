@@ -1,11 +1,13 @@
 # Three-Tier Architecture Migration Guide
 
 ## Overview
+
 This document outlines the migration from a monolithic Next.js application to a proper three-tier architecture where the Next.js frontend communicates with the Spring Boot backend.
 
 ## Architecture Change
 
 ### Before (Monolithic)
+
 ```
 Next.js Application
 ├── Frontend (React Components)
@@ -14,6 +16,7 @@ Next.js Application
 ```
 
 ### After (Three-Tier)
+
 ```
 Tier 1: Next.js Frontend (Presentation Layer)
     ↓ HTTP/REST API calls
@@ -25,12 +28,14 @@ Tier 3: PostgreSQL Database (Data Layer)
 ## Changes Made
 
 ### 1. Environment Configuration
+
 - **File**: `.env`
 - **Changes**:
   - Added `NEXT_PUBLIC_API_URL=http://localhost:8080/api`
   - Added `NEXT_PUBLIC_BACKEND_URL=http://localhost:8080`
 
 ### 2. API Client Implementation
+
 - **File**: `src/lib/api-client.ts`
 - **Purpose**: Centralized API communication with Spring Boot backend
 - **Features**:
@@ -41,6 +46,7 @@ Tier 3: PostgreSQL Database (Data Layer)
   - Request/response interceptors
 
 ### 3. Authentication System Update
+
 - **File**: `src/store/auth-store.ts`
 - **Changes**:
   - Updated to use Spring Boot login endpoint
@@ -49,59 +55,67 @@ Tier 3: PostgreSQL Database (Data Layer)
   - Backend-compatible user data format
 
 ### 4. API Initialization
+
 - **File**: `src/hooks/use-api-init.ts`
 - **Purpose**: Initialize API client with stored tokens
 - **File**: `src/store/auth-provider.tsx`
 - **Changes**: Added API initialization to app startup
 
 ### 5. API Routes Disabled
+
 - **Action**: Renamed `src/app/api/` to `src/app/api-disabled/`
 - **Purpose**: Prevent conflicts and force migration to backend APIs
 
 ### 6. Backend Configuration
+
 - **File**: `src/lib/backend-config.ts`
 - **Purpose**: Map frontend routes to backend endpoints
 
 ## API Endpoint Mapping
 
 ### Authentication
-| Frontend (Old) | Backend (New) | Status |
-|---------------|---------------|---------|
-| `/api/auth/login` | `/api/auth/login` | ✅ Implemented |
-| `/api/auth/logout` | `/api/auth/logout` | ✅ Implemented |
-| N/A | `/api/auth/refresh` | ✅ Implemented |
+
+| Frontend (Old)     | Backend (New)       | Status         |
+| ------------------ | ------------------- | -------------- |
+| `/api/auth/login`  | `/api/auth/login`   | ✅ Implemented |
+| `/api/auth/logout` | `/api/auth/logout`  | ✅ Implemented |
+| N/A                | `/api/auth/refresh` | ✅ Implemented |
 
 ### Employees
-| Frontend (Old) | Backend (New) | Status |
-|---------------|---------------|---------|
-| `/api/employees` | `/api/employees` | ✅ Implemented |
-| `/api/employees/search` | `/api/employees/search` | ⚠️ Needs Implementation |
+
+| Frontend (Old)                  | Backend (New)                   | Status                  |
+| ------------------------------- | ------------------------------- | ----------------------- |
+| `/api/employees`                | `/api/employees`                | ✅ Implemented          |
+| `/api/employees/search`         | `/api/employees/search`         | ⚠️ Needs Implementation |
 | `/api/employees/urgent-actions` | `/api/employees/urgent-actions` | ⚠️ Needs Implementation |
 
 ### Requests
-| Frontend (Old) | Backend (New) | Status |
-|---------------|---------------|---------|
-| `/api/confirmations` | `/api/confirmation-requests` | ✅ Implemented |
-| `/api/promotions` | `/api/promotion-requests` | ✅ Implemented |
-| `/api/lwop` | `/api/lwop-requests` | ✅ Implemented |
-| `/api/cadre-change` | `/api/cadre-change-requests` | ✅ Implemented |
-| `/api/retirement` | `/api/retirement-requests` | ✅ Implemented |
-| `/api/resignation` | `/api/resignation-requests` | ✅ Implemented |
+
+| Frontend (Old)           | Backend (New)                     | Status         |
+| ------------------------ | --------------------------------- | -------------- |
+| `/api/confirmations`     | `/api/confirmation-requests`      | ✅ Implemented |
+| `/api/promotions`        | `/api/promotion-requests`         | ✅ Implemented |
+| `/api/lwop`              | `/api/lwop-requests`              | ✅ Implemented |
+| `/api/cadre-change`      | `/api/cadre-change-requests`      | ✅ Implemented |
+| `/api/retirement`        | `/api/retirement-requests`        | ✅ Implemented |
+| `/api/resignation`       | `/api/resignation-requests`       | ✅ Implemented |
 | `/api/service-extension` | `/api/service-extension-requests` | ✅ Implemented |
-| `/api/termination` | `/api/termination-requests` | ✅ Implemented |
+| `/api/termination`       | `/api/termination-requests`       | ✅ Implemented |
 
 ### Other Endpoints
-| Frontend (Old) | Backend (New) | Status |
-|---------------|---------------|---------|
-| `/api/complaints` | `/api/complaints` | ✅ Implemented |
-| `/api/institutions` | `/api/institutions` | ✅ Implemented |
-| `/api/users` | `/api/users` | ✅ Implemented |
+
+| Frontend (Old)           | Backend (New)               | Status         |
+| ------------------------ | --------------------------- | -------------- |
+| `/api/complaints`        | `/api/complaints`           | ✅ Implemented |
+| `/api/institutions`      | `/api/institutions`         | ✅ Implemented |
+| `/api/users`             | `/api/users`                | ✅ Implemented |
 | `/api/dashboard/summary` | `/api/dashboard/statistics` | ✅ Implemented |
-| `/api/reports` | `/api/reports/generate` | ✅ Implemented |
+| `/api/reports`           | `/api/reports/generate`     | ✅ Implemented |
 
 ## Migration Progress
 
 ### ✅ Completed
+
 1. **API Client Setup** - Centralized backend communication
 2. **Authentication Migration** - JWT-based auth with Spring Boot
 3. **Environment Configuration** - Backend URLs configured
@@ -109,11 +123,13 @@ Tier 3: PostgreSQL Database (Data Layer)
 5. **API Routes Disabled** - Prevented conflicts
 
 ### 🔄 In Progress
+
 1. **Page-by-Page Migration** - Updating individual pages to use API client
 2. **Error Handling** - Standardizing error responses
 3. **Loading States** - Updating loading indicators
 
 ### ⚠️ Needs Backend Implementation
+
 1. **Employee Search** - `/api/employees/search?zanId=xxx`
 2. **Urgent Actions** - `/api/employees/urgent-actions`
 3. **File Upload** - `/api/files/upload`
@@ -126,22 +142,24 @@ Tier 3: PostgreSQL Database (Data Layer)
 ### For Frontend Developers
 
 1. **Update Component API Calls**:
+
    ```typescript
    // Old way
    const response = await fetch('/api/employees');
-   
+
    // New way
    import { apiClient } from '@/lib/api-client';
    const response = await apiClient.getEmployees();
    ```
 
 2. **Handle API Response Format**:
+
    ```typescript
    // Backend returns ApiResponse<T>
    if (response.success && response.data) {
      setEmployees(response.data);
    } else {
-     toast({ title: "Error", description: response.message });
+     toast({ title: 'Error', description: response.message });
    }
    ```
 
@@ -164,6 +182,7 @@ Tier 3: PostgreSQL Database (Data Layer)
 ## Testing the Migration
 
 ### 1. Start Backend
+
 ```bash
 cd backend
 ./mvnw spring-boot:run
@@ -171,6 +190,7 @@ cd backend
 ```
 
 ### 2. Start Frontend
+
 ```bash
 cd frontend
 npm run dev
@@ -178,12 +198,14 @@ npm run dev
 ```
 
 ### 3. Test Authentication
+
 1. Go to http://localhost:9002/login
 2. Login with existing credentials
 3. Verify JWT token is stored
 4. Check network tab for backend API calls
 
 ### 4. Test API Endpoints
+
 1. Navigate to dashboard - should call `/api/dashboard/statistics`
 2. Try to view employees - should call `/api/employees`
 3. Submit a request - should call appropriate backend endpoint
@@ -211,6 +233,7 @@ npm run dev
    - Check for missing required fields
 
 ### Network Debugging
+
 - Use browser DevTools Network tab
 - Look for calls to `localhost:8080/api/*`
 - Check request/response formats

@@ -8,9 +8,9 @@ export const PASSWORD_GRACE_PERIOD_DAYS = 7;
 // Warning levels (days before expiration)
 export const WARNING_LEVELS = {
   LEVEL_1: 14, // 14 days warning
-  LEVEL_2: 7,  // 7 days warning
-  LEVEL_3: 3,  // 3 days warning
-  LEVEL_4: 1,  // 1 day warning
+  LEVEL_2: 7, // 7 days warning
+  LEVEL_3: 3, // 3 days warning
+  LEVEL_4: 1, // 1 day warning
 };
 
 /**
@@ -18,7 +18,9 @@ export const WARNING_LEVELS = {
  * Admins: 60 days, All others: 90 days
  */
 export function getPasswordExpirationDays(role: string): number {
-  return role === 'Admin' ? PASSWORD_EXPIRATION_DAYS_ADMIN : PASSWORD_EXPIRATION_DAYS_STANDARD;
+  return role === 'Admin'
+    ? PASSWORD_EXPIRATION_DAYS_ADMIN
+    : PASSWORD_EXPIRATION_DAYS_STANDARD;
 }
 
 /**
@@ -154,10 +156,18 @@ export function getPasswordExpirationStatus(user: {
   const warningLevel = getWarningLevel(daysUntilExpiration);
 
   return {
-    isExpired: isPasswordExpired(user.passwordExpiresAt, user.gracePeriodStartedAt),
-    isInGracePeriod: isInGracePeriod(user.passwordExpiresAt, user.gracePeriodStartedAt),
+    isExpired: isPasswordExpired(
+      user.passwordExpiresAt,
+      user.gracePeriodStartedAt
+    ),
+    isInGracePeriod: isInGracePeriod(
+      user.passwordExpiresAt,
+      user.gracePeriodStartedAt
+    ),
     daysUntilExpiration,
-    gracePeriodDaysRemaining: getGracePeriodDaysRemaining(user.gracePeriodStartedAt),
+    gracePeriodDaysRemaining: getGracePeriodDaysRemaining(
+      user.gracePeriodStartedAt
+    ),
     passwordExpiresAt: user.passwordExpiresAt,
     gracePeriodStartedAt: user.gracePeriodStartedAt,
     warningLevel,

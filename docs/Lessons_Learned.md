@@ -1,19 +1,20 @@
 # LESSONS LEARNED DOCUMENT
+
 ## CIVIL SERVICE MANAGEMENT SYSTEM (CSMS)
 
 ---
 
 ## Document Control
 
-| Item | Details |
-|------|---------|
-| **Document Title** | Lessons Learned - Civil Service Management System |
-| **Project Name** | Civil Service Management System (CSMS) |
-| **Version** | 1.0 |
-| **Date Prepared** | December 26, 2025 |
-| **Project Duration** | [Start Date] - December 2025 |
-| **Prepared By** | CSMS Development Team |
-| **Reviewed By** | Project Stakeholders |
+| Item                 | Details                                           |
+| -------------------- | ------------------------------------------------- |
+| **Document Title**   | Lessons Learned - Civil Service Management System |
+| **Project Name**     | Civil Service Management System (CSMS)            |
+| **Version**          | 1.0                                               |
+| **Date Prepared**    | December 26, 2025                                 |
+| **Project Duration** | [Start Date] - December 2025                      |
+| **Prepared By**      | CSMS Development Team                             |
+| **Reviewed By**      | Project Stakeholders                              |
 
 ---
 
@@ -72,6 +73,7 @@ The Civil Service Management System (CSMS) was developed to modernize Zanzibar's
 ### 2.1 Scope Summary
 
 **Core Functionality:**
+
 - Employee profile management (synced from HRIMS)
 - 8 request workflow types (Confirmation, Promotion, LWOP, Cadre Change, Retirement, Resignation, Service Extension, Termination/Dismissal)
 - Complaint management system
@@ -80,6 +82,7 @@ The Civil Service Management System (CSMS) was developed to modernize Zanzibar's
 - Document storage and retrieval
 
 **User Base:**
+
 - 9 distinct user roles with different permission levels
 - Multiple government institutions (ministries, departments, agencies)
 - CSC (Civil Service Commission) oversight roles
@@ -119,22 +122,26 @@ Deployment:   aaPanel, PM2, Nginx
 **What We Learned:**
 
 ✅ **Server Components by Default**
+
 - Reduced client-side JavaScript bundle size
 - Improved initial page load performance
 - Required careful thinking about "use client" directive placement
 - Data fetching became simpler with async Server Components
 
 ❌ **Initial Confusion**
+
 - Team needed time to adjust from Pages Router mental model
 - Client vs Server component boundaries took time to understand
 - Some third-party libraries incompatible with Server Components
 
 **Recommendation:**
+
 - Invest in team training before starting App Router projects
 - Create clear guidelines for when to use Client vs Server Components
 - Test third-party library compatibility early
 
 **Code Example - What Worked:**
+
 ```typescript
 // Server Component - Direct database access
 export default async function EmployeesPage() {
@@ -160,6 +167,7 @@ export function EmployeeList({ employees }) {
 **What We Learned:**
 
 ✅ **Advantages:**
+
 - Single codebase eliminated API versioning issues
 - Shared TypeScript types between frontend and API
 - Simplified deployment (one application instead of two)
@@ -167,11 +175,13 @@ export function EmployeeList({ employees }) {
 - Faster development iteration
 
 ❌ **Challenges:**
+
 - Large codebase required careful organization
 - Risk of mixing client and server code without discipline
 - Some developers preferred separate backend for clarity
 
 **Best Practice Established:**
+
 ```
 src/app/api/
 ├── [module]/
@@ -183,6 +193,7 @@ src/app/api/
 ```
 
 **Recommendation:**
+
 - Use consistent naming and folder structure
 - Create shared validation schemas
 - Extract business logic to separate services
@@ -195,6 +206,7 @@ src/app/api/
 **What We Learned:**
 
 ✅ **Strengths:**
+
 - Auto-generated TypeScript types prevented many bugs
 - Migration system tracked database changes reliably
 - Query builder intuitive and safe from SQL injection
@@ -202,6 +214,7 @@ src/app/api/
 - Prisma Studio useful for database inspection
 
 ❌ **Limitations:**
+
 - Complex queries sometimes required raw SQL
 - Eager loading (`include`) could over-fetch data
 - No built-in soft delete (had to implement with `active` field)
@@ -210,30 +223,33 @@ src/app/api/
 **Critical Learning - N+1 Query Problem:**
 
 ❌ **Bad (N+1 queries):**
+
 ```typescript
 // Fetches requests, then makes separate query for each employee
 const requests = await prisma.confirmationRequest.findMany();
 for (const request of requests) {
   const employee = await prisma.employee.findUnique({
-    where: { id: request.employeeId }
+    where: { id: request.employeeId },
   });
 }
 ```
 
 ✅ **Good (single query with include):**
+
 ```typescript
 const requests = await prisma.confirmationRequest.findMany({
   include: {
     employee: {
-      include: { institution: true }
+      include: { institution: true },
     },
     submittedBy: true,
-    reviewedBy: true
-  }
+    reviewedBy: true,
+  },
 });
 ```
 
 **Recommendation:**
+
 - Always use `include` or `select` for relations
 - Profile queries in development
 - Use Prisma's `query` event to log slow queries
@@ -246,30 +262,34 @@ const requests = await prisma.confirmationRequest.findMany({
 **What We Learned:**
 
 ✅ **Type Safety Benefits:**
+
 - Caught errors at compile time instead of runtime
 - Improved IDE autocomplete and refactoring
 - Shared types between frontend and backend
 - Prisma-generated types ensured database type correctness
 
 ❌ **Challenges:**
+
 - Initial learning curve for team members
 - Some developers used `any` to bypass type checking
 - Third-party library types sometimes incomplete
 - Build times increased with large codebase
 
 **Best Practice - Shared Types:**
+
 ```typescript
 // /src/types/requests.ts
 import { Prisma } from '@prisma/client';
 
 // Create type from Prisma query
-export type ConfirmationRequestWithRelations = Prisma.ConfirmationRequestGetPayload<{
-  include: {
-    employee: { include: { institution: true } },
-    submittedBy: true,
-    reviewedBy: true
-  }
-}>;
+export type ConfirmationRequestWithRelations =
+  Prisma.ConfirmationRequestGetPayload<{
+    include: {
+      employee: { include: { institution: true } };
+      submittedBy: true;
+      reviewedBy: true;
+    };
+  }>;
 
 // API response types
 export interface ConfirmationRequestResponse {
@@ -279,6 +299,7 @@ export interface ConfirmationRequestResponse {
 ```
 
 **Recommendation:**
+
 - Enforce strict TypeScript in tsconfig.json
 - Create shared type definitions
 - Use Zod or similar for runtime validation
@@ -291,6 +312,7 @@ export interface ConfirmationRequestResponse {
 **What We Learned:**
 
 ✅ **Structured Error Responses:**
+
 ```typescript
 // Standard error format
 interface APIError {
@@ -305,18 +327,12 @@ export function handleAPIError(error: unknown): NextResponse {
 
   // Authentication errors
   if (error instanceof AuthenticationError) {
-    return NextResponse.json(
-      { error: error.message },
-      { status: 401 }
-    );
+    return NextResponse.json({ error: error.message }, { status: 401 });
   }
 
   // Authorization errors
   if (error instanceof AuthorizationError) {
-    return NextResponse.json(
-      { error: error.message },
-      { status: 403 }
-    );
+    return NextResponse.json({ error: error.message }, { status: 403 });
   }
 
   // Validation errors
@@ -336,14 +352,12 @@ export function handleAPIError(error: unknown): NextResponse {
   }
 
   // Generic errors
-  return NextResponse.json(
-    { error: 'Internal server error' },
-    { status: 500 }
-  );
+  return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
 }
 ```
 
 **Recommendation:**
+
 - Create custom error classes
 - Use centralized error handling
 - Log errors with context (user ID, request details)
@@ -358,6 +372,7 @@ export function handleAPIError(error: unknown): NextResponse {
 **Decision:** Chose monolithic Next.js application over microservices
 
 **Rationale:**
+
 - Team size and expertise suited monolithic architecture
 - Reduced operational complexity
 - Faster development and deployment
@@ -367,20 +382,24 @@ export function handleAPIError(error: unknown): NextResponse {
 **Outcome:** ✅ **Success**
 
 **What Worked:**
+
 - Simplified deployment (single application)
 - Easier debugging and monitoring
 - Faster feature development
 - No inter-service communication overhead
 
 **Trade-offs:**
+
 - Scaling requires scaling entire application
 - Cannot use different technologies for different modules
 - Single point of failure
 
 **Lesson Learned:**
+
 > For government systems with clear requirements and moderate scale, monolithic architecture often provides the best balance of simplicity and functionality. Microservices add unnecessary complexity unless there's a clear scalability or team organization need.
 
 **When to Reconsider:**
+
 - User base exceeds 10,000 concurrent users
 - Different modules have vastly different scaling requirements
 - Team grows beyond 15 developers
@@ -422,6 +441,7 @@ export function handleAPIError(error: unknown): NextResponse {
    - No single "request status" endpoint
 
    **Alternative Considered:**
+
    ```typescript
    // Single table with type discriminator
    model Request {
@@ -445,6 +465,7 @@ export function handleAPIError(error: unknown): NextResponse {
    - Couldn't track document versions
 
    **Better Approach:**
+
    ```typescript
    model RequestDocument {
      id          String   @id
@@ -474,6 +495,7 @@ export function handleAPIError(error: unknown): NextResponse {
 **Lesson:** RBAC complexity grew faster than anticipated
 
 **Initial Design:**
+
 ```typescript
 // Simple role check
 if (user.role === 'HHRMD') {
@@ -482,19 +504,20 @@ if (user.role === 'HHRMD') {
 ```
 
 **Reality:**
+
 ```typescript
 // Complex permission logic
 const canApprove = (requestType: string, userRole: string) => {
   const permissions = {
-    'CONFIRMATION': ['HHRMD', 'HRMO'],
-    'PROMOTION': ['HHRMD', 'HRMO'],
-    'LWOP': ['HHRMD', 'HRMO'],
-    'CADRE_CHANGE': ['HHRMD', 'HRMO'],
-    'RETIREMENT': ['HHRMD', 'HRMO'],
-    'RESIGNATION': ['HHRMD', 'HRMO'],
-    'SERVICE_EXTENSION': ['HHRMD', 'HRMO'],
-    'TERMINATION': ['HHRMD', 'DO'],  // NOT HRMO
-    'COMPLAINT': ['HHRMD', 'DO']     // NOT HRMO
+    CONFIRMATION: ['HHRMD', 'HRMO'],
+    PROMOTION: ['HHRMD', 'HRMO'],
+    LWOP: ['HHRMD', 'HRMO'],
+    CADRE_CHANGE: ['HHRMD', 'HRMO'],
+    RETIREMENT: ['HHRMD', 'HRMO'],
+    RESIGNATION: ['HHRMD', 'HRMO'],
+    SERVICE_EXTENSION: ['HHRMD', 'HRMO'],
+    TERMINATION: ['HHRMD', 'DO'], // NOT HRMO
+    COMPLAINT: ['HHRMD', 'DO'], // NOT HRMO
   };
   return permissions[requestType]?.includes(userRole) || false;
 };
@@ -509,12 +532,14 @@ const canAccessInstitution = (user: User, institutionId: string) => {
 **What We Learned:**
 
 ❌ **Hardcoded Permission Logic Problems:**
+
 - Scattered across many API routes
 - Difficult to modify permissions
 - No central place to see all permissions
 - Testing permission logic challenging
 
 ✅ **Better Approach Discovered Late:**
+
 ```typescript
 // Permission system with clear definitions
 const PERMISSIONS = {
@@ -523,7 +548,7 @@ const PERMISSIONS = {
   'requests:confirmation:view': ['HRO', 'HHRMD', 'HRMO', 'DO', 'CSCS', 'HRRP'],
 
   'requests:termination:submit': ['HRO'],
-  'requests:termination:approve': ['HHRMD', 'DO'],  // Explicitly no HRMO
+  'requests:termination:approve': ['HHRMD', 'DO'], // Explicitly no HRMO
   'requests:termination:view': ['HRO', 'HHRMD', 'DO', 'CSCS', 'HRRP'],
 
   'complaints:submit': ['EMPLOYEE'],
@@ -534,7 +559,10 @@ const PERMISSIONS = {
   'institutions:manage': ['ADMIN'],
 } as const;
 
-function hasPermission(user: User, permission: keyof typeof PERMISSIONS): boolean {
+function hasPermission(
+  user: User,
+  permission: keyof typeof PERMISSIONS
+): boolean {
   return PERMISSIONS[permission].includes(user.role as any);
 }
 
@@ -545,6 +573,7 @@ if (!hasPermission(user, 'requests:termination:approve')) {
 ```
 
 **Recommendation for Future:**
+
 1. Implement permission-based system (not just role-based)
 2. Store permissions in database for dynamic updates
 3. Create permission middleware for API routes
@@ -558,6 +587,7 @@ if (!hasPermission(user, 'requests:termination:approve')) {
 **What We Learned:**
 
 ✅ **Advantages:**
+
 - Much simpler API than Redux
 - No boilerplate code required
 - TypeScript support excellent
@@ -565,6 +595,7 @@ if (!hasPermission(user, 'requests:termination:approve')) {
 - Easy to integrate with Next.js
 
 **Usage Example:**
+
 ```typescript
 // stores/authStore.ts
 import { create } from 'zustand';
@@ -578,19 +609,22 @@ interface AuthState {
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   setUser: (user) => set({ user }),
-  logout: () => set({ user: null })
+  logout: () => set({ user: null }),
 }));
 ```
 
 ❌ **Challenges:**
+
 - No built-in persistence (had to add manually)
 - Difficult to debug state changes (no Redux DevTools equivalent)
 - Team unfamiliar with Zustand patterns initially
 
 **Lesson Learned:**
+
 > For simple to moderate state management needs, Zustand provides excellent developer experience. For complex state with time-travel debugging needs, Redux might still be better.
 
 **When to Use:**
+
 - ✅ Authentication state
 - ✅ UI state (modals, notifications)
 - ✅ Form state (multi-step forms)
@@ -606,29 +640,34 @@ export const useAuthStore = create<AuthState>((set) => ({
 **Approach:** Modified Scrum with 2-week sprints
 
 **What Worked:**
+
 - ✅ Regular sprint reviews kept stakeholders engaged
 - ✅ Daily standups identified blockers quickly
 - ✅ Sprint retrospectives led to continuous improvement
 - ✅ Backlog prioritization ensured critical features first
 
 **What Didn't Work:**
+
 - ❌ Government stakeholder availability inconsistent
 - ❌ Requirements changed frequently mid-sprint
 - ❌ Estimation accuracy poor initially (improved over time)
 - ❌ Testing often rushed at sprint end
 
 **Adjustments Made:**
+
 - Extended UAT period beyond sprints
 - Added buffer for requirement clarifications
 - Implemented "hardening sprints" for testing
 - Created detailed acceptance criteria upfront
 
 **Lesson Learned:**
+
 > Government projects require more flexibility than typical agile. Build in buffer time and maintain strong documentation even in agile process.
 
 ### 5.2 Code Review Process
 
 **Process Implemented:**
+
 1. All code must be reviewed before merging
 2. Minimum 1 reviewer approval required
 3. Automated tests must pass
@@ -637,12 +676,14 @@ export const useAuthStore = create<AuthState>((set) => ({
 **What We Learned:**
 
 ✅ **Benefits:**
+
 - Caught bugs before production
 - Knowledge sharing across team
 - Consistent code style
 - Improved code quality
 
 ❌ **Challenges:**
+
 - Reviews sometimes bottleneck
 - Senior developers overwhelmed with review requests
 - Some reviews too superficial
@@ -666,6 +707,7 @@ export const useAuthStore = create<AuthState>((set) => ({
    - Approve with minor comments when appropriate
 
 **Recommendation:**
+
 - Use automated tools (ESLint, Prettier) to reduce style debates
 - Set up CI/CD to automate testing and formatting checks
 - Rotate reviewers to spread knowledge
@@ -685,26 +727,31 @@ main (production)
 ```
 
 **What Worked:**
+
 - ✅ Feature branches isolated work
 - ✅ Pull requests enforced code review
 - ✅ Protected main branch prevented accidents
 - ✅ Git tags for releases
 
 **What Didn't Work:**
+
 - ❌ Long-lived feature branches caused merge conflicts
 - ❌ Inconsistent branch naming
 - ❌ Some developers didn't sync with develop regularly
 
 **Improvements Made:**
+
 - Enforced branch naming convention: `type/description`
 - Required daily rebase with develop
 - Set up branch auto-deletion after merge
 - Added pre-commit hooks for linting
 
 **Critical Incident:**
+
 > A developer force-pushed to main branch, overwriting 2 days of work. Led to implementing branch protection rules and removing force-push permissions.
 
 **Lessons:**
+
 1. Set up branch protection from day one
 2. Regular rebasing prevents large merge conflicts
 3. Clear branching strategy documented and enforced
@@ -713,6 +760,7 @@ main (production)
 ### 5.4 Documentation Practices
 
 **Documentation Created:**
+
 1. README.md with setup instructions
 2. CLAUDE.md for AI assistant guidance
 3. API documentation (this document)
@@ -722,18 +770,21 @@ main (production)
 7. Deployment guides
 
 **What Worked:**
+
 - ✅ CLAUDE.md helped maintain consistency
 - ✅ Inline code comments for complex logic
 - ✅ README.md kept up-to-date
 - ✅ API documentation generated from code
 
 **What Didn't Work:**
+
 - ❌ Documentation often out of sync with code
 - ❌ Some docs created after the fact (should be concurrent)
 - ❌ No process to update docs when code changes
 - ❌ Developers reluctant to write docs
 
 **Solutions Found:**
+
 1. **Documentation in Code:**
    - JSDoc comments for functions
    - TypeScript types as documentation
@@ -750,6 +801,7 @@ main (production)
    - Quarterly documentation audit
 
 **Recommendation:**
+
 > Documentation is code. Treat it with same rigor: version control, code review, continuous updates. Automate where possible.
 
 ---
@@ -783,13 +835,14 @@ main (production)
 **Solutions Implemented:**
 
 1. **Robust Error Handling:**
+
 ```typescript
 async function fetchFromHRIMS(endpoint: string, retries = 3): Promise<any> {
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       const response = await fetch(hrimsUrl + endpoint, {
         headers: { Authorization: `Bearer ${apiKey}` },
-        signal: AbortSignal.timeout(30000) // 30s timeout
+        signal: AbortSignal.timeout(30000), // 30s timeout
       });
 
       if (!response.ok) {
@@ -808,6 +861,7 @@ async function fetchFromHRIMS(endpoint: string, retries = 3): Promise<any> {
 ```
 
 2. **Data Validation & Cleaning:**
+
 ```typescript
 function validateAndCleanHRIMSData(data: any): Employee | null {
   // Required fields check
@@ -840,12 +894,13 @@ function validateAndCleanHRIMSData(data: any): Employee | null {
     dateOfBirth: cleanDate(data.dateOfBirth),
     employmentDate: cleanDate(data.employmentDate),
     confirmationDate: cleanDate(data.confirmationDate),
-    retirementDate: cleanDate(data.retirementDate)
+    retirementDate: cleanDate(data.retirementDate),
   };
 }
 ```
 
 3. **Chunked Processing with Progress:**
+
 ```typescript
 // Server-Sent Events for long-running operations
 export async function POST(request: NextRequest) {
@@ -874,7 +929,7 @@ export async function POST(request: NextRequest) {
               await prisma.employee.upsert({
                 where: { zanId: cleaned.zanId },
                 create: cleaned,
-                update: cleaned
+                update: cleaned,
               });
               totalProcessed++;
             }
@@ -884,7 +939,7 @@ export async function POST(request: NextRequest) {
               encoder.encode(
                 `event: progress\ndata: ${JSON.stringify({
                   processed: totalProcessed,
-                  page
+                  page,
                 })}\n\n`
               )
             );
@@ -895,12 +950,11 @@ export async function POST(request: NextRequest) {
 
           // Prevent overwhelming HRIMS
           await sleep(1000);
-
         } catch (error) {
           controller.enqueue(
             encoder.encode(
               `event: error\ndata: ${JSON.stringify({
-                error: error.message
+                error: error.message,
               })}\n\n`
             )
           );
@@ -911,24 +965,25 @@ export async function POST(request: NextRequest) {
       controller.enqueue(
         encoder.encode(
           `event: complete\ndata: ${JSON.stringify({
-            total: totalProcessed
+            total: totalProcessed,
           })}\n\n`
         )
       );
       controller.close();
-    }
+    },
   });
 
   return new Response(stream, {
     headers: {
       'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache'
-    }
+      'Cache-Control': 'no-cache',
+    },
   });
 }
 ```
 
 4. **Split Document Requests:**
+
 ```typescript
 // Instead of fetching all documents at once (timeout risk)
 // Fetch them one type at a time
@@ -938,7 +993,7 @@ async function syncEmployeeDocuments(zanId: string) {
     'ardhilHali',
     'birthCertificate',
     'confirmationLetter',
-    'jobContract'
+    'jobContract',
   ];
 
   for (const docType of documentTypes) {
@@ -949,7 +1004,7 @@ async function syncEmployeeDocuments(zanId: string) {
         const url = await uploadToMinIO(doc, `${zanId}-${docType}.pdf`);
         await prisma.employee.update({
           where: { zanId },
-          data: { [`${docType}Url`]: url }
+          data: { [`${docType}Url`]: url },
         });
       }
 
@@ -990,6 +1045,7 @@ async function syncEmployeeDocuments(zanId: string) {
    - Cache HRIMS data to reduce dependency
 
 **Recommendations:**
+
 - Budget 30-40% more time for external integrations than internal features
 - Set up integration testing environment early
 - Document actual API behavior, not just docs
@@ -1007,6 +1063,7 @@ async function syncEmployeeDocuments(zanId: string) {
 **Problems Discovered:**
 
 1. **Slow Query on Employee Search:**
+
 ```sql
 -- Initial query (no index on name)
 SELECT * FROM "Employee" WHERE name ILIKE '%john%';
@@ -1014,6 +1071,7 @@ SELECT * FROM "Employee" WHERE name ILIKE '%john%';
 ```
 
 **Solution:**
+
 ```sql
 -- Add GIN index for full-text search
 CREATE INDEX idx_employee_name_gin ON "Employee"
@@ -1026,6 +1084,7 @@ WHERE to_tsvector('english', name) @@ to_tsquery('english', 'john');
 ```
 
 2. **Slow Reports with Date Filters:**
+
 ```sql
 -- No index on createdAt
 SELECT * FROM "ConfirmationRequest"
@@ -1034,6 +1093,7 @@ WHERE "createdAt" BETWEEN '2024-01-01' AND '2024-12-31';
 ```
 
 **Solution:**
+
 ```sql
 -- Add B-tree index on timestamp
 CREATE INDEX idx_confirmation_created ON "ConfirmationRequest"("createdAt");
@@ -1041,6 +1101,7 @@ CREATE INDEX idx_confirmation_created ON "ConfirmationRequest"("createdAt");
 ```
 
 3. **Slow Institution Filtering:**
+
 ```sql
 -- No index on institutionId
 SELECT * FROM "Employee" WHERE "institutionId" = 'xxx';
@@ -1048,6 +1109,7 @@ SELECT * FROM "Employee" WHERE "institutionId" = 'xxx';
 ```
 
 **Solution:**
+
 ```sql
 -- Add index on foreign key
 CREATE INDEX idx_employee_institution ON "Employee"("institutionId");
@@ -1055,6 +1117,7 @@ CREATE INDEX idx_employee_institution ON "Employee"("institutionId");
 ```
 
 **Indexes Added:**
+
 ```prisma
 model Employee {
   id            String @id
@@ -1082,9 +1145,11 @@ model ConfirmationRequest {
 ```
 
 **Lesson Learned:**
+
 > Index on columns used in WHERE, JOIN, and ORDER BY clauses. Monitor slow queries and add indexes proactively.
 
 **Best Practices:**
+
 1. Run `EXPLAIN ANALYZE` on complex queries
 2. Monitor query performance in production
 3. Avoid over-indexing (slows writes)
@@ -1104,6 +1169,7 @@ model ConfirmationRequest {
    - Phase 4: New requests start in CSMS
 
 2. **Data Validation:**
+
 ```typescript
 interface MigrationReport {
   totalRecords: number;
@@ -1120,7 +1186,7 @@ async function migrateEmployees(): Promise<MigrationReport> {
     totalRecords: 0,
     successful: 0,
     failed: 0,
-    errors: []
+    errors: [],
   };
 
   const employees = await fetchFromHRIMS();
@@ -1142,7 +1208,7 @@ async function migrateEmployees(): Promise<MigrationReport> {
       report.failed++;
       report.errors.push({
         record: emp,
-        error: error.message
+        error: error.message,
       });
     }
   }
@@ -1158,18 +1224,21 @@ async function migrateEmployees(): Promise<MigrationReport> {
    - Keep old system running in parallel initially
 
 **What Went Wrong:**
+
 - ❌ Some date formats didn't convert properly
 - ❌ Institution mapping mismatches
 - ❌ Duplicate records discovered
 - ❌ Missing required fields in legacy data
 
 **What Went Right:**
+
 - ✅ Comprehensive validation caught issues before production
 - ✅ Detailed error logging helped fix data issues
 - ✅ Test migration on staging environment
 - ✅ Stakeholder communication about data issues
 
 **Recommendation:**
+
 1. Start data analysis early (understand source data quality)
 2. Build migration scripts with validation and reporting
 3. Test migration multiple times in staging
@@ -1182,6 +1251,7 @@ async function migrateEmployees(): Promise<MigrationReport> {
 **Strategy Implemented:**
 
 1. **Automated Backups:**
+
 ```bash
 # Daily full backup
 0 2 * * * pg_dump -U postgres csms_db | gzip > /backups/csms_$(date +\%Y\%m\%d).sql.gz
@@ -1202,9 +1272,11 @@ archive_command = 'cp %p /backups/wal/%f'
    - Measure recovery time (RTO: 2 hours)
 
 **Critical Incident:**
+
 > Power outage caused database corruption. Restored from backup taken 6 hours earlier. Lost 6 hours of data entry. Led to implementing WAL archiving for point-in-time recovery.
 
 **Lessons:**
+
 - Test backups regularly (backup is useless if restore doesn't work)
 - WAL archiving essential for point-in-time recovery
 - Document recovery procedures clearly
@@ -1220,12 +1292,14 @@ archive_command = 'cp %p /backups/wal/%f'
 **Approach:** Iron Session (encrypted cookies) for session management
 
 **What Worked:**
+
 - ✅ Encrypted cookies prevent tampering
 - ✅ Server-side session validation
 - ✅ No need for separate session store (Redis)
 - ✅ Works well with Next.js
 
 **What Didn't Work:**
+
 - ❌ No built-in session timeout
 - ❌ No way to invalidate all user sessions
 - ❌ Single-device only (session not shared across devices)
@@ -1233,6 +1307,7 @@ archive_command = 'cp %p /backups/wal/%f'
 **Improvements Made:**
 
 1. **Session Timeout:**
+
 ```typescript
 interface SessionData {
   user: User;
@@ -1270,11 +1345,13 @@ export async function validateSession(req: NextRequest): Promise<User | null> {
 ```
 
 2. **Password Security:**
+
 ```typescript
 import bcrypt from 'bcryptjs';
 
 // Strong password requirements
-const passwordSchema = z.string()
+const passwordSchema = z
+  .string()
   .min(8, 'Password must be at least 8 characters')
   .regex(/[A-Z]/, 'Password must contain uppercase letter')
   .regex(/[a-z]/, 'Password must contain lowercase letter')
@@ -1296,9 +1373,11 @@ async function verifyPassword(
 ```
 
 **Security Incident:**
+
 > Initial implementation stored passwords with bcrypt rounds = 6 (too weak). Increased to 10. Forced password reset for all users.
 
 **Lessons:**
+
 1. Use established libraries (don't roll your own crypto)
 2. Implement session timeouts from day one
 3. Strong password requirements prevent weak passwords
@@ -1310,6 +1389,7 @@ async function verifyPassword(
 **Lesson:** Authorization logic became scattered across codebase
 
 **Problem:**
+
 ```typescript
 // Authorization logic duplicated in many places
 export async function GET(req: NextRequest) {
@@ -1325,6 +1405,7 @@ export async function GET(req: NextRequest) {
 ```
 
 **Better Approach:**
+
 ```typescript
 // Centralized authorization middleware
 export function requireRole(roles: string[]) {
@@ -1351,6 +1432,7 @@ export async function GET(req: NextRequest) {
 ```
 
 **Institution-Based Access Control:**
+
 ```typescript
 // Check if user can access specific institution
 export function canAccessInstitution(
@@ -1381,6 +1463,7 @@ export async function GET(req: NextRequest) {
 ```
 
 **Recommendation:**
+
 1. Create reusable authorization middleware
 2. Centralize permission logic
 3. Test authorization thoroughly
@@ -1393,6 +1476,7 @@ export async function GET(req: NextRequest) {
 **Validation Strategy:**
 
 1. **Type Validation (Zod):**
+
 ```typescript
 import { z } from 'zod';
 
@@ -1400,9 +1484,22 @@ const createUserSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   username: z.string().min(3, 'Username must be at least 3 characters'),
   email: z.string().email('Invalid email format').optional(),
-  phoneNumber: z.string().regex(/^\d{10}$/, 'Phone must be 10 digits').optional(),
-  role: z.enum(['ADMIN', 'HRO', 'HHRMD', 'HRMO', 'DO', 'PO', 'CSCS', 'HRRP', 'EMPLOYEE']),
-  institutionId: z.string().uuid('Invalid institution ID')
+  phoneNumber: z
+    .string()
+    .regex(/^\d{10}$/, 'Phone must be 10 digits')
+    .optional(),
+  role: z.enum([
+    'ADMIN',
+    'HRO',
+    'HHRMD',
+    'HRMO',
+    'DO',
+    'PO',
+    'CSCS',
+    'HRRP',
+    'EMPLOYEE',
+  ]),
+  institutionId: z.string().uuid('Invalid institution ID'),
 });
 
 export async function POST(req: NextRequest) {
@@ -1414,7 +1511,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         error: 'Validation failed',
-        details: result.error.flatten()
+        details: result.error.flatten(),
       },
       { status: 400 }
     );
@@ -1427,6 +1524,7 @@ export async function POST(req: NextRequest) {
 ```
 
 2. **File Upload Validation:**
+
 ```typescript
 async function validateUploadedFile(file: File) {
   // Check file type
@@ -1444,8 +1542,12 @@ async function validateUploadedFile(file: File) {
   const bytes = new Uint8Array(buffer);
 
   // PDF magic bytes: %PDF
-  if (bytes[0] !== 0x25 || bytes[1] !== 0x50 ||
-      bytes[2] !== 0x44 || bytes[3] !== 0x46) {
+  if (
+    bytes[0] !== 0x25 ||
+    bytes[1] !== 0x50 ||
+    bytes[2] !== 0x44 ||
+    bytes[3] !== 0x46
+  ) {
     throw new Error('File is not a valid PDF');
   }
 
@@ -1454,13 +1556,14 @@ async function validateUploadedFile(file: File) {
 ```
 
 3. **Sanitization:**
+
 ```typescript
 import DOMPurify from 'isomorphic-dompurify';
 
 function sanitizeInput(input: string): string {
   // Remove HTML tags
   const sanitized = DOMPurify.sanitize(input, {
-    ALLOWED_TAGS: []
+    ALLOWED_TAGS: [],
   });
 
   // Trim whitespace
@@ -1480,6 +1583,7 @@ function sanitizeInput(input: string): string {
    - Next.js escapes JSX by default (good)
 
 3. **Path Traversal in File Downloads:**
+
 ```typescript
 // Vulnerable
 app.get('/download/:filename', (req, res) => {
@@ -1502,6 +1606,7 @@ app.get('/download/:filename', (req, res) => {
 ```
 
 **Lessons:**
+
 1. Validate on both client and server (never trust client validation)
 2. Use schema validation libraries (Zod, Yup, Joi)
 3. Sanitize user input before storage and display
@@ -1517,6 +1622,7 @@ app.get('/download/:filename', (req, res) => {
 **Design System:** Tailwind CSS + Radix UI + shadcn/ui
 
 **What Worked:**
+
 - ✅ Rapid prototyping with Tailwind utility classes
 - ✅ Accessible components from Radix UI
 - ✅ Consistent design with shadcn/ui components
@@ -1524,6 +1630,7 @@ app.get('/download/:filename', (req, res) => {
 - ✅ Responsive design easy with Tailwind
 
 **What Didn't Work:**
+
 - ❌ Tailwind class names became very long
 - ❌ Inconsistent spacing and colors initially
 - ❌ Some team members struggled with utility-first CSS
@@ -1532,6 +1639,7 @@ app.get('/download/:filename', (req, res) => {
 **Solutions:**
 
 1. **Design Tokens:**
+
 ```typescript
 // tailwind.config.js
 module.exports = {
@@ -1541,20 +1649,21 @@ module.exports = {
         primary: {
           50: '#f0f9ff',
           // ... government brand colors
-          900: '#0c4a6e'
-        }
+          900: '#0c4a6e',
+        },
       },
       spacing: {
         '72': '18rem',
         '84': '21rem',
-        '96': '24rem'
-      }
-    }
-  }
+        '96': '24rem',
+      },
+    },
+  },
 };
 ```
 
 2. **Component Abstraction:**
+
 ```typescript
 // components/ui/Button.tsx
 export function Button({ variant = 'primary', ...props }: ButtonProps) {
@@ -1583,6 +1692,7 @@ export function Button({ variant = 'primary', ...props }: ButtonProps) {
 **Initial Approach:** Hardcoded strings in components
 
 ❌ **Problem:**
+
 ```typescript
 // Not scalable
 <h1>Confirmation Requests</h1>
@@ -1592,6 +1702,7 @@ export function Button({ variant = 'primary', ...props }: ButtonProps) {
 **Better Approach:** i18n library
 
 ✅ **Solution:**
+
 ```typescript
 // i18n/translations.ts
 export const translations = {
@@ -1643,6 +1754,7 @@ function ConfirmationPage() {
 ```
 
 **Lessons:**
+
 1. Plan for i18n from the start (retrofitting is painful)
 2. Use translation keys, not English strings in code
 3. Keep translations in separate files
@@ -1656,6 +1768,7 @@ function ConfirmationPage() {
 **Best Practices Discovered:**
 
 1. **Client-Side Validation (Instant Feedback):**
+
 ```typescript
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -1683,6 +1796,7 @@ function PromotionForm() {
 ```
 
 2. **Server-Side Validation (Security):**
+
 ```typescript
 export async function POST(req: NextRequest) {
   const body = await req.json();
@@ -1701,6 +1815,7 @@ export async function POST(req: NextRequest) {
 ```
 
 3. **Error Display:**
+
 ```typescript
 function FormError({ error }: { error?: string }) {
   if (!error) return null;
@@ -1714,6 +1829,7 @@ function FormError({ error }: { error?: string }) {
 ```
 
 4. **Loading States:**
+
 ```typescript
 function SubmitButton({ loading }: { loading: boolean }) {
   return (
@@ -1732,6 +1848,7 @@ function SubmitButton({ loading }: { loading: boolean }) {
 ```
 
 **Common Mistakes:**
+
 - ❌ Only validating on client (insecure)
 - ❌ Generic error messages ("Something went wrong")
 - ❌ No loading states (users click multiple times)
@@ -1743,17 +1860,20 @@ function SubmitButton({ loading }: { loading: boolean }) {
 **Approach:** Mobile-first design with Tailwind breakpoints
 
 **What Worked:**
+
 - ✅ Tables collapse to cards on mobile
 - ✅ Navigation becomes hamburger menu on mobile
 - ✅ Forms stack vertically on small screens
 - ✅ Touch-friendly button sizes
 
 **What Didn't Work:**
+
 - ❌ Some complex tables unusable on mobile
 - ❌ PDF preview issues on mobile
 - ❌ Long forms tedious on mobile
 
 **Solutions:**
+
 ```typescript
 // Responsive table
 <div className="hidden md:block">
@@ -1772,6 +1892,7 @@ function SubmitButton({ loading }: { loading: boolean }) {
 ```
 
 **Lesson:**
+
 > Government users often on desktop, but plan for mobile anyway. Some users may access from phones.
 
 ---
@@ -1781,6 +1902,7 @@ function SubmitButton({ loading }: { loading: boolean }) {
 ### 10.1 Testing Strategy
 
 **Testing Pyramid:**
+
 ```
         /\
        /  \
@@ -1795,6 +1917,7 @@ function SubmitButton({ loading }: { loading: boolean }) {
 ```
 
 **What We Implemented:**
+
 - ✅ Unit tests for utility functions
 - ✅ Integration tests for API routes
 - ✅ Manual UAT testing
@@ -1806,6 +1929,7 @@ function SubmitButton({ loading }: { loading: boolean }) {
 **Framework:** Jest + Testing Library
 
 **Example:**
+
 ```typescript
 // lib/utils.test.ts
 import { validateZanID, formatDate } from './utils';
@@ -1839,6 +1963,7 @@ describe('formatDate', () => {
 ```
 
 **Lessons:**
+
 - ✅ Easy to test pure functions
 - ✅ High test coverage for business logic
 - ❌ Mocking Prisma client challenging
@@ -1849,6 +1974,7 @@ describe('formatDate', () => {
 **Approach:** Integration tests for API routes
 
 **Example:**
+
 ```typescript
 // __tests__/api/promotions.test.ts
 import { createMocks } from 'node-mocks-http';
@@ -1863,7 +1989,7 @@ describe('/api/promotions', () => {
         username: 'test-hro',
         role: 'HRO',
         // ...
-      }
+      },
     });
   });
 
@@ -1880,8 +2006,8 @@ describe('/api/promotions', () => {
         employeeId: 'emp-123',
         promotionType: 'Experience-based',
         proposedCadre: 'Senior Officer',
-        documents: ['url1', 'url2', 'url3', 'url4', 'url5']
-      }
+        documents: ['url1', 'url2', 'url3', 'url4', 'url5'],
+      },
     });
 
     const response = await POST(req);
@@ -1899,7 +2025,7 @@ describe('/api/promotions', () => {
         employeeId: 'emp-123',
         promotionType: 'InvalidType',
         // ...
-      }
+      },
     });
 
     const response = await POST(req);
@@ -1909,12 +2035,14 @@ describe('/api/promotions', () => {
 ```
 
 **Challenges:**
+
 - Setting up test database
 - Mocking authentication
 - Cleaning up test data
 - Handling async operations
 
 **Solutions:**
+
 1. Separate test database
 2. Test utilities for authentication mocks
 3. Transaction rollback for isolation
@@ -1923,6 +2051,7 @@ describe('/api/promotions', () => {
 ### 10.4 User Acceptance Testing (UAT)
 
 **Process:**
+
 1. Created comprehensive test cases (see CORRECT_UAT_DOCUMENT.md)
 2. Stakeholders tested each feature
 3. Logged bugs in issue tracker
@@ -1930,18 +2059,21 @@ describe('/api/promotions', () => {
 5. Sign-off from stakeholders
 
 **What Worked:**
+
 - ✅ Detailed test cases caught many issues
 - ✅ Real user feedback valuable
 - ✅ Discovered usability issues
 - ✅ Built stakeholder confidence
 
 **What Didn't Work:**
+
 - ❌ UAT started too late (should be continuous)
 - ❌ Some stakeholders unavailable
 - ❌ Bug fixing rushed at the end
 - ❌ No automated regression testing
 
 **Bugs Found in UAT:**
+
 1. Employee status not updating on approval
 2. File upload failing for certain PDF types
 3. Reports showing incorrect totals
@@ -1949,6 +2081,7 @@ describe('/api/promotions', () => {
 5. Date filters not working correctly
 
 **Lessons:**
+
 1. Start UAT early, not just at the end
 2. Automate repetitive test scenarios
 3. Budget adequate time for bug fixing
@@ -1958,6 +2091,7 @@ describe('/api/promotions', () => {
 ### 10.5 Security Testing
 
 **Testing Performed:**
+
 1. **Authentication Testing:**
    - Invalid credentials rejected
    - Session timeout works
@@ -1978,6 +2112,7 @@ describe('/api/promotions', () => {
    - Found and fixed several issues
 
 **Vulnerabilities Discovered:**
+
 1. Missing rate limiting on login (brute force risk)
 2. Weak password requirements initially
 3. No CSRF protection on some endpoints
@@ -1985,6 +2120,7 @@ describe('/api/promotions', () => {
 5. Missing security headers
 
 **Fixes Implemented:**
+
 ```typescript
 // Rate limiting
 import { Ratelimit } from '@upstash/ratelimit';
@@ -1999,10 +2135,7 @@ export async function POST(req: NextRequest) {
   const { success } = await ratelimit.limit(ip);
 
   if (!success) {
-    return NextResponse.json(
-      { error: 'Too many requests' },
-      { status: 429 }
-    );
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
   }
 
   // Process login...
@@ -2025,6 +2158,7 @@ export function middleware(request: NextRequest) {
 ```
 
 **Recommendation:**
+
 - Security testing should be continuous, not one-time
 - Use automated security scanning tools
 - Regular penetration testing
@@ -2038,6 +2172,7 @@ export function middleware(request: NextRequest) {
 ### 11.1 Deployment Environment
 
 **Infrastructure:**
+
 - **Server:** aaPanel on Linux (Ubuntu 22.04)
 - **Web Server:** Nginx (reverse proxy)
 - **Process Manager:** PM2
@@ -2046,6 +2181,7 @@ export function middleware(request: NextRequest) {
 - **Domain:** https://csms.zanajira.go.tz
 
 **Deployment Architecture:**
+
 ```
 Internet → Nginx (443) → PM2 → Next.js (9002)
                        → PostgreSQL (5432)
@@ -2057,6 +2193,7 @@ Internet → Nginx (443) → PM2 → Next.js (9002)
 **Initial Setup:**
 
 1. **Server Preparation:**
+
 ```bash
 # Update system
 sudo apt update && sudo apt upgrade -y
@@ -2077,6 +2214,7 @@ sudo bash install.sh
 ```
 
 2. **Application Deployment:**
+
 ```bash
 # Clone repository
 git clone https://github.com/org/csms.git
@@ -2099,6 +2237,7 @@ pm2 startup
 ```
 
 3. **Nginx Configuration:**
+
 ```nginx
 server {
     listen 80;
@@ -2143,6 +2282,7 @@ server {
 ```
 
 4. **MinIO Setup:**
+
 ```bash
 # Download MinIO
 wget https://dl.min.io/server/minio/release/linux-amd64/minio
@@ -2161,12 +2301,14 @@ sudo systemctl enable minio
 ```
 
 **What Worked:**
+
 - ✅ PM2 handled process management well
 - ✅ Nginx reverse proxy simple to configure
 - ✅ aaPanel provided useful server management UI
 - ✅ SSL certificate setup straightforward
 
 **What Didn't Work:**
+
 - ❌ Initial memory issues (Next.js build consuming too much RAM)
 - ❌ File permissions problems with uploads
 - ❌ Database connection pooling not optimized
@@ -2175,6 +2317,7 @@ sudo systemctl enable minio
 **Solutions:**
 
 1. **Memory Optimization:**
+
 ```json
 // package.json
 {
@@ -2186,28 +2329,32 @@ sudo systemctl enable minio
 ```
 
 2. **PM2 Configuration:**
+
 ```javascript
 // ecosystem.config.js
 module.exports = {
-  apps: [{
-    name: 'csms',
-    script: 'npm',
-    args: 'start',
-    instances: 2, // Cluster mode
-    exec_mode: 'cluster',
-    max_memory_restart: '1G',
-    env: {
-      NODE_ENV: 'production',
-      PORT: 9002
+  apps: [
+    {
+      name: 'csms',
+      script: 'npm',
+      args: 'start',
+      instances: 2, // Cluster mode
+      exec_mode: 'cluster',
+      max_memory_restart: '1G',
+      env: {
+        NODE_ENV: 'production',
+        PORT: 9002,
+      },
+      error_file: '/var/log/csms/error.log',
+      out_file: '/var/log/csms/out.log',
+      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
     },
-    error_file: '/var/log/csms/error.log',
-    out_file: '/var/log/csms/out.log',
-    log_date_format: 'YYYY-MM-DD HH:mm:ss Z'
-  }]
+  ],
 };
 ```
 
 3. **Database Connection Pooling:**
+
 ```typescript
 // lib/db.ts
 import { PrismaClient } from '@prisma/client';
@@ -2220,11 +2367,11 @@ export const prisma =
     log: ['error', 'warn'],
     datasources: {
       db: {
-        url: process.env.DATABASE_URL
-      }
+        url: process.env.DATABASE_URL,
+      },
     },
     // Connection pool settings
-    connectionLimit: 10
+    connectionLimit: 10,
   });
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
@@ -2235,6 +2382,7 @@ if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 **Process Developed:**
 
 1. **Git Workflow:**
+
 ```bash
 # Developer workflow
 git checkout -b feature/new-feature
@@ -2252,6 +2400,7 @@ pm2 reload csms
 ```
 
 2. **Automated Deployment Script:**
+
 ```bash
 #!/bin/bash
 # deploy.sh
@@ -2283,6 +2432,7 @@ echo "Deployment completed successfully!"
 ```
 
 3. **Database Migrations:**
+
 ```bash
 # Before deployment
 # 1. Test migration on staging
@@ -2299,6 +2449,7 @@ curl http://localhost:9002/api/health
 ```
 
 **Lessons:**
+
 1. Automate deployment from day one
 2. Always backup before deployment
 3. Test migrations on staging first
@@ -2306,6 +2457,7 @@ curl http://localhost:9002/api/health
 5. Monitor application after deployment
 
 **Deployment Incident:**
+
 > Deployment failed mid-migration, leaving database in inconsistent state. Had to restore from backup and re-deploy. Led to implementing transaction-based migrations and better backup strategy.
 
 ### 11.4 Monitoring & Logging
@@ -2313,6 +2465,7 @@ curl http://localhost:9002/api/health
 **Monitoring Setup:**
 
 1. **Application Monitoring:**
+
 ```bash
 # PM2 monitoring
 pm2 monit
@@ -2325,6 +2478,7 @@ htop
 ```
 
 2. **Database Monitoring:**
+
 ```sql
 -- Active connections
 SELECT count(*) FROM pg_stat_activity;
@@ -2340,6 +2494,7 @@ SELECT pg_size_pretty(pg_database_size('csms_db'));
 ```
 
 3. **Custom Health Check:**
+
 ```typescript
 // app/api/health/route.ts
 export async function GET() {
@@ -2354,13 +2509,13 @@ export async function GET() {
       status: 'healthy',
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
-      memory: process.memoryUsage()
+      memory: process.memoryUsage(),
     });
   } catch (error) {
     return NextResponse.json(
       {
         status: 'unhealthy',
-        error: error.message
+        error: error.message,
       },
       { status: 503 }
     );
@@ -2369,6 +2524,7 @@ export async function GET() {
 ```
 
 4. **Structured Logging:**
+
 ```typescript
 // lib/logger.ts
 import pino from 'pino';
@@ -2378,9 +2534,9 @@ export const logger = pino({
   formatters: {
     level: (label) => {
       return { level: label };
-    }
+    },
   },
-  timestamp: pino.stdTimeFunctions.isoTime
+  timestamp: pino.stdTimeFunctions.isoTime,
 });
 
 // Usage
@@ -2389,6 +2545,7 @@ logger.error({ error: err, context: 'api' }, 'API error occurred');
 ```
 
 **What's Missing (Should Add):**
+
 - ❌ Application Performance Monitoring (APM)
 - ❌ Error tracking (Sentry, Bugsnag)
 - ❌ Uptime monitoring (alerts when down)
@@ -2396,6 +2553,7 @@ logger.error({ error: err, context: 'api' }, 'API error occurred');
 - ❌ Log aggregation (ELK stack)
 
 **Recommendation:**
+
 - Implement comprehensive monitoring early
 - Set up alerts for critical errors
 - Dashboard for key metrics
@@ -2410,6 +2568,7 @@ logger.error({ error: err, context: 'api' }, 'API error occurred');
 **Optimizations Implemented:**
 
 1. **Code Splitting:**
+
 ```typescript
 // Dynamic imports for heavy components
 import dynamic from 'next/dynamic';
@@ -2424,6 +2583,7 @@ const ReportGenerator = dynamic(
 ```
 
 2. **Image Optimization:**
+
 ```typescript
 import Image from 'next/image';
 
@@ -2438,6 +2598,7 @@ import Image from 'next/image';
 ```
 
 3. **Lazy Loading:**
+
 ```typescript
 // Load large lists incrementally
 import { useInView } from 'react-intersection-observer';
@@ -2464,6 +2625,7 @@ function EmployeeList({ employees }) {
 ```
 
 4. **React Server Components:**
+
 ```typescript
 // Server Component - No JS sent to client
 export default async function EmployeesPage() {
@@ -2482,18 +2644,19 @@ function EmployeeList({ employees }) {
 
 **Performance Metrics:**
 
-| Metric | Before | After | Improvement |
-|--------|--------|-------|-------------|
-| First Contentful Paint | 2.8s | 1.2s | 57% |
-| Time to Interactive | 5.1s | 2.3s | 55% |
-| Bundle Size | 850KB | 420KB | 51% |
-| Lighthouse Score | 68 | 92 | +24 |
+| Metric                 | Before | After | Improvement |
+| ---------------------- | ------ | ----- | ----------- |
+| First Contentful Paint | 2.8s   | 1.2s  | 57%         |
+| Time to Interactive    | 5.1s   | 2.3s  | 55%         |
+| Bundle Size            | 850KB  | 420KB | 51%         |
+| Lighthouse Score       | 68     | 92    | +24         |
 
 ### 12.2 Backend Performance
 
 **Database Query Optimization:**
 
 1. **Index Usage:**
+
 ```sql
 -- Before: Full table scan
 EXPLAIN ANALYZE
@@ -2506,12 +2669,13 @@ CREATE INDEX idx_employee_institution ON "Employee"("institutionId");
 ```
 
 2. **Query Optimization:**
+
 ```typescript
 // Before: N+1 query problem
 const requests = await prisma.confirmationRequest.findMany();
 for (const req of requests) {
   const employee = await prisma.employee.findUnique({
-    where: { id: req.employeeId }
+    where: { id: req.employeeId },
   });
   // ... use employee
 }
@@ -2520,31 +2684,33 @@ for (const req of requests) {
 const requests = await prisma.confirmationRequest.findMany({
   include: {
     employee: {
-      include: { institution: true }
-    }
-  }
+      include: { institution: true },
+    },
+  },
 });
 ```
 
 3. **Connection Pooling:**
+
 ```typescript
 // Prisma connection pool configuration
 const prisma = new PrismaClient({
   datasources: {
     db: {
-      url: process.env.DATABASE_URL
-    }
+      url: process.env.DATABASE_URL,
+    },
   },
   // Optimize connection pool
   __internal: {
     engine: {
-      connectionLimit: 10
-    }
-  }
+      connectionLimit: 10,
+    },
+  },
 });
 ```
 
 4. **Caching:**
+
 ```typescript
 // Simple in-memory cache for reference data
 import NodeCache from 'node-cache';
@@ -2564,17 +2730,18 @@ export async function getInstitutions() {
 
 **API Response Time:**
 
-| Endpoint | Before | After | Improvement |
-|----------|--------|-------|-------------|
-| GET /api/employees | 3200ms | 450ms | 86% |
-| GET /api/confirmation-requests | 2800ms | 380ms | 86% |
-| POST /api/promotions | 1200ms | 320ms | 73% |
+| Endpoint                       | Before | After | Improvement |
+| ------------------------------ | ------ | ----- | ----------- |
+| GET /api/employees             | 3200ms | 450ms | 86%         |
+| GET /api/confirmation-requests | 2800ms | 380ms | 86%         |
+| POST /api/promotions           | 1200ms | 320ms | 73%         |
 
 ### 12.3 MinIO File Storage Performance
 
 **Optimization:**
 
 1. **Parallel Uploads:**
+
 ```typescript
 // Before: Sequential uploads
 for (const doc of documents) {
@@ -2582,12 +2749,11 @@ for (const doc of documents) {
 }
 
 // After: Parallel uploads
-await Promise.all(
-  documents.map(doc => uploadToMinIO(doc))
-);
+await Promise.all(documents.map((doc) => uploadToMinIO(doc)));
 ```
 
 2. **Multipart Upload for Large Files:**
+
 ```typescript
 async function uploadLargeFile(file: File) {
   const chunkSize = 5 * 1024 * 1024; // 5MB chunks
@@ -2603,6 +2769,7 @@ async function uploadLargeFile(file: File) {
 ```
 
 3. **CDN for Static Assets:**
+
 ```nginx
 # Nginx caching for MinIO
 location /minio/ {
@@ -2620,12 +2787,14 @@ location /minio/ {
 ### 13.1 Communication Strategy
 
 **Stakeholders:**
+
 1. Civil Service Commission (primary users)
 2. Ministry of State, Constitutional Affairs, and Good Governance
 3. Individual institutions (ministries, departments)
 4. Employees (end users)
 
 **Communication Channels:**
+
 - Weekly progress meetings
 - Monthly steering committee meetings
 - Email updates on milestones
@@ -2633,18 +2802,21 @@ location /minio/ {
 - UAT sessions with users
 
 **What Worked:**
+
 - ✅ Regular demos kept stakeholders engaged
 - ✅ Quick prototypes helped clarify requirements
 - ✅ Early user involvement identified issues
 - ✅ Written documentation reduced misunderstandings
 
 **What Didn't Work:**
+
 - ❌ Stakeholder availability inconsistent
 - ❌ Decision-making sometimes slow
 - ❌ Changing priorities mid-project
 - ❌ Technical jargon confused non-technical stakeholders
 
 **Solutions:**
+
 1. Flexible meeting schedules
 2. Decision log to track approvals
 3. Change request process
@@ -2669,6 +2841,7 @@ location /minio/ {
    - Solution: Prototype early, set clear boundaries
 
 **Best Practices:**
+
 - Document everything (requirements, decisions, changes)
 - Under-promise, over-deliver
 - Show progress frequently
@@ -2704,12 +2877,14 @@ location /minio/ {
    - Viewing own profile
 
 **Training Materials:**
+
 - User manuals (English and Swahili)
 - Video tutorials
 - Quick reference guides
 - In-app help tooltips
 
 **Lessons:**
+
 1. Train early and often
 2. Hands-on practice more effective than presentations
 3. Create role-specific training
@@ -2723,31 +2898,37 @@ location /minio/ {
 ### 14.1 Technical Decisions
 
 ✅ **Next.js 14 Full-Stack Architecture**
+
 - Single codebase simplified development and deployment
 - App Router improved performance
 - API routes eliminated need for separate backend
 
 ✅ **Prisma ORM**
+
 - Type-safe database queries
 - Easy migrations
 - Great developer experience
 
 ✅ **TypeScript**
+
 - Caught many bugs at compile time
 - Improved code quality and maintainability
 - Better IDE support
 
 ✅ **MinIO for File Storage**
+
 - S3-compatible API familiar to developers
 - Easy to set up and manage
 - Cost-effective
 
 ✅ **Tailwind CSS + shadcn/ui**
+
 - Rapid UI development
 - Consistent design system
 - Accessible components
 
 ✅ **Role-Based Access Control**
+
 - Clear separation of permissions
 - Institution-based data isolation
 - Secure by design
@@ -2755,21 +2936,25 @@ location /minio/ {
 ### 14.2 Process & Methodology
 
 ✅ **Agile Development**
+
 - Iterative development allowed for feedback
 - Sprint reviews kept stakeholders engaged
 - Retrospectives improved process
 
 ✅ **Code Reviews**
+
 - Improved code quality
 - Knowledge sharing across team
 - Caught bugs early
 
 ✅ **Git Workflow**
+
 - Feature branches isolated work
 - Pull requests enforced review
 - Protected main branch prevented accidents
 
 ✅ **Early Prototyping**
+
 - Quick mockups clarified requirements
 - Reduced rework
 - Built stakeholder confidence
@@ -2777,16 +2962,19 @@ location /minio/ {
 ### 14.3 Team Collaboration
 
 ✅ **Daily Standups**
+
 - Identified blockers quickly
 - Improved team coordination
 - Kept everyone aligned
 
 ✅ **Documentation**
+
 - CLAUDE.md helped AI assistant
 - README kept team on same page
 - API docs facilitated integration
 
 ✅ **Pair Programming (When Needed)**
+
 - Solved complex problems faster
 - Transferred knowledge
 - Improved code quality
@@ -2798,6 +2986,7 @@ location /minio/ {
 ### 15.1 Technical Improvements
 
 ❌ **Lack of Automated Testing**
+
 - Should have E2E tests
 - Integration test coverage low
 - Manual testing time-consuming
@@ -2805,6 +2994,7 @@ location /minio/ {
 **Recommendation:** Invest in Playwright or Cypress for E2E tests
 
 ❌ **No Centralized Error Tracking**
+
 - Errors only visible in logs
 - Hard to track error patterns
 - No user context for errors
@@ -2812,6 +3002,7 @@ location /minio/ {
 **Recommendation:** Implement Sentry or similar service
 
 ❌ **Limited Monitoring**
+
 - No APM (Application Performance Monitoring)
 - No uptime alerts
 - Metrics not centralized
@@ -2819,6 +3010,7 @@ location /minio/ {
 **Recommendation:** Set up Grafana + Prometheus or similar
 
 ❌ **No Load Testing**
+
 - Unknown performance under heavy load
 - Could have capacity issues
 - Scaling strategy unclear
@@ -2826,6 +3018,7 @@ location /minio/ {
 **Recommendation:** Use k6 or Artillery for load testing
 
 ❌ **Insufficient Caching**
+
 - Many repeated database queries
 - Static data fetched repeatedly
 - API response times could be better
@@ -2835,6 +3028,7 @@ location /minio/ {
 ### 15.2 Process Improvements
 
 ❌ **Late UAT Start**
+
 - Testing should be continuous
 - Bugs found too late
 - Rushed bug fixing
@@ -2842,6 +3036,7 @@ location /minio/ {
 **Recommendation:** Involve users from day one, continuous UAT
 
 ❌ **Unclear Requirements Initially**
+
 - Some features re-implemented
 - Scope creep issues
 - Timeline delays
@@ -2849,6 +3044,7 @@ location /minio/ {
 **Recommendation:** Invest more time in requirements gathering
 
 ❌ **Inadequate Documentation**
+
 - Some features undocumented
 - Documentation lagging behind code
 - Team knowledge silos
@@ -2856,6 +3052,7 @@ location /minio/ {
 **Recommendation:** Documentation as part of definition of done
 
 ❌ **No Formal QA Process**
+
 - Relied on developer testing
 - Inconsistent test coverage
 - Quality varied
@@ -2865,6 +3062,7 @@ location /minio/ {
 ### 15.3 Architecture Improvements
 
 ❌ **Monolithic Approach May Not Scale**
+
 - All features in one application
 - Harder to scale specific modules
 - Deployment affects entire system
@@ -2872,6 +3070,7 @@ location /minio/ {
 **Consider for Future:** Modular monolith or microservices
 
 ❌ **No API Versioning**
+
 - Breaking changes risky
 - Hard to maintain backward compatibility
 - Mobile app integration would be problematic
@@ -2879,6 +3078,7 @@ location /minio/ {
 **Recommendation:** Implement `/api/v1/` versioning
 
 ❌ **Limited Offline Support**
+
 - Requires internet connection
 - No offline mode for forms
 - Data entry interrupted by connectivity issues
@@ -2886,6 +3086,7 @@ location /minio/ {
 **Recommendation:** Progressive Web App with service workers
 
 ❌ **Single Point of Failure**
+
 - One database, one server
 - No redundancy
 - Downtime affects all users
@@ -3038,6 +3239,7 @@ location /minio/ {
 ### 17.1 Skills & Training Needs
 
 **Skills That Helped:**
+
 - TypeScript proficiency
 - React/Next.js experience
 - Database design knowledge
@@ -3045,6 +3247,7 @@ location /minio/ {
 - API design skills
 
 **Skills Gaps Identified:**
+
 - Next.js App Router (new paradigm)
 - Advanced Prisma features
 - Performance optimization
@@ -3052,6 +3255,7 @@ location /minio/ {
 - DevOps knowledge
 
 **Training Provided:**
+
 - Next.js 14 App Router workshop
 - TypeScript best practices session
 - Security awareness training
@@ -3059,6 +3263,7 @@ location /minio/ {
 - Git workflow training
 
 **Recommendation:**
+
 - Budget for continuous learning
 - Encourage conference attendance
 - Internal knowledge sharing sessions
@@ -3068,6 +3273,7 @@ location /minio/ {
 ### 17.2 Team Dynamics
 
 **What Worked:**
+
 - ✅ Open communication culture
 - ✅ Collaborative problem-solving
 - ✅ Supportive team environment
@@ -3075,6 +3281,7 @@ location /minio/ {
 - ✅ Regular team bonding
 
 **Challenges:**
+
 - ❌ Remote collaboration difficulties
 - ❌ Timezone differences
 - ❌ Varying skill levels
@@ -3082,6 +3289,7 @@ location /minio/ {
 - ❌ Burnout during crunch periods
 
 **Solutions Implemented:**
+
 - Overlapping work hours for key discussions
 - Detailed async communication (Slack, docs)
 - Pair programming for knowledge sharing
@@ -3089,6 +3297,7 @@ location /minio/ {
 - Enforced work-life balance
 
 **Lessons:**
+
 1. Invest in team building
 2. Clear communication channels
 3. Psychological safety important
@@ -3102,6 +3311,7 @@ location /minio/ {
 ### 18.1 Project Success Factors
 
 The CSMS project successfully delivered a comprehensive HR management system that:
+
 - ✅ Meets all core requirements
 - ✅ Serves multiple user roles effectively
 - ✅ Integrates with external HRIMS
@@ -3110,6 +3320,7 @@ The CSMS project successfully delivered a comprehensive HR management system tha
 - ✅ Delivers comprehensive reporting
 
 **Key Success Factors:**
+
 1. Strong stakeholder engagement throughout
 2. Iterative development with regular feedback
 3. Experienced development team
@@ -3119,6 +3330,7 @@ The CSMS project successfully delivered a comprehensive HR management system tha
 ### 18.2 Areas for Continued Improvement
 
 While successful, the project highlighted areas for ongoing enhancement:
+
 1. **Testing:** Implement comprehensive automated testing
 2. **Monitoring:** Deploy robust monitoring and alerting
 3. **Performance:** Continuous performance optimization
@@ -3128,6 +3340,7 @@ While successful, the project highlighted areas for ongoing enhancement:
 ### 18.3 Final Thoughts
 
 **What Made This Project Special:**
+
 - Impact on government operations
 - Modernizing civil service processes
 - Serving diverse user needs
@@ -3135,6 +3348,7 @@ While successful, the project highlighted areas for ongoing enhancement:
 - Team growth and learning
 
 **Biggest Lessons:**
+
 1. **Simplicity wins:** Monolithic Next.js better than complex microservices for this use case
 2. **Integration is hard:** HRIMS integration took longer than expected - always budget more time
 3. **User involvement crucial:** Early user feedback prevented major rework
@@ -3142,11 +3356,13 @@ While successful, the project highlighted areas for ongoing enhancement:
 5. **Documentation matters:** Comprehensive docs save time in long run
 
 **Advice for Similar Projects:**
+
 > Start simple, build solid foundations, involve users early, automate everything you can, and never compromise on security. Government systems require reliability over novelty—choose proven technologies and patterns.
 
 ### 18.4 Looking Forward
 
 **Potential Future Enhancements:**
+
 1. Mobile application (React Native)
 2. Advanced analytics dashboard
 3. AI-powered insights (using Genkit)
@@ -3159,6 +3375,7 @@ While successful, the project highlighted areas for ongoing enhancement:
 10. Training and development tracking
 
 **Sustainability Plan:**
+
 - Regular maintenance schedule
 - Continuous security updates
 - User feedback collection
@@ -3172,6 +3389,7 @@ While successful, the project highlighted areas for ongoing enhancement:
 ### Appendix A: Key Metrics
 
 **Development Metrics:**
+
 - Total development time: [X months]
 - Team size: [X developers]
 - Lines of code: ~[XX,XXX]
@@ -3180,12 +3398,14 @@ While successful, the project highlighted areas for ongoing enhancement:
 - User roles: 9
 
 **Performance Metrics:**
+
 - Average page load time: 1.2s
 - API response time (avg): 380ms
 - Database query time (avg): 45ms
 - Lighthouse score: 92/100
 
 **Quality Metrics:**
+
 - Code coverage: [X%]
 - Bugs found in UAT: [X]
 - Critical bugs: [X]
@@ -3258,15 +3478,15 @@ Development:
 
 ## Document Approval
 
-| Role | Name | Signature | Date |
-|------|------|-----------|------|
-| **Project Manager** | | | |
-| **Technical Lead** | | | |
-| **QA Lead** | | | |
-| **Stakeholder Representative** | | | |
+| Role                           | Name | Signature | Date |
+| ------------------------------ | ---- | --------- | ---- |
+| **Project Manager**            |      |           |      |
+| **Technical Lead**             |      |           |      |
+| **QA Lead**                    |      |           |      |
+| **Stakeholder Representative** |      |           |      |
 
 ---
 
 **End of Lessons Learned Document**
 
-*This document reflects the collective experience and insights of the CSMS development team. May it serve as a valuable resource for future projects and continuous improvement efforts.*
+_This document reflects the collective experience and insights of the CSMS development team. May it serve as a valuable resource for future projects and continuous improvement efforts._

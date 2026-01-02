@@ -17,6 +17,8 @@
     "test:run": "vitest run",
     "test:watch": "vitest --watch",
     "test:coverage": "vitest --coverage",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "prepare": "husky"
   },
   "dependencies": {
@@ -95,6 +97,8 @@
     "@vitest/coverage-v8": "^4.0.16",
     "eslint": "^8.57.1",
     "eslint-config-next": "^16.1.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.0.1",
     "genkit-cli": "^1.8.0",
@@ -103,6 +107,7 @@
     "lint-staged": "^16.2.7",
     "msw": "^2.12.7",
     "postcss": "^8",
+    "prettier": "^3.7.4",
     "prisma": "^6.19.1",
     "tailwindcss": "^3.4.1",
     "tsx": "^4.19.0",

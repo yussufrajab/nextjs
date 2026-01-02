@@ -15,7 +15,7 @@ import {
   ensureBucketExists,
   generateObjectKey,
   minioClient,
-  DEFAULT_BUCKET
+  DEFAULT_BUCKET,
 } from '@/lib/minio';
 
 // ============================================
@@ -57,7 +57,7 @@ export async function handleFileUpload(formData: FormData) {
     return {
       success: true,
       objectKey: result.objectKey,
-      url: `/api/files/preview/${result.objectKey}`
+      url: `/api/files/preview/${result.objectKey}`,
     };
   } catch (error) {
     console.error('Upload error:', error);
@@ -78,7 +78,7 @@ export async function handleFileDownload(objectKey: string) {
 
     return {
       stream,
-      metadata
+      metadata,
     };
   } catch (error) {
     console.error('Download error:', error);
@@ -96,7 +96,7 @@ export async function generateTemporaryLink(objectKey: string) {
 
     return {
       url,
-      expiresIn: 3600
+      expiresIn: 3600,
     };
   } catch (error) {
     console.error('Presigned URL error:', error);
@@ -121,7 +121,7 @@ export async function listDocuments(folderPrefix = 'documents/') {
           contentType: metadata.contentType,
           lastModified: metadata.lastModified,
           downloadUrl: `/api/files/download/${file.name}`,
-          previewUrl: `/api/files/preview/${file.name}`
+          previewUrl: `/api/files/preview/${file.name}`,
         };
       })
     );
@@ -142,7 +142,7 @@ export async function handleFileDelete(objectKey: string) {
 
     return {
       success: true,
-      message: 'File deleted successfully'
+      message: 'File deleted successfully',
     };
   } catch (error) {
     console.error('Delete error:', error);
@@ -159,12 +159,12 @@ export async function checkFileExists(objectKey: string) {
 
     return {
       exists: true,
-      metadata
+      metadata,
     };
   } catch (error: any) {
     if (error.code === 'NotFound') {
       return {
-        exists: false
+        exists: false,
       };
     }
     throw error;
@@ -227,17 +227,17 @@ export async function uploadWithProgress(
 export async function batchDeleteFiles(objectKeys: string[]) {
   try {
     const results = await Promise.allSettled(
-      objectKeys.map(key => deleteFile(key))
+      objectKeys.map((key) => deleteFile(key))
     );
 
-    const successful = results.filter(r => r.status === 'fulfilled').length;
-    const failed = results.filter(r => r.status === 'rejected').length;
+    const successful = results.filter((r) => r.status === 'fulfilled').length;
+    const failed = results.filter((r) => r.status === 'rejected').length;
 
     return {
       total: objectKeys.length,
       successful,
       failed,
-      results
+      results,
     };
   } catch (error) {
     console.error('Batch delete error:', error);
@@ -273,7 +273,7 @@ export async function backupFile(sourceKey: string, backupFolder = 'backups') {
     return {
       success: true,
       originalKey: sourceKey,
-      backupKey: result.objectKey
+      backupKey: result.objectKey,
     };
   } catch (error) {
     console.error('Backup error:', error);

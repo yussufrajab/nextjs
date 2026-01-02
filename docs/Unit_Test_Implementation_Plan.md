@@ -1,4 +1,5 @@
 # Unit Test Implementation Plan
+
 ## Civil Service Management System (CSMS)
 
 **Project Code:** CSMS-2025
@@ -11,9 +12,9 @@
 
 ## Document Control
 
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 1.0 | January 2, 2026 | Development Team | Initial Unit Test Implementation Plan |
+| Version | Date            | Author           | Changes                               |
+| ------- | --------------- | ---------------- | ------------------------------------- |
+| 1.0     | January 2, 2026 | Development Team | Initial Unit Test Implementation Plan |
 
 ---
 
@@ -22,6 +23,7 @@
 This Unit Test Implementation Plan defines the comprehensive approach, framework selection, implementation strategy, and timeline for adding automated unit testing to the Civil Service Management System (CSMS). Currently, the system has **zero automated tests** across **202 TypeScript files** and **73 API routes**.
 
 **Current State:**
+
 - **Total Files:** 202 TypeScript files
 - **API Routes:** 73 files
 - **Utility Libraries:** 26 files
@@ -30,6 +32,7 @@ This Unit Test Implementation Plan defines the comprehensive approach, framework
 - **Testing Approach:** Manual UAT only (244 scenarios)
 
 **Target State:**
+
 - **Test Framework:** Vitest (modern, fast, TypeScript-native)
 - **Target Coverage:** 80%+ for critical paths, 60%+ overall
 - **Total Test Files:** ~150-200 test files
@@ -37,6 +40,7 @@ This Unit Test Implementation Plan defines the comprehensive approach, framework
 - **Timeline:** 8 weeks (phased implementation)
 
 **Key Objectives:**
+
 1. Reduce regression defects by 70%+
 2. Enable confident refactoring and code changes
 3. Catch bugs early in development cycle
@@ -74,6 +78,7 @@ This document outlines the strategy and implementation plan for introducing auto
 ### 1.2 Scope
 
 **In Scope:**
+
 - Unit testing for utility functions and libraries (`/src/lib/`)
 - Unit testing for API route handlers (`/src/app/api/`)
 - Component testing for critical React components
@@ -83,6 +88,7 @@ This document outlines the strategy and implementation plan for introducing auto
 - API integration testing
 
 **Out of Scope (separate initiatives):**
+
 - End-to-end (E2E) testing (Playwright, Cypress)
 - Visual regression testing
 - Load/performance testing
@@ -91,6 +97,7 @@ This document outlines the strategy and implementation plan for introducing auto
 ### 1.3 Benefits
 
 **Development Benefits:**
+
 - Catch bugs before they reach QA
 - Enable safe refactoring
 - Faster debugging (isolated test failures)
@@ -98,6 +105,7 @@ This document outlines the strategy and implementation plan for introducing auto
 - Improved code design (testable code is better code)
 
 **Business Benefits:**
+
 - Reduced defect density (target: <2 defects/KLOC)
 - Faster development velocity (confident changes)
 - Lower QA costs (fewer defects to manually test)
@@ -105,6 +113,7 @@ This document outlines the strategy and implementation plan for introducing auto
 - Reduced production incidents
 
 **Quality Benefits:**
+
 - Automated regression testing
 - Consistent test execution
 - Measurable code coverage
@@ -117,14 +126,14 @@ This document outlines the strategy and implementation plan for introducing auto
 
 ### 2.1 Codebase Statistics
 
-| Category | Count | Files Requiring Tests | Priority |
-|----------|-------|----------------------|----------|
-| **API Routes** | 73 | 73 | Critical |
-| **Utility Libraries** | 26 | 26 | Critical |
-| **React Components** | ~80 | ~40 (critical components) | High |
-| **Custom Hooks** | ~8 | 8 | High |
-| **Store (Zustand)** | ~2 | 2 | High |
-| **Total** | **202** | **~150** | - |
+| Category              | Count   | Files Requiring Tests     | Priority |
+| --------------------- | ------- | ------------------------- | -------- |
+| **API Routes**        | 73      | 73                        | Critical |
+| **Utility Libraries** | 26      | 26                        | Critical |
+| **React Components**  | ~80     | ~40 (critical components) | High     |
+| **Custom Hooks**      | ~8      | 8                         | High     |
+| **Store (Zustand)**   | ~2      | 2                         | High     |
+| **Total**             | **202** | **~150**                  | -        |
 
 ### 2.2 Critical Areas Analysis
 
@@ -167,6 +176,7 @@ This document outlines the strategy and implementation plan for introducing auto
 ### 2.3 Technical Stack
 
 **Current Technologies:**
+
 - **Language:** TypeScript 5
 - **Framework:** Next.js 16 (App Router)
 - **UI:** React 19
@@ -177,6 +187,7 @@ This document outlines the strategy and implementation plan for introducing auto
 - **State:** Zustand
 
 **Testing Requirements:**
+
 - Must support TypeScript
 - Must work with Next.js App Router
 - Must support async/await
@@ -190,25 +201,26 @@ This document outlines the strategy and implementation plan for introducing auto
 
 ### 3.1 Framework Comparison
 
-| Feature | **Vitest** | Jest | Testing Library |
-|---------|-----------|------|----------------|
-| **TypeScript Support** | ✅ Native | ⚠️ Requires config | ✅ Native |
-| **Speed** | ✅ Very Fast (Vite) | ⚠️ Moderate | N/A (not test runner) |
-| **Next.js Support** | ✅ Excellent | ✅ Good | ✅ Excellent |
-| **API Mocking** | ✅ Built-in | ✅ Manual setup | ❌ Not applicable |
-| **Prisma Mocking** | ✅ Easy | ✅ Easy | N/A |
-| **React Testing** | ✅ Via @testing-library | ✅ Via @testing-library | ✅ Purpose-built |
-| **Watch Mode** | ✅ Instant | ⚠️ Slow | N/A |
-| **Coverage Reports** | ✅ Built-in (c8) | ✅ Built-in (istanbul) | N/A |
-| **Learning Curve** | ✅ Easy (Jest-compatible) | ⚠️ Moderate | ✅ Easy |
-| **Community** | ✅ Growing fast | ✅ Mature | ✅ Mature |
-| **Maintenance** | ✅ Active | ✅ Active | ✅ Active |
+| Feature                | **Vitest**                | Jest                    | Testing Library       |
+| ---------------------- | ------------------------- | ----------------------- | --------------------- |
+| **TypeScript Support** | ✅ Native                 | ⚠️ Requires config      | ✅ Native             |
+| **Speed**              | ✅ Very Fast (Vite)       | ⚠️ Moderate             | N/A (not test runner) |
+| **Next.js Support**    | ✅ Excellent              | ✅ Good                 | ✅ Excellent          |
+| **API Mocking**        | ✅ Built-in               | ✅ Manual setup         | ❌ Not applicable     |
+| **Prisma Mocking**     | ✅ Easy                   | ✅ Easy                 | N/A                   |
+| **React Testing**      | ✅ Via @testing-library   | ✅ Via @testing-library | ✅ Purpose-built      |
+| **Watch Mode**         | ✅ Instant                | ⚠️ Slow                 | N/A                   |
+| **Coverage Reports**   | ✅ Built-in (c8)          | ✅ Built-in (istanbul)  | N/A                   |
+| **Learning Curve**     | ✅ Easy (Jest-compatible) | ⚠️ Moderate             | ✅ Easy               |
+| **Community**          | ✅ Growing fast           | ✅ Mature               | ✅ Mature             |
+| **Maintenance**        | ✅ Active                 | ✅ Active               | ✅ Active             |
 
 ### 3.2 Recommended Stack
 
 **Selected Framework: Vitest**
 
 **Rationale:**
+
 1. **Speed:** 10-20x faster than Jest (critical for developer experience)
 2. **Native TypeScript:** Zero configuration needed
 3. **Modern:** Built for modern JS/TS projects
@@ -236,14 +248,14 @@ This document outlines the strategy and implementation plan for introducing auto
 
 While Jest is mature and widely used, Vitest offers significant advantages:
 
-| Aspect | Jest | Vitest | Winner |
-|--------|------|--------|--------|
-| **Initial Setup** | Complex config | Minimal config | Vitest |
-| **Speed** | 30-60s test suite | 3-5s test suite | Vitest |
-| **TypeScript** | Requires ts-jest | Native support | Vitest |
-| **Watch Mode** | Slow (5-10s) | Instant (<1s) | Vitest |
-| **ESM Support** | Problematic | Perfect | Vitest |
-| **Developer Experience** | Good | Excellent | Vitest |
+| Aspect                   | Jest              | Vitest          | Winner |
+| ------------------------ | ----------------- | --------------- | ------ |
+| **Initial Setup**        | Complex config    | Minimal config  | Vitest |
+| **Speed**                | 30-60s test suite | 3-5s test suite | Vitest |
+| **TypeScript**           | Requires ts-jest  | Native support  | Vitest |
+| **Watch Mode**           | Slow (5-10s)      | Instant (<1s)   | Vitest |
+| **ESM Support**          | Problematic       | Perfect         | Vitest |
+| **Developer Experience** | Good              | Excellent       | Vitest |
 
 **Decision:** Vitest is the superior choice for modern TypeScript/Next.js projects.
 
@@ -273,6 +285,7 @@ While Jest is mature and widely used, Vitest offers significant advantages:
 #### 4.2.1 Unit Tests (80%)
 
 **What to Test:**
+
 - Pure functions (utilities, helpers)
 - Business logic (validation, calculations)
 - Data transformations
@@ -280,12 +293,14 @@ While Jest is mature and widely used, Vitest offers significant advantages:
 - Edge cases
 
 **Example Files:**
+
 - `password-utils.ts` - hash, compare, validate strength
 - `role-utils.ts` - permission checks
 - `export-utils.ts` - data formatting
 - `utils.ts` - common helpers (cn, formatDate, etc.)
 
 **Test Characteristics:**
+
 - Isolated (no external dependencies)
 - Fast (<1ms per test)
 - Deterministic (same input = same output)
@@ -296,17 +311,20 @@ While Jest is mature and widely used, Vitest offers significant advantages:
 #### 4.2.2 Integration Tests (15%)
 
 **What to Test:**
+
 - API endpoints (request → response)
 - Database operations (Prisma queries)
 - Background jobs (BullMQ)
 - External service integration (MinIO, Redis)
 
 **Example Scenarios:**
+
 - POST /api/auth/login → validates credentials → returns JWT
 - POST /api/promotion-requests → validates data → saves to DB → returns 201
 - HRIMS sync job → fetches data → transforms → saves to DB
 
 **Test Characteristics:**
+
 - Multiple components working together
 - Mocked external dependencies (DB, MinIO, Redis)
 - Slower than unit tests (10-100ms per test)
@@ -317,6 +335,7 @@ While Jest is mature and widely used, Vitest offers significant advantages:
 #### 4.2.3 Component Tests (Included in Unit Tests)
 
 **What to Test:**
+
 - Component rendering
 - User interactions (clicks, typing)
 - Conditional rendering
@@ -324,11 +343,13 @@ While Jest is mature and widely used, Vitest offers significant advantages:
 - State changes
 
 **Example Components:**
+
 - `LoginForm` - validates input, calls API, handles errors
 - `PasswordStrengthMeter` - displays strength based on score
 - `EmployeeSearch` - filters employees, displays results
 
 **Test Characteristics:**
+
 - Render in test environment (jsdom)
 - Simulate user interactions
 - Assert DOM output
@@ -339,6 +360,7 @@ While Jest is mature and widely used, Vitest offers significant advantages:
 ### 4.3 What NOT to Test
 
 **Avoid Testing:**
+
 1. **Third-party libraries** (trust React, Prisma, etc.)
 2. **Simple getters/setters** (no logic)
 3. **Configuration files** (constants, types)
@@ -346,6 +368,7 @@ While Jest is mature and widely used, Vitest offers significant advantages:
 5. **Private implementation details** (test behavior, not internals)
 
 **Focus on:**
+
 - Business logic
 - Security features
 - Data validation
@@ -358,15 +381,15 @@ While Jest is mature and widely used, Vitest offers significant advantages:
 
 ### 5.1 Phase Overview
 
-| Phase | Duration | Focus | Tests Added | Coverage |
-|-------|----------|-------|-------------|----------|
-| **Phase 0: Setup** | 1 week | Framework installation, config | 0 | 0% |
-| **Phase 1: Critical Utils** | 2 weeks | Security, audit, validation | ~150 | 15% |
-| **Phase 2: API Routes** | 3 weeks | Authentication, HR workflows | ~400 | 45% |
-| **Phase 3: Components** | 1.5 weeks | Critical React components | ~200 | 60% |
-| **Phase 4: Remaining** | 0.5 weeks | Hooks, stores, misc | ~100 | 70% |
-| **Phase 5: Polish** | 0.5 weeks | Coverage gaps, refactoring | +50 | 80% |
-| **Total** | **8 weeks** | - | **~900 tests** | **80%** |
+| Phase                       | Duration    | Focus                          | Tests Added    | Coverage |
+| --------------------------- | ----------- | ------------------------------ | -------------- | -------- |
+| **Phase 0: Setup**          | 1 week      | Framework installation, config | 0              | 0%       |
+| **Phase 1: Critical Utils** | 2 weeks     | Security, audit, validation    | ~150           | 15%      |
+| **Phase 2: API Routes**     | 3 weeks     | Authentication, HR workflows   | ~400           | 45%      |
+| **Phase 3: Components**     | 1.5 weeks   | Critical React components      | ~200           | 60%      |
+| **Phase 4: Remaining**      | 0.5 weeks   | Hooks, stores, misc            | ~100           | 70%      |
+| **Phase 5: Polish**         | 0.5 weeks   | Coverage gaps, refactoring     | +50            | 80%      |
+| **Total**                   | **8 weeks** | -                              | **~900 tests** | **80%**  |
 
 ---
 
@@ -375,6 +398,7 @@ While Jest is mature and widely used, Vitest offers significant advantages:
 **Objective:** Install and configure testing framework
 
 **Tasks:**
+
 1. Install Vitest and dependencies
 2. Configure `vitest.config.ts`
 3. Update `tsconfig.json` for tests
@@ -385,6 +409,7 @@ While Jest is mature and widely used, Vitest offers significant advantages:
 8. Document testing guidelines
 
 **Deliverables:**
+
 - ✅ Working test environment
 - ✅ Sample test passing
 - ✅ Coverage reporting functional
@@ -392,6 +417,7 @@ While Jest is mature and widely used, Vitest offers significant advantages:
 - ✅ Testing guidelines document
 
 **Dependencies Installed:**
+
 ```json
 {
   "vitest": "^2.1.0",
@@ -407,6 +433,7 @@ While Jest is mature and widely used, Vitest offers significant advantages:
 ```
 
 **Exit Criteria:**
+
 - [ ] All dependencies installed
 - [ ] `npm test` runs successfully
 - [ ] Sample test passes
@@ -422,6 +449,7 @@ While Jest is mature and widely used, Vitest offers significant advantages:
 **Priority Files (26 files → ~150 tests):**
 
 #### Week 2: Security & Auth (60 tests)
+
 1. `password-utils.ts` (15 tests)
    - ✅ Hash password correctly
    - ✅ Compare passwords (valid/invalid)
@@ -451,6 +479,7 @@ While Jest is mature and widely used, Vitest offers significant advantages:
    - ✅ Edge cases (VPN, mobile, etc.)
 
 #### Week 3: Validation & Business Logic (90 tests)
+
 5. `role-utils.ts` (10 tests)
    - ✅ Check user permissions
    - ✅ Validate role hierarchy
@@ -485,6 +514,7 @@ While Jest is mature and widely used, Vitest offers significant advantages:
     - `minio.ts`, `db.ts`, `redis.ts`, etc.
 
 **Exit Criteria:**
+
 - [ ] 150+ tests passing
 - [ ] ~15% code coverage achieved
 - [ ] All critical security functions tested
@@ -498,6 +528,7 @@ While Jest is mature and widely used, Vitest offers significant advantages:
 **Objective:** Test all API endpoints (73 files → ~400 tests)
 
 **Testing Approach:**
+
 - Use MSW (Mock Service Worker) for HTTP mocking
 - Mock Prisma database calls
 - Test request validation
@@ -506,6 +537,7 @@ While Jest is mature and widely used, Vitest offers significant advantages:
 - Test authorization checks
 
 #### Week 4: Authentication APIs (80 tests)
+
 1. `/api/auth/login` (20 tests)
    - ✅ Valid credentials → success
    - ✅ Invalid credentials → 401
@@ -521,6 +553,7 @@ While Jest is mature and widely used, Vitest offers significant advantages:
 5. `/api/users` CRUD (25 tests)
 
 #### Week 5: HR Request Workflows (200 tests)
+
 6. `/api/promotion-requests` (25 tests)
 7. `/api/confirmation-requests` (25 tests)
 8. `/api/lwop-requests` (25 tests)
@@ -531,6 +564,7 @@ While Jest is mature and widely used, Vitest offers significant advantages:
 13. `/api/termination-requests` (25 tests)
 
 #### Week 6: Supporting APIs (120 tests)
+
 14. `/api/employees` (30 tests)
 15. `/api/institutions` (20 tests)
 16. `/api/complaints` (20 tests)
@@ -539,6 +573,7 @@ While Jest is mature and widely used, Vitest offers significant advantages:
 19. `/api/reports` (20 tests)
 
 **API Test Template:**
+
 ```typescript
 describe('POST /api/promotion-requests', () => {
   it('should create promotion request with valid data', async () => {
@@ -581,6 +616,7 @@ describe('POST /api/promotion-requests', () => {
 ```
 
 **Exit Criteria:**
+
 - [ ] 400+ API tests passing
 - [ ] ~45% code coverage achieved
 - [ ] All critical endpoints tested
@@ -596,6 +632,7 @@ describe('POST /api/promotion-requests', () => {
 **Priority Components:**
 
 #### Week 6.5: Auth Components (60 tests)
+
 1. `LoginForm` (20 tests)
    - ✅ Renders correctly
    - ✅ Validates input (required fields)
@@ -609,6 +646,7 @@ describe('POST /api/promotion-requests', () => {
 4. `PasswordExpirationBanner` (10 tests)
 
 #### Week 7: HR Workflow Components (80 tests)
+
 5. `PromotionRequestForm` (20 tests)
 6. `ConfirmationRequestForm` (20 tests)
 7. `EmployeeSearch` (15 tests)
@@ -616,6 +654,7 @@ describe('POST /api/promotion-requests', () => {
 9. `FilePreviewModal` (10 tests)
 
 #### Week 7.5: Admin & Shared Components (60 tests)
+
 10. `UserManagementTable` (15 tests)
 11. `AuditLogTable` (15 tests)
 12. `Pagination` (10 tests)
@@ -623,6 +662,7 @@ describe('POST /api/promotion-requests', () => {
 14. `NotificationBell` (10 tests)
 
 **Component Test Template:**
+
 ```typescript
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -666,6 +706,7 @@ describe('LoginForm', () => {
 ```
 
 **Exit Criteria:**
+
 - [ ] 200+ component tests passing
 - [ ] ~60% code coverage achieved
 - [ ] All critical components tested
@@ -696,6 +737,7 @@ describe('LoginForm', () => {
      - ✅ State persistence
 
 **Hook Test Template:**
+
 ```typescript
 import { renderHook, act } from '@testing-library/react';
 import { useInactivityTimeout } from './use-inactivity-timeout';
@@ -705,7 +747,9 @@ describe('useInactivityTimeout', () => {
     vi.useFakeTimers();
     const onTimeout = vi.fn();
 
-    renderHook(() => useInactivityTimeout({ onTimeout, timeout: 7 * 60 * 1000 }));
+    renderHook(() =>
+      useInactivityTimeout({ onTimeout, timeout: 7 * 60 * 1000 })
+    );
 
     // Fast-forward 7 minutes
     act(() => {
@@ -723,6 +767,7 @@ describe('useInactivityTimeout', () => {
 ```
 
 **Exit Criteria:**
+
 - [ ] 100+ hook/store tests passing
 - [ ] ~70% code coverage achieved
 - [ ] All custom hooks tested
@@ -735,6 +780,7 @@ describe('useInactivityTimeout', () => {
 **Objective:** Fill coverage gaps, refactor, optimize
 
 **Tasks:**
+
 1. **Coverage Analysis**
    - Run coverage report
    - Identify untested code paths
@@ -756,6 +802,7 @@ describe('useInactivityTimeout', () => {
    - Parallelize test execution
 
 **Exit Criteria:**
+
 - [ ] 80%+ code coverage achieved
 - [ ] <5% untested critical code
 - [ ] All tests pass reliably
@@ -768,25 +815,27 @@ describe('useInactivityTimeout', () => {
 
 ### 6.1 Overall Coverage Targets
 
-| Category | Target Coverage | Rationale |
-|----------|----------------|-----------|
-| **Security & Auth** | 95%+ | Critical - must be thoroughly tested |
-| **Business Logic** | 90%+ | High risk - core functionality |
-| **API Routes** | 85%+ | Important - user-facing |
-| **Utility Functions** | 90%+ | Highly reusable - must be reliable |
-| **React Components** | 70%+ | UI changes frequently - balance coverage vs effort |
-| **Hooks & Stores** | 85%+ | State management - critical |
-| **Overall Project** | 80%+ | Industry best practice |
+| Category              | Target Coverage | Rationale                                          |
+| --------------------- | --------------- | -------------------------------------------------- |
+| **Security & Auth**   | 95%+            | Critical - must be thoroughly tested               |
+| **Business Logic**    | 90%+            | High risk - core functionality                     |
+| **API Routes**        | 85%+            | Important - user-facing                            |
+| **Utility Functions** | 90%+            | Highly reusable - must be reliable                 |
+| **React Components**  | 70%+            | UI changes frequently - balance coverage vs effort |
+| **Hooks & Stores**    | 85%+            | State management - critical                        |
+| **Overall Project**   | 80%+            | Industry best practice                             |
 
 ### 6.2 Coverage Metrics
 
 **Tracked Metrics:**
+
 1. **Line Coverage:** % of lines executed
 2. **Branch Coverage:** % of if/else branches tested
 3. **Function Coverage:** % of functions called
 4. **Statement Coverage:** % of statements executed
 
 **Quality Gates:**
+
 - ❌ Block PR if coverage drops below 75%
 - ⚠️ Warn if coverage drops below 80%
 - ✅ Pass if coverage maintains 80%+
@@ -794,11 +843,13 @@ describe('useInactivityTimeout', () => {
 ### 6.3 Coverage Reporting
 
 **Tools:**
+
 - **Vitest Coverage:** Built-in c8 coverage
 - **Coverage Reports:** HTML, JSON, LCOV formats
 - **CI Integration:** Upload to Codecov/Coveralls (optional)
 
 **Commands:**
+
 ```bash
 npm test                    # Run tests
 npm test -- --coverage     # Run with coverage
@@ -812,17 +863,18 @@ npm test -- --watch        # Watch mode
 
 ### 7.1 Priority Matrix
 
-| Priority | Category | Files | Tests | Weeks | Coverage Target |
-|----------|----------|-------|-------|-------|----------------|
-| **P0 - Critical** | Security & Auth | 9 | 100 | 1 | 95%+ |
-| **P1 - High** | Business Logic | 10 | 120 | 1 | 90%+ |
-| **P2 - Important** | API Routes | 73 | 400 | 3 | 85%+ |
-| **P3 - Medium** | Components | 40 | 200 | 1.5 | 70%+ |
-| **P4 - Nice-to-have** | Hooks & Stores | 10 | 100 | 0.5 | 85%+ |
+| Priority              | Category        | Files | Tests | Weeks | Coverage Target |
+| --------------------- | --------------- | ----- | ----- | ----- | --------------- |
+| **P0 - Critical**     | Security & Auth | 9     | 100   | 1     | 95%+            |
+| **P1 - High**         | Business Logic  | 10    | 120   | 1     | 90%+            |
+| **P2 - Important**    | API Routes      | 73    | 400   | 3     | 85%+            |
+| **P3 - Medium**       | Components      | 40    | 200   | 1.5   | 70%+            |
+| **P4 - Nice-to-have** | Hooks & Stores  | 10    | 100   | 0.5   | 85%+            |
 
 ### 7.2 Risk-Based Prioritization
 
 **High Risk (Test First):**
+
 1. Authentication & authorization
 2. Password management
 3. Session management
@@ -833,6 +885,7 @@ npm test -- --watch        # Watch mode
 8. Background jobs
 
 **Medium Risk (Test Second):**
+
 1. HR request workflows
 2. User management
 3. Employee management
@@ -840,6 +893,7 @@ npm test -- --watch        # Watch mode
 5. Notifications
 
 **Low Risk (Test Last):**
+
 1. UI components (non-critical)
 2. Styling utilities
 3. Static pages
@@ -983,6 +1037,7 @@ afterEach(() => {
 ```
 
 **Naming Conventions:**
+
 - Test files: `*.test.ts` or `*.spec.ts`
 - Co-located with source files
 - Use descriptive test names
@@ -1164,6 +1219,7 @@ export const createMockEmployee = (overrides = {}) => ({
 **Week 1: Framework Introduction (4 hours)**
 
 **Session 1: Vitest Basics (2 hours)**
+
 - Why unit testing?
 - Vitest vs Jest
 - Writing your first test
@@ -1171,6 +1227,7 @@ export const createMockEmployee = (overrides = {}) => ({
 - Reading test output
 
 **Session 2: Testing Patterns (2 hours)**
+
 - AAA pattern
 - Mocking basics
 - Test fixtures and factories
@@ -1178,6 +1235,7 @@ export const createMockEmployee = (overrides = {}) => ({
 - Code review checklist
 
 **Hands-on Exercise:**
+
 - Write tests for a simple utility function
 - Write tests for a React component
 - Fix failing tests
@@ -1290,12 +1348,14 @@ npm test -- --run --changed
 ### 11.3 Quality Gates
 
 **Block Merges If:**
+
 - ❌ Tests fail
 - ❌ Coverage drops below 75%
 - ❌ New code has <80% coverage
 - ❌ Critical files have <90% coverage
 
 **Warn If:**
+
 - ⚠️ Coverage drops below 80%
 - ⚠️ Slow tests (>5s)
 - ⚠️ Flaky tests detected
@@ -1306,25 +1366,27 @@ npm test -- --run --changed
 
 ### 12.1 Quantitative Metrics
 
-| Metric | Baseline | Target | Timeline |
-|--------|----------|--------|----------|
-| **Test Coverage** | 0% | 80%+ | 8 weeks |
-| **Total Tests** | 0 | 900+ | 8 weeks |
-| **Test Execution Time** | N/A | <30s | 8 weeks |
-| **Defect Detection Rate** | 60% in UAT | 85% in dev | 12 weeks |
-| **Defect Density** | ~5 defects/KLOC | <2 defects/KLOC | 16 weeks |
-| **Regression Defects** | High | -70% | 12 weeks |
-| **Build Success Rate** | 70% | 95%+ | 8 weeks |
+| Metric                    | Baseline        | Target          | Timeline |
+| ------------------------- | --------------- | --------------- | -------- |
+| **Test Coverage**         | 0%              | 80%+            | 8 weeks  |
+| **Total Tests**           | 0               | 900+            | 8 weeks  |
+| **Test Execution Time**   | N/A             | <30s            | 8 weeks  |
+| **Defect Detection Rate** | 60% in UAT      | 85% in dev      | 12 weeks |
+| **Defect Density**        | ~5 defects/KLOC | <2 defects/KLOC | 16 weeks |
+| **Regression Defects**    | High            | -70%            | 12 weeks |
+| **Build Success Rate**    | 70%             | 95%+            | 8 weeks  |
 
 ### 12.2 Qualitative Metrics
 
 **Developer Experience:**
+
 - ✅ Faster debugging (isolated failures)
 - ✅ Confident refactoring
 - ✅ Living documentation
 - ✅ Improved code quality
 
 **Business Impact:**
+
 - ✅ Reduced QA time (fewer defects)
 - ✅ Faster feature delivery
 - ✅ Higher system reliability
@@ -1333,6 +1395,7 @@ npm test -- --run --changed
 ### 12.3 Monitoring & Reporting
 
 **Weekly Reports:**
+
 - Tests written this week
 - Coverage change
 - Test execution time
@@ -1340,6 +1403,7 @@ npm test -- --run --changed
 - Issues identified
 
 **Monthly Reports:**
+
 - Coverage trends
 - Defect density trends
 - Test suite performance
@@ -1351,31 +1415,31 @@ npm test -- --run --changed
 
 ### 13.1 Detailed Timeline
 
-| Week | Phase | Deliverables | Tests | Coverage |
-|------|-------|--------------|-------|----------|
-| **Week 1** | Phase 0: Setup | Framework installed, config done | 5 (sample) | 1% |
-| **Week 2** | Phase 1.1: Security | Security utils tested | 60 | 8% |
-| **Week 3** | Phase 1.2: Business Logic | Validation utils tested | 150 | 15% |
-| **Week 4** | Phase 2.1: Auth APIs | Auth endpoints tested | 230 | 25% |
-| **Week 5** | Phase 2.2: HR Workflows | HR endpoints tested | 430 | 38% |
-| **Week 6** | Phase 2.3: Supporting APIs | All APIs tested | 550 | 45% |
-| **Week 6.5** | Phase 3.1: Auth Components | Auth components tested | 610 | 52% |
-| **Week 7** | Phase 3.2: HR Components | HR components tested | 690 | 58% |
-| **Week 7.5** | Phase 3.3: Admin Components | Admin components tested | 750 | 62% |
-| **Week 8** | Phase 4: Hooks & Stores | Hooks/stores tested | 850 | 70% |
-| **Week 8** | Phase 5: Polish | Coverage gaps filled | 900 | 80% |
+| Week         | Phase                       | Deliverables                     | Tests      | Coverage |
+| ------------ | --------------------------- | -------------------------------- | ---------- | -------- |
+| **Week 1**   | Phase 0: Setup              | Framework installed, config done | 5 (sample) | 1%       |
+| **Week 2**   | Phase 1.1: Security         | Security utils tested            | 60         | 8%       |
+| **Week 3**   | Phase 1.2: Business Logic   | Validation utils tested          | 150        | 15%      |
+| **Week 4**   | Phase 2.1: Auth APIs        | Auth endpoints tested            | 230        | 25%      |
+| **Week 5**   | Phase 2.2: HR Workflows     | HR endpoints tested              | 430        | 38%      |
+| **Week 6**   | Phase 2.3: Supporting APIs  | All APIs tested                  | 550        | 45%      |
+| **Week 6.5** | Phase 3.1: Auth Components  | Auth components tested           | 610        | 52%      |
+| **Week 7**   | Phase 3.2: HR Components    | HR components tested             | 690        | 58%      |
+| **Week 7.5** | Phase 3.3: Admin Components | Admin components tested          | 750        | 62%      |
+| **Week 8**   | Phase 4: Hooks & Stores     | Hooks/stores tested              | 850        | 70%      |
+| **Week 8**   | Phase 5: Polish             | Coverage gaps filled             | 900        | 80%      |
 
 ### 13.2 Milestones
 
-| Milestone | Date | Criteria | Owner |
-|-----------|------|----------|-------|
-| **M1: Framework Setup Complete** | End Week 1 | Vitest installed, sample test passing | Dev Team |
-| **M2: Critical Utils Tested** | End Week 3 | 150 tests, 15% coverage | Dev Team |
-| **M3: All APIs Tested** | End Week 6 | 550 tests, 45% coverage | Dev Team |
-| **M4: Components Tested** | End Week 7.5 | 750 tests, 62% coverage | Dev Team |
-| **M5: 80% Coverage Achieved** | End Week 8 | 900 tests, 80% coverage | Dev Team |
-| **M6: CI/CD Integrated** | End Week 8 | Tests run on every PR | DevOps |
-| **M7: Team Trained** | End Week 8 | All developers can write tests | QA Lead |
+| Milestone                        | Date         | Criteria                              | Owner    |
+| -------------------------------- | ------------ | ------------------------------------- | -------- |
+| **M1: Framework Setup Complete** | End Week 1   | Vitest installed, sample test passing | Dev Team |
+| **M2: Critical Utils Tested**    | End Week 3   | 150 tests, 15% coverage               | Dev Team |
+| **M3: All APIs Tested**          | End Week 6   | 550 tests, 45% coverage               | Dev Team |
+| **M4: Components Tested**        | End Week 7.5 | 750 tests, 62% coverage               | Dev Team |
+| **M5: 80% Coverage Achieved**    | End Week 8   | 900 tests, 80% coverage               | Dev Team |
+| **M6: CI/CD Integrated**         | End Week 8   | Tests run on every PR                 | DevOps   |
+| **M7: Team Trained**             | End Week 8   | All developers can write tests        | QA Lead  |
 
 ---
 
@@ -1383,34 +1447,38 @@ npm test -- --run --changed
 
 ### 14.1 Implementation Risks
 
-| Risk | Probability | Impact | Mitigation |
-|------|-------------|--------|------------|
-| **Team resistance to testing** | Medium | High | Training, showcase benefits, code review enforcement |
-| **Timeline slippage** | Medium | Medium | Phased approach, prioritize critical tests |
-| **Flaky tests** | Medium | High | Strict test independence, proper mocking |
-| **Slow test execution** | Low | Medium | Optimize setup, parallelize tests |
-| **Low coverage in complex areas** | Medium | High | Extra focus on critical paths, pair programming |
-| **Learning curve** | Medium | Medium | Training sessions, documentation, mentorship |
-| **Breaking changes in tests** | Low | Low | Semantic versioning, gradual migration |
+| Risk                              | Probability | Impact | Mitigation                                           |
+| --------------------------------- | ----------- | ------ | ---------------------------------------------------- |
+| **Team resistance to testing**    | Medium      | High   | Training, showcase benefits, code review enforcement |
+| **Timeline slippage**             | Medium      | Medium | Phased approach, prioritize critical tests           |
+| **Flaky tests**                   | Medium      | High   | Strict test independence, proper mocking             |
+| **Slow test execution**           | Low         | Medium | Optimize setup, parallelize tests                    |
+| **Low coverage in complex areas** | Medium      | High   | Extra focus on critical paths, pair programming      |
+| **Learning curve**                | Medium      | Medium | Training sessions, documentation, mentorship         |
+| **Breaking changes in tests**     | Low         | Low    | Semantic versioning, gradual migration               |
 
 ### 14.2 Mitigation Strategies
 
 **Strategy 1: Incremental Adoption**
+
 - Start with critical code (security, auth)
 - Build confidence with early wins
 - Expand gradually
 
 **Strategy 2: Pair Programming**
+
 - Experienced developers mentor juniors
 - Knowledge transfer
 - Quality assurance
 
 **Strategy 3: Test Quality Reviews**
+
 - Dedicated test reviews in PRs
 - Test quality checklist
 - Refactor poor tests
 
 **Strategy 4: Continuous Monitoring**
+
 - Track coverage trends
 - Monitor test execution time
 - Alert on flaky tests
@@ -1453,16 +1521,19 @@ npm test -- --reporter=verbose
 ### 15.2 Appendix B: Testing Resources
 
 **Official Documentation:**
+
 - Vitest: https://vitest.dev/
 - Testing Library: https://testing-library.com/
 - MSW: https://mswjs.io/
 
 **Learning Resources:**
+
 - Kent C. Dodds - Testing JavaScript
 - Vitest Documentation & Examples
 - Testing Library Playground
 
 **Community:**
+
 - Vitest Discord
 - Testing Library Discord
 - Stack Overflow
@@ -1474,7 +1545,11 @@ npm test -- --reporter=verbose
 ```typescript
 // src/lib/password-utils.test.ts
 import { describe, it, expect } from 'vitest';
-import { hashPassword, comparePassword, validatePasswordStrength } from './password-utils';
+import {
+  hashPassword,
+  comparePassword,
+  validatePasswordStrength,
+} from './password-utils';
 
 describe('password-utils', () => {
   describe('hashPassword', () => {
@@ -1717,19 +1792,19 @@ describe('LoginForm', () => {
 
 ### Document Review
 
-| Reviewer | Title | Date | Signature |
-|----------|-------|------|-----------|
-| [Name] | Technical Lead | __________ | __________ |
-| [Name] | QA Lead | __________ | __________ |
-| [Name] | Development Manager | __________ | __________ |
+| Reviewer | Title               | Date             | Signature        |
+| -------- | ------------------- | ---------------- | ---------------- |
+| [Name]   | Technical Lead      | \***\*\_\_\*\*** | \***\*\_\_\*\*** |
+| [Name]   | QA Lead             | \***\*\_\_\*\*** | \***\*\_\_\*\*** |
+| [Name]   | Development Manager | \***\*\_\_\*\*** | \***\*\_\_\*\*** |
 
 ### Document Approval
 
 **Approved By:**
-Name: _______________________________
+Name: **\*\***\*\***\*\***\_\_\_**\*\***\*\***\*\***
 Title: Project Manager
-Date: _______________________________
-Signature: _______________________________
+Date: **\*\***\*\***\*\***\_\_\_**\*\***\*\***\*\***
+Signature: **\*\***\*\***\*\***\_\_\_**\*\***\*\***\*\***
 
 ---
 
@@ -1739,6 +1814,6 @@ Signature: _______________________________
 
 ---
 
-*This Unit Test Implementation Plan has been prepared to introduce comprehensive automated testing to the Civil Service Management System (CSMS), improving code quality, reducing defects, and enabling confident development.*
+_This Unit Test Implementation Plan has been prepared to introduce comprehensive automated testing to the Civil Service Management System (CSMS), improving code quality, reducing defects, and enabling confident development._
 
 **END OF UNIT TEST IMPLEMENTATION PLAN**

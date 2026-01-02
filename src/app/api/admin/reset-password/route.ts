@@ -33,7 +33,10 @@ export async function POST(req: Request) {
 
       if (!admin || admin.role !== 'Admin') {
         return NextResponse.json(
-          { success: false, message: 'Unauthorized. Only admins can reset passwords.' },
+          {
+            success: false,
+            message: 'Unauthorized. Only admins can reset passwords.',
+          },
           { status: 403 }
         );
       }
@@ -112,7 +115,8 @@ export async function POST(req: Request) {
     });
 
     // Log password reset in audit trail
-    const { logAuditEvent, AuditEventCategory, AuditSeverity, getClientIp } = await import('@/lib/audit-logger');
+    const { logAuditEvent, AuditEventCategory, AuditSeverity, getClientIp } =
+      await import('@/lib/audit-logger');
     const ipAddress = getClientIp(req.headers);
     const userAgent = req.headers.get('user-agent');
 

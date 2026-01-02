@@ -110,7 +110,9 @@ export async function createSession(
       },
     });
 
-    console.log(`[SESSION] Created new session for user ${userId} (${deviceInfo})`);
+    console.log(
+      `[SESSION] Created new session for user ${userId} (${deviceInfo})`
+    );
 
     return session;
   } catch (error) {
@@ -168,7 +170,9 @@ export async function terminateSession(sessionToken: string): Promise<boolean> {
     await db.session.delete({
       where: { sessionToken },
     });
-    console.log(`[SESSION] Terminated session: ${sessionToken.substring(0, 10)}...`);
+    console.log(
+      `[SESSION] Terminated session: ${sessionToken.substring(0, 10)}...`
+    );
     return true;
   } catch (error) {
     console.error('[SESSION] Failed to terminate session:', error);
@@ -181,12 +185,16 @@ export async function terminateSession(sessionToken: string): Promise<boolean> {
  *
  * @param userId - User ID
  */
-export async function terminateAllUserSessions(userId: string): Promise<number> {
+export async function terminateAllUserSessions(
+  userId: string
+): Promise<number> {
   try {
     const result = await db.session.deleteMany({
       where: { userId },
     });
-    console.log(`[SESSION] Terminated ${result.count} session(s) for user ${userId}`);
+    console.log(
+      `[SESSION] Terminated ${result.count} session(s) for user ${userId}`
+    );
     return result.count;
   } catch (error) {
     console.error('[SESSION] Failed to terminate all sessions:', error);

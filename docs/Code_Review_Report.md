@@ -1,20 +1,21 @@
 # CODE REVIEW REPORT
+
 ## CIVIL SERVICE MANAGEMENT SYSTEM (CSMS)
 
 ---
 
 ## Document Control
 
-| Item | Details |
-|------|---------|
-| **Document Title** | Code Review Report - Civil Service Management System |
-| **Project Name** | Civil Service Management System (CSMS) |
-| **Version** | 1.0 |
-| **Review Date** | May 20, 2025 |
-| **Review Period** | May 7-20, 2025 (Pre-UAT Code Review) |
-| **Report Prepared** | May 20, 2025 |
-| **Prepared By** | CSMS QA Team |
-| **Review Status** | **APPROVED WITH CRITICAL FIXES REQUIRED** |
+| Item                | Details                                              |
+| ------------------- | ---------------------------------------------------- |
+| **Document Title**  | Code Review Report - Civil Service Management System |
+| **Project Name**    | Civil Service Management System (CSMS)               |
+| **Version**         | 1.0                                                  |
+| **Review Date**     | May 20, 2025                                         |
+| **Review Period**   | May 7-20, 2025 (Pre-UAT Code Review)                 |
+| **Report Prepared** | May 20, 2025                                         |
+| **Prepared By**     | CSMS QA Team                                         |
+| **Review Status**   | **APPROVED WITH CRITICAL FIXES REQUIRED**            |
 
 ---
 
@@ -69,15 +70,18 @@ Note: Overall score significantly impacted by 0% test coverage and build configu
 ### 1.3 Critical Findings Summary
 
 #### ❌ Critical Issues (Must Fix Before Production)
+
 1. **TypeScript Build Errors Ignored** - `ignoreBuildErrors: true` in `next.config.ts`
 2. **Zero Automated Test Coverage** - No unit, integration, or E2E tests implemented
 
 #### ⚠️ High Priority Issues (Fix Before Production)
+
 3. **No ESLint Custom Configuration** - Minimal linting enforcement
 4. **No Code Formatting Tool** - No Prettier or similar tool configured
 5. **No Pre-commit Hooks** - No quality gates before commits
 
 #### ℹ️ Medium Priority Issues (Post-Production)
+
 6. **Console.log Debugging** - Production code contains debug console.log statements
 7. **Limited Code Documentation** - Minimal JSDoc comments for complex functions
 8. **No API Rate Limiting** - General API rate limiting not implemented (only OTP endpoint)
@@ -109,6 +113,7 @@ These issues pose significant risks to production stability and maintainability.
 ### 2.1 Review Scope
 
 **Codebase Statistics:**
+
 - **Total TypeScript Files**: 202 files
 - **Total Dependencies**: 85 npm packages
 - **Lines of Code**: ~45,000 (estimated)
@@ -118,6 +123,7 @@ These issues pose significant risks to production stability and maintainability.
 - **User Roles**: 9 roles
 
 **Review Coverage:**
+
 - ✅ Configuration files (tsconfig.json, next.config.ts, package.json)
 - ✅ Source code (/src directory)
 - ✅ API routes (/src/app/api/)
@@ -139,6 +145,7 @@ These issues pose significant risks to production stability and maintainability.
 | **Code Quality Reviewer** | QA Lead | Code quality, testing, documentation |
 
 **Review Methodology:**
+
 1. **Static Code Analysis**: Manual code review of critical files
 2. **Configuration Review**: Build configuration, TypeScript config, dependencies
 3. **Architecture Review**: Design patterns, code organization, separation of concerns
@@ -147,6 +154,7 @@ These issues pose significant risks to production stability and maintainability.
 6. **Best Practices Check**: TypeScript, React, Next.js, coding standards
 
 **Review Timeline:**
+
 - May 7-12, 2025: Initial code review
 - May 13-15, 2025: Security analysis
 - May 16-18, 2025: Performance testing
@@ -177,11 +185,12 @@ Code was evaluated against the following criteria:
 #### Strengths:
 
 ✅ **Strict Mode Enabled**
+
 ```json
 // tsconfig.json
 {
   "compilerOptions": {
-    "strict": true,  // ✅ Excellent
+    "strict": true, // ✅ Excellent
     "target": "ES2017",
     "jsx": "react-jsx"
   }
@@ -189,14 +198,26 @@ Code was evaluated against the following criteria:
 ```
 
 ✅ **Prisma-Generated Types**
+
 - All database models have auto-generated TypeScript types
 - Type-safe database queries throughout
 - No SQL injection risk due to Prisma ORM
 
 ✅ **Shared Type Definitions**
+
 ```typescript
 // Example: src/lib/types.ts
-type Role = "HRO" | "HHRMD" | "HRMO" | "DO" | "EMPLOYEE" | "CSCS" | "HRRP" | "PO" | "Admin" | null;
+type Role =
+  | 'HRO'
+  | 'HHRMD'
+  | 'HRMO'
+  | 'DO'
+  | 'EMPLOYEE'
+  | 'CSCS'
+  | 'HRRP'
+  | 'PO'
+  | 'Admin'
+  | null;
 
 interface RoutePermission {
   pattern: string | RegExp;
@@ -205,6 +226,7 @@ interface RoutePermission {
 ```
 
 ✅ **Consistent Type Annotations**
+
 - Function parameters properly typed
 - Return types explicitly declared
 - Component props interfaces defined
@@ -212,6 +234,7 @@ interface RoutePermission {
 #### Weaknesses:
 
 ❌ **CRITICAL: Build Errors Ignored**
+
 ```typescript
 // next.config.ts (Line 13-15)
 typescript: {
@@ -222,14 +245,16 @@ typescript: {
 **Impact**: TypeScript errors are silently ignored during builds, defeating the purpose of TypeScript's type safety.
 
 ⚠️ **Occasional `any` Type Usage**
+
 ```typescript
 // Example from API routes
-let whereClause: any = {};  // ⚠️ Should be typed
+let whereClause: any = {}; // ⚠️ Should be typed
 ```
 
 **Recommendation**: Define proper Prisma types instead of `any`.
 
 ⚠️ **Limited JSDoc Documentation**
+
 - Type annotations present but limited explanatory comments
 - Complex functions lack documentation
 
@@ -238,6 +263,7 @@ let whereClause: any = {};  // ⚠️ Should be typed
 **Score: 88% ✅ EXCELLENT**
 
 #### Directory Structure:
+
 ```
 src/
 ├── app/
@@ -269,6 +295,7 @@ src/
 ```
 
 **Strengths:**
+
 - ✅ Clear separation of concerns
 - ✅ Feature-based organization (by request type)
 - ✅ Reusable components properly abstracted
@@ -276,6 +303,7 @@ src/
 - ✅ Consistent naming conventions
 
 **Weaknesses:**
+
 - ⚠️ Some large files (e.g., API routes 200+ lines) could be refactored
 - ⚠️ No `/services` layer for business logic (mixed in API routes)
 
@@ -286,34 +314,40 @@ src/
 #### Consistent Patterns:
 
 ✅ **React Components**: PascalCase
+
 ```typescript
 // AppSidebar, LoginForm, EmployeeSearch
 export function AppSidebar() { ... }
 ```
 
 ✅ **Functions/Variables**: camelCase
+
 ```typescript
 const canAccessRoute = (pathname: string, userRole: Role) => { ... }
 ```
 
 ✅ **Constants**: UPPER_SNAKE_CASE
+
 ```typescript
 const CACHE_TTL = 30;
 const ROUTE_PERMISSIONS = [...];
 ```
 
 ✅ **Files**: kebab-case
+
 ```
 audit-logger.ts, password-utils.ts, route-permissions.ts
 ```
 
 ✅ **Database Models**: PascalCase (Prisma convention)
+
 ```prisma
 model ConfirmationRequest { ... }
 model Employee { ... }
 ```
 
 **Minor Issues:**
+
 - ⚠️ Some abbreviations inconsistent (e.g., `req` vs `request`)
 
 ### 3.4 Code Reusability
@@ -323,11 +357,13 @@ model Employee { ... }
 #### Well-Abstracted Components:
 
 ✅ **UI Component Library**
+
 - 48 reusable UI components from shadcn/ui
 - Consistent styling with Tailwind CSS
 - Accessible components from Radix UI
 
 ✅ **Shared Utilities**
+
 ```typescript
 // src/lib/role-utils.ts
 export function shouldApplyInstitutionFilter(
@@ -339,18 +375,21 @@ export function shouldApplyInstitutionFilter(
 ```
 
 ✅ **Custom Hooks**
+
 ```typescript
 // useAuth hook used throughout components
 const { user, role, logout } = useAuth();
 ```
 
 ✅ **Middleware Functions**
+
 ```typescript
 // Centralized authorization in middleware.ts
 export function canAccessRoute(pathname: string, userRole: Role): boolean { ... }
 ```
 
 **Areas for Improvement:**
+
 - ⚠️ Some API route logic duplicated (validation, error handling)
 - ⚠️ Could extract more business logic to service layer
 
@@ -361,11 +400,13 @@ export function canAccessRoute(pathname: string, userRole: Role): boolean { ... 
 #### Documentation Present:
 
 ✅ **High-Level Documentation**
+
 - CLAUDE.md: Excellent project overview
 - README.md: Setup instructions
 - Comprehensive external documentation (61 docs)
 
 ✅ **Inline Comments for Complex Logic**
+
 ```typescript
 // middleware.ts (Line 4-12)
 /**
@@ -382,23 +423,28 @@ export function canAccessRoute(pathname: string, userRole: Role): boolean { ... 
 #### Documentation Lacking:
 
 ❌ **Missing JSDoc for Functions**
+
 ```typescript
 // Most functions lack documentation
-export async function GET(req: Request) {  // ❌ No JSDoc
+export async function GET(req: Request) {
+  // ❌ No JSDoc
   // ... 50 lines of code
 }
 ```
 
 ❌ **No API Documentation in Code**
+
 - API endpoints lack OpenAPI/Swagger specs
 - Request/response schemas not documented in code
 
 ❌ **Complex Business Logic Undocumented**
+
 - Probation period calculation logic
 - Request status workflow logic
 - HRIMS integration logic
 
 **Recommendation:**
+
 - Add JSDoc comments to all public functions
 - Document complex algorithms and business rules
 - Consider OpenAPI/Swagger for API documentation
@@ -414,6 +460,7 @@ export async function GET(req: Request) {  // ❌ No JSDoc
 #### Proper Implementation:
 
 ✅ **Server Components by Default**
+
 ```typescript
 // app/dashboard/confirmation/page.tsx
 export default async function ConfirmationPage() {
@@ -424,17 +471,19 @@ export default async function ConfirmationPage() {
 ```
 
 ✅ **Client Components Where Needed**
+
 ```typescript
 // components/layout/sidebar.tsx
-'use client';  // ✅ Only client components marked
+'use client'; // ✅ Only client components marked
 
 export function AppSidebar() {
-  const pathname = usePathname();  // Client-side hook
+  const pathname = usePathname(); // Client-side hook
   // ...
 }
 ```
 
 ✅ **API Route Structure**
+
 ```
 api/
 ├── confirmations/
@@ -444,6 +493,7 @@ api/
 ```
 
 **Best Practices Followed:**
+
 - ✅ Data fetching in Server Components
 - ✅ Interactivity in Client Components
 - ✅ Proper `'use client'` directive usage
@@ -456,6 +506,7 @@ api/
 #### RESTful Design:
 
 ✅ **Consistent Endpoint Structure**
+
 ```
 GET    /api/confirmations              # List
 POST   /api/confirmations              # Create
@@ -465,12 +516,14 @@ DELETE /api/confirmations/[id]         # Delete
 ```
 
 ✅ **Proper HTTP Methods**
+
 - GET for retrieval
 - POST for creation
 - PATCH for updates
 - DELETE for deletion
 
 ✅ **Consistent Error Responses**
+
 ```typescript
 return NextResponse.json(
   { success: false, message: 'Employee not found' },
@@ -479,6 +532,7 @@ return NextResponse.json(
 ```
 
 ✅ **HTTP Status Codes**
+
 - 200: Success
 - 201: Created
 - 400: Bad request
@@ -488,24 +542,30 @@ return NextResponse.json(
 - 500: Internal server error
 
 ✅ **Request Validation**
+
 ```typescript
 if (!body.employeeId || !body.submittedById) {
-  return NextResponse.json({
-    success: false,
-    message: 'Missing required fields'
-  }, { status: 400 });
+  return NextResponse.json(
+    {
+      success: false,
+      message: 'Missing required fields',
+    },
+    { status: 400 }
+  );
 }
 ```
 
 #### API Performance:
 
 ✅ **Response Caching**
+
 ```typescript
 const CACHE_TTL = 30; // 30 seconds
 headers.set('Cache-Control', `public, s-maxage=${CACHE_TTL}`);
 ```
 
 ✅ **Selective Field Loading**
+
 ```typescript
 select: {
   id: true,
@@ -515,6 +575,7 @@ select: {
 ```
 
 **Minor Issues:**
+
 - ⚠️ No API versioning (e.g., `/api/v1/`)
 - ⚠️ No rate limiting (except OTP endpoint)
 
@@ -525,6 +586,7 @@ select: {
 #### Component Design:
 
 ✅ **Atomic Design Pattern**
+
 ```
 ui/                    # Atoms (Button, Input, Badge)
 shared/                # Molecules (EmployeeSearch, PageHeader)
@@ -533,6 +595,7 @@ app/dashboard/         # Pages (composition)
 ```
 
 ✅ **Props Interfaces**
+
 ```typescript
 interface SidebarProps {
   role: Role;
@@ -542,6 +605,7 @@ interface SidebarProps {
 ```
 
 ✅ **Composition Over Inheritance**
+
 ```tsx
 <ShadSidebar collapsible="icon">
   <SidebarHeader>...</SidebarHeader>
@@ -551,6 +615,7 @@ interface SidebarProps {
 ```
 
 ✅ **Custom Hooks for Logic**
+
 ```typescript
 const { role, logout, user } = useAuth();
 const navItems = React.useMemo(() => getNavItemsForRole(role), [role]);
@@ -563,6 +628,7 @@ const navItems = React.useMemo(() => getNavItemsForRole(role), [role]);
 #### Zustand Implementation:
 
 ✅ **Simple State Management**
+
 ```typescript
 // stores/authStore.ts
 interface AuthState {
@@ -578,15 +644,17 @@ export const useAuthStore = create<AuthState>((set) => ({
   role: null,
   isAuthenticated: false,
   login: (user) => set({ user, role: user.role, isAuthenticated: true }),
-  logout: () => set({ user: null, role: null, isAuthenticated: false })
+  logout: () => set({ user: null, role: null, isAuthenticated: false }),
 }));
 ```
 
 ✅ **Persistent Storage**
+
 - Auth state persisted to localStorage
 - Cookie sync for middleware access
 
 **Appropriate Usage:**
+
 - ✅ Auth state (global)
 - ✅ UI state (modals, notifications)
 - ❌ NOT used for server data caching (correct - using API calls instead)
@@ -598,13 +666,14 @@ export const useAuthStore = create<AuthState>((set) => ({
 #### Consistent Patterns:
 
 ✅ **Try-Catch in API Routes**
+
 ```typescript
 export async function GET(req: Request) {
   try {
     // ... business logic
     return NextResponse.json(data);
   } catch (error) {
-    console.error("[CONFIRMATIONS_GET]", error);
+    console.error('[CONFIRMATIONS_GET]', error);
     return NextResponse.json(
       { success: false, message: 'Internal Server Error' },
       { status: 500 }
@@ -614,27 +683,39 @@ export async function GET(req: Request) {
 ```
 
 ✅ **Input Validation**
+
 ```typescript
 if (!body.employeeId || !body.submittedById) {
-  return NextResponse.json({
-    success: false,
-    message: 'Missing required fields'
-  }, { status: 400 });
+  return NextResponse.json(
+    {
+      success: false,
+      message: 'Missing required fields',
+    },
+    { status: 400 }
+  );
 }
 ```
 
 ✅ **Business Logic Validation**
+
 ```typescript
-const statusValidation = validateEmployeeStatusForRequest(employee.status, 'confirmation');
+const statusValidation = validateEmployeeStatusForRequest(
+  employee.status,
+  'confirmation'
+);
 if (!statusValidation.isValid) {
-  return NextResponse.json({
-    success: false,
-    message: statusValidation.message
-  }, { status: 403 });
+  return NextResponse.json(
+    {
+      success: false,
+      message: statusValidation.message,
+    },
+    { status: 403 }
+  );
 }
 ```
 
 **Minor Issues:**
+
 - ⚠️ Some error messages could be more specific
 - ⚠️ Generic 500 errors don't distinguish error types
 - ⚠️ Console.error for production logging (should use structured logger)
@@ -650,6 +731,7 @@ if (!statusValidation.isValid) {
 #### Password Security:
 
 ✅ **bcrypt Password Hashing**
+
 ```typescript
 // Passwords hashed with bcrypt (cost factor 10)
 import bcrypt from 'bcryptjs';
@@ -659,16 +741,19 @@ const isValid = await bcrypt.compare(password, user.password);
 ```
 
 ✅ **Strong Password Requirements**
+
 - Minimum 8 characters
 - Must contain uppercase, lowercase, number, special character
 - Password strength validation with zxcvbn
 
 ✅ **Password Expiration Policy**
+
 - 60-day expiration for employees
 - 90-day expiration for admin roles
 - Forced password change on first login
 
 ✅ **Account Lockout Policy**
+
 - 5 failed login attempts → account locked
 - 30-minute lockout duration
 - Auto-unlock after timeout
@@ -677,16 +762,19 @@ const isValid = await bcrypt.compare(password, user.password);
 #### Session Management:
 
 ✅ **JWT with Encrypted Cookies**
+
 - Tokens stored in httpOnly cookies
 - SameSite=Strict (CSRF protection)
 - Secure flag in production
 
 ✅ **Session Timeout**
+
 - 8-hour absolute timeout
 - 30-minute inactivity timeout
 - Max 3 concurrent sessions per user
 
 ✅ **Session Tracking**
+
 ```typescript
 // Database tracking of active sessions
 model Session {
@@ -706,6 +794,7 @@ model Session {
 #### Role-Based Access Control (RBAC):
 
 ✅ **Comprehensive Middleware**
+
 ```typescript
 // middleware.ts
 const ROUTE_PERMISSIONS: RoutePermission[] = [
@@ -726,6 +815,7 @@ function canAccessRoute(pathname: string, userRole: Role): boolean {
 ```
 
 ✅ **API-Level Authorization**
+
 ```typescript
 // API routes check role permissions
 if (!['HHRMD', 'HRMO'].includes(userRole)) {
@@ -734,17 +824,19 @@ if (!['HHRMD', 'HRMO'].includes(userRole)) {
 ```
 
 ✅ **Institution-Based Data Isolation**
+
 ```typescript
 // HRO/HRRP see only their institution data
 if (shouldApplyInstitutionFilter(userRole, userInstitutionId)) {
   whereClause.Employee = {
-    institutionId: userInstitutionId
+    institutionId: userInstitutionId,
   };
 }
 // CSC roles see all institutions
 ```
 
 ✅ **9 User Roles Implemented**
+
 - ADMIN: System administration
 - HRO: HR Officers (institution-based)
 - HHRMD: Head of HR Management & Disciplinary (CSC)
@@ -762,6 +854,7 @@ if (shouldApplyInstitutionFilter(userRole, userInstitutionId)) {
 #### Zod Schema Validation:
 
 ✅ **Runtime Type Validation**
+
 ```typescript
 import { z } from 'zod';
 
@@ -769,23 +862,28 @@ const confirmationSchema = z.object({
   employeeId: z.string().uuid(),
   submittedById: z.string().uuid(),
   documents: z.array(z.string()).min(5, 'At least 5 documents required'),
-  status: z.enum(['Pending', 'Approved', 'Rejected']).optional()
+  status: z.enum(['Pending', 'Approved', 'Rejected']).optional(),
 });
 
 const result = confirmationSchema.safeParse(body);
 if (!result.success) {
-  return NextResponse.json({
-    error: 'Validation failed',
-    details: result.error
-  }, { status: 400 });
+  return NextResponse.json(
+    {
+      error: 'Validation failed',
+      details: result.error,
+    },
+    { status: 400 }
+  );
 }
 ```
 
 ✅ **SQL Injection Prevention**
+
 - Prisma ORM parameterizes all queries automatically
 - No raw SQL queries found (except safe analytics queries)
 
 ✅ **File Upload Validation**
+
 ```typescript
 // File type, size, and magic byte validation
 - Type: PDF only
@@ -798,12 +896,13 @@ if (!result.success) {
 **Score: 100% ✅ EXCELLENT**
 
 ✅ **Comprehensive CSRF Implementation**
+
 ```typescript
 // SameSite cookies
 cookies.set('auth-token', token, {
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
-  sameSite: 'strict'
+  sameSite: 'strict',
 });
 
 // CSRF token validation
@@ -820,21 +919,28 @@ if (!validateCsrfToken(csrfToken, userId)) {
 **Score: 100% ✅ EXCELLENT**
 
 ✅ **12 Security Headers Configured** (next.config.ts)
+
 ```typescript
 headers: [
   { key: 'X-DNS-Prefetch-Control', value: 'on' },
-  { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
+  {
+    key: 'Strict-Transport-Security',
+    value: 'max-age=63072000; includeSubDomains; preload',
+  },
   { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'X-XSS-Protection', value: '1; mode=block' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-  { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+  {
+    key: 'Permissions-Policy',
+    value: 'camera=(), microphone=(), geolocation=()',
+  },
   { key: 'Content-Security-Policy', value: '...' },
   { key: 'X-Permitted-Cross-Domain-Policies', value: 'none' },
   { key: 'Cross-Origin-Embedder-Policy', value: 'require-corp' },
   { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
-  { key: 'Cross-Origin-Resource-Policy', value: 'same-origin' }
-]
+  { key: 'Cross-Origin-Resource-Policy', value: 'same-origin' },
+];
 ```
 
 ### 5.6 Audit Logging
@@ -842,6 +948,7 @@ headers: [
 **Score: 95% ✅ EXCELLENT**
 
 ✅ **Comprehensive Audit Trail**
+
 ```typescript
 // src/lib/audit-logger.ts
 export async function logRequestApproval(data: {
@@ -866,6 +973,7 @@ export async function logRequestApproval(data: {
 ```
 
 ✅ **Events Logged:**
+
 - Login attempts (success/failure)
 - Logout
 - Password changes
@@ -882,6 +990,7 @@ export async function logRequestApproval(data: {
 **Score: 92% ✅ EXCELLENT**
 
 ✅ **Environment Variables**
+
 ```
 DATABASE_URL=...           # Not hardcoded
 MINIO_ACCESS_KEY=...       # Stored in .env
@@ -890,33 +999,36 @@ SESSION_SECRET=...         # Not in code
 ```
 
 ✅ **No Secrets in Git**
+
 - .env files in .gitignore
 - API keys not hardcoded
 
 ✅ **Data Encryption**
+
 - TLS 1.2/1.3 in transit
 - MinIO AES-256 at rest
 - Bcrypt for passwords
 
 **Minor Issues:**
+
 - ⚠️ Some console.log statements might expose data in production logs
 
 ### 5.8 Security Vulnerabilities Assessment
 
 **OWASP Top 10 (2021) Compliance:**
 
-| # | Vulnerability | Status | Notes |
-|---|---------------|--------|-------|
-| A01 | Broken Access Control | ✅ SECURE | RBAC + middleware enforcement |
-| A02 | Cryptographic Failures | ✅ SECURE | bcrypt, TLS, AES-256 |
-| A03 | Injection | ✅ SECURE | Prisma ORM, Zod validation |
-| A04 | Insecure Design | ✅ SECURE | Security-first architecture |
-| A05 | Security Misconfiguration | ⚠️ PARTIAL | TypeScript errors ignored |
-| A06 | Vulnerable Components | ✅ SECURE | Dependencies up-to-date |
-| A07 | Identification & Auth Failures | ✅ SECURE | Strong auth, lockout policy |
-| A08 | Software & Data Integrity | ✅ SECURE | Audit logging, CSRF protection |
-| A09 | Security Logging | ✅ SECURE | Comprehensive audit trail |
-| A10 | Server-Side Request Forgery | ✅ SECURE | Input validation on external calls |
+| #   | Vulnerability                  | Status     | Notes                              |
+| --- | ------------------------------ | ---------- | ---------------------------------- |
+| A01 | Broken Access Control          | ✅ SECURE  | RBAC + middleware enforcement      |
+| A02 | Cryptographic Failures         | ✅ SECURE  | bcrypt, TLS, AES-256               |
+| A03 | Injection                      | ✅ SECURE  | Prisma ORM, Zod validation         |
+| A04 | Insecure Design                | ✅ SECURE  | Security-first architecture        |
+| A05 | Security Misconfiguration      | ⚠️ PARTIAL | TypeScript errors ignored          |
+| A06 | Vulnerable Components          | ✅ SECURE  | Dependencies up-to-date            |
+| A07 | Identification & Auth Failures | ✅ SECURE  | Strong auth, lockout policy        |
+| A08 | Software & Data Integrity      | ✅ SECURE  | Audit logging, CSRF protection     |
+| A09 | Security Logging               | ✅ SECURE  | Comprehensive audit trail          |
+| A10 | Server-Side Request Forgery    | ✅ SECURE  | Input validation on external calls |
 
 **Overall Security Score: 95% ✅ EXCELLENT**
 
@@ -931,6 +1043,7 @@ SESSION_SECRET=...         # Not in code
 #### Indexing Strategy:
 
 ✅ **Comprehensive Indexes**
+
 ```prisma
 model Employee {
   @@index([name])
@@ -949,19 +1062,21 @@ model ConfirmationRequest {
 ```
 
 ✅ **Eager Loading (No N+1)**
+
 ```typescript
 const requests = await prisma.confirmationRequest.findMany({
   include: {
     Employee: {
-      include: { Institution: true }  // ✅ Single query
+      include: { Institution: true }, // ✅ Single query
     },
     submittedBy: true,
-    reviewedBy: true
-  }
+    reviewedBy: true,
+  },
 });
 ```
 
 ✅ **Selective Field Loading**
+
 ```typescript
 select: {
   id: true,
@@ -972,11 +1087,13 @@ select: {
 ```
 
 **Performance Metrics:**
+
 - Employee search: ~45ms (indexed)
 - Request list: ~380ms (with includes)
 - Dashboard metrics: ~250ms
 
 **Minor Issues:**
+
 - ⚠️ Some queries could use pagination (large result sets)
 - ⚠️ No database connection pooling configuration visible
 
@@ -987,12 +1104,17 @@ select: {
 #### Implemented Caching:
 
 ✅ **HTTP Cache Headers**
+
 ```typescript
 const CACHE_TTL = 30; // seconds
-headers.set('Cache-Control', `public, s-maxage=${CACHE_TTL}, stale-while-revalidate=${CACHE_TTL * 2}`);
+headers.set(
+  'Cache-Control',
+  `public, s-maxage=${CACHE_TTL}, stale-while-revalidate=${CACHE_TTL * 2}`
+);
 ```
 
 ✅ **Strategic Cache TTLs**
+
 ```
 Employees: 60s     (changes infrequently)
 Requests: 30s      (changes frequently)
@@ -1001,6 +1123,7 @@ Static data: 3600s (institutions, users)
 ```
 
 **Missing:**
+
 - ⚠️ No Redis/in-memory cache for frequently accessed data
 - ⚠️ No CDN for static assets (MinIO documents)
 
@@ -1011,15 +1134,18 @@ Static data: 3600s (institutions, users)
 #### Bundle Optimization (Phase 1 Complete):
 
 ✅ **Code Splitting**
+
 - Next.js automatic route-based splitting
 - Dynamic imports for heavy components
 
 ✅ **Image Optimization**
+
 - Next.js Image component
 - Optimized formats (WebP)
 - Lazy loading
 
 ✅ **Bundle Analyzer Configured**
+
 ```typescript
 const withBundleAnalyzer = require('@next/bundle-analyzer')({
   enabled: process.env.ANALYZE === 'true',
@@ -1027,12 +1153,14 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 ```
 
 **Metrics:**
+
 - First Contentful Paint: ~1.2s
 - Time to Interactive: ~2.3s
 - Bundle size: ~420KB (after optimization)
 - Lighthouse score: 92/100
 
 **Future Enhancements:**
+
 - ⚠️ Consider React Server Components more extensively
 - ⚠️ Implement virtual scrolling for long lists
 
@@ -1041,25 +1169,28 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 **Score: 90% ✅ EXCELLENT**
 
 ✅ **Redis + BullMQ Implementation**
+
 ```typescript
 // HRIMS bulk sync as background job
 import { Queue } from 'bullmq';
 
 const hrimsSyncQueue = new Queue('hrims-sync', {
-  connection: redis
+  connection: redis,
 });
 
 await hrimsSyncQueue.add('sync-institution', {
   institutionId,
-  voteCode
+  voteCode,
 });
 ```
 
 ✅ **Prevents Timeout**
+
 - HRIMS bulk fetch (5000+ employees): Previously timed out
 - Now: Chunked processing with progress updates via SSE
 
 **Benefits:**
+
 - Asynchronous processing
 - Progress tracking
 - Retry on failure
@@ -1076,6 +1207,7 @@ await hrimsSyncQueue.add('sync-institution', {
 #### Test Coverage:
 
 ❌ **No Unit Tests**
+
 ```
 No test files found in:
 - __tests__/ (directory doesn't exist)
@@ -1084,14 +1216,17 @@ No test files found in:
 ```
 
 ❌ **No Integration Tests**
+
 - API endpoints not tested
 - Database interactions not tested
 
 ❌ **No E2E Tests**
+
 - User workflows not tested
 - Critical paths not automated
 
 ❌ **No Test Framework Installed**
+
 ```json
 // package.json - devDependencies
 {
@@ -1104,6 +1239,7 @@ No test files found in:
 ```
 
 **Impact:**
+
 - **High risk** of regressions
 - Manual testing required for all changes
 - No confidence in refactoring
@@ -1116,11 +1252,13 @@ No test files found in:
 #### UAT Coverage:
 
 ✅ **Comprehensive Test Cases**
+
 - 244 test scenarios
 - 21 test cases
 - Pass rate: 96.7%
 
 ✅ **Test Coverage Areas**
+
 - Authentication & RBAC (12 scenarios)
 - Employee management (18 scenarios)
 - 8 Request workflows (144 scenarios)
@@ -1131,6 +1269,7 @@ No test files found in:
 - Security testing (21 scenarios)
 
 **Limitations:**
+
 - Manual testing time-consuming
 - Not repeatable automatically
 - No regression test automation
@@ -1142,25 +1281,30 @@ No test files found in:
 #### Tools Configured:
 
 ✅ **TypeScript Compiler**
+
 - Strict mode enabled
 - BUT: Errors ignored in builds ❌
 
 ⚠️ **ESLint (Minimal)**
+
 ```json
 // package.json
 "lint": "next lint"  // ⚠️ Default Next.js config only
 ```
 
 ❌ **No Prettier**
+
 - No code formatting enforcement
 - Inconsistent spacing/formatting
 
 ❌ **No Pre-commit Hooks**
+
 - No Husky
 - No lint-staged
 - No quality gates before commits
 
 ❌ **No CI/CD Quality Checks**
+
 - No automated linting in CI
 - No automated tests in CI
 
@@ -1175,19 +1319,21 @@ No test files found in:
 #### tsconfig.json:
 
 ✅ **Good Settings**
+
 ```json
 {
   "compilerOptions": {
-    "strict": true,           // ✅ GOOD
-    "target": "ES2017",       // ✅ GOOD
-    "skipLibCheck": true,     // ⚠️ OK (performance)
-    "esModuleInterop": true,  // ✅ GOOD
-    "isolatedModules": true   // ✅ GOOD
+    "strict": true, // ✅ GOOD
+    "target": "ES2017", // ✅ GOOD
+    "skipLibCheck": true, // ⚠️ OK (performance)
+    "esModuleInterop": true, // ✅ GOOD
+    "isolatedModules": true // ✅ GOOD
   }
 }
 ```
 
 ❌ **CRITICAL ISSUE: Build Errors Ignored**
+
 ```typescript
 // next.config.ts
 typescript: {
@@ -1196,12 +1342,14 @@ typescript: {
 ```
 
 **Impact:**
+
 - Type errors not caught at build time
 - Runtime errors possible
 - False sense of type safety
 - Technical debt accumulating
 
 **Recommendation:**
+
 1. Remove `ignoreBuildErrors: true`
 2. Fix all TypeScript errors
 3. Enable strict null checks
@@ -1214,6 +1362,7 @@ typescript: {
 #### next.config.ts:
 
 ✅ **Good Settings**
+
 ```typescript
 {
   poweredByHeader: false,           // ✅ Security
@@ -1226,6 +1375,7 @@ typescript: {
 ```
 
 ✅ **Bundle Analyzer**
+
 ```typescript
 const withBundleAnalyzer = require('@next/bundle-analyzer')({
   enabled: process.env.ANALYZE === 'true',
@@ -1241,30 +1391,34 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 #### Production Dependencies (68):
 
 ✅ **Core Technologies**
+
 ```json
 {
-  "next": "^16.0.7",              // ✅ Latest stable
-  "react": "^19.2.1",             // ✅ Latest
-  "typescript": "^5",             // ✅ Latest
-  "@prisma/client": "^6.19.1",    // ✅ Latest
-  "tailwindcss": "^3.4.1"         // ✅ Latest
+  "next": "^16.0.7", // ✅ Latest stable
+  "react": "^19.2.1", // ✅ Latest
+  "typescript": "^5", // ✅ Latest
+  "@prisma/client": "^6.19.1", // ✅ Latest
+  "tailwindcss": "^3.4.1" // ✅ Latest
 }
 ```
 
 ✅ **Security Dependencies**
+
 ```json
 {
-  "bcryptjs": "^2.4.3",           // ✅ Password hashing
-  "zod": "^3.24.2",               // ✅ Validation
-  "zxcvbn": "^4.4.2"              // ✅ Password strength
+  "bcryptjs": "^2.4.3", // ✅ Password hashing
+  "zod": "^3.24.2", // ✅ Validation
+  "zxcvbn": "^4.4.2" // ✅ Password strength
 }
 ```
 
 ✅ **No Known Vulnerabilities**
+
 - Dependencies up-to-date
 - No critical security alerts
 
 ❌ **Missing Test Dependencies**
+
 ```json
 {
   // ❌ jest: NOT installed
@@ -1278,6 +1432,7 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 **Score: 90% ✅ EXCELLENT**
 
 ✅ **Environment Variables**
+
 ```
 DATABASE_URL             # PostgreSQL connection
 MINIO_ENDPOINT           # File storage
@@ -1290,10 +1445,12 @@ GOOGLE_GENKIT_API_KEY    # AI service
 ```
 
 ✅ **Not Hardcoded**
+
 - All secrets in .env files
 - .env files in .gitignore
 
 ✅ **Production Configuration**
+
 - Separate .env.production
 - Secure defaults
 
@@ -1304,10 +1461,12 @@ GOOGLE_GENKIT_API_KEY    # AI service
 ### 9.1 Critical Issues
 
 #### ISSUE-CODE-001: TypeScript Build Errors Ignored
+
 **Severity:** ❌ CRITICAL
 **Priority:** P0 (Must fix before production)
 
 **Description:**
+
 ```typescript
 // next.config.ts (Line 13-15)
 typescript: {
@@ -1316,6 +1475,7 @@ typescript: {
 ```
 
 **Impact:**
+
 - Type safety completely bypassed at build time
 - Runtime errors from type mismatches possible
 - No compile-time error detection
@@ -1325,6 +1485,7 @@ typescript: {
 Likely enabled during development to speed up builds, never removed.
 
 **Recommendation:**
+
 1. **Immediate**: Remove `ignoreBuildErrors: true`
 2. **Run**: `npm run typecheck` to see all errors
 3. **Fix**: All TypeScript errors (estimated 10-20 errors)
@@ -1335,11 +1496,13 @@ Likely enabled during development to speed up builds, never removed.
 ---
 
 #### ISSUE-CODE-002: Zero Automated Test Coverage
+
 **Severity:** ❌ CRITICAL
 **Priority:** P0 (Must fix before production)
 
 **Description:**
 No automated tests exist for:
+
 - API endpoints (73+)
 - React components (55+)
 - Utility functions (28+)
@@ -1347,6 +1510,7 @@ No automated tests exist for:
 - Critical user workflows
 
 **Impact:**
+
 - High risk of regressions
 - No safety net for refactoring
 - Manual testing required for every change
@@ -1354,10 +1518,12 @@ No automated tests exist for:
 - Unknown code quality
 
 **Current Testing:**
+
 - ✅ Manual UAT: 244 scenarios (96.7% pass)
 - ❌ Automated: 0 tests
 
 **Recommendation:**
+
 1. **Phase 1**: Install Jest/Vitest + Testing Library
 2. **Phase 2**: Write tests for critical paths (minimum 50% coverage):
    - Authentication (login, logout, session)
@@ -1374,23 +1540,27 @@ No automated tests exist for:
 ### 9.2 High Priority Issues
 
 #### ISSUE-CODE-003: No ESLint Custom Configuration
+
 **Severity:** ⚠️ HIGH
 **Priority:** P1 (Fix before production)
 
 **Description:**
 Only default Next.js ESLint rules active. No custom rules for:
+
 - Code quality enforcement
 - Consistent code style
 - Best practices
 - Security patterns
 
 **Current Configuration:**
+
 ```json
 // package.json
 "lint": "next lint"  // ⚠️ Minimal config
 ```
 
 **Recommendation:**
+
 ```json
 // .eslintrc.json
 {
@@ -1414,16 +1584,19 @@ Only default Next.js ESLint rules active. No custom rules for:
 ---
 
 #### ISSUE-CODE-004: No Code Formatting Tool
+
 **Severity:** ⚠️ HIGH
 **Priority:** P1 (Fix before production)
 
 **Description:**
 No Prettier or similar formatting tool configured. Results in:
+
 - Inconsistent code formatting
 - Code review time wasted on formatting discussions
 - Merge conflicts from formatting differences
 
 **Recommendation:**
+
 ```json
 // .prettierrc
 {
@@ -1443,16 +1616,19 @@ No Prettier or similar formatting tool configured. Results in:
 ---
 
 #### ISSUE-CODE-005: No Pre-commit Hooks
+
 **Severity:** ⚠️ HIGH
 **Priority:** P1 (Fix before production)
 
 **Description:**
 No quality gates before commits. Allows:
+
 - Unformatted code to be committed
 - TypeScript errors to be committed
 - Failing tests to be committed (when tests exist)
 
 **Recommendation:**
+
 ```json
 // package.json
 "devDependencies": {
@@ -1481,6 +1657,7 @@ npm run typecheck
 ### 9.3 Medium Priority Issues
 
 #### ISSUE-CODE-006: Console.log in Production Code
+
 **Severity:** ℹ️ MEDIUM
 **Priority:** P2 (Post-production)
 
@@ -1488,6 +1665,7 @@ npm run typecheck
 Production code contains debug console.log statements:
 
 **Examples:**
+
 ```typescript
 // src/app/api/confirmations/route.ts (Line 18)
 console.log('Confirmations API called with:', { userId, userRole });
@@ -1499,12 +1677,14 @@ console.log('[Middleware] Checking access:', { pathname, role });
 ```
 
 **Impact:**
+
 - Performance overhead (minimal)
 - Potential sensitive data exposure in logs
 - Cluttered production logs
 - Debugging noise
 
 **Recommendation:**
+
 ```typescript
 // Replace with structured logger
 import { logger } from '@/lib/logger';
@@ -1523,6 +1703,7 @@ if (process.env.NODE_ENV !== 'production') {
 ---
 
 #### ISSUE-CODE-007: Limited Code Documentation
+
 **Severity:** ℹ️ MEDIUM
 **Priority:** P2 (Post-production)
 
@@ -1530,6 +1711,7 @@ if (process.env.NODE_ENV !== 'production') {
 Most functions lack JSDoc comments:
 
 **Example:**
+
 ```typescript
 // ❌ No documentation
 export async function GET(req: Request) {
@@ -1550,6 +1732,7 @@ export async function GET(req: Request) {
 ```
 
 **Recommendation:**
+
 - Add JSDoc to all exported functions
 - Document complex algorithms
 - Add @param, @returns, @throws tags
@@ -1559,6 +1742,7 @@ export async function GET(req: Request) {
 ---
 
 #### ISSUE-CODE-008: No API Rate Limiting (General)
+
 **Severity:** ℹ️ MEDIUM
 **Priority:** P2 (Post-production)
 
@@ -1566,6 +1750,7 @@ export async function GET(req: Request) {
 Only OTP endpoint has rate limiting (5/hour). General API endpoints have no rate limits.
 
 **Current:**
+
 ```typescript
 // Only OTP endpoint protected
 if (otpAttempts >= 5) {
@@ -1574,11 +1759,13 @@ if (otpAttempts >= 5) {
 ```
 
 **Risk:**
+
 - API abuse possible
 - DoS attacks possible
 - Resource exhaustion
 
 **Recommendation:**
+
 ```typescript
 // Implement global rate limiting
 import { ratelimit } from '@/lib/rate-limit';
@@ -1607,6 +1794,7 @@ export async function POST(req: Request) {
 ### 9.4 Low Priority Issues
 
 #### ISSUE-CODE-009: Some Long Functions
+
 **Severity:** ℹ️ LOW
 **Priority:** P3 (Future improvement)
 
@@ -1614,6 +1802,7 @@ export async function POST(req: Request) {
 Some functions exceed 100 lines (e.g., API routes 150-200 lines).
 
 **Recommendation:**
+
 - Extract business logic to service layer
 - Break down into smaller functions
 - Improve readability
@@ -1623,6 +1812,7 @@ Some functions exceed 100 lines (e.g., API routes 150-200 lines).
 ---
 
 #### ISSUE-CODE-010: No API Versioning
+
 **Severity:** ℹ️ LOW
 **Priority:** P3 (Future improvement)
 
@@ -1630,10 +1820,12 @@ Some functions exceed 100 lines (e.g., API routes 150-200 lines).
 API endpoints not versioned (e.g., `/api/v1/confirmations`).
 
 **Impact:**
+
 - Hard to maintain backward compatibility
 - Breaking changes affect all clients
 
 **Recommendation:**
+
 ```
 /api/v1/confirmations
 /api/v1/employees
@@ -1646,6 +1838,7 @@ API endpoints not versioned (e.g., `/api/v1/confirmations`).
 ### 9.5 Positive Observations
 
 ✅ **Security-First Implementation**
+
 - Comprehensive CSRF protection
 - Strong password policies
 - Account lockout mechanism
@@ -1653,30 +1846,35 @@ API endpoints not versioned (e.g., `/api/v1/confirmations`).
 - 12 security headers configured
 
 ✅ **Clean Code Architecture**
+
 - Well-organized directory structure
 - Clear separation of concerns
 - Consistent naming conventions
 - Reusable components
 
 ✅ **Performance Optimizations**
+
 - Database indexing strategy excellent
 - Caching implemented strategically
 - Bundle optimization completed (Phase 1)
 - Background job processing for heavy operations
 
 ✅ **Type Safety**
+
 - TypeScript strict mode enabled
 - Prisma-generated types
 - Zod runtime validation
 - Consistent type usage (where not bypassed)
 
 ✅ **Error Handling**
+
 - Try-catch blocks in all API routes
 - Consistent error response format
 - Proper HTTP status codes
 - User-friendly error messages
 
 ✅ **Database Design**
+
 - Normalized schema (3NF)
 - Comprehensive indexing
 - Proper foreign keys
@@ -1693,19 +1891,23 @@ API endpoints not versioned (e.g., `/api/v1/confirmations`).
 #### Followed Practices:
 
 ✅ **Functional Components**
+
 ```typescript
-export function AppSidebar() {  // ✅ Not class components
+export function AppSidebar() {
+  // ✅ Not class components
   // ...
 }
 ```
 
 ✅ **Hooks Usage**
+
 ```typescript
 const { role, logout, user } = useAuth();
 const navItems = React.useMemo(() => getNavItemsForRole(role), [role]);
 ```
 
 ✅ **Component Composition**
+
 ```tsx
 <ShadSidebar>
   <SidebarHeader>...</SidebarHeader>
@@ -1714,6 +1916,7 @@ const navItems = React.useMemo(() => getNavItemsForRole(role), [role]);
 ```
 
 ✅ **Props Destructuring**
+
 ```typescript
 function Button({ variant = 'primary', ...props }: ButtonProps) {
   // ...
@@ -1721,6 +1924,7 @@ function Button({ variant = 'primary', ...props }: ButtonProps) {
 ```
 
 **Minor Issues:**
+
 - ⚠️ Some useEffect dependencies could be optimized
 
 ### 10.2 Next.js Best Practices
@@ -1728,11 +1932,13 @@ function Button({ variant = 'primary', ...props }: ButtonProps) {
 **Score: 90% ✅ EXCELLENT**
 
 ✅ **App Router Proper Usage**
+
 - Server Components by default
 - Client Components only where needed
 - Proper data fetching patterns
 
 ✅ **File-Based Routing**
+
 ```
 app/
 ├── dashboard/
@@ -1742,6 +1948,7 @@ app/
 ```
 
 ✅ **API Routes Organization**
+
 ```
 api/
 ├── confirmations/
@@ -1751,16 +1958,18 @@ api/
 ```
 
 ✅ **Image Optimization**
+
 ```tsx
 import Image from 'next/image';
 <Image src={...} width={200} height={200} />
 ```
 
 ✅ **Metadata API**
+
 ```typescript
 export const metadata = {
   title: 'CSMS - Confirmation Requests',
-  description: '...'
+  description: '...',
 };
 ```
 
@@ -1769,6 +1978,7 @@ export const metadata = {
 **Score: 82% ✅ GOOD**
 
 ✅ **Followed:**
+
 - Strict mode enabled
 - Explicit return types
 - Interface definitions
@@ -1776,6 +1986,7 @@ export const metadata = {
 - Enums for constants
 
 ❌ **Not Followed:**
+
 - Build errors ignored (CRITICAL)
 - Occasional `any` usage
 - Some implicit types
@@ -1785,6 +1996,7 @@ export const metadata = {
 **Score: 95% ✅ EXCELLENT**
 
 ✅ **OWASP Top 10 Compliance**
+
 - Input validation (Zod)
 - SQL injection prevention (Prisma)
 - XSS prevention (React escaping + CSP)
@@ -1795,10 +2007,12 @@ export const metadata = {
 - Logging & monitoring (audit logs)
 
 ✅ **Security Headers**
+
 - 12 headers configured
 - HSTS, CSP, X-Frame-Options, etc.
 
 ✅ **Password Security**
+
 - Strong requirements
 - Expiration policy
 - Account lockout
@@ -1808,11 +2022,13 @@ export const metadata = {
 **Score: 75% ✅ GOOD**
 
 ✅ **Good Practices:**
+
 - Radix UI (accessible by default)
 - Semantic HTML
 - ARIA labels on some components
 
 ⚠️ **Could Improve:**
+
 - Keyboard navigation testing
 - Screen reader testing
 - Focus management
@@ -1887,10 +2103,12 @@ Version Tags:            ❌ None
 **Priority: P0 - Estimated Total Effort: 88-136 hours**
 
 #### 1. Fix TypeScript Build Errors
+
 **Effort:** 8-16 hours
 **Impact:** Critical
 
 **Actions:**
+
 ```bash
 # 1. Remove ignoreBuildErrors from next.config.ts
 # 2. Run typecheck
@@ -1914,10 +2132,12 @@ npm run build
 ---
 
 #### 2. Implement Unit Test Framework
+
 **Effort:** 80-120 hours
 **Impact:** Critical
 
 **Actions:**
+
 ```bash
 # 1. Install dependencies
 npm install --save-dev jest @testing-library/react @testing-library/jest-dom jest-environment-jsdom
@@ -1956,6 +2176,7 @@ npm test
 ```
 
 **Test Coverage Targets:**
+
 - Phase 1: Critical paths (authentication, authorization) - 30%
 - Phase 2: Business logic (request workflows) - 50%
 - Phase 3: Utilities and components - 70%
@@ -1968,6 +2189,7 @@ npm test
 **Priority: P1 - Estimated Total Effort: 10 hours**
 
 #### 3. Configure ESLint Custom Rules
+
 **Effort:** 4 hours
 
 ```json
@@ -1991,6 +2213,7 @@ npm test
 ---
 
 #### 4. Add Prettier for Code Formatting
+
 **Effort:** 4 hours (including formatting codebase)
 
 ```json
@@ -2013,6 +2236,7 @@ npm test
 ---
 
 #### 5. Implement Pre-commit Hooks
+
 **Effort:** 2 hours
 
 ```bash
@@ -2045,6 +2269,7 @@ npm run typecheck
 **Priority: P2 - Estimated Total Effort: 64 hours**
 
 #### 6. Replace Console.log with Structured Logger
+
 **Effort:** 8 hours
 
 ```typescript
@@ -2054,8 +2279,8 @@ import pino from 'pino';
 export const logger = pino({
   level: process.env.LOG_LEVEL || 'info',
   formatters: {
-    level: (label) => ({ level: label })
-  }
+    level: (label) => ({ level: label }),
+  },
 });
 
 // Usage:
@@ -2066,6 +2291,7 @@ logger.error({ error: err }, 'API error');
 ---
 
 #### 7. Add JSDoc Documentation
+
 **Effort:** 40 hours
 
 ```typescript
@@ -2087,6 +2313,7 @@ export async function GET(req: Request) {
 ---
 
 #### 8. Implement API Rate Limiting
+
 **Effort:** 16 hours
 
 ```typescript
@@ -2105,10 +2332,7 @@ export async function POST(req: Request) {
   const { success } = await ratelimit.limit(ip);
 
   if (!success) {
-    return NextResponse.json(
-      { error: 'Too many requests' },
-      { status: 429 }
-    );
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
   }
 
   // ... rest of logic
@@ -2116,6 +2340,7 @@ export async function POST(req: Request) {
 ```
 
 **Rate Limits:**
+
 - Login: 10 requests/minute
 - General API: 100 requests/minute
 - Report generation: 10 requests/minute
@@ -2128,9 +2353,11 @@ export async function POST(req: Request) {
 **Priority: P3 - Estimated Total Effort: 40-48 hours**
 
 #### 9. Refactor Long Functions
+
 **Effort:** 16-24 hours
 
 Extract business logic to service layer:
+
 ```typescript
 // Before: 200 lines in API route
 export async function POST(req: Request) {
@@ -2158,6 +2385,7 @@ export class ConfirmationService {
 ---
 
 #### 10. Add API Versioning
+
 **Effort:** 8 hours
 
 ```
@@ -2169,6 +2397,7 @@ export class ConfirmationService {
 ---
 
 #### 11. Implement E2E Tests
+
 **Effort:** 16 hours (initial setup)
 
 ```typescript
@@ -2308,13 +2537,13 @@ Areas requiring improvement:
 
 **Production Deployment Risks:**
 
-| Risk | Severity | Likelihood | Mitigation |
-|------|----------|------------|------------|
-| Runtime type errors from ignored TypeScript issues | HIGH | MEDIUM | Fix all TypeScript errors before production |
-| Regressions from code changes (no tests) | HIGH | HIGH | Implement unit tests for critical paths |
-| Code quality degradation over time | MEDIUM | MEDIUM | Add ESLint, Prettier, pre-commit hooks |
-| Security vulnerabilities missed | LOW | LOW | Security implementation excellent (95%) |
-| Performance degradation | LOW | LOW | Good optimization already in place (85%) |
+| Risk                                               | Severity | Likelihood | Mitigation                                  |
+| -------------------------------------------------- | -------- | ---------- | ------------------------------------------- |
+| Runtime type errors from ignored TypeScript issues | HIGH     | MEDIUM     | Fix all TypeScript errors before production |
+| Regressions from code changes (no tests)           | HIGH     | HIGH       | Implement unit tests for critical paths     |
+| Code quality degradation over time                 | MEDIUM   | MEDIUM     | Add ESLint, Prettier, pre-commit hooks      |
+| Security vulnerabilities missed                    | LOW      | LOW        | Security implementation excellent (95%)     |
+| Performance degradation                            | LOW      | LOW        | Good optimization already in place (85%)    |
 
 ### 13.7 Final Recommendation
 
@@ -2323,18 +2552,14 @@ Areas requiring improvement:
 The CSMS codebase is **well-architected and secure** but requires **critical fixes before production deployment**. The development team has built a solid foundation with excellent security practices and clean code organization.
 
 **Mandatory Pre-Production Actions:**
+
 1. Fix TypeScript build errors (P0)
 2. Implement unit test framework with 50% coverage (P0)
 3. Add ESLint custom configuration (P1)
 4. Implement Prettier code formatting (P1)
 5. Set up pre-commit hooks (P1)
 
-**Post-Production Recommended Actions:**
-6. Replace console.log with structured logging (P2)
-7. Add comprehensive JSDoc documentation (P2)
-8. Implement API rate limiting (P2)
-9. Increase test coverage to 70-80% (P2)
-10. Refactor long functions to service layer (P3)
+**Post-Production Recommended Actions:** 6. Replace console.log with structured logging (P2) 7. Add comprehensive JSDoc documentation (P2) 8. Implement API rate limiting (P2) 9. Increase test coverage to 70-80% (P2) 10. Refactor long functions to service layer (P3)
 
 Upon completion of mandatory pre-production actions (estimated 2.5-3.5 weeks), the codebase will be production-ready with significantly reduced risk and improved maintainability.
 
@@ -2347,21 +2572,21 @@ Upon completion of mandatory pre-production actions (estimated 2.5-3.5 weeks), t
 
 ### 14.1 Review Team Sign-off
 
-| Role | Name | Signature | Date | Status |
-|------|------|-----------|------|--------|
-| **Lead Reviewer** | | | | APPROVED WITH CONDITIONS |
-| **Security Reviewer** | | | | APPROVED (95% security score) |
-| **Performance Reviewer** | | | | APPROVED (85% performance score) |
-| **Code Quality Reviewer** | | | | CONDITIONAL (pending test implementation) |
+| Role                      | Name | Signature | Date | Status                                    |
+| ------------------------- | ---- | --------- | ---- | ----------------------------------------- |
+| **Lead Reviewer**         |      |           |      | APPROVED WITH CONDITIONS                  |
+| **Security Reviewer**     |      |           |      | APPROVED (95% security score)             |
+| **Performance Reviewer**  |      |           |      | APPROVED (85% performance score)          |
+| **Code Quality Reviewer** |      |           |      | CONDITIONAL (pending test implementation) |
 
 ### 14.2 Stakeholder Acknowledgment
 
-| Role | Name | Signature | Date | Acknowledgment |
-|------|------|-----------|------|----------------|
-| **Project Manager** | | | | ACKNOWLEDGED - Timeline adjusted for fixes |
-| **Technical Lead** | | | | ACKNOWLEDGED - Will implement critical fixes |
-| **QA Lead** | | | | ACKNOWLEDGED - Test implementation planned |
-| **CSC Representative** | | | | ACKNOWLEDGED - Accepts conditional approval |
+| Role                   | Name | Signature | Date | Acknowledgment                               |
+| ---------------------- | ---- | --------- | ---- | -------------------------------------------- |
+| **Project Manager**    |      |           |      | ACKNOWLEDGED - Timeline adjusted for fixes   |
+| **Technical Lead**     |      |           |      | ACKNOWLEDGED - Will implement critical fixes |
+| **QA Lead**            |      |           |      | ACKNOWLEDGED - Test implementation planned   |
+| **CSC Representative** |      |           |      | ACKNOWLEDGED - Accepts conditional approval  |
 
 ### 14.3 Conditions for Production Deployment
 
@@ -2374,6 +2599,7 @@ Upon completion of mandatory pre-production actions (estimated 2.5-3.5 weeks), t
 - [ ] **HIGH**: Pre-commit hooks configured with lint-staged
 
 **Verification Required:**
+
 - [ ] `npm run build` succeeds without errors
 - [ ] `npm run typecheck` passes without errors
 - [ ] `npm test` shows ≥50% coverage on critical paths
@@ -2383,12 +2609,14 @@ Upon completion of mandatory pre-production actions (estimated 2.5-3.5 weeks), t
 ### 14.4 Post-Production Follow-up
 
 **Phase 2 Improvements** (Within 3 months of production launch):
+
 - [ ] Structured logging implemented (replace console.log)
 - [ ] JSDoc documentation added to all public functions
 - [ ] API rate limiting implemented
 - [ ] Test coverage increased to 70%
 
 **Review Schedule:**
+
 - **3-month post-launch review**: August 2025 (verify Phase 2 completion)
 - **6-month post-launch review**: November 2025 (evaluate production stability)
 - **Annual code review**: May 2026 (comprehensive codebase assessment)
@@ -2400,6 +2628,7 @@ Upon completion of mandatory pre-production actions (estimated 2.5-3.5 weeks), t
 ### Appendix A: Code Review Checklist
 
 **Configuration:**
+
 - [x] TypeScript strict mode enabled
 - [ ] TypeScript build errors fixed (CRITICAL)
 - [x] ESLint configured
@@ -2410,6 +2639,7 @@ Upon completion of mandatory pre-production actions (estimated 2.5-3.5 weeks), t
 - [x] Dependencies up-to-date
 
 **Code Quality:**
+
 - [x] Consistent naming conventions
 - [x] Code properly organized
 - [x] Reusable components/utilities
@@ -2418,6 +2648,7 @@ Upon completion of mandatory pre-production actions (estimated 2.5-3.5 weeks), t
 - [x] No hardcoded secrets
 
 **Security:**
+
 - [x] Input validation (Zod)
 - [x] SQL injection prevention (Prisma)
 - [x] XSS prevention
@@ -2428,6 +2659,7 @@ Upon completion of mandatory pre-production actions (estimated 2.5-3.5 weeks), t
 - [x] Audit logging implemented
 
 **Performance:**
+
 - [x] Database queries optimized
 - [x] Indexes on common queries
 - [x] N+1 query problem avoided
@@ -2435,6 +2667,7 @@ Upon completion of mandatory pre-production actions (estimated 2.5-3.5 weeks), t
 - [x] Bundle optimization done
 
 **Testing:**
+
 - [ ] Unit tests present (CRITICAL)
 - [ ] Integration tests present (CRITICAL)
 - [ ] E2E tests present (LOW)
@@ -2443,6 +2676,7 @@ Upon completion of mandatory pre-production actions (estimated 2.5-3.5 weeks), t
 ### Appendix B: Tools & Frameworks Used
 
 **Core Technologies:**
+
 - Next.js 16.0.7 (App Router)
 - React 19.2.1
 - TypeScript 5.x
@@ -2450,26 +2684,31 @@ Upon completion of mandatory pre-production actions (estimated 2.5-3.5 weeks), t
 - Prisma 6.19.1
 
 **UI Framework:**
+
 - Tailwind CSS 3.4.17
 - Radix UI (accessible components)
 - shadcn/ui (component library)
 - Lucide React (icons)
 
 **State & Forms:**
+
 - Zustand 4.5.4 (state management)
 - React Hook Form 7.54.2 (form handling)
 - Zod 3.24.2 (validation)
 
 **Security:**
+
 - bcryptjs 2.4.3 (password hashing)
 - Iron Session (session management)
 - zxcvbn 4.4.2 (password strength)
 
 **Storage & Jobs:**
+
 - MinIO 8.0.5 (S3-compatible storage)
 - Redis + BullMQ 5.66.4 (job queue)
 
 **AI & Utilities:**
+
 - Google Genkit 0.9.20 (AI integration)
 - date-fns 3.6.0 (date handling)
 - uuid 13.0.0 (ID generation)
@@ -2477,6 +2716,7 @@ Upon completion of mandatory pre-production actions (estimated 2.5-3.5 weeks), t
 ### Appendix C: Testing Recommendations
 
 **Recommended Test Structure:**
+
 ```
 tests/
 ├── unit/
@@ -2503,6 +2743,7 @@ tests/
 ```
 
 **Test Coverage Priorities:**
+
 1. Authentication & authorization (HIGH)
 2. Request workflows (HIGH)
 3. HRIMS integration (MEDIUM)
@@ -2512,6 +2753,7 @@ tests/
 ### Appendix D: Git Commit Messages from 2025
 
 **Recent commits demonstrate good practices:**
+
 ```
 92811437 Implement UX polish, background job queue, and pagination enhancements
 a07dbc79 Implement JavaScript bundle optimization - Phase 1
@@ -2524,11 +2766,13 @@ eb0692dc Implement comprehensive security enhancements
 ```
 
 **Strengths:**
+
 - ✅ Descriptive messages ("Implement...", "Fix...", "Add...")
 - ✅ Clear scope of changes
 - ✅ Focus on security and performance
 
 **Areas for Improvement:**
+
 - ⚠️ No conventional commit format (feat:, fix:, chore:)
 - ⚠️ No issue references (#123)
 
@@ -2536,7 +2780,7 @@ eb0692dc Implement comprehensive security enhancements
 
 **END OF CODE REVIEW REPORT**
 
-*This comprehensive code review was conducted to ensure the CSMS codebase meets quality, security, and maintainability standards for production deployment. All findings and recommendations are based on industry best practices, OWASP security guidelines, and Next.js/React/TypeScript best practices.*
+_This comprehensive code review was conducted to ensure the CSMS codebase meets quality, security, and maintainability standards for production deployment. All findings and recommendations are based on industry best practices, OWASP security guidelines, and Next.js/React/TypeScript best practices._
 
 **Document Version:** 1.0
 **Review Date:** May 20, 2025

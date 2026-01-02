@@ -7,6 +7,7 @@ This script automatically fetches employee data from HRIMS for **all institution
 ## Features
 
 ✨ **Key Features:**
+
 - ✅ Automatic pagination for large institutions
 - ✅ Configurable page size
 - ✅ Automatic retry on failures
@@ -20,6 +21,7 @@ This script automatically fetches employee data from HRIMS for **all institution
 ## Prerequisites
 
 1. **Server Running**: The Next.js server must be running on port 9002
+
    ```bash
    npm run dev
    ```
@@ -93,18 +95,21 @@ const CONFIG = {
 ### Recommended Settings
 
 **For large institutions (1000+ employees):**
+
 ```typescript
 PAGE_SIZE: 50,
 TIMEOUT: 3600000, // 60 minutes
 ```
 
 **For normal institutions:**
+
 ```typescript
 PAGE_SIZE: 100,
 TIMEOUT: 1800000, // 30 minutes
 ```
 
 **For overnight batch runs:**
+
 ```typescript
 PAGE_SIZE: 100,
 PAUSE_BETWEEN_INSTITUTIONS: 20000, // 20 seconds
@@ -115,7 +120,9 @@ MAX_RETRIES: 3,
 ## Output
 
 ### Console Output
+
 The script provides real-time progress updates:
+
 ```
 [2025-12-08 10:30:00] ℹ️  [1/72] Fetching: WIZARA YA AFYA
 [2025-12-08 10:35:23] ✅ WIZARA YA AFYA: Fetched 1234 employees (15 pages, 5m 23s)
@@ -123,12 +130,15 @@ The script provides real-time progress updates:
 ```
 
 ### Log Files
+
 Detailed logs are saved to `./logs/hrims-fetch-TIMESTAMP.log`
 
 Example: `logs/hrims-fetch-2025-12-08T10-30-00.log`
 
 ### Final Summary
+
 At the end, you'll get a comprehensive summary:
+
 ```
 ================================================================================
 📊 FINAL SUMMARY
@@ -148,6 +158,7 @@ Total institutions: 72
 ## Monitoring Progress
 
 ### Real-time Monitoring
+
 ```bash
 # Follow the log file
 tail -f logs/hrims-fetch-*.log
@@ -160,6 +171,7 @@ tail -f logs/hrims-fetch-*.log | grep "✅"
 ```
 
 ### Check Database Count
+
 ```bash
 # In another terminal, check growing employee count
 psql -U postgres -d nody -c "SELECT COUNT(*) FROM \"Employee\";"
@@ -168,23 +180,30 @@ psql -U postgres -d nody -c "SELECT COUNT(*) FROM \"Employee\";"
 ## Troubleshooting
 
 ### Problem: Server not running
+
 **Solution:**
+
 ```bash
 npm run dev
 ```
 
 ### Problem: Timeout errors
+
 **Solution:** Increase timeout or decrease page size:
+
 ```typescript
 TIMEOUT: 7200000, // 2 hours
 PAGE_SIZE: 50, // Smaller pages
 ```
 
 ### Problem: Database connection errors
+
 **Solution:** Check database is running and credentials are correct
 
 ### Problem: Memory issues
+
 **Solution:** Increase Node.js memory:
+
 ```bash
 NODE_OPTIONS=--max-old-space-size=4096 npx tsx scripts/fetch-all-institutions-auto.ts
 ```
@@ -192,11 +211,13 @@ NODE_OPTIONS=--max-old-space-size=4096 npx tsx scripts/fetch-all-institutions-au
 ## Estimating Run Time
 
 **Formula:**
+
 ```
 Total Time ≈ (Number of Institutions × Average Fetch Time) + (Pause Time × Number of Institutions)
 ```
 
 **Example:**
+
 - 72 institutions
 - Average 3 minutes per institution
 - 15 seconds pause between institutions
@@ -245,6 +266,7 @@ psql -U postgres -d nody -c "
 ## Support
 
 If you encounter issues:
+
 1. Check the log file in `./logs/`
 2. Review the error messages
 3. Verify server is running

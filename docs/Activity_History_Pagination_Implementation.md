@@ -7,12 +7,14 @@ Added full pagination support to the Recent Activities page, allowing users to v
 ## Problem Solved
 
 ### Before (No Pagination)
+
 - Users could only see the **10 most recent activities**
 - No way to view older activities
 - Limited visibility into historical data
 - Poor UX for users needing to track older requests
 
 ### After (Full Pagination)
+
 - ✅ View **all activities** across multiple pages
 - ✅ Navigate using Previous/Next buttons
 - ✅ Jump to specific pages using page numbers
@@ -38,8 +40,8 @@ const skip = (page - 1) * limit;
 
 ```typescript
 // Sort all activities by date
-const sortedActivities = allActivities.sort((a, b) =>
-  b.updatedAt.getTime() - a.updatedAt.getTime()
+const sortedActivities = allActivities.sort(
+  (a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()
 );
 
 // Calculate pagination metadata
@@ -51,9 +53,9 @@ const hasPrevPage = page > 1;
 // Apply pagination
 const recentActivities = sortedActivities
   .slice(skip, skip + limit)
-  .map(activity => ({
+  .map((activity) => ({
     ...activity,
-    href: getRequestHref(activity.type)
+    href: getRequestHref(activity.type),
   }));
 ```
 
@@ -71,9 +73,9 @@ const response = {
       totalActivities,
       limit,
       hasNextPage,
-      hasPrevPage
-    }
-  }
+      hasPrevPage,
+    },
+  },
 };
 ```
 
@@ -100,18 +102,21 @@ interface PaginationInfo {
 **Updated fetch function to include page parameter:**
 
 ```typescript
-const fetchRecentActivities = React.useCallback(async (page: number) => {
-  const response = await fetch(
-    `/api/dashboard/metrics?userRole=${role}&userInstitutionId=${user.institutionId}&page=${page}&limit=10`,
-    { credentials: 'include' }
-  );
+const fetchRecentActivities = React.useCallback(
+  async (page: number) => {
+    const response = await fetch(
+      `/api/dashboard/metrics?userRole=${role}&userInstitutionId=${user.institutionId}&page=${page}&limit=10`,
+      { credentials: 'include' }
+    );
 
-  const result = await response.json();
-  if (result.success && result.data?.recentActivities) {
-    setRecentActivities(result.data.recentActivities);
-    setPagination(result.data.pagination);
-  }
-}, [isAuthLoading, user, role]);
+    const result = await response.json();
+    if (result.success && result.data?.recentActivities) {
+      setRecentActivities(result.data.recentActivities);
+      setPagination(result.data.pagination);
+    }
+  },
+  [isAuthLoading, user, role]
+);
 ```
 
 **Added pagination handlers:**
@@ -119,13 +124,13 @@ const fetchRecentActivities = React.useCallback(async (page: number) => {
 ```typescript
 const handlePrevPage = () => {
   if (pagination?.hasPrevPage) {
-    setCurrentPage(prev => prev - 1);
+    setCurrentPage((prev) => prev - 1);
   }
 };
 
 const handleNextPage = () => {
   if (pagination?.hasNextPage) {
-    setCurrentPage(prev => prev + 1);
+    setCurrentPage((prev) => prev + 1);
   }
 };
 
@@ -164,7 +169,7 @@ const handlePageClick = (page: number) => {
         return (
           <Button
             key={pageNum}
-            variant={pageNum === pagination.currentPage ? "default" : "outline"}
+            variant={pageNum === pagination.currentPage ? 'default' : 'outline'}
             onClick={() => handlePageClick(pageNum)}
           >
             {pageNum}
@@ -230,6 +235,7 @@ GET /api/dashboard/metrics?userRole={role}&userInstitutionId={id}&page={page}&li
 ```
 
 **Query Parameters:**
+
 - `userRole` (required): User's role for filtering
 - `userInstitutionId` (required): Institution ID for filtering
 - `page` (optional, default: 1): Page number to fetch
@@ -241,7 +247,9 @@ GET /api/dashboard/metrics?userRole={role}&userInstitutionId={id}&page={page}&li
 {
   "success": true,
   "data": {
-    "stats": { /* dashboard stats */ },
+    "stats": {
+      /* dashboard stats */
+    },
     "recentActivities": [
       {
         "id": "conf-123",
@@ -267,12 +275,14 @@ GET /api/dashboard/metrics?userRole={role}&userInstitutionId={id}&page={page}&li
 ## Benefits
 
 ### User Experience
+
 - ✅ **Complete Visibility**: Access to all historical activities, not just recent 10
 - ✅ **Easy Navigation**: Intuitive pagination controls
 - ✅ **Performance**: Still fetches only 10 items at a time (not loading all activities)
 - ✅ **Context**: Clear indication of total activities and current position
 
 ### Technical
+
 - ✅ **Backward Compatible**: Main dashboard still shows top 10 (no pagination there)
 - ✅ **Scalable**: Handles hundreds of activities efficiently
 - ✅ **Flexible**: Easy to change items per page (just update `limit` param)
@@ -281,14 +291,17 @@ GET /api/dashboard/metrics?userRole={role}&userInstitutionId={id}&page={page}&li
 ## Use Cases
 
 ### Scenario 1: HRO reviewing last month's activities
+
 - **Before:** Could only see 10 activities, likely from this week
 - **After:** Navigate through pages to see activities from 2-3 weeks ago
 
 ### Scenario 2: CSCS auditing all pending requests
+
 - **Before:** Limited to 10 most recent, might miss older pending items
 - **After:** Navigate all pages to review every pending request
 
 ### Scenario 3: HHRMD tracking approval history
+
 - **Before:** No way to see activities from last month
 - **After:** Jump to earlier pages to review historical approvals
 
@@ -348,6 +361,7 @@ GET /api/dashboard/metrics?userRole={role}&userInstitutionId={id}&page={page}&li
 
 **Implementation Date:** December 28, 2025
 **Modified Components:**
+
 - API Route: `src/app/api/dashboard/metrics/route.ts`
 - Frontend Page: `src/app/dashboard/recent-activities/page.tsx`
-**Impact:** Users can now view all historical activities with full pagination support
+  **Impact:** Users can now view all historical activities with full pagination support

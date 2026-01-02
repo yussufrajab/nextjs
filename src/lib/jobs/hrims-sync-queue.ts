@@ -99,7 +99,9 @@ export async function addHRIMSSyncJob(data: HRIMSSyncJobData): Promise<string> {
     jobId: `hrims-sync-${data.institutionId}-${Date.now()}`, // Unique job ID
   });
 
-  console.log(`✅ HRIMS sync job added: ${job.id} for institution ${data.institutionName}`);
+  console.log(
+    `✅ HRIMS sync job added: ${job.id} for institution ${data.institutionName}`
+  );
 
   return job.id!;
 }

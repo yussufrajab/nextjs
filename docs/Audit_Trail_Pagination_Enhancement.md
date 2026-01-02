@@ -7,6 +7,7 @@ Enhanced the Audit Trail pagination from basic Previous/Next buttons to a **full
 ## Problem Solved
 
 ### Before (Basic Pagination)
+
 - Only Previous/Next buttons
 - Text-based buttons (no icons)
 - Hard to jump to specific pages
@@ -14,6 +15,7 @@ Enhanced the Audit Trail pagination from basic Previous/Next buttons to a **full
 - Tedious navigation when dealing with thousands of logs
 
 ### After (Enhanced Pagination)
+
 - ✅ **Page number buttons** (shows 5 pages at a time)
 - ✅ **Icon-based navigation** (ChevronLeft/Right)
 - ✅ **Jump to specific pages** (click any page number)
@@ -26,11 +28,20 @@ Enhanced the Audit Trail pagination from basic Previous/Next buttons to a **full
 ### Changes in `/home/latest/src/app/dashboard/admin/audit-trail/page.tsx`
 
 **1. Added CardFooter import:**
+
 ```typescript
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from '@/components/ui/card';
 ```
 
 **2. Added Chevron icons:**
+
 ```typescript
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 ```
@@ -40,7 +51,8 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 ```tsx
 <CardFooter className="flex items-center justify-between border-t px-6 py-4">
   <div className="text-sm text-muted-foreground">
-    Page {currentPage} of {totalPages.toLocaleString()} • {totalLogs.toLocaleString()} total events
+    Page {currentPage} of {totalPages.toLocaleString()} •{' '}
+    {totalLogs.toLocaleString()} total events
   </div>
   <div className="flex items-center space-x-2">
     {/* Previous button with icon */}
@@ -61,7 +73,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
         return (
           <Button
             key={pageNum}
-            variant={pageNum === currentPage ? "default" : "outline"}
+            variant={pageNum === currentPage ? 'default' : 'outline'}
             onClick={() => setCurrentPage(pageNum)}
           >
             {pageNum}
@@ -117,6 +129,7 @@ This ensures users always see contextually relevant pages without overwhelming t
 ```
 
 **Elements:**
+
 - Left: Page info with total count (formatted with commas)
 - Right: Navigation controls
 - Current page button highlighted in blue
@@ -127,12 +140,14 @@ This ensures users always see contextually relevant pages without overwhelming t
 ### Scenario: 10,000 audit logs (200 pages @ 50 logs/page)
 
 **Before:**
+
 - User on page 1, needs to view page 50
 - Must click "Next" **49 times**
 - Takes 2-3 minutes of repetitive clicking
 - Easy to lose count, miss target page
 
 **After:**
+
 - User on page 1, clicks page numbers to jump: 5 → 25 → 45 → 50
 - Reaches page 50 in **4 clicks** (~5 seconds)
 - Clear visual feedback on current position
@@ -141,11 +156,13 @@ This ensures users always see contextually relevant pages without overwhelming t
 ### Scenario: Investigating logs from last month
 
 **Before:**
+
 - Scroll through 100+ pages using only Previous/Next
 - No way to jump to middle of dataset
 - Time-consuming and frustrating
 
 **After:**
+
 - Filter by date range (built-in feature)
 - Use page numbers to quickly navigate filtered results
 - Jump to specific pages in filtered dataset
@@ -171,20 +188,21 @@ The enhanced pagination works seamlessly with all existing audit trail features:
 
 Both pages now have **identical pagination UX**:
 
-| Feature | Recent Activities | Audit Trail |
-|---------|------------------|-------------|
-| Page number buttons | ✅ 5 buttons | ✅ 5 buttons |
-| Smart page display | ✅ Yes | ✅ Yes |
-| Chevron icons | ✅ Yes | ✅ Yes |
-| Total count display | ✅ Yes | ✅ Yes |
-| Items per page | 10 activities | 50 logs |
-| CardFooter design | ✅ Yes | ✅ Yes |
+| Feature             | Recent Activities | Audit Trail  |
+| ------------------- | ----------------- | ------------ |
+| Page number buttons | ✅ 5 buttons      | ✅ 5 buttons |
+| Smart page display  | ✅ Yes            | ✅ Yes       |
+| Chevron icons       | ✅ Yes            | ✅ Yes       |
+| Total count display | ✅ Yes            | ✅ Yes       |
+| Items per page      | 10 activities     | 50 logs      |
+| CardFooter design   | ✅ Yes            | ✅ Yes       |
 
 **Consistent UX** across all paginated pages in the application.
 
 ## Use Cases
 
 ### 1. Security Audit - Finding specific login attempts
+
 - **Goal**: Review all login attempts from 3 weeks ago
 - **Steps**:
   1. Filter by date range (3 weeks ago)
@@ -193,6 +211,7 @@ Both pages now have **identical pagination UX**:
   4. Jump to page 10, 20, 30 to sample different time periods
 
 ### 2. Compliance Review - Monthly audit report
+
 - **Goal**: Generate report of all critical events from last month
 - **Steps**:
   1. Filter by severity: "CRITICAL"
@@ -201,6 +220,7 @@ Both pages now have **identical pagination UX**:
   4. Use page numbers to efficiently review all critical events
 
 ### 3. Incident Investigation - Tracking unauthorized access
+
 - **Goal**: Investigate unauthorized access attempts on specific date
 - **Steps**:
   1. Filter by event type: "UNAUTHORIZED_ACCESS"
@@ -209,6 +229,7 @@ Both pages now have **identical pagination UX**:
   4. Jump to middle pages to look for patterns
 
 ### 4. User Activity Review - Track specific user actions
+
 - **Goal**: Review all actions by a specific user
 - **Steps**:
   1. Search by username
@@ -263,12 +284,12 @@ Both pages now have **identical pagination UX**:
 
 Based on typical audit log volumes:
 
-| Time Period | Estimated Logs | Pages (50/page) | Benefit |
-|------------|----------------|-----------------|---------|
-| 1 week | 500-1,000 | 10-20 | Moderate improvement |
-| 1 month | 2,000-5,000 | 40-100 | **Significant improvement** |
-| 3 months | 6,000-15,000 | 120-300 | **Major improvement** |
-| 1 year | 25,000-60,000 | 500-1,200 | **Critical enhancement** |
+| Time Period | Estimated Logs | Pages (50/page) | Benefit                     |
+| ----------- | -------------- | --------------- | --------------------------- |
+| 1 week      | 500-1,000      | 10-20           | Moderate improvement        |
+| 1 month     | 2,000-5,000    | 40-100          | **Significant improvement** |
+| 3 months    | 6,000-15,000   | 120-300         | **Major improvement**       |
+| 1 year      | 25,000-60,000  | 500-1,200       | **Critical enhancement**    |
 
 For a production system with thousands of logs, this enhancement reduces navigation time by **80-90%** when reviewing historical data.
 

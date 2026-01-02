@@ -1,5 +1,3 @@
 module.exports = {
-  '*.{ts,tsx}': () => [
-    'npm run typecheck',
-  ],
+  '*.{ts,tsx}': () => ['npm run typecheck'],
 };

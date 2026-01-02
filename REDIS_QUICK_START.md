@@ -7,32 +7,38 @@ Redis version 7.0.15 has been successfully installed on your system.
 ## Quick Commands
 
 ### Start Redis
+
 ```bash
 ./scripts/start-redis.sh
 ```
 
 Or manually:
+
 ```bash
 redis-server --daemonize yes --bind 127.0.0.1 --port 6379
 ```
 
 ### Stop Redis
+
 ```bash
 ./scripts/stop-redis.sh
 ```
 
 Or manually:
+
 ```bash
 redis-cli SHUTDOWN
 ```
 
 ### Check if Redis is Running
+
 ```bash
 redis-cli ping
 # Should return: PONG
 ```
 
 ### View Redis Info
+
 ```bash
 redis-cli INFO server
 ```
@@ -42,11 +48,13 @@ redis-cli INFO server
 Open 2 terminals:
 
 ### Terminal 1: Start Background Worker
+
 ```bash
 npm run worker
 ```
 
 You should see:
+
 ```
 🚀 Starting HRIMS Sync Worker...
 ✅ HRIMS Sync Worker started
@@ -54,6 +62,7 @@ Worker is running. Press Ctrl+C to stop.
 ```
 
 ### Terminal 2: Start Next.js Application
+
 ```bash
 npm run dev
 ```
@@ -72,6 +81,7 @@ Then navigate to: http://localhost:9002/dashboard/admin/fetch-data
 ## Redis Status
 
 ### Current Status
+
 - **Version:** Redis 7.0.15
 - **Port:** 6379
 - **Host:** localhost (127.0.0.1)
@@ -79,17 +89,20 @@ Then navigate to: http://localhost:9002/dashboard/admin/fetch-data
 - **Status:** ✅ Running
 
 ### Process Info
+
 ```bash
 ps aux | grep redis-server
 # Shows: redis-server 127.0.0.1:6379
 ```
 
 ### Monitor Redis in Real-time
+
 ```bash
 redis-cli MONITOR
 ```
 
 ### View Job Queue
+
 ```bash
 redis-cli
 > KEYS bull:hrims-sync:*
@@ -99,6 +112,7 @@ redis-cli
 ## Troubleshooting
 
 ### Redis not responding?
+
 ```bash
 # Check if running
 redis-cli ping
@@ -108,6 +122,7 @@ redis-cli ping
 ```
 
 ### Worker can't connect?
+
 ```bash
 # Verify Redis is running
 redis-cli ping
@@ -117,6 +132,7 @@ npm run worker
 ```
 
 ### View logs
+
 ```bash
 # Redis logs
 tail -f /var/log/redis/redis-server.log

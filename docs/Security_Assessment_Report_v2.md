@@ -1,14 +1,15 @@
 # Security Assessment Report - Version 2.0
+
 ## Civil Service Management System (CSMS)
 
 ---
 
 ## Document Control
 
-| Version | Date | Author | Classification |
-|---------|------|--------|----------------|
-| 2.0 | 2025-12-28 | Security Assessment Team | **CONFIDENTIAL** |
-| 1.0 | 2024-12-25 | Security Assessment Team | **CONFIDENTIAL** |
+| Version | Date       | Author                   | Classification   |
+| ------- | ---------- | ------------------------ | ---------------- |
+| 2.0     | 2025-12-28 | Security Assessment Team | **CONFIDENTIAL** |
+| 1.0     | 2024-12-25 | Security Assessment Team | **CONFIDENTIAL** |
 
 **Assessment Period:** December 2024 - December 2025
 **Application Version:** 2.0 (Post-Security Enhancement)
@@ -27,13 +28,13 @@ The application has undergone **SIGNIFICANT SECURITY IMPROVEMENTS** with the imp
 
 ### Security Enhancement Summary
 
-| Severity | V1.0 Count | V2.0 Count | Status |
-|----------|------------|------------|--------|
-| **CRITICAL** | 4 | 0 | ✅ **All Remediated** |
-| **HIGH** | 4 | 1 | ✅ **75% Remediated** |
-| **MEDIUM** | 6 | 3 | ✅ **50% Remediated** |
-| **LOW** | 4 | 3 | ✅ **25% Remediated** |
-| **Total** | 18 | 7 | ✅ **61% Overall Reduction** |
+| Severity     | V1.0 Count | V2.0 Count | Status                       |
+| ------------ | ---------- | ---------- | ---------------------------- |
+| **CRITICAL** | 4          | 0          | ✅ **All Remediated**        |
+| **HIGH**     | 4          | 1          | ✅ **75% Remediated**        |
+| **MEDIUM**   | 6          | 3          | ✅ **50% Remediated**        |
+| **LOW**      | 4          | 3          | ✅ **25% Remediated**        |
+| **Total**    | 18         | 7          | ✅ **61% Overall Reduction** |
 
 ### Key Achievements
 
@@ -81,6 +82,7 @@ The application has undergone **SIGNIFICANT SECURITY IMPROVEMENTS** with the imp
 Session validation endpoint always returned `isAuthenticated: true` without performing actual authentication checks.
 
 **Remediation Implemented:**
+
 - ✅ Implemented comprehensive session management system (`src/lib/session-manager.ts`)
 - ✅ Session tokens generated using cryptographically secure random bytes
 - ✅ Session validation checks expiration and updates last activity
@@ -88,6 +90,7 @@ Session validation endpoint always returned `isAuthenticated: true` without perf
 - ✅ 24-hour session expiry with automatic cleanup
 
 **Verification Evidence:**
+
 ```typescript
 // src/lib/session-manager.ts
 export function generateSessionToken(): string {
@@ -115,6 +118,7 @@ export async function validateSession(sessionToken: string) {
 ```
 
 **Current Status:** ✅ **SECURE**
+
 - Session tokens are cryptographically secure
 - Session expiration enforced
 - Concurrent session limits prevent abuse
@@ -130,12 +134,14 @@ export async function validateSession(sessionToken: string) {
 No authentication middleware on API routes. Any user could access sensitive endpoints without authentication.
 
 **Remediation Implemented:**
+
 - ✅ Implemented Next.js middleware (`middleware.ts`) protecting all dashboard routes
 - ✅ Authentication check validates `auth-storage` cookie before page render
 - ✅ Unauthenticated users redirected to login page
 - ✅ All unauthorized access attempts logged to audit trail
 
 **Verification Evidence:**
+
 ```typescript
 // middleware.ts
 export function middleware(request: NextRequest) {
@@ -167,6 +173,7 @@ export function middleware(request: NextRequest) {
 ```
 
 **Testing Results:**
+
 - ✅ Unauthenticated access to `/dashboard/*` routes **BLOCKED**
 - ✅ Redirection to login page successful
 - ✅ Audit logging captures all unauthorized attempts
@@ -184,6 +191,7 @@ export function middleware(request: NextRequest) {
 Authorization decisions based on client-controlled query parameters (`userRole`, `userInstitutionId`). Attackers could bypass authorization by modifying URL parameters.
 
 **Remediation Implemented:**
+
 - ✅ Removed all client-side authorization parameters from API routes
 - ✅ Authorization now based on server-side session validation
 - ✅ Centralized route permission configuration (`src/lib/route-permissions.ts`)
@@ -191,6 +199,7 @@ Authorization decisions based on client-controlled query parameters (`userRole`,
 - ✅ Defense-in-depth with both middleware and client-side route guards
 
 **Verification Evidence:**
+
 ```typescript
 // middleware.ts - Server-side RBAC enforcement
 const ROUTE_PERMISSIONS: RoutePermission[] = [
@@ -221,6 +230,7 @@ function canAccessRoute(pathname: string, userRole: Role | null): boolean {
 ```
 
 **Testing Results:**
+
 - ✅ **Test 1:** DO user accessing `/dashboard/admin/users` → **BLOCKED** (redirected to dashboard)
 - ✅ **Test 2:** HRO user changing role parameter in API call → **NO EFFECT** (server uses session role)
 - ✅ **Test 3:** EMPLOYEE accessing `/dashboard/promotion` → **BLOCKED**
@@ -228,6 +238,7 @@ function canAccessRoute(pathname: string, userRole: Role | null): boolean {
 - ✅ **Test 5:** Manipulating cookies to change role → **BLOCKED** (backend validates)
 
 **Current Status:** ✅ **SECURE**
+
 - Authorization is 100% server-side
 - Client-side guards provide UX enhancement only
 - Multiple layers of defense (middleware + backend API validation)
@@ -242,6 +253,7 @@ function canAccessRoute(pathname: string, userRole: Role | null): boolean {
 No actual session management. Sessions never expired, no session invalidation on logout, no session fixation protection.
 
 **Remediation Implemented:**
+
 - ✅ Full session management system with database-backed sessions
 - ✅ Session tracking with IP address, user agent, device info, location
 - ✅ Session expiration (24 hours with automatic cleanup)
@@ -250,6 +262,7 @@ No actual session management. Sessions never expired, no session invalidation on
 - ✅ Suspicious login detection and flagging
 
 **Database Schema:**
+
 ```prisma
 model Session {
   id            String   @id @default(cuid())
@@ -273,6 +286,7 @@ model Session {
 ```
 
 **Session Management Features:**
+
 - ✅ Unique session token per login (64-character hex)
 - ✅ Device fingerprinting (IP, user agent, device type)
 - ✅ Last activity tracking
@@ -294,18 +308,21 @@ model Session {
 **Current Status:** 🟡 **IN PROGRESS**
 
 **Remediation Progress:**
+
 - ✅ SameSite cookie attribute set to 'Strict'
 - ✅ HTTP-only cookies implemented
 - ⚠️ CSRF tokens not yet implemented
 - ⚠️ Double-submit cookie pattern not implemented
 
 **Current Protection:**
+
 ```typescript
 // src/store/auth-store.ts
 document.cookie = `auth-storage=${encodeURIComponent(cookieValue)}; path=/; max-age=${maxAge}; SameSite=Strict`;
 ```
 
 **Remaining Work:**
+
 - Implement CSRF token generation on login
 - Add CSRF token validation middleware for POST/PATCH/DELETE requests
 - Include CSRF token in all state-changing forms
@@ -321,12 +338,14 @@ document.cookie = `auth-storage=${encodeURIComponent(cookieValue)}; path=/; max-
 **Current Status:** ✅ **MITIGATED** (via Account Lockout)
 
 **Remediation Implemented:**
+
 - ✅ Account lockout after 5 failed login attempts
 - ✅ 30-minute automatic lockout for standard violations
 - ✅ Security lockout (requires admin unlock) for excessive attempts (>10)
 - ✅ Failed login attempt tracking in database
 
 **Account Lockout Policy:**
+
 ```typescript
 // src/lib/account-lockout-utils.ts
 export const MAX_FAILED_LOGIN_ATTEMPTS = 5;
@@ -370,11 +389,13 @@ export async function incrementFailedLoginAttempts(
 ```
 
 **Lockout Types:**
+
 - **Standard Lockout**: Auto-unlocks after 30 minutes
 - **Security Lockout**: Requires administrator verification and manual unlock
 - **Admin Manual Lock**: Administrator-initiated security lockout
 
 **Testing Results:**
+
 - ✅ **Test 1:** 5 failed logins → Account locked for 30 minutes
 - ✅ **Test 2:** 11 failed logins → Security lockout (requires admin unlock)
 - ✅ **Test 3:** Successful login → Failed attempts reset to 0
@@ -393,6 +414,7 @@ export async function incrementFailedLoginAttempts(
 **Current Status:** 🟡 **PENDING**
 
 **Remaining Work:**
+
 - Configure security headers in `next.config.ts`:
   - Content-Security-Policy (CSP)
   - Strict-Transport-Security (HSTS)
@@ -402,6 +424,7 @@ export async function incrementFailedLoginAttempts(
   - Permissions-Policy
 
 **Recommended Implementation:**
+
 ```typescript
 // next.config.ts
 async headers() {
@@ -429,12 +452,14 @@ async headers() {
 **Current Status:** ✅ **RESOLVED**
 
 **Remediation Implemented:**
+
 - ✅ TypeScript strict mode enabled
 - ✅ All TypeScript compilation errors fixed
 - ✅ `ignoreBuildErrors: true` removed from `next.config.ts`
 - ✅ Type safety enforced throughout codebase
 
 **Verification:**
+
 ```bash
 $ npx tsc --noEmit
 # No errors - all type issues resolved
@@ -449,6 +474,7 @@ $ npx tsc --noEmit
 #### Enhancement 1: Comprehensive Audit Logging System ✅
 
 **Implementation:**
+
 - ✅ Complete audit logging system (`src/lib/audit-logger.ts`)
 - ✅ Database-backed audit trail (`AuditLog` model)
 - ✅ Automatic logging of security events
@@ -456,12 +482,14 @@ $ npx tsc --noEmit
 - ✅ Advanced filtering and search capabilities
 
 **Logged Events:**
+
 - Authentication events (login success/failure, logout, session expiry)
 - Authorization violations (unauthorized access, role violations)
 - Security events (account lockout, suspicious activity, potential breach)
 - Administrative actions (user creation, password reset, account lock/unlock)
 
 **Audit Log Schema:**
+
 ```prisma
 model AuditLog {
   id                String   @id @default(cuid())
@@ -489,6 +517,7 @@ model AuditLog {
 ```
 
 **Audit Trail UI Features:**
+
 - Real-time event monitoring
 - Statistics dashboard (total events, blocked attempts, critical events, success rate)
 - Date range filtering
@@ -499,6 +528,7 @@ model AuditLog {
 - Export capability (planned)
 
 **Compliance:**
+
 - ✅ Meets ISO 27001 logging requirements
 - ✅ Supports GDPR audit trail requirements
 - ✅ Provides non-repudiation for security events
@@ -511,6 +541,7 @@ model AuditLog {
 #### Enhancement 2: Password Expiration and Grace Period ✅
 
 **Implementation:**
+
 - ✅ Password expiration policy (`src/lib/password-expiration-utils.ts`)
 - ✅ Role-based expiration periods:
   - Admin: 60 days
@@ -521,6 +552,7 @@ model AuditLog {
 - ✅ Password expiration tracking in database
 
 **Database Schema:**
+
 ```prisma
 model User {
   // ... other fields
@@ -533,6 +565,7 @@ model User {
 ```
 
 **Password Expiration Logic:**
+
 ```typescript
 // src/lib/password-expiration-utils.ts
 export const PASSWORD_EXPIRATION_DAYS_ADMIN = 60;
@@ -560,6 +593,7 @@ export function isPasswordExpired(
 ```
 
 **User Experience:**
+
 - Users receive warnings at 14, 7, 3, and 1 days before expiration
 - Upon expiration, 7-day grace period begins
 - During grace period, users can still login but are strongly encouraged to change password
@@ -573,6 +607,7 @@ export function isPasswordExpired(
 #### Enhancement 3: Enhanced Password Policy ✅
 
 **Implementation:**
+
 - ✅ Increased minimum length to 8 characters (was 6)
 - ✅ Complexity requirements enforced:
   - At least one uppercase letter
@@ -583,6 +618,7 @@ export function isPasswordExpired(
 - ✅ Password strength meter in UI
 
 **Password Validation:**
+
 ```typescript
 // src/lib/password-utils.ts
 const changePasswordSchema = z.object({
@@ -598,6 +634,7 @@ const changePasswordSchema = z.object({
 ```
 
 **Alignment with Security Policy:**
+
 - ✅ Meets NIST password guidelines
 - ✅ Exceeds minimum requirements from Security Policy Document
 - ✅ Provides user-friendly guidance during password creation
@@ -649,6 +686,7 @@ The CSMS application now implements a **multi-layered defense-in-depth security 
 ```
 
 **Key Security Principles:**
+
 1. ✅ **Defense in Depth**: Multiple security layers
 2. ✅ **Principle of Least Privilege**: Minimal necessary permissions
 3. ✅ **Fail-Safe Defaults**: Default deny for routes
@@ -662,26 +700,27 @@ The CSMS application now implements a **multi-layered defense-in-depth security 
 
 #### Authentication Methods
 
-| User Type | Authentication Method | MFA | Session Duration |
-|-----------|----------------------|-----|------------------|
-| **Staff Users** | Username/Email + Password | Not yet | 24 hours |
-| **Employees** | ZanID + Payroll + ZSSF | Not yet | 24 hours (read-only) |
-| **Administrators** | Username + Password | Not yet | 24 hours |
+| User Type          | Authentication Method     | MFA     | Session Duration     |
+| ------------------ | ------------------------- | ------- | -------------------- |
+| **Staff Users**    | Username/Email + Password | Not yet | 24 hours             |
+| **Employees**      | ZanID + Payroll + ZSSF    | Not yet | 24 hours (read-only) |
+| **Administrators** | Username + Password       | Not yet | 24 hours             |
 
 #### Role-Based Access Control (RBAC)
 
-| Route | HRO | HHRMD | HRMO | DO | EMP | CSCS | HRRP | PO | Admin |
-|-------|-----|-------|------|----|-----|------|------|----|----|
-| `/dashboard/admin/*` | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
-| `/dashboard/confirmation` | ✅ S | ✅ A | ✅ A | ❌ | ❌ | ✅ V | ✅ M | ❌ | ❌ |
-| `/dashboard/promotion` | ✅ S | ✅ A | ✅ A | ❌ | ❌ | ✅ V | ✅ M | ❌ | ❌ |
-| `/dashboard/complaints` | ❌ | ✅ A | ❌ | ✅ A | ✅ S | ✅ V | ❌ | ❌ | ❌ |
-| `/dashboard/termination` | ✅ S | ✅ A | ❌ | ✅ A | ❌ | ✅ V | ❌ | ❌ | ❌ |
-| `/dashboard/institutions` | ❌ | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ | ❌ | ❌ |
-| `/dashboard/profile` | ✅ | ✅ | ✅ | ✅ | ✅ Own | ✅ | ✅ | ✅ | ❌ |
-| `/dashboard/audit-trail` | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ✅ |
+| Route                     | HRO  | HHRMD | HRMO | DO   | EMP    | CSCS | HRRP | PO  | Admin |
+| ------------------------- | ---- | ----- | ---- | ---- | ------ | ---- | ---- | --- | ----- |
+| `/dashboard/admin/*`      | ❌   | ❌    | ❌   | ❌   | ❌     | ❌   | ❌   | ❌  | ✅    |
+| `/dashboard/confirmation` | ✅ S | ✅ A  | ✅ A | ❌   | ❌     | ✅ V | ✅ M | ❌  | ❌    |
+| `/dashboard/promotion`    | ✅ S | ✅ A  | ✅ A | ❌   | ❌     | ✅ V | ✅ M | ❌  | ❌    |
+| `/dashboard/complaints`   | ❌   | ✅ A  | ❌   | ✅ A | ✅ S   | ✅ V | ❌   | ❌  | ❌    |
+| `/dashboard/termination`  | ✅ S | ✅ A  | ❌   | ✅ A | ❌     | ✅ V | ❌   | ❌  | ❌    |
+| `/dashboard/institutions` | ❌   | ✅    | ✅   | ✅   | ❌     | ✅   | ✅   | ❌  | ❌    |
+| `/dashboard/profile`      | ✅   | ✅    | ✅   | ✅   | ✅ Own | ✅   | ✅   | ✅  | ❌    |
+| `/dashboard/audit-trail`  | ❌   | ❌    | ❌   | ❌   | ❌     | ✅   | ❌   | ❌  | ✅    |
 
 **Legend:**
+
 - ✅ S = Submit/Create
 - ✅ A = Approve/Reject
 - ✅ V = View (monitoring)
@@ -690,6 +729,7 @@ The CSMS application now implements a **multi-layered defense-in-depth security 
 - ❌ = No access
 
 **Enforcement Levels:**
+
 1. **Server-Side Middleware**: Primary enforcement (cannot be bypassed)
 2. **Client-Side Route Guards**: UX enhancement and loading states
 3. **API Backend**: Secondary validation for data operations
@@ -700,6 +740,7 @@ The CSMS application now implements a **multi-layered defense-in-depth security 
 ### 2.3 Session Management
 
 **Session Features:**
+
 - ✅ Cryptographically secure session tokens (64-character hex)
 - ✅ Database-backed session storage
 - ✅ Session expiration (24 hours)
@@ -710,6 +751,7 @@ The CSMS application now implements a **multi-layered defense-in-depth security 
 - ✅ Session cleanup (cron job removes expired sessions)
 
 **Session Security:**
+
 - ✅ HTTP-only cookies (JavaScript cannot access)
 - ✅ SameSite=Strict (CSRF protection)
 - ✅ Secure flag in production (HTTPS only)
@@ -717,6 +759,7 @@ The CSMS application now implements a **multi-layered defense-in-depth security 
 - ✅ Last activity tracking (session timeout)
 
 **Session Lifecycle:**
+
 ```
 Login → Session Created (24h expiry) → Active Use (last activity updated)
                                                     ↓
@@ -730,6 +773,7 @@ Login → Session Created (24h expiry) → Active Use (last activity updated)
 ### 2.4 Account Lockout Policy
 
 **Lockout Configuration:**
+
 - **Threshold**: 5 failed login attempts
 - **Standard Lockout**: 30 minutes (auto-unlock)
 - **Security Lockout**: Manual admin unlock required (>10 attempts)
@@ -737,14 +781,15 @@ Login → Session Created (24h expiry) → Active Use (last activity updated)
 
 **Lockout Types:**
 
-| Type | Trigger | Duration | Unlock Method | Severity |
-|------|---------|----------|---------------|----------|
-| **Standard** | 5-10 failed attempts | 30 minutes | Automatic | WARNING |
-| **Security** | >10 failed attempts | Indefinite | Admin manual unlock | CRITICAL |
-| **Admin Manual** | Administrator action | Indefinite | Admin manual unlock | WARNING |
-| **Password Expired** | Grace period exceeded | Until password change | Password reset | INFO |
+| Type                 | Trigger               | Duration              | Unlock Method       | Severity |
+| -------------------- | --------------------- | --------------------- | ------------------- | -------- |
+| **Standard**         | 5-10 failed attempts  | 30 minutes            | Automatic           | WARNING  |
+| **Security**         | >10 failed attempts   | Indefinite            | Admin manual unlock | CRITICAL |
+| **Admin Manual**     | Administrator action  | Indefinite            | Admin manual unlock | WARNING  |
+| **Password Expired** | Grace period exceeded | Until password change | Password reset      | INFO     |
 
 **Lockout Process:**
+
 1. User fails login → Failed attempt counter incremented
 2. 5th failed attempt → Account locked (standard 30-min lockout)
 3. Lockout event logged to audit trail
@@ -752,6 +797,7 @@ Login → Session Created (24h expiry) → Active Use (last activity updated)
 5. After 30 minutes → Auto-unlock (standard) or admin unlock required (security)
 
 **Admin Lockout Management:**
+
 - Admins can view lockout status of any user
 - Admins can manually lock accounts (with reason and notes)
 - Admins can unlock accounts (with verification notes)
@@ -762,6 +808,7 @@ Login → Session Created (24h expiry) → Active Use (last activity updated)
 ### 2.5 Password Management
 
 **Password Policy:**
+
 - **Minimum Length**: 8 characters
 - **Complexity Requirements**:
   - At least one uppercase letter (A-Z)
@@ -773,6 +820,7 @@ Login → Session Created (24h expiry) → Active Use (last activity updated)
 - **Password History**: Planned (prevent reuse of last 5 passwords)
 
 **Password Expiration:**
+
 - **Admin Users**: 60 days
 - **Standard Users**: 90 days
 - **Grace Period**: 7 days after expiration
@@ -780,6 +828,7 @@ Login → Session Created (24h expiry) → Active Use (last activity updated)
 - **Forced Change**: After grace period expires
 
 **Password Security:**
+
 - ✅ Passwords hashed with bcrypt (10 salt rounds)
 - ✅ Unique salt per password
 - ✅ No plaintext storage
@@ -793,16 +842,16 @@ Login → Session Created (24h expiry) → Active Use (last activity updated)
 
 ### 3.1 Authentication Controls
 
-| Control | Status | Implementation | Effectiveness |
-|---------|--------|----------------|---------------|
-| **Password Hashing** | ✅ Implemented | bcrypt (10 rounds) | **HIGH** |
-| **Session Management** | ✅ Implemented | Database-backed, 24h expiry | **HIGH** |
-| **Multi-Factor Authentication** | ❌ Not Implemented | Planned for future | **N/A** |
-| **Account Lockout** | ✅ Implemented | 5 attempts, 30-min lockout | **HIGH** |
-| **Password Expiration** | ✅ Implemented | 60/90 days with grace period | **HIGH** |
-| **Password Complexity** | ✅ Implemented | 8+ chars, mixed case, numbers | **MEDIUM** |
-| **Session Timeout** | ✅ Implemented | 24 hours | **MEDIUM** |
-| **Concurrent Session Limit** | ✅ Implemented | Max 3 sessions | **MEDIUM** |
+| Control                         | Status             | Implementation                | Effectiveness |
+| ------------------------------- | ------------------ | ----------------------------- | ------------- |
+| **Password Hashing**            | ✅ Implemented     | bcrypt (10 rounds)            | **HIGH**      |
+| **Session Management**          | ✅ Implemented     | Database-backed, 24h expiry   | **HIGH**      |
+| **Multi-Factor Authentication** | ❌ Not Implemented | Planned for future            | **N/A**       |
+| **Account Lockout**             | ✅ Implemented     | 5 attempts, 30-min lockout    | **HIGH**      |
+| **Password Expiration**         | ✅ Implemented     | 60/90 days with grace period  | **HIGH**      |
+| **Password Complexity**         | ✅ Implemented     | 8+ chars, mixed case, numbers | **MEDIUM**    |
+| **Session Timeout**             | ✅ Implemented     | 24 hours                      | **MEDIUM**    |
+| **Concurrent Session Limit**    | ✅ Implemented     | Max 3 sessions                | **MEDIUM**    |
 
 **Overall Authentication Score:** 87.5% (7/8 controls implemented)
 
@@ -810,16 +859,16 @@ Login → Session Created (24h expiry) → Active Use (last activity updated)
 
 ### 3.2 Authorization Controls
 
-| Control | Status | Implementation | Effectiveness |
-|---------|--------|----------------|---------------|
-| **Role-Based Access Control** | ✅ Implemented | 9 roles with granular permissions | **HIGH** |
-| **Server-Side Authorization** | ✅ Implemented | Middleware + API validation | **HIGH** |
-| **Route Protection** | ✅ Implemented | Next.js middleware | **HIGH** |
-| **Data Scope Filtering** | ✅ Implemented | Institution-based filtering | **HIGH** |
-| **Principle of Least Privilege** | ✅ Implemented | Minimal necessary permissions | **HIGH** |
-| **Separation of Duties** | ✅ Implemented | Submit ≠ Approve | **HIGH** |
-| **Default Deny** | ✅ Implemented | Routes denied unless explicitly allowed | **HIGH** |
-| **Authorization Logging** | ✅ Implemented | All violations logged | **HIGH** |
+| Control                          | Status         | Implementation                          | Effectiveness |
+| -------------------------------- | -------------- | --------------------------------------- | ------------- |
+| **Role-Based Access Control**    | ✅ Implemented | 9 roles with granular permissions       | **HIGH**      |
+| **Server-Side Authorization**    | ✅ Implemented | Middleware + API validation             | **HIGH**      |
+| **Route Protection**             | ✅ Implemented | Next.js middleware                      | **HIGH**      |
+| **Data Scope Filtering**         | ✅ Implemented | Institution-based filtering             | **HIGH**      |
+| **Principle of Least Privilege** | ✅ Implemented | Minimal necessary permissions           | **HIGH**      |
+| **Separation of Duties**         | ✅ Implemented | Submit ≠ Approve                        | **HIGH**      |
+| **Default Deny**                 | ✅ Implemented | Routes denied unless explicitly allowed | **HIGH**      |
+| **Authorization Logging**        | ✅ Implemented | All violations logged                   | **HIGH**      |
 
 **Overall Authorization Score:** 100% (8/8 controls implemented)
 
@@ -827,14 +876,14 @@ Login → Session Created (24h expiry) → Active Use (last activity updated)
 
 ### 3.3 Input Validation Controls
 
-| Control | Status | Implementation | Effectiveness |
-|---------|--------|----------------|---------------|
-| **SQL Injection Prevention** | ✅ Implemented | Prisma ORM (parameterized) | **HIGH** |
-| **XSS Prevention** | ✅ Implemented | React auto-escaping | **MEDIUM** |
-| **Input Validation (Zod)** | ✅ Implemented | All forms and API endpoints | **HIGH** |
-| **File Upload Validation** | ✅ Implemented | Type, size, extension checks | **MEDIUM** |
-| **Content Security Policy** | ❌ Not Implemented | Planned | **N/A** |
-| **Output Encoding** | ✅ Implemented | React + Next.js built-in | **HIGH** |
+| Control                      | Status             | Implementation               | Effectiveness |
+| ---------------------------- | ------------------ | ---------------------------- | ------------- |
+| **SQL Injection Prevention** | ✅ Implemented     | Prisma ORM (parameterized)   | **HIGH**      |
+| **XSS Prevention**           | ✅ Implemented     | React auto-escaping          | **MEDIUM**    |
+| **Input Validation (Zod)**   | ✅ Implemented     | All forms and API endpoints  | **HIGH**      |
+| **File Upload Validation**   | ✅ Implemented     | Type, size, extension checks | **MEDIUM**    |
+| **Content Security Policy**  | ❌ Not Implemented | Planned                      | **N/A**       |
+| **Output Encoding**          | ✅ Implemented     | React + Next.js built-in     | **HIGH**      |
 
 **Overall Input Validation Score:** 80% (4/5 controls implemented)
 
@@ -842,16 +891,16 @@ Login → Session Created (24h expiry) → Active Use (last activity updated)
 
 ### 3.4 Audit & Logging Controls
 
-| Control | Status | Implementation | Effectiveness |
-|---------|--------|----------------|---------------|
-| **Authentication Logging** | ✅ Implemented | All login/logout events | **HIGH** |
-| **Authorization Logging** | ✅ Implemented | All access violations | **HIGH** |
-| **Security Event Logging** | ✅ Implemented | Lockouts, suspicious activity | **HIGH** |
-| **Admin Action Logging** | ✅ Implemented | User management, lock/unlock | **HIGH** |
-| **Audit Trail UI** | ✅ Implemented | Admin dashboard with filters | **HIGH** |
-| **Log Retention** | ✅ Implemented | Indefinite (90 days minimum) | **HIGH** |
-| **Log Integrity** | ⚠️ Partial | Database-backed, not tamper-proof | **MEDIUM** |
-| **Real-Time Monitoring** | ⚠️ Partial | Manual refresh, no alerts | **LOW** |
+| Control                    | Status         | Implementation                    | Effectiveness |
+| -------------------------- | -------------- | --------------------------------- | ------------- |
+| **Authentication Logging** | ✅ Implemented | All login/logout events           | **HIGH**      |
+| **Authorization Logging**  | ✅ Implemented | All access violations             | **HIGH**      |
+| **Security Event Logging** | ✅ Implemented | Lockouts, suspicious activity     | **HIGH**      |
+| **Admin Action Logging**   | ✅ Implemented | User management, lock/unlock      | **HIGH**      |
+| **Audit Trail UI**         | ✅ Implemented | Admin dashboard with filters      | **HIGH**      |
+| **Log Retention**          | ✅ Implemented | Indefinite (90 days minimum)      | **HIGH**      |
+| **Log Integrity**          | ⚠️ Partial     | Database-backed, not tamper-proof | **MEDIUM**    |
+| **Real-Time Monitoring**   | ⚠️ Partial     | Manual refresh, no alerts         | **LOW**       |
 
 **Overall Audit & Logging Score:** 81.25% (6.5/8 controls)
 
@@ -859,13 +908,13 @@ Login → Session Created (24h expiry) → Active Use (last activity updated)
 
 ### 3.5 Cryptography Controls
 
-| Control | Status | Implementation | Effectiveness |
-|---------|--------|----------------|---------------|
-| **Password Hashing** | ✅ Implemented | bcrypt (industry standard) | **HIGH** |
-| **Data in Transit Encryption** | ✅ Implemented (Prod) | HTTPS/TLS 1.2+ | **HIGH** |
-| **Data at Rest Encryption** | ❌ Not Implemented | Database encryption pending | **N/A** |
-| **Session Token Generation** | ✅ Implemented | Cryptographic random (32 bytes) | **HIGH** |
-| **Secure Cookie Attributes** | ✅ Implemented | HTTP-only, SameSite, Secure | **HIGH** |
+| Control                        | Status                | Implementation                  | Effectiveness |
+| ------------------------------ | --------------------- | ------------------------------- | ------------- |
+| **Password Hashing**           | ✅ Implemented        | bcrypt (industry standard)      | **HIGH**      |
+| **Data in Transit Encryption** | ✅ Implemented (Prod) | HTTPS/TLS 1.2+                  | **HIGH**      |
+| **Data at Rest Encryption**    | ❌ Not Implemented    | Database encryption pending     | **N/A**       |
+| **Session Token Generation**   | ✅ Implemented        | Cryptographic random (32 bytes) | **HIGH**      |
+| **Secure Cookie Attributes**   | ✅ Implemented        | HTTP-only, SameSite, Secure     | **HIGH**      |
 
 **Overall Cryptography Score:** 80% (4/5 controls implemented)
 
@@ -877,20 +926,21 @@ Login → Session Created (24h expiry) → Active Use (last activity updated)
 
 #### 4.1.1 Data Protection Principles
 
-| Principle | V1.0 Status | V2.0 Status | Evidence | Compliance |
-|-----------|-------------|-------------|----------|----------|
-| **Lawfulness, Fairness, Transparency** | ⚠️ Partial | ✅ Compliant | Privacy policy implemented (planned) | **IMPROVED** |
-| **Purpose Limitation** | ✅ Compliant | ✅ Compliant | HR management only, documented | **MAINTAINED** |
-| **Data Minimization** | ✅ Compliant | ✅ Compliant | Only necessary fields collected | **MAINTAINED** |
-| **Accuracy** | ✅ Compliant | ✅ Compliant | HRIMS sync, validation | **MAINTAINED** |
-| **Storage Limitation** | ⚠️ Partial | ⚠️ Partial | Retention policy needed | **NO CHANGE** |
-| **Integrity and Confidentiality** | 🔴 Non-Compliant | ✅ Compliant | **CRITICAL vulnerabilities fixed** | **RESOLVED** |
-| **Accountability** | ⚠️ Partial | ✅ Compliant | Audit logging implemented | **IMPROVED** |
+| Principle                              | V1.0 Status      | V2.0 Status  | Evidence                             | Compliance     |
+| -------------------------------------- | ---------------- | ------------ | ------------------------------------ | -------------- |
+| **Lawfulness, Fairness, Transparency** | ⚠️ Partial       | ✅ Compliant | Privacy policy implemented (planned) | **IMPROVED**   |
+| **Purpose Limitation**                 | ✅ Compliant     | ✅ Compliant | HR management only, documented       | **MAINTAINED** |
+| **Data Minimization**                  | ✅ Compliant     | ✅ Compliant | Only necessary fields collected      | **MAINTAINED** |
+| **Accuracy**                           | ✅ Compliant     | ✅ Compliant | HRIMS sync, validation               | **MAINTAINED** |
+| **Storage Limitation**                 | ⚠️ Partial       | ⚠️ Partial   | Retention policy needed              | **NO CHANGE**  |
+| **Integrity and Confidentiality**      | 🔴 Non-Compliant | ✅ Compliant | **CRITICAL vulnerabilities fixed**   | **RESOLVED**   |
+| **Accountability**                     | ⚠️ Partial       | ✅ Compliant | Audit logging implemented            | **IMPROVED**   |
 
 **V1.0 GDPR Compliance Score:** 48%
 **V2.0 GDPR Compliance Score:** 86% ✅ **+38% Improvement**
 
 **Remaining Issues:**
+
 - Privacy policy and consent mechanism (low priority for internal government system)
 - Data retention and deletion policy (planned)
 
@@ -898,15 +948,15 @@ Login → Session Created (24h expiry) → Active Use (last activity updated)
 
 #### 4.1.2 Individual Rights
 
-| Right | V1.0 | V2.0 | Implementation |
-|-------|------|------|----------------|
-| **Right to Access** | ✅ | ✅ | Employees view own profile |
-| **Right to Rectification** | ✅ | ✅ | Profile updates allowed |
-| **Right to Erasure** | ❌ | ⚠️ | Partial (legal retention limits) |
-| **Right to Restrict Processing** | ❌ | ❌ | Not implemented |
-| **Right to Data Portability** | ⚠️ | ⚠️ | Export feature planned |
-| **Right to Object** | ❌ | ❌ | Not implemented |
-| **Automated Decision Making** | ✅ N/A | ✅ N/A | No automated decisions |
+| Right                            | V1.0   | V2.0   | Implementation                   |
+| -------------------------------- | ------ | ------ | -------------------------------- |
+| **Right to Access**              | ✅     | ✅     | Employees view own profile       |
+| **Right to Rectification**       | ✅     | ✅     | Profile updates allowed          |
+| **Right to Erasure**             | ❌     | ⚠️     | Partial (legal retention limits) |
+| **Right to Restrict Processing** | ❌     | ❌     | Not implemented                  |
+| **Right to Data Portability**    | ⚠️     | ⚠️     | Export feature planned           |
+| **Right to Object**              | ❌     | ❌     | Not implemented                  |
+| **Automated Decision Making**    | ✅ N/A | ✅ N/A | No automated decisions           |
 
 **V2.0 Individual Rights Score:** 42% (3/7 implemented)
 
@@ -916,15 +966,15 @@ Login → Session Created (24h expiry) → Active Use (last activity updated)
 
 **Information Security Controls Assessment:**
 
-| Control Domain | V1.0 Score | V2.0 Score | Status | Key Improvements |
-|----------------|-----------|-----------|--------|------------------|
-| **A.9 Access Control** | 30% | 95% | ✅ **Significantly Improved** | Authentication, RBAC, session mgmt |
-| **A.10 Cryptography** | 80% | 85% | ✅ Improved | Session tokens, password hashing |
-| **A.12 Operations Security** | 50% | 75% | ✅ Improved | Audit logging, monitoring |
-| **A.13 Communications Security** | 60% | 70% | ✅ Improved | HTTPS, secure cookies |
-| **A.14 System Acquisition** | 75% | 80% | ✅ Improved | Secure SDLC practices |
-| **A.16 Incident Management** | 20% | 70% | ✅ **Significantly Improved** | Audit trail, logging |
-| **A.18 Compliance** | 50% | 75% | ✅ Improved | Audit logging, GDPR alignment |
+| Control Domain                   | V1.0 Score | V2.0 Score | Status                        | Key Improvements                   |
+| -------------------------------- | ---------- | ---------- | ----------------------------- | ---------------------------------- |
+| **A.9 Access Control**           | 30%        | 95%        | ✅ **Significantly Improved** | Authentication, RBAC, session mgmt |
+| **A.10 Cryptography**            | 80%        | 85%        | ✅ Improved                   | Session tokens, password hashing   |
+| **A.12 Operations Security**     | 50%        | 75%        | ✅ Improved                   | Audit logging, monitoring          |
+| **A.13 Communications Security** | 60%        | 70%        | ✅ Improved                   | HTTPS, secure cookies              |
+| **A.14 System Acquisition**      | 75%        | 80%        | ✅ Improved                   | Secure SDLC practices              |
+| **A.16 Incident Management**     | 20%        | 70%        | ✅ **Significantly Improved** | Audit trail, logging               |
+| **A.18 Compliance**              | 50%        | 75%        | ✅ Improved                   | Audit logging, GDPR alignment      |
 
 **V1.0 Overall ISO 27001 Alignment:** 52%
 **V2.0 Overall ISO 27001 Alignment:** 78.5% ✅ **+26.5% Improvement**
@@ -933,18 +983,18 @@ Login → Session Created (24h expiry) → Active Use (last activity updated)
 
 ### 4.3 OWASP Top 10 (2021) Compliance
 
-| Risk | V1.0 | V2.0 | Findings | Status |
-|------|------|------|----------|--------|
-| **A01: Broken Access Control** | 🔴 Vulnerable | ✅ Secure | Middleware + RBAC implemented | **RESOLVED** |
-| **A02: Cryptographic Failures** | ✅ Secure | ✅ Secure | bcrypt, HTTPS maintained | **MAINTAINED** |
-| **A03: Injection** | ✅ Secure | ✅ Secure | Prisma ORM prevents SQL injection | **MAINTAINED** |
-| **A04: Insecure Design** | 🔴 Vulnerable | ✅ Secure | Security architecture redesigned | **RESOLVED** |
-| **A05: Security Misconfiguration** | 🟡 Partial | 🟡 Partial | Headers pending, TypeScript fixed | **IMPROVED** |
-| **A06: Vulnerable Components** | ✅ Secure | ✅ Secure | Dependencies up-to-date | **MAINTAINED** |
-| **A07: Authentication Failures** | 🔴 Vulnerable | ✅ Secure | Session mgmt, lockout implemented | **RESOLVED** |
-| **A08: Software/Data Integrity** | 🟡 Partial | 🟡 Partial | CSRF pending, audit logging added | **IMPROVED** |
-| **A09: Logging/Monitoring Failures** | 🟡 Partial | ✅ Secure | Comprehensive audit logging | **RESOLVED** |
-| **A10: Server-Side Request Forgery** | ✅ Secure | ✅ Secure | No SSRF vectors | **MAINTAINED** |
+| Risk                                 | V1.0          | V2.0       | Findings                          | Status         |
+| ------------------------------------ | ------------- | ---------- | --------------------------------- | -------------- |
+| **A01: Broken Access Control**       | 🔴 Vulnerable | ✅ Secure  | Middleware + RBAC implemented     | **RESOLVED**   |
+| **A02: Cryptographic Failures**      | ✅ Secure     | ✅ Secure  | bcrypt, HTTPS maintained          | **MAINTAINED** |
+| **A03: Injection**                   | ✅ Secure     | ✅ Secure  | Prisma ORM prevents SQL injection | **MAINTAINED** |
+| **A04: Insecure Design**             | 🔴 Vulnerable | ✅ Secure  | Security architecture redesigned  | **RESOLVED**   |
+| **A05: Security Misconfiguration**   | 🟡 Partial    | 🟡 Partial | Headers pending, TypeScript fixed | **IMPROVED**   |
+| **A06: Vulnerable Components**       | ✅ Secure     | ✅ Secure  | Dependencies up-to-date           | **MAINTAINED** |
+| **A07: Authentication Failures**     | 🔴 Vulnerable | ✅ Secure  | Session mgmt, lockout implemented | **RESOLVED**   |
+| **A08: Software/Data Integrity**     | 🟡 Partial    | 🟡 Partial | CSRF pending, audit logging added | **IMPROVED**   |
+| **A09: Logging/Monitoring Failures** | 🟡 Partial    | ✅ Secure  | Comprehensive audit logging       | **RESOLVED**   |
+| **A10: Server-Side Request Forgery** | ✅ Secure     | ✅ Secure  | No SSRF vectors                   | **MAINTAINED** |
 
 **V1.0 OWASP Top 10 Compliance:** 50%
 **V2.0 OWASP Top 10 Compliance:** 85% ✅ **+35% Improvement**
@@ -955,33 +1005,34 @@ Login → Session Created (24h expiry) → Active Use (last activity updated)
 
 **Alignment with CSMS Security Policy Document:**
 
-| Policy Section | Requirement | V2.0 Status | Compliance |
-|----------------|-------------|-------------|-----------|
-| **5. Password Policy** |
-| 5.2.1 Password Complexity | 12+ chars, 3 of 4 types | ⚠️ 8+ chars implemented | **PARTIAL** |
-| 5.2.2 Password Creation | Temp password on first login | ✅ Implemented | **COMPLIANT** |
-| 5.3.3 Password Expiration | 60/90 days | ✅ Implemented | **COMPLIANT** |
-| 5.4 Password Reset | Verified reset process | ✅ Implemented | **COMPLIANT** |
-| 5.8 Account Lockout | 5 attempts, 30-min lockout | ✅ Implemented | **COMPLIANT** |
-| **6. Access Control Policy** |
-| 6.2.1 Least Privilege | Minimum necessary access | ✅ Implemented | **COMPLIANT** |
-| 6.2.2 Separation of Duties | Submit ≠ Approve | ✅ Implemented | **COMPLIANT** |
-| 6.3.4 Access Reviews | Quarterly reviews | ⚠️ Manual process | **PARTIAL** |
-| 6.4 RBAC | 9 roles with permissions | ✅ Implemented | **COMPLIANT** |
-| 6.5.2 Authorization Checks | Server-side validation | ✅ Implemented | **COMPLIANT** |
-| 6.5.3 Session Management | Secure sessions | ✅ Implemented | **COMPLIANT** |
-| **7. Data Protection Policy** |
-| 7.2 Data Classification | 4 levels | ✅ Documented | **COMPLIANT** |
-| 7.5 Data Retention | Retention policies | ⚠️ Partial | **PARTIAL** |
-| 7.7 Data Breach Response | Incident response | ⚠️ Documented only | **PARTIAL** |
+| Policy Section                   | Requirement                  | V2.0 Status             | Compliance    |
+| -------------------------------- | ---------------------------- | ----------------------- | ------------- |
+| **5. Password Policy**           |
+| 5.2.1 Password Complexity        | 12+ chars, 3 of 4 types      | ⚠️ 8+ chars implemented | **PARTIAL**   |
+| 5.2.2 Password Creation          | Temp password on first login | ✅ Implemented          | **COMPLIANT** |
+| 5.3.3 Password Expiration        | 60/90 days                   | ✅ Implemented          | **COMPLIANT** |
+| 5.4 Password Reset               | Verified reset process       | ✅ Implemented          | **COMPLIANT** |
+| 5.8 Account Lockout              | 5 attempts, 30-min lockout   | ✅ Implemented          | **COMPLIANT** |
+| **6. Access Control Policy**     |
+| 6.2.1 Least Privilege            | Minimum necessary access     | ✅ Implemented          | **COMPLIANT** |
+| 6.2.2 Separation of Duties       | Submit ≠ Approve             | ✅ Implemented          | **COMPLIANT** |
+| 6.3.4 Access Reviews             | Quarterly reviews            | ⚠️ Manual process       | **PARTIAL**   |
+| 6.4 RBAC                         | 9 roles with permissions     | ✅ Implemented          | **COMPLIANT** |
+| 6.5.2 Authorization Checks       | Server-side validation       | ✅ Implemented          | **COMPLIANT** |
+| 6.5.3 Session Management         | Secure sessions              | ✅ Implemented          | **COMPLIANT** |
+| **7. Data Protection Policy**    |
+| 7.2 Data Classification          | 4 levels                     | ✅ Documented           | **COMPLIANT** |
+| 7.5 Data Retention               | Retention policies           | ⚠️ Partial              | **PARTIAL**   |
+| 7.7 Data Breach Response         | Incident response            | ⚠️ Documented only      | **PARTIAL**   |
 | **10. Incident Response Policy** |
-| 10.3 Incident Logging | Comprehensive logging | ✅ Implemented | **COMPLIANT** |
-| **11. Compliance and Audit** |
-| 11.3 Audit Logging | Security event logging | ✅ Implemented | **COMPLIANT** |
+| 10.3 Incident Logging            | Comprehensive logging        | ✅ Implemented          | **COMPLIANT** |
+| **11. Compliance and Audit**     |
+| 11.3 Audit Logging               | Security event logging       | ✅ Implemented          | **COMPLIANT** |
 
 **Overall Security Policy Compliance:** 82% ✅ (14/17 requirements fully compliant)
 
 **Recommended Enhancements:**
+
 1. Increase password minimum to 12 characters (currently 8)
 2. Implement automated access reviews
 3. Complete data retention policy implementation
@@ -993,26 +1044,27 @@ Login → Session Created (24h expiry) → Active Use (last activity updated)
 
 ### 5.1 Risk Matrix - Version 2.0
 
-| Vulnerability | V1.0 Risk | V2.0 Risk | Status | Notes |
-|---------------|-----------|-----------|--------|-------|
-| **Session Endpoint Returns True** | CRITICAL | ✅ **RESOLVED** | Remediated | Session management implemented |
-| **No Authentication Middleware** | CRITICAL | ✅ **RESOLVED** | Remediated | Next.js middleware implemented |
-| **Client-Side Authorization** | CRITICAL | ✅ **RESOLVED** | Remediated | Server-side RBAC implemented |
-| **No Session Management** | CRITICAL | ✅ **RESOLVED** | Remediated | Full session system implemented |
-| **No CSRF Protection** | HIGH | MEDIUM | Improved | SameSite cookies, tokens pending |
-| **No Rate Limiting** | HIGH | ✅ **RESOLVED** | Remediated | Account lockout effective |
-| **Missing Security Headers** | HIGH | MEDIUM | Pending | Configuration needed |
-| **TypeScript Errors Ignored** | HIGH | ✅ **RESOLVED** | Remediated | Strict mode enabled |
-| **Verbose Console Logging** | MEDIUM | LOW | Improved | Production logging pending |
-| **HTTP in Development** | MEDIUM | LOW | Improved | HTTPS in production |
-| **No CSP** | MEDIUM | MEDIUM | Pending | CSP configuration needed |
-| **File Upload Validation** | MEDIUM | LOW | Improved | Magic number check pending |
-| **No CORS Configuration** | MEDIUM | LOW | Improved | Explicit CORS needed |
-| **Weak Password (6 chars)** | MEDIUM | ✅ **RESOLVED** | Remediated | 8+ chars with complexity |
-| **No Audit Logging** | LOW | ✅ **RESOLVED** | Remediated | Comprehensive logging |
-| **No Account Lockout** | LOW | ✅ **RESOLVED** | Remediated | 5 attempts, 30-min lockout |
+| Vulnerability                     | V1.0 Risk | V2.0 Risk       | Status     | Notes                            |
+| --------------------------------- | --------- | --------------- | ---------- | -------------------------------- |
+| **Session Endpoint Returns True** | CRITICAL  | ✅ **RESOLVED** | Remediated | Session management implemented   |
+| **No Authentication Middleware**  | CRITICAL  | ✅ **RESOLVED** | Remediated | Next.js middleware implemented   |
+| **Client-Side Authorization**     | CRITICAL  | ✅ **RESOLVED** | Remediated | Server-side RBAC implemented     |
+| **No Session Management**         | CRITICAL  | ✅ **RESOLVED** | Remediated | Full session system implemented  |
+| **No CSRF Protection**            | HIGH      | MEDIUM          | Improved   | SameSite cookies, tokens pending |
+| **No Rate Limiting**              | HIGH      | ✅ **RESOLVED** | Remediated | Account lockout effective        |
+| **Missing Security Headers**      | HIGH      | MEDIUM          | Pending    | Configuration needed             |
+| **TypeScript Errors Ignored**     | HIGH      | ✅ **RESOLVED** | Remediated | Strict mode enabled              |
+| **Verbose Console Logging**       | MEDIUM    | LOW             | Improved   | Production logging pending       |
+| **HTTP in Development**           | MEDIUM    | LOW             | Improved   | HTTPS in production              |
+| **No CSP**                        | MEDIUM    | MEDIUM          | Pending    | CSP configuration needed         |
+| **File Upload Validation**        | MEDIUM    | LOW             | Improved   | Magic number check pending       |
+| **No CORS Configuration**         | MEDIUM    | LOW             | Improved   | Explicit CORS needed             |
+| **Weak Password (6 chars)**       | MEDIUM    | ✅ **RESOLVED** | Remediated | 8+ chars with complexity         |
+| **No Audit Logging**              | LOW       | ✅ **RESOLVED** | Remediated | Comprehensive logging            |
+| **No Account Lockout**            | LOW       | ✅ **RESOLVED** | Remediated | 5 attempts, 30-min lockout       |
 
 **Risk Summary:**
+
 - **CRITICAL**: 4 → 0 (✅ 100% reduction)
 - **HIGH**: 4 → 1 (✅ 75% reduction)
 - **MEDIUM**: 6 → 3 (✅ 50% reduction)
@@ -1031,10 +1083,12 @@ Login → Session Created (24h expiry) → Active Use (last activity updated)
 **Risk Level:** 🟡 **MEDIUM** (Reduced from HIGH)
 
 **Current Mitigation:**
+
 - SameSite=Strict cookie attribute
 - HTTP-only cookies
 
 **Residual Exposure:**
+
 - Subdomain attacks (if subdomains exist)
 - Older browser compatibility
 
@@ -1050,10 +1104,12 @@ Implement CSRF token generation and validation for complete protection.
 **Risk Level:** 🟡 **MEDIUM**
 
 **Current Mitigation:**
+
 - HTTPS enforced in production
 - Nginx security configuration
 
 **Residual Exposure:**
+
 - No Content-Security-Policy (XSS risk)
 - No HSTS header (downgrade attacks)
 - No X-Frame-Options (clickjacking)
@@ -1070,11 +1126,13 @@ Configure security headers in `next.config.ts`.
 **Risk Level:** 🟡 **MEDIUM**
 
 **Current Mitigation:**
+
 - PostgreSQL access controls
 - Filesystem encryption (if enabled on server)
 - Limited physical access to server
 
 **Residual Exposure:**
+
 - Database dump exposure
 - Backup exposure
 - Physical storage theft
@@ -1093,6 +1151,7 @@ Enable PostgreSQL transparent data encryption (TDE) or use encrypted filesystem.
 **Risk Level:** 🟢 **LOW** (Informational)
 
 **Current Mitigation:**
+
 - Strong password policy
 - Account lockout
 - Session management
@@ -1114,6 +1173,7 @@ Implement MFA for administrator and high-privilege accounts (HHRMD, CSCS).
 **V1.0 Outcome:** ✅ Success (critical vulnerability)
 
 **V2.0 Defense:**
+
 1. ✅ Middleware intercepts request
 2. ✅ No `auth-storage` cookie found
 3. ✅ Request blocked and logged to audit trail
@@ -1130,6 +1190,7 @@ Implement MFA for administrator and high-privilege accounts (HHRMD, CSCS).
 **V1.0 Outcome:** ✅ Success (critical vulnerability)
 
 **V2.0 Defense:**
+
 1. ✅ Middleware checks `auth-storage` cookie
 2. ✅ Extracts role: "DO"
 3. ✅ Checks route permissions: Admin route requires "Admin" role
@@ -1147,6 +1208,7 @@ Implement MFA for administrator and high-privilege accounts (HHRMD, CSCS).
 **V1.0 Outcome:** ⚠️ Partial success (no rate limiting, eventual success possible)
 
 **V2.0 Defense:**
+
 1. ✅ Attempt 1-4: Failed attempts logged
 2. ✅ Attempt 5: Account locked (standard 30-min lockout)
 3. ✅ Lockout event logged (severity: WARNING)
@@ -1164,6 +1226,7 @@ Implement MFA for administrator and high-privilege accounts (HHRMD, CSCS).
 **V1.0 Outcome:** ✅ Success (no session validation, persistent sessions)
 
 **V2.0 Defense:**
+
 1. ✅ HTTP-only cookie prevents JavaScript access (XSS mitigation)
 2. ✅ SameSite=Strict prevents cross-origin cookie sending
 3. ✅ Session token validated against database
@@ -1190,11 +1253,13 @@ Implement MFA for administrator and high-privilege accounts (HHRMD, CSCS).
 While SameSite=Strict cookies provide baseline CSRF protection, dedicated CSRF tokens are not implemented for state-changing operations.
 
 **Impact:**
+
 - Potential for CSRF attacks in subdomain scenarios
 - Limited protection in older browsers
 - Not following defense-in-depth best practice
 
 **Recommendation:**
+
 ```typescript
 // Implement CSRF token generation
 import { randomBytes } from 'crypto';
@@ -1233,6 +1298,7 @@ if (mutatingMethod && csrfCookie?.value !== csrfHeader) {
 Application does not set recommended security headers (CSP, HSTS, X-Frame-Options, etc.)
 
 **Missing Headers:**
+
 - Content-Security-Policy
 - Strict-Transport-Security
 - X-Frame-Options
@@ -1255,11 +1321,13 @@ See Section 1.2 (VULN-007) for detailed implementation.
 PostgreSQL database does not have transparent data encryption (TDE) enabled.
 
 **Impact:**
+
 - Database files readable if physical access gained
 - Backup files unencrypted
 - Compliance risk (some standards require encryption at rest)
 
 **Recommendation:**
+
 - Enable PostgreSQL encryption at rest
 - OR use filesystem-level encryption (LUKS, dm-crypt)
 - Encrypt database backups
@@ -1328,6 +1396,7 @@ Request → Nginx → Middleware → Route Guards → API Validation → Databas
 ```
 
 **Benefits:**
+
 - Single layer breach does not compromise system
 - Multiple opportunities to detect and block attacks
 - Audit trail at every layer
@@ -1344,6 +1413,7 @@ All critical security decisions made server-side:
 - ✅ Data Filtering: Backend applies institution scope
 
 **Benefits:**
+
 - Cannot be bypassed by client-side manipulation
 - Consistent enforcement
 - Tamper-proof security logic
@@ -1368,6 +1438,7 @@ Every security event logged with rich context:
 ```
 
 **Benefits:**
+
 - Incident investigation capability
 - Compliance evidence
 - Security monitoring
@@ -1385,6 +1456,7 @@ Every security event logged with rich context:
 - **Employee Role**: EMPLOYEE (self-service)
 
 **Benefits:**
+
 - Clear separation of duties
 - Least privilege enforcement
 - Scalable permission management
@@ -1394,14 +1466,14 @@ Every security event logged with rich context:
 
 ### 7.2 Architectural Improvements (V1.0 → V2.0)
 
-| Component | V1.0 | V2.0 | Improvement |
-|-----------|------|------|-------------|
-| **Authentication** | None | Middleware + Session DB | **+100%** |
-| **Authorization** | Client-side | Server-side RBAC | **+100%** |
-| **Session Management** | Stub | Full session system | **+100%** |
-| **Account Security** | None | Lockout + Expiration | **+100%** |
-| **Audit Logging** | Limited | Comprehensive | **+90%** |
-| **Password Policy** | Basic | Strong (8+ chars) | **+50%** |
+| Component              | V1.0        | V2.0                    | Improvement |
+| ---------------------- | ----------- | ----------------------- | ----------- |
+| **Authentication**     | None        | Middleware + Session DB | **+100%**   |
+| **Authorization**      | Client-side | Server-side RBAC        | **+100%**   |
+| **Session Management** | Stub        | Full session system     | **+100%**   |
+| **Account Security**   | None        | Lockout + Expiration    | **+100%**   |
+| **Audit Logging**      | Limited     | Comprehensive           | **+90%**    |
+| **Password Policy**    | Basic       | Strong (8+ chars)       | **+50%**    |
 
 ---
 
@@ -1410,11 +1482,13 @@ Every security event logged with rich context:
 #### 7.3.1 HRIMS Integration Security
 
 **Current Protection:**
+
 - ✅ Bearer token authentication
 - ✅ Environment variable storage
 - ✅ HTTPS connection
 
 **Recommendations:**
+
 - Implement API key rotation policy
 - Add request signing for integrity
 - Implement circuit breaker for resilience
@@ -1424,11 +1498,13 @@ Every security event logged with rich context:
 #### 7.3.2 MinIO Object Storage Security
 
 **Current Protection:**
+
 - ✅ Access key/secret key authentication
 - ✅ Pre-signed URLs for temporary access
 - ✅ File type and size validation
 
 **Strengths:**
+
 - Files not in web-accessible directory
 - Short-lived pre-signed URLs
 - Separate storage service
@@ -1445,6 +1521,7 @@ Every security event logged with rich context:
 **Risk Reduction:** Medium → Low
 
 **Tasks:**
+
 - Generate CSRF token on login
 - Store in non-httpOnly cookie
 - Validate token on all POST/PATCH/DELETE requests
@@ -1458,6 +1535,7 @@ Every security event logged with rich context:
 **Risk Reduction:** Medium → Low
 
 **Tasks:**
+
 - Add CSP, HSTS, X-Frame-Options, etc.
 - Test header configuration
 - Deploy to production
@@ -1470,6 +1548,7 @@ Every security event logged with rich context:
 **Risk Reduction:** Align with security policy
 
 **Tasks:**
+
 - Update password validation schema
 - Update user-facing documentation
 - Notify users before enforcement
@@ -1508,6 +1587,7 @@ Every security event logged with rich context:
 **Benefit:** Additional layer of authentication security
 
 **Phased Approach:**
+
 - Phase 1: Admin and HHRMD (most privileged)
 - Phase 2: All CSC roles
 - Phase 3: All users (optional)
@@ -1520,6 +1600,7 @@ Every security event logged with rich context:
 **Benefit:** Continuous security validation
 
 **Tools:**
+
 - SAST: Semgrep, SonarQube
 - DAST: OWASP ZAP
 - Dependency scanning: npm audit, Snyk
@@ -1532,6 +1613,7 @@ Every security event logged with rich context:
 **Benefit:** Real-time threat detection
 
 **Features:**
+
 - Anomaly detection (unusual access patterns)
 - Automated incident response
 - Integration with SIEM
@@ -1544,6 +1626,7 @@ Every security event logged with rich context:
 **Benefit:** GDPR compliance, storage optimization
 
 **Implementation:**
+
 - Define retention periods per data type
 - Automated deletion of expired data
 - Backup management
@@ -1555,19 +1638,23 @@ Every security event logged with rich context:
 ### 9.1 Appendix A: Remediation Summary
 
 **Critical Vulnerabilities Resolved:**
+
 1. ✅ VULN-001: Session authentication implemented
 2. ✅ VULN-002: Authentication middleware implemented
 3. ✅ VULN-003: Server-side authorization implemented
 4. ✅ VULN-004: Session management implemented
 
 **High Vulnerabilities Resolved:**
+
 1. ✅ VULN-006: Account lockout (effective rate limiting)
 2. ✅ VULN-008: TypeScript strict mode enabled
 
 **Medium Vulnerabilities Resolved:**
+
 1. ✅ VULN-014: Strong password policy (8+ chars)
 
 **Low Vulnerabilities Resolved:**
+
 1. ✅ VULN-015: Comprehensive audit logging
 2. ✅ VULN-016: Account lockout after failed attempts
 
@@ -1582,18 +1669,19 @@ Every security event logged with rich context:
 
 **Penetration Testing Results:**
 
-| Test Case | V1.0 Result | V2.0 Result | Status |
-|-----------|-------------|-------------|--------|
-| Unauthenticated access to dashboard | ✅ Success | ❌ Blocked | ✅ Fixed |
-| Bypass authentication middleware | ✅ Success | ❌ Blocked | ✅ Fixed |
-| Privilege escalation (DO → Admin) | ✅ Success | ❌ Blocked | ✅ Fixed |
-| Session hijacking | ✅ Success | ⚠️ Mitigated | ✅ Improved |
-| Brute force login | ⚠️ Possible | ❌ Blocked (5 attempts) | ✅ Fixed |
-| SQL injection | ❌ Blocked | ❌ Blocked | ✅ Maintained |
-| XSS injection | ⚠️ Possible | ⚠️ Possible (CSP pending) | 🟡 Partial |
-| CSRF attack | ✅ Success | ⚠️ Mitigated (SameSite) | ✅ Improved |
+| Test Case                           | V1.0 Result | V2.0 Result               | Status        |
+| ----------------------------------- | ----------- | ------------------------- | ------------- |
+| Unauthenticated access to dashboard | ✅ Success  | ❌ Blocked                | ✅ Fixed      |
+| Bypass authentication middleware    | ✅ Success  | ❌ Blocked                | ✅ Fixed      |
+| Privilege escalation (DO → Admin)   | ✅ Success  | ❌ Blocked                | ✅ Fixed      |
+| Session hijacking                   | ✅ Success  | ⚠️ Mitigated              | ✅ Improved   |
+| Brute force login                   | ⚠️ Possible | ❌ Blocked (5 attempts)   | ✅ Fixed      |
+| SQL injection                       | ❌ Blocked  | ❌ Blocked                | ✅ Maintained |
+| XSS injection                       | ⚠️ Possible | ⚠️ Possible (CSP pending) | 🟡 Partial    |
+| CSRF attack                         | ✅ Success  | ⚠️ Mitigated (SameSite)   | ✅ Improved   |
 
 **Overall Security Test Pass Rate:**
+
 - V1.0: 12.5% (1/8 tests passed)
 - V2.0: 87.5% (7/8 tests passed, 1 partial)
 
@@ -1603,17 +1691,18 @@ Every security event logged with rich context:
 
 **Security KPIs (Month 1 Post-Deployment):**
 
-| Metric | Target | Actual | Status |
-|--------|--------|--------|--------|
-| System Availability | 99.5% | 99.8% | ✅ Exceeds |
-| Unauthorized Access Attempts | < 10/month | 23 | ⚠️ Monitor |
-| Security Incidents (Critical) | 0 | 0 | ✅ Met |
-| Account Lockouts | Monitor | 8 | ℹ️ Normal |
-| Password Expiration Compliance | 100% | 100% | ✅ Met |
-| Audit Log Retention | 90 days | Indefinite | ✅ Exceeds |
-| Session Expiry Compliance | 100% | 100% | ✅ Met |
+| Metric                         | Target     | Actual     | Status     |
+| ------------------------------ | ---------- | ---------- | ---------- |
+| System Availability            | 99.5%      | 99.8%      | ✅ Exceeds |
+| Unauthorized Access Attempts   | < 10/month | 23         | ⚠️ Monitor |
+| Security Incidents (Critical)  | 0          | 0          | ✅ Met     |
+| Account Lockouts               | Monitor    | 8          | ℹ️ Normal  |
+| Password Expiration Compliance | 100%       | 100%       | ✅ Met     |
+| Audit Log Retention            | 90 days    | Indefinite | ✅ Exceeds |
+| Session Expiry Compliance      | 100%       | 100%       | ✅ Met     |
 
 **Audit Event Statistics:**
+
 - Total Events Logged: 1,247
 - Unauthorized Access Attempts: 23 (WARNING)
 - Failed Logins: 47 (ERROR)
@@ -1668,51 +1757,51 @@ Every security event logged with rich context:
 
 **Evidence of Compliance:**
 
-| Requirement | Evidence Location | Status |
-|-------------|------------------|--------|
-| Authentication Middleware | `/middleware.ts` | ✅ Implemented |
-| Session Management | `/src/lib/session-manager.ts` | ✅ Implemented |
-| RBAC Enforcement | `/src/lib/route-permissions.ts` | ✅ Implemented |
-| Account Lockout | `/src/lib/account-lockout-utils.ts` | ✅ Implemented |
-| Password Expiration | `/src/lib/password-expiration-utils.ts` | ✅ Implemented |
-| Audit Logging | `/src/lib/audit-logger.ts` | ✅ Implemented |
-| Password Policy | `/src/lib/password-utils.ts` | ✅ Implemented |
-| Security Documentation | `/docs/SECURITY_IMPLEMENTATION.md` | ✅ Complete |
-| Audit Documentation | `/docs/AUDIT_LOGGING.md` | ✅ Complete |
-| RBAC Documentation | `/docs/RBAC_MATRIX.md` | ✅ Complete |
+| Requirement               | Evidence Location                       | Status         |
+| ------------------------- | --------------------------------------- | -------------- |
+| Authentication Middleware | `/middleware.ts`                        | ✅ Implemented |
+| Session Management        | `/src/lib/session-manager.ts`           | ✅ Implemented |
+| RBAC Enforcement          | `/src/lib/route-permissions.ts`         | ✅ Implemented |
+| Account Lockout           | `/src/lib/account-lockout-utils.ts`     | ✅ Implemented |
+| Password Expiration       | `/src/lib/password-expiration-utils.ts` | ✅ Implemented |
+| Audit Logging             | `/src/lib/audit-logger.ts`              | ✅ Implemented |
+| Password Policy           | `/src/lib/password-utils.ts`            | ✅ Implemented |
+| Security Documentation    | `/docs/SECURITY_IMPLEMENTATION.md`      | ✅ Complete    |
+| Audit Documentation       | `/docs/AUDIT_LOGGING.md`                | ✅ Complete    |
+| RBAC Documentation        | `/docs/RBAC_MATRIX.md`                  | ✅ Complete    |
 
 ---
 
 ### 9.6 Appendix F: Security Contact Information
 
-| Role | Contact | Responsibility |
-|------|---------|----------------|
-| **Security Lead** | security@zanzibar.go.tz | Overall security program |
-| **Development Lead** | dev-lead@zanzibar.go.tz | Code security, remediation |
-| **System Administrator** | admin@csms.zanzibar.go.tz | Infrastructure security |
-| **CISO** | ciso@zanzibar.go.tz | Security policy, compliance |
-| **Incident Response** | incident@zanzibar.go.tz | Security incidents 24/7 |
+| Role                     | Contact                   | Responsibility              |
+| ------------------------ | ------------------------- | --------------------------- |
+| **Security Lead**        | security@zanzibar.go.tz   | Overall security program    |
+| **Development Lead**     | dev-lead@zanzibar.go.tz   | Code security, remediation  |
+| **System Administrator** | admin@csms.zanzibar.go.tz | Infrastructure security     |
+| **CISO**                 | ciso@zanzibar.go.tz       | Security policy, compliance |
+| **Incident Response**    | incident@zanzibar.go.tz   | Security incidents 24/7     |
 
 ---
 
 ## Document Approval
 
-| Role | Name | Signature | Date |
-|------|------|-----------|------|
-| **Security Assessor** | | | |
-| **Development Lead** | | | |
-| **System Architect** | | | |
-| **CISO** | | | |
-| **Project Manager** | | | |
+| Role                  | Name | Signature | Date |
+| --------------------- | ---- | --------- | ---- |
+| **Security Assessor** |      |           |      |
+| **Development Lead**  |      |           |      |
+| **System Architect**  |      |           |      |
+| **CISO**              |      |           |      |
+| **Project Manager**   |      |           |      |
 
 ---
 
 ## Revision History
 
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 2.0 | 2025-12-28 | Security Assessment Team | Post-remediation assessment, verification of security enhancements |
-| 1.0 | 2024-12-25 | Security Assessment Team | Initial security assessment report |
+| Version | Date       | Author                   | Changes                                                            |
+| ------- | ---------- | ------------------------ | ------------------------------------------------------------------ |
+| 2.0     | 2025-12-28 | Security Assessment Team | Post-remediation assessment, verification of security enhancements |
+| 1.0     | 2024-12-25 | Security Assessment Team | Initial security assessment report                                 |
 
 ---
 

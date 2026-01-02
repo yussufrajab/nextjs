@@ -142,14 +142,15 @@ class ApiClient {
   constructor() {
     // Use relative URLs for Next.js proxy, or frontend URL for client-side requests
     // This allows Next.js to proxy requests to the backend automatically
-    this.baseURL = typeof window !== 'undefined' 
-      ? '/api'  // Client-side: use relative path for Next.js proxy
-      : process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'; // Server-side: direct backend URL
-    
+    this.baseURL =
+      typeof window !== 'undefined'
+        ? '/api' // Client-side: use relative path for Next.js proxy
+        : process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'; // Server-side: direct backend URL
+
     // Load token from localStorage if available
     if (typeof window !== 'undefined') {
       this.token = localStorage.getItem('accessToken');
-      
+
       // Authentication is now handled properly via login endpoint
       // No need for development tokens or automatic user setting
     }
@@ -162,14 +163,16 @@ class ApiClient {
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`;
 
-
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       ...((options.headers as Record<string, string>) || {}),
     };
 
     // Add JWT token if available - always get fresh token from localStorage
-    const currentToken = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : this.token;
+    const currentToken =
+      typeof window !== 'undefined'
+        ? localStorage.getItem('accessToken')
+        : this.token;
     if (currentToken) {
       headers['Authorization'] = `Bearer ${currentToken}`;
     }
@@ -182,13 +185,17 @@ class ApiClient {
       // Get CSRF token from cookie
       const csrfToken = document.cookie
         .split('; ')
-        .find(row => row.startsWith('csrf-token='))
+        .find((row) => row.startsWith('csrf-token='))
         ?.split('=')[1];
 
       if (csrfToken) {
         headers['x-csrf-token'] = csrfToken;
       } else {
-        console.warn('[API Client] CSRF token not found for state-changing request:', method, endpoint);
+        console.warn(
+          '[API Client] CSRF token not found for state-changing request:',
+          method,
+          endpoint
+        );
       }
     }
 
@@ -200,33 +207,46 @@ class ApiClient {
       });
 
       // Handle 401 Unauthorized with automatic token refresh
-      if (response.status === 401 && retryCount === 0 && endpoint !== '/auth/refresh' && endpoint !== '/auth/login') {
-        console.log('401 Unauthorized, attempting token refresh for endpoint:', endpoint);
-        
-        const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null;
+      if (
+        response.status === 401 &&
+        retryCount === 0 &&
+        endpoint !== '/auth/refresh' &&
+        endpoint !== '/auth/login'
+      ) {
+        console.log(
+          '401 Unauthorized, attempting token refresh for endpoint:',
+          endpoint
+        );
+
+        const refreshToken =
+          typeof window !== 'undefined'
+            ? localStorage.getItem('refreshToken')
+            : null;
         if (refreshToken) {
           try {
             console.log('Attempting to refresh token...');
             const refreshResponse = await this.refreshToken(refreshToken);
-            
+
             if (refreshResponse.success && refreshResponse.data) {
               console.log('Token refresh successful');
               const newAccessToken = refreshResponse.data.token;
               const newRefreshToken = refreshResponse.data.refreshToken;
-              
+
               // Update tokens
               this.setToken(newAccessToken);
               if (typeof window !== 'undefined') {
                 localStorage.setItem('refreshToken', newRefreshToken);
               }
-              
+
               // Update auth store with new token
               if (typeof window !== 'undefined') {
                 import('@/store/auth-store').then(({ useAuthStore }) => {
-                  useAuthStore.getState().updateTokenFromApiClient(newAccessToken);
+                  useAuthStore
+                    .getState()
+                    .updateTokenFromApiClient(newAccessToken);
                 });
               }
-              
+
               // Retry the original request with new token
               console.log('Retrying original request with new token');
               return this.request<T>(endpoint, options, retryCount + 1);
@@ -235,7 +255,7 @@ class ApiClient {
             console.error('Token refresh failed:', refreshError);
           }
         }
-        
+
         // If refresh failed or no refresh token, clear auth and redirect
         console.log('Token refresh failed, clearing authentication');
         this.clearToken();
@@ -250,7 +270,7 @@ class ApiClient {
 
       const contentType = response.headers.get('content-type');
       let data;
-      
+
       if (contentType && contentType.includes('application/json')) {
         data = await response.json();
       } else {
@@ -260,20 +280,26 @@ class ApiClient {
       if (!response.ok) {
         return {
           success: false,
-          message: data.message || `HTTP ${response.status}: ${response.statusText}`,
+          message:
+            data.message || `HTTP ${response.status}: ${response.statusText}`,
           errors: data.errors || [],
         };
       }
 
       // Check if the backend already wrapped the response in success/data format
-      if (data && typeof data === 'object' && 'success' in data && 'data' in data) {
+      if (
+        data &&
+        typeof data === 'object' &&
+        'success' in data &&
+        'data' in data
+      ) {
         return {
           success: data.success,
           data: data.data,
-          message: data.message
+          message: data.message,
         };
       }
-      
+
       return {
         success: true,
         data,
@@ -317,14 +343,14 @@ class ApiClient {
           active: true,
           employeeId: null,
           institutionId: 'cmd059ion0000e6d85kexfukl', // Real institution ID
-          institution: { 
-            id: 'cmd059ion0000e6d85kexfukl', 
-            name: 'TUME YA UTUMISHI SERIKALINI' 
+          institution: {
+            id: 'cmd059ion0000e6d85kexfukl',
+            name: 'TUME YA UTUMISHI SERIKALINI',
           },
           createdAt: new Date(),
           updatedAt: new Date(),
         };
-        
+
         useAuthStore.getState().setUserManually(user);
         console.log('Development user set in auth store:', user.name);
       });
@@ -333,21 +359,27 @@ class ApiClient {
 
   // Authentication APIs
   async login(username: string, password: string): Promise<ApiResponse<any>> {
-    console.log('ApiClient.login called with:', { username, passwordLength: password?.length });
+    console.log('ApiClient.login called with:', {
+      username,
+      passwordLength: password?.length,
+    });
     const requestBody = { username, password };
     console.log('ApiClient.login request body:', requestBody);
     console.log('Making request to:', `${this.baseURL}/auth/login`);
-    
+
     const result = await this.request<any>('/auth/login', {
       method: 'POST',
       body: JSON.stringify(requestBody),
     });
-    
+
     console.log('ApiClient.login result:', result);
     return result;
   }
 
-  async logout(userId?: string, sessionToken?: string | null): Promise<ApiResponse<void>> {
+  async logout(
+    userId?: string,
+    sessionToken?: string | null
+  ): Promise<ApiResponse<void>> {
     const result = await this.request<void>('/auth/logout', {
       method: 'POST',
       body: JSON.stringify({ userId, sessionToken }),
@@ -356,17 +388,21 @@ class ApiClient {
     return result;
   }
 
-  async refreshToken(refreshToken: string): Promise<ApiResponse<{ token: string; refreshToken: string }>> {
+  async refreshToken(
+    refreshToken: string
+  ): Promise<ApiResponse<{ token: string; refreshToken: string }>> {
     // Backend expects plain string, not JSON object
-    return this.request<{ token: string; refreshToken: string }>('/auth/refresh', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'text/plain',
-      },
-      body: refreshToken, // Send as plain string
-    });
+    return this.request<{ token: string; refreshToken: string }>(
+      '/auth/refresh',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain',
+        },
+        body: refreshToken, // Send as plain string
+      }
+    );
   }
-
 
   // Employee APIs
   async getEmployees(params?: {
@@ -378,10 +414,13 @@ class ApiClient {
   }): Promise<ApiResponse<Employee[]>> {
     const queryParams = new URLSearchParams();
     if (params?.userRole) queryParams.append('userRole', params.userRole);
-    if (params?.userInstitutionId) queryParams.append('userInstitutionId', params.userInstitutionId);
+    if (params?.userInstitutionId)
+      queryParams.append('userInstitutionId', params.userInstitutionId);
     if (params?.q) queryParams.append('q', params.q);
-    if (params?.page !== undefined) queryParams.append('page', params.page.toString());
-    if (params?.size !== undefined) queryParams.append('size', params.size.toString());
+    if (params?.page !== undefined)
+      queryParams.append('page', params.page.toString());
+    if (params?.size !== undefined)
+      queryParams.append('size', params.size.toString());
 
     return this.request<Employee[]>(`/employees?${queryParams.toString()}`);
   }
@@ -390,14 +429,19 @@ class ApiClient {
     return this.request<Employee>(`/employees/${id}`);
   }
 
-  async createEmployee(employee: Partial<Employee>): Promise<ApiResponse<Employee>> {
+  async createEmployee(
+    employee: Partial<Employee>
+  ): Promise<ApiResponse<Employee>> {
     return this.request<Employee>('/employees', {
       method: 'POST',
       body: JSON.stringify(employee),
     });
   }
 
-  async updateEmployee(id: string, employee: Partial<Employee>): Promise<ApiResponse<Employee>> {
+  async updateEmployee(
+    id: string,
+    employee: Partial<Employee>
+  ): Promise<ApiResponse<Employee>> {
     return this.request<Employee>(`/employees/${id}`, {
       method: 'PUT',
       body: JSON.stringify(employee),
@@ -415,18 +459,25 @@ class ApiClient {
     return this.request<ConfirmationRequest[]>('/confirmation-requests');
   }
 
-  async getConfirmationRequest(id: string): Promise<ApiResponse<ConfirmationRequest>> {
+  async getConfirmationRequest(
+    id: string
+  ): Promise<ApiResponse<ConfirmationRequest>> {
     return this.request<ConfirmationRequest>(`/confirmation-requests/${id}`);
   }
 
-  async createConfirmationRequest(request: Partial<ConfirmationRequest>): Promise<ApiResponse<ConfirmationRequest>> {
+  async createConfirmationRequest(
+    request: Partial<ConfirmationRequest>
+  ): Promise<ApiResponse<ConfirmationRequest>> {
     return this.request<ConfirmationRequest>('/confirmation-requests', {
       method: 'POST',
       body: JSON.stringify(request),
     });
   }
 
-  async updateConfirmationRequest(id: string, request: Partial<ConfirmationRequest>): Promise<ApiResponse<ConfirmationRequest>> {
+  async updateConfirmationRequest(
+    id: string,
+    request: Partial<ConfirmationRequest>
+  ): Promise<ApiResponse<ConfirmationRequest>> {
     return this.request<ConfirmationRequest>(`/confirmation-requests/${id}`, {
       method: 'PUT',
       body: JSON.stringify(request),
@@ -438,18 +489,25 @@ class ApiClient {
     return this.request<PromotionRequest[]>('/promotion-requests');
   }
 
-  async getPromotionRequest(id: string): Promise<ApiResponse<PromotionRequest>> {
+  async getPromotionRequest(
+    id: string
+  ): Promise<ApiResponse<PromotionRequest>> {
     return this.request<PromotionRequest>(`/promotion-requests/${id}`);
   }
 
-  async createPromotionRequest(request: Partial<PromotionRequest>): Promise<ApiResponse<PromotionRequest>> {
+  async createPromotionRequest(
+    request: Partial<PromotionRequest>
+  ): Promise<ApiResponse<PromotionRequest>> {
     return this.request<PromotionRequest>('/promotion-requests', {
       method: 'POST',
       body: JSON.stringify(request),
     });
   }
 
-  async updatePromotionRequest(id: string, request: Partial<PromotionRequest>): Promise<ApiResponse<PromotionRequest>> {
+  async updatePromotionRequest(
+    id: string,
+    request: Partial<PromotionRequest>
+  ): Promise<ApiResponse<PromotionRequest>> {
     return this.request<PromotionRequest>(`/promotion-requests/${id}`, {
       method: 'PUT',
       body: JSON.stringify(request),
@@ -465,14 +523,19 @@ class ApiClient {
     return this.request<LwopRequest>(`/lwop-requests/${id}`);
   }
 
-  async createLwopRequest(request: Partial<LwopRequest>): Promise<ApiResponse<LwopRequest>> {
+  async createLwopRequest(
+    request: Partial<LwopRequest>
+  ): Promise<ApiResponse<LwopRequest>> {
     return this.request<LwopRequest>('/lwop-requests', {
       method: 'POST',
       body: JSON.stringify(request),
     });
   }
 
-  async updateLwopRequest(id: string, request: Partial<LwopRequest>): Promise<ApiResponse<LwopRequest>> {
+  async updateLwopRequest(
+    id: string,
+    request: Partial<LwopRequest>
+  ): Promise<ApiResponse<LwopRequest>> {
     return this.request<LwopRequest>(`/lwop-requests/${id}`, {
       method: 'PUT',
       body: JSON.stringify(request),
@@ -488,14 +551,19 @@ class ApiClient {
     return this.request<Complaint>(`/complaints/${id}`);
   }
 
-  async createComplaint(complaint: Partial<Complaint>): Promise<ApiResponse<Complaint>> {
+  async createComplaint(
+    complaint: Partial<Complaint>
+  ): Promise<ApiResponse<Complaint>> {
     return this.request<Complaint>('/complaints', {
       method: 'POST',
       body: JSON.stringify(complaint),
     });
   }
 
-  async updateComplaint(id: string, complaint: Partial<Complaint>): Promise<ApiResponse<Complaint>> {
+  async updateComplaint(
+    id: string,
+    complaint: Partial<Complaint>
+  ): Promise<ApiResponse<Complaint>> {
     return this.request<Complaint>(`/complaints/${id}`, {
       method: 'PUT',
       body: JSON.stringify(complaint),
@@ -511,14 +579,19 @@ class ApiClient {
     return this.request<Institution>(`/institutions/${id}`);
   }
 
-  async createInstitution(institution: Partial<Institution>): Promise<ApiResponse<Institution>> {
+  async createInstitution(
+    institution: Partial<Institution>
+  ): Promise<ApiResponse<Institution>> {
     return this.request<Institution>('/institutions', {
       method: 'POST',
       body: JSON.stringify(institution),
     });
   }
 
-  async updateInstitution(id: string, institution: Partial<Institution>): Promise<ApiResponse<Institution>> {
+  async updateInstitution(
+    id: string,
+    institution: Partial<Institution>
+  ): Promise<ApiResponse<Institution>> {
     return this.request<Institution>(`/institutions/${id}`, {
       method: 'PUT',
       body: JSON.stringify(institution),
@@ -547,7 +620,10 @@ class ApiClient {
     });
   }
 
-  async updateUser(id: string, user: Partial<User>): Promise<ApiResponse<User>> {
+  async updateUser(
+    id: string,
+    user: Partial<User>
+  ): Promise<ApiResponse<User>> {
     return this.request<User>(`/users/${id}`, {
       method: 'PUT',
       body: JSON.stringify(user),
@@ -569,7 +645,7 @@ class ApiClient {
   async generateReport(type: string, params?: any): Promise<ApiResponse<any>> {
     const queryParams = new URLSearchParams();
     if (params) {
-      Object.keys(params).forEach(key => {
+      Object.keys(params).forEach((key) => {
         if (params[key] !== undefined && params[key] !== null) {
           queryParams.append(key, params[key].toString());
         }
@@ -581,7 +657,10 @@ class ApiClient {
   }
 
   // File Upload
-  async uploadFile(file: File, endpoint: string = '/files/upload'): Promise<ApiResponse<{ url: string }>> {
+  async uploadFile(
+    file: File,
+    endpoint: string = '/files/upload'
+  ): Promise<ApiResponse<{ url: string }>> {
     const formData = new FormData();
     formData.append('file', file);
 
@@ -604,7 +683,9 @@ class ApiClient {
     return this.request<T>(endpoint);
   }
 
-  async markNotificationsAsRead(notificationIds: string[]): Promise<ApiResponse<void>> {
+  async markNotificationsAsRead(
+    notificationIds: string[]
+  ): Promise<ApiResponse<void>> {
     return this.request<void>('/notifications', {
       method: 'POST',
       body: JSON.stringify({ notificationIds }),

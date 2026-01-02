@@ -24,9 +24,10 @@ const prisma = new PrismaClient();
 
 // HRIMS API Configuration
 const HRIMS_CONFIG = {
-  BASE_URL: "http://10.0.217.11:8135/api",
-  API_KEY: "0ea1e3f5-ea57-410b-a199-246fa288b851",
-  TOKEN: "CfDJ8M6SKjORsSdBliudb_vdU_DEea8FKIcQckiBxdvt4EJgtcP0ba_3REOpGvWYeOF46fvqw8heVnqFnXTwOmD5Wg5Qg3yNJlwyGDHVhqbgyKxB31Bjh2pI6C2qAYnLMovU4XLlQFVu7cTpIqtgItNZpM4"
+  BASE_URL: 'http://10.0.217.11:8135/api',
+  API_KEY: '0ea1e3f5-ea57-410b-a199-246fa288b851',
+  TOKEN:
+    'CfDJ8M6SKjORsSdBliudb_vdU_DEea8FKIcQckiBxdvt4EJgtcP0ba_3REOpGvWYeOF46fvqw8heVnqFnXTwOmD5Wg5Qg3yNJlwyGDHVhqbgyKxB31Bjh2pI6C2qAYnLMovU4XLlQFVu7cTpIqtgItNZpM4',
 };
 
 interface PhotoFetchResult {
@@ -51,7 +52,7 @@ function parseArguments(): ScriptOptions {
   const options: ScriptOptions = {
     skipExisting: false,
     delay: 100,
-    dryRun: false
+    dryRun: false,
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -122,22 +123,24 @@ interface PhotoData {
   mimeType: string;
 }
 
-async function fetchPhotoFromHRIMS(payrollNumber: string): Promise<PhotoData | null> {
+async function fetchPhotoFromHRIMS(
+  payrollNumber: string
+): Promise<PhotoData | null> {
   try {
     const photoPayload = {
-      RequestId: "203",
-      SearchCriteria: payrollNumber
+      RequestId: '203',
+      SearchCriteria: payrollNumber,
     };
 
     const response = await fetch(`${HRIMS_CONFIG.BASE_URL}/Employees`, {
       method: 'POST',
       headers: {
-        'ApiKey': HRIMS_CONFIG.API_KEY,
-        'Token': HRIMS_CONFIG.TOKEN,
+        ApiKey: HRIMS_CONFIG.API_KEY,
+        Token: HRIMS_CONFIG.TOKEN,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(photoPayload),
-      signal: AbortSignal.timeout(30000) // 30 second timeout
+      signal: AbortSignal.timeout(30000), // 30 second timeout
     });
 
     if (!response.ok) {
@@ -152,7 +155,11 @@ async function fetchPhotoFromHRIMS(payrollNumber: string): Promise<PhotoData | n
       photoBase64 = photoData.data;
     } else if (photoData.photo && photoData.photo.content) {
       photoBase64 = photoData.photo.content;
-    } else if (photoData.data && photoData.data.photo && photoData.data.photo.content) {
+    } else if (
+      photoData.data &&
+      photoData.data.photo &&
+      photoData.data.photo.content
+    ) {
       photoBase64 = photoData.data.photo.content;
     } else if (photoData.data && photoData.data.Picture) {
       photoBase64 = photoData.data.Picture;
@@ -191,7 +198,9 @@ async function main() {
   const options = parseArguments();
 
   console.log('📋 Configuration:');
-  console.log(`   Institution ID: ${options.institutionId || 'All institutions'}`);
+  console.log(
+    `   Institution ID: ${options.institutionId || 'All institutions'}`
+  );
   console.log(`   Skip existing: ${options.skipExisting}`);
   console.log(`   Delay: ${options.delay}ms`);
   console.log(`   Batch size: ${options.batchSize || 'All'}`);
@@ -199,7 +208,9 @@ async function main() {
   console.log();
 
   // Build where clause for institutions
-  const institutionWhere = options.institutionId ? { id: options.institutionId } : {};
+  const institutionWhere = options.institutionId
+    ? { id: options.institutionId }
+    : {};
 
   // Fetch institutions
   const institutions = await prisma.institution.findMany({
@@ -208,8 +219,8 @@ async function main() {
       id: true,
       name: true,
       voteNumber: true,
-      tinNumber: true
-    }
+      tinNumber: true,
+    },
   });
 
   if (institutions.length === 0) {
@@ -230,7 +241,7 @@ async function main() {
 
     // Build where clause for employees
     const employeeWhere: any = {
-      institutionId: institution.id
+      institutionId: institution.id,
     };
 
     // Skip employees who already have photos if option is set
@@ -242,11 +253,15 @@ async function main() {
             {
               AND: [
                 { profileImageUrl: { not: { startsWith: 'data:image' } } },
-                { profileImageUrl: { not: { startsWith: '/api/files/employee-photos/' } } }
-              ]
-            }
-          ]
-        }
+                {
+                  profileImageUrl: {
+                    not: { startsWith: '/api/files/employee-photos/' },
+                  },
+                },
+              ],
+            },
+          ],
+        },
       ];
     }
 
@@ -257,15 +272,18 @@ async function main() {
         id: true,
         name: true,
         payrollNumber: true,
-        profileImageUrl: true
+        profileImageUrl: true,
       },
       orderBy: {
-        name: 'asc'
-      }
+        name: 'asc',
+      },
     });
 
     // Apply batch size limit if specified
-    if (options.batchSize && employees.length > options.batchSize - totalProcessed) {
+    if (
+      options.batchSize &&
+      employees.length > options.batchSize - totalProcessed
+    ) {
       employees = employees.slice(0, options.batchSize - totalProcessed);
     }
 
@@ -291,7 +309,7 @@ async function main() {
           payrollNumber: 'N/A',
           institutionName: institution.name,
           status: 'skipped',
-          message: 'No payroll number'
+          message: 'No payroll number',
         });
         skippedCount++;
         continue;
@@ -299,28 +317,34 @@ async function main() {
 
       try {
         if (options.dryRun) {
-          console.log(`   ${progress} 🔍 [DRY RUN] Would fetch photo for ${employee.name} (${employee.payrollNumber})`);
+          console.log(
+            `   ${progress} 🔍 [DRY RUN] Would fetch photo for ${employee.name} (${employee.payrollNumber})`
+          );
           allResults.push({
             employeeName: employee.name,
             payrollNumber: employee.payrollNumber,
             institutionName: institution.name,
             status: 'success',
-            message: 'Dry run - not executed'
+            message: 'Dry run - not executed',
           });
           successCount++;
         } else {
-          console.log(`   ${progress} 📸 Fetching photo for ${employee.name} (${employee.payrollNumber})...`);
+          console.log(
+            `   ${progress} 📸 Fetching photo for ${employee.name} (${employee.payrollNumber})...`
+          );
 
           const photoData = await fetchPhotoFromHRIMS(employee.payrollNumber);
 
           if (!photoData) {
-            console.log(`   ${progress} ❌ No photo data found for ${employee.name}`);
+            console.log(
+              `   ${progress} ❌ No photo data found for ${employee.name}`
+            );
             allResults.push({
               employeeName: employee.name,
               payrollNumber: employee.payrollNumber,
               institutionName: institution.name,
               status: 'failed',
-              message: 'No photo data in HRIMS response'
+              message: 'No photo data in HRIMS response',
             });
             failedCount++;
           } else {
@@ -330,9 +354,10 @@ async function main() {
               'image/jpg': 'jpg',
               'image/png': 'png',
               'image/gif': 'gif',
-              'image/webp': 'webp'
+              'image/webp': 'webp',
             };
-            const extension = extensionMap[photoData.mimeType.toLowerCase()] || 'jpg';
+            const extension =
+              extensionMap[photoData.mimeType.toLowerCase()] || 'jpg';
 
             // Upload to MinIO
             const fileName = `${employee.id}.${extension}`;
@@ -345,26 +370,30 @@ async function main() {
               const minioUrl = `/api/files/employee-photos/${fileName}`;
               await prisma.employee.update({
                 where: { id: employee.id },
-                data: { profileImageUrl: minioUrl }
+                data: { profileImageUrl: minioUrl },
               });
 
-              console.log(`   ${progress} ✅ Photo stored for ${employee.name} (MinIO)`);
+              console.log(
+                `   ${progress} ✅ Photo stored for ${employee.name} (MinIO)`
+              );
               allResults.push({
                 employeeName: employee.name,
                 payrollNumber: employee.payrollNumber,
                 institutionName: institution.name,
                 status: 'success',
-                message: 'Photo fetched and stored in MinIO'
+                message: 'Photo fetched and stored in MinIO',
               });
               successCount++;
             } catch (uploadError) {
-              console.log(`   ${progress} ❌ Failed to upload to MinIO for ${employee.name}: ${uploadError instanceof Error ? uploadError.message : 'Unknown error'}`);
+              console.log(
+                `   ${progress} ❌ Failed to upload to MinIO for ${employee.name}: ${uploadError instanceof Error ? uploadError.message : 'Unknown error'}`
+              );
               allResults.push({
                 employeeName: employee.name,
                 payrollNumber: employee.payrollNumber,
                 institutionName: institution.name,
                 status: 'failed',
-                message: `MinIO upload failed: ${uploadError instanceof Error ? uploadError.message : 'Unknown error'}`
+                message: `MinIO upload failed: ${uploadError instanceof Error ? uploadError.message : 'Unknown error'}`,
               });
               failedCount++;
             }
@@ -372,17 +401,19 @@ async function main() {
 
           // Add delay between requests to avoid overwhelming HRIMS API
           if (i < employees.length - 1) {
-            await new Promise(resolve => setTimeout(resolve, options.delay));
+            await new Promise((resolve) => setTimeout(resolve, options.delay));
           }
         }
       } catch (error) {
-        console.log(`   ${progress} ❌ Error for ${employee.name}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        console.log(
+          `   ${progress} ❌ Error for ${employee.name}: ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
         allResults.push({
           employeeName: employee.name,
           payrollNumber: employee.payrollNumber,
           institutionName: institution.name,
           status: 'failed',
-          message: error instanceof Error ? error.message : 'Unknown error'
+          message: error instanceof Error ? error.message : 'Unknown error',
         });
         failedCount++;
       }
@@ -391,7 +422,9 @@ async function main() {
 
       // Stop if batch size reached
       if (options.batchSize && totalProcessed >= options.batchSize) {
-        console.log(`\n⚠️  Batch size limit (${options.batchSize}) reached. Stopping.`);
+        console.log(
+          `\n⚠️  Batch size limit (${options.batchSize}) reached. Stopping.`
+        );
         break;
       }
     }
@@ -413,9 +446,9 @@ async function main() {
   console.log('🏁 FINAL SUMMARY');
   console.log(`${'='.repeat(80)}\n`);
 
-  const finalSuccess = allResults.filter(r => r.status === 'success').length;
-  const finalFailed = allResults.filter(r => r.status === 'failed').length;
-  const finalSkipped = allResults.filter(r => r.status === 'skipped').length;
+  const finalSuccess = allResults.filter((r) => r.status === 'success').length;
+  const finalFailed = allResults.filter((r) => r.status === 'failed').length;
+  const finalSkipped = allResults.filter((r) => r.status === 'skipped').length;
 
   console.log(`📊 Overall Statistics:`);
   console.log(`   Total Processed: ${allResults.length}`);
@@ -439,17 +472,21 @@ async function main() {
 
     fs.writeFileSync(
       path.join(process.cwd(), resultsFile),
-      JSON.stringify({
-        timestamp: new Date().toISOString(),
-        options,
-        summary: {
-          total: allResults.length,
-          success: finalSuccess,
-          failed: finalFailed,
-          skipped: finalSkipped
+      JSON.stringify(
+        {
+          timestamp: new Date().toISOString(),
+          options,
+          summary: {
+            total: allResults.length,
+            success: finalSuccess,
+            failed: finalFailed,
+            skipped: finalSkipped,
+          },
+          results: allResults,
         },
-        results: allResults
-      }, null, 2)
+        null,
+        2
+      )
     );
 
     console.log(`\n💾 Results saved to: ${resultsFile}`);
@@ -463,9 +500,8 @@ async function main() {
 }
 
 // Run the script
-main()
-  .catch((error) => {
-    console.error('🚨 Fatal error:', error);
-    prisma.$disconnect();
-    process.exit(1);
-  });
+main().catch((error) => {
+  console.error('🚨 Fatal error:', error);
+  prisma.$disconnect();
+  process.exit(1);
+});

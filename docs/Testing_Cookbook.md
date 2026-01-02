@@ -65,6 +65,7 @@ All testing dependencies are already installed. The project uses:
 - **Location**: Place test files next to the source files they test
 
 Example:
+
 ```
 src/lib/password-utils.ts       # Source file
 src/lib/password-utils.test.ts  # Test file (same directory)
@@ -109,6 +110,7 @@ npm test -t "should validate password"
 ### Watch Mode Tips
 
 When running `npm test`, Vitest enters watch mode:
+
 - Press **a** to run all tests
 - Press **f** to run only failed tests
 - Press **t** to filter by test name
@@ -121,11 +123,13 @@ npm run test:coverage
 ```
 
 This generates:
+
 - **Terminal output**: Quick summary
 - **HTML report**: `coverage/index.html` (open in browser)
 - **LCOV report**: `coverage/lcov.info` (for CI/CD)
 
 Coverage thresholds (configured in `vitest.config.ts`):
+
 - Lines: 80%
 - Functions: 80%
 - Branches: 80%
@@ -183,6 +187,7 @@ describe('password-utils', () => {
 ```
 
 **Key Points**:
+
 - Group related tests with `describe` blocks
 - Use descriptive test names that read like sentences
 - Test both happy paths and edge cases
@@ -263,6 +268,7 @@ describe('LoginForm', () => {
 ```
 
 **Key Points**:
+
 - Mock external dependencies (stores, routers, APIs)
 - Reset mocks in `beforeEach` to ensure test isolation
 - Use `userEvent` for simulating user interactions (more realistic than `fireEvent`)
@@ -318,10 +324,7 @@ describe('POST /api/auth/login', () => {
     expect(data.user.username).toBe('testuser');
     expect(prismaMock.user.findFirst).toHaveBeenCalledWith({
       where: {
-        OR: [
-          { username: 'testuser' },
-          { email: 'testuser' },
-        ],
+        OR: [{ username: 'testuser' }, { email: 'testuser' }],
       },
     });
   });
@@ -346,6 +349,7 @@ describe('POST /api/auth/login', () => {
 ```
 
 **Key Points**:
+
 - Mock Prisma client for database operations
 - Create Request objects to test API handlers
 - Test both success and error cases
@@ -389,6 +393,7 @@ describe('useEmployeeData', () => {
 ```
 
 **Key Points**:
+
 - Use `renderHook` from Testing Library
 - Test loading, success, and error states
 - Mock API calls or data fetching
@@ -439,6 +444,7 @@ describe('authStore', () => {
 ```
 
 **Key Points**:
+
 - Access store directly with `getState()`
 - Reset state in `beforeEach`
 - Test state changes and actions
@@ -487,6 +493,7 @@ describe('User API', () => {
 ```
 
 **All Prisma operations are mocked**:
+
 - `findUnique`, `findFirst`, `findMany`
 - `create`, `update`, `delete`
 - `upsert`, `count`, `aggregate`
@@ -541,6 +548,7 @@ describe('Protected Route', () => {
 ```
 
 **Pre-defined mock users** (from `test/fixtures/users.ts`):
+
 - `testUsers.admin` - CSCS (Admin) role
 - `testUsers.hro` - HRO role
 - `testUsers.hrmo` - HRMO role
@@ -860,6 +868,7 @@ test: {
 **Problem**: Mock defined but actual module is called
 
 **Solution**:
+
 - Ensure `vi.mock()` is at the top level (not inside `describe` or `it`)
 - Check mock path matches actual import path
 - Use `vi.clearAllMocks()` in `beforeEach`
@@ -945,9 +954,12 @@ it('should handle long operation', async () => {
 }, 10000); // 10 second timeout
 
 // Option 2: Use waitFor with timeout
-await waitFor(() => {
-  expect(screen.getByText('Loaded')).toBeInTheDocument();
-}, { timeout: 10000 });
+await waitFor(
+  () => {
+    expect(screen.getByText('Loaded')).toBeInTheDocument();
+  },
+  { timeout: 10000 }
+);
 ```
 
 #### 8. "Cannot spy on property because it is not a function"
@@ -1027,6 +1039,7 @@ screen.logTestingPlaygroundURL(); // Get Testing Playground URL
 ### Vitest APIs
 
 #### Test Functions
+
 - `describe(name, fn)` - Group related tests
 - `it(name, fn)` - Define a test (alias: `test`)
 - `beforeEach(fn)` - Run before each test
@@ -1035,6 +1048,7 @@ screen.logTestingPlaygroundURL(); // Get Testing Playground URL
 - `afterAll(fn)` - Run once after all tests
 
 #### Assertions
+
 - `expect(value).toBe(expected)` - Strict equality (===)
 - `expect(value).toEqual(expected)` - Deep equality
 - `expect(value).toBeDefined()` - Value is not undefined
@@ -1047,10 +1061,12 @@ screen.logTestingPlaygroundURL(); // Get Testing Playground URL
 - `expect(value).toHaveLength(n)` - Array/string length
 
 #### Async Assertions
+
 - `await expect(promise).resolves.toBe(value)` - Promise resolves
 - `await expect(promise).rejects.toThrow()` - Promise rejects
 
 #### Mock Functions
+
 - `vi.fn()` - Create mock function
 - `vi.mock('module')` - Mock entire module
 - `vi.spyOn(object, 'method')` - Spy on method
@@ -1061,6 +1077,7 @@ screen.logTestingPlaygroundURL(); // Get Testing Playground URL
 ### Testing Library APIs
 
 #### Queries
+
 - `getByRole(role)` - Get by ARIA role
 - `getByLabelText(text)` - Get by label text
 - `getByText(text)` - Get by text content
@@ -1069,6 +1086,7 @@ screen.logTestingPlaygroundURL(); // Get Testing Playground URL
 - `findBy*()` - Async, waits for element
 
 #### User Events
+
 - `await user.click(element)` - Click element
 - `await user.type(element, text)` - Type text
 - `await user.clear(element)` - Clear input
@@ -1076,6 +1094,7 @@ screen.logTestingPlaygroundURL(); // Get Testing Playground URL
 - `await user.selectOptions(element, value)` - Select option
 
 #### Utilities
+
 - `render(<Component />)` - Render component
 - `screen` - Query rendered component
 - `waitFor(() => {})` - Wait for condition
@@ -1094,14 +1113,17 @@ screen.logTestingPlaygroundURL(); // Get Testing Playground URL
 ### Configuration Files
 
 #### vitest.config.ts
+
 ```typescript
 export default defineConfig({
   plugins: [react()],
   test: {
-    globals: true,              // Enable global APIs
-    environment: 'jsdom',       // Use jsdom
+    globals: true, // Enable global APIs
+    environment: 'jsdom', // Use jsdom
     setupFiles: ['./test/setup.ts'],
-    coverage: { /* config */ },
+    coverage: {
+      /* config */
+    },
     include: ['**/*.{test,spec}.{ts,tsx}'],
     testTimeout: 5000,
   },
@@ -1114,7 +1136,9 @@ export default defineConfig({
 ```
 
 #### test/setup.ts
+
 Global setup for all tests:
+
 - Imports `@testing-library/jest-dom`
 - Mocks Next.js navigation
 - Mocks Next.js headers
@@ -1137,12 +1161,14 @@ Global setup for all tests:
 Now that the testing infrastructure is set up, the next phase focuses on testing critical utility files:
 
 **Priority P0 (Security/Auth)**:
+
 - `src/lib/auth.ts` - Authentication logic
 - `src/lib/session.ts` - Session management
 - `src/lib/password-utils.ts` - ✅ Already tested (55 tests)
 - `src/lib/rbac.ts` - Role-based access control
 
 **Priority P1 (Business Logic)**:
+
 - `src/lib/validation.ts` - Data validation
 - `src/lib/business-rules.ts` - Business rule enforcement
 - `src/lib/workflow.ts` - Workflow state management

@@ -369,9 +369,9 @@ describe('session-manager', () => {
     it('should throw error on database failure', async () => {
       mockedDb.session.findMany.mockRejectedValue(new Error('DB Error'));
 
-      await expect(
-        createSession(userId, ipAddress, userAgent)
-      ).rejects.toThrow('DB Error');
+      await expect(createSession(userId, ipAddress, userAgent)).rejects.toThrow(
+        'DB Error'
+      );
     });
   });
 

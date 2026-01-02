@@ -7,9 +7,15 @@ interface PageHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
   actions?: React.ReactNode;
 }
 
-export function PageHeader({ title, description, actions, className, ...props }: PageHeaderProps) {
+export function PageHeader({
+  title,
+  description,
+  actions,
+  className,
+  ...props
+}: PageHeaderProps) {
   return (
-    <div className={cn("mb-6 md:mb-8", className)} {...props}>
+    <div className={cn('mb-6 md:mb-8', className)} {...props}>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold font-headline tracking-tight text-foreground">
@@ -21,7 +27,9 @@ export function PageHeader({ title, description, actions, className, ...props }:
             </p>
           )}
         </div>
-        {actions && <div className="flex items-center space-x-2">{actions}</div>}
+        {actions && (
+          <div className="flex items-center space-x-2">{actions}</div>
+        )}
       </div>
     </div>
   );

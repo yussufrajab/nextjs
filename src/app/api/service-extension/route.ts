@@ -3,7 +3,11 @@ import { db } from '@/lib/db';
 import { shouldApplyInstitutionFilter } from '@/lib/role-utils';
 import { validateEmployeeStatusForRequest } from '@/lib/employee-status-validation';
 import { v4 as uuidv4 } from 'uuid';
-import { logRequestApproval, logRequestRejection, getClientIp } from '@/lib/audit-logger';
+import {
+  logRequestApproval,
+  logRequestRejection,
+  getClientIp,
+} from '@/lib/audit-logger';
 
 export async function GET(req: Request) {
   try {
@@ -12,43 +16,57 @@ export async function GET(req: Request) {
     const userRole = searchParams.get('userRole');
     const userInstitutionId = searchParams.get('userInstitutionId');
 
-    console.log('Service Extension API called with:', { userId, userRole, userInstitutionId });
+    console.log('Service Extension API called with:', {
+      userId,
+      userRole,
+      userInstitutionId,
+    });
 
     // Build where clause based on user role and institution
-    let whereClause: any = {};
+    const whereClause: any = {};
 
     // Apply institution filtering based on role
     if (shouldApplyInstitutionFilter(userRole, userInstitutionId)) {
-      console.log(`Applying institution filter for role ${userRole} with institutionId ${userInstitutionId}`);
+      console.log(
+        `Applying institution filter for role ${userRole} with institutionId ${userInstitutionId}`
+      );
       whereClause.Employee = {
-        institutionId: userInstitutionId
+        institutionId: userInstitutionId,
       };
     } else {
-      console.log(`Role ${userRole} is a CSC role - showing all service extension data across institutions`);
+      console.log(
+        `Role ${userRole} is a CSC role - showing all service extension data across institutions`
+      );
     }
 
-    const requests = await db.serviceExtensionRequest.findMany({
-      where: whereClause,
-      include: {
-        Employee: {
-          select: {
-            id: true,
-            name: true,
-            zanId: true,
-            payrollNumber: true,
-            zssfNumber: true,
-            department: true,
-            cadre: true,
-            dateOfBirth: true,
-            employmentDate: true,
-            Institution: { select: { id: true, name: true } }
-          }
+    const requests = await db.serviceExtensionRequest
+      .findMany({
+        where: whereClause,
+        include: {
+          Employee: {
+            select: {
+              id: true,
+              name: true,
+              zanId: true,
+              payrollNumber: true,
+              zssfNumber: true,
+              department: true,
+              cadre: true,
+              dateOfBirth: true,
+              employmentDate: true,
+              Institution: { select: { id: true, name: true } },
+            },
+          },
+          User_ServiceExtensionRequest_submittedByIdToUser: {
+            select: { id: true, name: true, username: true },
+          },
+          User_ServiceExtensionRequest_reviewedByIdToUser: {
+            select: { id: true, name: true, username: true },
+          },
         },
-        User_ServiceExtensionRequest_submittedByIdToUser: { select: { id: true, name: true, username: true } },
-        User_ServiceExtensionRequest_reviewedByIdToUser: { select: { id: true, name: true, username: true } }
-      },
-      orderBy: { createdAt: 'desc' }
-    }).catch(() => []);
+        orderBy: { createdAt: 'desc' },
+      })
+      .catch(() => []);
 
     // Transform the data to match frontend expectations
     const transformedRequests = requests.map((req: any) => ({
@@ -56,13 +74,16 @@ export async function GET(req: Request) {
       submittedBy: req.User_ServiceExtensionRequest_submittedByIdToUser,
       reviewedBy: req.User_ServiceExtensionRequest_reviewedByIdToUser,
       User_ServiceExtensionRequest_submittedByIdToUser: undefined,
-      User_ServiceExtensionRequest_reviewedByIdToUser: undefined
+      User_ServiceExtensionRequest_reviewedByIdToUser: undefined,
     }));
 
     return NextResponse.json(transformedRequests);
   } catch (error) {
-    console.error("[SERVICE_EXTENSION_GET]", error);
-    return NextResponse.json({ success: false, message: 'Internal Server Error' }, { status: 500 });
+    console.error('[SERVICE_EXTENSION_GET]', error);
+    return NextResponse.json(
+      { success: false, message: 'Internal Server Error' },
+      { status: 500 }
+    );
   }
 }
 
@@ -72,33 +93,52 @@ export async function POST(req: Request) {
     console.log('Creating service extension request:', body);
 
     // Basic validation
-    if (!body.employeeId || !body.submittedById || !body.currentRetirementDate || !body.requestedExtensionPeriod || !body.justification) {
-      return NextResponse.json({ 
-        success: false, 
-        message: 'Missing required fields: employeeId, submittedById, currentRetirementDate, requestedExtensionPeriod, justification' 
-      }, { status: 400 });
+    if (
+      !body.employeeId ||
+      !body.submittedById ||
+      !body.currentRetirementDate ||
+      !body.requestedExtensionPeriod ||
+      !body.justification
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            'Missing required fields: employeeId, submittedById, currentRetirementDate, requestedExtensionPeriod, justification',
+        },
+        { status: 400 }
+      );
     }
 
     // Get employee details to check status
     const employee = await db.employee.findUnique({
       where: { id: body.employeeId },
-      select: { id: true, name: true, status: true }
+      select: { id: true, name: true, status: true },
     });
 
     if (!employee) {
-      return NextResponse.json({ 
-        success: false, 
-        message: 'Employee not found' 
-      }, { status: 404 });
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Employee not found',
+        },
+        { status: 404 }
+      );
     }
 
     // Validate employee status for service extension request
-    const statusValidation = validateEmployeeStatusForRequest(employee.status, 'service-extension');
+    const statusValidation = validateEmployeeStatusForRequest(
+      employee.status,
+      'service-extension'
+    );
     if (!statusValidation.isValid) {
-      return NextResponse.json({ 
-        success: false, 
-        message: statusValidation.message 
-      }, { status: 403 });
+      return NextResponse.json(
+        {
+          success: false,
+          message: statusValidation.message,
+        },
+        { status: 403 }
+      );
     }
 
     const serviceExtensionRequest = await db.serviceExtensionRequest.create({
@@ -113,7 +153,7 @@ export async function POST(req: Request) {
         status: body.status || 'Pending HRMO/HHRMD Review',
         reviewStage: body.reviewStage || 'initial',
         rejectionReason: body.rejectionReason,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       },
       include: {
         Employee: {
@@ -127,27 +167,34 @@ export async function POST(req: Request) {
             cadre: true,
             dateOfBirth: true,
             employmentDate: true,
-            Institution: { select: { id: true, name: true } }
-          }
-        }
-      ,
-        User_ServiceExtensionRequest_submittedByIdToUser: { select: { id: true, name: true, username: true } }}
+            Institution: { select: { id: true, name: true } },
+          },
+        },
+        User_ServiceExtensionRequest_submittedByIdToUser: {
+          select: { id: true, name: true, username: true },
+        },
+      },
     });
 
-    console.log('Created service extension request:', serviceExtensionRequest.id);
+    console.log(
+      'Created service extension request:',
+      serviceExtensionRequest.id
+    );
 
     return NextResponse.json({
       success: true,
-      data: serviceExtensionRequest
+      data: serviceExtensionRequest,
     });
-
   } catch (error) {
-    console.error("[SERVICE_EXTENSION_POST]", error);
-    return NextResponse.json({ 
-      success: false, 
-      message: 'Internal Server Error',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+    console.error('[SERVICE_EXTENSION_POST]', error);
+    return NextResponse.json(
+      {
+        success: false,
+        message: 'Internal Server Error',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
   }
 }
 
@@ -157,10 +204,13 @@ export async function PATCH(req: Request) {
     const { id, ...updateData } = body;
 
     if (!id) {
-      return NextResponse.json({
-        success: false,
-        message: 'Request ID is required'
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Request ID is required',
+        },
+        { status: 400 }
+      );
     }
 
     // Get IP and user agent for audit logging
@@ -170,7 +220,9 @@ export async function PATCH(req: Request) {
 
     // Convert date string to Date object if present
     if (updateData.currentRetirementDate) {
-      updateData.currentRetirementDate = new Date(updateData.currentRetirementDate);
+      updateData.currentRetirementDate = new Date(
+        updateData.currentRetirementDate
+      );
     }
 
     const updatedRequest = await db.serviceExtensionRequest.update({
@@ -189,12 +241,16 @@ export async function PATCH(req: Request) {
             dateOfBirth: true,
             employmentDate: true,
             retirementDate: true,
-            Institution: { select: { id: true, name: true } }
-          }
-        }
-      ,
-        User_ServiceExtensionRequest_submittedByIdToUser: { select: { id: true, name: true, username: true } },
-        User_ServiceExtensionRequest_reviewedByIdToUser: { select: { id: true, name: true, username: true } }}
+            Institution: { select: { id: true, name: true } },
+          },
+        },
+        User_ServiceExtensionRequest_submittedByIdToUser: {
+          select: { id: true, name: true, username: true },
+        },
+        User_ServiceExtensionRequest_reviewedByIdToUser: {
+          select: { id: true, name: true, username: true },
+        },
+      },
     });
 
     // Check if the service extension request was approved by commission
@@ -202,14 +258,17 @@ export async function PATCH(req: Request) {
       try {
         // Calculate new retirement date based on the requested extension period
         const currentRetirementDate = updatedRequest.currentRetirementDate;
-        const extensionPeriod = updatedRequest.requestedExtensionPeriod.toLowerCase();
+        const extensionPeriod =
+          updatedRequest.requestedExtensionPeriod.toLowerCase();
 
-        let newRetirementDate = new Date(currentRetirementDate);
+        const newRetirementDate = new Date(currentRetirementDate);
 
         // Parse extension period and calculate new date
         if (extensionPeriod.includes('year')) {
           const years = parseInt(extensionPeriod.match(/\d+/)?.[0] || '1');
-          newRetirementDate.setFullYear(newRetirementDate.getFullYear() + years);
+          newRetirementDate.setFullYear(
+            newRetirementDate.getFullYear() + years
+          );
         } else if (extensionPeriod.includes('month')) {
           const months = parseInt(extensionPeriod.match(/\d+/)?.[0] || '6');
           newRetirementDate.setMonth(newRetirementDate.getMonth() + months);
@@ -222,13 +281,18 @@ export async function PATCH(req: Request) {
         await db.employee.update({
           where: { id: updatedRequest.employeeId },
           data: {
-            retirementDate: newRetirementDate
-          }
+            retirementDate: newRetirementDate,
+          },
         });
 
-        console.log(`Employee ${updatedRequest.Employee.name} (${updatedRequest.Employee.zanId}) retirement date updated from ${currentRetirementDate.toISOString().split('T')[0]} to ${newRetirementDate.toISOString().split('T')[0]} due to approved service extension`);
+        console.log(
+          `Employee ${updatedRequest.Employee.name} (${updatedRequest.Employee.zanId}) retirement date updated from ${currentRetirementDate.toISOString().split('T')[0]} to ${newRetirementDate.toISOString().split('T')[0]} due to approved service extension`
+        );
       } catch (employeeUpdateError) {
-        console.error('Failed to update employee retirement date:', employeeUpdateError);
+        console.error(
+          'Failed to update employee retirement date:',
+          employeeUpdateError
+        );
         // Don't fail the entire request if employee update fails
       }
     }
@@ -237,12 +301,13 @@ export async function PATCH(req: Request) {
     if (updateData.reviewedById && updateData.status) {
       const reviewer = await db.user.findUnique({
         where: { id: updateData.reviewedById },
-        select: { username: true, role: true }
+        select: { username: true, role: true },
       });
 
       if (reviewer) {
         const statusLower = updateData.status.toLowerCase();
-        const isApproval = statusLower.includes('approved') && !statusLower.includes('rejected');
+        const isApproval =
+          statusLower.includes('approved') && !statusLower.includes('rejected');
         const isRejection = statusLower.includes('rejected');
 
         console.log('[AUDIT] Service Extension status update:', {
@@ -296,27 +361,30 @@ export async function PATCH(req: Request) {
       }
     }
 
-
     // Transform the data to match frontend expectations
     const transformedRequest = {
       ...updatedRequest,
-      submittedBy: (updatedRequest as any).User_ServiceExtensionRequest_submittedByIdToUser,
-      reviewedBy: (updatedRequest as any).User_ServiceExtensionRequest_reviewedByIdToUser,
+      submittedBy: (updatedRequest as any)
+        .User_ServiceExtensionRequest_submittedByIdToUser,
+      reviewedBy: (updatedRequest as any)
+        .User_ServiceExtensionRequest_reviewedByIdToUser,
       User_ServiceExtensionRequest_submittedByIdToUser: undefined,
-      User_ServiceExtensionRequest_reviewedByIdToUser: undefined
+      User_ServiceExtensionRequest_reviewedByIdToUser: undefined,
     };
 
     return NextResponse.json({
       success: true,
-      data: transformedRequest
+      data: transformedRequest,
     });
-
   } catch (error) {
-    console.error("[SERVICE_EXTENSION_PATCH]", error);
-    return NextResponse.json({ 
-      success: false, 
-      message: 'Internal Server Error',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+    console.error('[SERVICE_EXTENSION_PATCH]', error);
+    return NextResponse.json(
+      {
+        success: false,
+        message: 'Internal Server Error',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
   }
 }

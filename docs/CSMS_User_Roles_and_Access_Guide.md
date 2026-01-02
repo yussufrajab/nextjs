@@ -37,9 +37,9 @@ The HR Officer has restricted access limited to information related to their spe
 
 **Login Credentials:**
 
-| Field | Value |
-|-------|-------|
-| Username | kmnyonge |
+| Field    | Value       |
+| -------- | ----------- |
+| Username | kmnyonge    |
 | Password | password123 |
 
 ---
@@ -58,9 +58,9 @@ Unlike the HR Officer role which is institution-restricted, the HHRMD as an inte
 
 **Login Credentials:**
 
-| Field | Value |
-|-------|-------|
-| Username | skhamis |
+| Field    | Value       |
+| -------- | ----------- |
+| Username | skhamis     |
 | Password | password123 |
 
 ---
@@ -79,9 +79,9 @@ The HRMO, being an internal CSC user, has access to view all data from different
 
 **Login Credentials:**
 
-| Field | Value |
-|-------|-------|
-| Username | fiddi |
+| Field    | Value       |
+| -------- | ----------- |
+| Username | fiddi       |
 | Password | password123 |
 
 ---
@@ -100,9 +100,9 @@ Similar to other internal CSC roles, the Disciplinary Officer has access to view
 
 **Login Credentials:**
 
-| Field | Value |
-|-------|-------|
-| Username | mussi |
+| Field    | Value       |
+| -------- | ----------- |
+| Username | mussi       |
 | Password | password123 |
 
 ---
@@ -143,9 +143,9 @@ The Planning Officer has read-only access to reports across all CSMS modules but
 
 **Login Credentials:**
 
-| Field | Value |
-|-------|-------|
-| Username | mishak |
+| Field    | Value       |
+| -------- | ----------- |
+| Username | mishak      |
 | Password | password123 |
 
 ---
@@ -164,9 +164,9 @@ The CSC Secretary has the most comprehensive access level in the system, encompa
 
 **Login Credentials:**
 
-| Field | Value |
-|-------|-------|
-| Username | zhaji |
+| Field    | Value       |
+| -------- | ----------- |
+| Username | zhaji       |
 | Password | password123 |
 
 ---
@@ -185,9 +185,9 @@ The HRRP has institution-restricted access, meaning they can only view data, pro
 
 **Login Credentials:**
 
-| Field | Value |
-|-------|-------|
-| Username | kmhaji |
+| Field    | Value       |
+| -------- | ----------- |
+| Username | kmhaji      |
 | Password | password123 |
 
 ---
@@ -206,26 +206,26 @@ The Administrator has the authority to configure module settings, manage access 
 
 **Login Credentials:**
 
-| Field | Value |
-|-------|-------|
-| Username | akassim |
+| Field    | Value       |
+| -------- | ----------- |
+| Username | akassim     |
 | Password | password123 |
 
 ---
 
 ## System Access Summary
 
-| Role | Username | Primary Function | Data Scope |
-|------|----------|------------------|------------|
-| HR Officer (HRO) | kmnyonge | Submit HR requests | Institution only |
-| Head of HR Management (HHRMD) | skhamis | Approve/Reject HR & Disciplinary | All institutions |
-| HR Management Officer (HRMO) | fiddi | Approve/Reject HR requests | All institutions (specific modules) |
-| Disciplinary Officer (DO) | mussi | Handle Complaints/Terminations | All institutions (disciplinary) |
-| Employee (EMP) | N/A | Submit complaints, view profile | Own data only |
-| Planning Officer (PO) | mishak | View reports, analyze data | All institutions (read-only) |
-| CSC Secretary (CSCS) | zhaji | Executive oversight | All institutions |
-| HR Responsible Personnel (HRRP) | kmhaji | Institutional supervision | Institution only |
-| Administrator | akassim | System management | All system data |
+| Role                            | Username | Primary Function                 | Data Scope                          |
+| ------------------------------- | -------- | -------------------------------- | ----------------------------------- |
+| HR Officer (HRO)                | kmnyonge | Submit HR requests               | Institution only                    |
+| Head of HR Management (HHRMD)   | skhamis  | Approve/Reject HR & Disciplinary | All institutions                    |
+| HR Management Officer (HRMO)    | fiddi    | Approve/Reject HR requests       | All institutions (specific modules) |
+| Disciplinary Officer (DO)       | mussi    | Handle Complaints/Terminations   | All institutions (disciplinary)     |
+| Employee (EMP)                  | N/A      | Submit complaints, view profile  | Own data only                       |
+| Planning Officer (PO)           | mishak   | View reports, analyze data       | All institutions (read-only)        |
+| CSC Secretary (CSCS)            | zhaji    | Executive oversight              | All institutions                    |
+| HR Responsible Personnel (HRRP) | kmhaji   | Institutional supervision        | Institution only                    |
+| Administrator                   | akassim  | System management                | All system data                     |
 
 ---
 
@@ -249,7 +249,7 @@ HR requests from external institution HROs that are submitted to CSC may be reje
 
 ---
 
-*Document Version: 1.0*
-*Last Updated: December 2025*
-*System: Civil Service Management System (CSMS)*
-*URL: https://csms.zanajira.go.tz*
+_Document Version: 1.0_
+_Last Updated: December 2025_
+_System: Civil Service Management System (CSMS)_
+_URL: https://csms.zanajira.go.tz_

@@ -436,7 +436,8 @@ describe('csrf-utils', () => {
     });
 
     it('should log CSRF violation to audit system', async () => {
-      const { logAuditEvent, AuditEventCategory, AuditSeverity } = await import('@/lib/audit-logger');
+      const { logAuditEvent, AuditEventCategory, AuditSeverity } =
+        await import('@/lib/audit-logger');
 
       await logCSRFViolation(
         'user-123',
@@ -512,7 +513,9 @@ describe('csrf-utils', () => {
 
     it('should handle errors gracefully', async () => {
       const { logAuditEvent } = await import('@/lib/audit-logger');
-      (logAuditEvent as any).mockRejectedValueOnce(new Error('Audit system error'));
+      (logAuditEvent as any).mockRejectedValueOnce(
+        new Error('Audit system error')
+      );
 
       // Should not throw
       await expect(

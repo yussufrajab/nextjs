@@ -6,8 +6,22 @@ import { useRouter } from 'next/navigation';
 import { Activity, ChevronLeft, ChevronRight } from 'lucide-react';
 
 import { PageHeader } from '@/components/shared/page-header';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardFooter,
+} from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
@@ -33,7 +47,11 @@ interface PaginationInfo {
 }
 
 const getStatusVariant = (status: string) => {
-  if (status.toLowerCase().includes('approved') || status.toLowerCase().includes('satisfied')) return 'default';
+  if (
+    status.toLowerCase().includes('approved') ||
+    status.toLowerCase().includes('satisfied')
+  )
+    return 'default';
   if (status.toLowerCase().includes('rejected')) return 'destructive';
   return 'secondary';
 };
@@ -69,58 +87,69 @@ export default function RecentActivitiesPage() {
   const { isLoading: isAuthLoading, user, role } = useAuth();
   const router = useRouter();
 
-  const [recentActivities, setRecentActivities] = React.useState<RecentActivity[]>([]);
-  const [pagination, setPagination] = React.useState<PaginationInfo | null>(null);
+  const [recentActivities, setRecentActivities] = React.useState<
+    RecentActivity[]
+  >([]);
+  const [pagination, setPagination] = React.useState<PaginationInfo | null>(
+    null
+  );
   const [currentPage, setCurrentPage] = React.useState(1);
   const [isPageLoading, setIsPageLoading] = React.useState(true);
 
   React.useEffect(() => {
-    if (!isAuthLoading && (role === ROLES.EMPLOYEE || role === ROLES.PO || role === ROLES.ADMIN)) {
+    if (
+      !isAuthLoading &&
+      (role === ROLES.EMPLOYEE || role === ROLES.PO || role === ROLES.ADMIN)
+    ) {
       router.replace('/dashboard/profile');
     }
   }, [isAuthLoading, role, router]);
 
-  const fetchRecentActivities = React.useCallback(async (page: number) => {
-    if (isAuthLoading || !user) return;
+  const fetchRecentActivities = React.useCallback(
+    async (page: number) => {
+      if (isAuthLoading || !user) return;
 
-    const isDashboardUser = role !== ROLES.EMPLOYEE && role !== ROLES.PO && role !== ROLES.ADMIN;
-    if (!isDashboardUser) {
-      setIsPageLoading(false);
-      return;
-    }
+      const isDashboardUser =
+        role !== ROLES.EMPLOYEE && role !== ROLES.PO && role !== ROLES.ADMIN;
+      if (!isDashboardUser) {
+        setIsPageLoading(false);
+        return;
+      }
 
-    try {
-      setIsPageLoading(true);
+      try {
+        setIsPageLoading(true);
 
-      const response = await fetch(
-        `/api/dashboard/metrics?userRole=${role}&userInstitutionId=${user.institutionId}&page=${page}&limit=10`,
-        { credentials: 'include' }
-      );
+        const response = await fetch(
+          `/api/dashboard/metrics?userRole=${role}&userInstitutionId=${user.institutionId}&page=${page}&limit=10`,
+          { credentials: 'include' }
+        );
 
-      const result = await response.json();
-      console.log('Recent activities API response:', result);
+        const result = await response.json();
+        console.log('Recent activities API response:', result);
 
-      if (result.success && result.data?.recentActivities) {
-        setRecentActivities(result.data.recentActivities);
-        setPagination(result.data.pagination);
-      } else {
-        console.error('Failed to fetch recent activities:', result.message);
+        if (result.success && result.data?.recentActivities) {
+          setRecentActivities(result.data.recentActivities);
+          setPagination(result.data.pagination);
+        } else {
+          console.error('Failed to fetch recent activities:', result.message);
+          setRecentActivities([]);
+          setPagination(null);
+        }
+      } catch (error) {
+        console.error('Recent activities fetch error:', error);
+        toast({
+          title: 'Error',
+          description: 'Could not load recent activities.',
+          variant: 'destructive',
+        });
         setRecentActivities([]);
         setPagination(null);
+      } finally {
+        setIsPageLoading(false);
       }
-    } catch (error) {
-      console.error('Recent activities fetch error:', error);
-      toast({
-        title: "Error",
-        description: "Could not load recent activities.",
-        variant: "destructive"
-      });
-      setRecentActivities([]);
-      setPagination(null);
-    } finally {
-      setIsPageLoading(false);
-    }
-  }, [isAuthLoading, user, role]);
+    },
+    [isAuthLoading, user, role]
+  );
 
   React.useEffect(() => {
     fetchRecentActivities(currentPage);
@@ -128,13 +157,13 @@ export default function RecentActivitiesPage() {
 
   const handlePrevPage = () => {
     if (pagination?.hasPrevPage) {
-      setCurrentPage(prev => prev - 1);
+      setCurrentPage((prev) => prev - 1);
     }
   };
 
   const handleNextPage = () => {
     if (pagination?.hasNextPage) {
-      setCurrentPage(prev => prev + 1);
+      setCurrentPage((prev) => prev + 1);
     }
   };
 
@@ -154,12 +183,17 @@ export default function RecentActivitiesPage() {
   };
 
   const institutionName = getInstitutionName();
-  const shouldShowInstitution = (role === ROLES.HRO || role === ROLES.HRRP) && institutionName;
+  const shouldShowInstitution =
+    (role === ROLES.HRO || role === ROLES.HRRP) && institutionName;
 
   return (
     <div className="flex-1 space-y-4">
       <PageHeader
-        title={shouldShowInstitution ? `Recent Activities - ${institutionName}` : "Recent Activities"}
+        title={
+          shouldShowInstitution
+            ? `Recent Activities - ${institutionName}`
+            : 'Recent Activities'
+        }
         description="An overview of the latest requests and their statuses."
       />
 
@@ -167,10 +201,12 @@ export default function RecentActivitiesPage() {
         <CardHeader>
           <CardTitle>Latest Requests</CardTitle>
           <CardDescription>
-            View the most recent activities across all request types in the system.
+            View the most recent activities across all request types in the
+            system.
             {pagination && (
               <span className="ml-2 text-muted-foreground">
-                (Showing {recentActivities.length} of {pagination.totalActivities} activities)
+                (Showing {recentActivities.length} of{' '}
+                {pagination.totalActivities} activities)
               </span>
             )}
           </CardDescription>
@@ -196,7 +232,9 @@ export default function RecentActivitiesPage() {
                         </a>
                       </Link>
                     </TableCell>
-                    <TableCell className="font-medium">{activity.type}</TableCell>
+                    <TableCell className="font-medium">
+                      {activity.type}
+                    </TableCell>
                     <TableCell>{activity.employee}</TableCell>
                     <TableCell className="text-right">
                       <Badge variant={getStatusVariant(activity.status)}>
@@ -210,7 +248,9 @@ export default function RecentActivitiesPage() {
           ) : (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <Activity className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No Recent Activities</h3>
+              <h3 className="text-lg font-semibold mb-2">
+                No Recent Activities
+              </h3>
               <p className="text-sm text-muted-foreground max-w-sm">
                 There are no recent activities to display at this time.
               </p>
@@ -236,30 +276,40 @@ export default function RecentActivitiesPage() {
 
               {/* Page numbers */}
               <div className="flex items-center space-x-1">
-                {Array.from({ length: Math.min(pagination.totalPages, 5) }, (_, i) => {
-                  let pageNum;
-                  if (pagination.totalPages <= 5) {
-                    pageNum = i + 1;
-                  } else if (pagination.currentPage <= 3) {
-                    pageNum = i + 1;
-                  } else if (pagination.currentPage >= pagination.totalPages - 2) {
-                    pageNum = pagination.totalPages - 4 + i;
-                  } else {
-                    pageNum = pagination.currentPage - 2 + i;
-                  }
+                {Array.from(
+                  { length: Math.min(pagination.totalPages, 5) },
+                  (_, i) => {
+                    let pageNum;
+                    if (pagination.totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (pagination.currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (
+                      pagination.currentPage >=
+                      pagination.totalPages - 2
+                    ) {
+                      pageNum = pagination.totalPages - 4 + i;
+                    } else {
+                      pageNum = pagination.currentPage - 2 + i;
+                    }
 
-                  return (
-                    <Button
-                      key={pageNum}
-                      variant={pageNum === pagination.currentPage ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => handlePageClick(pageNum)}
-                      className="h-8 w-8 p-0"
-                    >
-                      {pageNum}
-                    </Button>
-                  );
-                })}
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant={
+                          pageNum === pagination.currentPage
+                            ? 'default'
+                            : 'outline'
+                        }
+                        size="sm"
+                        onClick={() => handlePageClick(pageNum)}
+                        className="h-8 w-8 p-0"
+                      >
+                        {pageNum}
+                      </Button>
+                    );
+                  }
+                )}
               </div>
 
               <Button

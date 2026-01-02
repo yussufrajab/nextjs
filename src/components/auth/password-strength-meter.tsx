@@ -44,7 +44,8 @@ export function PasswordStrengthMeter({
   const hasLowercase = /[a-z]/.test(password);
   const hasNumber = /\d/.test(password);
   const hasSpecial = /[@$!%*?&#^()_+\-=\[\]{}|;:,.<>?]/.test(password);
-  const hasCharacterType = hasUppercase || hasLowercase || hasNumber || hasSpecial;
+  const hasCharacterType =
+    hasUppercase || hasLowercase || hasNumber || hasSpecial;
   const isNotCommon = feedback.score > 1; // Not weak (0-1)
 
   if (!password) {
@@ -56,8 +57,15 @@ export function PasswordStrengthMeter({
       {/* Progress Bar */}
       <div className="space-y-1">
         <div className="flex justify-between items-center text-sm">
-          <span className="text-gray-600 dark:text-gray-400">Password strength:</span>
-          <span className={cn('font-medium capitalize', strengthTextColors[feedback.strength])}>
+          <span className="text-gray-600 dark:text-gray-400">
+            Password strength:
+          </span>
+          <span
+            className={cn(
+              'font-medium capitalize',
+              strengthTextColors[feedback.strength]
+            )}
+          >
             {feedback.strength.replace('-', ' ')}
           </span>
         </div>
@@ -75,7 +83,8 @@ export function PasswordStrengthMeter({
       {/* Crack Time Display */}
       {password && (
         <p className="text-xs text-gray-500 dark:text-gray-400">
-          Estimated crack time: <span className="font-medium">{feedback.crackTimeDisplay}</span>
+          Estimated crack time:{' '}
+          <span className="font-medium">{feedback.crackTimeDisplay}</span>
         </p>
       )}
 
@@ -99,18 +108,41 @@ export function PasswordStrengthMeter({
       {/* Requirements Checklist */}
       {showRequirements && (
         <div className="space-y-1 pt-2 border-t border-gray-200 dark:border-gray-700">
-          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Password must have:</p>
+          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            Password must have:
+          </p>
           <ul className="space-y-1 text-xs">
-            <li className={cn('flex items-center gap-2', hasMinLength ? 'text-green-600' : 'text-gray-500')}>
-              <span className={cn('text-lg', hasMinLength ? '✓' : '○')}>{hasMinLength ? '✓' : '○'}</span>
+            <li
+              className={cn(
+                'flex items-center gap-2',
+                hasMinLength ? 'text-green-600' : 'text-gray-500'
+              )}
+            >
+              <span className={cn('text-lg', hasMinLength ? '✓' : '○')}>
+                {hasMinLength ? '✓' : '○'}
+              </span>
               At least {PASSWORD_MIN_LENGTH} characters
             </li>
-            <li className={cn('flex items-center gap-2', hasCharacterType ? 'text-green-600' : 'text-gray-500')}>
-              <span className={cn('text-lg', hasCharacterType ? '✓' : '○')}>{hasCharacterType ? '✓' : '○'}</span>
+            <li
+              className={cn(
+                'flex items-center gap-2',
+                hasCharacterType ? 'text-green-600' : 'text-gray-500'
+              )}
+            >
+              <span className={cn('text-lg', hasCharacterType ? '✓' : '○')}>
+                {hasCharacterType ? '✓' : '○'}
+              </span>
               At least one: uppercase, lowercase, number, or special character
             </li>
-            <li className={cn('flex items-center gap-2', isNotCommon ? 'text-green-600' : 'text-gray-500')}>
-              <span className={cn('text-lg', isNotCommon ? '✓' : '○')}>{isNotCommon ? '✓' : '○'}</span>
+            <li
+              className={cn(
+                'flex items-center gap-2',
+                isNotCommon ? 'text-green-600' : 'text-gray-500'
+              )}
+            >
+              <span className={cn('text-lg', isNotCommon ? '✓' : '○')}>
+                {isNotCommon ? '✓' : '○'}
+              </span>
               Not a common password
             </li>
           </ul>

@@ -1,13 +1,14 @@
 # Operations Manual
+
 ## Civil Service Management System (CSMS)
 
 ---
 
 ### Document Control
 
-| **Version** | **Date** | **Author** | **Changes** |
-|-------------|----------|------------|-------------|
-| 1.0 | 2025-01-15 | CSMS Operations Team | Initial operations manual |
+| **Version** | **Date**   | **Author**           | **Changes**               |
+| ----------- | ---------- | -------------------- | ------------------------- |
+| 1.0         | 2025-01-15 | CSMS Operations Team | Initial operations manual |
 
 **Document Classification**: RESTRICTED
 **Distribution**: System Administrators, Operations Team, Technical Support
@@ -34,10 +35,13 @@
 ## 1. Introduction
 
 ### 1.1 Purpose
+
 This Operations Manual provides comprehensive guidance for the daily operation, maintenance, and monitoring of the Civil Service Management System (CSMS).
 
 ### 1.2 Scope
+
 This manual covers:
+
 - Daily, weekly, and monthly operational tasks
 - System administration procedures
 - Backup and recovery operations
@@ -47,6 +51,7 @@ This manual covers:
 - Security operations
 
 ### 1.3 Audience
+
 - System Administrators
 - Database Administrators
 - DevOps Engineers
@@ -56,6 +61,7 @@ This manual covers:
 ### 1.4 System Overview
 
 **CSMS Architecture**:
+
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                    Users (Web Browsers)                  │
@@ -96,13 +102,13 @@ This manual covers:
 
 ### 1.5 Operations Team Structure
 
-| Role | Responsibilities | Availability |
-|------|-----------------|--------------|
+| Role                          | Responsibilities                                                             | Availability             |
+| ----------------------------- | ---------------------------------------------------------------------------- | ------------------------ |
 | **Lead System Administrator** | - Overall system health<br>- Critical incident response<br>- Change approval | Business hours + on-call |
-| **System Administrator** | - Daily operations<br>- User support<br>- Routine maintenance | Business hours |
-| **Database Administrator** | - Database performance<br>- Backup verification<br>- Query optimization | Business hours + on-call |
-| **DevOps Engineer** | - Deployment automation<br>- Infrastructure management<br>- Monitoring setup | Business hours |
-| **On-Call Engineer** | - After-hours support<br>- Emergency response<br>- Incident escalation | 24/7 rotation |
+| **System Administrator**      | - Daily operations<br>- User support<br>- Routine maintenance                | Business hours           |
+| **Database Administrator**    | - Database performance<br>- Backup verification<br>- Query optimization      | Business hours + on-call |
+| **DevOps Engineer**           | - Deployment automation<br>- Infrastructure management<br>- Monitoring setup | Business hours           |
+| **On-Call Engineer**          | - After-hours support<br>- Emergency response<br>- Incident escalation       | 24/7 rotation            |
 
 ---
 
@@ -113,6 +119,7 @@ This manual covers:
 #### 2.1.1 Morning Health Check (08:00 - 08:30)
 
 **System Status Verification**:
+
 ```bash
 #!/bin/bash
 # Daily health check script
@@ -162,6 +169,7 @@ echo -e "\n===== Health Check Complete ====="
 ```
 
 **Health Check Checklist**:
+
 - [ ] All services running (PostgreSQL, MinIO, Nginx, PM2)
 - [ ] Application health endpoints responding
 - [ ] Disk usage < 80%
@@ -176,6 +184,7 @@ echo -e "\n===== Health Check Complete ====="
 #### 2.1.2 Log Review (Throughout the day)
 
 **Application Logs**:
+
 ```bash
 # View real-time application logs
 pm2 logs csms-production --lines 100
@@ -191,6 +200,7 @@ pm2 logs csms-production --lines 5000 --nostream | grep "2025-01-15 14:"
 ```
 
 **Nginx Access Logs**:
+
 ```bash
 # View access log
 sudo tail -f /var/log/nginx/csms-access.log
@@ -206,6 +216,7 @@ sudo grep "$(date +%d/%b/%Y)" /var/log/nginx/csms-access.log | awk '{print $1}' 
 ```
 
 **Database Logs**:
+
 ```bash
 # View PostgreSQL logs
 sudo tail -f /var/log/postgresql/postgresql-14-main.log
@@ -220,6 +231,7 @@ sudo grep "duration:" /var/log/postgresql/postgresql-14-main.log | grep -v "dura
 #### 2.1.3 User Management
 
 **Create New User**:
+
 ```bash
 # Using CSMS API (requires admin authentication)
 curl -X POST https://csms.zanajira.go.tz/api/users \
@@ -241,6 +253,7 @@ npx prisma studio
 ```
 
 **Reset User Password**:
+
 ```bash
 # Using CSMS API
 curl -X PUT https://csms.zanajira.go.tz/api/users/$USER_ID \
@@ -266,6 +279,7 @@ bcrypt.genSalt(10).then(salt => {
 ```
 
 **Deactivate User**:
+
 ```bash
 # Using CSMS API
 curl -X PUT https://csms.zanajira.go.tz/api/users/$USER_ID \
@@ -280,6 +294,7 @@ sudo -u postgres psql -d nody -c "UPDATE \"User\" SET \"isActive\" = false WHERE
 ```
 
 **View User Activity**:
+
 ```bash
 # Check user logins today
 sudo grep "POST /api/auth/login" /var/log/nginx/csms-access.log | grep "$(date +%d/%b/%Y)" | wc -l
@@ -298,6 +313,7 @@ LIMIT 20;
 #### 2.1.4 Application Management
 
 **Check Application Status**:
+
 ```bash
 # PM2 status
 pm2 status
@@ -313,6 +329,7 @@ pm2 jlist | jq '.[] | {name: .name, uptime: .pm2_env.pm_uptime}'
 ```
 
 **Restart Application** (if needed):
+
 ```bash
 # Graceful restart (zero-downtime)
 pm2 reload csms-production
@@ -328,6 +345,7 @@ pm2 scale csms-production 6  # Scale to 6 instances
 ```
 
 **Clear Application Cache**:
+
 ```bash
 # Clear Next.js cache
 cd /var/www/csms
@@ -340,6 +358,7 @@ pm2 restart csms-production
 #### 2.1.5 End of Day Report (17:00)
 
 **Daily Report Template**:
+
 ```bash
 #!/bin/bash
 # Daily report script
@@ -388,6 +407,7 @@ echo "Daily report generated: $REPORT_FILE"
 ```
 
 **Schedule Daily Report**:
+
 ```bash
 # Add to crontab
 crontab -e
@@ -401,6 +421,7 @@ crontab -e
 #### 2.2.1 Common Support Requests
 
 **Password Reset**:
+
 1. Verify user identity
 2. Generate temporary password
 3. Reset password using API or database
@@ -408,6 +429,7 @@ crontab -e
 5. Document in support ticket
 
 **Account Unlock**:
+
 ```bash
 # Check if account is locked
 sudo -u postgres psql -d nody -c "SELECT id, username, \"isActive\" FROM \"User\" WHERE username = 'USERNAME';"
@@ -417,6 +439,7 @@ sudo -u postgres psql -d nody -c "UPDATE \"User\" SET \"isActive\" = true WHERE 
 ```
 
 **File Recovery**:
+
 ```bash
 # List all versions of a file in MinIO
 mc ls --versions csms-local/csms-documents/path/to/file.pdf
@@ -426,6 +449,7 @@ mc cp --version-id VERSION_ID csms-local/csms-documents/path/to/file.pdf csms-lo
 ```
 
 **Request Status Check**:
+
 ```bash
 # Check request status
 sudo -u postgres psql -d nody -c "
@@ -438,12 +462,14 @@ WHERE id = 'REQUEST_ID';
 #### 2.2.2 Support Ticket Management
 
 **Ticket Priority Guidelines**:
+
 - **P1 (Critical)**: System down, data loss, security breach - Immediate response
 - **P2 (High)**: Major functionality broken - 1 hour response
 - **P3 (Medium)**: Minor issues - 4 hour response
 - **P4 (Low)**: Cosmetic, enhancements - 24 hour response
 
 **Ticket Tracking**:
+
 ```bash
 # Create daily support summary
 cat > /var/log/csms/support-summary-$(date +%Y%m%d).txt <<EOF
@@ -465,6 +491,7 @@ EOF
 #### 2.3.1 Database Health Checks
 
 **Connection Monitoring**:
+
 ```bash
 # View active connections
 sudo -u postgres psql -d nody -c "
@@ -496,6 +523,7 @@ WHERE datname = 'nody'
 ```
 
 **Database Size Monitoring**:
+
 ```bash
 # Check database size
 sudo -u postgres psql -d nody -c "
@@ -532,6 +560,7 @@ LIMIT 10;
 ```
 
 **Query Performance**:
+
 ```bash
 # View slow queries (if pg_stat_statements enabled)
 sudo -u postgres psql -d nody -c "
@@ -563,6 +592,7 @@ ORDER BY duration DESC;
 #### 2.3.2 Database Maintenance
 
 **Vacuum Operations**:
+
 ```bash
 # Analyze database (lightweight, can run anytime)
 sudo -u postgres psql -d nody -c "ANALYZE;"
@@ -585,6 +615,7 @@ pm2 start csms-production
 ```
 
 **Reindex Operations**:
+
 ```bash
 # Reindex database (during maintenance window)
 pm2 stop csms-production
@@ -600,6 +631,7 @@ sudo -u postgres psql -d nody -c "REINDEX TABLE \"User\";"
 #### 2.4.1 Storage Monitoring
 
 **Bucket Statistics**:
+
 ```bash
 # Check bucket size
 mc du csms-local/csms-documents
@@ -618,6 +650,7 @@ mc admin bucket quota csms-local/csms-documents
 ```
 
 **Storage Usage by Date**:
+
 ```bash
 # Objects uploaded today
 mc ls csms-local/csms-documents --recursive | grep "$(date +%Y-%m-%d)"
@@ -632,6 +665,7 @@ mc ls csms-local/csms-documents --recursive | grep "$(date +%Y-%m)" | awk '{sum+
 #### 2.4.2 Object Lifecycle Management
 
 **Clean Up Old Versions**:
+
 ```bash
 # List objects with versions
 mc ls --versions csms-local/csms-documents --recursive | head -20
@@ -642,6 +676,7 @@ mc ilm export csms-local/csms-documents
 ```
 
 **Verify Integrity**:
+
 ```bash
 # Check bucket consistency
 mc admin heal csms-local/csms-documents --recursive --dry-run
@@ -691,6 +726,7 @@ mc admin heal csms-local/csms-documents --recursive
 **Weekly Checklist** (Performed every Monday):
 
 - [ ] **System Updates Check**
+
   ```bash
   # Check for available updates
   sudo apt update
@@ -701,6 +737,7 @@ mc admin heal csms-local/csms-documents --recursive
   ```
 
 - [ ] **Backup Verification**
+
   ```bash
   # Verify last 7 days of backups exist
   ls -lh /var/backups/csms/ | tail -10
@@ -713,6 +750,7 @@ mc admin heal csms-local/csms-documents --recursive
   ```
 
 - [ ] **Database Maintenance**
+
   ```bash
   # Vacuum and analyze
   sudo -u postgres psql -d nody -c "VACUUM VERBOSE ANALYZE;"
@@ -730,6 +768,7 @@ mc admin heal csms-local/csms-documents --recursive
   ```
 
 - [ ] **Log Rotation Verification**
+
   ```bash
   # Verify log rotation is working
   ls -lh /var/log/nginx/*.gz | tail -5
@@ -741,6 +780,7 @@ mc admin heal csms-local/csms-documents --recursive
   ```
 
 - [ ] **Performance Review**
+
   ```bash
   # Generate weekly performance report
   cat > /var/log/csms/weekly-performance-$(date +%Y%W).txt <<EOF
@@ -755,6 +795,7 @@ mc admin heal csms-local/csms-documents --recursive
   ```
 
 - [ ] **Security Review**
+
   ```bash
   # Check for failed login attempts
   sudo grep "401" /var/log/nginx/csms-access.log | grep "auth/login" | wc -l
@@ -772,6 +813,7 @@ mc admin heal csms-local/csms-documents --recursive
   ```
 
 - [ ] **Disk Space Management**
+
   ```bash
   # Clean up old logs (older than 30 days)
   find /var/log/csms/ -name "*.log" -mtime +30 -delete
@@ -789,6 +831,7 @@ mc admin heal csms-local/csms-documents --recursive
 **Monthly Checklist** (Performed first Monday of each month):
 
 - [ ] **System Updates** (During maintenance window)
+
   ```bash
   # Announce maintenance window
   # Enable maintenance mode
@@ -819,6 +862,7 @@ mc admin heal csms-local/csms-documents --recursive
   ```
 
 - [ ] **Full Database Maintenance**
+
   ```bash
   # During maintenance window
   pm2 stop csms-production
@@ -834,6 +878,7 @@ mc admin heal csms-local/csms-documents --recursive
   ```
 
 - [ ] **SSL Certificate Check**
+
   ```bash
   # Check certificate expiration
   echo | openssl s_client -connect csms.zanajira.go.tz:443 2>/dev/null | openssl x509 -noout -dates
@@ -843,6 +888,7 @@ mc admin heal csms-local/csms-documents --recursive
   ```
 
 - [ ] **Backup Retention Review**
+
   ```bash
   # Review backup storage usage
   du -sh /var/backups/csms/
@@ -856,6 +902,7 @@ mc admin heal csms-local/csms-documents --recursive
   ```
 
 - [ ] **Capacity Planning Review**
+
   ```bash
   # Generate monthly capacity report
   cat > /var/log/csms/capacity-$(date +%Y%m).txt <<EOF
@@ -882,6 +929,7 @@ mc admin heal csms-local/csms-documents --recursive
   ```
 
 - [ ] **Security Audit**
+
   ```bash
   # Run security scan
   # Check for vulnerable packages
@@ -899,6 +947,7 @@ mc admin heal csms-local/csms-documents --recursive
   ```
 
 - [ ] **Performance Optimization**
+
   ```bash
   # Identify slow queries
   sudo -u postgres psql -d nody -c "
@@ -977,6 +1026,7 @@ mc admin heal csms-local/csms-documents --recursive
 | Application Code | On deployment | 12 months | Git repository |
 
 **Recovery Objectives**:
+
 - **RPO (Recovery Point Objective)**: 24 hours (last daily backup)
 - **RTO (Recovery Time Objective)**: 4 hours (time to restore and verify)
 
@@ -985,6 +1035,7 @@ mc admin heal csms-local/csms-documents --recursive
 #### 4.2.1 Database Backup
 
 **Daily Backup Script**:
+
 ```bash
 #!/bin/bash
 # Database backup script
@@ -1049,6 +1100,7 @@ exit 0
 ```
 
 **Make executable and schedule**:
+
 ```bash
 # Make executable
 sudo chmod +x /usr/local/bin/backup-csms-db.sh
@@ -1063,6 +1115,7 @@ sudo crontab -e
 #### 4.2.2 MinIO Backup
 
 **Weekly MinIO Backup Script**:
+
 ```bash
 #!/bin/bash
 # MinIO backup script
@@ -1110,6 +1163,7 @@ exit 0
 ```
 
 **Schedule weekly backup**:
+
 ```bash
 sudo chmod +x /usr/local/bin/backup-csms-minio.sh
 
@@ -1121,6 +1175,7 @@ sudo crontab -e
 #### 4.2.3 Configuration Backup
 
 **Configuration Backup Script**:
+
 ```bash
 #!/bin/bash
 # Configuration backup script
@@ -1166,6 +1221,7 @@ exit 0
 ```
 
 **Schedule weekly backup**:
+
 ```bash
 sudo chmod +x /usr/local/bin/backup-csms-config.sh
 
@@ -1179,6 +1235,7 @@ sudo crontab -e
 #### 4.3.1 Database Restore
 
 **Full Database Restore**:
+
 ```bash
 #!/bin/bash
 # Database restore procedure
@@ -1230,6 +1287,7 @@ unset PGPASSWORD
 ```
 
 **Partial Data Restore** (Single table):
+
 ```bash
 # Extract specific table from backup
 gunzip -c /var/backups/csms/nody_20250115_020000.sql.gz | grep -A 10000 "CREATE TABLE.*User" > user_table.sql
@@ -1244,6 +1302,7 @@ psql -U csms_user -h localhost nody < user_table.sql
 #### 4.3.2 MinIO Restore
 
 **Full Bucket Restore**:
+
 ```bash
 #!/bin/bash
 # MinIO restore procedure
@@ -1273,6 +1332,7 @@ echo "MinIO restore completed"
 ```
 
 **Single File Restore**:
+
 ```bash
 # Extract backup
 tar -xzf /var/backups/csms/minio/csms-documents-20250115.tar.gz
@@ -1287,6 +1347,7 @@ mc cp csms-documents-20250115/path/to/filename.pdf csms-local/csms-documents/pat
 #### 4.3.3 Configuration Restore
 
 **Restore Configuration Files**:
+
 ```bash
 # 1. Extract backup
 BACKUP_FILE="/var/backups/csms/config/config-20250115.tar.gz.gpg"
@@ -1323,6 +1384,7 @@ rm config-20250115.tar.gz
 ### 4.4 Backup Verification
 
 **Weekly Backup Verification Checklist**:
+
 ```bash
 #!/bin/bash
 # Backup verification script
@@ -1383,6 +1445,7 @@ exit 0
 ```
 
 **Schedule verification**:
+
 ```bash
 sudo chmod +x /usr/local/bin/verify-csms-backups.sh
 
@@ -1398,6 +1461,7 @@ crontab -e
 ### 5.1 Monitoring Architecture
 
 **Monitoring Stack**:
+
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                      Grafana                             │
@@ -1424,6 +1488,7 @@ crontab -e
 #### 5.2.1 System Metrics
 
 **CPU Monitoring**:
+
 ```bash
 # Current CPU usage
 top -bn1 | grep "Cpu(s)" | awk '{print $2}' | cut -d'%' -f1
@@ -1438,6 +1503,7 @@ ps aux --sort=-%cpu | head -10
 ```
 
 **Memory Monitoring**:
+
 ```bash
 # Memory usage
 free -h
@@ -1452,6 +1518,7 @@ ps aux --sort=-%mem | head -10
 ```
 
 **Disk Monitoring**:
+
 ```bash
 # Disk usage
 df -h
@@ -1469,6 +1536,7 @@ df -i
 #### 5.2.2 Application Metrics
 
 **PM2 Monitoring**:
+
 ```bash
 # Application status
 pm2 status
@@ -1490,6 +1558,7 @@ pm2 jlist | jq '.[] | {name: .name, restarts: .pm2_env.restart_time}'
 ```
 
 **Response Time Monitoring**:
+
 ```bash
 # Test response time
 curl -w "@curl-format.txt" -o /dev/null -s http://localhost:9002/api/health
@@ -1509,6 +1578,7 @@ watch -n 60 'curl -w "%{time_total}\n" -o /dev/null -s http://localhost:9002/api
 ```
 
 **Request Rate Monitoring**:
+
 ```bash
 # Count requests in last minute
 sudo tail -1000 /var/log/nginx/csms-access.log | grep "$(date +%d/%b/%Y:%H:%M)" | wc -l
@@ -1527,6 +1597,7 @@ ERROR_RATE=$(echo "scale=2; $ERRORS / $TOTAL * 100" | bc)
 #### 5.2.3 Database Metrics
 
 **Connection Monitoring**:
+
 ```bash
 # Active connections
 sudo -u postgres psql -d nody -t -c "
@@ -1546,6 +1617,7 @@ GROUP BY state;
 ```
 
 **Query Performance**:
+
 ```bash
 # Slow queries (currently running)
 sudo -u postgres psql -d nody -c "
@@ -1563,6 +1635,7 @@ ORDER BY duration DESC;
 ```
 
 **Database Size**:
+
 ```bash
 # Database size
 sudo -u postgres psql -d nody -t -c "
@@ -1586,6 +1659,7 @@ LIMIT 5;
 #### 5.2.4 Storage Metrics
 
 **MinIO Monitoring**:
+
 ```bash
 # Bucket size
 mc du csms-local/csms-documents
@@ -1600,6 +1674,7 @@ mc admin info csms-local
 ```
 
 **File System Monitoring**:
+
 ```bash
 # Disk space
 df -h /
@@ -1616,6 +1691,7 @@ df -i
 ### 5.3 Monitoring Dashboard
 
 **Create Monitoring Dashboard Script**:
+
 ```bash
 #!/bin/bash
 # Live monitoring dashboard
@@ -1669,6 +1745,7 @@ done
 ```
 
 **Usage**:
+
 ```bash
 sudo chmod +x /usr/local/bin/csms-monitor.sh
 /usr/local/bin/csms-monitor.sh
@@ -1677,6 +1754,7 @@ sudo chmod +x /usr/local/bin/csms-monitor.sh
 ### 5.4 Automated Monitoring Script
 
 **Continuous Monitoring with Alerts**:
+
 ```bash
 #!/bin/bash
 # Automated monitoring with threshold alerts
@@ -1753,6 +1831,7 @@ exit 0
 ```
 
 **Schedule monitoring**:
+
 ```bash
 sudo chmod +x /usr/local/bin/csms-automated-monitor.sh
 
@@ -1767,25 +1846,27 @@ crontab -e
 
 ### 6.1 Alert Categories and Response
 
-| Alert Type | Severity | Response Time | Response Procedure |
-|------------|----------|---------------|-------------------|
-| **System Down** | Critical | Immediate | See Section 6.2.1 |
-| **High Resource Usage** | High | 15 minutes | See Section 6.2.2 |
-| **Database Issues** | High | 15 minutes | See Section 6.2.3 |
-| **Performance Degradation** | Medium | 1 hour | See Section 6.2.4 |
-| **Backup Failure** | Medium | Next business day | See Section 6.2.5 |
-| **Security Alert** | Critical | Immediate | See Section 6.2.6 |
+| Alert Type                  | Severity | Response Time     | Response Procedure |
+| --------------------------- | -------- | ----------------- | ------------------ |
+| **System Down**             | Critical | Immediate         | See Section 6.2.1  |
+| **High Resource Usage**     | High     | 15 minutes        | See Section 6.2.2  |
+| **Database Issues**         | High     | 15 minutes        | See Section 6.2.3  |
+| **Performance Degradation** | Medium   | 1 hour            | See Section 6.2.4  |
+| **Backup Failure**          | Medium   | Next business day | See Section 6.2.5  |
+| **Security Alert**          | Critical | Immediate         | See Section 6.2.6  |
 
 ### 6.2 Alert Response Procedures
 
 #### 6.2.1 System Down Alert
 
 **Symptoms**:
+
 - Application not responding
 - Health check failing
 - Users cannot access system
 
 **Response Procedure**:
+
 ```bash
 # 1. Verify the issue
 curl https://csms.zanajira.go.tz
@@ -1839,6 +1920,7 @@ echo "System recovered at $(date)" | mail -s "CSMS System Restored" ops-team@csm
 #### 6.2.2 High Resource Usage Alert
 
 **CPU > 80%**:
+
 ```bash
 # 1. Identify process consuming CPU
 top -bn1 | head -20
@@ -1873,6 +1955,7 @@ htop
 ```
 
 **Memory > 80%**:
+
 ```bash
 # 1. Identify memory-consuming processes
 ps aux --sort=-%mem | head -10
@@ -1896,6 +1979,7 @@ pm2 scale csms-production 2
 ```
 
 **Disk > 80%**:
+
 ```bash
 # 1. Identify large files/directories
 sudo du -sh /* | sort -rh | head -10
@@ -1925,6 +2009,7 @@ sudo -u postgres psql -d nody -c "VACUUM FULL;"
 #### 6.2.3 Database Issues Alert
 
 **High Connection Count**:
+
 ```bash
 # 1. Check connections
 sudo -u postgres psql -d nody -c "
@@ -1960,6 +2045,7 @@ watch -n 10 "sudo -u postgres psql -d nody -t -c 'SELECT count(*) FROM pg_stat_a
 ```
 
 **Database Lock**:
+
 ```bash
 # 1. Identify locked queries
 sudo -u postgres psql -d nody -c "
@@ -1995,6 +2081,7 @@ sudo -u postgres psql -d nody -c "SELECT pg_terminate_backend(BLOCKING_PID);"
 #### 6.2.4 Performance Degradation Alert
 
 **Slow Response Times**:
+
 ```bash
 # 1. Test response time
 curl -w "@curl-format.txt" -o /dev/null -s https://csms.zanajira.go.tz/api/health
@@ -2027,6 +2114,7 @@ rm -rf .next/cache/*
 #### 6.2.5 Backup Failure Alert
 
 **Daily Backup Failed**:
+
 ```bash
 # 1. Check backup log
 tail -50 /var/log/csms/backup.log
@@ -2051,6 +2139,7 @@ echo "$(date): Backup failure resolved - manual backup successful" >> /var/log/c
 #### 6.2.6 Security Alert
 
 **Suspicious Login Attempts**:
+
 ```bash
 # 1. Check failed login attempts
 sudo grep "401" /var/log/nginx/csms-access.log | grep "auth/login" | tail -20
@@ -2086,6 +2175,7 @@ echo "Security alert: Multiple failed login attempts from [IPs]" | mail -s "CSMS
 ### 6.3 On-Call Procedures
 
 **On-Call Responsibilities**:
+
 - Monitor alerts during on-call period
 - Respond to critical (P1) alerts within 15 minutes
 - Escalate issues as needed
@@ -2093,6 +2183,7 @@ echo "Security alert: Multiple failed login attempts from [IPs]" | mail -s "CSMS
 - Handover to next shift
 
 **On-Call Handover Checklist**:
+
 ```
 CSMS On-Call Handover
 
@@ -2129,19 +2220,20 @@ Signature: __________________
 **Establish Performance Baselines** (measured weekly):
 | Metric | Baseline Target | Current | Trend |
 |--------|----------------|---------|-------|
-| Average Response Time | < 2 seconds | _____ | ☐ ↑ ☐ → ☐ ↓ |
-| Peak Response Time | < 5 seconds | _____ | ☐ ↑ ☐ → ☐ ↓ |
-| Concurrent Users | 200+ | _____ | ☐ ↑ ☐ → ☐ ↓ |
-| Requests/Second | 100+ | _____ | ☐ ↑ ☐ → ☐ ↓ |
-| Database Query Time | < 100ms avg | _____ | ☐ ↑ ☐ → ☐ ↓ |
-| Error Rate | < 0.1% | _____ | ☐ ↑ ☐ → ☐ ↓ |
-| System Uptime | > 99.9% | _____ | ☐ ↑ ☐ → ☐ ↓ |
+| Average Response Time | < 2 seconds | **\_** | ☐ ↑ ☐ → ☐ ↓ |
+| Peak Response Time | < 5 seconds | **\_** | ☐ ↑ ☐ → ☐ ↓ |
+| Concurrent Users | 200+ | **\_** | ☐ ↑ ☐ → ☐ ↓ |
+| Requests/Second | 100+ | **\_** | ☐ ↑ ☐ → ☐ ↓ |
+| Database Query Time | < 100ms avg | **\_** | ☐ ↑ ☐ → ☐ ↓ |
+| Error Rate | < 0.1% | **\_** | ☐ ↑ ☐ → ☐ ↓ |
+| System Uptime | > 99.9% | **\_** | ☐ ↑ ☐ → ☐ ↓ |
 
 ### 7.2 Performance Optimization
 
 #### 7.2.1 Application Performance
 
 **Identify Performance Bottlenecks**:
+
 ```bash
 # 1. Check response times
 ab -n 100 -c 10 https://csms.zanajira.go.tz/api/health
@@ -2159,6 +2251,7 @@ sudo awk '$NF > 2 {print $7, $NF}' /var/log/nginx/csms-access.log | sort | uniq 
 ```
 
 **Optimize Next.js Application**:
+
 ```bash
 # 1. Analyze bundle size
 cd /var/www/csms
@@ -2176,6 +2269,7 @@ pm2 restart csms-production --update-env
 ```
 
 **Adjust PM2 Instances**:
+
 ```bash
 # Scale based on CPU cores and load
 # For 4-core system: 4 instances is optimal
@@ -2188,6 +2282,7 @@ pm2 monit
 #### 7.2.2 Database Performance
 
 **Optimize Slow Queries**:
+
 ```bash
 # 1. Identify slow queries
 sudo -u postgres psql -d nody -c "
@@ -2218,6 +2313,7 @@ sudo -u postgres psql -d nody -c "ANALYZE;"
 ```
 
 **Database Connection Pooling**:
+
 ```bash
 # Check current connection settings in Prisma
 cd /var/www/csms
@@ -2237,6 +2333,7 @@ pm2 restart csms-production
 #### 7.2.3 Cache Management
 
 **Nginx Caching**:
+
 ```bash
 # Edit Nginx configuration
 sudo nano /etc/nginx/sites-available/csms
@@ -2257,6 +2354,7 @@ sudo systemctl reload nginx
 ### 7.3 Capacity Planning
 
 **Monthly Capacity Review**:
+
 ```bash
 # Generate capacity report
 cat > /var/log/csms/capacity-$(date +%Y%m).txt <<EOF
@@ -2303,6 +2401,7 @@ cat /var/log/csms/capacity-$(date +%Y%m).txt
 ### 8.1 Security Monitoring
 
 **Daily Security Checks**:
+
 ```bash
 #!/bin/bash
 # Daily security check script
@@ -2352,6 +2451,7 @@ echo "===== Security Check Complete =====" >> $LOG_FILE
 ```
 
 **Schedule daily security check**:
+
 ```bash
 sudo chmod +x /usr/local/bin/csms-security-check.sh
 
@@ -2363,6 +2463,7 @@ crontab -e
 ### 8.2 Access Control Management
 
 **Review User Accounts**:
+
 ```bash
 # List all active users
 sudo -u postgres psql -d nody -c "
@@ -2391,6 +2492,7 @@ ORDER BY \"lastLogin\" NULLS FIRST;
 ```
 
 **Review User Roles**:
+
 ```bash
 # Count users by role
 sudo -u postgres psql -d nody -c "
@@ -2412,6 +2514,7 @@ ORDER BY \"lastLogin\" DESC NULLS LAST;
 ### 8.3 Security Patches
 
 **Apply Security Updates**:
+
 ```bash
 # 1. Check for security updates
 sudo apt update
@@ -2445,6 +2548,7 @@ echo "$(date): Security updates applied" >> /var/log/csms/maintenance.log
 ### 8.4 Audit Logging
 
 **Enable Audit Logging**:
+
 ```bash
 # PostgreSQL audit logging
 sudo nano /etc/postgresql/14/main/postgresql.conf
@@ -2462,6 +2566,7 @@ sudo systemctl restart postgresql
 ```
 
 **Review Audit Logs**:
+
 ```bash
 # Review database audit logs
 sudo grep "INSERT\|UPDATE\|DELETE" /var/log/postgresql/postgresql-14-main.log | tail -50
@@ -2488,6 +2593,7 @@ LIMIT 100;
 ### 9.1 Incident Response Process
 
 **Incident Response Steps**:
+
 1. **Detection**: Incident detected via monitoring, user report, or alert
 2. **Assessment**: Determine severity (P1/P2/P3/P4)
 3. **Response**: Execute appropriate response procedure
@@ -2498,6 +2604,7 @@ LIMIT 100;
 ### 9.2 Incident Documentation
 
 **Incident Report Template**:
+
 ```bash
 # Create incident report
 cat > /var/log/csms/incidents/incident-$(date +%Y%m%d-%H%M).txt <<EOF
@@ -2547,6 +2654,7 @@ EOF
 ### 9.3 Post-Mortem Process
 
 **Conduct Post-Mortem** (for P1/P2 incidents):
+
 1. Schedule meeting within 24 hours of incident
 2. Invite all involved parties
 3. Review incident timeline
@@ -2556,6 +2664,7 @@ EOF
 7. Update runbooks and procedures
 
 **Post-Mortem Template**:
+
 ```
 POST-MORTEM: [Incident Title]
 
@@ -2602,11 +2711,13 @@ LESSONS LEARNED:
 ### 10.1 Change Request Process
 
 **Change Categories**:
+
 - **Standard Change**: Pre-approved, low-risk (e.g., user password reset)
 - **Normal Change**: Requires CAB approval (e.g., application update)
 - **Emergency Change**: Critical, expedited approval (e.g., security patch)
 
 **Change Request Template**:
+
 ```
 CHANGE REQUEST
 
@@ -2647,6 +2758,7 @@ CAB Chair (if required): ______________ Date: ______
 ### 10.2 Change Implementation
 
 **Change Implementation Checklist**:
+
 - [ ] Change request approved
 - [ ] Tested in staging environment
 - [ ] Rollback plan documented
@@ -2661,6 +2773,7 @@ CAB Chair (if required): ______________ Date: ______
 ### 10.3 Emergency Changes
 
 **Emergency Change Process** (for critical security issues):
+
 1. **Immediate Assessment**: Confirm emergency status
 2. **Verbal Approval**: Get verbal approval from IT Director or Technical Lead
 3. **Implement**: Execute change immediately
@@ -2675,6 +2788,7 @@ CAB Chair (if required): ______________ Date: ______
 ### 11.1 Growth Monitoring
 
 **Track Key Growth Metrics**:
+
 ```bash
 # Monthly growth tracking script
 cat > /var/log/csms/growth-$(date +%Y%m).txt <<EOF
@@ -2705,6 +2819,7 @@ EOF
 ### 11.2 Capacity Projections
 
 **Calculate Capacity Needs** (review quarterly):
+
 ```
 Current Capacity:
 - Server: 4 CPU, 16GB RAM, 200GB Disk
@@ -2748,6 +2863,7 @@ If months to threshold < 6:
 ### 12.1 Common Operational Procedures
 
 **Runbook Index**:
+
 1. Application Restart
 2. Database Restart
 3. Emergency Maintenance
@@ -2879,23 +2995,23 @@ DOWNTIME: 1-2 minutes
 
 ### Appendix A: Contact List
 
-| Role | Name | Phone | Email | Hours |
-|------|------|-------|-------|-------|
-| Lead System Admin | [NAME] | [PHONE] | [EMAIL] | 24/7 |
-| Database Admin | [NAME] | [PHONE] | [EMAIL] | Business hours + on-call |
-| Security Lead | [NAME] | [PHONE] | [EMAIL] | Business hours |
-| IT Director | [NAME] | [PHONE] | [EMAIL] | Business hours |
+| Role              | Name   | Phone   | Email   | Hours                    |
+| ----------------- | ------ | ------- | ------- | ------------------------ |
+| Lead System Admin | [NAME] | [PHONE] | [EMAIL] | 24/7                     |
+| Database Admin    | [NAME] | [PHONE] | [EMAIL] | Business hours + on-call |
+| Security Lead     | [NAME] | [PHONE] | [EMAIL] | Business hours           |
+| IT Director       | [NAME] | [PHONE] | [EMAIL] | Business hours           |
 
 ### Appendix B: System Information
 
-| Component | Details |
-|-----------|---------|
-| Application URL | https://csms.zanajira.go.tz |
-| Server Location | /var/www/csms |
-| Logs Location | /var/log/csms |
-| Backups Location | /var/backups/csms |
-| Database Name | nody |
-| MinIO Bucket | csms-documents |
+| Component        | Details                     |
+| ---------------- | --------------------------- |
+| Application URL  | https://csms.zanajira.go.tz |
+| Server Location  | /var/www/csms               |
+| Logs Location    | /var/log/csms               |
+| Backups Location | /var/backups/csms           |
+| Database Name    | nody                        |
+| MinIO Bucket     | csms-documents              |
 
 ### Appendix C: Useful Commands
 

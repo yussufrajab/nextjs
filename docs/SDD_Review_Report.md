@@ -1,21 +1,22 @@
 # SOFTWARE DESIGN DOCUMENT (SDD) REVIEW REPORT
+
 ## CIVIL SERVICE MANAGEMENT SYSTEM (CSMS)
 
 ---
 
 ## Document Control
 
-| Item | Details |
-|------|---------|
+| Item               | Details                                             |
+| ------------------ | --------------------------------------------------- |
 | **Document Title** | SDD Review Report - Civil Service Management System |
-| **Project Name** | Civil Service Management System (CSMS) |
-| **Version** | 1.0 |
-| **Date Prepared** | February 18, 2025 |
-| **Review Period** | February 12-18, 2025 |
-| **Prepared By** | Design Review Team |
-| **Reviewed By** | ___________________ |
-| **Approved By** | ___________________ |
-| **Status** | Final |
+| **Project Name**   | Civil Service Management System (CSMS)              |
+| **Version**        | 1.0                                                 |
+| **Date Prepared**  | February 18, 2025                                   |
+| **Review Period**  | February 12-18, 2025                                |
+| **Prepared By**    | Design Review Team                                  |
+| **Reviewed By**    | **\*\*\*\***\_\_\_**\*\*\*\***                      |
+| **Approved By**    | **\*\*\*\***\_\_\_**\*\*\*\***                      |
+| **Status**         | Final                                               |
 
 ---
 
@@ -46,26 +47,26 @@ This document presents the findings of the formal design review conducted on the
 
 ### 1.2 Documents Under Review
 
-| Document | Version | Date | Lines | Location |
-|----------|---------|------|-------|----------|
-| **System Design Document** | 1.0 | Dec 25, 2025 | 500+ | System_Design_Document_Complete.md |
-| **High-Level Design** | 1.0 | Dec 25, 2025 | 300+ | High_Level_Design_Document.md |
-| **Low-Level Design** | 1.0 | Dec 25, 2025 | 300+ | Low_Level_Design_Document.md |
-| **Technical Architecture** | 1.0 | Dec 25, 2025 | 300+ | Technical_Architecture_Document.md |
+| Document                   | Version | Date         | Lines | Location                           |
+| -------------------------- | ------- | ------------ | ----- | ---------------------------------- |
+| **System Design Document** | 1.0     | Dec 25, 2025 | 500+  | System_Design_Document_Complete.md |
+| **High-Level Design**      | 1.0     | Dec 25, 2025 | 300+  | High_Level_Design_Document.md      |
+| **Low-Level Design**       | 1.0     | Dec 25, 2025 | 300+  | Low_Level_Design_Document.md       |
+| **Technical Architecture** | 1.0     | Dec 25, 2025 | 300+  | Technical_Architecture_Document.md |
 
 ### 1.3 Review Outcome Summary
 
-| Criteria | Result | Score | Status |
-|----------|--------|-------|--------|
-| **Architecture Quality** | Layered monolithic, well-structured | 96% | ✅ Excellent |
-| **Database Design** | Normalized schema, proper indexing | 95% | ✅ Excellent |
-| **API Design** | RESTful, consistent patterns | 94% | ✅ Excellent |
-| **Security Design** | Multi-layered defense in depth | 98% | ✅ Excellent |
-| **Frontend Design** | Component-based, responsive | 93% | ✅ Good |
-| **Integration Design** | HRIMS integration well-designed | 92% | ✅ Good |
-| **Design-Implementation Alignment** | High fidelity implementation | 97% | ✅ Excellent |
-| **Documentation Quality** | Comprehensive, clear | 94% | ✅ Excellent |
-| **OVERALL DESIGN** | **APPROVED** | **94.9%** | ✅ **EXCELLENT** |
+| Criteria                            | Result                              | Score     | Status           |
+| ----------------------------------- | ----------------------------------- | --------- | ---------------- |
+| **Architecture Quality**            | Layered monolithic, well-structured | 96%       | ✅ Excellent     |
+| **Database Design**                 | Normalized schema, proper indexing  | 95%       | ✅ Excellent     |
+| **API Design**                      | RESTful, consistent patterns        | 94%       | ✅ Excellent     |
+| **Security Design**                 | Multi-layered defense in depth      | 98%       | ✅ Excellent     |
+| **Frontend Design**                 | Component-based, responsive         | 93%       | ✅ Good          |
+| **Integration Design**              | HRIMS integration well-designed     | 92%       | ✅ Good          |
+| **Design-Implementation Alignment** | High fidelity implementation        | 97%       | ✅ Excellent     |
+| **Documentation Quality**           | Comprehensive, clear                | 94%       | ✅ Excellent     |
+| **OVERALL DESIGN**                  | **APPROVED**                        | **94.9%** | ✅ **EXCELLENT** |
 
 ### 1.4 Key Findings
 
@@ -132,26 +133,28 @@ This document presents the findings of the formal design review conducted on the
 
 ### 2.1 Review Participants
 
-| Role | Name | Responsibility |
-|------|------|----------------|
-| **Review Lead** | Tech Architect | Overall design review coordination, architecture assessment |
-| **Senior Developer** | Lead Developer | Code structure review, implementation feasibility |
-| **Database Architect** | DBA | Database design review, performance optimization |
-| **Security Architect** | Security Officer | Security architecture assessment, vulnerability analysis |
-| **Frontend Architect** | UI/UX Lead | Frontend design review, component architecture |
-| **QA Lead** | QA Manager | Testability assessment, quality assurance strategy |
-| **DevOps Engineer** | Infrastructure Lead | Deployment architecture, infrastructure design |
-| **Project Manager** | PM | Design completeness, alignment with requirements |
+| Role                   | Name                | Responsibility                                              |
+| ---------------------- | ------------------- | ----------------------------------------------------------- |
+| **Review Lead**        | Tech Architect      | Overall design review coordination, architecture assessment |
+| **Senior Developer**   | Lead Developer      | Code structure review, implementation feasibility           |
+| **Database Architect** | DBA                 | Database design review, performance optimization            |
+| **Security Architect** | Security Officer    | Security architecture assessment, vulnerability analysis    |
+| **Frontend Architect** | UI/UX Lead          | Frontend design review, component architecture              |
+| **QA Lead**            | QA Manager          | Testability assessment, quality assurance strategy          |
+| **DevOps Engineer**    | Infrastructure Lead | Deployment architecture, infrastructure design              |
+| **Project Manager**    | PM                  | Design completeness, alignment with requirements            |
 
 ### 2.2 Review Scope
 
 **Documents Reviewed:**
+
 - ✅ System Design Document (SDD) - Architecture, database, API, security, UI, deployment
 - ✅ High-Level Design (HLD) - System overview, component architecture, technology stack
 - ✅ Low-Level Design (LLD) - Module specifications, class diagrams, algorithms
 - ✅ Technical Architecture Document - Infrastructure, network, security, integration
 
 **Additional Artifacts Reviewed:**
+
 - ✅ Prisma schema (/prisma/schema.prisma) - Database implementation
 - ✅ Codebase structure (/src directory, 202 TypeScript files) - Implementation verification
 - ✅ next.config.ts, tsconfig.json - Configuration alignment
@@ -159,16 +162,16 @@ This document presents the findings of the formal design review conducted on the
 
 ### 2.3 Review Timeline
 
-| Activity | Date | Duration | Participants |
-|----------|------|----------|-------------|
-| **Design Documents Distribution** | Feb 12, 2025 | - | All reviewers |
-| **Individual Review** | Feb 12-15, 2025 | 3 days | All reviewers |
-| **Architecture Review Meeting** | Feb 16, 2025 AM | 3 hours | All participants |
-| **Technical Deep Dive** | Feb 16, 2025 PM | 3 hours | Tech, DB, Security architects |
-| **Implementation Verification** | Feb 17, 2025 | 1 day | Senior Dev, QA Lead |
-| **Issue Resolution** | Feb 17, 2025 PM | 4 hours | Tech Lead, PM |
-| **Report Preparation** | Feb 18, 2025 | 1 day | Review Lead |
-| **Final Approval** | Feb 18, 2025 | - | PM, Tech Lead |
+| Activity                          | Date            | Duration | Participants                  |
+| --------------------------------- | --------------- | -------- | ----------------------------- |
+| **Design Documents Distribution** | Feb 12, 2025    | -        | All reviewers                 |
+| **Individual Review**             | Feb 12-15, 2025 | 3 days   | All reviewers                 |
+| **Architecture Review Meeting**   | Feb 16, 2025 AM | 3 hours  | All participants              |
+| **Technical Deep Dive**           | Feb 16, 2025 PM | 3 hours  | Tech, DB, Security architects |
+| **Implementation Verification**   | Feb 17, 2025    | 1 day    | Senior Dev, QA Lead           |
+| **Issue Resolution**              | Feb 17, 2025 PM | 4 hours  | Tech Lead, PM                 |
+| **Report Preparation**            | Feb 18, 2025    | 1 day    | Review Lead                   |
+| **Final Approval**                | Feb 18, 2025    | -        | PM, Tech Lead                 |
 
 ### 2.4 Reference Documents
 
@@ -272,6 +275,7 @@ This review employed a **Comprehensive Design Inspection** methodology combining
 Each design aspect was evaluated against the following criteria:
 
 #### 3.2.1 Architecture Quality
+
 - Appropriate architectural pattern (layered, monolithic, microservices)
 - Clear separation of concerns
 - Scalability and maintainability
@@ -279,6 +283,7 @@ Each design aspect was evaluated against the following criteria:
 - Component cohesion and coupling
 
 #### 3.2.2 Design Completeness
+
 - All SRS requirements addressed in design
 - Complete module specifications
 - Database schema fully defined
@@ -287,6 +292,7 @@ Each design aspect was evaluated against the following criteria:
 - Deployment architecture specified
 
 #### 3.2.3 Design Consistency
+
 - Consistent design patterns across modules
 - Uniform naming conventions
 - Standardized data models
@@ -294,6 +300,7 @@ Each design aspect was evaluated against the following criteria:
 - Consistent error handling
 
 #### 3.2.4 Security by Design
+
 - Authentication and authorization design
 - Data encryption (at rest and in transit)
 - Input validation and sanitization
@@ -302,6 +309,7 @@ Each design aspect was evaluated against the following criteria:
 - Compliance with security standards
 
 #### 3.2.5 Performance Design
+
 - Database indexing strategy
 - Caching design
 - Query optimization approach
@@ -309,6 +317,7 @@ Each design aspect was evaluated against the following criteria:
 - Scalability provisions
 
 #### 3.2.6 Implementation Alignment
+
 - Design accurately reflects implementation
 - Minimal design-code divergence
 - Design updates for implementation changes
@@ -317,6 +326,7 @@ Each design aspect was evaluated against the following criteria:
 ### 3.3 Review Scoring System
 
 **Scoring Scale:**
+
 - **95-100%** - Excellent (Best practices, minor improvements possible)
 - **85-94%** - Good (Solid design, some enhancements needed)
 - **70-84%** - Acceptable (Functional but requires improvements)
@@ -324,6 +334,7 @@ Each design aspect was evaluated against the following criteria:
 - **<50%** - Inadequate (Major redesign required)
 
 **Scoring Weights:**
+
 - Architecture Quality: 25%
 - Security Design: 20%
 - Database Design: 15%
@@ -387,6 +398,7 @@ The design specifies a clean 6-layer architecture:
 ```
 
 **Strengths:**
+
 - ✅ Clear separation of concerns across all 6 layers
 - ✅ Unidirectional data flow (top to bottom)
 - ✅ Proper abstraction at each layer
@@ -394,6 +406,7 @@ The design specifies a clean 6-layer architecture:
 - ✅ Maintainable and extensible design
 
 **Verification:**
+
 - ✅ Implementation follows 6-layer design precisely
 - ✅ `/src/app` (Presentation), `/src/app/api` (API), `/middleware.ts` (Middleware)
 - ✅ `/src/lib` (Service), Prisma Client (Data Access), PostgreSQL (Data)
@@ -403,6 +416,7 @@ The design specifies a clean 6-layer architecture:
 **Design Decision:** Monolithic architecture
 
 **Rationale (from Technical Architecture Document):**
+
 - ✅ **Simplicity:** Easier deployment and management for small team (9 FTE)
 - ✅ **Team Size:** Small team better suited for monolithic architecture
 - ✅ **Deployment Constraints:** Single on-premises server deployment model
@@ -413,6 +427,7 @@ The design specifies a clean 6-layer architecture:
 **Assessment:** ✅ **CORRECT DECISION**
 
 **Justification:**
+
 1. **Team Capacity:** 9 FTE team (3 developers) not sufficient for microservices complexity
 2. **Deployment Model:** On-premises single-server deployment - microservices adds unnecessary complexity
 3. **Data Consistency:** HR workflows require ACID transactions across multiple entities
@@ -420,6 +435,7 @@ The design specifies a clean 6-layer architecture:
 5. **Performance:** Monolithic avoids network latency of inter-service calls
 
 **Observation:**
+
 - ⚠️ Design allows for future microservices migration if needed (modular structure)
 - ✅ Clear module boundaries make potential service extraction straightforward
 - ✅ API layer already acts as internal service boundary
@@ -428,17 +444,18 @@ The design specifies a clean 6-layer architecture:
 
 **Design Decisions:**
 
-| Technology | Version | Rationale | Assessment |
-|------------|---------|-----------|------------|
-| **Next.js** | 16 | Full-stack framework, SSR, API routes, React 19 | ✅ EXCELLENT |
-| **TypeScript** | 5 | Type safety, better DX, fewer runtime errors | ✅ EXCELLENT |
-| **PostgreSQL** | 15 | ACID compliance, robust, mature, government-approved | ✅ EXCELLENT |
-| **Prisma ORM** | Latest | Type-safe queries, migrations, modern DX | ✅ EXCELLENT |
-| **MinIO** | Latest | S3-compatible, self-hosted, scalable object storage | ✅ EXCELLENT |
-| **Tailwind CSS** | 3 | Utility-first, rapid development, consistent design | ✅ GOOD |
-| **Radix UI** | Latest | Accessible components, headless UI primitives | ✅ EXCELLENT |
+| Technology       | Version | Rationale                                            | Assessment   |
+| ---------------- | ------- | ---------------------------------------------------- | ------------ |
+| **Next.js**      | 16      | Full-stack framework, SSR, API routes, React 19      | ✅ EXCELLENT |
+| **TypeScript**   | 5       | Type safety, better DX, fewer runtime errors         | ✅ EXCELLENT |
+| **PostgreSQL**   | 15      | ACID compliance, robust, mature, government-approved | ✅ EXCELLENT |
+| **Prisma ORM**   | Latest  | Type-safe queries, migrations, modern DX             | ✅ EXCELLENT |
+| **MinIO**        | Latest  | S3-compatible, self-hosted, scalable object storage  | ✅ EXCELLENT |
+| **Tailwind CSS** | 3       | Utility-first, rapid development, consistent design  | ✅ GOOD      |
+| **Radix UI**     | Latest  | Accessible components, headless UI primitives        | ✅ EXCELLENT |
 
 **Strengths:**
+
 - ✅ Modern, battle-tested technology stack
 - ✅ All choices align with SRS requirements
 - ✅ TypeScript provides type safety across entire stack
@@ -448,6 +465,7 @@ The design specifies a clean 6-layer architecture:
 - ✅ MinIO provides scalable document storage (1TB+ capacity)
 
 **Verification Against Implementation:**
+
 - ✅ package.json confirms all technologies at specified versions
 - ✅ Next.js 16, TypeScript 5.7.2, Prisma 6.2.1, PostgreSQL 15
 - ✅ Tailwind 3.4.17, Radix UI components, Lucide React icons
@@ -496,22 +514,24 @@ CSMS Components
 
 **Verification Against Implementation:**
 
-| Component | Design | Implementation | Status |
-|-----------|--------|----------------|--------|
-| Auth Module | ✅ Specified | ✅ /src/store/auth-store.ts, /src/app/api/auth/ | ✅ COMPLETE |
-| Employee Module | ✅ Specified | ✅ /src/app/(dashboard)/employees/ | ✅ COMPLETE |
-| 8 Request Modules | ✅ Specified | ✅ /src/app/api/{request-type}/ | ✅ COMPLETE |
-| Complaint Module | ✅ Specified | ✅ /src/app/(dashboard)/complaints/ | ✅ COMPLETE |
-| Report Module | ✅ Specified | ✅ /src/app/(dashboard)/reports/ | ✅ COMPLETE |
-| Admin Module | ✅ Specified | ✅ /src/app/(dashboard)/admin/ | ✅ COMPLETE |
-| Audit Module | ✅ Specified | ✅ Audit logging in middleware, audit_logs table | ✅ COMPLETE |
+| Component         | Design       | Implementation                                   | Status      |
+| ----------------- | ------------ | ------------------------------------------------ | ----------- |
+| Auth Module       | ✅ Specified | ✅ /src/store/auth-store.ts, /src/app/api/auth/  | ✅ COMPLETE |
+| Employee Module   | ✅ Specified | ✅ /src/app/(dashboard)/employees/               | ✅ COMPLETE |
+| 8 Request Modules | ✅ Specified | ✅ /src/app/api/{request-type}/                  | ✅ COMPLETE |
+| Complaint Module  | ✅ Specified | ✅ /src/app/(dashboard)/complaints/              | ✅ COMPLETE |
+| Report Module     | ✅ Specified | ✅ /src/app/(dashboard)/reports/                 | ✅ COMPLETE |
+| Admin Module      | ✅ Specified | ✅ /src/app/(dashboard)/admin/                   | ✅ COMPLETE |
+| Audit Module      | ✅ Specified | ✅ Audit logging in middleware, audit_logs table | ✅ COMPLETE |
 
 **Component Cohesion:** ✅ EXCELLENT
+
 - Each module has single, well-defined responsibility
 - Clear boundaries between modules
 - Minimal coupling between modules
 
 **Component Reusability:** ✅ GOOD
+
 - UI components in `/src/components` (51 files) - reusable across modules
 - Shared utilities in `/src/lib` - common functionality extracted
 - API client centralized in `/src/lib/api-client.ts` (599 LOC)
@@ -520,22 +540,24 @@ CSMS Components
 
 **Design Targets (from SDD and Technical Architecture):**
 
-| Metric | Design Target | Current Capacity | Headroom | Status |
-|--------|---------------|------------------|----------|--------|
-| **Employees** | 50,000+ | 20,000-30,000 | 40-60% growth | ✅ ADEQUATE |
-| **Concurrent Users** | 500+ | ~50 typical | 900% growth | ✅ ADEQUATE |
-| **Database Size** | 100GB+ | ~10GB | 900% growth | ✅ ADEQUATE |
-| **Object Storage** | 1TB+ | ~100GB | 900% growth | ✅ ADEQUATE |
-| **Response Time** | <5s (dashboard) | ~2-3s average | Performance buffer | ✅ GOOD |
+| Metric               | Design Target   | Current Capacity | Headroom           | Status      |
+| -------------------- | --------------- | ---------------- | ------------------ | ----------- |
+| **Employees**        | 50,000+         | 20,000-30,000    | 40-60% growth      | ✅ ADEQUATE |
+| **Concurrent Users** | 500+            | ~50 typical      | 900% growth        | ✅ ADEQUATE |
+| **Database Size**    | 100GB+          | ~10GB            | 900% growth        | ✅ ADEQUATE |
+| **Object Storage**   | 1TB+            | ~100GB           | 900% growth        | ✅ ADEQUATE |
+| **Response Time**    | <5s (dashboard) | ~2-3s average    | Performance buffer | ✅ GOOD     |
 
 **Scalability Provisions:**
 
 **Vertical Scaling:**
+
 - ✅ Design supports CPU upgrade (8 cores → 16 cores)
 - ✅ Design supports RAM upgrade (16GB → 32GB)
 - ✅ Design supports storage expansion (1TB → 2TB)
 
 **Horizontal Scaling (Future):**
+
 - ⚠️ Read replicas design mentioned but not detailed
 - ⚠️ Load balancing design not included (single server deployment)
 - ⚠️ Database sharding strategy not designed
@@ -543,6 +565,7 @@ CSMS Components
 **Assessment:** ✅ **ADEQUATE** for current needs, **REQUIRES ENHANCEMENT** for long-term growth
 
 **Observation:**
+
 - Current design adequate for 5-10 year horizon
 - Vertical scaling sufficient for projected growth (50,000 employees)
 - Horizontal scaling design deferred appropriately (not needed yet)
@@ -554,6 +577,7 @@ CSMS Components
 #### 4.3.1 Database Optimization
 
 **Indexing Strategy:**
+
 ```sql
 -- Primary Indexes (auto-created)
 PRIMARY KEY (id)
@@ -577,6 +601,7 @@ INDEX idx_audit_user_date ON audit_logs(user_id, action_date DESC)
 ```
 
 **Assessment:** ✅ **EXCELLENT**
+
 - All search fields indexed (username, email, payroll, zanID, ZSSF)
 - Foreign keys indexed (institution_id, employee_id, etc.)
 - Status fields indexed (enables fast filtering)
@@ -584,18 +609,21 @@ INDEX idx_audit_user_date ON audit_logs(user_id, action_date DESC)
 - Composite indexes for common query patterns
 
 **Verification:**
+
 - ✅ Prisma schema includes `@@index` directives for all specified indexes
 - ✅ Confirmed in actual database (PostgreSQL inspection)
 
 #### 4.3.2 Query Optimization
 
 **Design Patterns:**
-- ✅ **SELECT specific columns** (not SELECT *)
+
+- ✅ **SELECT specific columns** (not SELECT \*)
 - ✅ **Eager loading** for related entities (Prisma `include`)
 - ✅ **Pagination** for large result sets (default 50 per page)
 - ✅ **Connection pooling** (Prisma connection pool, max 20)
 
 **Example (from LLD):**
+
 ```typescript
 // Good: Specific columns
 const employees = await prisma.employee.findMany({
@@ -603,9 +631,9 @@ const employees = await prisma.employee.findMany({
     id: true,
     fullName: true,
     payrollNumber: true,
-    status: true
-  }
-})
+    status: true,
+  },
+});
 
 // Good: Eager loading
 const request = await prisma.confirmationRequest.findUnique({
@@ -613,27 +641,31 @@ const request = await prisma.confirmationRequest.findUnique({
   include: {
     Employee: true,
     submittedBy: true,
-    approvedBy: true
-  }
-})
+    approvedBy: true,
+  },
+});
 ```
 
 **Assessment:** ✅ **GOOD**
+
 - Design patterns promote efficient queries
 - Prisma ORM generates optimized SQL
 
 #### 4.3.3 Caching Strategy
 
 **Design Specification:**
+
 - ✅ **API Response Caching** (60s for employee counts, 30s for request counts)
 - ✅ **HTTP Cache Headers** (Cache-Control, ETag)
 - ⚠️ **Redis Caching** mentioned but not detailed
 
 **Implementation Verification:**
+
 - ✅ Redis/BullMQ implemented for background job queue (HRIMS bulk sync)
 - ⚠️ Redis for API caching **not yet implemented** (can be added)
 
 **Assessment:** ⚠️ **PARTIAL**
+
 - HTTP cache headers implemented
 - In-memory caching used for some API responses
 - Redis available (used for background jobs) but not for API caching yet
@@ -642,18 +674,21 @@ const request = await prisma.confirmationRequest.findUnique({
 #### 4.3.4 Frontend Optimization
 
 **Design Strategies:**
+
 - ✅ **Code Splitting** (Next.js automatic route-based splitting)
 - ✅ **Lazy Loading** (dynamic imports for heavy components)
 - ✅ **Image Optimization** (Next.js Image component)
 - ✅ **Bundle Optimization** (tree-shaking, minification)
 
 **Implementation Verification:**
+
 - ✅ Bundle optimization Phase 1 completed (December 2025)
 - ✅ Next.js automatic code splitting confirmed
 - ✅ Image component used for profile photos
 - ✅ Webpack bundle analyzer used to optimize bundle size
 
 **Assessment:** ✅ **EXCELLENT**
+
 - All designed optimizations implemented
 - Additional optimization (bundle analysis) beyond design
 
@@ -661,15 +696,15 @@ const request = await prisma.confirmationRequest.findUnique({
 
 **Architecture Scorecard:**
 
-| Aspect | Score | Status | Comments |
-|--------|-------|--------|----------|
-| **Architectural Pattern** | 98% | ✅ EXCELLENT | Layered monolithic appropriate for project |
-| **Technology Stack** | 96% | ✅ EXCELLENT | Modern, well-suited choices |
-| **Component Design** | 95% | ✅ EXCELLENT | Clear boundaries, single responsibility |
-| **Scalability Design** | 90% | ✅ GOOD | Adequate for current needs, some future gaps |
-| **Performance Design** | 92% | ✅ GOOD | Solid indexing and caching strategy |
-| **Design Completeness** | 94% | ✅ EXCELLENT | All major aspects covered |
-| **OVERALL ARCHITECTURE** | **96%** | ✅ **EXCELLENT** | **Well-designed architecture** |
+| Aspect                    | Score   | Status           | Comments                                     |
+| ------------------------- | ------- | ---------------- | -------------------------------------------- |
+| **Architectural Pattern** | 98%     | ✅ EXCELLENT     | Layered monolithic appropriate for project   |
+| **Technology Stack**      | 96%     | ✅ EXCELLENT     | Modern, well-suited choices                  |
+| **Component Design**      | 95%     | ✅ EXCELLENT     | Clear boundaries, single responsibility      |
+| **Scalability Design**    | 90%     | ✅ GOOD          | Adequate for current needs, some future gaps |
+| **Performance Design**    | 92%     | ✅ GOOD          | Solid indexing and caching strategy          |
+| **Design Completeness**   | 94%     | ✅ EXCELLENT     | All major aspects covered                    |
+| **OVERALL ARCHITECTURE**  | **96%** | ✅ **EXCELLENT** | **Well-designed architecture**               |
 
 **Verdict:** ✅ **ARCHITECTURE DESIGN APPROVED** - Solid layered architecture with appropriate technology choices for a government HR system.
 
@@ -684,6 +719,7 @@ const request = await prisma.confirmationRequest.findUnique({
 **Total Tables:** 22+ tables
 
 **Table Categories:**
+
 1. **Users & Auth** (3 tables) - users, institutions, password_reset_tokens
 2. **Employees** (3 tables) - employees, employee_documents, employee_certificates
 3. **Requests** (10 tables) - 8 request types + shared documents + dismissal
@@ -716,14 +752,14 @@ Complaint (1:M) → Complaint Responses
 
 **Verification Against Prisma Schema:**
 
-| Relationship | Design | Prisma Schema | Status |
-|--------------|--------|---------------|--------|
-| Institution → Employee | 1:M | `employees Employee[]` | ✅ CORRECT |
-| Institution → User | 1:M | `users User[]` | ✅ CORRECT |
-| Employee → ConfirmationRequest | 1:M | `confirmationRequests ConfirmationRequest[]` | ✅ CORRECT |
-| Employee → Complaint | 1:M | `complaints Complaint[]` | ✅ CORRECT |
-| User → ConfirmationRequest (submitted) | 1:M | `submittedConfirmationRequests ConfirmationRequest[]` | ✅ CORRECT |
-| User → ConfirmationRequest (approved) | 1:M | `approvedConfirmationRequests ConfirmationRequest[]` | ✅ CORRECT |
+| Relationship                           | Design | Prisma Schema                                         | Status     |
+| -------------------------------------- | ------ | ----------------------------------------------------- | ---------- |
+| Institution → Employee                 | 1:M    | `employees Employee[]`                                | ✅ CORRECT |
+| Institution → User                     | 1:M    | `users User[]`                                        | ✅ CORRECT |
+| Employee → ConfirmationRequest         | 1:M    | `confirmationRequests ConfirmationRequest[]`          | ✅ CORRECT |
+| Employee → Complaint                   | 1:M    | `complaints Complaint[]`                              | ✅ CORRECT |
+| User → ConfirmationRequest (submitted) | 1:M    | `submittedConfirmationRequests ConfirmationRequest[]` | ✅ CORRECT |
+| User → ConfirmationRequest (approved)  | 1:M    | `approvedConfirmationRequests ConfirmationRequest[]`  | ✅ CORRECT |
 
 **Assessment:** ✅ **EXCELLENT** - All relationships correctly modeled in design and implementation
 
@@ -734,15 +770,18 @@ Complaint (1:M) → Complaint Responses
 **Normalization Verification:**
 
 **1NF (First Normal Form):**
+
 - ✅ All tables have primary keys
 - ✅ No repeating groups (e.g., separate EmployeeCertificate table instead of embedding)
 - ✅ Atomic values (e.g., fullName is single field, not first+last+middle)
 
 **2NF (Second Normal Form):**
+
 - ✅ All non-key attributes fully dependent on primary key
 - ✅ No partial dependencies (all tables have single-column primary key: UUID)
 
 **3NF (Third Normal Form):**
+
 - ✅ No transitive dependencies
 - ✅ Institution details not duplicated in Employee (stored only in Institution table)
 - ✅ User role not duplicated (single source of truth)
@@ -750,6 +789,7 @@ Complaint (1:M) → Complaint Responses
 **Example Analysis:**
 
 **employees Table:**
+
 ```
 id (PK)
 payrollNumber (Unique)
@@ -766,37 +806,40 @@ employmentDate
 ### 5.4 Data Integrity Constraints
 
 **Primary Keys:**
+
 - ✅ All tables have UUID primary keys
 - ✅ Type: `id String @id @default(uuid())`
 
 **Unique Constraints:**
 
-| Table | Unique Fields | Status | Business Rule |
-|-------|---------------|--------|---------------|
-| users | username | ✅ CORRECT | Usernames must be unique |
-| users | email | ✅ CORRECT | Email addresses must be unique |
-| employees | payrollNumber | ✅ CORRECT | Payroll numbers unique across system |
-| employees | zanId | ✅ CORRECT | ZanID unique (9-digit national ID) |
-| employees | zssfNumber | ✅ CORRECT | ZSSF unique (social security number) |
-| complaints | complaintNumber | ✅ CORRECT | Complaint IDs unique (COMP-YYYY-NNNNNN) |
-| institutions | institutionCode | ✅ CORRECT | Institution codes unique |
+| Table        | Unique Fields   | Status     | Business Rule                           |
+| ------------ | --------------- | ---------- | --------------------------------------- |
+| users        | username        | ✅ CORRECT | Usernames must be unique                |
+| users        | email           | ✅ CORRECT | Email addresses must be unique          |
+| employees    | payrollNumber   | ✅ CORRECT | Payroll numbers unique across system    |
+| employees    | zanId           | ✅ CORRECT | ZanID unique (9-digit national ID)      |
+| employees    | zssfNumber      | ✅ CORRECT | ZSSF unique (social security number)    |
+| complaints   | complaintNumber | ✅ CORRECT | Complaint IDs unique (COMP-YYYY-NNNNNN) |
+| institutions | institutionCode | ✅ CORRECT | Institution codes unique                |
 
 **Foreign Key Constraints:**
 
-| Relationship | ON DELETE | ON UPDATE | Status | Rationale |
-|--------------|-----------|-----------|--------|-----------|
-| employees → institutions | CASCADE | CASCADE | ✅ CORRECT | Update cascades, delete restricted in practice (soft delete) |
-| users → institutions | CASCADE | CASCADE | ✅ CORRECT | User institution changes cascade |
-| requests → employees | RESTRICT | CASCADE | ✅ CORRECT | Cannot delete employee with requests (audit trail) |
-| requests → users (submitted_by) | RESTRICT | CASCADE | ✅ CORRECT | Preserve submitter reference |
-| requests → users (approved_by) | SET NULL | CASCADE | ⚠️ PARTIAL | Allow approver deletion but preserve audit |
+| Relationship                    | ON DELETE | ON UPDATE | Status     | Rationale                                                    |
+| ------------------------------- | --------- | --------- | ---------- | ------------------------------------------------------------ |
+| employees → institutions        | CASCADE   | CASCADE   | ✅ CORRECT | Update cascades, delete restricted in practice (soft delete) |
+| users → institutions            | CASCADE   | CASCADE   | ✅ CORRECT | User institution changes cascade                             |
+| requests → employees            | RESTRICT  | CASCADE   | ✅ CORRECT | Cannot delete employee with requests (audit trail)           |
+| requests → users (submitted_by) | RESTRICT  | CASCADE   | ✅ CORRECT | Preserve submitter reference                                 |
+| requests → users (approved_by)  | SET NULL  | CASCADE   | ⚠️ PARTIAL | Allow approver deletion but preserve audit                   |
 
 **Assessment:** ✅ **GOOD**
+
 - Primary and unique constraints properly specified
 - Foreign key relationships correctly defined
 - Soft delete pattern preserves data integrity (status='Deleted' instead of actual deletion)
 
 **Observation:**
+
 - ⚠️ Some ON DELETE behaviors should be RESTRICT to prevent accidental data loss
 - ✅ Soft delete pattern mitigates this concern (no actual deletion)
 
@@ -805,6 +848,7 @@ employmentDate
 **Design Specification (SDD Section 2.4):**
 
 **Index Categories:**
+
 1. **Primary Indexes** (auto-created)
 2. **Unique Indexes** (username, email, payroll, zanId, zssf, complaintNumber)
 3. **Performance Indexes** (FKs, status, dates)
@@ -812,19 +856,19 @@ employmentDate
 
 **Index Verification:**
 
-| Table | Index Type | Columns | Design | Implementation | Status |
-|-------|-----------|---------|--------|----------------|--------|
-| users | Unique | username | ✅ Specified | ✅ `@@unique([username])` | ✅ IMPLEMENTED |
-| users | Unique | email | ✅ Specified | ✅ `@@unique([email])` | ✅ IMPLEMENTED |
-| employees | Unique | payrollNumber | ✅ Specified | ✅ `@@unique([payrollNumber])` | ✅ IMPLEMENTED |
-| employees | Unique | zanId | ✅ Specified | ✅ `@@unique([zanId])` | ✅ IMPLEMENTED |
-| employees | Unique | zssfNumber | ✅ Specified | ✅ `@@unique([zssfNumber])` | ✅ IMPLEMENTED |
-| employees | Index | institutionId | ✅ Specified | ✅ `@@index([institutionId])` | ✅ IMPLEMENTED |
-| employees | Index | status | ✅ Specified | ✅ `@@index([status])` | ✅ IMPLEMENTED |
-| *_requests | Index | status | ✅ Specified | ✅ `@@index([status])` | ✅ IMPLEMENTED |
-| *_requests | Index | submissionDate | ✅ Specified | ✅ `@@index([submissionDate])` | ✅ IMPLEMENTED |
-| *_requests | Composite | status, submissionDate | ✅ Specified | ✅ `@@index([status, submissionDate])` | ✅ IMPLEMENTED |
-| audit_logs | Composite | userId, actionDate | ✅ Specified | ✅ `@@index([userId, actionDate])` | ✅ IMPLEMENTED |
+| Table        | Index Type | Columns                | Design       | Implementation                         | Status         |
+| ------------ | ---------- | ---------------------- | ------------ | -------------------------------------- | -------------- |
+| users        | Unique     | username               | ✅ Specified | ✅ `@@unique([username])`              | ✅ IMPLEMENTED |
+| users        | Unique     | email                  | ✅ Specified | ✅ `@@unique([email])`                 | ✅ IMPLEMENTED |
+| employees    | Unique     | payrollNumber          | ✅ Specified | ✅ `@@unique([payrollNumber])`         | ✅ IMPLEMENTED |
+| employees    | Unique     | zanId                  | ✅ Specified | ✅ `@@unique([zanId])`                 | ✅ IMPLEMENTED |
+| employees    | Unique     | zssfNumber             | ✅ Specified | ✅ `@@unique([zssfNumber])`            | ✅ IMPLEMENTED |
+| employees    | Index      | institutionId          | ✅ Specified | ✅ `@@index([institutionId])`          | ✅ IMPLEMENTED |
+| employees    | Index      | status                 | ✅ Specified | ✅ `@@index([status])`                 | ✅ IMPLEMENTED |
+| \*\_requests | Index      | status                 | ✅ Specified | ✅ `@@index([status])`                 | ✅ IMPLEMENTED |
+| \*\_requests | Index      | submissionDate         | ✅ Specified | ✅ `@@index([submissionDate])`         | ✅ IMPLEMENTED |
+| \*\_requests | Composite  | status, submissionDate | ✅ Specified | ✅ `@@index([status, submissionDate])` | ✅ IMPLEMENTED |
+| audit_logs   | Composite  | userId, actionDate     | ✅ Specified | ✅ `@@index([userId, actionDate])`     | ✅ IMPLEMENTED |
 
 **Assessment:** ✅ **EXCELLENT** - All designed indexes implemented correctly
 
@@ -833,41 +877,51 @@ employmentDate
 **Common Queries and Index Usage:**
 
 1. **Employee Search by Payroll:**
+
    ```sql
    SELECT * FROM employees WHERE payroll_number = ?
    ```
+
    - ✅ Uses `idx_unique_payroll` (UNIQUE index)
    - Performance: O(log n) - Very fast
 
 2. **Employees by Institution (HRO Filter):**
+
    ```sql
    SELECT * FROM employees WHERE institution_id = ? AND status = 'Confirmed'
    ```
+
    - ✅ Uses `idx_employee_institution` + `idx_employee_status`
    - Performance: O(log n) - Fast
 
 3. **Pending Requests (Dashboard Count):**
+
    ```sql
    SELECT COUNT(*) FROM confirmation_requests WHERE status = 'Pending'
    ```
+
    - ✅ Uses `idx_request_status` (Index-only scan)
    - Performance: O(log n) - Very fast
 
 4. **Requests Older Than 5 Days (SLA Alert):**
+
    ```sql
    SELECT * FROM confirmation_requests
    WHERE status = 'Pending' AND submission_date < CURRENT_DATE - INTERVAL '5 days'
    ORDER BY submission_date
    ```
+
    - ✅ Uses composite `idx_requests_status_date`
    - Performance: O(log n + k) where k = result size - Fast
 
 5. **User Audit Trail:**
+
    ```sql
    SELECT * FROM audit_logs
    WHERE user_id = ? AND action_date > ?
    ORDER BY action_date DESC
    ```
+
    - ✅ Uses composite `idx_audit_user_date`
    - Performance: O(log n + k) - Fast
 
@@ -876,20 +930,24 @@ employmentDate
 ### 5.6 Data Types and Constraints
 
 **String Fields:**
+
 - ✅ `String` for text (Prisma maps to VARCHAR/TEXT in PostgreSQL)
 - ✅ `@db.Text` for large text (descriptions, comments)
 - ✅ Appropriate length considerations
 
 **Numeric Fields:**
+
 - ✅ `Int` for counts, IDs
 - ✅ `Float` for decimals (if needed)
 
 **Date/Time Fields:**
+
 - ✅ `DateTime` for timestamps
 - ✅ `@default(now())` for creation timestamps
 - ✅ `@updatedAt` for modification timestamps
 
 **Enums:**
+
 - ✅ `enum UserRole` (9 values: HRO, HHRMD, HRMO, DO, EMP, PO, CSCS, HRRP, ADMIN)
 - ✅ `enum UserStatus` (Active, Inactive, Locked, Deleted)
 - ✅ `enum EmployeeStatus` (On Probation, Confirmed, On LWOP, Retired, Resigned, Terminated, Dismissed, Deceased)
@@ -903,6 +961,7 @@ employmentDate
 **Design Decision:** Soft delete for users and employees to preserve audit trail
 
 **Implementation:**
+
 ```prisma
 model User {
   id        String   @id @default(uuid())
@@ -921,12 +980,14 @@ enum UserStatus {
 ```
 
 **Soft Delete Logic:**
+
 1. Set `status = 'Deleted'`
 2. Set `deletedAt = CURRENT_TIMESTAMP`
 3. Set `deletedBy = admin_user_id`
 4. Append `_DELETED_[timestamp]` to username and email (prevent reuse)
 
 **Benefits:**
+
 - ✅ Preserves audit trail (who created/approved requests)
 - ✅ Prevents accidental data loss
 - ✅ Supports compliance requirements (10-year retention)
@@ -938,16 +999,16 @@ enum UserStatus {
 
 **Database Design Scorecard:**
 
-| Aspect | Score | Status | Comments |
-|--------|-------|--------|----------|
-| **Schema Completeness** | 100% | ✅ EXCELLENT | All entities modeled |
-| **Normalization** | 100% | ✅ EXCELLENT | Proper 3NF |
-| **Relationships** | 100% | ✅ EXCELLENT | All FKs correct |
-| **Integrity Constraints** | 98% | ✅ EXCELLENT | PKs, UNIQUEs, FKs, ENUMs |
-| **Indexing Strategy** | 100% | ✅ EXCELLENT | All common queries optimized |
-| **Data Types** | 100% | ✅ EXCELLENT | Appropriate types throughout |
-| **Design-Implementation Alignment** | 100% | ✅ EXCELLENT | Prisma schema matches design exactly |
-| **OVERALL DATABASE DESIGN** | **99.7%** | ✅ **EXCELLENT** | **Exemplary database design** |
+| Aspect                              | Score     | Status           | Comments                             |
+| ----------------------------------- | --------- | ---------------- | ------------------------------------ |
+| **Schema Completeness**             | 100%      | ✅ EXCELLENT     | All entities modeled                 |
+| **Normalization**                   | 100%      | ✅ EXCELLENT     | Proper 3NF                           |
+| **Relationships**                   | 100%      | ✅ EXCELLENT     | All FKs correct                      |
+| **Integrity Constraints**           | 98%       | ✅ EXCELLENT     | PKs, UNIQUEs, FKs, ENUMs             |
+| **Indexing Strategy**               | 100%      | ✅ EXCELLENT     | All common queries optimized         |
+| **Data Types**                      | 100%      | ✅ EXCELLENT     | Appropriate types throughout         |
+| **Design-Implementation Alignment** | 100%      | ✅ EXCELLENT     | Prisma schema matches design exactly |
+| **OVERALL DATABASE DESIGN**         | **99.7%** | ✅ **EXCELLENT** | **Exemplary database design**        |
 
 **Verdict:** ✅ **DATABASE DESIGN APPROVED** - Excellent normalization, indexing, and implementation fidelity.
 
@@ -962,6 +1023,7 @@ enum UserStatus {
 **Base URL:** `/api/`
 
 **HTTP Methods:**
+
 - GET: Retrieve resources
 - POST: Create resources
 - PUT: Update resources
@@ -972,6 +1034,7 @@ enum UserStatus {
 ### 6.2 API Endpoint Structure
 
 **Design Pattern:**
+
 ```
 /api/resource              → GET (list), POST (create)
 /api/resource/{id}         → GET (read), PUT (update), DELETE (delete)
@@ -981,6 +1044,7 @@ enum UserStatus {
 **Examples from Design:**
 
 **Authentication:**
+
 ```
 POST /api/auth/login
 POST /api/auth/employee-login
@@ -991,6 +1055,7 @@ GET  /api/auth/me
 ```
 
 **Employees:**
+
 ```
 GET    /api/employees
 GET    /api/employees/{id}
@@ -1001,6 +1066,7 @@ POST   /api/employees/{id}/documents
 ```
 
 **Requests (Pattern for all 8 types):**
+
 ```
 GET  /api/requests/confirmation
 POST /api/requests/confirmation
@@ -1011,6 +1077,7 @@ POST /api/requests/confirmation/{id}/send-back
 ```
 
 **Assessment:** ✅ **EXCELLENT**
+
 - Consistent naming conventions
 - Logical resource hierarchy
 - Action endpoints clearly named (approve, reject, send-back)
@@ -1018,29 +1085,30 @@ POST /api/requests/confirmation/{id}/send-back
 
 **Verification Against Implementation:**
 
-| Endpoint Category | Design Count | Implemented Count | Status |
-|-------------------|--------------|-------------------|--------|
-| Authentication | 6 | 6 | ✅ COMPLETE |
-| Employees | 6 | 6+ | ✅ COMPLETE (+ search endpoint) |
-| Confirmation Requests | 6 | 6 | ✅ COMPLETE |
-| Promotion Requests | 6 | 6 | ✅ COMPLETE |
-| LWOP Requests | 6 | 6 | ✅ COMPLETE |
-| Cadre Change Requests | 6 | 6 | ✅ COMPLETE |
-| Retirement Requests | 6 | 6 | ✅ COMPLETE |
-| Resignation Requests | 6 | 6 | ✅ COMPLETE |
-| Service Extension Requests | 6 | 6 | ✅ COMPLETE |
-| Termination/Dismissal Requests | 6 | 6 | ✅ COMPLETE |
-| Complaints | 6 | 6 | ✅ COMPLETE |
-| Reports | 3 | 3 | ✅ COMPLETE |
-| Files | 2 | 4+ | ✅ ENHANCED (+ preview, exists) |
-| Dashboard | - | 1 | ✅ ADDED (metrics endpoint) |
-| Institutions | 2 | 2 | ✅ COMPLETE |
-| Users | 4 | 4 | ✅ COMPLETE |
-| HRIMS Integration | - | 5 | ✅ ADDED (not in original design) |
-| Notifications | 2 | 2 | ✅ COMPLETE |
-| **TOTAL** | **~73** | **90+** | ✅ **EXCELLENT** |
+| Endpoint Category              | Design Count | Implemented Count | Status                            |
+| ------------------------------ | ------------ | ----------------- | --------------------------------- |
+| Authentication                 | 6            | 6                 | ✅ COMPLETE                       |
+| Employees                      | 6            | 6+                | ✅ COMPLETE (+ search endpoint)   |
+| Confirmation Requests          | 6            | 6                 | ✅ COMPLETE                       |
+| Promotion Requests             | 6            | 6                 | ✅ COMPLETE                       |
+| LWOP Requests                  | 6            | 6                 | ✅ COMPLETE                       |
+| Cadre Change Requests          | 6            | 6                 | ✅ COMPLETE                       |
+| Retirement Requests            | 6            | 6                 | ✅ COMPLETE                       |
+| Resignation Requests           | 6            | 6                 | ✅ COMPLETE                       |
+| Service Extension Requests     | 6            | 6                 | ✅ COMPLETE                       |
+| Termination/Dismissal Requests | 6            | 6                 | ✅ COMPLETE                       |
+| Complaints                     | 6            | 6                 | ✅ COMPLETE                       |
+| Reports                        | 3            | 3                 | ✅ COMPLETE                       |
+| Files                          | 2            | 4+                | ✅ ENHANCED (+ preview, exists)   |
+| Dashboard                      | -            | 1                 | ✅ ADDED (metrics endpoint)       |
+| Institutions                   | 2            | 2                 | ✅ COMPLETE                       |
+| Users                          | 4            | 4                 | ✅ COMPLETE                       |
+| HRIMS Integration              | -            | 5                 | ✅ ADDED (not in original design) |
+| Notifications                  | 2            | 2                 | ✅ COMPLETE                       |
+| **TOTAL**                      | **~73**      | **90+**           | ✅ **EXCELLENT**                  |
 
 **Observation:**
+
 - ✅ All designed endpoints implemented
 - ✅ Additional endpoints added beyond design (HRIMS integration, dashboard metrics, file preview)
 - ✅ Enhancements improve system functionality
@@ -1050,14 +1118,18 @@ POST /api/requests/confirmation/{id}/send-back
 **Design Specification:**
 
 **Success Response:**
+
 ```json
 {
   "success": true,
-  "data": { /* response data */ }
+  "data": {
+    /* response data */
+  }
 }
 ```
 
 **Error Response:**
+
 ```json
 {
   "success": false,
@@ -1070,6 +1142,7 @@ POST /api/requests/confirmation/{id}/send-back
 ```
 
 **Paginated Response:**
+
 ```json
 {
   "success": true,
@@ -1088,6 +1161,7 @@ POST /api/requests/confirmation/{id}/send-back
 **Verification Against Implementation:**
 
 **ApiClient Request Method (from LLD):**
+
 ```typescript
 function request<T>(endpoint, options):
   // ... fetch logic ...
@@ -1101,6 +1175,7 @@ function request<T>(endpoint, options):
 ```
 
 **Assessment:** ✅ **EXCELLENT**
+
 - Consistent response wrapping
 - Client-side ApiClient handles both wrapped and unwrapped responses
 - Error responses follow standard format
@@ -1110,21 +1185,22 @@ function request<T>(endpoint, options):
 
 **Design Specification:**
 
-| Status Code | Usage | Examples |
-|-------------|-------|----------|
-| 200 OK | Successful GET, PUT, POST (with response) | Employee retrieved, Request approved |
-| 201 Created | Successful POST (resource created) | Employee created, Request submitted |
-| 204 No Content | Successful DELETE | Employee deleted, Session ended |
-| 400 Bad Request | Invalid input | Validation errors, Missing required fields |
-| 401 Unauthorized | Authentication failure | Invalid credentials, Expired token |
-| 403 Forbidden | Authorization failure | Insufficient permissions, Wrong role |
-| 404 Not Found | Resource not found | Employee doesn't exist, Request not found |
-| 409 Conflict | Duplicate or conflict | Username already exists, Request already approved |
-| 500 Internal Server Error | Server error | Database error, Unexpected exception |
+| Status Code               | Usage                                     | Examples                                          |
+| ------------------------- | ----------------------------------------- | ------------------------------------------------- |
+| 200 OK                    | Successful GET, PUT, POST (with response) | Employee retrieved, Request approved              |
+| 201 Created               | Successful POST (resource created)        | Employee created, Request submitted               |
+| 204 No Content            | Successful DELETE                         | Employee deleted, Session ended                   |
+| 400 Bad Request           | Invalid input                             | Validation errors, Missing required fields        |
+| 401 Unauthorized          | Authentication failure                    | Invalid credentials, Expired token                |
+| 403 Forbidden             | Authorization failure                     | Insufficient permissions, Wrong role              |
+| 404 Not Found             | Resource not found                        | Employee doesn't exist, Request not found         |
+| 409 Conflict              | Duplicate or conflict                     | Username already exists, Request already approved |
+| 500 Internal Server Error | Server error                              | Database error, Unexpected exception              |
 
 **Assessment:** ✅ **CORRECT** - Proper HTTP status code usage
 
 **Verification:**
+
 - ✅ 200/201 for successful operations
 - ✅ 400 for validation errors (Zod validation)
 - ✅ 401 for authentication failures (middleware)
@@ -1137,6 +1213,7 @@ function request<T>(endpoint, options):
 **Design Specification (LLD):**
 
 **Authentication Middleware:**
+
 ```typescript
 function requireAuth(req, res, next):
   1. Extract JWT token from httpOnly cookie
@@ -1148,6 +1225,7 @@ function requireAuth(req, res, next):
 ```
 
 **Authorization Middleware:**
+
 ```typescript
 function requireRole(allowedRoles):
   return (req, res, next) => {
@@ -1161,51 +1239,54 @@ function requireRole(allowedRoles):
 **Verification Against Implementation:**
 
 **middleware.ts:**
+
 ```typescript
 export async function middleware(request: NextRequest) {
-  const token = request.cookies.get('token')?.value
+  const token = request.cookies.get('token')?.value;
 
   if (!token) {
-    return NextResponse.redirect(new URL('/login', request.url))
+    return NextResponse.redirect(new URL('/login', request.url));
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET)
+    const decoded = jwt.verify(token, JWT_SECRET);
     // Attach user info to headers for API routes
-    const requestHeaders = new Headers(request.headers)
-    requestHeaders.set('x-user-id', decoded.userId)
-    requestHeaders.set('x-user-role', decoded.role)
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set('x-user-id', decoded.userId);
+    requestHeaders.set('x-user-role', decoded.role);
     // ...
   } catch (error) {
-    return NextResponse.redirect(new URL('/login', request.url))
+    return NextResponse.redirect(new URL('/login', request.url));
   }
 }
 ```
 
 **Assessment:** ✅ **EXCELLENT**
+
 - JWT authentication correctly implemented
 - Middleware validates all protected routes
 - User context passed to API routes via headers
 - Role-based authorization enforced in API routes
 
 **Example API Route (from codebase):**
+
 ```typescript
 export async function GET(request: Request) {
-  const userRole = request.headers.get('x-user-role')
-  const userInstitutionId = request.headers.get('x-user-institution-id')
+  const userRole = request.headers.get('x-user-role');
+  const userInstitutionId = request.headers.get('x-user-institution-id');
 
   // RBAC check
   if (shouldApplyInstitutionFilter(userRole, userInstitutionId)) {
     whereClause.Employee = {
-      institutionId: userInstitutionId
-    }
+      institutionId: userInstitutionId,
+    };
   }
 
   const requests = await prisma.confirmationRequest.findMany({
-    where: whereClause
-  })
+    where: whereClause,
+  });
 
-  return NextResponse.json({ success: true, data: requests })
+  return NextResponse.json({ success: true, data: requests });
 }
 ```
 
@@ -1216,28 +1297,35 @@ export async function GET(request: Request) {
 **Design Specification:**
 
 **Validation Strategy:**
+
 - Frontend: React Hook Form + Zod schemas
 - Backend: Zod validation on all API routes
 
 **Example Zod Schema (from Design):**
+
 ```typescript
 const createEmployeeSchema = z.object({
   fullName: z.string().min(3).max(255),
   payrollNumber: z.string().regex(/^[A-Z0-9]+$/),
-  zanId: z.string().length(9).regex(/^\d{9}$/),
+  zanId: z
+    .string()
+    .length(9)
+    .regex(/^\d{9}$/),
   zssfNumber: z.string().min(1),
   institutionId: z.string().uuid(),
-  employmentDate: z.string().datetime()
-})
+  employmentDate: z.string().datetime(),
+});
 ```
 
 **Verification:**
+
 - ✅ Zod installed (package.json: `zod: ^3.24.1`)
 - ✅ React Hook Form installed (package.json: `react-hook-form: ^7.54.2`)
 - ✅ Zod schemas used in API routes for validation
 - ✅ Frontend forms use Zod + React Hook Form
 
 **Assessment:** ✅ **EXCELLENT**
+
 - Two-layer validation (frontend + backend)
 - Type-safe validation with Zod
 - Consistent validation across all forms and API endpoints
@@ -1247,25 +1335,27 @@ const createEmployeeSchema = z.object({
 **Design Specification (SDD Section 9):**
 
 **Error Handling Pattern:**
+
 ```typescript
 try {
   // Business logic
-  const result = await someOperation()
-  return { success: true, data: result }
+  const result = await someOperation();
+  return { success: true, data: result };
 } catch (error) {
-  console.error('Error:', error)
+  console.error('Error:', error);
   return {
     success: false,
     error: {
       code: 'OPERATION_FAILED',
       message: error.message,
-      details: {}
-    }
-  }
+      details: {},
+    },
+  };
 }
 ```
 
 **Error Categories:**
+
 1. **Validation Errors** (400) - Zod validation failures
 2. **Authentication Errors** (401) - Invalid/expired token
 3. **Authorization Errors** (403) - Insufficient permissions
@@ -1274,12 +1364,14 @@ try {
 6. **Server Errors** (500) - Unexpected exceptions
 
 **Verification:**
+
 - ✅ All API routes wrapped in try-catch blocks
 - ✅ Errors logged to console (production: should log to file/service)
 - ✅ User-friendly error messages returned
 - ✅ Stack traces not exposed to clients (security)
 
 **Assessment:** ✅ **GOOD**
+
 - Consistent error handling pattern
 - Proper error categorization
 - **Recommendation:** Add centralized error logging service (Winston, Pino)
@@ -1288,18 +1380,18 @@ try {
 
 **API Design Scorecard:**
 
-| Aspect | Score | Status | Comments |
-|--------|-------|--------|----------|
-| **RESTful Conventions** | 100% | ✅ EXCELLENT | Proper HTTP methods, resource naming |
-| **Endpoint Structure** | 98% | ✅ EXCELLENT | Consistent patterns, logical hierarchy |
-| **Response Standardization** | 100% | ✅ EXCELLENT | Uniform success/error format |
-| **HTTP Status Codes** | 100% | ✅ EXCELLENT | Correct status code usage |
-| **Authentication** | 100% | ✅ EXCELLENT | JWT with httpOnly cookies |
-| **Authorization** | 100% | ✅ EXCELLENT | RBAC implemented correctly |
-| **Input Validation** | 100% | ✅ EXCELLENT | Zod validation frontend + backend |
-| **Error Handling** | 95% | ✅ EXCELLENT | Consistent pattern, minor logging gap |
-| **Design-Implementation Alignment** | 98% | ✅ EXCELLENT | All designed endpoints + enhancements |
-| **OVERALL API DESIGN** | **99.0%** | ✅ **EXCELLENT** | **Exemplary API design** |
+| Aspect                              | Score     | Status           | Comments                               |
+| ----------------------------------- | --------- | ---------------- | -------------------------------------- |
+| **RESTful Conventions**             | 100%      | ✅ EXCELLENT     | Proper HTTP methods, resource naming   |
+| **Endpoint Structure**              | 98%       | ✅ EXCELLENT     | Consistent patterns, logical hierarchy |
+| **Response Standardization**        | 100%      | ✅ EXCELLENT     | Uniform success/error format           |
+| **HTTP Status Codes**               | 100%      | ✅ EXCELLENT     | Correct status code usage              |
+| **Authentication**                  | 100%      | ✅ EXCELLENT     | JWT with httpOnly cookies              |
+| **Authorization**                   | 100%      | ✅ EXCELLENT     | RBAC implemented correctly             |
+| **Input Validation**                | 100%      | ✅ EXCELLENT     | Zod validation frontend + backend      |
+| **Error Handling**                  | 95%       | ✅ EXCELLENT     | Consistent pattern, minor logging gap  |
+| **Design-Implementation Alignment** | 98%       | ✅ EXCELLENT     | All designed endpoints + enhancements  |
+| **OVERALL API DESIGN**              | **99.0%** | ✅ **EXCELLENT** | **Exemplary API design**               |
 
 **Verdict:** ✅ **API DESIGN APPROVED** - RESTful, consistent, secure, and well-implemented.
 
@@ -1326,6 +1418,7 @@ try {
 **Design Specification (SDD Section 4):**
 
 **JWT Token Structure:**
+
 ```json
 {
   "userId": "uuid",
@@ -1333,11 +1426,12 @@ try {
   "role": "HRO|HHRMD|...",
   "institutionId": "uuid|null",
   "iat": 1234567890,
-  "exp": 1234568490  // 10-min expiry
+  "exp": 1234568490 // 10-min expiry
 }
 ```
 
 **Token Lifecycle:**
+
 1. Generate on login (bcrypt password verification)
 2. Store in httpOnly cookie (prevents XSS)
 3. Set Secure flag (HTTPS only)
@@ -1348,19 +1442,20 @@ try {
 
 **Security Measures:**
 
-| Measure | Design | Implementation | Status |
-|---------|--------|----------------|--------|
-| **Password Hashing** | bcrypt (cost 10) | ✅ `bcrypt.hash(password, 10)` | ✅ IMPLEMENTED |
-| **JWT Signing** | Secret key | ✅ `jwt.sign(payload, JWT_SECRET)` | ✅ IMPLEMENTED |
-| **httpOnly Cookie** | Prevents XSS | ✅ `httpOnly: true` | ✅ IMPLEMENTED |
-| **Secure Cookie** | HTTPS only | ✅ `secure: true` (production) | ✅ IMPLEMENTED |
-| **SameSite Cookie** | CSRF protection | ✅ `sameSite: 'strict'` | ✅ IMPLEMENTED |
-| **Account Lockout** | 5 failed attempts, 15 min | ✅ Counter + timestamp check | ✅ IMPLEMENTED |
-| **Session Timeout** | 10 min inactivity | ✅ JWT expiry + middleware | ✅ IMPLEMENTED |
-| **OTP Expiry** | 60 min | ✅ Timestamp check | ✅ IMPLEMENTED |
-| **Password History** | Last 3 passwords | ⚠️ Designed but not verified | ⚠️ VERIFY |
+| Measure              | Design                    | Implementation                     | Status         |
+| -------------------- | ------------------------- | ---------------------------------- | -------------- |
+| **Password Hashing** | bcrypt (cost 10)          | ✅ `bcrypt.hash(password, 10)`     | ✅ IMPLEMENTED |
+| **JWT Signing**      | Secret key                | ✅ `jwt.sign(payload, JWT_SECRET)` | ✅ IMPLEMENTED |
+| **httpOnly Cookie**  | Prevents XSS              | ✅ `httpOnly: true`                | ✅ IMPLEMENTED |
+| **Secure Cookie**    | HTTPS only                | ✅ `secure: true` (production)     | ✅ IMPLEMENTED |
+| **SameSite Cookie**  | CSRF protection           | ✅ `sameSite: 'strict'`            | ✅ IMPLEMENTED |
+| **Account Lockout**  | 5 failed attempts, 15 min | ✅ Counter + timestamp check       | ✅ IMPLEMENTED |
+| **Session Timeout**  | 10 min inactivity         | ✅ JWT expiry + middleware         | ✅ IMPLEMENTED |
+| **OTP Expiry**       | 60 min                    | ✅ Timestamp check                 | ✅ IMPLEMENTED |
+| **Password History** | Last 3 passwords          | ⚠️ Designed but not verified       | ⚠️ VERIFY      |
 
 **Assessment:** ✅ **EXCELLENT**
+
 - Robust authentication design
 - bcrypt hashing (industry standard, cost factor 10 appropriate)
 - JWT with httpOnly cookies (prevents XSS attacks)
@@ -1368,6 +1463,7 @@ try {
 - Account lockout prevents brute force
 
 **Observation:**
+
 - ⚠️ Password history (last 3 passwords) designed but not verified in implementation
 - **Recommendation:** Verify password_history table/column exists and is enforced
 
@@ -1378,10 +1474,12 @@ try {
 **Role Hierarchy:**
 
 **Institution-Level:**
+
 - HRO: Submit requests (own institution)
 - HRRP: View requests (own institution)
 
 **CSC-Wide:**
+
 - HHRMD: Approve all requests
 - HRMO: Approve HR requests only (not disciplinary)
 - DO: Approve disciplinary requests only (complaints, termination, dismissal)
@@ -1389,46 +1487,50 @@ try {
 - CSCS: Executive oversight (read-only)
 
 **System-Wide:**
+
 - ADMIN: User management, system configuration
 
 **Authorization Enforcement:**
 
 **Middleware Level:**
+
 ```typescript
 function checkRole(allowedRoles: UserRole[]) {
   return (req, res, next) => {
-    const user = req.user  // from JWT
+    const user = req.user; // from JWT
     if (!allowedRoles.includes(user.role)) {
-      return res.status(403).json({ error: "Access denied" })
+      return res.status(403).json({ error: 'Access denied' });
     }
-    next()
-  }
+    next();
+  };
 }
 ```
 
 **Data Level (Institutional Filtering):**
+
 ```typescript
 // HRO/HRRP see only own institution's data
 if (shouldApplyInstitutionFilter(userRole, userInstitutionId)) {
   whereClause.Employee = {
-    institutionId: userInstitutionId
-  }
+    institutionId: userInstitutionId,
+  };
 }
 ```
 
 **Verification:**
 
-| RBAC Aspect | Design | Implementation | Status |
-|-------------|--------|----------------|--------|
-| **Role Enforcement** | Middleware checks | ✅ Middleware validates role | ✅ IMPLEMENTED |
+| RBAC Aspect                 | Design            | Implementation                      | Status         |
+| --------------------------- | ----------------- | ----------------------------------- | -------------- |
+| **Role Enforcement**        | Middleware checks | ✅ Middleware validates role        | ✅ IMPLEMENTED |
 | **Institutional Filtering** | HRO/HRRP isolated | ✅ `shouldApplyInstitutionFilter()` | ✅ IMPLEMENTED |
-| **HHRMD Full Access** | All institutions | ✅ No filter for HHRMD | ✅ IMPLEMENTED |
-| **HRMO Limited Access** | HR requests only | ✅ Cannot access complaints API | ✅ IMPLEMENTED |
-| **DO Limited Access** | Disciplinary only | ✅ Cannot access HR request APIs | ✅ IMPLEMENTED |
-| **PO Read-Only** | Reports only | ✅ Only report endpoints accessible | ✅ IMPLEMENTED |
-| **ADMIN Privileges** | User management | ✅ Admin-only endpoints protected | ✅ IMPLEMENTED |
+| **HHRMD Full Access**       | All institutions  | ✅ No filter for HHRMD              | ✅ IMPLEMENTED |
+| **HRMO Limited Access**     | HR requests only  | ✅ Cannot access complaints API     | ✅ IMPLEMENTED |
+| **DO Limited Access**       | Disciplinary only | ✅ Cannot access HR request APIs    | ✅ IMPLEMENTED |
+| **PO Read-Only**            | Reports only      | ✅ Only report endpoints accessible | ✅ IMPLEMENTED |
+| **ADMIN Privileges**        | User management   | ✅ Admin-only endpoints protected   | ✅ IMPLEMENTED |
 
 **Assessment:** ✅ **EXCELLENT**
+
 - Comprehensive RBAC design
 - Role-based endpoint access enforced
 - Institutional data isolation for HRO/HRRP
@@ -1440,14 +1542,15 @@ if (shouldApplyInstitutionFilter(userRole, userInstitutionId)) {
 
 **Encryption:**
 
-| Data Type | Encryption Method | Status |
-|-----------|------------------|--------|
-| **Data in Transit** | TLS 1.2/1.3 (HTTPS) | ✅ IMPLEMENTED |
-| **Data at Rest** | AES-256 (MinIO) | ✅ IMPLEMENTED |
-| **Passwords** | bcrypt (cost 10) | ✅ IMPLEMENTED |
+| Data Type            | Encryption Method            | Status             |
+| -------------------- | ---------------------------- | ------------------ |
+| **Data in Transit**  | TLS 1.2/1.3 (HTTPS)          | ✅ IMPLEMENTED     |
+| **Data at Rest**     | AES-256 (MinIO)              | ✅ IMPLEMENTED     |
+| **Passwords**        | bcrypt (cost 10)             | ✅ IMPLEMENTED     |
 | **Sensitive Fields** | Application-level encryption | ⚠️ NOT IMPLEMENTED |
 
 **Assessment:** ✅ **GOOD**
+
 - TLS 1.2/1.3 for all communications (Nginx configuration)
 - MinIO AES-256 encryption for documents at rest
 - bcrypt for password hashing
@@ -1456,15 +1559,16 @@ if (shouldApplyInstitutionFilter(userRole, userInstitutionId)) {
 
 **File Upload Security:**
 
-| Measure | Design | Implementation | Status |
-|---------|--------|----------------|--------|
-| **Type Validation** | PDF, JPEG, PNG whitelist | ✅ File extension check | ✅ IMPLEMENTED |
-| **Size Limits** | 2MB/1MB | ✅ File size validation | ✅ IMPLEMENTED |
-| **Virus Scanning** | ClamAV (future) | ❌ NOT IMPLEMENTED | ⚠️ FUTURE |
-| **Content-Type Verification** | MIME type check | ✅ Content-Type header check | ✅ IMPLEMENTED |
-| **Filename Sanitization** | Remove special chars | ✅ UUID-based naming | ✅ IMPLEMENTED |
+| Measure                       | Design                   | Implementation               | Status         |
+| ----------------------------- | ------------------------ | ---------------------------- | -------------- |
+| **Type Validation**           | PDF, JPEG, PNG whitelist | ✅ File extension check      | ✅ IMPLEMENTED |
+| **Size Limits**               | 2MB/1MB                  | ✅ File size validation      | ✅ IMPLEMENTED |
+| **Virus Scanning**            | ClamAV (future)          | ❌ NOT IMPLEMENTED           | ⚠️ FUTURE      |
+| **Content-Type Verification** | MIME type check          | ✅ Content-Type header check | ✅ IMPLEMENTED |
+| **Filename Sanitization**     | Remove special chars     | ✅ UUID-based naming         | ✅ IMPLEMENTED |
 
 **Assessment:** ✅ **GOOD**
+
 - File type validation (whitelist approach)
 - File size limits enforced
 - **Gap:** Virus scanning not implemented (planned for future)
@@ -1472,27 +1576,29 @@ if (shouldApplyInstitutionFilter(userRole, userInstitutionId)) {
 
 **SQL Injection Prevention:**
 
-| Measure | Design | Implementation | Status |
-|---------|--------|----------------|--------|
-| **Prisma ORM** | Parameterized queries | ✅ All queries use Prisma | ✅ IMPLEMENTED |
-| **No Raw SQL** | Avoided except reports | ✅ Minimal raw SQL usage | ✅ IMPLEMENTED |
-| **Input Validation** | Zod schemas | ✅ All inputs validated | ✅ IMPLEMENTED |
+| Measure              | Design                 | Implementation            | Status         |
+| -------------------- | ---------------------- | ------------------------- | -------------- |
+| **Prisma ORM**       | Parameterized queries  | ✅ All queries use Prisma | ✅ IMPLEMENTED |
+| **No Raw SQL**       | Avoided except reports | ✅ Minimal raw SQL usage  | ✅ IMPLEMENTED |
+| **Input Validation** | Zod schemas            | ✅ All inputs validated   | ✅ IMPLEMENTED |
 
 **Assessment:** ✅ **EXCELLENT**
+
 - Prisma ORM prevents SQL injection (parameterized queries)
 - No user input directly in SQL queries
 - All inputs validated with Zod
 
 **XSS Prevention:**
 
-| Measure | Design | Implementation | Status |
-|---------|--------|----------------|--------|
-| **React Auto-Escaping** | Default escaping | ✅ React escapes by default | ✅ IMPLEMENTED |
-| **Content Security Policy** | CSP headers | ✅ CSP headers configured | ✅ IMPLEMENTED |
-| **Input Sanitization** | Zod + DOMPurify | ✅ Zod validation | ✅ IMPLEMENTED |
-| **httpOnly Cookies** | Prevent JS access | ✅ httpOnly: true | ✅ IMPLEMENTED |
+| Measure                     | Design            | Implementation              | Status         |
+| --------------------------- | ----------------- | --------------------------- | -------------- |
+| **React Auto-Escaping**     | Default escaping  | ✅ React escapes by default | ✅ IMPLEMENTED |
+| **Content Security Policy** | CSP headers       | ✅ CSP headers configured   | ✅ IMPLEMENTED |
+| **Input Sanitization**      | Zod + DOMPurify   | ✅ Zod validation           | ✅ IMPLEMENTED |
+| **httpOnly Cookies**        | Prevent JS access | ✅ httpOnly: true           | ✅ IMPLEMENTED |
 
 **Assessment:** ✅ **EXCELLENT**
+
 - React's automatic escaping prevents most XSS
 - CSP headers add additional layer
 - httpOnly cookies protect session tokens
@@ -1503,19 +1609,21 @@ if (shouldApplyInstitutionFilter(userRole, userInstitutionId)) {
 **Design Specification:**
 
 **CSRF Protection Measures:**
+
 1. SameSite=Strict cookies
 2. CSRF tokens for state-changing operations
 3. Referer/Origin header validation
 
 **Verification:**
 
-| Measure | Design | Implementation | Status |
-|---------|--------|----------------|--------|
-| **SameSite Cookies** | Strict | ✅ `sameSite: 'strict'` | ✅ IMPLEMENTED |
-| **CSRF Tokens** | Token-based protection | ⚠️ Designed, not verified | ⚠️ VERIFY |
-| **Referer Check** | Optional | ❌ Not implemented | ⚠️ OPTIONAL |
+| Measure              | Design                 | Implementation            | Status         |
+| -------------------- | ---------------------- | ------------------------- | -------------- |
+| **SameSite Cookies** | Strict                 | ✅ `sameSite: 'strict'`   | ✅ IMPLEMENTED |
+| **CSRF Tokens**      | Token-based protection | ⚠️ Designed, not verified | ⚠️ VERIFY      |
+| **Referer Check**    | Optional               | ❌ Not implemented        | ⚠️ OPTIONAL    |
 
 **Assessment:** ✅ **GOOD**
+
 - SameSite=Strict cookies provide strong CSRF protection
 - **Gap:** Explicit CSRF tokens not verified (SameSite sufficient for most cases)
 - **Recommendation:** Verify CSRF token implementation or document SameSite as primary protection
@@ -1525,6 +1633,7 @@ if (shouldApplyInstitutionFilter(userRole, userInstitutionId)) {
 **Design Specification (SDD Section 4.4):**
 
 **Audit Trail Features:**
+
 - Complete logging of all user actions
 - Immutable audit logs (no deletion)
 - Cryptographic signing for integrity
@@ -1533,15 +1642,16 @@ if (shouldApplyInstitutionFilter(userRole, userInstitutionId)) {
 
 **Implementation Verification:**
 
-| Feature | Design | Implementation | Status |
-|---------|--------|----------------|--------|
-| **All Actions Logged** | CREATE, READ, UPDATE, DELETE | ✅ Middleware logs all | ✅ IMPLEMENTED |
-| **Immutable Logs** | Write-only | ⚠️ No DELETE API, but not enforced | ⚠️ PARTIAL |
-| **Cryptographic Signing** | Hash of log entry | ⚠️ Not verified | ⚠️ VERIFY |
-| **10-Year Retention** | Specified | ✅ Database retention | ✅ SPECIFIED |
-| **Tamper Detection** | Hash verification | ⚠️ Not verified | ⚠️ VERIFY |
+| Feature                   | Design                       | Implementation                     | Status         |
+| ------------------------- | ---------------------------- | ---------------------------------- | -------------- |
+| **All Actions Logged**    | CREATE, READ, UPDATE, DELETE | ✅ Middleware logs all             | ✅ IMPLEMENTED |
+| **Immutable Logs**        | Write-only                   | ⚠️ No DELETE API, but not enforced | ⚠️ PARTIAL     |
+| **Cryptographic Signing** | Hash of log entry            | ⚠️ Not verified                    | ⚠️ VERIFY      |
+| **10-Year Retention**     | Specified                    | ✅ Database retention              | ✅ SPECIFIED   |
+| **Tamper Detection**      | Hash verification            | ⚠️ Not verified                    | ⚠️ VERIFY      |
 
 **Assessment:** ⚠️ **PARTIAL**
+
 - Comprehensive audit logging implemented
 - All user actions logged with before/after values
 - **Gaps:**
@@ -1555,6 +1665,7 @@ if (shouldApplyInstitutionFilter(userRole, userInstitutionId)) {
 **Design Specification (SDD Section 4.4):**
 
 **Limits:**
+
 - Authentication: 10 attempts/min per IP
 - API calls: 100 requests/min per user
 - File uploads: 20 uploads/hour per user
@@ -1562,14 +1673,15 @@ if (shouldApplyInstitutionFilter(userRole, userInstitutionId)) {
 
 **Implementation Verification:**
 
-| Rate Limit | Design | Implementation | Status |
-|------------|--------|----------------|--------|
-| **Authentication** | 10/min per IP | ⚠️ Not verified | ⚠️ VERIFY |
-| **API Calls** | 100/min per user | ❌ NOT IMPLEMENTED | ⚠️ FUTURE |
-| **File Uploads** | 20/hour per user | ❌ NOT IMPLEMENTED | ⚠️ FUTURE |
-| **OTP Generation** | 5/hour per user | ✅ Counter in DB | ✅ IMPLEMENTED |
+| Rate Limit         | Design           | Implementation     | Status         |
+| ------------------ | ---------------- | ------------------ | -------------- |
+| **Authentication** | 10/min per IP    | ⚠️ Not verified    | ⚠️ VERIFY      |
+| **API Calls**      | 100/min per user | ❌ NOT IMPLEMENTED | ⚠️ FUTURE      |
+| **File Uploads**   | 20/hour per user | ❌ NOT IMPLEMENTED | ⚠️ FUTURE      |
+| **OTP Generation** | 5/hour per user  | ✅ Counter in DB   | ✅ IMPLEMENTED |
 
 **Assessment:** ⚠️ **PARTIAL**
+
 - OTP rate limiting implemented
 - **Gaps:**
   - General API rate limiting not implemented
@@ -1582,6 +1694,7 @@ if (shouldApplyInstitutionFilter(userRole, userInstitutionId)) {
 **Design Specification:**
 
 **Security Headers:**
+
 - Strict-Transport-Security (HSTS)
 - Content-Security-Policy (CSP)
 - X-Content-Type-Options
@@ -1592,6 +1705,7 @@ if (shouldApplyInstitutionFilter(userRole, userInstitutionId)) {
 **Verification (from Technical Architecture):**
 
 **Nginx Configuration:**
+
 ```nginx
 add_header Strict-Transport-Security "max-age=31536000" always;
 add_header X-Content-Type-Options "nosniff";
@@ -1602,6 +1716,7 @@ add_header Content-Security-Policy "default-src 'self'; ...";
 ```
 
 **Assessment:** ✅ **EXCELLENT**
+
 - All critical security headers configured
 - HSTS enforces HTTPS
 - CSP prevents XSS
@@ -1612,21 +1727,21 @@ add_header Content-Security-Policy "default-src 'self'; ...";
 
 **Security Design Scorecard:**
 
-| Aspect | Score | Status | Comments |
-|--------|-------|--------|----------|
-| **Defense in Depth** | 100% | ✅ EXCELLENT | 5-layer security architecture |
-| **Authentication** | 98% | ✅ EXCELLENT | JWT, bcrypt, account lockout, httpOnly cookies |
-| **Authorization (RBAC)** | 100% | ✅ EXCELLENT | 9 roles, institutional filtering |
-| **Data Encryption** | 95% | ✅ EXCELLENT | TLS 1.2/1.3, AES-256, bcrypt |
-| **Input Validation** | 100% | ✅ EXCELLENT | Zod frontend + backend |
-| **SQL Injection Prevention** | 100% | ✅ EXCELLENT | Prisma ORM parameterized queries |
-| **XSS Prevention** | 100% | ✅ EXCELLENT | React escaping, CSP, httpOnly |
-| **CSRF Protection** | 95% | ✅ EXCELLENT | SameSite=Strict cookies |
-| **Audit Logging** | 85% | ⚠️ PARTIAL | Logging complete, signing not verified |
-| **Rate Limiting** | 60% | ⚠️ PARTIAL | OTP only, general rate limiting missing |
-| **Security Headers** | 100% | ✅ EXCELLENT | All critical headers configured |
-| **File Upload Security** | 90% | ✅ GOOD | Validation good, virus scanning future |
-| **OVERALL SECURITY** | **93.6%** | ✅ **EXCELLENT** | **Strong security posture** |
+| Aspect                       | Score     | Status           | Comments                                       |
+| ---------------------------- | --------- | ---------------- | ---------------------------------------------- |
+| **Defense in Depth**         | 100%      | ✅ EXCELLENT     | 5-layer security architecture                  |
+| **Authentication**           | 98%       | ✅ EXCELLENT     | JWT, bcrypt, account lockout, httpOnly cookies |
+| **Authorization (RBAC)**     | 100%      | ✅ EXCELLENT     | 9 roles, institutional filtering               |
+| **Data Encryption**          | 95%       | ✅ EXCELLENT     | TLS 1.2/1.3, AES-256, bcrypt                   |
+| **Input Validation**         | 100%      | ✅ EXCELLENT     | Zod frontend + backend                         |
+| **SQL Injection Prevention** | 100%      | ✅ EXCELLENT     | Prisma ORM parameterized queries               |
+| **XSS Prevention**           | 100%      | ✅ EXCELLENT     | React escaping, CSP, httpOnly                  |
+| **CSRF Protection**          | 95%       | ✅ EXCELLENT     | SameSite=Strict cookies                        |
+| **Audit Logging**            | 85%       | ⚠️ PARTIAL       | Logging complete, signing not verified         |
+| **Rate Limiting**            | 60%       | ⚠️ PARTIAL       | OTP only, general rate limiting missing        |
+| **Security Headers**         | 100%      | ✅ EXCELLENT     | All critical headers configured                |
+| **File Upload Security**     | 90%       | ✅ GOOD          | Validation good, virus scanning future         |
+| **OVERALL SECURITY**         | **93.6%** | ✅ **EXCELLENT** | **Strong security posture**                    |
 
 **Verdict:** ✅ **SECURITY DESIGN APPROVED** - Comprehensive multi-layered security with minor gaps in rate limiting and audit log signing.
 
@@ -1641,6 +1756,7 @@ add_header Content-Security-Policy "default-src 'self'; ...";
 **Framework:** Tailwind CSS + Radix UI
 
 **Color Palette:**
+
 - Primary: Blue (#2563eb)
 - Success: Green (#10b981)
 - Warning: Yellow (#f59e0b)
@@ -1648,22 +1764,26 @@ add_header Content-Security-Policy "default-src 'self'; ...";
 - Neutral: Gray (#6b7280)
 
 **Typography:**
+
 - Font: Inter (sans-serif)
 - Headings: 24-32px (bold)
 - Body: 14-16px (regular)
 - Small: 12px (labels, captions)
 
 **Spacing:**
+
 - Base unit: 4px (Tailwind scale)
 - Padding: 4px, 8px, 12px, 16px, 24px
 - Margins: 8px, 16px, 24px, 32px
 
 **Assessment:** ✅ **EXCELLENT**
+
 - Consistent design system
 - Tailwind utility-first approach
 - Professional color palette
 
 **Verification:**
+
 - ✅ Tailwind CSS 3.4.17 (package.json)
 - ✅ Radix UI components (package.json)
 - ✅ Inter font (Google Fonts or system font)
@@ -1673,6 +1793,7 @@ add_header Content-Security-Policy "default-src 'self'; ...";
 **Design Specification:**
 
 **Reusable Components:**
+
 - Button (Primary, Secondary, Danger, Ghost)
 - Input (Text, Email, Tel, Date, Select)
 - Table (Sortable, Paginated, Filterable)
@@ -1688,20 +1809,21 @@ add_header Content-Security-Policy "default-src 'self'; ...";
 
 **Components Directory:** `/src/components` (51 files)
 
-| Component | Design | Implementation | Status |
-|-----------|--------|----------------|--------|
-| **Button** | Specified | ✅ `/src/components/ui/button.tsx` | ✅ IMPLEMENTED |
-| **Input** | Specified | ✅ `/src/components/ui/input.tsx` | ✅ IMPLEMENTED |
-| **Table** | Specified | ✅ `/src/components/ui/table.tsx` | ✅ IMPLEMENTED |
-| **Card** | Specified | ✅ `/src/components/ui/card.tsx` | ✅ IMPLEMENTED |
-| **Dialog** | Specified | ✅ `/src/components/ui/dialog.tsx` | ✅ IMPLEMENTED |
-| **Toast** | Specified | ✅ `/src/components/ui/toast.tsx` + Sonner | ✅ IMPLEMENTED |
-| **Badge** | Specified | ✅ `/src/components/ui/badge.tsx` | ✅ IMPLEMENTED |
-| **Tabs** | Specified | ✅ `/src/components/ui/tabs.tsx` | ✅ IMPLEMENTED |
-| **Accordion** | Specified | ✅ `/src/components/ui/accordion.tsx` | ✅ IMPLEMENTED |
-| **Dropdown** | Specified | ✅ `/src/components/ui/dropdown-menu.tsx` | ✅ IMPLEMENTED |
+| Component     | Design    | Implementation                             | Status         |
+| ------------- | --------- | ------------------------------------------ | -------------- |
+| **Button**    | Specified | ✅ `/src/components/ui/button.tsx`         | ✅ IMPLEMENTED |
+| **Input**     | Specified | ✅ `/src/components/ui/input.tsx`          | ✅ IMPLEMENTED |
+| **Table**     | Specified | ✅ `/src/components/ui/table.tsx`          | ✅ IMPLEMENTED |
+| **Card**      | Specified | ✅ `/src/components/ui/card.tsx`           | ✅ IMPLEMENTED |
+| **Dialog**    | Specified | ✅ `/src/components/ui/dialog.tsx`         | ✅ IMPLEMENTED |
+| **Toast**     | Specified | ✅ `/src/components/ui/toast.tsx` + Sonner | ✅ IMPLEMENTED |
+| **Badge**     | Specified | ✅ `/src/components/ui/badge.tsx`          | ✅ IMPLEMENTED |
+| **Tabs**      | Specified | ✅ `/src/components/ui/tabs.tsx`           | ✅ IMPLEMENTED |
+| **Accordion** | Specified | ✅ `/src/components/ui/accordion.tsx`      | ✅ IMPLEMENTED |
+| **Dropdown**  | Specified | ✅ `/src/components/ui/dropdown-menu.tsx`  | ✅ IMPLEMENTED |
 
 **Additional Components (Beyond Design):**
+
 - ✅ Select (Radix Select)
 - ✅ Checkbox
 - ✅ Label
@@ -1716,6 +1838,7 @@ add_header Content-Security-Policy "default-src 'self'; ...";
 - ✅ Tooltip
 
 **Assessment:** ✅ **EXCELLENT**
+
 - All designed components implemented
 - Additional components beyond design (enhancements)
 - Radix UI provides accessible base components
@@ -1726,6 +1849,7 @@ add_header Content-Security-Policy "default-src 'self'; ...";
 **Design Specification:**
 
 **Dashboard Layout:**
+
 ```
 ┌────────────────────────────────────────┐
 │  Header (Logo, Nav, User, Notifications)│
@@ -1744,6 +1868,7 @@ add_header Content-Security-Policy "default-src 'self'; ...";
 ```
 
 **Responsive Breakpoints:**
+
 - Desktop: ≥1024px (full layout)
 - Tablet: 768-1023px (adapted layout)
 - Mobile: <768px (not supported, redirect notice)
@@ -1751,12 +1876,14 @@ add_header Content-Security-Policy "default-src 'self'; ...";
 **Verification:**
 
 **Layout Components:**
+
 - ✅ `/src/components/layout/header.tsx` - Header with logo, navigation, user menu
 - ✅ `/src/components/layout/sidebar.tsx` - Sidebar with navigation links
 - ✅ `/src/components/layout/footer.tsx` - Footer with version info
 - ✅ `/src/app/(dashboard)/layout.tsx` - Main dashboard layout wrapper
 
 **Assessment:** ✅ **EXCELLENT**
+
 - Dashboard layout matches design exactly
 - Header, sidebar, main content, footer all implemented
 - Responsive design for desktop and tablet
@@ -1766,6 +1893,7 @@ add_header Content-Security-Policy "default-src 'self'; ...";
 **Design Specification:**
 
 **Primary Navigation:**
+
 - Dashboard
 - Employees
 - Requests (with submenu)
@@ -1774,18 +1902,21 @@ add_header Content-Security-Policy "default-src 'self'; ...";
 - Admin (ADMIN only)
 
 **Verification:**
+
 - ✅ Primary navigation in sidebar
 - ✅ Role-based menu items (Admin menu only for ADMIN)
 - ✅ Request submenu with 8 request types
 - ✅ Breadcrumbs implemented (e.g., Dashboard > Employees > John Doe)
 
 **User Menu:**
+
 - Profile
 - Settings
 - Change Password
 - Logout
 
 **Verification:**
+
 - ✅ User dropdown menu in header
 - ✅ Profile, change password, logout options
 
@@ -1796,21 +1927,23 @@ add_header Content-Security-Policy "default-src 'self'; ...";
 **Design Specification (LLD Section 1.1):**
 
 **Zustand AuthStore:**
+
 ```typescript
 class AuthStore {
-  user: User | null
-  role: Role | null
-  isAuthenticated: boolean
-  accessToken: string | null
-  refreshToken: string | null
+  user: User | null;
+  role: Role | null;
+  isAuthenticated: boolean;
+  accessToken: string | null;
+  refreshToken: string | null;
 
-  login(username, password): Promise<User | null>
-  logout(): Promise<void>
-  refreshAuthToken(): Promise<boolean>
+  login(username, password): Promise<User | null>;
+  logout(): Promise<void>;
+  refreshAuthToken(): Promise<boolean>;
 }
 ```
 
 **Verification:**
+
 - ✅ `/src/store/auth-store.ts` implemented
 - ✅ Zustand for auth state management
 - ✅ localStorage persistence
@@ -1818,6 +1951,7 @@ class AuthStore {
 - ✅ Token auto-refresh on 401 errors
 
 **Assessment:** ✅ **EXCELLENT**
+
 - Clean state management design
 - Zustand appropriate for auth state (simple, performant)
 - localStorage persistence for session continuity
@@ -1829,19 +1963,25 @@ class AuthStore {
 **Form Validation:** React Hook Form + Zod
 
 **Example Form:**
+
 ```typescript
 const schema = z.object({
   fullName: z.string().min(3).max(255),
   payrollNumber: z.string().regex(/^[A-Z0-9]+$/),
-  email: z.string().email()
-})
+  email: z.string().email(),
+});
 
-const { register, handleSubmit, formState: { errors } } = useForm({
-  resolver: zodResolver(schema)
-})
+const {
+  register,
+  handleSubmit,
+  formState: { errors },
+} = useForm({
+  resolver: zodResolver(schema),
+});
 ```
 
 **Verification:**
+
 - ✅ React Hook Form 7.54.2 (package.json)
 - ✅ Zod 3.24.1 (package.json)
 - ✅ Forms use React Hook Form throughout codebase
@@ -1849,6 +1989,7 @@ const { register, handleSubmit, formState: { errors } } = useForm({
 - ✅ Real-time validation feedback
 
 **Assessment:** ✅ **EXCELLENT**
+
 - Type-safe form validation
 - React Hook Form provides great DX
 - Zod schemas reusable (frontend + backend)
@@ -1860,6 +2001,7 @@ const { register, handleSubmit, formState: { errors } } = useForm({
 **Accessibility Target:** WCAG 2.1 Level AA
 
 **Accessibility Features:**
+
 - Radix UI (accessible by default)
 - Keyboard navigation
 - Screen reader support
@@ -1867,6 +2009,7 @@ const { register, handleSubmit, formState: { errors } } = useForm({
 - ARIA attributes
 
 **Verification:**
+
 - ✅ Radix UI components (accessible primitives)
 - ✅ Semantic HTML (`<button>`, `<nav>`, `<main>`, `<header>`, `<footer>`)
 - ⚠️ ARIA attributes - partial (Radix provides, custom components need review)
@@ -1874,6 +2017,7 @@ const { register, handleSubmit, formState: { errors } } = useForm({
 - ⚠️ Screen reader testing - not verified
 
 **Assessment:** ✅ **GOOD**
+
 - Radix UI provides accessible base
 - Semantic HTML used throughout
 - **Gap:** Accessibility audit not conducted
@@ -1883,18 +2027,18 @@ const { register, handleSubmit, formState: { errors } } = useForm({
 
 **Frontend Design Scorecard:**
 
-| Aspect | Score | Status | Comments |
-|--------|-------|--------|----------|
-| **Design System** | 100% | ✅ EXCELLENT | Tailwind + Radix, consistent |
-| **Component Library** | 100% | ✅ EXCELLENT | All components + extras |
-| **Layout Structure** | 100% | ✅ EXCELLENT | Dashboard layout perfect |
-| **Navigation** | 100% | ✅ EXCELLENT | Role-based, breadcrumbs |
-| **State Management** | 100% | ✅ EXCELLENT | Zustand auth store |
-| **Form Handling** | 100% | ✅ EXCELLENT | React Hook Form + Zod |
-| **Responsive Design** | 95% | ✅ EXCELLENT | Desktop + tablet (mobile excluded) |
-| **Accessibility** | 85% | ✅ GOOD | Radix base, audit needed |
-| **Design-Implementation Alignment** | 100% | ✅ EXCELLENT | Perfect match + enhancements |
-| **OVERALL FRONTEND** | **97.8%** | ✅ **EXCELLENT** | **Exceptional frontend design** |
+| Aspect                              | Score     | Status           | Comments                           |
+| ----------------------------------- | --------- | ---------------- | ---------------------------------- |
+| **Design System**                   | 100%      | ✅ EXCELLENT     | Tailwind + Radix, consistent       |
+| **Component Library**               | 100%      | ✅ EXCELLENT     | All components + extras            |
+| **Layout Structure**                | 100%      | ✅ EXCELLENT     | Dashboard layout perfect           |
+| **Navigation**                      | 100%      | ✅ EXCELLENT     | Role-based, breadcrumbs            |
+| **State Management**                | 100%      | ✅ EXCELLENT     | Zustand auth store                 |
+| **Form Handling**                   | 100%      | ✅ EXCELLENT     | React Hook Form + Zod              |
+| **Responsive Design**               | 95%       | ✅ EXCELLENT     | Desktop + tablet (mobile excluded) |
+| **Accessibility**                   | 85%       | ✅ GOOD          | Radix base, audit needed           |
+| **Design-Implementation Alignment** | 100%      | ✅ EXCELLENT     | Perfect match + enhancements       |
+| **OVERALL FRONTEND**                | **97.8%** | ✅ **EXCELLENT** | **Exceptional frontend design**    |
 
 **Verdict:** ✅ **FRONTEND DESIGN APPROVED** - Excellent component-based architecture with Radix UI and Tailwind CSS.
 
@@ -1909,12 +2053,14 @@ const { register, handleSubmit, formState: { errors } } = useForm({
 **Integration Type:** RESTful API integration with external HRIMS system
 
 **HRIMS System:**
+
 - Base URL: http://10.0.217.11:8135/api
 - Authentication: API key or Basic Auth
 - Data Format: JSON
 - Purpose: Bulk employee data sync
 
 **Design Endpoints:**
+
 - GET /hrims/fetch-employee (single employee by ID)
 - GET /hrims/search-employee (search by criteria)
 - GET /hrims/fetch-by-institution (all employees in institution)
@@ -1923,38 +2069,40 @@ const { register, handleSubmit, formState: { errors } } = useForm({
 
 **Verification Against Implementation:**
 
-| Endpoint | Design | Implementation | Status |
-|----------|--------|----------------|--------|
-| **Fetch Employee** | ✅ Specified | ✅ `/api/hrims/fetch-employee` | ✅ IMPLEMENTED |
-| **Search Employee** | ✅ Specified | ✅ `/api/hrims/search-employee` | ✅ IMPLEMENTED |
+| Endpoint                 | Design       | Implementation                       | Status         |
+| ------------------------ | ------------ | ------------------------------------ | -------------- |
+| **Fetch Employee**       | ✅ Specified | ✅ `/api/hrims/fetch-employee`       | ✅ IMPLEMENTED |
+| **Search Employee**      | ✅ Specified | ✅ `/api/hrims/search-employee`      | ✅ IMPLEMENTED |
 | **Fetch by Institution** | ✅ Specified | ✅ `/api/hrims/fetch-by-institution` | ✅ IMPLEMENTED |
-| **Sync Employee** | ✅ Specified | ✅ `/api/hrims/sync-employee` | ✅ IMPLEMENTED |
-| **Bulk Fetch** | ✅ Specified | ✅ `/api/hrims/bulk-fetch` | ✅ IMPLEMENTED |
+| **Sync Employee**        | ✅ Specified | ✅ `/api/hrims/sync-employee`        | ✅ IMPLEMENTED |
+| **Bulk Fetch**           | ✅ Specified | ✅ `/api/hrims/bulk-fetch`           | ✅ IMPLEMENTED |
 
 **Enhancement Beyond Design:**
 
 **Background Job Queue (Redis/BullMQ):**
+
 - ⚠️ **NOT IN ORIGINAL DESIGN** but added during implementation
 - Purpose: Process bulk HRIMS sync in background (avoid timeout)
 - Implementation: Redis + BullMQ for job queue
 - Jobs: Bulk employee fetch (5000+ employees), periodic sync
 
 **Assessment:** ✅ **EXCELLENT**
+
 - All designed HRIMS endpoints implemented
 - **Enhancement:** Background job queue added for performance (excellent proactive decision)
 - **Observation:** Background jobs prevent timeout on bulk operations (5000+ employees)
 
 **Data Mapping (HRIMS → CSMS):**
 
-| HRIMS Field | CSMS Field | Transformation | Status |
-|-------------|-----------|----------------|--------|
-| employee_id | payrollNumber | Direct mapping | ✅ IMPLEMENTED |
-| national_id | zanId | Direct mapping | ✅ IMPLEMENTED |
-| zssf_id | zssfNumber | Direct mapping | ✅ IMPLEMENTED |
-| full_name | fullName | Direct mapping | ✅ IMPLEMENTED |
-| institution_code | institutionId | Lookup in institutions table | ✅ IMPLEMENTED |
-| employment_date | employmentDate | Date parsing | ✅ IMPLEMENTED |
-| status | status | Status mapping (On Probation, Confirmed, etc.) | ✅ IMPLEMENTED |
+| HRIMS Field      | CSMS Field     | Transformation                                 | Status         |
+| ---------------- | -------------- | ---------------------------------------------- | -------------- |
+| employee_id      | payrollNumber  | Direct mapping                                 | ✅ IMPLEMENTED |
+| national_id      | zanId          | Direct mapping                                 | ✅ IMPLEMENTED |
+| zssf_id          | zssfNumber     | Direct mapping                                 | ✅ IMPLEMENTED |
+| full_name        | fullName       | Direct mapping                                 | ✅ IMPLEMENTED |
+| institution_code | institutionId  | Lookup in institutions table                   | ✅ IMPLEMENTED |
+| employment_date  | employmentDate | Date parsing                                   | ✅ IMPLEMENTED |
+| status           | status         | Status mapping (On Probation, Confirmed, etc.) | ✅ IMPLEMENTED |
 
 **Assessment:** ✅ **EXCELLENT** - Comprehensive field mapping, proper transformations
 
@@ -1965,6 +2113,7 @@ const { register, handleSubmit, formState: { errors } } = useForm({
 **Email Service:** SMTP
 
 **Use Cases:**
+
 - User registration
 - Password reset OTP
 - Request notifications
@@ -1972,6 +2121,7 @@ const { register, handleSubmit, formState: { errors } } = useForm({
 - Report distribution
 
 **Email Configuration:**
+
 ```
 SMTP Server: [Government SMTP or Gmail]
 Port: 587 (TLS)
@@ -1980,6 +2130,7 @@ Authentication: Username/Password
 ```
 
 **Verification:**
+
 - ✅ Email service configured (NodeMailer or similar)
 - ✅ Password reset OTP emails working
 - ⚠️ Request notification emails - not verified
@@ -1987,6 +2138,7 @@ Authentication: Username/Password
 - ⚠️ Report distribution - not verified
 
 **Assessment:** ⚠️ **PARTIAL**
+
 - Email infrastructure configured
 - Password reset emails working
 - **Gaps:** Request/complaint/report notification emails not fully verified
@@ -1997,6 +2149,7 @@ Authentication: Username/Password
 **Design Specification (SDD Section 6):**
 
 **Bucket Structure:**
+
 ```
 csms-bucket/
 ├── employee-documents/
@@ -2018,12 +2171,14 @@ csms-bucket/
 ```
 
 **MinIO Client Functions:**
+
 - uploadFile(file, bucket, path)
 - downloadFile(bucket, path)
 - deleteFile(bucket, path)
 - generatePresignedUrl(bucket, path, expiry)
 
 **Verification:**
+
 - ✅ MinIO configured (verified from previous documentation)
 - ✅ Bucket structure implemented
 - ✅ Upload/download/delete functions implemented
@@ -2031,6 +2186,7 @@ csms-bucket/
 - ✅ `/src/lib/minio-client.ts` (MinIO client utility)
 
 **Assessment:** ✅ **EXCELLENT**
+
 - MinIO integration well-designed
 - Bucket structure logical (organized by entity type)
 - Presigned URLs provide secure time-limited access
@@ -2044,16 +2200,19 @@ csms-bucket/
 **Purpose:** AI-powered complaint rewriting
 
 **Implementation:**
+
 - Google Genkit for AI flows
 - Google Gemini model
 - Flow: Complaint Rewriting (standardize employee complaints to professional CSC format)
 
 **Verification:**
+
 - ✅ Google Genkit installed (package.json: `@genkit-ai/core`, `@genkit-ai/googleai`)
 - ✅ AI flow for complaint rewriting implemented
 - ✅ Integration in complaint submission workflow
 
 **Assessment:** ✅ **EXCELLENT**
+
 - Valuable enhancement beyond design
 - Improves complaint quality and processing efficiency
 - Demonstrates proactive problem-solving
@@ -2062,16 +2221,17 @@ csms-bucket/
 
 **Integration Design Scorecard:**
 
-| Integration | Design | Implementation | Enhancement | Score | Status |
-|-------------|--------|----------------|-------------|-------|--------|
-| **HRIMS API** | ✅ Specified | ✅ Complete | ✅ Background jobs | 100% | ✅ EXCELLENT |
-| **Email (SMTP)** | ✅ Specified | ⚠️ Partial | - | 75% | ⚠️ VERIFY |
-| **MinIO Storage** | ✅ Specified | ✅ Complete | - | 100% | ✅ EXCELLENT |
-| **AI (Genkit)** | ❌ Not designed | ✅ Implemented | ✅ Major enhancement | 100% | ✅ EXCELLENT |
-| **Future Integrations** | ✅ Planned | 🔄 Deferred | - | N/A | 🔄 FUTURE |
-| **OVERALL INTEGRATION** | **94%** | **93.75%** | **Excellent** | **92%** | ✅ **EXCELLENT** |
+| Integration             | Design          | Implementation | Enhancement          | Score   | Status           |
+| ----------------------- | --------------- | -------------- | -------------------- | ------- | ---------------- |
+| **HRIMS API**           | ✅ Specified    | ✅ Complete    | ✅ Background jobs   | 100%    | ✅ EXCELLENT     |
+| **Email (SMTP)**        | ✅ Specified    | ⚠️ Partial     | -                    | 75%     | ⚠️ VERIFY        |
+| **MinIO Storage**       | ✅ Specified    | ✅ Complete    | -                    | 100%    | ✅ EXCELLENT     |
+| **AI (Genkit)**         | ❌ Not designed | ✅ Implemented | ✅ Major enhancement | 100%    | ✅ EXCELLENT     |
+| **Future Integrations** | ✅ Planned      | 🔄 Deferred    | -                    | N/A     | 🔄 FUTURE        |
+| **OVERALL INTEGRATION** | **94%**         | **93.75%**     | **Excellent**        | **92%** | ✅ **EXCELLENT** |
 
 **Future Integrations (Deferred):**
+
 - Pension System - Manual process acceptable initially
 - TCU Verification - Manual verification initially
 - Payroll System - Future integration for LWOP salary adjustments
@@ -2088,19 +2248,20 @@ csms-bucket/
 
 **Alignment Summary:**
 
-| Design Aspect | Designed | Implemented | Alignment | Status |
-|---------------|----------|-------------|-----------|--------|
-| **Architecture** | 6-layer monolithic | ✅ 6-layer implemented | 100% | ✅ PERFECT |
-| **Database Schema** | 22+ tables | ✅ 22+ tables | 100% | ✅ PERFECT |
-| **API Endpoints** | ~73 endpoints | ✅ 90+ endpoints | 123% | ✅ ENHANCED |
-| **Authentication** | JWT + bcrypt | ✅ Implemented | 100% | ✅ PERFECT |
-| **Authorization (RBAC)** | 9 roles | ✅ 9 roles implemented | 100% | ✅ PERFECT |
-| **Frontend Components** | 10 core components | ✅ 10 + 12 additional | 220% | ✅ ENHANCED |
-| **Security Measures** | Multi-layered | ✅ Implemented | 95% | ✅ EXCELLENT |
-| **HRIMS Integration** | RESTful API | ✅ API + background jobs | 120% | ✅ ENHANCED |
-| **Testing Strategy** | 80% coverage target | ❌ 0% automated | 0% | ⚠️ GAP |
+| Design Aspect            | Designed            | Implemented              | Alignment | Status       |
+| ------------------------ | ------------------- | ------------------------ | --------- | ------------ |
+| **Architecture**         | 6-layer monolithic  | ✅ 6-layer implemented   | 100%      | ✅ PERFECT   |
+| **Database Schema**      | 22+ tables          | ✅ 22+ tables            | 100%      | ✅ PERFECT   |
+| **API Endpoints**        | ~73 endpoints       | ✅ 90+ endpoints         | 123%      | ✅ ENHANCED  |
+| **Authentication**       | JWT + bcrypt        | ✅ Implemented           | 100%      | ✅ PERFECT   |
+| **Authorization (RBAC)** | 9 roles             | ✅ 9 roles implemented   | 100%      | ✅ PERFECT   |
+| **Frontend Components**  | 10 core components  | ✅ 10 + 12 additional    | 220%      | ✅ ENHANCED  |
+| **Security Measures**    | Multi-layered       | ✅ Implemented           | 95%       | ✅ EXCELLENT |
+| **HRIMS Integration**    | RESTful API         | ✅ API + background jobs | 120%      | ✅ ENHANCED  |
+| **Testing Strategy**     | 80% coverage target | ❌ 0% automated          | 0%        | ⚠️ GAP       |
 
 **Overall Assessment:** ✅ **EXCELLENT**
+
 - High fidelity implementation of design
 - Several enhancements beyond design (background jobs, AI, additional components)
 - One major gap: Automated testing not implemented
@@ -2146,6 +2307,7 @@ csms-bucket/
    - Impact: Positive user feedback during development
 
 **Assessment:** ✅ **EXCELLENT**
+
 - All enhancements are value-adding
 - Demonstrate proactive problem-solving
 - Improve security, performance, or user experience
@@ -2200,14 +2362,14 @@ csms-bucket/
 
 **Gap Summary:**
 
-| Gap | Priority | Impact | Recommendation |
-|-----|----------|--------|----------------|
-| Automated Testing | HIGH | High | Implement Jest/Vitest + Playwright (Phase 2) |
-| API Rate Limiting | MEDIUM | Medium | Implement rate limiting middleware (Phase 2) |
-| Audit Log Signing | MEDIUM | Medium | Verify or implement hash-based signing |
-| Virus Scanning | MEDIUM | Medium | Implement ClamAV (Phase 2) |
-| Email Notifications | LOW | Low | Verify all email workflows |
-| CI/CD Pipeline | LOW | Low | Design in post-launch enhancement |
+| Gap                 | Priority | Impact | Recommendation                               |
+| ------------------- | -------- | ------ | -------------------------------------------- |
+| Automated Testing   | HIGH     | High   | Implement Jest/Vitest + Playwright (Phase 2) |
+| API Rate Limiting   | MEDIUM   | Medium | Implement rate limiting middleware (Phase 2) |
+| Audit Log Signing   | MEDIUM   | Medium | Verify or implement hash-based signing       |
+| Virus Scanning      | MEDIUM   | Medium | Implement ClamAV (Phase 2)                   |
+| Email Notifications | LOW      | Low    | Verify all email workflows                   |
+| CI/CD Pipeline      | LOW      | Low    | Design in post-launch enhancement            |
 
 ### 10.4 Design Deviations (Intentional)
 
@@ -2237,6 +2399,7 @@ csms-bucket/
    - **Recommendation:** Implement Git Flow with branch protection (Phase 2)
 
 **Assessment:**
+
 - Max concurrent sessions change: ✅ POSITIVE
 - TypeScript ignoreBuildErrors: ⚠️ CONCERNING (should fix)
 - Direct commits to main: ⚠️ ACCEPTABLE but not ideal
@@ -2245,18 +2408,18 @@ csms-bucket/
 
 **Alignment Scorecard:**
 
-| Category | Alignment | Score | Status |
-|----------|-----------|-------|--------|
-| **Architecture Alignment** | Perfect match | 100% | ✅ EXCELLENT |
-| **Database Alignment** | Perfect match | 100% | ✅ EXCELLENT |
-| **API Alignment** | All designed + extras | 123% | ✅ ENHANCED |
-| **Security Alignment** | Most implemented, minor gaps | 95% | ✅ EXCELLENT |
-| **Frontend Alignment** | All designed + extras | 120% | ✅ ENHANCED |
-| **Integration Alignment** | All + AI enhancement | 110% | ✅ ENHANCED |
-| **Testing Alignment** | Major gap | 0% | ⚠️ GAP |
-| **Enhancements (Positive)** | AI, background jobs, bundle optimization | N/A | ✅ EXCELLENT |
-| **Gaps (Negative)** | Automated testing, rate limiting, some security | N/A | ⚠️ MINOR |
-| **OVERALL ALIGNMENT** | **High fidelity with enhancements** | **97%** | ✅ **EXCELLENT** |
+| Category                    | Alignment                                       | Score   | Status           |
+| --------------------------- | ----------------------------------------------- | ------- | ---------------- |
+| **Architecture Alignment**  | Perfect match                                   | 100%    | ✅ EXCELLENT     |
+| **Database Alignment**      | Perfect match                                   | 100%    | ✅ EXCELLENT     |
+| **API Alignment**           | All designed + extras                           | 123%    | ✅ ENHANCED      |
+| **Security Alignment**      | Most implemented, minor gaps                    | 95%     | ✅ EXCELLENT     |
+| **Frontend Alignment**      | All designed + extras                           | 120%    | ✅ ENHANCED      |
+| **Integration Alignment**   | All + AI enhancement                            | 110%    | ✅ ENHANCED      |
+| **Testing Alignment**       | Major gap                                       | 0%      | ⚠️ GAP           |
+| **Enhancements (Positive)** | AI, background jobs, bundle optimization        | N/A     | ✅ EXCELLENT     |
+| **Gaps (Negative)**         | Automated testing, rate limiting, some security | N/A     | ⚠️ MINOR         |
+| **OVERALL ALIGNMENT**       | **High fidelity with enhancements**             | **97%** | ✅ **EXCELLENT** |
 
 **Verdict:** ✅ **DESIGN-IMPLEMENTATION ALIGNMENT EXCELLENT** - Implementation faithfully follows design with valuable enhancements, minor gaps acceptable.
 
@@ -2268,14 +2431,14 @@ csms-bucket/
 
 **Total Issues Identified:** 6 (0 Critical, 1 High, 3 Medium, 2 Low)
 
-| Issue ID | Severity | Category | Description | Status |
-|----------|----------|----------|-------------|--------|
-| ISSUE-SDD-001 | High | Testing | No automated testing framework implemented | Open |
-| ISSUE-SDD-002 | Medium | Security | API rate limiting not implemented (except OTP) | Open |
-| ISSUE-SDD-003 | Medium | Security | Audit log cryptographic signing not verified | Open |
-| ISSUE-SDD-004 | Medium | Quality | TypeScript errors ignored in build (`ignoreBuildErrors: true`) | Open |
-| ISSUE-SDD-005 | Low | DevOps | No Git branching strategy, direct commits to main | Accepted |
-| ISSUE-SDD-006 | Low | Integration | Email notification workflows not fully verified | Open |
+| Issue ID      | Severity | Category    | Description                                                    | Status   |
+| ------------- | -------- | ----------- | -------------------------------------------------------------- | -------- |
+| ISSUE-SDD-001 | High     | Testing     | No automated testing framework implemented                     | Open     |
+| ISSUE-SDD-002 | Medium   | Security    | API rate limiting not implemented (except OTP)                 | Open     |
+| ISSUE-SDD-003 | Medium   | Security    | Audit log cryptographic signing not verified                   | Open     |
+| ISSUE-SDD-004 | Medium   | Quality     | TypeScript errors ignored in build (`ignoreBuildErrors: true`) | Open     |
+| ISSUE-SDD-005 | Low      | DevOps      | No Git branching strategy, direct commits to main              | Accepted |
+| ISSUE-SDD-006 | Low      | Integration | Email notification workflows not fully verified                | Open     |
 
 ### 11.2 Issue Details
 
@@ -2289,6 +2452,7 @@ csms-bucket/
 Design specifies 80% code coverage target (SDD Section 10) but no automated testing framework is implemented.
 
 **Current State:**
+
 - ✅ Comprehensive manual UAT (244 scenarios, 96.7% pass rate)
 - ❌ No unit tests (Jest/Vitest)
 - ❌ No integration tests
@@ -2296,6 +2460,7 @@ Design specifies 80% code coverage target (SDD Section 10) but no automated test
 - ❌ 0% automated test coverage
 
 **Impact:**
+
 - Manual testing not sustainable as codebase grows
 - Regression bugs may go undetected
 - Refactoring risky without automated tests
@@ -2305,6 +2470,7 @@ Design specifies 80% code coverage target (SDD Section 10) but no automated test
 **Priority:** HIGH - Implement in Phase 2 (post-launch)
 
 **Action Plan:**
+
 1. **Unit Tests (Week 1-2):**
    - Set up Jest or Vitest
    - Write unit tests for utility functions (/src/lib)
@@ -2337,17 +2503,20 @@ Design specifies 80% code coverage target (SDD Section 10) but no automated test
 Design specifies rate limiting (100 requests/min per user) but only OTP rate limiting is implemented.
 
 **Current State:**
+
 - ✅ OTP rate limiting: 5 requests/hour per user (implemented)
 - ❌ General API rate limiting: Not implemented
 - ❌ Authentication rate limiting: Not verified
 - ❌ File upload rate limiting: Not implemented
 
 **Impact:**
+
 - Risk of API abuse (e.g., denial of service, data scraping)
 - No protection against brute force attacks (beyond account lockout)
 - File upload spam possible
 
 **Risk Assessment:**
+
 - **Low for current deployment:** Internal government system, trusted users
 - **Medium for future:** If system opens to wider user base
 
@@ -2355,6 +2524,7 @@ Design specifies rate limiting (100 requests/min per user) but only OTP rate lim
 **Priority:** MEDIUM - Implement in Phase 2
 
 **Action Plan:**
+
 1. **Choose Rate Limiting Library:**
    - Option 1: Custom middleware with Redis (already available)
    - Option 2: Use Next.js middleware with Redis
@@ -2385,17 +2555,20 @@ Design specifies rate limiting (100 requests/min per user) but only OTP rate lim
 Design specifies cryptographic signing of audit logs for tamper detection, but implementation not verified.
 
 **Current State:**
+
 - ✅ Complete audit logging (all user actions logged with before/after values)
 - ✅ Audit logs stored in database
 - ⚠️ Cryptographic signing not verified
 - ⚠️ Tamper detection not implemented
 
 **Impact:**
+
 - Audit logs may be tampered with (if database access is compromised)
 - No tamper detection to alert administrators
 - Compliance risk for highly regulated environments
 
 **Risk Assessment:**
+
 - **Low-Medium:** Database access restricted, application-level protections in place
 - **Medium for compliance:** Government audits may require tamper-proof logs
 
@@ -2403,6 +2576,7 @@ Design specifies cryptographic signing of audit logs for tamper detection, but i
 **Priority:** MEDIUM - Verify or implement
 
 **Action Plan:**
+
 1. **Verify Current Implementation:**
    - Check if audit logs include hash/signature field
    - Check if hash is calculated on insert
@@ -2433,22 +2607,25 @@ Design specifies cryptographic signing of audit logs for tamper detection, but i
 `tsconfig.json` has `ignoreBuildErrors: true`, allowing build with TypeScript errors.
 
 **Current State:**
+
 ```json
 {
   "compilerOptions": {
     // ...
   },
-  "ignoreBuildErrors": true  // ← Problem
+  "ignoreBuildErrors": true // ← Problem
 }
 ```
 
 **Impact:**
+
 - TypeScript type safety benefits reduced
 - Runtime errors may occur due to type mismatches
 - Refactoring risky (type errors not caught at build time)
 - Code quality degradation over time
 
 **Risk Assessment:**
+
 - **Medium:** System functional (UAT passed) but type safety compromised
 - **High for maintenance:** Future changes risky without type checking
 
@@ -2456,10 +2633,13 @@ Design specifies cryptographic signing of audit logs for tamper detection, but i
 **Priority:** HIGH - Fix before production deployment
 
 **Action Plan:**
+
 1. **Identify TypeScript Errors:**
+
    ```bash
    npm run typecheck
    ```
+
    - Review all TypeScript errors
    - Categorize: Fixable vs. requires refactoring
 
@@ -2492,6 +2672,7 @@ Design specifies cryptographic signing of audit logs for tamper detection, but i
 No Git branching strategy specified in design, direct commits to main branch observed.
 
 **Current State:**
+
 - ✅ Git repository: github.com/yussufrajab/production3
 - ✅ Main branch: `main`
 - ❌ No feature branches
@@ -2500,12 +2681,14 @@ No Git branching strategy specified in design, direct commits to main branch obs
 - ✅ Commit messages descriptive ("Implement...", "Fix...", "Add...")
 
 **Impact:**
+
 - No code review before merge (quality risk)
 - No isolation of features (one person's bug affects everyone)
 - Difficult to roll back specific changes
 - No approval process for critical changes
 
 **Risk Assessment:**
+
 - **Low-Medium for small team:** 3 developers can communicate directly
 - **Medium for quality:** Code review catches bugs and improves code quality
 
@@ -2513,6 +2696,7 @@ No Git branching strategy specified in design, direct commits to main branch obs
 **Priority:** LOW - Acceptable for small team, but should improve
 
 **Action Plan (Phase 2):**
+
 1. **Implement Git Flow:**
    - Main branch: Production-ready code
    - Develop branch: Integration branch
@@ -2545,6 +2729,7 @@ No Git branching strategy specified in design, direct commits to main branch obs
 Email notification workflows for requests, complaints, and reports not fully verified.
 
 **Current State:**
+
 - ✅ Email infrastructure configured (SMTP)
 - ✅ Password reset OTP emails working
 - ⚠️ Request notification emails (submission, approval, rejection) - not verified
@@ -2552,11 +2737,13 @@ Email notification workflows for requests, complaints, and reports not fully ver
 - ⚠️ Report distribution emails - not verified
 
 **Impact:**
+
 - Users may not receive timely notifications
 - Manual checking of request status required
 - Reduces efficiency gains from automation
 
 **Risk Assessment:**
+
 - **Low:** Core functionality works, notifications are enhancement
 - **Low-Medium for UX:** Notifications improve user experience
 
@@ -2564,6 +2751,7 @@ Email notification workflows for requests, complaints, and reports not fully ver
 **Priority:** LOW - Verify and fix in post-launch
 
 **Action Plan:**
+
 1. **Verify Email Workflows:**
    - Test request submission notification (to HRO, HHRMD/HRMO)
    - Test request approval notification (to HRO, employee)
@@ -2592,18 +2780,21 @@ Email notification workflows for requests, complaints, and reports not fully ver
 **Positive Observations:**
 
 **OBS-POS-001: Excellent Design Documentation**
+
 - ✅ Comprehensive design documents (SDD, HLD, LLD, Technical Architecture)
 - ✅ Clear diagrams, code examples, and specifications
 - ✅ Good balance of high-level and low-level details
 - **Impact:** Easy for developers to implement, easy for new team members to onboard
 
 **OBS-POS-002: Proactive Enhancements**
+
 - ✅ AI complaint rewriting (Google Genkit) - not designed but valuable
 - ✅ Background job queue (Redis/BullMQ) - prevents HRIMS bulk sync timeout
 - ✅ Bundle optimization - improves performance
 - **Impact:** Demonstrates team's problem-solving and initiative
 
 **OBS-POS-003: Security-First Design**
+
 - ✅ Multi-layered security (5 layers)
 - ✅ JWT + bcrypt + httpOnly + SameSite (defense in depth)
 - ✅ RBAC with institutional filtering
@@ -2611,6 +2802,7 @@ Email notification workflows for requests, complaints, and reports not fully ver
 - **Impact:** Exceeds government IT security standards
 
 **OBS-POS-004: Clean Code Structure**
+
 - ✅ Logical directory organization (/src/app, /src/components, /src/lib)
 - ✅ Separation of concerns (components, utilities, API routes)
 - ✅ Consistent naming conventions
@@ -2619,32 +2811,35 @@ Email notification workflows for requests, complaints, and reports not fully ver
 **Neutral Observations:**
 
 **OBS-NEU-001: Monolithic Architecture**
+
 - **Design Decision:** Monolithic (not microservices)
 - **Rationale:** Small team, single-server deployment, simpler operations
 - **Observation:** Appropriate for current needs, allows future microservices migration if needed
 - **Impact:** Neutral - Right choice for now, may need re-evaluation in 5-10 years
 
 **OBS-NEU-002: No Mobile App**
+
 - **Design Decision:** Desktop/tablet only, mobile explicitly excluded
 - **Rationale:** Government office users primarily use desktop/laptop
 - **Observation:** Acceptable for current scope, consider PWA for Phase 2 if field workers need access
 - **Impact:** Neutral - Meets current needs, may limit future use cases
 
 **OBS-NEU-003: Manual Deployment**
+
 - **Current State:** No CI/CD pipeline, manual deployment process
 - **Observation:** Acceptable for government system with controlled releases
 - **Impact:** Neutral for small team, but CI/CD would improve quality
 
 ### 11.4 Issue Resolution Status
 
-| Issue ID | Status | Priority | Resolution | Responsible | Target Date |
-|----------|--------|----------|------------|-------------|-------------|
-| ISSUE-SDD-001 | Open | HIGH | Implement Jest/Vitest + Playwright | Dev Team | Phase 2 (Q2 2025) |
-| ISSUE-SDD-002 | Open | MEDIUM | Implement rate limiting middleware | Dev Team | Phase 2 (Q3 2025) |
-| ISSUE-SDD-003 | Open | MEDIUM | Verify/implement audit log signing | Dev Team | Phase 2 (Q2 2025) |
-| ISSUE-SDD-004 | Open | MEDIUM | Fix TypeScript errors, remove ignoreBuildErrors | Dev Team | Pre-production |
-| ISSUE-SDD-005 | Accepted | LOW | Implement Git Flow + branch protection | Dev Team | Phase 2 (Q3 2025) |
-| ISSUE-SDD-006 | Open | LOW | Verify email notification workflows | Dev Team | Post-launch |
+| Issue ID      | Status   | Priority | Resolution                                      | Responsible | Target Date       |
+| ------------- | -------- | -------- | ----------------------------------------------- | ----------- | ----------------- |
+| ISSUE-SDD-001 | Open     | HIGH     | Implement Jest/Vitest + Playwright              | Dev Team    | Phase 2 (Q2 2025) |
+| ISSUE-SDD-002 | Open     | MEDIUM   | Implement rate limiting middleware              | Dev Team    | Phase 2 (Q3 2025) |
+| ISSUE-SDD-003 | Open     | MEDIUM   | Verify/implement audit log signing              | Dev Team    | Phase 2 (Q2 2025) |
+| ISSUE-SDD-004 | Open     | MEDIUM   | Fix TypeScript errors, remove ignoreBuildErrors | Dev Team    | Pre-production    |
+| ISSUE-SDD-005 | Accepted | LOW      | Implement Git Flow + branch protection          | Dev Team    | Phase 2 (Q3 2025) |
+| ISSUE-SDD-006 | Open     | LOW      | Verify email notification workflows             | Dev Team    | Post-launch       |
 
 **Critical/High Issues:** 1
 **Medium Issues:** 3
@@ -2663,11 +2858,13 @@ Email notification workflows for requests, complaints, and reports not fully ver
 **Action:** Fix all TypeScript errors and set `ignoreBuildErrors: false` in tsconfig.json
 
 **Rationale:**
+
 - TypeScript provides type safety and catches errors at build time
 - `ignoreBuildErrors: true` defeats the purpose of using TypeScript
 - Runtime errors may occur due to type mismatches
 
 **Action Plan:**
+
 ```bash
 # 1. Run typecheck to see all errors
 npm run typecheck
@@ -2701,6 +2898,7 @@ npm run build
 **Action:** Test all email notification workflows (requests, complaints, reports)
 
 **Workflows to Test:**
+
 1. Request submission → Email to HHRMD/HRMO
 2. Request approval → Email to HRO, employee
 3. Request rejection → Email to HRO with reason
@@ -2711,6 +2909,7 @@ npm run build
 8. Report distribution → Email to PO, CSCS (scheduled)
 
 **Action Plan:**
+
 ```typescript
 // 1. Verify email templates exist
 /src/lib/email-templates/
@@ -2745,6 +2944,7 @@ await sendEmail({
 **Action:** Set up Jest/Vitest for unit tests and Playwright for E2E tests
 
 **Testing Stack:**
+
 - **Unit Tests:** Jest or Vitest
 - **Integration Tests:** React Testing Library
 - **E2E Tests:** Playwright
@@ -2753,6 +2953,7 @@ await sendEmail({
 **Implementation Phases:**
 
 **Phase 1: Unit Tests (Week 1-2)**
+
 ```typescript
 // Install testing frameworks
 npm install --save-dev vitest @testing-library/react @testing-library/jest-dom
@@ -2778,6 +2979,7 @@ describe('Button', () => {
 ```
 
 **Phase 2: Integration Tests (Week 3)**
+
 ```typescript
 // Example integration test: Login flow
 describe('Login Flow', () => {
@@ -2796,6 +2998,7 @@ describe('Login Flow', () => {
 ```
 
 **Phase 3: E2E Tests (Week 4)**
+
 ```typescript
 // Install Playwright
 npm install --save-dev @playwright/test
@@ -2824,6 +3027,7 @@ test('HRO submits confirmation request', async ({ page }) => {
 ```
 
 **Coverage Targets:**
+
 - Unit Tests: 60-70% coverage
 - Integration Tests: 80% coverage of critical flows
 - E2E Tests: Top 20 user scenarios
@@ -2838,54 +3042,56 @@ test('HRO submits confirmation request', async ({ page }) => {
 **Action:** Add rate limiting middleware to protect API from abuse
 
 **Implementation:**
+
 ```typescript
 // /src/middleware/rate-limit.ts
-import { Redis } from 'ioredis'
+import { Redis } from 'ioredis';
 
-const redis = new Redis(process.env.REDIS_URL)
+const redis = new Redis(process.env.REDIS_URL);
 
 export async function rateLimit(
-  identifier: string,  // User ID or IP
-  limit: number,       // Max requests
-  window: number       // Time window in seconds
+  identifier: string, // User ID or IP
+  limit: number, // Max requests
+  window: number // Time window in seconds
 ): Promise<{ allowed: boolean; remaining: number }> {
-  const key = `rate_limit:${identifier}`
-  const current = await redis.incr(key)
+  const key = `rate_limit:${identifier}`;
+  const current = await redis.incr(key);
 
   if (current === 1) {
-    await redis.expire(key, window)
+    await redis.expire(key, window);
   }
 
-  const allowed = current <= limit
-  const remaining = Math.max(0, limit - current)
+  const allowed = current <= limit;
+  const remaining = Math.max(0, limit - current);
 
-  return { allowed, remaining }
+  return { allowed, remaining };
 }
 
 // Apply to API routes
 export async function POST(request: Request) {
-  const userId = request.headers.get('x-user-id')
+  const userId = request.headers.get('x-user-id');
 
   // Rate limit: 100 requests per minute
-  const { allowed, remaining } = await rateLimit(userId, 100, 60)
+  const { allowed, remaining } = await rateLimit(userId, 100, 60);
 
   if (!allowed) {
     return NextResponse.json(
       { error: 'Rate limit exceeded. Try again in 1 minute.' },
       { status: 429 }
-    )
+    );
   }
 
   // Add rate limit headers
-  const response = NextResponse.json(data)
-  response.headers.set('X-RateLimit-Limit', '100')
-  response.headers.set('X-RateLimit-Remaining', remaining.toString())
+  const response = NextResponse.json(data);
+  response.headers.set('X-RateLimit-Limit', '100');
+  response.headers.set('X-RateLimit-Remaining', remaining.toString());
 
-  return response
+  return response;
 }
 ```
 
 **Rate Limits:**
+
 - Authentication: 10 attempts/min per IP
 - API calls: 100 requests/min per user
 - File uploads: 20 uploads/hour per user
@@ -2901,6 +3107,7 @@ export async function POST(request: Request) {
 **Action:** Verify cryptographic signing is implemented, or add it
 
 **Implementation:**
+
 ```typescript
 // Add logHash field to audit_logs table
 model AuditLog {
@@ -2967,6 +3174,7 @@ if (!verifyLogIntegrity(log)) {
 **Implementation:**
 
 **1. Git Flow Setup:**
+
 ```bash
 # Create develop branch
 git checkout -b develop
@@ -2998,6 +3206,7 @@ git merge hotfix/bug-fix
 ```
 
 **2. Branch Protection (GitHub):**
+
 - Protect `main` branch:
   - ✅ Require pull request before merging
   - ✅ Require 1 approval
@@ -3006,6 +3215,7 @@ git merge hotfix/bug-fix
   - ✅ No deletion
 
 **3. PR Review Checklist:**
+
 - Code follows style guide
 - TypeScript types correct
 - No console.log (use proper logging)
@@ -3025,6 +3235,7 @@ git merge hotfix/bug-fix
 **Implementation:**
 
 **.github/workflows/ci.yml:**
+
 ```yaml
 name: CI
 
@@ -3063,6 +3274,7 @@ jobs:
 ```
 
 **.github/workflows/deploy.yml:**
+
 ```yaml
 name: Deploy
 
@@ -3089,15 +3301,15 @@ jobs:
 
 ### 12.3 Recommendations Summary
 
-| Rec ID | Recommendation | Priority | Phase | Effort | Impact |
-|--------|---------------|----------|-------|--------|--------|
-| REC-SDD-001 | Fix TypeScript errors | HIGH | Pre-Production | 1-2 weeks | High |
-| REC-SDD-002 | Verify email workflows | MEDIUM | Pre-Production | 2-3 days | Medium |
-| REC-SDD-003 | Implement automated testing | HIGH | Phase 2 | 4 weeks | High |
-| REC-SDD-004 | Implement API rate limiting | MEDIUM | Phase 2 | 1 week | Medium |
-| REC-SDD-005 | Verify audit log signing | MEDIUM | Phase 2 | 3-5 days | Medium |
-| REC-SDD-006 | Implement Git Flow | LOW | Phase 2 | 1-2 days | Medium |
-| REC-SDD-007 | Add CI/CD pipeline | LOW | Phase 2 | 2-3 days | Medium |
+| Rec ID      | Recommendation              | Priority | Phase          | Effort    | Impact |
+| ----------- | --------------------------- | -------- | -------------- | --------- | ------ |
+| REC-SDD-001 | Fix TypeScript errors       | HIGH     | Pre-Production | 1-2 weeks | High   |
+| REC-SDD-002 | Verify email workflows      | MEDIUM   | Pre-Production | 2-3 days  | Medium |
+| REC-SDD-003 | Implement automated testing | HIGH     | Phase 2        | 4 weeks   | High   |
+| REC-SDD-004 | Implement API rate limiting | MEDIUM   | Phase 2        | 1 week    | Medium |
+| REC-SDD-005 | Verify audit log signing    | MEDIUM   | Phase 2        | 3-5 days  | Medium |
+| REC-SDD-006 | Implement Git Flow          | LOW      | Phase 2        | 1-2 days  | Medium |
+| REC-SDD-007 | Add CI/CD pipeline          | LOW      | Phase 2        | 2-3 days  | Medium |
 
 ---
 
@@ -3109,45 +3321,50 @@ The Software Design Documents (SDD, HLD, LLD, Technical Architecture) for the Ci
 
 **Design Quality Scorecard:**
 
-| Design Aspect | Score | Status | Comments |
-|---------------|-------|--------|----------|
-| **Architecture Design** | 96% | ✅ EXCELLENT | Clean 6-layer architecture, appropriate technology stack |
-| **Database Design** | 99.7% | ✅ EXCELLENT | Normalized schema, proper indexing, integrity constraints |
-| **API Design** | 99% | ✅ EXCELLENT | RESTful conventions, consistent patterns, secure |
-| **Security Design** | 93.6% | ✅ EXCELLENT | Multi-layered defense in depth, minor gaps acceptable |
-| **Frontend Design** | 97.8% | ✅ EXCELLENT | Component-based, Tailwind + Radix, responsive |
-| **Integration Design** | 92% | ✅ EXCELLENT | HRIMS, MinIO, AI integrations well-designed |
-| **Design Documentation** | 94% | ✅ EXCELLENT | Comprehensive, clear, well-organized |
-| **Implementation Fidelity** | 97% | ✅ EXCELLENT | High alignment with valuable enhancements |
-| **OVERALL DESIGN QUALITY** | **96.1%** | ✅ **EXCELLENT** | **Exemplary design documents** |
+| Design Aspect               | Score     | Status           | Comments                                                  |
+| --------------------------- | --------- | ---------------- | --------------------------------------------------------- |
+| **Architecture Design**     | 96%       | ✅ EXCELLENT     | Clean 6-layer architecture, appropriate technology stack  |
+| **Database Design**         | 99.7%     | ✅ EXCELLENT     | Normalized schema, proper indexing, integrity constraints |
+| **API Design**              | 99%       | ✅ EXCELLENT     | RESTful conventions, consistent patterns, secure          |
+| **Security Design**         | 93.6%     | ✅ EXCELLENT     | Multi-layered defense in depth, minor gaps acceptable     |
+| **Frontend Design**         | 97.8%     | ✅ EXCELLENT     | Component-based, Tailwind + Radix, responsive             |
+| **Integration Design**      | 92%       | ✅ EXCELLENT     | HRIMS, MinIO, AI integrations well-designed               |
+| **Design Documentation**    | 94%       | ✅ EXCELLENT     | Comprehensive, clear, well-organized                      |
+| **Implementation Fidelity** | 97%       | ✅ EXCELLENT     | High alignment with valuable enhancements                 |
+| **OVERALL DESIGN QUALITY**  | **96.1%** | ✅ **EXCELLENT** | **Exemplary design documents**                            |
 
 ### 13.2 Key Strengths
 
 **1. Architectural Excellence:**
+
 - ✅ Well-structured 6-layer architecture
 - ✅ Monolithic design appropriate for team size and deployment model
 - ✅ Clear separation of concerns
 - ✅ Scalable design (50,000+ employees, 500+ concurrent users)
 
 **2. Security-First Approach:**
+
 - ✅ Multi-layered security (5 layers: Network, Application, Data, Operational, Physical)
 - ✅ JWT + bcrypt + httpOnly cookies + SameSite
 - ✅ RBAC for 9 user roles with institutional filtering
 - ✅ Comprehensive audit logging (10-year retention)
 
 **3. Database Excellence:**
+
 - ✅ Properly normalized (3NF)
 - ✅ Strategic indexing (all common queries optimized)
 - ✅ Soft delete pattern (preserves audit trail)
 - ✅ Complete integrity constraints
 
 **4. API Consistency:**
+
 - ✅ RESTful conventions followed
 - ✅ Standardized response formats
 - ✅ Proper HTTP status codes
 - ✅ Comprehensive input validation (Zod)
 
 **5. Implementation Quality:**
+
 - ✅ 97% design-implementation alignment
 - ✅ Valuable enhancements (AI, background jobs, bundle optimization)
 - ✅ 96.7% UAT pass rate demonstrates design quality
@@ -3155,15 +3372,11 @@ The Software Design Documents (SDD, HLD, LLD, Technical Architecture) for the Ci
 ### 13.3 Areas for Improvement
 
 **Pre-Production (Before Go-Live):**
+
 1. ⚠️ **Fix TypeScript Errors** (ISSUE-SDD-004) - Remove `ignoreBuildErrors: true`
 2. ⚠️ **Verify Email Workflows** (ISSUE-SDD-006) - Test all notification emails
 
-**Post-Launch (Phase 2 Enhancements):**
-3. ⚠️ **Implement Automated Testing** (ISSUE-SDD-001) - Jest/Vitest + Playwright
-4. ⚠️ **API Rate Limiting** (ISSUE-SDD-002) - Protect against API abuse
-5. ⚠️ **Audit Log Signing** (ISSUE-SDD-003) - Verify or implement tamper detection
-6. ⚠️ **Git Flow** (ISSUE-SDD-005) - Branch protection and PR reviews
-7. ⚠️ **CI/CD Pipeline** (REC-SDD-007) - Automated testing and deployment
+**Post-Launch (Phase 2 Enhancements):** 3. ⚠️ **Implement Automated Testing** (ISSUE-SDD-001) - Jest/Vitest + Playwright 4. ⚠️ **API Rate Limiting** (ISSUE-SDD-002) - Protect against API abuse 5. ⚠️ **Audit Log Signing** (ISSUE-SDD-003) - Verify or implement tamper detection 6. ⚠️ **Git Flow** (ISSUE-SDD-005) - Branch protection and PR reviews 7. ⚠️ **CI/CD Pipeline** (REC-SDD-007) - Automated testing and deployment
 
 ### 13.4 Risk Assessment
 
@@ -3185,12 +3398,14 @@ The Software Design Documents (SDD, HLD, LLD, Technical Architecture) for the Ci
 ### 13.5 Compliance Assessment
 
 **Requirements Compliance:**
+
 - ✅ All SRS requirements addressed in design
 - ✅ All functional requirements (14 modules) designed
 - ✅ All non-functional requirements (performance, security, scalability) met
 - ✅ 100% SRS-to-design traceability
 
 **Standards Compliance:**
+
 - ✅ RESTful API standards
 - ✅ PostgreSQL best practices (normalization, indexing)
 - ✅ Next.js best practices (App Router, SSR, API routes)
@@ -3198,6 +3413,7 @@ The Software Design Documents (SDD, HLD, LLD, Technical Architecture) for the Ci
 - ✅ Government IT Security Standards
 
 **Design Best Practices:**
+
 - ✅ SOLID principles (Single Responsibility, Open/Closed, etc.)
 - ✅ DRY (Don't Repeat Yourself) - reusable components and utilities
 - ✅ Separation of concerns (6-layer architecture)
@@ -3237,11 +3453,13 @@ The Software Design Documents (SDD, HLD, LLD, Technical Architecture) for the Ci
 **Approval Status:** CONDITIONAL APPROVAL
 
 **Conditions:**
+
 1. ✅ Fix TypeScript build errors (remove `ignoreBuildErrors: true`) before production
 2. ✅ Verify email notification workflows before production
 3. ✅ Plan Phase 2 enhancements (automated testing, rate limiting, audit signing)
 
 **Approval Rationale:**
+
 - Exceptional design quality (96.1% score)
 - High implementation fidelity (97%)
 - All SRS requirements addressed
@@ -3250,37 +3468,41 @@ The Software Design Documents (SDD, HLD, LLD, Technical Architecture) for the Ci
 
 ### 14.2 Sign-off Table
 
-| Role | Name | Signature | Date | Decision |
-|------|------|-----------|------|----------|
-| **Review Lead (Tech Architect)** | Tech Architect | ___________________ | Feb 18, 2025 | ✅ APPROVE |
-| **Senior Developer** | Lead Developer | ___________________ | Feb 18, 2025 | ✅ APPROVE |
-| **Database Architect** | DBA | ___________________ | Feb 18, 2025 | ✅ APPROVE |
-| **Security Architect** | Security Officer | ___________________ | Feb 18, 2025 | ✅ APPROVE |
-| **Frontend Architect** | UI/UX Lead | ___________________ | Feb 18, 2025 | ✅ APPROVE |
-| **QA Lead** | QA Manager | ___________________ | Feb 18, 2025 | ✅ APPROVE |
-| **DevOps Engineer** | Infrastructure Lead | ___________________ | Feb 18, 2025 | ✅ APPROVE |
-| **Project Manager** | PM | ___________________ | Feb 18, 2025 | ✅ APPROVE |
-| **HHRMD (Stakeholder)** | Head of HR Management Division | ___________________ | Feb 18, 2025 | ✅ APPROVE |
+| Role                             | Name                           | Signature                      | Date         | Decision   |
+| -------------------------------- | ------------------------------ | ------------------------------ | ------------ | ---------- |
+| **Review Lead (Tech Architect)** | Tech Architect                 | **\*\*\*\***\_\_\_**\*\*\*\*** | Feb 18, 2025 | ✅ APPROVE |
+| **Senior Developer**             | Lead Developer                 | **\*\*\*\***\_\_\_**\*\*\*\*** | Feb 18, 2025 | ✅ APPROVE |
+| **Database Architect**           | DBA                            | **\*\*\*\***\_\_\_**\*\*\*\*** | Feb 18, 2025 | ✅ APPROVE |
+| **Security Architect**           | Security Officer               | **\*\*\*\***\_\_\_**\*\*\*\*** | Feb 18, 2025 | ✅ APPROVE |
+| **Frontend Architect**           | UI/UX Lead                     | **\*\*\*\***\_\_\_**\*\*\*\*** | Feb 18, 2025 | ✅ APPROVE |
+| **QA Lead**                      | QA Manager                     | **\*\*\*\***\_\_\_**\*\*\*\*** | Feb 18, 2025 | ✅ APPROVE |
+| **DevOps Engineer**              | Infrastructure Lead            | **\*\*\*\***\_\_\_**\*\*\*\*** | Feb 18, 2025 | ✅ APPROVE |
+| **Project Manager**              | PM                             | **\*\*\*\***\_\_\_**\*\*\*\*** | Feb 18, 2025 | ✅ APPROVE |
+| **HHRMD (Stakeholder)**          | Head of HR Management Division | **\*\*\*\***\_\_\_**\*\*\*\*** | Feb 18, 2025 | ✅ APPROVE |
 
 ### 14.3 Next Steps
 
 **Immediate Actions (Week of Feb 18, 2025):**
+
 1. ✅ Distribute SDD Review Report to all stakeholders
 2. ✅ Brief development team on pre-production fixes
 3. ✅ Fix TypeScript errors (ISSUE-SDD-004)
 4. ✅ Verify email workflows (ISSUE-SDD-006)
 
 **Pre-Production (Feb 19-25, 2025):**
+
 1. ✅ Complete pre-production fixes
 2. ✅ Final testing with fixes
 3. ✅ Production deployment preparation
 
 **Production Deployment (Feb 26 - Mar 5, 2025):**
+
 1. ✅ Deploy to production server
 2. ✅ User training
 3. ✅ Go-live support
 
 **Phase 2 Planning (Mar 2025+):**
+
 1. ✅ Plan automated testing implementation (REC-SDD-003)
 2. ✅ Plan rate limiting implementation (REC-SDD-004)
 3. ✅ Plan audit log signing verification (REC-SDD-005)
@@ -3290,6 +3512,7 @@ The Software Design Documents (SDD, HLD, LLD, Technical Architecture) for the Ci
 ### 14.4 Document Revision
 
 **Current Versions:**
+
 - System Design Document: 1.0 (Dec 25, 2025)
 - High-Level Design: 1.0 (Dec 25, 2025)
 - Low-Level Design: 1.0 (Dec 25, 2025)
@@ -3298,6 +3521,7 @@ The Software Design Documents (SDD, HLD, LLD, Technical Architecture) for the Ci
 **Next Planned Revisions:** 1.1 (Mar 2025)
 
 **Planned Changes in Version 1.1:**
+
 - Document implementation enhancements (AI, background jobs, bundle optimization)
 - Update concurrent session limit (1 → 3)
 - Add automated testing strategy section
@@ -3310,33 +3534,33 @@ The Software Design Documents (SDD, HLD, LLD, Technical Architecture) for the Ci
 
 ### Appendix A: Design Documents Reviewed
 
-| Document | Version | Date | Pages/Lines | Key Sections Reviewed |
-|----------|---------|------|-------------|----------------------|
-| **System Design Document** | 1.0 | Dec 25, 2025 | 500+ lines | Architecture, Database, API, Security, UI, Deployment |
-| **High-Level Design** | 1.0 | Dec 25, 2025 | 300+ lines | System overview, Component architecture, Technology stack |
-| **Low-Level Design** | 1.0 | Dec 25, 2025 | 300+ lines | Module specs, Class diagrams, Algorithms, Code structure |
-| **Technical Architecture** | 1.0 | Dec 25, 2025 | 300+ lines | Infrastructure, Network, Security, Integration |
+| Document                   | Version | Date         | Pages/Lines | Key Sections Reviewed                                     |
+| -------------------------- | ------- | ------------ | ----------- | --------------------------------------------------------- |
+| **System Design Document** | 1.0     | Dec 25, 2025 | 500+ lines  | Architecture, Database, API, Security, UI, Deployment     |
+| **High-Level Design**      | 1.0     | Dec 25, 2025 | 300+ lines  | System overview, Component architecture, Technology stack |
+| **Low-Level Design**       | 1.0     | Dec 25, 2025 | 300+ lines  | Module specs, Class diagrams, Algorithms, Code structure  |
+| **Technical Architecture** | 1.0     | Dec 25, 2025 | 300+ lines  | Infrastructure, Network, Security, Integration            |
 
 ---
 
 ### Appendix B: Technology Stack Verification
 
-| Technology | Design Version | Actual Version | Status |
-|------------|---------------|----------------|--------|
-| Next.js | 16 | 16.0.1 | ✅ MATCH |
-| TypeScript | 5 | 5.7.2 | ✅ MATCH |
-| React | 19 | 19.0.0 | ✅ MATCH |
-| PostgreSQL | 15 | 15.x | ✅ MATCH |
-| Prisma | Latest | 6.2.1 | ✅ MATCH |
-| Tailwind CSS | 3 | 3.4.17 | ✅ MATCH |
-| Radix UI | Latest | Various versions | ✅ MATCH |
-| MinIO | Latest | Latest stable | ✅ MATCH |
-| Zustand | Latest | 5.0.2 | ✅ MATCH |
-| React Hook Form | Latest | 7.54.2 | ✅ MATCH |
-| Zod | Latest | 3.24.1 | ✅ MATCH |
-| bcrypt | Latest | 5.1.1 | ✅ MATCH |
-| Google Genkit | Not in design | 0.9.20 | ✅ ENHANCEMENT |
-| BullMQ | Not in design | 5.32.3 | ✅ ENHANCEMENT |
+| Technology      | Design Version | Actual Version   | Status         |
+| --------------- | -------------- | ---------------- | -------------- |
+| Next.js         | 16             | 16.0.1           | ✅ MATCH       |
+| TypeScript      | 5              | 5.7.2            | ✅ MATCH       |
+| React           | 19             | 19.0.0           | ✅ MATCH       |
+| PostgreSQL      | 15             | 15.x             | ✅ MATCH       |
+| Prisma          | Latest         | 6.2.1            | ✅ MATCH       |
+| Tailwind CSS    | 3              | 3.4.17           | ✅ MATCH       |
+| Radix UI        | Latest         | Various versions | ✅ MATCH       |
+| MinIO           | Latest         | Latest stable    | ✅ MATCH       |
+| Zustand         | Latest         | 5.0.2            | ✅ MATCH       |
+| React Hook Form | Latest         | 7.54.2           | ✅ MATCH       |
+| Zod             | Latest         | 3.24.1           | ✅ MATCH       |
+| bcrypt          | Latest         | 5.1.1            | ✅ MATCH       |
+| Google Genkit   | Not in design  | 0.9.20           | ✅ ENHANCEMENT |
+| BullMQ          | Not in design  | 5.32.3           | ✅ ENHANCEMENT |
 
 ---
 
@@ -3346,6 +3570,7 @@ The Software Design Documents (SDD, HLD, LLD, Technical Architecture) for the Ci
 **Tables Implemented:** 22+ (100% match)
 
 **Schema Verification:**
+
 - ✅ All designed tables implemented
 - ✅ All designed fields present
 - ✅ All designed relationships correct
@@ -3362,6 +3587,7 @@ The Software Design Documents (SDD, HLD, LLD, Technical Architecture) for the Ci
 **Implemented Endpoints:** 90+
 
 **Endpoint Categories:**
+
 - ✅ Authentication (6/6)
 - ✅ Employees (6+/6)
 - ✅ Confirmation Requests (6/6)
@@ -3382,7 +3608,8 @@ The Software Design Documents (SDD, HLD, LLD, Technical Architecture) for the Ci
 - ✅ Notifications (2/2)
 
 **Additional Endpoints (Beyond Design):**
-- ✅ /api/hrims/* (5 endpoints for HRIMS integration)
+
+- ✅ /api/hrims/\* (5 endpoints for HRIMS integration)
 - ✅ /api/dashboard/metrics (dashboard statistics)
 - ✅ /api/files/preview, /api/files/exists (file enhancements)
 
@@ -3390,26 +3617,26 @@ The Software Design Documents (SDD, HLD, LLD, Technical Architecture) for the Ci
 
 ### Appendix E: Acronyms and Abbreviations
 
-| Acronym | Full Form |
-|---------|-----------|
-| SDD | Software Design Document |
-| HLD | High-Level Design |
-| LLD | Low-Level Design |
-| CSMS | Civil Service Management System |
-| API | Application Programming Interface |
-| RBAC | Role-Based Access Control |
-| JWT | JSON Web Token |
-| ORM | Object-Relational Mapping |
-| CSRF | Cross-Site Request Forgery |
-| XSS | Cross-Site Scripting |
-| TLS | Transport Layer Security |
-| SSL | Secure Sockets Layer |
-| HRIMS | HR Information Management System |
-| CSC | Civil Service Commission |
-| UAT | User Acceptance Testing |
-| CI/CD | Continuous Integration/Continuous Deployment |
-| WCAG | Web Content Accessibility Guidelines |
-| OWASP | Open Web Application Security Project |
+| Acronym | Full Form                                    |
+| ------- | -------------------------------------------- |
+| SDD     | Software Design Document                     |
+| HLD     | High-Level Design                            |
+| LLD     | Low-Level Design                             |
+| CSMS    | Civil Service Management System              |
+| API     | Application Programming Interface            |
+| RBAC    | Role-Based Access Control                    |
+| JWT     | JSON Web Token                               |
+| ORM     | Object-Relational Mapping                    |
+| CSRF    | Cross-Site Request Forgery                   |
+| XSS     | Cross-Site Scripting                         |
+| TLS     | Transport Layer Security                     |
+| SSL     | Secure Sockets Layer                         |
+| HRIMS   | HR Information Management System             |
+| CSC     | Civil Service Commission                     |
+| UAT     | User Acceptance Testing                      |
+| CI/CD   | Continuous Integration/Continuous Deployment |
+| WCAG    | Web Content Accessibility Guidelines         |
+| OWASP   | Open Web Application Security Project        |
 
 ---
 
@@ -3422,4 +3649,4 @@ The Software Design Documents (SDD, HLD, LLD, Technical Architecture) for the Ci
 
 ---
 
-*This document is confidential and proprietary to the Civil Service Commission of Zanzibar. Unauthorized distribution or reproduction is prohibited.*
+_This document is confidential and proprietary to the Civil Service Commission of Zanzibar. Unauthorized distribution or reproduction is prohibited._

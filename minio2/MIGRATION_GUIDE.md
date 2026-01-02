@@ -5,6 +5,7 @@ This guide will help you migrate your MinIO setup to a new VPS server.
 ## Current Server Configuration
 
 ### Server Details
+
 - **MinIO Binary**: `/usr/local/bin/minio`
 - **Data Directory**: `/minio/data`
 - **API Port**: `9000`
@@ -13,6 +14,7 @@ This guide will help you migrate your MinIO setup to a new VPS server.
 - **Secret Key**: `Mamlaka2020MinIO`
 
 ### Buckets and Policies
+
 - **attachments** - Policy: `download` (public read)
 - **certificates** - Policy: `download` (public read)
 - **csms-files** - Policy: `private` (no public access)
@@ -53,12 +55,14 @@ sudo chown -R minio-user:minio-user /minio/data
 ### Step 3: Copy Data from Old Server to New Server
 
 **Option A: Using rsync (recommended for large datasets)**
+
 ```bash
 # On new server, from old server
 rsync -avz --progress root@OLD_SERVER_IP:/minio/data/ /minio/data/
 ```
 
 **Option B: Using tar and scp**
+
 ```bash
 # On old server
 cd /minio
@@ -173,6 +177,7 @@ If you're using a domain name or reverse proxy (nginx/caddy), update the configu
 ## Security Recommendations
 
 1. **Change default credentials** in production:
+
    ```bash
    # Generate strong credentials
    MINIO_ROOT_USER=your-secure-username
@@ -180,12 +185,14 @@ If you're using a domain name or reverse proxy (nginx/caddy), update the configu
    ```
 
 2. **Enable SSL/TLS** for production:
+
    ```bash
    # Place SSL certificates in /home/minio-user/.minio/certs/
    # Update MINIO_USE_SSL=true in .env.local
    ```
 
 3. **Restrict network access**:
+
    ```bash
    # Only allow specific IPs if MinIO is not public-facing
    sudo ufw allow from TRUSTED_IP to any port 9000
@@ -200,6 +207,7 @@ If you're using a domain name or reverse proxy (nginx/caddy), update the configu
 ## Troubleshooting
 
 ### MinIO won't start
+
 ```bash
 # Check logs
 sudo journalctl -u minio -f
@@ -212,6 +220,7 @@ sudo netstat -tlnp | grep -E '9000|9001'
 ```
 
 ### Cannot access MinIO Console
+
 ```bash
 # Verify MinIO is running
 systemctl status minio
@@ -224,6 +233,7 @@ curl http://localhost:9001
 ```
 
 ### Bucket policies not working
+
 ```bash
 # Re-apply policies
 bash bucket-policies.sh
@@ -258,6 +268,7 @@ If migration fails, you can rollback to the old server:
 ## Support
 
 For issues, refer to:
+
 - MinIO Documentation: https://docs.min.io/
 - MinIO GitHub: https://github.com/minio/minio
 - CSMS Application Docs: See `MINIO_SETUP.md` in project root

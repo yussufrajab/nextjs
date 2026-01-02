@@ -5,6 +5,7 @@ This guide provides instructions for backing up and restoring the HR Management 
 ## Overview
 
 The HR Management System uses PostgreSQL with Prisma ORM. This guide includes:
+
 - Automated backup script that reads from your `.env` file
 - Restore script optimized for existing PostgreSQL installations
 - Support for both fresh installations and pre-configured systems
@@ -18,6 +19,7 @@ The HR Management System uses PostgreSQL with Prisma ORM. This guide includes:
 ## Backup Process
 
 ### Prerequisites
+
 - PostgreSQL client tools (`pg_dump`) installed locally
 - Valid `.env` file with `DATABASE_URL`
 - Database access permissions
@@ -25,6 +27,7 @@ The HR Management System uses PostgreSQL with Prisma ORM. This guide includes:
 ### Running the Backup
 
 1. **Navigate to project directory**:
+
    ```bash
    cd /path/to/your/hr-management-system
    ```
@@ -35,6 +38,7 @@ The HR Management System uses PostgreSQL with Prisma ORM. This guide includes:
    ```
 
 The backup script will:
+
 - Read database credentials from your `.env` file
 - Create a `backups/` directory
 - Generate timestamped SQL backup file
@@ -42,6 +46,7 @@ The backup script will:
 - Display backup information
 
 ### Backup Output
+
 ```
 backups/
 ├── hr_backup_20240115_143022.sql     # Full SQL backup
@@ -51,6 +56,7 @@ backups/
 ## Restore Process
 
 ### Prerequisites for Target System
+
 - Ubuntu 22.04 LTS (or existing PostgreSQL installation)
 - PostgreSQL already installed and running
 - Empty database named "mfumo2" created
@@ -61,11 +67,13 @@ backups/
 If your target system already has PostgreSQL installed with the mfumo2 database:
 
 1. **Copy backup file to target system**:
+
    ```bash
    scp hr_backup_YYYYMMDD_HHMMSS.sql user@target-server:/home/user/
    ```
 
 2. **Make the restore script executable**:
+
    ```bash
    chmod +x restore-database.sh
    ```
@@ -76,6 +84,7 @@ If your target system already has PostgreSQL installed with the mfumo2 database:
    ```
 
 The restore script will:
+
 - Connect to existing PostgreSQL installation
 - Verify access to mfumo2 database
 - Clear any existing data (ensure clean restore)
@@ -84,7 +93,9 @@ The restore script will:
 - Provide next steps for application setup
 
 ### Database Configuration
+
 The restore script is pre-configured for:
+
 - **Host**: localhost
 - **Port**: 5432
 - **Database**: mfumo2
@@ -113,16 +124,19 @@ sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'password';"
 After successful database restore, configure your application:
 
 1. **Update .env file** on target system:
+
    ```bash
    DATABASE_URL="postgresql://postgres:password@localhost:5432/mfumo2?schema=public"
    ```
 
 2. **Install dependencies**:
+
    ```bash
    npm install
    ```
 
 3. **Generate Prisma client**:
+
    ```bash
    npx prisma generate
    ```
@@ -138,11 +152,13 @@ After successful database restore, configure your application:
 ### Backup Issues
 
 **Error: "DATABASE_URL not found in .env file"**
+
 - Ensure your `.env` file exists in the project root
 - Verify the `DATABASE_URL` line is not commented out
 - Check for proper formatting: `DATABASE_URL="postgresql://..."`
 
 **Error: "pg_dump: command not found"**
+
 ```bash
 # Ubuntu/Debian
 sudo apt install postgresql-client
@@ -154,11 +170,13 @@ brew install postgresql
 ### Restore Issues
 
 **Error: "Cannot connect to PostgreSQL database"**
+
 - Verify PostgreSQL is running: `sudo systemctl status postgresql`
 - Check database exists: `sudo -u postgres psql -l | grep mfumo2`
 - Verify user credentials and permissions
 
 **Error: "Permission denied"**
+
 - Ensure user has access to the database
 - Check PostgreSQL authentication configuration
 - Verify password is correct
@@ -174,12 +192,14 @@ brew install postgresql
 ## Automation
 
 ### Daily Backup Cron Job
+
 ```bash
 # Add to crontab (crontab -e)
 0 2 * * * cd /path/to/hr-system && ./backup-database.sh >> backup.log 2>&1
 ```
 
 ### Backup Retention Script
+
 ```bash
 # Keep only last 7 days of backups
 find ./backups/ -name "hr_backup_*.sql*" -mtime +7 -delete

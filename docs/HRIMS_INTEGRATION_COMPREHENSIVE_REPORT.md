@@ -64,16 +64,16 @@ The API uses a `RequestId` field to determine the operation type. All requests f
 
 ### Connection Details
 
-| Parameter | Value |
-|-----------|-------|
-| Protocol | HTTP (Internal Network) |
-| Server | 10.0.217.11 |
-| Port | 8135 |
-| Endpoint | /api/Employees |
-| Method | POST |
-| Timeout (Standard) | 30 seconds |
-| Timeout (Paginated) | 120 seconds |
-| Timeout (Documents) | 120 seconds |
+| Parameter           | Value                   |
+| ------------------- | ----------------------- |
+| Protocol            | HTTP (Internal Network) |
+| Server              | 10.0.217.11             |
+| Port                | 8135                    |
+| Endpoint            | /api/Employees          |
+| Method              | POST                    |
+| Timeout (Standard)  | 30 seconds              |
+| Timeout (Paginated) | 120 seconds             |
+| Timeout (Documents) | 120 seconds             |
 
 ### Network Requirements
 
@@ -91,6 +91,7 @@ The API uses a `RequestId` field to determine the operation type. All requests f
 **Purpose:** Retrieve a paginated list of all employees in the HRIMS system.
 
 **Request Format:**
+
 ```json
 {
   "RequestId": "201",
@@ -102,10 +103,12 @@ The API uses a `RequestId` field to determine the operation type. All requests f
 ```
 
 **Request Parameters:**
+
 - `PageNumber` (number): Zero-based page index (0 = first page)
 - `PageSize` (number): Number of records per page (recommended: 10-100)
 
 **Response Structure:**
+
 ```json
 {
   "code": 200,
@@ -160,7 +163,7 @@ The API uses a `RequestId` field to determine the operation type. All requests f
         {
           "isCurrent": true,
           "salaryScaleName": "PGSS 7",
-          "basicSalary": 850000.00
+          "basicSalary": 850000.0
         }
       ],
       "educationHistories": [
@@ -185,6 +188,7 @@ The API uses a `RequestId` field to determine the operation type. All requests f
 ```
 
 **Pagination Metadata:**
+
 - `currentPage`: Current page number being returned
 - `currentDataSize`: Number of records in current page
 - `overallDataSize`: Total number of records available
@@ -198,6 +202,7 @@ The API uses a `RequestId` field to determine the operation type. All requests f
 **Purpose:** Retrieve detailed information about a specific employee.
 
 **Request Format:**
+
 ```json
 {
   "RequestId": "202",
@@ -208,9 +213,11 @@ The API uses a `RequestId` field to determine the operation type. All requests f
 ```
 
 **Request Parameters:**
+
 - `RequestBody` (string): Employee's payroll number or ZanID
 
 **Response Structure:**
+
 ```json
 {
   "code": 200,
@@ -250,29 +257,29 @@ The API uses a `RequestId` field to determine the operation type. All requests f
 
 **Response Fields - Personal Info:**
 
-| Field | Type | Description | Example |
-|-------|------|-------------|---------|
-| zanIdNumber | string | Zanzibar ID Number | "Z123456789" |
-| payrollNumber | string | Employee payroll number | "536151" |
-| firstName | string | Employee first name | "John" |
-| middleName | string | Employee middle name | "Doe" |
-| lastName | string | Employee last name | "Mwalimu" |
-| genderName | string | Gender (Swahili) | "Mwanamme" / "Mwanamke" |
-| birthDate | ISO8601 | Date of birth | "1985-05-15T00:00:00" |
-| placeOfBirth | string | Birth place | "Stone Town" |
-| birthRegionName | string | Birth region | "Zanzibar Urban" |
-| birthCountryName | string | Birth country | "Tanzania" |
-| primaryPhone | string | Primary phone | "+255777123456" |
-| workPhone | string | Work phone | "+255242231614" |
-| houseNumber | string | House number | "123" |
-| street | string | Street name | "Malawi Road" |
-| city | string | City | "Stone Town" |
-| districtName | string | District | "Urban" |
-| regionName | string | Region | "Zanzibar Urban" |
-| zssfNumber | string | ZSSF Number | "ZSSF123456" |
-| employmentDate | ISO8601 | Employment start date | "2015-03-01T00:00:00" |
-| employmentConfirmationDate | ISO8601 | Confirmation date | "2016-03-01T00:00:00" |
-| isEmployeeConfirmed | boolean | Confirmation status | true |
+| Field                      | Type    | Description             | Example                 |
+| -------------------------- | ------- | ----------------------- | ----------------------- |
+| zanIdNumber                | string  | Zanzibar ID Number      | "Z123456789"            |
+| payrollNumber              | string  | Employee payroll number | "536151"                |
+| firstName                  | string  | Employee first name     | "John"                  |
+| middleName                 | string  | Employee middle name    | "Doe"                   |
+| lastName                   | string  | Employee last name      | "Mwalimu"               |
+| genderName                 | string  | Gender (Swahili)        | "Mwanamme" / "Mwanamke" |
+| birthDate                  | ISO8601 | Date of birth           | "1985-05-15T00:00:00"   |
+| placeOfBirth               | string  | Birth place             | "Stone Town"            |
+| birthRegionName            | string  | Birth region            | "Zanzibar Urban"        |
+| birthCountryName           | string  | Birth country           | "Tanzania"              |
+| primaryPhone               | string  | Primary phone           | "+255777123456"         |
+| workPhone                  | string  | Work phone              | "+255242231614"         |
+| houseNumber                | string  | House number            | "123"                   |
+| street                     | string  | Street name             | "Malawi Road"           |
+| city                       | string  | City                    | "Stone Town"            |
+| districtName               | string  | District                | "Urban"                 |
+| regionName                 | string  | Region                  | "Zanzibar Urban"        |
+| zssfNumber                 | string  | ZSSF Number             | "ZSSF123456"            |
+| employmentDate             | ISO8601 | Employment start date   | "2015-03-01T00:00:00"   |
+| employmentConfirmationDate | ISO8601 | Confirmation date       | "2016-03-01T00:00:00"   |
+| isEmployeeConfirmed        | boolean | Confirmation status     | true                    |
 
 **Use Case:** Individual employee profile synchronization and updates.
 
@@ -283,6 +290,7 @@ The API uses a `RequestId` field to determine the operation type. All requests f
 **Purpose:** Retrieve employee photograph as base64-encoded image data.
 
 **Request Format:**
+
 ```json
 {
   "RequestId": "203",
@@ -291,9 +299,11 @@ The API uses a `RequestId` field to determine the operation type. All requests f
 ```
 
 **Request Parameters:**
+
 - `SearchCriteria` (string): Employee ID or payroll number
 
 **Response Structure:**
+
 ```json
 {
   "code": 200,
@@ -306,6 +316,7 @@ The API uses a `RequestId` field to determine the operation type. All requests f
 ```
 
 **Alternative Response Format:**
+
 ```json
 {
   "photo": {
@@ -317,6 +328,7 @@ The API uses a `RequestId` field to determine the operation type. All requests f
 ```
 
 **Photo Data Specifications:**
+
 - **Format:** JPEG, PNG, or other web-compatible image formats
 - **Encoding:** Base64 string
 - **Size:** Typically 50KB - 500KB (before encoding)
@@ -325,6 +337,7 @@ The API uses a `RequestId` field to determine the operation type. All requests f
 
 **Possible Response Field Locations:**
 The photo data may be in different fields depending on HRIMS version:
+
 1. `data` (string) - Direct base64 string
 2. `data.Picture` (string) - Base64 string in Picture field
 3. `photo.content` (string) - Base64 in photo object
@@ -340,6 +353,7 @@ The photo data may be in different fields depending on HRIMS version:
 **Purpose:** Retrieve all employees belonging to a specific institution identified by vote code.
 
 **Request Format:**
+
 ```json
 {
   "RequestId": "204",
@@ -352,11 +366,13 @@ The photo data may be in different fields depending on HRIMS version:
 ```
 
 **Request Parameters:**
+
 - `PageNumber` (number): Zero-based page index
 - `PageSize` (number): Records per page (recommended: 10-20 for testing, 50-100 for production)
 - `RequestBody` (string): Institution vote code
 
 **Response Structure:**
+
 ```json
 {
   "code": 200,
@@ -378,12 +394,14 @@ The photo data may be in different fields depending on HRIMS version:
 ```
 
 **Pagination Details:**
+
 - Returns detailed employee data (same structure as RequestId 202)
 - Supports pagination for large institutions
 - Includes pagination metadata
 - Can timeout for large institutions with small page sizes
 
 **Performance Considerations:**
+
 - Larger page sizes (50-100) are more efficient
 - Very large institutions may require 2-3 minutes per page
 - Total pages = ceiling(overallDataSize / PageSize)
@@ -397,6 +415,7 @@ The photo data may be in different fields depending on HRIMS version:
 **Purpose:** Retrieve all employees belonging to a specific institution identified by TIN number.
 
 **Request Format:**
+
 ```json
 {
   "RequestId": "205",
@@ -409,6 +428,7 @@ The photo data may be in different fields depending on HRIMS version:
 ```
 
 **Request Parameters:**
+
 - `PageNumber` (number): Zero-based page index
 - `PageSize` (number): Records per page
 - `RequestBody` (string): Institution TIN number
@@ -417,6 +437,7 @@ The photo data may be in different fields depending on HRIMS version:
 Same as RequestId 204 (identical structure and pagination)
 
 **Difference from RequestId 204:**
+
 - Uses TIN number instead of vote code for institution identification
 - Otherwise identical functionality
 - Both return the same employee data structure
@@ -430,6 +451,7 @@ Same as RequestId 204 (identical structure and pagination)
 **Purpose:** Retrieve employee documents (certificates, contracts, etc.) by document type.
 
 **Request Format:**
+
 ```json
 {
   "RequestId": "206",
@@ -441,10 +463,12 @@ Same as RequestId 204 (identical structure and pagination)
 ```
 
 **Request Parameters:**
+
 - `SearchCriteria` (string): Employee payroll number
 - `RequestBody` (string): Document type code (see Document Type Specifications)
 
 **Response Structure:**
+
 ```json
 {
   "code": 200,
@@ -464,11 +488,13 @@ Same as RequestId 204 (identical structure and pagination)
 ```
 
 **Response Fields:**
+
 - `data` (array): Array of document attachments
 - `attachmentType` (string): Human-readable document type name
 - `attachmentContent` (string): Base64-encoded document (typically PDF)
 
 **Error Response (Timeout):**
+
 ```json
 {
   "code": 500,
@@ -479,12 +505,14 @@ Same as RequestId 204 (identical structure and pagination)
 ```
 
 **Document Processing:**
+
 - Each document type requires a separate API call
 - Responses contain arrays (multiple documents of same type possible)
 - Base64 encoding for PDF documents
 - 120-second timeout per request (increased from 60s to prevent timeouts)
 
 **Performance Characteristics:**
+
 - Single document type fetch: 5-30 seconds
 - Multiple documents of same type: 10-120 seconds
 - Timeout risk for employees with many documents
@@ -500,43 +528,45 @@ Same as RequestId 204 (identical structure and pagination)
 
 HRIMS categorizes employee documents into specific types, each with a unique code:
 
-| Code | Document Type | Database Field | Description | Storage Location |
-|------|--------------|----------------|-------------|------------------|
-| 2 | Ardhilihal | ardhilHaliUrl | Employment authorization document | employee-documents/ |
-| 3 | Employment Contract | jobContractUrl | Employment contract | employee-documents/ |
-| 4 | Birth Certificate | birthCertificateUrl | Birth certificate | employee-documents/ |
-| 8 | Educational Certificate | N/A (EmployeeCertificate table) | Educational credentials | employee-documents/ |
-| 23 | Confirmation Letter | confirmationLetterUrl | Employment confirmation letter | employee-documents/ |
+| Code | Document Type           | Database Field                  | Description                       | Storage Location    |
+| ---- | ----------------------- | ------------------------------- | --------------------------------- | ------------------- |
+| 2    | Ardhilihal              | ardhilHaliUrl                   | Employment authorization document | employee-documents/ |
+| 3    | Employment Contract     | jobContractUrl                  | Employment contract               | employee-documents/ |
+| 4    | Birth Certificate       | birthCertificateUrl             | Birth certificate                 | employee-documents/ |
+| 8    | Educational Certificate | N/A (EmployeeCertificate table) | Educational credentials           | employee-documents/ |
+| 23   | Confirmation Letter     | confirmationLetterUrl           | Employment confirmation letter    | employee-documents/ |
 
 ### Document Type Mapping
 
 **Core Employment Documents** (stored in Employee table):
+
 ```typescript
 const CORE_DOCUMENTS = {
   '2': {
     name: 'Ardhilihal',
     dbField: 'ardhilHaliUrl',
-    attachmentTypes: ['ardhilhali', 'ardhilhaliurl']
+    attachmentTypes: ['ardhilhali', 'ardhilhaliurl'],
   },
   '3': {
     name: 'Employment Contract',
     dbField: 'jobContractUrl',
-    attachmentTypes: ['employmentcontract', 'jobcontract']
+    attachmentTypes: ['employmentcontract', 'jobcontract'],
   },
   '4': {
     name: 'Birth Certificate',
     dbField: 'birthCertificateUrl',
-    attachmentTypes: ['birthcertificate']
+    attachmentTypes: ['birthcertificate'],
   },
   '23': {
     name: 'Confirmation Letter',
     dbField: 'confirmationLetterUrl',
-    attachmentTypes: ['comfirmationletter', 'confirmationletter']
-  }
+    attachmentTypes: ['comfirmationletter', 'confirmationletter'],
+  },
 };
 ```
 
 **Educational Certificates** (stored in EmployeeCertificate table):
+
 ```typescript
 const EDUCATIONAL_DOCUMENTS = {
   '8': {
@@ -550,9 +580,9 @@ const EDUCATIONAL_DOCUMENTS = {
       'Advanced Diploma',
       'Bachelor Degree',
       'Master Degree',
-      'PHd'
-    ]
-  }
+      'PHd',
+    ],
+  },
 };
 ```
 
@@ -561,6 +591,7 @@ const EDUCATIONAL_DOCUMENTS = {
 HRIMS returns documents with `attachmentType` fields that need normalization:
 
 **Normalized Mapping:**
+
 ```
 ardhilhali → Ardhil Hali
 ardhilhaliurl → Ardhil Hali
@@ -585,6 +616,7 @@ Due to HRIMS performance limitations, the system uses a split-request strategy:
 5. **Duplicate Prevention:** Skip documents already stored in MinIO
 
 **Example Fetching Sequence:**
+
 ```
 Request 1: RequestBody="2" (Ardhilihal) → Wait 2s
 Request 2: RequestBody="3" (Employment Contract) → Wait 2s
@@ -627,6 +659,7 @@ For RequestId 201, 204, 205:
 ```
 
 **Pagination Fields:**
+
 - `currentPage` (number): The page number being returned (0-based)
 - `currentDataSize` (number): Number of records in this page
 - `overallDataSize` (number): Total number of records available across all pages
@@ -634,6 +667,7 @@ For RequestId 201, 204, 205:
 ### Error Response Formats
 
 **HTTP Error (Non-200 Status):**
+
 ```json
 {
   "code": 400,
@@ -644,6 +678,7 @@ For RequestId 201, 204, 205:
 ```
 
 **HRIMS Internal Error (200 Status but failure):**
+
 ```json
 {
   "code": 500,
@@ -655,16 +690,17 @@ For RequestId 201, 204, 205:
 
 **Common Error Codes:**
 
-| Code | Status | Meaning | Common Causes |
-|------|--------|---------|---------------|
-| 200 | Success | Operation successful | N/A |
-| 400 | Failure | Bad request | Invalid parameters, missing fields |
-| 404 | Failure | Not found | Employee/institution not found |
-| 500 | Failure | Server error | Timeout, database error, server overload |
+| Code | Status  | Meaning              | Common Causes                            |
+| ---- | ------- | -------------------- | ---------------------------------------- |
+| 200  | Success | Operation successful | N/A                                      |
+| 400  | Failure | Bad request          | Invalid parameters, missing fields       |
+| 404  | Failure | Not found            | Employee/institution not found           |
+| 500  | Failure | Server error         | Timeout, database error, server overload |
 
 ### Data Type Mappings
 
 **Gender Mapping:**
+
 ```
 HRIMS → CSMS
 Mwanamme → Male
@@ -674,6 +710,7 @@ Female → Female
 ```
 
 **Employment Status Mapping:**
+
 ```
 HRIMS employeeStatusName → CSMS status
 Hai → Confirmed
@@ -686,6 +723,7 @@ isEmployeeConfirmed: false → On Probation
 ```
 
 **Date Format:**
+
 - HRIMS: ISO8601 format `"2015-03-01T00:00:00"`
 - CSMS Database: JavaScript Date object
 - Display: Various formats depending on context
@@ -803,31 +841,35 @@ User Request (Institution)
 
 #### Core API Routes
 
-| Route Path | Method | Purpose | Timeout | Response Type |
-|------------|--------|---------|---------|---------------|
-| /api/hrims/test | POST | Run integration tests | 30s per test | JSON |
-| /api/hrims/fetch-employee | POST | Fetch single employee + photos + docs | 5 min | JSON |
-| /api/hrims/fetch-by-institution | POST | Fetch all employees for institution | 5 min | Server-Sent Events |
-| /api/hrims/fetch-photos-by-institution | POST | Fetch photos for all employees | 5 min | Server-Sent Events |
-| /api/hrims/fetch-documents-by-institution | POST | Fetch documents for all employees | 15 min | Server-Sent Events |
+| Route Path                                | Method | Purpose                               | Timeout      | Response Type      |
+| ----------------------------------------- | ------ | ------------------------------------- | ------------ | ------------------ |
+| /api/hrims/test                           | POST   | Run integration tests                 | 30s per test | JSON               |
+| /api/hrims/fetch-employee                 | POST   | Fetch single employee + photos + docs | 5 min        | JSON               |
+| /api/hrims/fetch-by-institution           | POST   | Fetch all employees for institution   | 5 min        | Server-Sent Events |
+| /api/hrims/fetch-photos-by-institution    | POST   | Fetch photos for all employees        | 5 min        | Server-Sent Events |
+| /api/hrims/fetch-documents-by-institution | POST   | Fetch documents for all employees     | 15 min       | Server-Sent Events |
 
 #### Implementation Technologies
 
 **Backend Framework:**
+
 - Next.js 14 API Routes
 - TypeScript for type safety
 - Prisma ORM for database operations
 
 **Data Storage:**
+
 - PostgreSQL (nody database) for structured data
 - MinIO for object storage (photos, documents)
 
 **API Communication:**
+
 - Native fetch API for HRIMS requests
 - Axios for complex scenarios (large payloads)
 - Server-Sent Events (SSE) for real-time progress updates
 
 **Error Handling:**
+
 - AbortSignal.timeout() for request timeouts
 - Try-catch blocks for error isolation
 - Retry logic for failed requests
@@ -836,6 +878,7 @@ User Request (Institution)
 ### MinIO Integration
 
 **Storage Structure:**
+
 ```
 MinIO Bucket: csms-files
 ├── employee-photos/
@@ -852,10 +895,12 @@ MinIO Bucket: csms-files
 ```
 
 **File URL Format:**
+
 - Photos: `/api/files/employee-photos/{employeeId}.{ext}`
 - Documents: `/api/files/employee-documents/{employeeId}_{docType}.pdf`
 
 **Upload Process:**
+
 1. Receive base64 data from HRIMS
 2. Convert to Buffer
 3. Upload to MinIO with proper content-type
@@ -871,29 +916,32 @@ MinIO Bucket: csms-files
 
 Based on production testing and monitoring:
 
-| Operation | Typical Duration | Max Duration | Success Rate |
-|-----------|-----------------|--------------|--------------|
-| Single Employee (202) | 2-5 seconds | 30 seconds | 98% |
-| Employee Photo (203) | 1-3 seconds | 30 seconds | 95% |
-| Vote Code Page (204) | 10-120 seconds | 120 seconds | 92% |
-| TIN Page (205) | 10-120 seconds | 120 seconds | 92% |
-| Single Document (206) | 5-30 seconds | 120 seconds | 85% |
-| All Documents (206 x5) | 30-300 seconds | 600 seconds | 75% |
+| Operation              | Typical Duration | Max Duration | Success Rate |
+| ---------------------- | ---------------- | ------------ | ------------ |
+| Single Employee (202)  | 2-5 seconds      | 30 seconds   | 98%          |
+| Employee Photo (203)   | 1-3 seconds      | 30 seconds   | 95%          |
+| Vote Code Page (204)   | 10-120 seconds   | 120 seconds  | 92%          |
+| TIN Page (205)         | 10-120 seconds   | 120 seconds  | 92%          |
+| Single Document (206)  | 5-30 seconds     | 120 seconds  | 85%          |
+| All Documents (206 x5) | 30-300 seconds   | 600 seconds  | 75%          |
 
 ### Bulk Operation Performance
 
 **Institution Fetch (500 employees):**
+
 - Employee Data Fetch: 15-45 minutes
 - Photo Fetch: 10-25 minutes
 - Document Fetch: 45-120 minutes
 - Total Time: 70-190 minutes
 
 **Pagination Performance:**
+
 - Page Size 10: 15-30 seconds per page (slow, many requests)
 - Page Size 50: 30-90 seconds per page (balanced)
 - Page Size 100: 60-120 seconds per page (fast, fewer requests)
 
 **Recommended Settings:**
+
 - Testing: Page Size 10-20
 - Production: Page Size 50-100
 - Large Institutions (>1000 employees): Page Size 100
@@ -902,12 +950,12 @@ Based on production testing and monitoring:
 
 ```typescript
 const TIMEOUTS = {
-  SINGLE_EMPLOYEE: 30000,      // 30 seconds
-  PHOTO: 30000,                // 30 seconds
-  PAGINATED: 120000,           // 120 seconds (2 minutes)
-  DOCUMENTS: 120000,           // 120 seconds per type
-  ROUTE_MAX_DURATION: 300,     // 5 minutes (Next.js)
-  ROUTE_MAX_DURATION_LONG: 900 // 15 minutes (Next.js)
+  SINGLE_EMPLOYEE: 30000, // 30 seconds
+  PHOTO: 30000, // 30 seconds
+  PAGINATED: 120000, // 120 seconds (2 minutes)
+  DOCUMENTS: 120000, // 120 seconds per type
+  ROUTE_MAX_DURATION: 300, // 5 minutes (Next.js)
+  ROUTE_MAX_DURATION_LONG: 900, // 15 minutes (Next.js)
 };
 ```
 
@@ -945,16 +993,19 @@ const TIMEOUTS = {
 #### 1. Connection Errors
 
 **Symptom:**
+
 ```
 Error: Failed to connect to HRIMS API
 ```
 
 **Causes:**
+
 - HRIMS server down or unreachable
 - Network connectivity issues
 - Firewall blocking port 8135
 
 **Resolution:**
+
 - Verify HRIMS server status
 - Check network connectivity to 10.0.217.11
 - Confirm port 8135 is accessible
@@ -962,6 +1013,7 @@ Error: Failed to connect to HRIMS API
 #### 2. Timeout Errors
 
 **Symptom:**
+
 ```json
 {
   "code": 500,
@@ -971,12 +1023,14 @@ Error: Failed to connect to HRIMS API
 ```
 
 **Causes:**
+
 - Large dataset request
 - HRIMS server overload
 - Slow network connection
 - Too many documents for employee
 
 **Resolution:**
+
 - Reduce page size
 - Retry with smaller batch
 - Use split document type requests
@@ -985,17 +1039,20 @@ Error: Failed to connect to HRIMS API
 #### 3. Authentication Errors
 
 **Symptom:**
+
 ```
 HTTP 401 Unauthorized
 HTTP 403 Forbidden
 ```
 
 **Causes:**
+
 - Invalid ApiKey or Token
 - Expired credentials
 - API access revoked
 
 **Resolution:**
+
 - Verify credentials in configuration
 - Contact HRIMS administrator
 - Update token if expired
@@ -1003,6 +1060,7 @@ HTTP 403 Forbidden
 #### 4. Data Not Found
 
 **Symptom:**
+
 ```json
 {
   "code": 404,
@@ -1012,11 +1070,13 @@ HTTP 403 Forbidden
 ```
 
 **Causes:**
+
 - Invalid payroll number
 - Employee not in HRIMS
 - Incorrect institution identifier
 
 **Resolution:**
+
 - Verify employee exists in HRIMS
 - Check payroll number spelling
 - Confirm institution vote code/TIN
@@ -1024,16 +1084,19 @@ HTTP 403 Forbidden
 #### 5. Malformed Response
 
 **Symptom:**
+
 ```
 Error: Cannot read property 'data' of undefined
 ```
 
 **Causes:**
+
 - HRIMS API version change
 - Unexpected response format
 - Server error response
 
 **Resolution:**
+
 - Log full response for debugging
 - Check HRIMS API version
 - Implement defensive parsing
@@ -1095,6 +1158,7 @@ try {
 ### Retry Strategies
 
 **Exponential Backoff:**
+
 ```typescript
 async function fetchWithRetry(url, options, maxRetries = 3) {
   for (let attempt = 0; attempt < maxRetries; attempt++) {
@@ -1104,13 +1168,14 @@ async function fetchWithRetry(url, options, maxRetries = 3) {
       if (attempt === maxRetries - 1) throw error;
 
       const delay = Math.pow(2, attempt) * 1000; // 1s, 2s, 4s
-      await new Promise(resolve => setTimeout(resolve, delay));
+      await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
 }
 ```
 
 **Conditional Retry:**
+
 - Retry on network errors: Yes
 - Retry on timeouts: Yes (with longer timeout)
 - Retry on 404: No (permanent failure)
@@ -1134,9 +1199,11 @@ The test interface provides comprehensive testing capabilities for all HRIMS int
 **Purpose:** Test fetching detailed data for a specific employee.
 
 **Default Parameters:**
+
 - Payroll Number: 536151
 
 **What It Tests:**
+
 - Connection to HRIMS API
 - Employee data retrieval
 - Response data structure
@@ -1145,6 +1212,7 @@ The test interface provides comprehensive testing capabilities for all HRIMS int
 **Expected Response Time:** 2-5 seconds
 
 **Success Criteria:**
+
 - HTTP 200 response
 - Valid employee data structure
 - Complete personalInfo object
@@ -1155,9 +1223,11 @@ The test interface provides comprehensive testing capabilities for all HRIMS int
 **Purpose:** Test photo retrieval functionality.
 
 **Default Parameters:**
+
 - Search Criteria: 111660 (Employee ID)
 
 **What It Tests:**
+
 - Photo endpoint functionality
 - Base64 encoding
 - Image data retrieval
@@ -1166,6 +1236,7 @@ The test interface provides comprehensive testing capabilities for all HRIMS int
 **Expected Response Time:** 1-3 seconds
 
 **Success Criteria:**
+
 - HTTP 200 response
 - Base64 photo data present
 - Valid image encoding
@@ -1176,11 +1247,13 @@ The test interface provides comprehensive testing capabilities for all HRIMS int
 **Purpose:** Test paginated employee retrieval by institution vote code.
 
 **Default Parameters:**
+
 - Vote Code: 004
 - Page Number: 0
 - Page Size: 10
 
 **What It Tests:**
+
 - Pagination functionality
 - Vote code lookup
 - Bulk data retrieval
@@ -1189,6 +1262,7 @@ The test interface provides comprehensive testing capabilities for all HRIMS int
 **Expected Response Time:** 10-120 seconds
 
 **Success Criteria:**
+
 - HTTP 200 response
 - Pagination metadata present
 - Employee array populated
@@ -1199,11 +1273,13 @@ The test interface provides comprehensive testing capabilities for all HRIMS int
 **Purpose:** Test paginated employee retrieval by institution TIN.
 
 **Default Parameters:**
+
 - TIN Number: 119060370
 - Page Number: 0
 - Page Size: 10
 
 **What It Tests:**
+
 - TIN-based lookup
 - Alternative institution identifier
 - Pagination (same as Test 3)
@@ -1211,6 +1287,7 @@ The test interface provides comprehensive testing capabilities for all HRIMS int
 **Expected Response Time:** 10-120 seconds
 
 **Success Criteria:**
+
 - Same as Test 3
 - TIN successfully resolves to institution
 
@@ -1219,10 +1296,12 @@ The test interface provides comprehensive testing capabilities for all HRIMS int
 **Purpose:** Test document retrieval with split requests by document type.
 
 **Default Parameters:**
+
 - Documents Search Criteria: 149391 (Payroll Number)
 - Document Types: All (2, 3, 4, 8, 23)
 
 **What It Tests:**
+
 - Document endpoint functionality
 - Multiple document type handling
 - Base64 PDF encoding
@@ -1232,12 +1311,14 @@ The test interface provides comprehensive testing capabilities for all HRIMS int
 **Expected Response Time:** 30-600 seconds (depending on document types selected)
 
 **Success Criteria:**
+
 - HTTP 200 response for each document type
 - Valid base64 PDF data
 - Correct document type identification
 - No timeout errors
 
 **Special Features:**
+
 - Select individual document types to test
 - See separate API call for each type
 - Observe timeout handling
@@ -1246,6 +1327,7 @@ The test interface provides comprehensive testing capabilities for all HRIMS int
 ### Test Configuration Options
 
 **Test Selection:**
+
 - Individual test selection (checkboxes)
 - Quick presets:
   - Only Test 5 (Documents)
@@ -1253,6 +1335,7 @@ The test interface provides comprehensive testing capabilities for all HRIMS int
   - Select All / Deselect All
 
 **Document Type Selection (Test 5):**
+
 - Ardhilihal (Code: 2)
 - Employment Contract (Code: 3)
 - Birth Certificate (Code: 4)
@@ -1260,6 +1343,7 @@ The test interface provides comprehensive testing capabilities for all HRIMS int
 - Confirmation Letter (Code: 23)
 
 **Parameter Customization:**
+
 - Payroll numbers
 - Employee IDs
 - Vote codes
@@ -1270,12 +1354,14 @@ The test interface provides comprehensive testing capabilities for all HRIMS int
 ### Test Results Display
 
 **Request Details Section:**
+
 - Endpoint URL
 - Request headers (ApiKey, Token)
 - Request payload (JSON)
 - Request timestamp
 
 **Success Response Section:**
+
 - HTTP status code
 - Response size (characters)
 - Data keys present
@@ -1285,6 +1371,7 @@ The test interface provides comprehensive testing capabilities for all HRIMS int
 - Complete JSON response (expandable)
 
 **Error Response Section:**
+
 - HTTP status code
 - Error message
 - Error description
@@ -1321,6 +1408,7 @@ The test interface provides comprehensive testing capabilities for all HRIMS int
 ### Common Test Scenarios
 
 **Scenario 1: Verify HRIMS Connectivity**
+
 ```
 1. Run Test 1 (Single Employee)
 2. Check HTTP 200 response
@@ -1329,6 +1417,7 @@ The test interface provides comprehensive testing capabilities for all HRIMS int
 ```
 
 **Scenario 2: Test Institution Data Fetch**
+
 ```
 1. Configure vote code or TIN
 2. Set page size to 10
@@ -1339,6 +1428,7 @@ The test interface provides comprehensive testing capabilities for all HRIMS int
 ```
 
 **Scenario 3: Test Document Retrieval**
+
 ```
 1. Select only "Ardhilihal" document type
 2. Run Test 5
@@ -1348,6 +1438,7 @@ The test interface provides comprehensive testing capabilities for all HRIMS int
 ```
 
 **Scenario 4: Performance Testing**
+
 ```
 1. Run Test 3 with Page Size 10 → Note time
 2. Run Test 3 with Page Size 50 → Note time
@@ -1358,6 +1449,7 @@ The test interface provides comprehensive testing capabilities for all HRIMS int
 ### Interpreting Test Results
 
 **Successful Test:**
+
 - ✅ Green checkmark icon
 - "Success" badge
 - HTTP 200 status
@@ -1365,6 +1457,7 @@ The test interface provides comprehensive testing capabilities for all HRIMS int
 - Complete response payload
 
 **Failed Test:**
+
 - ❌ Red X icon
 - "Failed" badge
 - Error status code or message
@@ -1372,12 +1465,14 @@ The test interface provides comprehensive testing capabilities for all HRIMS int
 - Troubleshooting suggestions
 
 **Pagination Success Indicators:**
+
 - `currentPage` matches requested page
 - `currentDataSize` ≤ `pageSize`
 - `overallDataSize` shows total available
 - `data` array length matches `currentDataSize`
 
 **Document Test Success Indicators:**
+
 - Base64 data present in `attachmentContent`
 - `attachmentType` correctly identified
 - No timeout errors
@@ -1386,6 +1481,7 @@ The test interface provides comprehensive testing capabilities for all HRIMS int
 ### Test Result Analysis
 
 **Response Size Analysis:**
+
 ```
 Small Response (<10KB): Likely single employee or error
 Medium Response (10KB-100KB): Single employee with details
@@ -1394,6 +1490,7 @@ Very Large Response (>1MB): Multiple employees with full data
 ```
 
 **Timing Analysis:**
+
 ```
 <5s: Single employee, photo, or error
 5-30s: Small pagination page or single document
@@ -1408,6 +1505,7 @@ Very Large Response (>1MB): Multiple employees with full data
 ### Appendix A: Complete HRIMS Request Examples
 
 #### Example 1: Fetch Single Employee
+
 ```bash
 curl -X POST http://10.0.217.11:8135/api/Employees \
   -H "ApiKey: 0ea1e3f5-ea57-410b-a199-246fa288b851" \
@@ -1422,6 +1520,7 @@ curl -X POST http://10.0.217.11:8135/api/Employees \
 ```
 
 #### Example 2: Fetch Employee Photo
+
 ```bash
 curl -X POST http://10.0.217.11:8135/api/Employees \
   -H "ApiKey: 0ea1e3f5-ea57-410b-a199-246fa288b851" \
@@ -1434,6 +1533,7 @@ curl -X POST http://10.0.217.11:8135/api/Employees \
 ```
 
 #### Example 3: Fetch Employees by Vote Code
+
 ```bash
 curl -X POST http://10.0.217.11:8135/api/Employees \
   -H "ApiKey: 0ea1e3f5-ea57-410b-a199-246fa288b851" \
@@ -1450,6 +1550,7 @@ curl -X POST http://10.0.217.11:8135/api/Employees \
 ```
 
 #### Example 4: Fetch Employee Documents
+
 ```bash
 curl -X POST http://10.0.217.11:8135/api/Employees \
   -H "ApiKey: 0ea1e3f5-ea57-410b-a199-246fa288b851" \
@@ -1467,6 +1568,7 @@ curl -X POST http://10.0.217.11:8135/api/Employees \
 ### Appendix B: Database Schema Mapping
 
 **Employee Table Fields:**
+
 ```typescript
 Employee {
   id: string                    // UUID
@@ -1508,6 +1610,7 @@ Employee {
 **Problem:** Tests keep timing out
 
 **Solutions:**
+
 1. Reduce page size to 10-20
 2. Test with smaller dataset (fewer employees)
 3. Run tests during off-peak hours
@@ -1517,6 +1620,7 @@ Employee {
 **Problem:** Documents not found for employee
 
 **Solutions:**
+
 1. Verify employee has payroll number
 2. Check if employee exists in HRIMS
 3. Confirm documents are uploaded to HRIMS
@@ -1526,6 +1630,7 @@ Employee {
 **Problem:** Photos showing as broken/missing
 
 **Solutions:**
+
 1. Check photo exists in HRIMS
 2. Verify base64 encoding is valid
 3. Ensure MinIO upload succeeded
@@ -1535,6 +1640,7 @@ Employee {
 **Problem:** Pagination returns no data
 
 **Solutions:**
+
 1. Check vote code/TIN is correct
 2. Verify institution has employees
 3. Try page 0 instead of page 1
@@ -1569,6 +1675,7 @@ This comprehensive report documents the complete HRIMS API integration as implem
 ### Recommendations
 
 **For Optimal Performance:**
+
 - Use page sizes of 50-100 for production
 - Fetch documents in background jobs
 - Implement caching to avoid re-fetching
@@ -1576,6 +1683,7 @@ This comprehensive report documents the complete HRIMS API integration as implem
 - Use streaming responses for bulk operations
 
 **For Reliability:**
+
 - Implement retry logic with exponential backoff
 - Handle all error scenarios gracefully
 - Log all HRIMS interactions for debugging
@@ -1583,6 +1691,7 @@ This comprehensive report documents the complete HRIMS API integration as implem
 - Use transactions for database operations
 
 **For Maintainability:**
+
 - Keep HRIMS configuration centralized
 - Document all data mappings
 - Maintain comprehensive tests

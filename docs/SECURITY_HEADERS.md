@@ -61,20 +61,20 @@ The CSMS application implements **comprehensive security HTTP headers** to prote
 
 ### Summary Table
 
-| Header | Purpose | Production Value | Development Value | Risk Mitigated |
-|--------|---------|------------------|-------------------|----------------|
-| **Strict-Transport-Security** | Force HTTPS | 2 years, includeSubDomains, preload | Disabled (max-age=0) | Man-in-the-Middle |
-| **X-Frame-Options** | Prevent clickjacking | SAMEORIGIN | SAMEORIGIN | Clickjacking |
-| **X-Content-Type-Options** | Prevent MIME sniffing | nosniff | nosniff | MIME Confusion |
-| **X-XSS-Protection** | Enable XSS filter | 1; mode=block | 1; mode=block | XSS (legacy browsers) |
-| **Referrer-Policy** | Control referrer info | strict-origin-when-cross-origin | strict-origin-when-cross-origin | Info Disclosure |
-| **Permissions-Policy** | Restrict browser features | camera=(), microphone=(), etc. | Same | Privacy Invasion |
-| **Content-Security-Policy** | Prevent XSS & injection | Comprehensive policy (see below) | Same | XSS, Injection |
-| **X-DNS-Prefetch-Control** | Control DNS prefetching | on | on | DNS Leaks |
-| **X-Permitted-Cross-Domain-Policies** | Block Flash/PDF access | none | none | Cross-domain attacks |
-| **Cross-Origin-Embedder-Policy** | Require explicit CORS | require-corp | require-corp | Resource leaks |
-| **Cross-Origin-Opener-Policy** | Isolate browsing context | same-origin | same-origin | Cross-origin attacks |
-| **Cross-Origin-Resource-Policy** | Restrict resource access | same-origin | same-origin | Resource theft |
+| Header                                | Purpose                   | Production Value                    | Development Value               | Risk Mitigated        |
+| ------------------------------------- | ------------------------- | ----------------------------------- | ------------------------------- | --------------------- |
+| **Strict-Transport-Security**         | Force HTTPS               | 2 years, includeSubDomains, preload | Disabled (max-age=0)            | Man-in-the-Middle     |
+| **X-Frame-Options**                   | Prevent clickjacking      | SAMEORIGIN                          | SAMEORIGIN                      | Clickjacking          |
+| **X-Content-Type-Options**            | Prevent MIME sniffing     | nosniff                             | nosniff                         | MIME Confusion        |
+| **X-XSS-Protection**                  | Enable XSS filter         | 1; mode=block                       | 1; mode=block                   | XSS (legacy browsers) |
+| **Referrer-Policy**                   | Control referrer info     | strict-origin-when-cross-origin     | strict-origin-when-cross-origin | Info Disclosure       |
+| **Permissions-Policy**                | Restrict browser features | camera=(), microphone=(), etc.      | Same                            | Privacy Invasion      |
+| **Content-Security-Policy**           | Prevent XSS & injection   | Comprehensive policy (see below)    | Same                            | XSS, Injection        |
+| **X-DNS-Prefetch-Control**            | Control DNS prefetching   | on                                  | on                              | DNS Leaks             |
+| **X-Permitted-Cross-Domain-Policies** | Block Flash/PDF access    | none                                | none                            | Cross-domain attacks  |
+| **Cross-Origin-Embedder-Policy**      | Require explicit CORS     | require-corp                        | require-corp                    | Resource leaks        |
+| **Cross-Origin-Opener-Policy**        | Isolate browsing context  | same-origin                         | same-origin                     | Cross-origin attacks  |
+| **Cross-Origin-Resource-Policy**      | Restrict resource access  | same-origin                         | same-origin                     | Resource theft        |
 
 ---
 
@@ -85,28 +85,33 @@ The CSMS application implements **comprehensive security HTTP headers** to prote
 **Purpose:** Forces browsers to only connect via HTTPS, preventing man-in-the-middle attacks.
 
 **Configuration:**
+
 ```
 Production: max-age=63072000; includeSubDomains; preload
 Development: max-age=0 (disabled)
 ```
 
 **Directives:**
+
 - `max-age=63072000` - Browser remembers for 2 years (63,072,000 seconds)
 - `includeSubDomains` - Apply to all subdomains
 - `preload` - Eligible for browser HSTS preload list
 
 **Why Development is Disabled:**
+
 - Local development typically uses HTTP
 - Prevents browser from forcing HTTPS on localhost
 - Avoids certificate warnings during development
 
 **Production Benefits:**
+
 - ✅ Prevents SSL stripping attacks
 - ✅ Protects against protocol downgrade attacks
 - ✅ Ensures all connections are encrypted
 - ✅ Eligible for [HSTS Preload List](https://hstspreload.org/)
 
 **Important:** To submit to HSTS preload list:
+
 1. Ensure HTTPS is working on all subdomains
 2. Submit at https://hstspreload.org/
 3. Wait for browser inclusion (can take months)
@@ -118,26 +123,31 @@ Development: max-age=0 (disabled)
 **Purpose:** Prevents clickjacking by controlling whether the page can be embedded in frames.
 
 **Configuration:**
+
 ```
 SAMEORIGIN
 ```
 
 **Options:**
+
 - `DENY` - Never allow framing (most restrictive)
 - `SAMEORIGIN` - Allow framing only from same origin (our choice)
 - `ALLOW-FROM uri` - Allow specific origin (deprecated)
 
 **Why SAMEORIGIN:**
+
 - Application may need to frame its own pages
 - Balances security with functionality
 - Prevents external sites from framing our pages
 
 **Protection:**
+
 - ✅ Prevents clickjacking attacks
 - ✅ Stops UI redressing attacks
 - ✅ Blocks malicious iframe embedding
 
 **Example Attack Prevented:**
+
 ```html
 <!-- Malicious site trying to embed CSMS -->
 <iframe src="https://csms.zanajira.go.tz/dashboard/admin"></iframe>
@@ -151,16 +161,19 @@ SAMEORIGIN
 **Purpose:** Prevents browsers from MIME-sniffing responses away from declared content-type.
 
 **Configuration:**
+
 ```
 nosniff
 ```
 
 **Protection:**
+
 - ✅ Forces browser to respect `Content-Type` header
 - ✅ Prevents execution of disguised malicious files
 - ✅ Blocks MIME confusion attacks
 
 **Example Attack Prevented:**
+
 ```
 Attacker uploads image.jpg that contains JavaScript
 Without nosniff: Browser might execute it as script
@@ -174,17 +187,20 @@ With nosniff: Browser treats it strictly as image ✅
 **Purpose:** Enables browser's built-in XSS filter (legacy, but still useful for older browsers).
 
 **Configuration:**
+
 ```
 1; mode=block
 ```
 
 **Directives:**
+
 - `1` - Enable XSS filtering
 - `mode=block` - Block page load if XSS detected (don't sanitize)
 
 **Note:** Modern browsers use CSP instead, but this provides defense-in-depth for older browsers.
 
 **Protection:**
+
 - ✅ Additional XSS layer for legacy browsers
 - ✅ Blocks page rendering on XSS detection
 - ✅ Complements CSP protection
@@ -196,22 +212,26 @@ With nosniff: Browser treats it strictly as image ✅
 **Purpose:** Controls how much referrer information is sent with requests.
 
 **Configuration:**
+
 ```
 strict-origin-when-cross-origin
 ```
 
 **Behavior:**
+
 - **Same-origin requests:** Full URL sent as referrer
 - **Cross-origin HTTPS→HTTPS:** Origin only (no path/query)
 - **Cross-origin HTTPS→HTTP:** No referrer (downgrade)
 
 **Privacy Benefits:**
+
 - ✅ Prevents leaking sensitive URLs to third parties
 - ✅ Protects user session tokens in URLs
 - ✅ Reduces information disclosure
 - ✅ Maintains analytics for same-origin
 
 **Example:**
+
 ```
 User navigating from:
 https://csms.zanajira.go.tz/dashboard/profile?userId=123
@@ -230,17 +250,20 @@ User ID protected! ✅
 **Purpose:** Controls which browser features can be used by the page.
 
 **Configuration:**
+
 ```
 camera=(), microphone=(), geolocation=(), interest-cohort=()
 ```
 
 **Disabled Features:**
+
 - `camera=()` - No camera access
 - `microphone=()` - No microphone access
 - `geolocation=()` - No location access
 - `interest-cohort=()` - No FLoC tracking (privacy)
 
 **Benefits:**
+
 - ✅ Prevents malicious scripts from accessing camera/mic
 - ✅ Protects user location privacy
 - ✅ Blocks FLoC tracking (Google's tracking alternative)
@@ -274,21 +297,21 @@ upgrade-insecure-requests;
 
 **Directive Breakdown:**
 
-| Directive | Value | Purpose |
-|-----------|-------|---------|
-| `default-src 'self'` | Only same-origin by default | Secure default for all resource types |
-| `script-src` | Self + Google services + eval/inline | Allow app scripts and Google integrations |
-| `style-src` | Self + inline + Google Fonts | Allow app styles and font stylesheets |
-| `font-src` | Self + Google Fonts + data URIs | Allow custom fonts |
-| `img-src` | Self + data + HTTPS + blob | Allow images from secure sources |
-| `media-src` | Self + data + blob | Allow media files |
-| `connect-src` | Self + Gemini API + Google | Allow AJAX to API and AI services |
-| `frame-src` | Self + Google Accounts | Allow Google OAuth frames |
-| `object-src 'none'` | Block all plugins | No Flash, Java, etc. |
-| `base-uri 'self'` | Only same-origin base tags | Prevent base tag injection |
-| `form-action 'self'` | Forms only submit to same origin | Prevent form hijacking |
-| `frame-ancestors 'self'` | Only same-origin framing | Clickjacking protection (complements X-Frame-Options) |
-| `upgrade-insecure-requests` | Upgrade HTTP to HTTPS | Force secure connections |
+| Directive                   | Value                                | Purpose                                               |
+| --------------------------- | ------------------------------------ | ----------------------------------------------------- |
+| `default-src 'self'`        | Only same-origin by default          | Secure default for all resource types                 |
+| `script-src`                | Self + Google services + eval/inline | Allow app scripts and Google integrations             |
+| `style-src`                 | Self + inline + Google Fonts         | Allow app styles and font stylesheets                 |
+| `font-src`                  | Self + Google Fonts + data URIs      | Allow custom fonts                                    |
+| `img-src`                   | Self + data + HTTPS + blob           | Allow images from secure sources                      |
+| `media-src`                 | Self + data + blob                   | Allow media files                                     |
+| `connect-src`               | Self + Gemini API + Google           | Allow AJAX to API and AI services                     |
+| `frame-src`                 | Self + Google Accounts               | Allow Google OAuth frames                             |
+| `object-src 'none'`         | Block all plugins                    | No Flash, Java, etc.                                  |
+| `base-uri 'self'`           | Only same-origin base tags           | Prevent base tag injection                            |
+| `form-action 'self'`        | Forms only submit to same origin     | Prevent form hijacking                                |
+| `frame-ancestors 'self'`    | Only same-origin framing             | Clickjacking protection (complements X-Frame-Options) |
+| `upgrade-insecure-requests` | Upgrade HTTP to HTTPS                | Force secure connections                              |
 
 **⚠️ Security Trade-offs:**
 
@@ -312,6 +335,7 @@ The CSP includes some relaxed directives for functionality:
    - **Mitigation:** MinIO access controls
 
 **Protection:**
+
 - ✅ Prevents XSS attacks
 - ✅ Blocks data injection
 - ✅ Controls resource loading
@@ -329,11 +353,13 @@ Violations are logged to browser console during development. Monitor these to ti
 **Purpose:** Controls DNS prefetching to improve performance while managing privacy.
 
 **Configuration:**
+
 ```
 on
 ```
 
 **Benefits:**
+
 - ✅ Allows DNS prefetching for performance
 - ✅ Faster page loads for external resources
 - ✅ Controlled via browser
@@ -345,11 +371,13 @@ on
 **Purpose:** Prevents Adobe Flash and PDF cross-domain access.
 
 **Configuration:**
+
 ```
 none
 ```
 
 **Protection:**
+
 - ✅ Blocks Flash cross-domain policy files
 - ✅ Prevents PDF cross-domain access
 - ✅ Legacy protection (Flash deprecated, but still relevant)
@@ -361,11 +389,13 @@ none
 **Purpose:** Requires explicit permission for cross-origin resources.
 
 **Configuration:**
+
 ```
 require-corp
 ```
 
 **Protection:**
+
 - ✅ Prevents loading cross-origin resources without CORS
 - ✅ Enables advanced browser features (SharedArrayBuffer, etc.)
 - ✅ Strengthens isolation
@@ -377,11 +407,13 @@ require-corp
 **Purpose:** Isolates browsing context from cross-origin windows.
 
 **Configuration:**
+
 ```
 same-origin
 ```
 
 **Protection:**
+
 - ✅ Prevents cross-origin windows from accessing window object
 - ✅ Protects against Spectre-like attacks
 - ✅ Enables advanced performance features
@@ -393,11 +425,13 @@ same-origin
 **Purpose:** Restricts which origins can load resources.
 
 **Configuration:**
+
 ```
 same-origin
 ```
 
 **Protection:**
+
 - ✅ Only same-origin can load resources
 - ✅ Prevents cross-origin resource theft
 - ✅ Complements COEP
@@ -509,6 +543,7 @@ echo "Test complete!"
 ```
 
 **Usage:**
+
 ```bash
 chmod +x test-security-headers.sh
 ./test-security-headers.sh
@@ -529,15 +564,15 @@ This implementation resolves **VULN-NEW-002** from Security Assessment Report v2
 
 ### Attack Surface Reduction
 
-| Attack Vector | Before Headers | After Headers | Risk Reduction |
-|---------------|----------------|---------------|----------------|
-| **Clickjacking** | Vulnerable | ✅ Protected (X-Frame-Options + CSP) | 95% |
-| **XSS Attacks** | Medium Risk | ✅ Strong Protection (CSP + X-XSS) | 80% |
-| **MIME Confusion** | Vulnerable | ✅ Protected (X-Content-Type-Options) | 100% |
-| **Man-in-the-Middle** | Medium Risk | ✅ Strong Protection (HSTS) | 90% |
-| **Data Injection** | Medium Risk | ✅ Protected (CSP) | 85% |
-| **Info Disclosure** | Medium Risk | ✅ Protected (Referrer-Policy) | 70% |
-| **Cross-Origin Attacks** | Medium Risk | ✅ Protected (COOP, COEP, CORP) | 85% |
+| Attack Vector            | Before Headers | After Headers                         | Risk Reduction |
+| ------------------------ | -------------- | ------------------------------------- | -------------- |
+| **Clickjacking**         | Vulnerable     | ✅ Protected (X-Frame-Options + CSP)  | 95%            |
+| **XSS Attacks**          | Medium Risk    | ✅ Strong Protection (CSP + X-XSS)    | 80%            |
+| **MIME Confusion**       | Vulnerable     | ✅ Protected (X-Content-Type-Options) | 100%           |
+| **Man-in-the-Middle**    | Medium Risk    | ✅ Strong Protection (HSTS)           | 90%            |
+| **Data Injection**       | Medium Risk    | ✅ Protected (CSP)                    | 85%            |
+| **Info Disclosure**      | Medium Risk    | ✅ Protected (Referrer-Policy)        | 70%            |
+| **Cross-Origin Attacks** | Medium Risk    | ✅ Protected (COOP, COEP, CORP)       | 85%            |
 
 **Overall Security Improvement:** +75% attack surface reduction
 
@@ -545,14 +580,14 @@ This implementation resolves **VULN-NEW-002** from Security Assessment Report v2
 
 ### Compliance Impact
 
-| Standard | Requirement | Status |
-|----------|-------------|--------|
-| **OWASP Top 10 (2021)** | Security Headers for A05 | ✅ Met |
-| **OWASP Secure Headers Project** | All recommended headers | ✅ Met |
-| **ISO 27001** | A.13.1.3 Application Security | ✅ Met |
-| **PCI DSS** | Requirement 6.5 (XSS, Injection) | ✅ Met |
-| **NIST Cybersecurity Framework** | PR.PT-3 (Access Control) | ✅ Met |
-| **Security Assessment v2** | VULN-NEW-002 Resolution | ✅ Resolved |
+| Standard                         | Requirement                      | Status      |
+| -------------------------------- | -------------------------------- | ----------- |
+| **OWASP Top 10 (2021)**          | Security Headers for A05         | ✅ Met      |
+| **OWASP Secure Headers Project** | All recommended headers          | ✅ Met      |
+| **ISO 27001**                    | A.13.1.3 Application Security    | ✅ Met      |
+| **PCI DSS**                      | Requirement 6.5 (XSS, Injection) | ✅ Met      |
+| **NIST Cybersecurity Framework** | PR.PT-3 (Access Control)         | ✅ Met      |
+| **Security Assessment v2**       | VULN-NEW-002 Resolution          | ✅ Resolved |
 
 ---
 
@@ -561,6 +596,7 @@ This implementation resolves **VULN-NEW-002** from Security Assessment Report v2
 ### Issue: CSP Violations in Console
 
 **Symptoms:**
+
 ```
 Refused to load the script 'https://example.com/script.js'
 because it violates the Content Security Policy directive
@@ -575,6 +611,7 @@ because it violates the Content Security Policy directive
 2. **Update CSP to allow specific resource**
 
    Edit `next.config.ts`:
+
    ```typescript
    script-src 'self' 'unsafe-inline' https://trusted-domain.com;
    ```
@@ -589,16 +626,19 @@ because it violates the Content Security Policy directive
 ### Issue: Images Not Loading
 
 **Symptoms:**
+
 - Broken image icons
 - CSP violations for `img-src`
 
 **Cause:**
+
 - Image from non-HTTPS source
 - Image from disallowed origin
 
 **Solution:**
 
 Update CSP `img-src` in `next.config.ts`:
+
 ```typescript
 img-src 'self' data: https: blob: https://specific-domain.com;
 ```
@@ -608,10 +648,12 @@ img-src 'self' data: https: blob: https://specific-domain.com;
 ### Issue: HSTS Causing Localhost Issues
 
 **Symptoms:**
+
 - Can't access localhost after visiting production
 - Browser forces HTTPS on localhost
 
 **Cause:**
+
 - Browser remembers HSTS from production domain
 - `includeSubDomains` affecting localhost
 
@@ -631,18 +673,22 @@ img-src 'self' data: https: blob: https://specific-domain.com;
 ### Issue: Frames/Iframes Not Working
 
 **Symptoms:**
+
 - Content not displaying in iframe
 - Console error: "Refused to display in a frame"
 
 **Cause:**
+
 - X-Frame-Options or CSP frame-ancestors blocking
 
 **Solutions:**
 
 If same-origin framing needed:
+
 - Current config already allows (`SAMEORIGIN`)
 
 If cross-origin framing needed (rarely recommended):
+
 ```typescript
 // In next.config.ts
 {
@@ -659,6 +705,7 @@ frame-ancestors 'self' https://trusted-site.com;
 ### Issue: Third-Party Scripts Not Loading
 
 **Symptoms:**
+
 - Analytics not working
 - CDN scripts blocked
 - CSP violations
@@ -666,6 +713,7 @@ frame-ancestors 'self' https://trusted-site.com;
 **Solution:**
 
 Add trusted domains to CSP:
+
 ```typescript
 const ContentSecurityPolicy = `
   script-src 'self'
@@ -673,7 +721,9 @@ const ContentSecurityPolicy = `
     https://www.google-analytics.com;
   connect-src 'self'
     https://www.google-analytics.com;
-`.replace(/\s{2,}/g, ' ').trim();
+`
+  .replace(/\s{2,}/g, ' ')
+  .trim();
 ```
 
 ---
@@ -768,11 +818,11 @@ const ContentSecurityPolicy = `
 
 For questions or security concerns regarding HTTP security headers:
 
-| Role | Contact | Responsibility |
-|------|---------|----------------|
-| **Security Lead** | security@zanzibar.go.tz | Security headers policy |
-| **Development Lead** | dev-lead@zanzibar.go.tz | Headers implementation |
-| **CISO** | ciso@zanzibar.go.tz | Overall security compliance |
+| Role                 | Contact                 | Responsibility              |
+| -------------------- | ----------------------- | --------------------------- |
+| **Security Lead**    | security@zanzibar.go.tz | Security headers policy     |
+| **Development Lead** | dev-lead@zanzibar.go.tz | Headers implementation      |
+| **CISO**             | ciso@zanzibar.go.tz     | Overall security compliance |
 
 ---
 

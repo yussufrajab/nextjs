@@ -1,4 +1,3 @@
-
 import {
   LayoutDashboard,
   UserCheck,
@@ -34,7 +33,15 @@ export const NAV_ITEMS: NavItem[] = [
     title: 'Dashboard',
     href: '/dashboard',
     icon: LayoutDashboard, // Could use LineChart for PO if specific dashboard exists
-    roles: [ROLES.HRO, ROLES.HHRMD, ROLES.HRMO, ROLES.DO, ROLES.CSCS, ROLES.HRRP, ROLES.ADMIN as Role],
+    roles: [
+      ROLES.HRO,
+      ROLES.HHRMD,
+      ROLES.HRMO,
+      ROLES.DO,
+      ROLES.CSCS,
+      ROLES.HRRP,
+      ROLES.ADMIN as Role,
+    ],
     description: 'Overview of your activities and quick access to modules.',
   },
   {
@@ -50,56 +57,58 @@ export const NAV_ITEMS: NavItem[] = [
     icon: ShieldCheck,
     roles: [ROLES.ADMIN as Role],
     children: [
-        {
-            title: 'User Management',
-            href: '/dashboard/admin/users',
-            icon: Users,
-            roles: [ROLES.ADMIN as Role],
-            description: 'Create and manage user accounts and roles.'
-        },
-        {
-            title: 'Institution Management',
-            href: '/dashboard/admin/institutions',
-            icon: Building,
-            roles: [ROLES.ADMIN as Role],
-            description: 'Create and manage institutions.'
-        },
-        {
-            title: 'Fetch Data',
-            href: '/dashboard/admin/fetch-data',
-            icon: Download,
-            roles: [ROLES.ADMIN as Role],
-            description: 'Fetch employee data from HRIMS system.'
-        },
-        {
-            title: 'Get Photos',
-            href: '/dashboard/admin/get-photo',
-            icon: Camera,
-            roles: [ROLES.ADMIN as Role],
-            description: 'Bulk fetch employee photos from HRIMS by institution.'
-        },
-        {
-            title: 'Get Documents',
-            href: '/dashboard/admin/get-documents',
-            icon: FileText,
-            roles: [ROLES.ADMIN as Role],
-            description: 'Bulk fetch employee documents and certificates from HRIMS.'
-        },
-        {
-            title: 'Test HRIMS',
-            href: '/dashboard/admin/test-hrims',
-            icon: AlertTriangle,
-            roles: [ROLES.ADMIN as Role],
-            description: 'Test HRIMS API connectivity and data fetching.'
-        },
-        {
-            title: 'Audit Trail',
-            href: '/dashboard/admin/audit-trail',
-            icon: ShieldAlert,
-            roles: [ROLES.ADMIN as Role],
-            description: 'Monitor security events and unauthorized access attempts.'
-        }
-    ]
+      {
+        title: 'User Management',
+        href: '/dashboard/admin/users',
+        icon: Users,
+        roles: [ROLES.ADMIN as Role],
+        description: 'Create and manage user accounts and roles.',
+      },
+      {
+        title: 'Institution Management',
+        href: '/dashboard/admin/institutions',
+        icon: Building,
+        roles: [ROLES.ADMIN as Role],
+        description: 'Create and manage institutions.',
+      },
+      {
+        title: 'Fetch Data',
+        href: '/dashboard/admin/fetch-data',
+        icon: Download,
+        roles: [ROLES.ADMIN as Role],
+        description: 'Fetch employee data from HRIMS system.',
+      },
+      {
+        title: 'Get Photos',
+        href: '/dashboard/admin/get-photo',
+        icon: Camera,
+        roles: [ROLES.ADMIN as Role],
+        description: 'Bulk fetch employee photos from HRIMS by institution.',
+      },
+      {
+        title: 'Get Documents',
+        href: '/dashboard/admin/get-documents',
+        icon: FileText,
+        roles: [ROLES.ADMIN as Role],
+        description:
+          'Bulk fetch employee documents and certificates from HRIMS.',
+      },
+      {
+        title: 'Test HRIMS',
+        href: '/dashboard/admin/test-hrims',
+        icon: AlertTriangle,
+        roles: [ROLES.ADMIN as Role],
+        description: 'Test HRIMS API connectivity and data fetching.',
+      },
+      {
+        title: 'Audit Trail',
+        href: '/dashboard/admin/audit-trail',
+        icon: ShieldAlert,
+        roles: [ROLES.ADMIN as Role],
+        description:
+          'Monitor security events and unauthorized access attempts.',
+      },
+    ],
   },
   {
     title: 'Urgent Actions',
@@ -112,14 +121,23 @@ export const NAV_ITEMS: NavItem[] = [
     title: 'Employee Profiles',
     href: '/dashboard/profile',
     icon: UserCog,
-    roles: [ROLES.HRO, ROLES.EMPLOYEE, ROLES.HHRMD, ROLES.HRMO, ROLES.DO, ROLES.CSCS, ROLES.HRRP, ROLES.PO],
+    roles: [
+      ROLES.HRO,
+      ROLES.EMPLOYEE,
+      ROLES.HHRMD,
+      ROLES.HRMO,
+      ROLES.DO,
+      ROLES.CSCS,
+      ROLES.HRRP,
+      ROLES.PO,
+    ],
     description: 'View and manage employee profile information.',
   },
   {
     title: 'Employee Confirmation',
     href: '/dashboard/confirmation',
     icon: UserCheck,
-    roles: [ROLES.HRO, ROLES.HHRMD, ROLES.HRMO], 
+    roles: [ROLES.HRO, ROLES.HHRMD, ROLES.HRMO],
     description: 'Manage employee confirmation processes.',
   },
   {
@@ -160,7 +178,7 @@ export const NAV_ITEMS: NavItem[] = [
   {
     title: 'Resignation',
     href: '/dashboard/resignation',
-    icon: UserX, 
+    icon: UserX,
     roles: [ROLES.HRO, ROLES.HHRMD, ROLES.HRMO],
     description: 'Handle employee resignation submissions.',
   },
@@ -176,48 +194,91 @@ export const NAV_ITEMS: NavItem[] = [
     href: '/dashboard/termination',
     icon: ShieldAlert,
     roles: [ROLES.HRO, ROLES.DO, ROLES.HHRMD],
-    description: 'Process terminations for confirmed staff and dismissals for probationers.',
+    description:
+      'Process terminations for confirmed staff and dismissals for probationers.',
   },
   {
     title: 'Track Status',
     href: '/dashboard/track-status',
     icon: ListChecks,
-    roles: [ROLES.HRO, ROLES.HHRMD, ROLES.HRMO, ROLES.DO, ROLES.CSCS, ROLES.HRRP, ROLES.PO],
+    roles: [
+      ROLES.HRO,
+      ROLES.HHRMD,
+      ROLES.HRMO,
+      ROLES.DO,
+      ROLES.CSCS,
+      ROLES.HRRP,
+      ROLES.PO,
+    ],
     description: 'Track the status of submitted requests.',
   },
   {
     title: 'Recent Activities',
     href: '/dashboard/recent-activities',
     icon: Activity,
-    roles: [ROLES.HRO, ROLES.HHRMD, ROLES.HRMO, ROLES.DO, ROLES.CSCS, ROLES.HRRP],
+    roles: [
+      ROLES.HRO,
+      ROLES.HHRMD,
+      ROLES.HRMO,
+      ROLES.DO,
+      ROLES.CSCS,
+      ROLES.HRRP,
+    ],
     description: 'An overview of the latest requests and their statuses.',
   },
   {
     title: 'Reports & Analytics',
     href: '/dashboard/reports',
     icon: BarChart3,
-    roles: [ROLES.HRO, ROLES.HHRMD, ROLES.HRMO, ROLES.DO, ROLES.CSCS, ROLES.HRRP, ROLES.PO],
+    roles: [
+      ROLES.HRO,
+      ROLES.HHRMD,
+      ROLES.HRMO,
+      ROLES.DO,
+      ROLES.CSCS,
+      ROLES.HRRP,
+      ROLES.PO,
+    ],
     description: 'Generate and view various system reports.',
   },
 ];
 
 export function getNavItemsForRole(role: Role | null): NavItem[] {
-  console.log('getNavItemsForRole called with role:', role, 'type:', typeof role);
-  
+  console.log(
+    'getNavItemsForRole called with role:',
+    role,
+    'type:',
+    typeof role
+  );
+
   if (!role) {
     console.log('getNavItemsForRole: No role provided, returning empty array');
     return [];
   }
-  
+
   console.log('Available roles in ROLES constant:', Object.values(ROLES));
-  console.log('Role comparison - input role:', role, 'HRMO constant:', ROLES.HRMO, 'equal?', role === ROLES.HRMO);
-  
-  const filteredItems = NAV_ITEMS.filter(item => {
+  console.log(
+    'Role comparison - input role:',
+    role,
+    'HRMO constant:',
+    ROLES.HRMO,
+    'equal?',
+    role === ROLES.HRMO
+  );
+
+  const filteredItems = NAV_ITEMS.filter((item) => {
     const hasRole = item.roles.includes(role);
-    console.log(`Item "${item.title}": roles=${JSON.stringify(item.roles)}, includes ${role}? ${hasRole}`);
+    console.log(
+      `Item "${item.title}": roles=${JSON.stringify(item.roles)}, includes ${role}? ${hasRole}`
+    );
     return hasRole;
   });
-  
-  console.log('Filtered nav items for role', role, ':', filteredItems.map(item => item.title));
+
+  console.log(
+    'Filtered nav items for role',
+    role,
+    ':',
+    filteredItems.map((item) => item.title)
+  );
   return filteredItems;
 }

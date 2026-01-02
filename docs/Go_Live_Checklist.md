@@ -1,13 +1,14 @@
 # Go-Live Checklist
+
 ## Civil Service Management System (CSMS)
 
 ---
 
 ### Document Control
 
-| **Version** | **Date** | **Author** | **Changes** |
-|-------------|----------|------------|-------------|
-| 1.0 | 2025-01-15 | CSMS Technical Team | Initial go-live checklist |
+| **Version** | **Date**   | **Author**          | **Changes**               |
+| ----------- | ---------- | ------------------- | ------------------------- |
+| 1.0         | 2025-01-15 | CSMS Technical Team | Initial go-live checklist |
 
 **Document Classification**: RESTRICTED
 **Distribution**: Technical Team, Project Management, Executive Leadership
@@ -31,10 +32,13 @@
 ## 1. Introduction
 
 ### 1.1 Purpose
+
 This checklist ensures a smooth and successful go-live of the Civil Service Management System (CSMS) for the Revolutionary Government of Zanzibar.
 
 ### 1.2 Scope
+
 This checklist covers:
+
 - Pre-go-live preparation and validation (D-30 to D-1)
 - Go-live execution tasks (D-Day)
 - Post-go-live monitoring and support (D+1 to D+30)
@@ -102,13 +106,13 @@ D+30 │
 
 ### 1.4 Go-Live Date and Time
 
-| **Item** | **Details** |
-|----------|-------------|
-| Go-Live Date | [INSERT DATE] |
-| Deployment Window | 22:00 - 02:00 EAT |
-| System Unavailable | 22:00 - 02:00 EAT (4 hours) |
-| Users Can Access | 06:00 EAT |
-| Extended Support Hours | Day 1: 06:00 - 20:00 EAT |
+| **Item**               | **Details**                 |
+| ---------------------- | --------------------------- |
+| Go-Live Date           | [INSERT DATE]               |
+| Deployment Window      | 22:00 - 02:00 EAT           |
+| System Unavailable     | 22:00 - 02:00 EAT (4 hours) |
+| Users Can Access       | 06:00 EAT                   |
+| Extended Support Hours | Day 1: 06:00 - 20:00 EAT    |
 
 ---
 
@@ -117,14 +121,16 @@ D+30 │
 ### 2.1 D-30: Code Freeze and Final Testing
 
 #### 2.1.1 Code Freeze
-- [ ] **Code freeze initiated** (Date: ________, By: ________)
+
+- [ ] **Code freeze initiated** (Date: **\_\_\_\_**, By: **\_\_\_\_**)
   - [ ] No new features after this date
   - [ ] Only critical bug fixes allowed
   - [ ] All bug fixes require approval from Technical Lead
   - [ ] Production branch locked
 
 #### 2.1.2 Final UAT (User Acceptance Testing)
-- [ ] **UAT completion** (Completion Date: ________)
+
+- [ ] **UAT completion** (Completion Date: **\_\_\_\_**)
   - [ ] All UAT test cases executed (reference: CORRECT_UAT_DOCUMENT.md)
   - [ ] UAT sign-off received from all 9 user roles:
     - [ ] Director General
@@ -142,7 +148,8 @@ D+30 │
   - [ ] UAT sign-off document signed (see Appendix A)
 
 #### 2.1.3 Security Audit
-- [ ] **Security audit completed** (Date: ________)
+
+- [ ] **Security audit completed** (Date: **\_\_\_\_**)
   - [ ] Penetration testing completed
   - [ ] Vulnerability scan completed
   - [ ] Security findings report reviewed
@@ -159,7 +166,8 @@ D+30 │
   - [ ] Security audit sign-off received
 
 #### 2.1.4 Performance Testing
-- [ ] **Performance testing completed** (Date: ________)
+
+- [ ] **Performance testing completed** (Date: **\_\_\_\_**)
   - [ ] Load testing completed (target: 200 concurrent users)
   - [ ] Stress testing completed (peak load: 500 concurrent users)
   - [ ] Response time verification (target: < 2 seconds for 95% of requests)
@@ -169,7 +177,8 @@ D+30 │
   - [ ] Performance test results reviewed and approved
 
 #### 2.1.5 Integration Testing
-- [ ] **Integration testing completed** (Date: ________)
+
+- [ ] **Integration testing completed** (Date: **\_\_\_\_**)
   - [ ] HRIMS integration tested and verified
   - [ ] Employee data sync tested
   - [ ] MinIO document storage tested
@@ -190,30 +199,32 @@ D+30 │
 ### 2.2 D-14: Training and Data Preparation
 
 #### 2.2.1 User Training
-- [ ] **Training program completed** (Completion Date: ________)
+
+- [ ] **Training program completed** (Completion Date: **\_\_\_\_**)
   - [ ] Training materials finalized:
     - [ ] User Manual
     - [ ] Quick Start Guide
     - [ ] Video tutorials
     - [ ] Role-specific guides
   - [ ] Training sessions conducted:
-    - [ ] System Overview (all users) - Attendance: ____%
-    - [ ] Director General training - Attendance: ____%
-    - [ ] HR Director training - Attendance: ____%
-    - [ ] HR Officer training - Attendance: ____%
-    - [ ] HOD training - Attendance: ____%
-    - [ ] Reviewer training - Attendance: ____%
-    - [ ] Approver training - Attendance: ____%
-    - [ ] Institutions Officer training - Attendance: ____%
-    - [ ] PSC Officer training - Attendance: ____%
-    - [ ] Regular Employee training - Attendance: ____%
+    - [ ] System Overview (all users) - Attendance: \_\_\_\_%
+    - [ ] Director General training - Attendance: \_\_\_\_%
+    - [ ] HR Director training - Attendance: \_\_\_\_%
+    - [ ] HR Officer training - Attendance: \_\_\_\_%
+    - [ ] HOD training - Attendance: \_\_\_\_%
+    - [ ] Reviewer training - Attendance: \_\_\_\_%
+    - [ ] Approver training - Attendance: \_\_\_\_%
+    - [ ] Institutions Officer training - Attendance: \_\_\_\_%
+    - [ ] PSC Officer training - Attendance: \_\_\_\_%
+    - [ ] Regular Employee training - Attendance: \_\_\_\_%
   - [ ] Training completion rate > 90%
   - [ ] Training feedback collected
   - [ ] Training certificates issued
   - [ ] Super users identified and trained
 
 #### 2.2.2 Support Team Training
-- [ ] **Support team readiness** (Date: ________)
+
+- [ ] **Support team readiness** (Date: **\_\_\_\_**)
   - [ ] Help desk staff trained on CSMS
   - [ ] Support documentation reviewed
   - [ ] Ticketing system configured
@@ -224,7 +235,8 @@ D+30 │
   - [ ] Support team dry-run completed
 
 #### 2.2.3 Data Migration
-- [ ] **Data migration preparation** (Date: ________)
+
+- [ ] **Data migration preparation** (Date: **\_\_\_\_**)
   - [ ] Data migration plan reviewed
   - [ ] Data extraction from HRIMS completed
   - [ ] Data cleansing completed
@@ -236,7 +248,8 @@ D+30 │
   - [ ] Data migration sign-off received
 
 #### 2.2.4 Documentation
-- [ ] **Documentation complete** (Date: ________)
+
+- [ ] **Documentation complete** (Date: **\_\_\_\_**)
   - [ ] User Manual finalized
   - [ ] Administrator Manual finalized
   - [ ] Quick Start Guide finalized
@@ -251,7 +264,8 @@ D+30 │
 ### 2.3 D-7: Infrastructure and Change Control
 
 #### 2.3.1 Production Environment
-- [ ] **Production environment verified** (Date: ________)
+
+- [ ] **Production environment verified** (Date: **\_\_\_\_**)
   - [ ] Server infrastructure provisioned and configured
   - [ ] Operating system hardened
   - [ ] PostgreSQL database installed and configured
@@ -265,7 +279,8 @@ D+30 │
   - [ ] Domain name resolving correctly
 
 #### 2.3.2 Backup and Recovery
-- [ ] **Backup and recovery verified** (Date: ________)
+
+- [ ] **Backup and recovery verified** (Date: **\_\_\_\_**)
   - [ ] Backup solution configured
   - [ ] Database backup tested
   - [ ] MinIO backup tested
@@ -278,7 +293,8 @@ D+30 │
   - [ ] RTO (Recovery Time Objective) defined: 4 hours
 
 #### 2.3.3 Monitoring and Alerting
-- [ ] **Monitoring systems configured** (Date: ________)
+
+- [ ] **Monitoring systems configured** (Date: **\_\_\_\_**)
   - [ ] Application performance monitoring (APM) configured
   - [ ] Server resource monitoring configured
   - [ ] Database monitoring configured
@@ -297,7 +313,8 @@ D+30 │
   - [ ] Alert notification channels tested (email, SMS, Slack)
 
 #### 2.3.4 Staging Deployment
-- [ ] **Final staging deployment** (Date: ________)
+
+- [ ] **Final staging deployment** (Date: **\_\_\_\_**)
   - [ ] Production code deployed to staging
   - [ ] Database migration tested on staging
   - [ ] Smoke tests passed on staging
@@ -308,7 +325,8 @@ D+30 │
   - [ ] Staging sign-off received
 
 #### 2.3.5 Change Advisory Board (CAB)
-- [ ] **CAB approval obtained** (Date: ________)
+
+- [ ] **CAB approval obtained** (Date: **\_\_\_\_**)
   - [ ] Change request submitted
   - [ ] Deployment plan reviewed
   - [ ] Risk assessment reviewed
@@ -321,7 +339,8 @@ D+30 │
 ### 2.4 D-3: Final Preparations
 
 #### 2.4.1 Communication
-- [ ] **User communication sent** (Date: ________)
+
+- [ ] **User communication sent** (Date: **\_\_\_\_**)
   - [ ] Go-live announcement sent to all users
   - [ ] Training reminder sent
   - [ ] System unavailability notification sent
@@ -331,7 +350,8 @@ D+30 │
   - [ ] User readiness confirmed
 
 #### 2.4.2 Business Readiness
-- [ ] **Business stakeholders ready** (Date: ________)
+
+- [ ] **Business stakeholders ready** (Date: **\_\_\_\_**)
   - [ ] Executive leadership briefed
   - [ ] Department heads briefed
   - [ ] HR Directors briefed
@@ -341,7 +361,8 @@ D+30 │
   - [ ] Manual fallback procedures documented (in case of system failure)
 
 #### 2.4.3 Technical Readiness
-- [ ] **Technical team ready** (Date: ________)
+
+- [ ] **Technical team ready** (Date: **\_\_\_\_**)
   - [ ] All team members assigned roles
   - [ ] Team contact list updated
   - [ ] Communication channels tested (Slack, Teams, phone)
@@ -355,7 +376,8 @@ D+30 │
 ### 2.5 D-1: Final Verification
 
 #### 2.5.1 Pre-Deployment Checklist
-- [ ] **Final verification completed** (Date: ________, Time: ________)
+
+- [ ] **Final verification completed** (Date: **\_\_\_\_**, Time: **\_\_\_\_**)
   - [ ] All pre-go-live tasks completed
   - [ ] Code freeze maintained (no unauthorized changes)
   - [ ] Production environment verified
@@ -370,7 +392,8 @@ D+30 │
   - [ ] No conflicting changes in related systems
 
 #### 2.5.2 Go/No-Go Decision
-- [ ] **Go/No-Go meeting conducted** (Date: ________, Time: ________)
+
+- [ ] **Go/No-Go meeting conducted** (Date: **\_\_\_\_**, Time: **\_\_\_\_**)
 
   **Decision Criteria**:
   - [ ] All P1/P2 bugs resolved: YES / NO
@@ -386,15 +409,16 @@ D+30 │
   **Decision**: GO / NO-GO
 
   **Approved By**:
-  - Director General: _________________ Date: _______
-  - IT Director: ______________________ Date: _______
-  - Technical Lead: ___________________ Date: _______
-  - Project Manager: __________________ Date: _______
+  - Director General: **\*\*\*\***\_**\*\*\*\*** Date: **\_\_\_**
+  - IT Director: \***\*\*\*\*\***\_\_\***\*\*\*\*\*** Date: **\_\_\_**
+  - Technical Lead: **\*\*\*\***\_\_\_**\*\*\*\*** Date: **\_\_\_**
+  - Project Manager: **\*\*\*\***\_\_**\*\*\*\*** Date: **\_\_\_**
 
-  **If NO-GO**: New go-live date: ____________
+  **If NO-GO**: New go-live date: \***\*\_\_\_\_\*\***
 
 #### 2.5.3 Team Standby
-- [ ] **Team on standby** (Date: ________)
+
+- [ ] **Team on standby** (Date: **\_\_\_\_**)
   - [ ] Technical Lead confirmed available
   - [ ] System Administrator confirmed available
   - [ ] Database Administrator confirmed available
@@ -414,6 +438,7 @@ D+30 │
 #### 3.1.1 H-2 (20:00): Final Preparations
 
 **Technical Team Pre-Deployment Tasks**:
+
 - [ ] **Team assembly** (20:00)
   - [ ] All team members logged into communication channel
   - [ ] All team members confirmed ready
@@ -445,57 +470,69 @@ D+30 │
 #### 3.1.2 H-0 (22:00): Deployment Start
 
 **Deployment Kickoff**:
+
 - [ ] **Enable maintenance mode** (22:00)
+
   ```bash
   # Command executed by: ____________
   cp /var/www/csms/maintenance.html /var/www/html/index.html
   sudo systemctl reload nginx
   ```
+
   - [ ] Maintenance page verified
   - [ ] Users seeing maintenance page
 
 - [ ] **Stop application** (22:05)
+
   ```bash
   # Command executed by: ____________
   pm2 stop csms-production
   ```
+
   - [ ] Application stopped
   - [ ] No active connections
 
 - [ ] **Deployment notification** (22:10)
   - [ ] "Deployment started" email sent to management
   - [ ] Status updated on communication channel
-  - [ ] Time logged: ____________
+  - [ ] Time logged: \***\*\_\_\_\_\*\***
 
 #### 3.1.3 H+0.25 (22:15): Database Deployment
 
 **Database Tasks**:
+
 - [ ] **Pre-deployment database backup** (22:15)
+
   ```bash
   # Executed by: ____________
   pg_dump -U csms_user nody | gzip > /var/backups/csms/pre-deployment-$(date +%Y%m%d_%H%M%S).sql.gz
   ```
-  - [ ] Backup file created: ________________
-  - [ ] Backup size verified: ________ MB
+
+  - [ ] Backup file created: **\*\***\_\_\_\_**\*\***
+  - [ ] Backup size verified: **\_\_\_\_** MB
   - [ ] Backup integrity checked
 
 - [ ] **Database migration** (22:20)
+
   ```bash
   # Executed by: ____________
   cd /var/www/csms
   npx prisma migrate status
   npx prisma migrate deploy 2>&1 | tee logs/migration-$(date +%Y%m%d_%H%M%S).log
   ```
-  - [ ] Migration started: Time ____________
-  - [ ] Migration completed: Time ____________
+
+  - [ ] Migration started: Time \***\*\_\_\_\_\*\***
+  - [ ] Migration completed: Time \***\*\_\_\_\_\*\***
   - [ ] Migration log reviewed: No errors
   - [ ] Database schema validated
 
 - [ ] **Data migration** (22:30)
+
   ```bash
   # Executed by: ____________
   npm run migrate:data
   ```
+
   - [ ] HRIMS data imported
   - [ ] User accounts created
   - [ ] Institutions created
@@ -503,20 +540,24 @@ D+30 │
   - [ ] Data validation passed
 
 - [ ] **Database verification** (22:45)
+
   ```bash
   # Executed by: ____________
   psql -U csms_user -d nody -c "SELECT COUNT(*) FROM \"User\";"
   psql -U csms_user -d nody -c "SELECT COUNT(*) FROM \"Institution\";"
   psql -U csms_user -d nody -c "SELECT COUNT(*) FROM \"Employee\";"
   ```
-  - [ ] User count: ________ (expected: ________)
-  - [ ] Institution count: ________ (expected: ________)
-  - [ ] Employee count: ________ (expected: ________)
+
+  - [ ] User count: **\_\_\_\_** (expected: **\_\_\_\_**)
+  - [ ] Institution count: **\_\_\_\_** (expected: **\_\_\_\_**)
+  - [ ] Employee count: **\_\_\_\_** (expected: **\_\_\_\_**)
 
 #### 3.1.4 H+1 (23:00): Application Deployment
 
 **Application Tasks**:
+
 - [ ] **Code deployment** (23:00)
+
   ```bash
   # Executed by: ____________
   cd /var/www/csms
@@ -524,31 +565,38 @@ D+30 │
   git checkout production
   git pull origin production
   ```
-  - [ ] Code version: ________________
-  - [ ] Git commit hash: ________________
+
+  - [ ] Code version: **\*\***\_\_\_\_**\*\***
+  - [ ] Git commit hash: **\*\***\_\_\_\_**\*\***
 
 - [ ] **Dependencies installation** (23:05)
+
   ```bash
   # Executed by: ____________
   npm ci --only=production
   ```
+
   - [ ] Dependencies installed
   - [ ] No errors reported
 
 - [ ] **Prisma client generation** (23:10)
+
   ```bash
   # Executed by: ____________
   npx prisma generate
   ```
+
   - [ ] Prisma client generated
 
 - [ ] **Application build** (23:15)
+
   ```bash
   # Executed by: ____________
   npm run build
   ```
-  - [ ] Build started: Time ____________
-  - [ ] Build completed: Time ____________
+
+  - [ ] Build started: Time \***\*\_\_\_\_\*\***
+  - [ ] Build completed: Time \***\*\_\_\_\_\*\***
   - [ ] Build successful: YES / NO
   - [ ] .next directory verified
 
@@ -561,10 +609,12 @@ D+30 │
   - [ ] NODE_ENV=production
 
 - [ ] **Application startup** (23:30)
+
   ```bash
   # Executed by: ____________
   pm2 start ecosystem.config.js
   ```
+
   - [ ] PM2 started
   - [ ] Application instances: 4
   - [ ] All instances online
@@ -573,7 +623,9 @@ D+30 │
 #### 3.1.5 H+1.5 (23:30): Verification
 
 **System Verification**:
+
 - [ ] **Health checks** (23:35)
+
   ```bash
   # Executed by: ____________
   curl http://localhost:9002/api/health
@@ -581,16 +633,19 @@ D+30 │
   curl http://localhost:9002/api/health/minio
   curl http://localhost:9002/api/health/hrims
   ```
+
   - [ ] Application health: OK
   - [ ] Database health: OK
   - [ ] MinIO health: OK
   - [ ] HRIMS health: OK
 
 - [ ] **Smoke tests** (23:40)
+
   ```bash
   # Executed by: ____________
   npm run test:smoke-production
   ```
+
   - [ ] Login test: PASS
   - [ ] Dashboard test: PASS
   - [ ] Create request test: PASS
@@ -606,6 +661,7 @@ D+30 │
 #### 3.1.6 H+2 (00:00): Manual Testing
 
 **Functional Testing**:
+
 - [ ] **Login testing** (00:00)
   - [ ] System Admin login: SUCCESS
   - [ ] HR Director login: SUCCESS
@@ -631,6 +687,7 @@ D+30 │
 #### 3.1.7 H+2.5 (00:30): Enable Production Traffic
 
 **Go-Live Decision Checkpoint**:
+
 - [ ] **Verification summary reviewed** (00:30)
   - [ ] All health checks passed: YES / NO
   - [ ] All smoke tests passed: YES / NO
@@ -644,11 +701,13 @@ D+30 │
 
   **If PROCEED**:
   - [ ] **Disable maintenance mode** (00:35)
+
     ```bash
     # Executed by: ____________
     sudo rm /var/www/html/index.html
     sudo systemctl reload nginx
     ```
+
     - [ ] Maintenance mode disabled
     - [ ] Application accessible via https://csms.zanajira.go.tz
 
@@ -657,6 +716,7 @@ D+30 │
 #### 3.1.8 H+3 (01:00): Post-Go-Live Monitoring
 
 **Initial Monitoring**:
+
 - [ ] **Monitor application** (01:00 - 02:00)
   - [ ] Monitor access logs
     ```bash
@@ -677,16 +737,17 @@ D+30 │
     ```
 
 - [ ] **Metrics verification** (01:00 - 02:00)
-  - [ ] Response time: Average ________ seconds
-  - [ ] Error rate: ________%
-  - [ ] CPU usage: ________%
-  - [ ] Memory usage: ________%
-  - [ ] Concurrent users: ________
-  - [ ] Database connections: ________
+  - [ ] Response time: Average **\_\_\_\_** seconds
+  - [ ] Error rate: **\_\_\_\_**%
+  - [ ] CPU usage: **\_\_\_\_**%
+  - [ ] Memory usage: **\_\_\_\_**%
+  - [ ] Concurrent users: **\_\_\_\_**
+  - [ ] Database connections: **\_\_\_\_**
 
 #### 3.1.9 H+4 (02:00): Deployment Complete
 
 **Deployment Closure**:
+
 - [ ] **Final verification** (02:00)
   - [ ] System stable for 1 hour
   - [ ] No critical errors
@@ -720,6 +781,7 @@ D+30 │
 #### 4.1.1 Morning Briefing (06:00)
 
 **Team Briefing**:
+
 - [ ] **Team meeting** (06:00)
   - [ ] Deployment summary presented
   - [ ] Known issues reviewed
@@ -730,6 +792,7 @@ D+30 │
 #### 4.1.2 User Support (06:00 - 20:00)
 
 **Extended Support Hours**:
+
 - [ ] **Help desk ready** (06:00)
   - [ ] Help desk staff present
   - [ ] Support documentation available
@@ -743,24 +806,25 @@ D+30 │
   - [ ] Track support tickets
 
 - [ ] **Support metrics** (End of Day 1)
-  - [ ] Total users logged in: ________
-  - [ ] Total requests created: ________
-  - [ ] Total documents uploaded: ________
-  - [ ] Total support tickets: ________
-  - [ ] Support ticket resolution rate: ________%
-  - [ ] User satisfaction: ________%
+  - [ ] Total users logged in: **\_\_\_\_**
+  - [ ] Total requests created: **\_\_\_\_**
+  - [ ] Total documents uploaded: **\_\_\_\_**
+  - [ ] Total support tickets: **\_\_\_\_**
+  - [ ] Support ticket resolution rate: **\_\_\_\_**%
+  - [ ] User satisfaction: **\_\_\_\_**%
 
 #### 4.1.3 System Monitoring (Continuous)
 
 **Monitoring Tasks**:
+
 - [ ] **Hourly checks** (Every hour, 06:00 - 20:00)
-  - [ ] System uptime: ________%
-  - [ ] Response time: ________ seconds
-  - [ ] Error rate: ________%
-  - [ ] CPU usage: ________%
-  - [ ] Memory usage: ________%
-  - [ ] Active users: ________
-  - [ ] Database connections: ________
+  - [ ] System uptime: **\_\_\_\_**%
+  - [ ] Response time: **\_\_\_\_** seconds
+  - [ ] Error rate: **\_\_\_\_**%
+  - [ ] CPU usage: **\_\_\_\_**%
+  - [ ] Memory usage: **\_\_\_\_**%
+  - [ ] Active users: **\_\_\_\_**
+  - [ ] Database connections: **\_\_\_\_**
 
 - [ ] **Log review** (06:00, 12:00, 18:00)
   - [ ] Application logs reviewed
@@ -772,6 +836,7 @@ D+30 │
 #### 4.1.4 Issue Tracking
 
 **Issue Management**:
+
 - [ ] **Issue log maintained** (Continuous)
   - [ ] All issues logged in ticketing system
   - [ ] Issue priority assigned (P1/P2/P3/P4)
@@ -787,6 +852,7 @@ D+30 │
 #### 4.1.5 Communication
 
 **Day 1 Communication**:
+
 - [ ] **Morning update** (09:00)
   - [ ] "System is live" announcement sent
   - [ ] User access instructions sent
@@ -808,6 +874,7 @@ D+30 │
 #### 4.2.1 Daily Monitoring
 
 **Daily Tasks**:
+
 - [ ] **Daily standup** (09:00 each day)
   - [ ] Previous day summary
   - [ ] Issues review
@@ -830,6 +897,7 @@ D+30 │
 #### 4.2.2 Week 1 Tasks
 
 **Operational Tasks**:
+
 - [ ] **User feedback collection** (Daily)
   - [ ] User satisfaction surveys sent
   - [ ] Feedback collected and analyzed
@@ -851,28 +919,29 @@ D+30 │
 #### 4.2.3 Week 1 Review (D+7)
 
 **Week 1 Review Meeting**:
-- [ ] **Week 1 review conducted** (Date: ________)
+
+- [ ] **Week 1 review conducted** (Date: **\_\_\_\_**)
 
   **Metrics Review**:
-  - [ ] Total users onboarded: ________
-  - [ ] Active users (logged in at least once): ________
-  - [ ] Total requests created: ________
-  - [ ] Total documents uploaded: ________
-  - [ ] Average session duration: ________ minutes
-  - [ ] System uptime: ________%
-  - [ ] Average response time: ________ seconds
-  - [ ] Total support tickets: ________
-  - [ ] Support ticket resolution rate: ________%
-  - [ ] User satisfaction: ________%
+  - [ ] Total users onboarded: **\_\_\_\_**
+  - [ ] Active users (logged in at least once): **\_\_\_\_**
+  - [ ] Total requests created: **\_\_\_\_**
+  - [ ] Total documents uploaded: **\_\_\_\_**
+  - [ ] Average session duration: **\_\_\_\_** minutes
+  - [ ] System uptime: **\_\_\_\_**%
+  - [ ] Average response time: **\_\_\_\_** seconds
+  - [ ] Total support tickets: **\_\_\_\_**
+  - [ ] Support ticket resolution rate: **\_\_\_\_**%
+  - [ ] User satisfaction: **\_\_\_\_**%
 
   **Issues Review**:
-  - [ ] Total issues reported: ________
-  - [ ] P1 issues: ________
-  - [ ] P2 issues: ________
-  - [ ] P3 issues: ________
-  - [ ] P4 issues: ________
-  - [ ] Issues resolved: ________
-  - [ ] Issues remaining: ________
+  - [ ] Total issues reported: **\_\_\_\_**
+  - [ ] P1 issues: **\_\_\_\_**
+  - [ ] P2 issues: **\_\_\_\_**
+  - [ ] P3 issues: **\_\_\_\_**
+  - [ ] P4 issues: **\_\_\_\_**
+  - [ ] Issues resolved: **\_\_\_\_**
+  - [ ] Issues remaining: **\_\_\_\_**
 
   **Success Criteria Check**:
   - [ ] System uptime > 99%: YES / NO
@@ -886,6 +955,7 @@ D+30 │
 #### 4.3.1 Ongoing Monitoring
 
 **Weekly Tasks**:
+
 - [ ] **Weekly reviews** (Every Monday)
   - [ ] Metrics review
   - [ ] Issues review
@@ -902,6 +972,7 @@ D+30 │
 #### 4.3.2 Optimization Activities
 
 **Continuous Improvement**:
+
 - [ ] **Performance optimization**
   - [ ] Database query optimization ongoing
   - [ ] Application code optimization
@@ -921,40 +992,41 @@ D+30 │
 #### 4.3.3 Month 1 Review (D+30)
 
 **Month 1 Review Meeting**:
-- [ ] **Month 1 review conducted** (Date: ________)
+
+- [ ] **Month 1 review conducted** (Date: **\_\_\_\_**)
 
   **Final Metrics**:
-  - [ ] Total users: ________
-  - [ ] Active users (monthly): ________
-  - [ ] User adoption rate: ________%
-  - [ ] Total requests processed: ________
-  - [ ] Average request processing time: ________ days
-  - [ ] Total documents stored: ________
-  - [ ] System uptime: ________%
-  - [ ] Average response time: ________ seconds
-  - [ ] Total support tickets (month): ________
-  - [ ] Average resolution time: ________ hours
-  - [ ] User satisfaction: ________%
+  - [ ] Total users: **\_\_\_\_**
+  - [ ] Active users (monthly): **\_\_\_\_**
+  - [ ] User adoption rate: **\_\_\_\_**%
+  - [ ] Total requests processed: **\_\_\_\_**
+  - [ ] Average request processing time: **\_\_\_\_** days
+  - [ ] Total documents stored: **\_\_\_\_**
+  - [ ] System uptime: **\_\_\_\_**%
+  - [ ] Average response time: **\_\_\_\_** seconds
+  - [ ] Total support tickets (month): **\_\_\_\_**
+  - [ ] Average resolution time: **\_\_\_\_** hours
+  - [ ] User satisfaction: **\_\_\_\_**%
 
   **Business Impact**:
-  - [ ] Time savings vs. manual process: ________%
-  - [ ] Efficiency gains: ________%
-  - [ ] Cost savings: ________ TZS
-  - [ ] User productivity improvement: ________%
+  - [ ] Time savings vs. manual process: **\_\_\_\_**%
+  - [ ] Efficiency gains: **\_\_\_\_**%
+  - [ ] Cost savings: **\_\_\_\_** TZS
+  - [ ] User productivity improvement: **\_\_\_\_**%
 
   **Lessons Learned**:
   - [ ] What went well:
-    - ________________________________
-    - ________________________________
-    - ________________________________
+    - ***
+    - ***
+    - ***
   - [ ] What could be improved:
-    - ________________________________
-    - ________________________________
-    - ________________________________
+    - ***
+    - ***
+    - ***
   - [ ] Action items for future deployments:
-    - ________________________________
-    - ________________________________
-    - ________________________________
+    - ***
+    - ***
+    - ***
 
   **Success Criteria Final Check**: See Section 5
 
@@ -964,62 +1036,62 @@ D+30 │
 
 ### 5.1 Technical Success Criteria
 
-| **Criterion** | **Target** | **Actual** | **Status** |
-|---------------|------------|------------|------------|
-| **System Uptime** | > 99.5% | ________% | ☐ Pass ☐ Fail |
-| **Average Response Time** | < 2 seconds | ________ sec | ☐ Pass ☐ Fail |
-| **Peak Response Time** | < 5 seconds | ________ sec | ☐ Pass ☐ Fail |
-| **Error Rate** | < 0.1% | ________% | ☐ Pass ☐ Fail |
-| **Concurrent Users** | 200+ | ________ | ☐ Pass ☐ Fail |
-| **Database Performance** | < 100ms avg query | ________ ms | ☐ Pass ☐ Fail |
-| **File Upload Success** | > 99% | ________% | ☐ Pass ☐ Fail |
-| **HRIMS Sync Success** | > 98% | ________% | ☐ Pass ☐ Fail |
-| **Backup Success** | 100% | ________% | ☐ Pass ☐ Fail |
-| **Security Audit** | No critical issues | ________ issues | ☐ Pass ☐ Fail |
+| **Criterion**             | **Target**         | **Actual**          | **Status**    |
+| ------------------------- | ------------------ | ------------------- | ------------- |
+| **System Uptime**         | > 99.5%            | **\_\_\_\_**%       | ☐ Pass ☐ Fail |
+| **Average Response Time** | < 2 seconds        | **\_\_\_\_** sec    | ☐ Pass ☐ Fail |
+| **Peak Response Time**    | < 5 seconds        | **\_\_\_\_** sec    | ☐ Pass ☐ Fail |
+| **Error Rate**            | < 0.1%             | **\_\_\_\_**%       | ☐ Pass ☐ Fail |
+| **Concurrent Users**      | 200+               | **\_\_\_\_**        | ☐ Pass ☐ Fail |
+| **Database Performance**  | < 100ms avg query  | **\_\_\_\_** ms     | ☐ Pass ☐ Fail |
+| **File Upload Success**   | > 99%              | **\_\_\_\_**%       | ☐ Pass ☐ Fail |
+| **HRIMS Sync Success**    | > 98%              | **\_\_\_\_**%       | ☐ Pass ☐ Fail |
+| **Backup Success**        | 100%               | **\_\_\_\_**%       | ☐ Pass ☐ Fail |
+| **Security Audit**        | No critical issues | **\_\_\_\_** issues | ☐ Pass ☐ Fail |
 
 **Overall Technical Success**: ☐ PASS ☐ FAIL
 
 ### 5.2 User Adoption Success Criteria
 
-| **Criterion** | **Target** | **Actual** | **Status** |
-|---------------|------------|------------|------------|
-| **User Registration** | > 90% of expected users | ________% | ☐ Pass ☐ Fail |
-| **Active Users (Week 1)** | > 70% | ________% | ☐ Pass ☐ Fail |
-| **Active Users (Month 1)** | > 85% | ________% | ☐ Pass ☐ Fail |
-| **Requests Created** | > 100 in month 1 | ________ | ☐ Pass ☐ Fail |
-| **Documents Uploaded** | > 500 in month 1 | ________ | ☐ Pass ☐ Fail |
-| **Training Completion** | > 90% | ________% | ☐ Pass ☐ Fail |
-| **User Satisfaction** | > 80% | ________% | ☐ Pass ☐ Fail |
-| **Support Dependency** | Decreasing over time | ☐ Inc ☐ Dec | ☐ Pass ☐ Fail |
+| **Criterion**              | **Target**              | **Actual**    | **Status**    |
+| -------------------------- | ----------------------- | ------------- | ------------- |
+| **User Registration**      | > 90% of expected users | **\_\_\_\_**% | ☐ Pass ☐ Fail |
+| **Active Users (Week 1)**  | > 70%                   | **\_\_\_\_**% | ☐ Pass ☐ Fail |
+| **Active Users (Month 1)** | > 85%                   | **\_\_\_\_**% | ☐ Pass ☐ Fail |
+| **Requests Created**       | > 100 in month 1        | **\_\_\_\_**  | ☐ Pass ☐ Fail |
+| **Documents Uploaded**     | > 500 in month 1        | **\_\_\_\_**  | ☐ Pass ☐ Fail |
+| **Training Completion**    | > 90%                   | **\_\_\_\_**% | ☐ Pass ☐ Fail |
+| **User Satisfaction**      | > 80%                   | **\_\_\_\_**% | ☐ Pass ☐ Fail |
+| **Support Dependency**     | Decreasing over time    | ☐ Inc ☐ Dec   | ☐ Pass ☐ Fail |
 
 **Overall User Adoption Success**: ☐ PASS ☐ FAIL
 
 ### 5.3 Support Success Criteria
 
-| **Criterion** | **Target** | **Actual** | **Status** |
-|---------------|------------|------------|------------|
-| **Support Availability** | 99% during business hours | ________% | ☐ Pass ☐ Fail |
-| **First Response Time** | < 1 hour | ________ min | ☐ Pass ☐ Fail |
-| **Average Resolution Time** | < 24 hours | ________ hours | ☐ Pass ☐ Fail |
-| **P1 Resolution Time** | < 4 hours | ________ hours | ☐ Pass ☐ Fail |
-| **P2 Resolution Time** | < 24 hours | ________ hours | ☐ Pass ☐ Fail |
-| **Ticket Backlog** | < 10 open tickets | ________ | ☐ Pass ☐ Fail |
-| **Support Satisfaction** | > 85% | ________% | ☐ Pass ☐ Fail |
-| **Escalations** | < 5% of tickets | ________% | ☐ Pass ☐ Fail |
+| **Criterion**               | **Target**                | **Actual**         | **Status**    |
+| --------------------------- | ------------------------- | ------------------ | ------------- |
+| **Support Availability**    | 99% during business hours | **\_\_\_\_**%      | ☐ Pass ☐ Fail |
+| **First Response Time**     | < 1 hour                  | **\_\_\_\_** min   | ☐ Pass ☐ Fail |
+| **Average Resolution Time** | < 24 hours                | **\_\_\_\_** hours | ☐ Pass ☐ Fail |
+| **P1 Resolution Time**      | < 4 hours                 | **\_\_\_\_** hours | ☐ Pass ☐ Fail |
+| **P2 Resolution Time**      | < 24 hours                | **\_\_\_\_** hours | ☐ Pass ☐ Fail |
+| **Ticket Backlog**          | < 10 open tickets         | **\_\_\_\_**       | ☐ Pass ☐ Fail |
+| **Support Satisfaction**    | > 85%                     | **\_\_\_\_**%      | ☐ Pass ☐ Fail |
+| **Escalations**             | < 5% of tickets           | **\_\_\_\_**%      | ☐ Pass ☐ Fail |
 
 **Overall Support Success**: ☐ PASS ☐ FAIL
 
 ### 5.4 Business Success Criteria
 
-| **Criterion** | **Target** | **Actual** | **Status** |
-|---------------|------------|------------|------------|
-| **Process Efficiency** | > 50% improvement | ________% | ☐ Pass ☐ Fail |
-| **Request Processing Time** | < 7 days average | ________ days | ☐ Pass ☐ Fail |
-| **Paper Reduction** | > 80% | ________% | ☐ Pass ☐ Fail |
-| **Data Accuracy** | > 95% | ________% | ☐ Pass ☐ Fail |
-| **Compliance** | 100% | ________% | ☐ Pass ☐ Fail |
-| **Stakeholder Satisfaction** | > 80% | ________% | ☐ Pass ☐ Fail |
-| **ROI** | Positive in 12 months | ☐ Yes ☐ No | ☐ Pass ☐ Fail |
+| **Criterion**                | **Target**            | **Actual**        | **Status**    |
+| ---------------------------- | --------------------- | ----------------- | ------------- |
+| **Process Efficiency**       | > 50% improvement     | **\_\_\_\_**%     | ☐ Pass ☐ Fail |
+| **Request Processing Time**  | < 7 days average      | **\_\_\_\_** days | ☐ Pass ☐ Fail |
+| **Paper Reduction**          | > 80%                 | **\_\_\_\_**%     | ☐ Pass ☐ Fail |
+| **Data Accuracy**            | > 95%                 | **\_\_\_\_**%     | ☐ Pass ☐ Fail |
+| **Compliance**               | 100%                  | **\_\_\_\_**%     | ☐ Pass ☐ Fail |
+| **Stakeholder Satisfaction** | > 80%                 | **\_\_\_\_**%     | ☐ Pass ☐ Fail |
+| **ROI**                      | Positive in 12 months | ☐ Yes ☐ No        | ☐ Pass ☐ Fail |
 
 **Overall Business Success**: ☐ PASS ☐ FAIL
 
@@ -1028,15 +1100,17 @@ D+30 │
 **Overall Go-Live Success**: ☐ SUCCESS ☐ PARTIAL SUCCESS ☐ NEEDS IMPROVEMENT
 
 **Success Definition**:
+
 - **SUCCESS**: All categories pass, no P1 issues, user adoption > 85%
 - **PARTIAL SUCCESS**: 3/4 categories pass, no P1 issues, user adoption > 70%
 - **NEEDS IMPROVEMENT**: < 3 categories pass or P1 issues remain or user adoption < 70%
 
 **Sign-Off**:
-- Technical Lead: _________________ Date: _______
-- Project Manager: ________________ Date: _______
-- IT Director: ____________________ Date: _______
-- Director General: _______________ Date: _______
+
+- Technical Lead: **\*\*\*\***\_**\*\*\*\*** Date: **\_\_\_**
+- Project Manager: **\*\***\_\_\_\_**\*\*** Date: **\_\_\_**
+- IT Director: **\*\*\*\***\_\_\_\_**\*\*\*\*** Date: **\_\_\_**
+- Director General: **\*\***\_\_\_**\*\*** Date: **\_\_\_**
 
 ---
 
@@ -1044,12 +1118,12 @@ D+30 │
 
 ### 6.1 Issue Priority Definitions
 
-| **Priority** | **Definition** | **Examples** | **Response Time** | **Resolution Time** |
-|--------------|----------------|--------------|-------------------|---------------------|
-| **P1 - Critical** | System down, data loss, security breach | - System unavailable<br>- Database corruption<br>- Data breach<br>- All users cannot log in | 15 minutes | 4 hours |
-| **P2 - High** | Major functionality broken, affecting many users | - HRIMS sync broken<br>- File upload broken<br>- Login broken for specific role<br>- Performance degradation > 50% | 1 hour | 24 hours |
-| **P3 - Medium** | Minor functionality broken, affecting some users | - Notification not working<br>- Export broken<br>- UI issues<br>- Performance degradation < 50% | 4 hours | 72 hours |
-| **P4 - Low** | Cosmetic issues, enhancement requests | - Typos<br>- Layout issues<br>- Feature requests | 24 hours | 2 weeks |
+| **Priority**      | **Definition**                                   | **Examples**                                                                                                       | **Response Time** | **Resolution Time** |
+| ----------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ | ----------------- | ------------------- |
+| **P1 - Critical** | System down, data loss, security breach          | - System unavailable<br>- Database corruption<br>- Data breach<br>- All users cannot log in                        | 15 minutes        | 4 hours             |
+| **P2 - High**     | Major functionality broken, affecting many users | - HRIMS sync broken<br>- File upload broken<br>- Login broken for specific role<br>- Performance degradation > 50% | 1 hour            | 24 hours            |
+| **P3 - Medium**   | Minor functionality broken, affecting some users | - Notification not working<br>- Export broken<br>- UI issues<br>- Performance degradation < 50%                    | 4 hours           | 72 hours            |
+| **P4 - Low**      | Cosmetic issues, enhancement requests            | - Typos<br>- Layout issues<br>- Feature requests                                                                   | 24 hours          | 2 weeks             |
 
 ### 6.2 Escalation Matrix
 
@@ -1111,14 +1185,14 @@ D+30 │
 
 ### 6.3 Escalation Contact List
 
-| **Level** | **Role** | **Name** | **Phone** | **Email** | **Availability** |
-|-----------|----------|----------|-----------|-----------|------------------|
-| **Level 1** | Help Desk | [NAME] | +255-XXX-XXXX | support@csms.zanajira.go.tz | 08:00-17:00 (Extended: 06:00-20:00 Day 1-7) |
-| **Level 2** | Technical Support | [NAME] | +255-XXX-XXXX | tech-support@csms.zanajira.go.tz | 08:00-17:00 |
-| **Level 3** | System Administrator | [NAME] | +255-XXX-XXXX | sysadmin@csms.zanajira.go.tz | 24/7 on-call |
-| **Level 4** | Technical Lead | [NAME] | +255-XXX-XXXX | tech-lead@csms.zanajira.go.tz | 24/7 on-call |
-| **Level 5** | IT Director | [NAME] | +255-XXX-XXXX | it-director@csms.zanajira.go.tz | Business hours + on-call |
-| **Level 6** | Director General | [NAME] | +255-XXX-XXXX | dg@csms.zanajira.go.tz | Business hours |
+| **Level**   | **Role**             | **Name** | **Phone**     | **Email**                        | **Availability**                            |
+| ----------- | -------------------- | -------- | ------------- | -------------------------------- | ------------------------------------------- |
+| **Level 1** | Help Desk            | [NAME]   | +255-XXX-XXXX | support@csms.zanajira.go.tz      | 08:00-17:00 (Extended: 06:00-20:00 Day 1-7) |
+| **Level 2** | Technical Support    | [NAME]   | +255-XXX-XXXX | tech-support@csms.zanajira.go.tz | 08:00-17:00                                 |
+| **Level 3** | System Administrator | [NAME]   | +255-XXX-XXXX | sysadmin@csms.zanajira.go.tz     | 24/7 on-call                                |
+| **Level 4** | Technical Lead       | [NAME]   | +255-XXX-XXXX | tech-lead@csms.zanajira.go.tz    | 24/7 on-call                                |
+| **Level 5** | IT Director          | [NAME]   | +255-XXX-XXXX | it-director@csms.zanajira.go.tz  | Business hours + on-call                    |
+| **Level 6** | Director General     | [NAME]   | +255-XXX-XXXX | dg@csms.zanajira.go.tz           | Business hours                              |
 
 **External Contacts**:
 | **Service** | **Contact** | **Phone** | **Email** |
@@ -1132,6 +1206,7 @@ D+30 │
 #### 6.4.1 P1 (Critical) Escalation
 
 **Immediate Actions** (0-15 minutes):
+
 1. **Report issue** via phone call to Technical Lead
 2. **Create P1 ticket** in ticketing system
 3. **Activate war room** (virtual conference call)
@@ -1140,17 +1215,20 @@ D+30 │
 6. **Start incident log**: Document all actions
 
 **Ongoing** (Every 30 minutes):
+
 1. **Status update** to IT Director
 2. **Update ticket** with progress
 3. **User communication** if issue is user-facing
 4. **Document actions** in incident log
 
 **Escalation Triggers**:
+
 - **2 hours**: If not resolved, escalate to IT Director
 - **4 hours**: If not resolved, consider rollback
 - **4 hours**: If not resolved, notify Director General
 
 **Resolution**:
+
 1. **Verify fix** in production
 2. **Monitor** for 1 hour
 3. **Close ticket** with root cause analysis
@@ -1160,20 +1238,24 @@ D+30 │
 #### 6.4.2 P2 (High) Escalation
 
 **Initial Actions** (0-1 hour):
+
 1. **Create P2 ticket** in ticketing system
 2. **Assign to developer**
 3. **Notify team** via email
 4. **Investigate** root cause
 
 **Ongoing** (Every 4 hours):
+
 1. **Status update** to team
 2. **Update ticket** with progress
 
 **Escalation Triggers**:
+
 - **24 hours**: If not resolved, escalate to Technical Lead
 - **48 hours**: If not resolved, escalate to IT Director
 
 **Resolution**:
+
 1. **Verify fix** in production
 2. **Monitor** for 24 hours
 3. **Close ticket** with root cause
@@ -1182,6 +1264,7 @@ D+30 │
 #### 6.4.3 P3 (Medium) and P4 (Low) Escalation
 
 **Standard Process**:
+
 1. **Create ticket**
 2. **Assign to appropriate team member**
 3. **Weekly review** in team meeting
@@ -1194,35 +1277,35 @@ D+30 │
 
 ### 7.1 Core Team Roles and Responsibilities
 
-| **Role** | **Name** | **Contact** | **Responsibilities** |
-|----------|----------|-------------|----------------------|
-| **Project Manager** | [NAME] | [PHONE/EMAIL] | - Overall go-live coordination<br>- Stakeholder communication<br>- Timeline management<br>- Go/No-Go decision facilitation<br>- Issue escalation management |
-| **Technical Lead** | [NAME] | [PHONE/EMAIL] | - Technical decision making<br>- Deployment oversight<br>- Rollback decisions<br>- Technical escalations<br>- Post-go-live technical review |
-| **System Administrator** | [NAME] | [PHONE/EMAIL] | - Infrastructure deployment<br>- Server management<br>- Nginx configuration<br>- SSL/TLS management<br>- System monitoring |
-| **Database Administrator** | [NAME] | [PHONE/EMAIL] | - Database deployment<br>- Migration execution<br>- Data validation<br>- Database monitoring<br>- Performance tuning |
-| **Developer** | [NAME] | [PHONE/EMAIL] | - Application deployment<br>- Code verification<br>- Bug fixes<br>- Smoke testing<br>- Issue resolution |
-| **QA Lead** | [NAME] | [PHONE/EMAIL] | - Test execution<br>- Verification testing<br>- Issue validation<br>- UAT coordination<br>- Quality sign-off |
-| **Support Lead** | [NAME] | [PHONE/EMAIL] | - Help desk coordination<br>- User support<br>- Ticket management<br>- User communication<br>- Training coordination |
-| **Security Lead** | [NAME] | [PHONE/EMAIL] | - Security monitoring<br>- Access control verification<br>- Incident response<br>- Security compliance |
-| **Network Engineer** | [NAME] | [PHONE/EMAIL] | - Network configuration<br>- Firewall management<br>- VPN access<br>- Connectivity issues |
+| **Role**                   | **Name** | **Contact**   | **Responsibilities**                                                                                                                                        |
+| -------------------------- | -------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Project Manager**        | [NAME]   | [PHONE/EMAIL] | - Overall go-live coordination<br>- Stakeholder communication<br>- Timeline management<br>- Go/No-Go decision facilitation<br>- Issue escalation management |
+| **Technical Lead**         | [NAME]   | [PHONE/EMAIL] | - Technical decision making<br>- Deployment oversight<br>- Rollback decisions<br>- Technical escalations<br>- Post-go-live technical review                 |
+| **System Administrator**   | [NAME]   | [PHONE/EMAIL] | - Infrastructure deployment<br>- Server management<br>- Nginx configuration<br>- SSL/TLS management<br>- System monitoring                                  |
+| **Database Administrator** | [NAME]   | [PHONE/EMAIL] | - Database deployment<br>- Migration execution<br>- Data validation<br>- Database monitoring<br>- Performance tuning                                        |
+| **Developer**              | [NAME]   | [PHONE/EMAIL] | - Application deployment<br>- Code verification<br>- Bug fixes<br>- Smoke testing<br>- Issue resolution                                                     |
+| **QA Lead**                | [NAME]   | [PHONE/EMAIL] | - Test execution<br>- Verification testing<br>- Issue validation<br>- UAT coordination<br>- Quality sign-off                                                |
+| **Support Lead**           | [NAME]   | [PHONE/EMAIL] | - Help desk coordination<br>- User support<br>- Ticket management<br>- User communication<br>- Training coordination                                        |
+| **Security Lead**          | [NAME]   | [PHONE/EMAIL] | - Security monitoring<br>- Access control verification<br>- Incident response<br>- Security compliance                                                      |
+| **Network Engineer**       | [NAME]   | [PHONE/EMAIL] | - Network configuration<br>- Firewall management<br>- VPN access<br>- Connectivity issues                                                                   |
 
 ### 7.2 Extended Team
 
-| **Role** | **Name** | **Contact** | **Responsibilities** |
-|----------|----------|-------------|----------------------|
-| **IT Director** | [NAME] | [PHONE/EMAIL] | - Executive oversight<br>- Strategic decisions<br>- Escalation point |
-| **HR Director** | [NAME] | [PHONE/EMAIL] | - Business stakeholder<br>- User readiness<br>- Business process validation |
-| **Training Coordinator** | [NAME] | [PHONE/EMAIL] | - User training<br>- Documentation distribution<br>- User onboarding |
-| **Communication Lead** | [NAME] | [PHONE/EMAIL] | - User communication<br>- Announcement distribution<br>- Status updates |
+| **Role**                 | **Name** | **Contact**   | **Responsibilities**                                                        |
+| ------------------------ | -------- | ------------- | --------------------------------------------------------------------------- |
+| **IT Director**          | [NAME]   | [PHONE/EMAIL] | - Executive oversight<br>- Strategic decisions<br>- Escalation point        |
+| **HR Director**          | [NAME]   | [PHONE/EMAIL] | - Business stakeholder<br>- User readiness<br>- Business process validation |
+| **Training Coordinator** | [NAME]   | [PHONE/EMAIL] | - User training<br>- Documentation distribution<br>- User onboarding        |
+| **Communication Lead**   | [NAME]   | [PHONE/EMAIL] | - User communication<br>- Announcement distribution<br>- Status updates     |
 
 ### 7.3 On-Call Schedule (D-Day to D+7)
 
-| **Date** | **Primary On-Call** | **Backup On-Call** | **Hours** |
-|----------|--------------------|--------------------|-----------|
-| D-Day (Deployment) | [NAME] | [NAME] | 20:00 - 06:00 |
-| D+1 (Day 1) | [NAME] | [NAME] | 06:00 - 20:00 |
-| D+1 (Night 1) | [NAME] | [NAME] | 20:00 - 06:00 |
-| D+2 to D+7 | [ROTATION] | [ROTATION] | 24/7 |
+| **Date**           | **Primary On-Call** | **Backup On-Call** | **Hours**     |
+| ------------------ | ------------------- | ------------------ | ------------- |
+| D-Day (Deployment) | [NAME]              | [NAME]             | 20:00 - 06:00 |
+| D+1 (Day 1)        | [NAME]              | [NAME]             | 06:00 - 20:00 |
+| D+1 (Night 1)      | [NAME]              | [NAME]             | 20:00 - 06:00 |
+| D+2 to D+7         | [ROTATION]          | [ROTATION]         | 24/7          |
 
 ---
 
@@ -1349,6 +1432,7 @@ CSMS Technical Team
 ### 9.1 Rollback Decision Criteria
 
 **ROLLBACK REQUIRED** if ANY of the following:
+
 - [ ] System completely unavailable for > 30 minutes
 - [ ] Data corruption detected
 - [ ] Data loss detected
@@ -1359,6 +1443,7 @@ CSMS Technical Team
 - [ ] Performance degradation > 80%
 
 **ROLLBACK RECOMMENDED** if ANY of the following:
+
 - [ ] Multiple P1 issues (>3) with no clear resolution path
 - [ ] P1 issue cannot be resolved within 2 hours
 - [ ] Major functionality broken affecting > 30% of users
@@ -1366,6 +1451,7 @@ CSMS Technical Team
 - [ ] Performance degradation 50-80%
 
 **CONTINUE with MONITORING** if:
+
 - [ ] Minor issues (P3/P4) only
 - [ ] P2 issues with clear resolution path
 - [ ] Issues affecting < 10% of users
@@ -1446,11 +1532,13 @@ CSMS Technical Team
 ### 9.3 Rollback Authorization
 
 **Rollback can be initiated by**:
+
 - Technical Lead
 - IT Director
 - Director General (after consultation)
 
 **Approval required**:
+
 - **ROLLBACK REQUIRED**: Technical Lead can proceed (notify IT Director immediately)
 - **ROLLBACK RECOMMENDED**: Requires IT Director approval
 

@@ -16,7 +16,10 @@ import { Switch } from '@/components/ui/switch';
 import { Loader2, KeyRound, Copy, Check, AlertCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { PasswordStrengthMeter } from '@/components/auth/password-strength-meter';
-import { validatePasswordComplexity, isCommonPassword } from '@/lib/password-utils';
+import {
+  validatePasswordComplexity,
+  isCommonPassword,
+} from '@/lib/password-utils';
 
 interface ResetPasswordModalProps {
   isOpen: boolean;
@@ -38,7 +41,9 @@ export function ResetPasswordModal({
   const [autoGenerate, setAutoGenerate] = useState(true);
   const [customPassword, setCustomPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [generatedPassword, setGeneratedPassword] = useState<string | null>(null);
+  const [generatedPassword, setGeneratedPassword] = useState<string | null>(
+    null
+  );
   const [copied, setCopied] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -58,7 +63,8 @@ export function ResetPasswordModal({
       if (!validatePasswordComplexity(customPassword)) {
         toast({
           title: 'Weak Password',
-          description: 'Password must contain at least one uppercase, lowercase, number, or special character.',
+          description:
+            'Password must contain at least one uppercase, lowercase, number, or special character.',
           variant: 'destructive',
         });
         return;
@@ -67,7 +73,8 @@ export function ResetPasswordModal({
       if (isCommonPassword(customPassword)) {
         toast({
           title: 'Common Password',
-          description: 'This password is too common. Please choose a stronger password or use auto-generate.',
+          description:
+            'This password is too common. Please choose a stronger password or use auto-generate.',
           variant: 'destructive',
         });
         return;
@@ -130,7 +137,11 @@ export function ResetPasswordModal({
       onClose();
     } else if (generatedPassword) {
       // Confirm before closing if password was generated
-      if (confirm('Are you sure you want to close? Make sure you have copied the temporary password.')) {
+      if (
+        confirm(
+          'Are you sure you want to close? Make sure you have copied the temporary password.'
+        )
+      ) {
         setGeneratedPassword(null);
         setCustomPassword('');
         setAutoGenerate(true);
@@ -150,7 +161,8 @@ export function ResetPasswordModal({
             Reset User Password
           </DialogTitle>
           <DialogDescription>
-            Reset the password for <strong>{username}</strong>. A temporary password will be created that expires in 7 days.
+            Reset the password for <strong>{username}</strong>. A temporary
+            password will be created that expires in 7 days.
           </DialogDescription>
         </DialogHeader>
 
@@ -191,7 +203,8 @@ export function ResetPasswordModal({
             {!autoGenerate && (
               <div className="space-y-2">
                 <Label htmlFor="customPassword">
-                  Custom Temporary Password <span className="text-red-500">*</span>
+                  Custom Temporary Password{' '}
+                  <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="customPassword"
@@ -221,7 +234,9 @@ export function ResetPasswordModal({
                 Cancel
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isSubmitting && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
                 Reset Password
               </Button>
             </DialogFooter>
@@ -233,7 +248,8 @@ export function ResetPasswordModal({
                 Password reset successfully!
               </p>
               <p className="text-xs text-green-700">
-                Share this temporary password with the user securely. They must change it on first login.
+                Share this temporary password with the user securely. They must
+                change it on first login.
               </p>
             </div>
 
@@ -262,15 +278,13 @@ export function ResetPasswordModal({
 
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
               <p className="text-xs text-yellow-800">
-                <strong>Important:</strong> This password will only be shown once. Make sure to copy it before closing this dialog.
+                <strong>Important:</strong> This password will only be shown
+                once. Make sure to copy it before closing this dialog.
               </p>
             </div>
 
             <DialogFooter>
-              <Button
-                type="button"
-                onClick={handleClose}
-              >
+              <Button type="button" onClick={handleClose}>
                 Close
               </Button>
             </DialogFooter>

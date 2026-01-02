@@ -12,7 +12,9 @@ const prisma = new PrismaClient();
 /**
  * Get user from session/cookie
  */
-async function getUserFromRequest(request: NextRequest): Promise<{ id: string; role: string } | null> {
+async function getUserFromRequest(
+  request: NextRequest
+): Promise<{ id: string; role: string } | null> {
   try {
     const authCookie = request.cookies.get('auth-storage')?.value;
     if (!authCookie) return null;

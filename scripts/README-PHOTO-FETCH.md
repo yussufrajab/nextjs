@@ -45,31 +45,37 @@ Options:
 ### Examples
 
 #### Fetch photos for all institutions
+
 ```bash
 npx tsx scripts/fetch-all-photos.ts
 ```
 
 #### Fetch photos for a specific institution
+
 ```bash
 npx tsx scripts/fetch-all-photos.ts --institution-id abc123
 ```
 
 #### Skip employees who already have photos
+
 ```bash
 npx tsx scripts/fetch-all-photos.ts --skip-existing
 ```
 
 #### Process only first 50 employees (for testing)
+
 ```bash
 npx tsx scripts/fetch-all-photos.ts --batch-size 50
 ```
 
 #### Dry run to see what would happen
+
 ```bash
 npx tsx scripts/fetch-all-photos.ts --dry-run
 ```
 
 #### Combine multiple options
+
 ```bash
 npx tsx scripts/fetch-all-photos.ts --skip-existing --delay 200 --batch-size 100
 ```
@@ -90,11 +96,13 @@ npx tsx scripts/fetch-all-photos.ts --skip-existing
 #### Daily at 2 AM (Recommended for production)
 
 1. Open crontab:
+
 ```bash
 crontab -e
 ```
 
 2. Add this line:
+
 ```bash
 0 2 * * * cd /home/nextjs && npx tsx scripts/fetch-all-photos.ts --skip-existing >> logs/photo-fetch-cron.log 2>&1
 ```
@@ -122,11 +130,13 @@ pm2 start scripts/fetch-photos.sh --name photo-fetch --cron "0 2 * * *" --no-aut
 This will run the script daily at 2 AM.
 
 To see scheduled jobs:
+
 ```bash
 pm2 list
 ```
 
 To stop the scheduled job:
+
 ```bash
 pm2 stop photo-fetch
 pm2 delete photo-fetch
@@ -137,6 +147,7 @@ pm2 delete photo-fetch
 ### Console Output
 
 The script provides detailed console output including:
+
 - Configuration summary
 - Institution-by-institution progress
 - Employee-by-employee results
@@ -151,6 +162,7 @@ logs/photo-fetch-2025-12-09T14-30-00-000Z.json
 ```
 
 Each file contains:
+
 - Timestamp
 - Configuration options used
 - Summary statistics
@@ -207,16 +219,19 @@ Each file contains:
 ### Delay Between Requests
 
 The default delay is 100ms between requests. You can adjust this based on:
+
 - HRIMS server load capacity
 - Time constraints
 - Network conditions
 
 For faster execution (if HRIMS can handle it):
+
 ```bash
 npx tsx scripts/fetch-all-photos.ts --delay 50
 ```
 
 For more conservative execution:
+
 ```bash
 npx tsx scripts/fetch-all-photos.ts --delay 500
 ```
@@ -236,6 +251,7 @@ npx tsx scripts/fetch-all-photos.ts --batch-size 100 --skip-existing
 ### Estimated Time
 
 With 100ms delay:
+
 - 100 employees: ~10 seconds
 - 1,000 employees: ~1.7 minutes
 - 5,000 employees: ~8.5 minutes
@@ -245,6 +261,7 @@ With 100ms delay:
 ### View Cron Job Logs
 
 If running via cron:
+
 ```bash
 tail -f logs/photo-fetch-cron.log
 ```
@@ -252,6 +269,7 @@ tail -f logs/photo-fetch-cron.log
 ### View PM2 Logs
 
 If running via PM2:
+
 ```bash
 pm2 logs photo-fetch
 ```
@@ -268,17 +286,20 @@ cat logs/photo-fetch-2025-12-09T14-30-00-000Z.json | jq '.summary'
 ### Script Fails to Run
 
 1. Make sure you're in the project directory:
+
 ```bash
 cd /home/nextjs
 ```
 
 2. Check Node.js and dependencies are installed:
+
 ```bash
 node --version
 npm list @prisma/client
 ```
 
 3. Try running with verbose output:
+
 ```bash
 npx tsx scripts/fetch-all-photos.ts --dry-run
 ```
@@ -286,6 +307,7 @@ npx tsx scripts/fetch-all-photos.ts --dry-run
 ### HRIMS Connection Issues
 
 If you get connection errors:
+
 - Check HRIMS server is accessible: `curl http://10.0.217.11:8135/api`
 - Verify API credentials are correct in the script
 - Try increasing the timeout
@@ -294,6 +316,7 @@ If you get connection errors:
 ### Database Connection Issues
 
 If you get database errors:
+
 - Check `.env` file has correct DATABASE_URL
 - Verify PostgreSQL is running: `systemctl status postgresql`
 - Check database connection: `psql $DATABASE_URL`
@@ -309,6 +332,7 @@ If you get database errors:
 ## Support
 
 For issues or questions, check:
+
 - Console output for error messages
 - JSON log files in `logs/` directory
 - PM2 logs if using PM2: `pm2 logs photo-fetch`

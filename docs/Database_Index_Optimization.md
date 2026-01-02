@@ -13,6 +13,7 @@ Successfully added comprehensive database indexes to improve query performance a
 ## Indexes Added
 
 ### Employee Table
+
 The Employee table received the following performance indexes:
 
 ```prisma
@@ -24,15 +25,18 @@ The Employee table received the following performance indexes:
 ```
 
 **Impact:**
+
 - Employee search by name: **2-5 seconds → 200-500ms** (80-90% faster)
 - Payroll number lookups: **Instant** (indexed)
 - Employment date sorting: **Optimized** for descending order
 - Filtered queries by status and institution: **Significantly faster**
 
 ### Request Tables
+
 Added indexes to all request types for dashboard performance:
 
 **Models Updated:**
+
 - PromotionRequest
 - ConfirmationRequest
 - RetirementRequest
@@ -44,6 +48,7 @@ Added indexes to all request types for dashboard performance:
 - Complaint
 
 **Indexes Added to Each:**
+
 ```prisma
 @@index([status])                    // Status filtering (dashboard metrics)
 @@index([reviewStage])               // Review stage queries
@@ -52,6 +57,7 @@ Added indexes to all request types for dashboard performance:
 ```
 
 **Impact:**
+
 - Dashboard metrics queries: **20-40% faster**
 - Status filtering: **Instant** for pending/approved/rejected queries
 - Recent activities: **Optimized** sorting by creation date
@@ -63,21 +69,21 @@ Added indexes to all request types for dashboard performance:
 
 ### Before Optimization
 
-| Query Type | Execution Time | Records |
-|------------|---------------|---------|
-| Employee name search | 2-5 seconds | 10,000+ |
-| Payroll number search | 1-3 seconds | 10,000+ |
-| Dashboard metrics (19 queries) | 800-1200ms | Various |
-| Request status filtering | 400-800ms | 1,000+ |
+| Query Type                     | Execution Time | Records |
+| ------------------------------ | -------------- | ------- |
+| Employee name search           | 2-5 seconds    | 10,000+ |
+| Payroll number search          | 1-3 seconds    | 10,000+ |
+| Dashboard metrics (19 queries) | 800-1200ms     | Various |
+| Request status filtering       | 400-800ms      | 1,000+  |
 
 ### After Optimization
 
-| Query Type | Execution Time | Records | Improvement |
-|------------|---------------|---------|-------------|
-| Employee name search | 200-500ms | 10,000+ | **80-90% faster** |
-| Payroll number search | 50-150ms | 10,000+ | **90-95% faster** |
-| Dashboard metrics (19 queries) | 500-800ms | Various | **30-40% faster** |
-| Request status filtering | 100-200ms | 1,000+ | **70-80% faster** |
+| Query Type                     | Execution Time | Records | Improvement       |
+| ------------------------------ | -------------- | ------- | ----------------- |
+| Employee name search           | 200-500ms      | 10,000+ | **80-90% faster** |
+| Payroll number search          | 50-150ms       | 10,000+ | **90-95% faster** |
+| Dashboard metrics (19 queries) | 500-800ms      | Various | **30-40% faster** |
+| Request status filtering       | 100-200ms      | 1,000+  | **70-80% faster** |
 
 ---
 
@@ -100,17 +106,18 @@ Added indexes to all request types for dashboard performance:
 ## Scalability
 
 ### Current Database Size
+
 - Employees: ~10,000 records (estimated)
 - Requests: ~5,000-10,000 total across all types
 
 ### Projected Performance at Scale
 
 | Employee Count | Search Time (Before) | Search Time (After) |
-|----------------|---------------------|---------------------|
-| 10,000 | 2-5 seconds | 200-500ms |
-| 50,000 | 10-20 seconds | 300-600ms |
-| 100,000 | 20-40 seconds | 400-800ms |
-| 500,000 | 2+ minutes | 600ms-1.2s |
+| -------------- | -------------------- | ------------------- |
+| 10,000         | 2-5 seconds          | 200-500ms           |
+| 50,000         | 10-20 seconds        | 300-600ms           |
+| 100,000        | 20-40 seconds        | 400-800ms           |
+| 500,000        | 2+ minutes           | 600ms-1.2s          |
 
 **Result:** Database can now scale to **500,000+ employees** without significant performance degradation.
 
@@ -127,6 +134,7 @@ npx prisma db push
 ```
 
 **Result:**
+
 ```
 ✔ Your database is now in sync with your Prisma schema. Done in 354ms
 ✔ Generated Prisma Client (v6.19.1) in 255ms
@@ -213,6 +221,7 @@ ORDER BY
 ## Next Steps
 
 ### Immediate Actions
+
 1. ✅ **Done:** Database indexes added
 2. **Monitor:** Track query performance improvements in production
 3. **Optimize:** Add indexes to other tables if needed
@@ -231,17 +240,20 @@ From the Performance Test Report priority list:
 ## Cost-Benefit Analysis
 
 ### Effort
+
 - **Time spent:** 30 minutes
 - **Complexity:** Low
 - **Risk:** Very Low (non-destructive operation)
 
 ### Benefits
+
 - **Performance improvement:** 80-90% faster searches
 - **Scalability:** Handles 10× more data efficiently
 - **User experience:** Near-instant search results
 - **Database load:** Reduced query execution time = lower CPU usage
 
 ### ROI
+
 - **Highest ROI optimization** in the performance improvement roadmap
 - **Immediate impact** on all users
 - **Long-term value** as data grows

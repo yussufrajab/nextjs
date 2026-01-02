@@ -31,6 +31,7 @@ This guide covers deployment and monitoring for **4 major performance optimizati
 ### ✅ Commits Pushed to GitHub
 
 **Commit History:**
+
 ```bash
 git log --oneline -5
 
@@ -60,6 +61,7 @@ git log --oneline -3
 ```
 
 **Expected Output:**
+
 ```
 a07dbc79 Implement JavaScript bundle optimization - Phase 1
 8e7952e1 Implement comprehensive performance optimizations for CSMS
@@ -78,6 +80,7 @@ npm list --depth=0 | wc -l
 ```
 
 **What Changed:**
+
 - Removed: `firebase` (53 packages)
 - Removed: `recharts` (36 packages)
 - Added: `@next/bundle-analyzer` (16 packages)
@@ -110,6 +113,7 @@ SQL
 ```
 
 **Expected Indexes on Employee Table:**
+
 - `Employee_employmentDate_idx`
 - `Employee_institutionId_idx`
 - `Employee_name_idx`
@@ -119,12 +123,14 @@ SQL
 - `Employee_zanId_key` (existing unique)
 
 **Migration Time:**
+
 - Duration: ~354ms (very fast)
 - Downtime: Zero (indexes created online)
 - Data loss: None
 
 **Rollback Plan:**
 If indexes cause issues, you can drop them:
+
 ```sql
 DROP INDEX IF EXISTS "Employee_name_idx";
 DROP INDEX IF EXISTS "Employee_payrollNumber_idx";
@@ -144,6 +150,7 @@ echo $?  # Should output: 0
 ```
 
 **Expected Output:**
+
 ```
 ✓ Compiled successfully in 9-12s
 ✓ Generating static pages (84/84)
@@ -151,12 +158,14 @@ echo $?  # Should output: 0
 ```
 
 **Build Size Check:**
+
 ```bash
 # Check bundle sizes
 du -sh .next/static/chunks/*.js | sort -h | tail -10
 ```
 
 **Look for:**
+
 - Main chunk should be smaller (~480-550KB vs 684KB)
 - No firebase or recharts chunks
 - Overall bundle reduction
@@ -179,6 +188,7 @@ docker-compose logs -f --tail 50
 ```
 
 **Verify Application Started:**
+
 ```bash
 # Check application is responding
 curl -I http://localhost:9002/
@@ -191,12 +201,14 @@ curl -I http://localhost:9002/
 **Test Critical Flows:**
 
 1. **Login Page**
+
 ```bash
 curl http://localhost:9002/login
 # Should return 200 OK
 ```
 
 2. **Dashboard (Authenticated)**
+
 ```bash
 # Test with browser or authenticated curl
 # Navigate to: http://your-domain/dashboard
@@ -204,6 +216,7 @@ curl http://localhost:9002/login
 ```
 
 3. **Employee Search**
+
 ```bash
 # Test search functionality in browser
 # Navigate to employee list
@@ -212,6 +225,7 @@ curl http://localhost:9002/login
 ```
 
 4. **File Upload**
+
 ```bash
 # Test file upload in browser
 # Upload 3-5 files simultaneously
@@ -219,6 +233,7 @@ curl http://localhost:9002/login
 ```
 
 5. **API Endpoints**
+
 ```bash
 # Test caching headers
 curl -I http://localhost:9002/api/institutions
@@ -249,11 +264,13 @@ sudo journalctl -u csms -p err -n 100
 ```
 
 **Green Flags:**
+
 - ✅ Application starts successfully
 - ✅ No error logs
 - ✅ All routes accessible
 
 **Red Flags:**
+
 - ❌ Module not found errors
 - ❌ Database connection failures
 - ❌ 500 errors on any route
@@ -274,6 +291,7 @@ LIMIT 10;
 ```
 
 **What to Look For:**
+
 - Employee searches: <500ms average
 - Payroll lookups: <200ms average
 - Dashboard queries: <800ms average
@@ -334,6 +352,7 @@ ORDER BY
 ```
 
 **What to Look For:**
+
 - New indexes should have `idx_scan > 0` (being used)
 - Higher `idx_scan` = more queries using the index
 - `idx_tup_fetch` should be proportional to queries
@@ -344,6 +363,7 @@ If `idx_scan = 0` after 24 hours, indexes might not be optimally configured.
 #### Cache Hit Rates
 
 **Monitor Server Logs:**
+
 ```bash
 # Count cache-related requests
 grep "Cache-Control" /var/log/nginx/access.log | wc -l
@@ -353,11 +373,13 @@ pm2 logs csms | grep "api/employees" | head -20
 ```
 
 **Expected Cache Behavior:**
+
 - First request: Full database query (slow)
 - Second request within TTL: Cached (fast)
 - Request after TTL: Stale-while-revalidate (fast + background refresh)
 
 **Target Cache Hit Rates:**
+
 - Institutions: 90-95% hit rate
 - Employees: 70-80% hit rate
 - Requests: 50-60% hit rate
@@ -387,14 +409,17 @@ window.addEventListener('load', (event) => {
 #### File Upload Monitoring
 
 **Track Upload Times:**
+
 - Monitor file upload completion times
 - Compare before/after for multi-file uploads
 - Look for 70-80% improvement
 
 **Before:**
+
 - 5 files: ~20 seconds
 
 **After (Expected):**
+
 - 5 files: ~6 seconds
 
 ### Long-term Monitoring (First Week)
@@ -416,6 +441,7 @@ ORDER BY date DESC;
 ```
 
 **Expected:**
+
 - 60-80% reduction in query count
 - 50-70% reduction in average query time
 - Fewer long-running queries (>1s)
@@ -423,6 +449,7 @@ ORDER BY date DESC;
 #### 2. Server Resource Usage
 
 **CPU Usage:**
+
 ```bash
 # Monitor CPU usage
 top -bn1 | grep node
@@ -432,11 +459,13 @@ pm2 monit
 ```
 
 **Expected:**
+
 - 20-40% reduction in CPU usage (less database work)
 - More headroom for concurrent users
 - Fewer CPU spikes
 
 **Memory Usage:**
+
 ```bash
 # Check memory usage
 free -m
@@ -446,6 +475,7 @@ ps aux | grep node
 ```
 
 **Expected:**
+
 - Similar or slightly lower memory usage
 - Bundle optimization reduces client-side memory
 - Server-side memory similar (caching is HTTP-level)
@@ -453,6 +483,7 @@ ps aux | grep node
 #### 3. Error Rates
 
 **Monitor Application Errors:**
+
 ```bash
 # Check error logs daily
 grep -i error /var/log/csms/*.log | wc -l
@@ -462,6 +493,7 @@ grep -i error /var/log/csms/*.log | wc -l
 ```
 
 **Red Flags:**
+
 - Increase in 500 errors
 - Database timeout errors
 - Cache-related errors
@@ -470,6 +502,7 @@ grep -i error /var/log/csms/*.log | wc -l
 #### 4. User Feedback
 
 **Collect User Reports:**
+
 - Are searches faster?
 - Are page loads faster?
 - Are file uploads faster?
@@ -482,30 +515,35 @@ grep -i error /var/log/csms/*.log | wc -l
 ### Key Performance Indicators (KPIs)
 
 #### Database Performance
+
 - [ ] Employee searches: <500ms (vs 2-5s before)
 - [ ] Dashboard load: <800ms (vs 800-1200ms before)
 - [ ] Database query volume: 60-80% reduction
 - [ ] Index usage: All new indexes showing idx_scan > 0
 
 #### API Performance
+
 - [ ] Cache hit rate: >65% overall
 - [ ] Institutions cache hit: >90%
 - [ ] Employees cache hit: >70%
 - [ ] API P95 latency: <1000ms (vs 1500ms before)
 
 #### Upload Performance
+
 - [ ] 5-file upload: <7s (vs 20s before)
 - [ ] 10-file upload: <10s (vs 40s before)
 - [ ] Upload success rate: >95%
 - [ ] Parallel uploads working correctly
 
 #### Bundle Performance
+
 - [ ] Main chunk: <550KB (vs 684KB before)
 - [ ] Total bundle: <2.0MB (vs 2.5MB before)
 - [ ] Package count: ~770 (vs 859 before)
 - [ ] Build time: <12s (similar or better)
 
 #### User Experience
+
 - [ ] Page load (cached): <400ms
 - [ ] Time to Interactive: <3.5s (vs 4.5s before)
 - [ ] Zero user-reported regressions
@@ -518,10 +556,12 @@ grep -i error /var/log/csms/*.log | wc -l
 ### Issue 1: Database Migration Fails
 
 **Symptoms:**
+
 - `prisma db push` or `prisma migrate deploy` errors
 - Index creation fails
 
 **Solution:**
+
 ```bash
 # Check database connection
 npx prisma db execute --stdin <<SQL
@@ -538,6 +578,7 @@ SQL
 ```
 
 **Prevention:**
+
 - Ensure database has proper permissions
 - Ensure no conflicting index names
 - Check disk space on database server
@@ -545,11 +586,13 @@ SQL
 ### Issue 2: Cache Not Working
 
 **Symptoms:**
+
 - No Cache-Control headers in responses
 - All requests hitting database
 - No performance improvement
 
 **Diagnosis:**
+
 ```bash
 # Check if headers are being set
 curl -I http://localhost:9002/api/employees | grep Cache-Control
@@ -561,6 +604,7 @@ curl -I http://localhost:9002/api/employees | grep Cache-Control
 **Solutions:**
 
 1. **If headers missing:**
+
 ```bash
 # Verify code changes deployed
 git log --oneline -1
@@ -572,6 +616,7 @@ pm2 restart csms
 ```
 
 2. **If CDN/Proxy stripping headers:**
+
 ```nginx
 # In nginx.conf or similar
 proxy_pass_header Cache-Control;
@@ -579,6 +624,7 @@ proxy_ignore_headers Set-Cookie;
 ```
 
 3. **If Next.js not respecting headers:**
+
 ```bash
 # Check Next.js version
 npm list next
@@ -592,11 +638,13 @@ npm run build
 ### Issue 3: Parallel Uploads Not Working
 
 **Symptoms:**
+
 - File uploads still slow
 - Uploads happening sequentially
 - No speed improvement
 
 **Diagnosis:**
+
 ```bash
 # Check if new code deployed
 grep -A 5 "Upload files in parallel" src/components/ui/file-upload.tsx
@@ -607,6 +655,7 @@ grep -A 5 "Upload files in parallel" src/components/ui/file-upload.tsx
 **Solutions:**
 
 1. **Clear browser cache:**
+
 ```javascript
 // In browser console
 localStorage.clear();
@@ -615,6 +664,7 @@ location.reload(true);
 ```
 
 2. **Verify client bundle updated:**
+
 ```bash
 # Check main chunk timestamp
 ls -la .next/static/chunks/main-*.js
@@ -623,6 +673,7 @@ ls -la .next/static/chunks/main-*.js
 ```
 
 3. **Test upload manually:**
+
 - Open browser DevTools → Network tab
 - Upload 3 files
 - Check if requests fire simultaneously (not one after another)
@@ -630,6 +681,7 @@ ls -la .next/static/chunks/main-*.js
 ### Issue 4: Build Fails After Dependency Removal
 
 **Symptoms:**
+
 - `npm run build` fails
 - Module not found errors
 - Import errors
@@ -637,6 +689,7 @@ ls -la .next/static/chunks/main-*.js
 **Common Errors:**
 
 **Error: Cannot find module 'firebase'**
+
 ```bash
 # Search for remaining firebase imports
 grep -r "from ['\"']firebase" src/
@@ -645,6 +698,7 @@ grep -r "from ['\"']firebase" src/
 ```
 
 **Error: Cannot find module 'recharts'**
+
 ```bash
 # Search for remaining recharts imports
 grep -r "from ['\"']recharts" src/
@@ -654,6 +708,7 @@ grep -r "from ['\"']recharts" src/
 ```
 
 **Solution:**
+
 ```bash
 # Reinstall dependencies
 rm -rf node_modules package-lock.json
@@ -666,6 +721,7 @@ npm run build
 ### Issue 5: Increased Server Load
 
 **Symptoms:**
+
 - Higher CPU usage than before
 - More memory consumption
 - Server struggling
@@ -673,6 +729,7 @@ npm run build
 **Possible Causes:**
 
 1. **Indexes Rebuilding:**
+
 ```sql
 -- Check for index rebuilds
 SELECT * FROM pg_stat_progress_create_index;
@@ -681,9 +738,11 @@ SELECT * FROM pg_stat_progress_create_index;
 ```
 
 2. **Cache Not Working:**
+
 - See "Issue 2: Cache Not Working" above
 
 3. **Parallel Uploads Overloading:**
+
 ```bash
 # Check concurrent connections
 netstat -an | grep :9002 | wc -l
@@ -692,6 +751,7 @@ netstat -an | grep :9002 | wc -l
 ```
 
 **Solutions:**
+
 - Monitor for 24-48 hours (indexes settle in)
 - Implement rate limiting if needed
 - Scale server resources if sustained high load
@@ -758,6 +818,7 @@ DROP INDEX IF EXISTS "Employee_institutionId_idx";
 ### Notify Stakeholders
 
 **Before Deployment:**
+
 ```
 Subject: Scheduled Performance Upgrade - [Date/Time]
 
@@ -781,6 +842,7 @@ IT Team
 ```
 
 **After Successful Deployment:**
+
 ```
 Subject: Performance Upgrade Complete ✓
 
@@ -800,11 +862,13 @@ IT Team
 ### User Training (Optional)
 
 **No training required** - all changes are backend/infrastructure:
+
 - UI remains the same
 - Workflows unchanged
 - Just faster performance
 
 Users will naturally notice:
+
 - Searches complete almost instantly
 - File uploads finish much quicker
 - Pages load faster
@@ -816,12 +880,14 @@ Users will naturally notice:
 ### After 1 Week
 
 **Schedule Review Meeting:**
+
 - Review monitoring metrics
 - Discuss user feedback
 - Identify any issues
 - Plan next steps (Phase 2 if successful)
 
 **Metrics to Review:**
+
 - Database query performance
 - Cache hit rates
 - Upload times
@@ -830,6 +896,7 @@ Users will naturally notice:
 - Server resource usage
 
 **Decision Points:**
+
 1. Are all KPIs met? → Success!
 2. Any regressions found? → Address immediately
 3. Users happy with performance? → Document success
@@ -876,14 +943,17 @@ Users will naturally notice:
 ## Support Contacts
 
 **For Deployment Issues:**
+
 - DevOps Team: [contact]
 - Database Admin: [contact]
 
 **For Application Issues:**
+
 - Development Team: [contact]
 - Product Owner: [contact]
 
 **For User Reports:**
+
 - Help Desk: [contact]
 - Support Email: [contact]
 
@@ -892,18 +962,21 @@ Users will naturally notice:
 ## Conclusion
 
 This deployment includes 4 major performance optimizations that are:
+
 - ✅ Well-tested
 - ✅ Fully documented
 - ✅ Low-risk (with rollback plan)
 - ✅ High-impact (significant improvements)
 
 **Expected Outcome:**
+
 - Faster, more responsive application
 - Better user experience
 - Reduced server load
 - Foundation for future optimizations
 
 **Success Criteria:**
+
 - Zero critical issues
 - Positive user feedback
 - Metrics meet targets

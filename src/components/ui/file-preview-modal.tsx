@@ -22,7 +22,7 @@ export function FilePreviewModal({
   open,
   onOpenChange,
   objectKey,
-  title = 'File Preview'
+  title = 'File Preview',
 }: FilePreviewModalProps) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [contentType, setContentType] = useState<string>('');
@@ -50,39 +50,41 @@ export function FilePreviewModal({
       console.log('Loading preview for objectKey:', objectKey);
       console.log('ObjectKey type:', typeof objectKey);
       console.log('ObjectKey length:', objectKey.length);
-      
+
       // The preview API streams the file directly, so we just need to construct the URL
       // Use session-based authentication (cookies will be sent automatically)
       const previewApiUrl = `/api/files/preview/${encodeURIComponent(objectKey)}`;
       console.log('Preview API URL:', previewApiUrl);
-      
+
       // Test if the file exists by making a HEAD request first
       const testResponse = await fetch(previewApiUrl, {
         method: 'HEAD',
-        credentials: 'include' // Include cookies for session auth
+        credentials: 'include', // Include cookies for session auth
       });
-      
+
       if (!testResponse.ok) {
-        throw new Error(`File not accessible: ${testResponse.status} ${testResponse.statusText}`);
+        throw new Error(
+          `File not accessible: ${testResponse.status} ${testResponse.statusText}`
+        );
       }
-      
+
       // Get content type from headers
-      const responseContentType = testResponse.headers.get('content-type') || 'application/pdf';
+      const responseContentType =
+        testResponse.headers.get('content-type') || 'application/pdf';
       console.log('Content type from headers:', responseContentType);
-      
+
       // Set the preview URL directly to the API endpoint
       setPreviewUrl(previewApiUrl);
       setContentType(responseContentType);
-      
-      console.log('Preview URL set to:', previewApiUrl);
 
+      console.log('Preview URL set to:', previewApiUrl);
     } catch (error: any) {
       console.error('Preview error:', error);
       setError(error.message || 'Failed to load file preview');
       toast({
         title: 'Preview Error',
         description: `Failed to load file preview: ${error.message}`,
-        variant: 'destructive'
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
@@ -92,43 +94,45 @@ export function FilePreviewModal({
   const handleDownload = () => {
     if (objectKey) {
       console.log('Download - Object key:', objectKey);
-      
+
       const downloadUrl = `/api/files/download/${encodeURIComponent(objectKey)}`;
       console.log('Download URL:', downloadUrl);
-      
+
       // Use session-based authentication (cookies will be sent automatically)
       fetch(downloadUrl, {
-        credentials: 'include' // Include cookies for session auth
+        credentials: 'include', // Include cookies for session auth
       })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`Download failed: ${response.status} ${response.statusText}`);
-        }
-        return response.blob();
-      })
-      .then(blob => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = getFileName(objectKey);
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-        
-        toast({
-          title: 'Success',
-          description: 'File downloaded successfully',
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(
+              `Download failed: ${response.status} ${response.statusText}`
+            );
+          }
+          return response.blob();
+        })
+        .then((blob) => {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = getFileName(objectKey);
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+
+          toast({
+            title: 'Success',
+            description: 'File downloaded successfully',
+          });
+        })
+        .catch((error) => {
+          console.error('Download error:', error);
+          toast({
+            title: 'Download Error',
+            description: `Failed to download file: ${error.message}`,
+            variant: 'destructive',
+          });
         });
-      })
-      .catch(error => {
-        console.error('Download error:', error);
-        toast({
-          title: 'Download Error',
-          description: `Failed to download file: ${error.message}`,
-          variant: 'destructive'
-        });
-      });
     }
   };
 
@@ -245,9 +249,7 @@ export function FilePreviewModal({
           )}
         </DialogHeader>
 
-        <div className="mt-4">
-          {renderPreview()}
-        </div>
+        <div className="mt-4">{renderPreview()}</div>
       </DialogContent>
     </Dialog>
   );

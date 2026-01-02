@@ -17,7 +17,16 @@ export async function GET(req: Request) {
     const page = parseInt(searchParams.get('page') || '1');
     const size = parseInt(searchParams.get('size') || '200'); // Default to 200 for latest profiles
 
-    console.log('Employees API called with params:', { userRole, userInstitutionId, employeeId, q, status, gender, page, size });
+    console.log('Employees API called with params:', {
+      userRole,
+      userInstitutionId,
+      employeeId,
+      q,
+      status,
+      gender,
+      page,
+      size,
+    });
 
     // If a specific employee ID is requested, fetch that employee directly
     if (employeeId) {
@@ -27,52 +36,61 @@ export async function GET(req: Request) {
           Institution: {
             select: {
               id: true,
-              name: true
-            }
+              name: true,
+            },
           },
           EmployeeCertificate: {
             select: {
               id: true,
               type: true,
               name: true,
-              url: true
-            }
-          }
-        }
+              url: true,
+            },
+          },
+        },
       });
 
       if (!employee) {
-        return NextResponse.json({
-          success: false,
-          message: 'Employee not found'
-        }, { status: 404 });
+        return NextResponse.json(
+          {
+            success: false,
+            message: 'Employee not found',
+          },
+          { status: 404 }
+        );
       }
 
       // Map EmployeeCertificate to certificates
       const mappedEmployee = {
         ...employee,
         certificates: employee.EmployeeCertificate,
-        EmployeeCertificate: undefined
+        EmployeeCertificate: undefined,
       };
 
       // Set cache headers for single employee lookup
       const headers = new Headers();
-      headers.set('Cache-Control', `public, s-maxage=${CACHE_TTL}, stale-while-revalidate=${CACHE_TTL * 2}`);
+      headers.set(
+        'Cache-Control',
+        `public, s-maxage=${CACHE_TTL}, stale-while-revalidate=${CACHE_TTL * 2}`
+      );
 
-      return NextResponse.json({
-        success: true,
-        data: [mappedEmployee],
-        pagination: {
-          page: 1,
-          size: 1,
-          total: 1,
-          totalPages: 1
-        }
-      }, { headers });
+      return NextResponse.json(
+        {
+          success: true,
+          data: [mappedEmployee],
+          pagination: {
+            page: 1,
+            size: 1,
+            total: 1,
+            totalPages: 1,
+          },
+        },
+        { headers }
+      );
     }
 
     // Build where clause based on parameters
-    let whereClause: any = {};
+    const whereClause: any = {};
 
     // CSC internal roles and Admin should see ALL employees from all institutions
     // Institution-based roles should only see employees from their institution
@@ -81,16 +99,21 @@ export async function GET(req: Request) {
       whereClause.institutionId = userInstitutionId;
       console.log('Applying institution filter for role:', userRole);
     } else if (isCSCRole(userRole)) {
-      console.log('CSC role detected - showing ALL institutions data for role:', userRole);
+      console.log(
+        'CSC role detected - showing ALL institutions data for role:',
+        userRole
+      );
     } else if (!userRole) {
-      console.log('No user role provided - showing ALL employees (default behavior)');
+      console.log(
+        'No user role provided - showing ALL employees (default behavior)'
+      );
     }
 
     // If a specific institution ID is provided, filter by that institution
-    const institutionId = searchParams.get('institutionId')
+    const institutionId = searchParams.get('institutionId');
     if (institutionId) {
-      whereClause.institutionId = institutionId
-      console.log('Filtering by specific institution:', institutionId)
+      whereClause.institutionId = institutionId;
+      console.log('Filtering by specific institution:', institutionId);
     }
 
     // If search query provided, search by name, zanId, payrollNumber, cadre, or institution name
@@ -100,7 +123,7 @@ export async function GET(req: Request) {
         { zanId: { contains: q, mode: 'insensitive' } },
         { payrollNumber: { contains: q, mode: 'insensitive' } },
         { cadre: { contains: q, mode: 'insensitive' } },
-        { Institution: { name: { contains: q, mode: 'insensitive' } } }
+        { Institution: { name: { contains: q, mode: 'insensitive' } } },
       ];
     }
 
@@ -115,65 +138,77 @@ export async function GET(req: Request) {
     }
 
     // Get total count for pagination
-    const total = await db.employee.count({ where: whereClause }).catch(() => 0);
+    const total = await db.employee
+      .count({ where: whereClause })
+      .catch(() => 0);
 
     // Get employees with pagination (latest 200 by default, ordered by most recent updates)
-    const employees = await db.employee.findMany({
-      where: whereClause,
-      include: {
-        Institution: {
-          select: {
-            id: true,
-            name: true
-          }
+    const employees = await db.employee
+      .findMany({
+        where: whereClause,
+        include: {
+          Institution: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+          EmployeeCertificate: {
+            select: {
+              id: true,
+              type: true,
+              name: true,
+              url: true,
+            },
+          },
         },
-        EmployeeCertificate: {
-          select: {
-            id: true,
-            type: true,
-            name: true,
-            url: true
-          }
-        }
-      },
-      orderBy: [
-        { employmentDate: 'desc' }, // Most recently employed first
-        { name: 'asc' }             // Then by name for consistency
-      ],
-      skip: (page - 1) * size,
-      take: size
-    }).catch(() => []);
+        orderBy: [
+          { employmentDate: 'desc' }, // Most recently employed first
+          { name: 'asc' }, // Then by name for consistency
+        ],
+        skip: (page - 1) * size,
+        take: size,
+      })
+      .catch(() => []);
 
     console.log(`Found ${employees.length} employees out of ${total} total`);
 
     // Map EmployeeCertificate to certificates to match TypeScript interface
-    const mappedEmployees = employees.map(emp => ({
+    const mappedEmployees = employees.map((emp) => ({
       ...emp,
       certificates: emp.EmployeeCertificate,
-      EmployeeCertificate: undefined
+      EmployeeCertificate: undefined,
     }));
 
     // Set cache headers for employee list
     const headers = new Headers();
-    headers.set('Cache-Control', `public, s-maxage=${CACHE_TTL}, stale-while-revalidate=${CACHE_TTL * 2}`);
+    headers.set(
+      'Cache-Control',
+      `public, s-maxage=${CACHE_TTL}, stale-while-revalidate=${CACHE_TTL * 2}`
+    );
 
-    return NextResponse.json({
-      success: true,
-      data: mappedEmployees,
-      pagination: {
-        page,
-        size,
-        total,
-        totalPages: Math.ceil(total / size)
-      }
-    }, { headers });
-
+    return NextResponse.json(
+      {
+        success: true,
+        data: mappedEmployees,
+        pagination: {
+          page,
+          size,
+          total,
+          totalPages: Math.ceil(total / size),
+        },
+      },
+      { headers }
+    );
   } catch (error) {
-    console.error("[EMPLOYEES_GET]", error);
-    return NextResponse.json({ 
-      success: false, 
-      message: 'Internal Server Error',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+    console.error('[EMPLOYEES_GET]', error);
+    return NextResponse.json(
+      {
+        success: false,
+        message: 'Internal Server Error',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
   }
 }

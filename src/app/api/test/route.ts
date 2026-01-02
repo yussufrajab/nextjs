@@ -6,15 +6,15 @@ export async function GET() {
   try {
     // Test database connection
     const userCount = await db.user.count();
-    
+
     return NextResponse.json({
       success: true,
       message: 'Test API is working',
       timestamp: new Date().toISOString(),
       database: {
         connected: true,
-        userCount
-      }
+        userCount,
+      },
     });
   } catch (error) {
     console.error('[TEST_API]', error);
@@ -24,8 +24,8 @@ export async function GET() {
       timestamp: new Date().toISOString(),
       database: {
         connected: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
-      }
+        error: error instanceof Error ? error.message : 'Unknown error',
+      },
     });
   }
 }

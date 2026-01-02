@@ -1,4 +1,5 @@
 # PM2 Configuration Summary
+
 ## CSMS Next.js Application
 
 **Date:** December 26, 2025
@@ -9,6 +10,7 @@
 ## Configuration Details
 
 ### Application Information
+
 - **App Name:** csms-app
 - **Process ID:** 0
 - **Port:** 9002
@@ -18,6 +20,7 @@
 - **Working Directory:** /home/latest
 
 ### Process Configuration
+
 ```javascript
 {
   name: 'csms-app',
@@ -33,11 +36,13 @@
 ```
 
 ### Log Files
+
 - **Combined Log:** /var/log/pm2/csms-app-0.log
 - **Output Log:** /var/log/pm2/csms-app-out-0.log
 - **Error Log:** /var/log/pm2/csms-app-error-0.log
 
 ### Auto-Startup Configuration
+
 - **System:** systemd
 - **Service:** pm2-root.service
 - **Status:** Enabled (will start on system boot)
@@ -48,6 +53,7 @@
 ## PM2 Commands Reference
 
 ### Basic Commands
+
 ```bash
 # View all processes
 pm2 list
@@ -66,6 +72,7 @@ pm2 monit
 ```
 
 ### Process Control
+
 ```bash
 # Restart app
 pm2 restart csms-app
@@ -84,6 +91,7 @@ pm2 delete csms-app
 ```
 
 ### Startup Management
+
 ```bash
 # Save current process list
 pm2 save
@@ -100,6 +108,7 @@ pm2 resurrect  # Restore saved processes
 ```
 
 ### Debugging
+
 ```bash
 # Show environment variables
 pm2 env 0
@@ -144,6 +153,7 @@ pm2 flush
 ## Verification
 
 ### Current Status
+
 ```
 ✓ Only one PM2 process running (csms-app)
 ✓ App responding on port 9002
@@ -153,6 +163,7 @@ pm2 flush
 ```
 
 ### Test Commands
+
 ```bash
 # Check PM2 status
 pm2 status
@@ -172,6 +183,7 @@ systemctl status pm2-root
 ## Monitoring and Maintenance
 
 ### Daily Health Checks
+
 ```bash
 # Quick status check
 pm2 status
@@ -184,6 +196,7 @@ pm2 logs csms-app --lines 50
 ```
 
 ### Weekly Maintenance
+
 ```bash
 # Flush old logs
 pm2 flush
@@ -198,6 +211,7 @@ pm2 save
 ### Troubleshooting
 
 #### App Not Starting
+
 ```bash
 # Check logs
 pm2 logs csms-app --err --lines 100
@@ -211,6 +225,7 @@ sudo lsof -i :9002
 ```
 
 #### High Memory Usage
+
 ```bash
 # Check memory
 pm2 monit
@@ -223,6 +238,7 @@ pm2 logs csms-app | grep -i "memory"
 ```
 
 #### After Server Reboot
+
 ```bash
 # Check if PM2 started
 systemctl status pm2-root
@@ -242,6 +258,7 @@ pm2 start ecosystem.config.js
 ## Performance Metrics
 
 Current performance (from `pm2 info`):
+
 - **Used Heap:** 9.34 MiB
 - **Heap Usage:** 86.1%
 - **Event Loop Latency:** 0.52 ms (avg), 1.44 ms (p95)
@@ -253,10 +270,12 @@ Current performance (from `pm2 info`):
 ## Configuration Files
 
 ### Main Configuration
+
 - **File:** `/home/latest/ecosystem.config.js`
 - **Purpose:** PM2 process configuration
 
 ### Environment Variables
+
 - **File:** `/home/latest/.env`
 - **Important Settings:**
   - `NODE_ENV=production`
@@ -265,6 +284,7 @@ Current performance (from `pm2 info`):
   - `NEXTAUTH_URL=https://test.zanajira.go.tz`
 
 ### Systemd Service
+
 - **File:** `/etc/systemd/system/pm2-root.service`
 - **Purpose:** Auto-start PM2 on system boot
 
@@ -273,6 +293,7 @@ Current performance (from `pm2 info`):
 ## Next Steps (Optional Improvements)
 
 ### 1. Log Rotation
+
 Set up log rotation to prevent disk space issues:
 
 ```bash
@@ -281,6 +302,7 @@ sudo nano /etc/logrotate.d/pm2-csms
 ```
 
 Add:
+
 ```
 /var/log/pm2/csms-app*.log {
     daily
@@ -294,7 +316,9 @@ Add:
 ```
 
 ### 2. Monitoring
+
 Install PM2 monitoring (optional):
+
 ```bash
 pm2 install pm2-logrotate
 pm2 set pm2-logrotate:max_size 10M
@@ -302,7 +326,9 @@ pm2 set pm2-logrotate:retain 7
 ```
 
 ### 3. Alerts
+
 Set up email alerts for crashes:
+
 ```bash
 # Install pm2-slack or configure custom monitoring
 # This requires additional setup

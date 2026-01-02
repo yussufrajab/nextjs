@@ -30,9 +30,7 @@ import { PasswordStrengthMeter } from './password-strength-meter';
 const changePasswordSchema = z
   .object({
     currentPassword: z.string().min(1, 'Current password is required'),
-    newPassword: z
-      .string()
-      .min(8, 'Password must be at least 8 characters'),
+    newPassword: z.string().min(8, 'Password must be at least 8 characters'),
     confirmPassword: z.string().min(1, 'Please confirm your password'),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
@@ -47,7 +45,10 @@ interface ChangePasswordModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function ChangePasswordModal({ open, onOpenChange }: ChangePasswordModalProps) {
+export function ChangePasswordModal({
+  open,
+  onOpenChange,
+}: ChangePasswordModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -101,7 +102,8 @@ export function ChangePasswordModal({ open, onOpenChange }: ChangePasswordModalP
     } catch (error) {
       toast({
         title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to change password',
+        description:
+          error instanceof Error ? error.message : 'Failed to change password',
         variant: 'destructive',
       });
     } finally {

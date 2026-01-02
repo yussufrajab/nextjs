@@ -4,9 +4,10 @@ import { uploadFile } from '@/lib/minio';
 
 // HRIMS API Configuration
 const HRIMS_CONFIG = {
-  BASE_URL: "http://10.0.217.11:8135/api",
-  API_KEY: "0ea1e3f5-ea57-410b-a199-246fa288b851",
-  TOKEN: "CfDJ8M6SKjORsSdBliudb_vdU_DEea8FKIcQckiBxdvt4EJgtcP0ba_3REOpGvWYeOF46fvqw8heVnqFnXTwOmD5Wg5Qg3yNJlwyGDHVhqbgyKxB31Bjh2pI6C2qAYnLMovU4XLlQFVu7cTpIqtgItNZpM4"
+  BASE_URL: 'http://10.0.217.11:8135/api',
+  API_KEY: '0ea1e3f5-ea57-410b-a199-246fa288b851',
+  TOKEN:
+    'CfDJ8M6SKjORsSdBliudb_vdU_DEea8FKIcQckiBxdvt4EJgtcP0ba_3REOpGvWYeOF46fvqw8heVnqFnXTwOmD5Wg5Qg3yNJlwyGDHVhqbgyKxB31Bjh2pI6C2qAYnLMovU4XLlQFVu7cTpIqtgItNZpM4',
 };
 
 export async function POST(
@@ -23,8 +24,8 @@ export async function POST(
         id: true,
         payrollNumber: true,
         profileImageUrl: true,
-        name: true
-      }
+        name: true,
+      },
     });
 
     if (!employee) {
@@ -42,9 +43,11 @@ export async function POST(
     }
 
     // Check if photo already exists (either base64 or MinIO URL)
-    if (employee.profileImageUrl &&
-        (employee.profileImageUrl.startsWith('data:image') ||
-         employee.profileImageUrl.startsWith('/api/files/employee-photos/'))) {
+    if (
+      employee.profileImageUrl &&
+      (employee.profileImageUrl.startsWith('data:image') ||
+        employee.profileImageUrl.startsWith('/api/files/employee-photos/'))
+    ) {
       return NextResponse.json({
         success: true,
         message: 'Photo already exists',
@@ -52,37 +55,41 @@ export async function POST(
           employeeId: employee.id,
           employeeName: employee.name,
           photoUrl: employee.profileImageUrl,
-          alreadyExists: true
-        }
+          alreadyExists: true,
+        },
       });
     }
 
-    console.log(`📸 Fetching photo for employee ${employee.name} (Payroll: ${employee.payrollNumber})`);
+    console.log(
+      `📸 Fetching photo for employee ${employee.name} (Payroll: ${employee.payrollNumber})`
+    );
 
     // Fetch photo from HRIMS using the new configuration
     const photoPayload = {
-      RequestId: "203",
-      SearchCriteria: employee.payrollNumber
+      RequestId: '203',
+      SearchCriteria: employee.payrollNumber,
     };
 
     const hrimsResponse = await fetch(`${HRIMS_CONFIG.BASE_URL}/Employees`, {
       method: 'POST',
       headers: {
-        'ApiKey': HRIMS_CONFIG.API_KEY,
-        'Token': HRIMS_CONFIG.TOKEN,
+        ApiKey: HRIMS_CONFIG.API_KEY,
+        Token: HRIMS_CONFIG.TOKEN,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(photoPayload),
-      signal: AbortSignal.timeout(30000) // 30 second timeout
+      signal: AbortSignal.timeout(30000), // 30 second timeout
     });
 
     if (!hrimsResponse.ok) {
-      console.error(`❌ HRIMS API error: ${hrimsResponse.status} ${hrimsResponse.statusText}`);
+      console.error(
+        `❌ HRIMS API error: ${hrimsResponse.status} ${hrimsResponse.statusText}`
+      );
       return NextResponse.json(
         {
           success: false,
           message: `HRIMS API returned error: ${hrimsResponse.status}`,
-          error: hrimsResponse.statusText
+          error: hrimsResponse.statusText,
         },
         { status: 502 }
       );
@@ -90,7 +97,10 @@ export async function POST(
 
     const hrimsData = await hrimsResponse.json();
     console.log('✅ Received response from HRIMS');
-    console.log('HRIMS Response structure:', JSON.stringify(hrimsData).substring(0, 500));
+    console.log(
+      'HRIMS Response structure:',
+      JSON.stringify(hrimsData).substring(0, 500)
+    );
 
     // Extract photo data from response
     // The response structure may vary, adjust according to actual HRIMS response
@@ -100,7 +110,11 @@ export async function POST(
     if (hrimsData.photo && hrimsData.photo.content) {
       console.log('Found photo at: hrimsData.photo.content');
       photoBase64 = hrimsData.photo.content;
-    } else if (hrimsData.data && hrimsData.data.photo && hrimsData.data.photo.content) {
+    } else if (
+      hrimsData.data &&
+      hrimsData.data.photo &&
+      hrimsData.data.photo.content
+    ) {
       console.log('Found photo at: hrimsData.data.photo.content');
       photoBase64 = hrimsData.data.photo.content;
     } else if (hrimsData.data && typeof hrimsData.data === 'string') {
@@ -123,13 +137,16 @@ export async function POST(
       if (hrimsData.data) {
         console.log('Data keys:', Object.keys(hrimsData.data));
       }
-      return NextResponse.json({
-        success: false,
-        message: 'No photo data found in HRIMS response',
-        hrimsResponse: hrimsData,
-        availableKeys: Object.keys(hrimsData),
-        dataKeys: hrimsData.data ? Object.keys(hrimsData.data) : null
-      }, { status: 404 });
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'No photo data found in HRIMS response',
+          hrimsResponse: hrimsData,
+          availableKeys: Object.keys(hrimsData),
+          dataKeys: hrimsData.data ? Object.keys(hrimsData.data) : null,
+        },
+        { status: 404 }
+      );
     }
 
     console.log(`💾 Storing photo for employee ${employee.name} to MinIO...`);
@@ -155,7 +172,7 @@ export async function POST(
       'image/jpg': 'jpg',
       'image/png': 'png',
       'image/gif': 'gif',
-      'image/webp': 'webp'
+      'image/webp': 'webp',
     };
     const extension = extensionMap[mimeType.toLowerCase()] || 'jpg';
 
@@ -172,7 +189,10 @@ export async function POST(
         {
           success: false,
           message: 'Failed to upload photo to storage',
-          error: uploadError instanceof Error ? uploadError.message : 'Unknown error'
+          error:
+            uploadError instanceof Error
+              ? uploadError.message
+              : 'Unknown error',
         },
         { status: 500 }
       );
@@ -184,8 +204,8 @@ export async function POST(
     const updatedEmployee = await prisma.employee.update({
       where: { id: employeeId },
       data: {
-        profileImageUrl: minioUrl
-      }
+        profileImageUrl: minioUrl,
+      },
     });
 
     console.log(`✅ Photo stored successfully for employee ${employee.name}`);
@@ -197,17 +217,16 @@ export async function POST(
         employeeId: updatedEmployee.id,
         employeeName: employee.name,
         photoUrl: updatedEmployee.profileImageUrl,
-        photoSize: photoBuffer.length
-      }
+        photoSize: photoBuffer.length,
+      },
     });
-
   } catch (error) {
     console.error('🚨 Error fetching photo from HRIMS:', error);
     return NextResponse.json(
       {
         success: false,
         message: 'Failed to fetch photo from HRIMS',
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );

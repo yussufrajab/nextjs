@@ -7,7 +7,13 @@
 
 import React from 'react';
 import { useRouteGuard } from '@/hooks/use-route-guard';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ShieldAlert, ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -61,7 +67,11 @@ export function RouteGuard({
   loadingComponent,
 }: RouteGuardProps) {
   const router = useRouter();
-  const { hasAccess, isChecking, errorMessage: guardError } = useRouteGuard({
+  const {
+    hasAccess,
+    isChecking,
+    errorMessage: guardError,
+  } = useRouteGuard({
     redirectOnDenied: false, // Handle redirect manually in this component
   });
 

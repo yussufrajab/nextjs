@@ -1,4 +1,5 @@
 # Project Team Structure with Roles and Responsibilities
+
 ## Civil Service Management System (CSMS)
 
 **Project Title:** Civil Service Management System (CSMS)
@@ -13,9 +14,9 @@
 
 ## Document Control
 
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 1.0 | January 10, 2025 | Project Management Team | Initial Project Team Structure for e-GAZ compliance |
+| Version | Date             | Author                  | Changes                                             |
+| ------- | ---------------- | ----------------------- | --------------------------------------------------- |
+| 1.0     | January 10, 2025 | Project Management Team | Initial Project Team Structure for e-GAZ compliance |
 
 ---
 
@@ -24,6 +25,7 @@
 This document defines the organizational structure, roles, responsibilities, and communication protocols for the Civil Service Management System (CSMS) project team. The project is executed by a dedicated team of **9 Full-Time Equivalents (FTE)** over 31 weeks, with support from key stakeholders across the Civil Service Commission and 41 government institutions.
 
 **Team Composition:**
+
 - 1 Project Manager
 - 1 Business Analyst
 - 3 Full-Stack Developers
@@ -166,29 +168,29 @@ This document defines the organizational structure, roles, responsibilities, and
 
 ### 2.1 Core Team Overview
 
-| # | Role | FTE | Primary Responsibility | Key Deliverables |
-|---|------|-----|----------------------|------------------|
-| 1 | **Project Manager** | 1 | Planning, coordination, delivery | Project Plan, status reports, deliverables |
-| 2 | **Business Analyst** | 1 | Requirements, UAT, training | SRS, UAT reports, training materials |
-| 3-5 | **Full-Stack Developers** | 3 | System development, features | Functional CSMS application |
-| 6 | **Database Administrator** | 1 | Database design, optimization | Database schema, data migration |
-| 7-8 | **QA Engineers** | 2 | Testing, quality assurance | Test results, QA reports |
-| 9 | **DevOps Engineer** | 1 | Deployment, infrastructure | Production environment, monitoring |
-| **TOTAL** | **9 FTE** | | |
+| #         | Role                       | FTE | Primary Responsibility           | Key Deliverables                           |
+| --------- | -------------------------- | --- | -------------------------------- | ------------------------------------------ |
+| 1         | **Project Manager**        | 1   | Planning, coordination, delivery | Project Plan, status reports, deliverables |
+| 2         | **Business Analyst**       | 1   | Requirements, UAT, training      | SRS, UAT reports, training materials       |
+| 3-5       | **Full-Stack Developers**  | 3   | System development, features     | Functional CSMS application                |
+| 6         | **Database Administrator** | 1   | Database design, optimization    | Database schema, data migration            |
+| 7-8       | **QA Engineers**           | 2   | Testing, quality assurance       | Test results, QA reports                   |
+| 9         | **DevOps Engineer**        | 1   | Deployment, infrastructure       | Production environment, monitoring         |
+| **TOTAL** | **9 FTE**                  |     |                                  |
 
 ---
 
 ### 2.2 Team Allocation by Project Phase
 
-| Phase | Duration | PM | BA | Dev | DBA | QA | DevOps | Total FTE |
-|-------|----------|----|----|-----|-----|-------|--------|-----------|
-| Inception | 2 weeks | 100% | 100% | 20% | 20% | 50% | 20% | 4.5 |
-| Planning & Design | 4 weeks | 100% | 100% | 50% | 80% | 50% | 30% | 6.4 |
-| Development | 12 weeks | 100% | 50% | 100% | 100% | 50% | 60% | 8.8 |
-| Testing | 4 weeks | 100% | 80% | 60% | 60% | 100% | 40% | 8.2 |
-| UAT | 3 weeks | 100% | 100% | 60% | 40% | 100% | 30% | 8.6 |
-| Deployment | 2 weeks | 100% | 80% | 80% | 100% | 80% | 100% | 9.0 |
-| Post-Launch | 4 weeks | 100% | 60% | 80% | 60% | 60% | 80% | 7.8 |
+| Phase             | Duration | PM   | BA   | Dev  | DBA  | QA   | DevOps | Total FTE |
+| ----------------- | -------- | ---- | ---- | ---- | ---- | ---- | ------ | --------- |
+| Inception         | 2 weeks  | 100% | 100% | 20%  | 20%  | 50%  | 20%    | 4.5       |
+| Planning & Design | 4 weeks  | 100% | 100% | 50%  | 80%  | 50%  | 30%    | 6.4       |
+| Development       | 12 weeks | 100% | 50%  | 100% | 100% | 50%  | 60%    | 8.8       |
+| Testing           | 4 weeks  | 100% | 80%  | 60%  | 60%  | 100% | 40%    | 8.2       |
+| UAT               | 3 weeks  | 100% | 100% | 60%  | 40%  | 100% | 30%    | 8.6       |
+| Deployment        | 2 weeks  | 100% | 80%  | 80%  | 100% | 80%  | 100%   | 9.0       |
+| Post-Launch       | 4 weeks  | 100% | 60%  | 80%  | 60%  | 60%  | 80%    | 7.8       |
 
 **Average FTE Utilization:** 7.6 FTE (85% of team capacity)
 
@@ -201,6 +203,7 @@ This document defines the organizational structure, roles, responsibilities, and
 **Work Hours:** Monday - Friday, 8:00 AM - 5:00 PM (with flexibility as needed)
 
 **Collaboration Model:**
+
 - **Co-located Team:** All 9 team members work from CSC offices for maximum collaboration
 - **Dedicated Project Space:** Conference room allocated for team use
 - **Daily Standups:** In-person at 9:00 AM
@@ -223,6 +226,7 @@ This document defines the organizational structure, roles, responsibilities, and
 #### 3.1.1 Primary Responsibilities
 
 **Planning & Coordination:**
+
 - Develop and maintain project plan
 - Define project scope, timeline, and deliverables
 - Allocate resources and assign tasks
@@ -231,6 +235,7 @@ This document defines the organizational structure, roles, responsibilities, and
 - Manage project dependencies
 
 **Monitoring & Control:**
+
 - Track project progress against plan
 - Monitor schedule, budget, and quality
 - Identify and address deviations
@@ -239,6 +244,7 @@ This document defines the organizational structure, roles, responsibilities, and
 - Update project management tools
 
 **Stakeholder Management:**
+
 - Serve as primary point of contact for stakeholders
 - Manage stakeholder expectations
 - Facilitate communication between team and stakeholders
@@ -246,6 +252,7 @@ This document defines the organizational structure, roles, responsibilities, and
 - Present project updates to executives
 
 **Risk & Issue Management:**
+
 - Identify and assess project risks
 - Develop and implement mitigation strategies
 - Maintain risk register
@@ -253,6 +260,7 @@ This document defines the organizational structure, roles, responsibilities, and
 - Track issue resolution
 
 **Quality & Governance:**
+
 - Ensure project adheres to e-GAZ standards
 - Implement quality gates
 - Oversee change control process
@@ -260,6 +268,7 @@ This document defines the organizational structure, roles, responsibilities, and
 - Conduct project reviews
 
 **Team Management:**
+
 - Lead and motivate project team
 - Resolve team conflicts
 - Conduct performance reviews
@@ -285,6 +294,7 @@ This document defines the organizational structure, roles, responsibilities, and
 #### 3.1.3 Required Skills & Experience
 
 **Essential:**
+
 - 5+ years project management experience
 - Government or public sector project experience
 - E-government or IT project experience
@@ -293,6 +303,7 @@ This document defines the organizational structure, roles, responsibilities, and
 - Stakeholder management expertise
 
 **Technical:**
+
 - Understanding of software development lifecycle
 - Familiarity with agile/waterfall methodologies
 - Project management tools (MS Project, Jira, etc.)
@@ -312,6 +323,7 @@ This document defines the organizational structure, roles, responsibilities, and
 #### 3.2.1 Primary Responsibilities
 
 **Requirements Management:**
+
 - Facilitate requirements gathering workshops
 - Document functional and non-functional requirements
 - Create System Requirements Specification (SRS)
@@ -320,6 +332,7 @@ This document defines the organizational structure, roles, responsibilities, and
 - Maintain requirements traceability matrix
 
 **Business Process Analysis:**
+
 - Map current HR processes (8 workflows)
 - Document process flows and decision points
 - Identify process improvement opportunities
@@ -327,6 +340,7 @@ This document defines the organizational structure, roles, responsibilities, and
 - Create Business Process Document
 
 **UAT Coordination:**
+
 - Develop UAT strategy and plan
 - Create UAT test scenarios (244 scenarios)
 - Coordinate UAT participants from 41 institutions
@@ -336,6 +350,7 @@ This document defines the organizational structure, roles, responsibilities, and
 - Prepare UAT Summary Report
 
 **Training Coordination:**
+
 - Develop training plan
 - Create training materials and manuals
 - Conduct training sessions for 9 user roles
@@ -344,6 +359,7 @@ This document defines the organizational structure, roles, responsibilities, and
 - Prepare Training Closure Report
 
 **Stakeholder Engagement:**
+
 - Serve as liaison with CSC and institutions
 - Facilitate user workshops
 - Gather and prioritize user feedback
@@ -372,6 +388,7 @@ This document defines the organizational structure, roles, responsibilities, and
 #### 3.2.3 Required Skills & Experience
 
 **Essential:**
+
 - 4+ years business analysis experience
 - Government/public sector domain knowledge
 - HR/civil service management domain knowledge
@@ -380,12 +397,14 @@ This document defines the organizational structure, roles, responsibilities, and
 - UAT planning and execution
 
 **Technical:**
+
 - UML or BPMN process modeling
 - Requirements management tools
 - MS Office (Word, Excel, PowerPoint, Visio)
 - User story writing
 
 **Soft Skills:**
+
 - Excellent communication (Swahili and English)
 - Facilitation and workshop skills
 - Stakeholder engagement
@@ -405,6 +424,7 @@ This document defines the organizational structure, roles, responsibilities, and
 #### 3.3.1 Primary Responsibilities
 
 **Frontend Development:**
+
 - Develop Next.js 16 application with React 19
 - Implement user interfaces using Tailwind CSS and Radix UI
 - Create responsive, user-friendly pages for 9 user roles
@@ -414,6 +434,7 @@ This document defines the organizational structure, roles, responsibilities, and
 - Optimize frontend performance
 
 **Backend Development:**
+
 - Develop Next.js API routes (RESTful endpoints)
 - Implement business logic for 8 HR workflows
 - Develop authentication and authorization (JWT, RBAC)
@@ -423,6 +444,7 @@ This document defines the organizational structure, roles, responsibilities, and
 - Implement HRIMS integration
 
 **Full-Stack Integration:**
+
 - Ensure seamless frontend-backend integration
 - Develop end-to-end features (UI to database)
 - Implement notification system (email, in-app)
@@ -430,6 +452,7 @@ This document defines the organizational structure, roles, responsibilities, and
 - Create dashboard and metrics
 
 **Code Quality:**
+
 - Write clean, maintainable TypeScript code
 - Follow coding standards and best practices
 - Conduct peer code reviews
@@ -438,6 +461,7 @@ This document defines the organizational structure, roles, responsibilities, and
 - Optimize code performance
 
 **Security Implementation:**
+
 - Implement security features (password expiration, account lockout, etc.)
 - Ensure input validation and sanitization
 - Implement CSRF protection
@@ -445,6 +469,7 @@ This document defines the organizational structure, roles, responsibilities, and
 - Implement comprehensive audit logging
 
 **Collaboration:**
+
 - Collaborate with BA on requirements clarification
 - Work with DBA on database schema
 - Support QA team during testing
@@ -456,6 +481,7 @@ This document defines the organizational structure, roles, responsibilities, and
 #### 3.3.2 Developer Specialization (Flexible)
 
 **Developer #1 (Technical Lead):**
+
 - Architecture oversight
 - Complex feature development
 - Code review leadership
@@ -463,12 +489,14 @@ This document defines the organizational structure, roles, responsibilities, and
 - Mentoring other developers
 
 **Developer #2:**
+
 - Frontend focus
 - UI/UX implementation
 - Form development
 - State management
 
 **Developer #3:**
+
 - Backend focus
 - API development
 - HRIMS integration
@@ -495,6 +523,7 @@ This document defines the organizational structure, roles, responsibilities, and
 #### 3.3.4 Required Skills & Experience
 
 **Essential:**
+
 - 3+ years full-stack development experience
 - Strong TypeScript/JavaScript proficiency
 - Next.js and React experience
@@ -503,12 +532,14 @@ This document defines the organizational structure, roles, responsibilities, and
 - Git version control
 
 **Technical Stack:**
+
 - **Frontend:** Next.js 16, React 19, TypeScript 5, Tailwind CSS, Radix UI
 - **Backend:** Next.js API Routes, Node.js
 - **Database:** PostgreSQL, Prisma ORM
 - **Tools:** Git, VS Code, npm/yarn
 
 **Preferred:**
+
 - Government/enterprise application experience
 - RBAC implementation experience
 - File upload/storage (MinIO, S3)
@@ -529,6 +560,7 @@ This document defines the organizational structure, roles, responsibilities, and
 #### 3.4.1 Primary Responsibilities
 
 **Database Design:**
+
 - Design relational database schema (PostgreSQL)
 - Normalize database to 3NF
 - Define entities, relationships, and constraints
@@ -537,6 +569,7 @@ This document defines the organizational structure, roles, responsibilities, and
 - Define data integrity rules
 
 **Database Implementation:**
+
 - Implement database schema using Prisma ORM
 - Create database migrations
 - Define Prisma models and relations
@@ -545,6 +578,7 @@ This document defines the organizational structure, roles, responsibilities, and
 - Implement database security
 
 **Data Management:**
+
 - Develop data migration scripts (HRIMS to CSMS)
 - Perform data quality validation
 - Implement data backup strategies
@@ -552,6 +586,7 @@ This document defines the organizational structure, roles, responsibilities, and
 - Ensure data consistency and integrity
 
 **Performance Optimization:**
+
 - Query optimization and tuning
 - Index management and optimization
 - Analyze slow queries using EXPLAIN
@@ -560,6 +595,7 @@ This document defines the organizational structure, roles, responsibilities, and
 - Implement caching strategies (if applicable)
 
 **Database Operations:**
+
 - Set up database backups and recovery
 - Monitor database health and availability
 - Manage database users and permissions
@@ -568,6 +604,7 @@ This document defines the organizational structure, roles, responsibilities, and
 - Document database architecture
 
 **Data Migration:**
+
 - Plan HRIMS data migration strategy
 - Extract employee data from HRIMS
 - Transform and map data to CSMS schema
@@ -594,6 +631,7 @@ This document defines the organizational structure, roles, responsibilities, and
 #### 3.4.3 Required Skills & Experience
 
 **Essential:**
+
 - 4+ years database administration experience
 - Strong PostgreSQL expertise
 - Database design and normalization
@@ -602,6 +640,7 @@ This document defines the organizational structure, roles, responsibilities, and
 - Backup and recovery
 
 **Technical:**
+
 - PostgreSQL 15+
 - Prisma ORM
 - SQL and PL/pgSQL
@@ -609,6 +648,7 @@ This document defines the organizational structure, roles, responsibilities, and
 - Database monitoring tools
 
 **Preferred:**
+
 - Large-scale database experience (50,000+ records)
 - Government/enterprise database experience
 - Data migration from legacy systems
@@ -627,6 +667,7 @@ This document defines the organizational structure, roles, responsibilities, and
 #### 3.5.1 Primary Responsibilities
 
 **Test Planning:**
+
 - Develop Quality Assurance Plan
 - Define test strategy and approach
 - Create test schedules
@@ -635,6 +676,7 @@ This document defines the organizational structure, roles, responsibilities, and
 - Define quality metrics and KPIs
 
 **Test Case Development:**
+
 - Design test cases for 244 UAT scenarios
 - Create test cases for functional testing
 - Develop performance test scenarios
@@ -643,6 +685,7 @@ This document defines the organizational structure, roles, responsibilities, and
 - Document test data requirements
 
 **Test Execution:**
+
 - Execute factory testing (244 scenarios)
 - Perform integration testing
 - Conduct performance testing
@@ -651,6 +694,7 @@ This document defines the organizational structure, roles, responsibilities, and
 - Coordinate UAT execution
 
 **Defect Management:**
+
 - Log defects in issue tracker
 - Categorize and prioritize defects
 - Conduct daily defect triage
@@ -659,6 +703,7 @@ This document defines the organizational structure, roles, responsibilities, and
 - Report defect status
 
 **Quality Reporting:**
+
 - Generate test execution reports
 - Create quality dashboards
 - Prepare weekly QA status reports
@@ -667,6 +712,7 @@ This document defines the organizational structure, roles, responsibilities, and
 - Publish QA deliverables
 
 **Performance Testing:**
+
 - Conduct load testing (50-100 concurrent users)
 - Benchmark performance metrics
 - Identify performance bottlenecks
@@ -674,6 +720,7 @@ This document defines the organizational structure, roles, responsibilities, and
 - Prepare Performance Test Report
 
 **Security Testing:**
+
 - Execute security test scenarios
 - Validate authentication and authorization
 - Test RBAC implementation
@@ -686,6 +733,7 @@ This document defines the organizational structure, roles, responsibilities, and
 #### 3.5.2 QA Team Specialization
 
 **QA Engineer #1 (QA Lead):**
+
 - QA planning and strategy
 - Test case review and approval
 - Defect triage leadership
@@ -694,6 +742,7 @@ This document defines the organizational structure, roles, responsibilities, and
 - Stakeholder communication on quality
 
 **QA Engineer #2:**
+
 - Test execution
 - Defect logging and verification
 - Test data preparation
@@ -721,6 +770,7 @@ This document defines the organizational structure, roles, responsibilities, and
 #### 3.5.4 Required Skills & Experience
 
 **Essential:**
+
 - 3+ years QA/testing experience
 - Manual testing expertise
 - Test case design and execution
@@ -729,6 +779,7 @@ This document defines the organizational structure, roles, responsibilities, and
 - Quality metrics and reporting
 
 **Technical:**
+
 - Testing tools (Excel, test management tools)
 - Performance testing (Chrome DevTools, Lighthouse)
 - Security testing basics
@@ -736,6 +787,7 @@ This document defines the organizational structure, roles, responsibilities, and
 - Browser developer tools
 
 **Preferred:**
+
 - Government/enterprise application testing
 - Web application testing
 - API testing (Postman, curl)
@@ -755,6 +807,7 @@ This document defines the organizational structure, roles, responsibilities, and
 #### 3.6.1 Primary Responsibilities
 
 **Infrastructure Setup:**
+
 - Set up development environment
 - Configure test/UAT environment
 - Provision production infrastructure
@@ -763,6 +816,7 @@ This document defines the organizational structure, roles, responsibilities, and
 - Set up SSL/TLS certificates
 
 **Application Deployment:**
+
 - Deploy Next.js application to environments
 - Configure environment variables
 - Set up database connections
@@ -771,12 +825,14 @@ This document defines the organizational structure, roles, responsibilities, and
 - Manage application versions
 
 **CI/CD (If Implemented):**
+
 - Set up build pipelines
 - Configure automated deployments
 - Implement deployment scripts
 - Set up code quality checks
 
 **Monitoring & Logging:**
+
 - Set up application monitoring
 - Configure error logging
 - Set up performance monitoring
@@ -785,6 +841,7 @@ This document defines the organizational structure, roles, responsibilities, and
 - Set up log aggregation
 
 **Security Configuration:**
+
 - Configure firewalls
 - Set up security headers
 - Implement HTTPS/TLS
@@ -793,6 +850,7 @@ This document defines the organizational structure, roles, responsibilities, and
 - Implement backup security
 
 **Backup & Recovery:**
+
 - Configure database backups
 - Set up file storage backups
 - Test recovery procedures
@@ -800,6 +858,7 @@ This document defines the organizational structure, roles, responsibilities, and
 - Implement disaster recovery plan
 
 **Performance Optimization:**
+
 - Optimize server configuration
 - Configure caching (if applicable)
 - Optimize web server settings
@@ -826,6 +885,7 @@ This document defines the organizational structure, roles, responsibilities, and
 #### 3.6.3 Required Skills & Experience
 
 **Essential:**
+
 - 3+ years DevOps/infrastructure experience
 - Linux system administration
 - Web server configuration (Nginx, Apache)
@@ -834,6 +894,7 @@ This document defines the organizational structure, roles, responsibilities, and
 - Backup and recovery
 
 **Technical:**
+
 - Linux (Ubuntu 24.04)
 - Nginx
 - PM2 or similar process managers
@@ -842,6 +903,7 @@ This document defines the organizational structure, roles, responsibilities, and
 - Bash scripting
 
 **Preferred:**
+
 - Next.js deployment experience
 - Cloud infrastructure (if applicable)
 - Docker/containerization
@@ -855,9 +917,11 @@ This document defines the organizational structure, roles, responsibilities, and
 ### 4.1 Executive Stakeholders
 
 #### 4.1.1 Chief Secretary Civil Service (CSCS)
+
 **Role:** Project Sponsor & Executive Owner
 
 **Responsibilities:**
+
 - Provide executive sponsorship and leadership
 - Chair Steering Committee
 - Approve project plan, budget, and major changes
@@ -872,9 +936,11 @@ This document defines the organizational structure, roles, responsibilities, and
 ---
 
 #### 4.1.2 Director of Operations (DO)
+
 **Role:** Operations Lead & Steering Committee Member
 
 **Responsibilities:**
+
 - Represent CSC operations in steering committee
 - Review project progress bi-weekly
 - Provide operational insights and requirements
@@ -890,9 +956,11 @@ This document defines the organizational structure, roles, responsibilities, and
 ### 4.2 Functional Stakeholders
 
 #### 4.2.1 Head of HR Management Division (HHRMD)
+
 **Role:** Functional Lead & Key User
 
 **Responsibilities:**
+
 - Provide HR process expertise
 - Define functional requirements
 - Participate in requirements workshops
@@ -907,9 +975,11 @@ This document defines the organizational structure, roles, responsibilities, and
 ---
 
 #### 4.2.2 Human Resource Management Officer (HRMO)
+
 **Role:** Technical HR Expert & UAT Participant
 
 **Responsibilities:**
+
 - Provide detailed HR process knowledge
 - Support requirements definition
 - Participate in UAT
@@ -922,9 +992,11 @@ This document defines the organizational structure, roles, responsibilities, and
 ---
 
 #### 4.2.3 41 Human Resource Officers (HROs)
+
 **Role:** Primary End Users & UAT Participants
 
 **Responsibilities:**
+
 - Provide institution-level perspectives
 - Participate in requirements workshops
 - Execute UAT scenarios
@@ -940,9 +1012,11 @@ This document defines the organizational structure, roles, responsibilities, and
 ### 4.3 Technical Stakeholders
 
 #### 4.3.1 HRIMS Team
+
 **Role:** Integration Partner
 
 **Responsibilities:**
+
 - Provide HRIMS API access
 - Support integration development
 - Provide data mapping documentation
@@ -956,9 +1030,11 @@ This document defines the organizational structure, roles, responsibilities, and
 ---
 
 #### 4.3.2 CSC IT Department
+
 **Role:** Infrastructure Support
 
 **Responsibilities:**
+
 - Provide infrastructure support
 - Assist with environment setup
 - Support network connectivity
@@ -971,9 +1047,11 @@ This document defines the organizational structure, roles, responsibilities, and
 ---
 
 #### 4.3.3 E-Government Authority (E-GAZ)
+
 **Role:** Compliance & Oversight
 
 **Responsibilities:**
+
 - Review compliance with e-GAZ standards
 - Validate QA documentation
 - Provide compliance guidance
@@ -988,9 +1066,11 @@ This document defines the organizational structure, roles, responsibilities, and
 ### 4.4 End User Representatives
 
 #### 4.4.1 Sample Employees
+
 **Role:** Self-Service Portal Testers
 
 **Responsibilities:**
+
 - Participate in UAT (employee self-service features)
 - Provide feedback on usability
 - Validate employee workflows
@@ -1004,6 +1084,7 @@ This document defines the organizational structure, roles, responsibilities, and
 ## 5. RACI Matrix
 
 **Legend:**
+
 - **R** = Responsible (Does the work)
 - **A** = Accountable (Final approval/authority)
 - **C** = Consulted (Provides input)
@@ -1013,74 +1094,74 @@ This document defines the organizational structure, roles, responsibilities, and
 
 ### 5.1 Project Management Activities
 
-| Activity | PM | BA | Devs | DBA | QA | DevOps | CSCS | DO | HHRMD | HROs |
-|----------|----|----|------|-----|-----|--------|------|-----|-------|------|
-| **Project Planning** | R/A | C | C | C | C | C | I | I | I | I |
-| **Status Reporting** | R/A | C | C | C | C | C | I | I | I | I |
-| **Risk Management** | R/A | C | C | C | C | C | I | I | I | I |
-| **Budget Management** | R/A | I | I | I | I | I | C | I | I | I |
-| **Stakeholder Mgmt** | R/A | R | I | I | I | I | C | C | C | C |
-| **Change Control** | R/A | C | C | C | C | C | A | C | C | I |
-| **Issue Escalation** | R/A | C | C | C | C | C | C | C | C | I |
+| Activity              | PM  | BA  | Devs | DBA | QA  | DevOps | CSCS | DO  | HHRMD | HROs |
+| --------------------- | --- | --- | ---- | --- | --- | ------ | ---- | --- | ----- | ---- |
+| **Project Planning**  | R/A | C   | C    | C   | C   | C      | I    | I   | I     | I    |
+| **Status Reporting**  | R/A | C   | C    | C   | C   | C      | I    | I   | I     | I    |
+| **Risk Management**   | R/A | C   | C    | C   | C   | C      | I    | I   | I     | I    |
+| **Budget Management** | R/A | I   | I    | I   | I   | I      | C    | I   | I     | I    |
+| **Stakeholder Mgmt**  | R/A | R   | I    | I   | I   | I      | C    | C   | C     | C    |
+| **Change Control**    | R/A | C   | C    | C   | C   | C      | A    | C   | C     | I    |
+| **Issue Escalation**  | R/A | C   | C    | C   | C   | C      | C    | C   | C     | I    |
 
 ---
 
 ### 5.2 Requirements & Design
 
-| Activity | PM | BA | Devs | DBA | QA | DevOps | CSCS | DO | HHRMD | HROs |
-|----------|----|----|------|-----|-----|--------|------|-----|-------|------|
-| **Requirements Gathering** | A | R | C | C | C | I | I | C | C | C |
-| **SRS Development** | A | R | C | C | C | I | I | C | C | I |
-| **Business Process Mapping** | A | R | C | I | C | I | I | C | C | C |
-| **SRS Approval** | I | C | I | I | I | I | A | C | C | I |
-| **System Design** | A | C | R | R | C | C | I | I | I | I |
-| **Database Design** | A | C | C | R | I | I | I | I | I | I |
-| **API Design** | A | C | R | C | I | I | I | I | I | I |
-| **Design Approval** | R/A | C | C | C | C | C | I | I | I | I |
+| Activity                     | PM  | BA  | Devs | DBA | QA  | DevOps | CSCS | DO  | HHRMD | HROs |
+| ---------------------------- | --- | --- | ---- | --- | --- | ------ | ---- | --- | ----- | ---- |
+| **Requirements Gathering**   | A   | R   | C    | C   | C   | I      | I    | C   | C     | C    |
+| **SRS Development**          | A   | R   | C    | C   | C   | I      | I    | C   | C     | I    |
+| **Business Process Mapping** | A   | R   | C    | I   | C   | I      | I    | C   | C     | C    |
+| **SRS Approval**             | I   | C   | I    | I   | I   | I      | A    | C   | C     | I    |
+| **System Design**            | A   | C   | R    | R   | C   | C      | I    | I   | I     | I    |
+| **Database Design**          | A   | C   | C    | R   | I   | I      | I    | I   | I     | I    |
+| **API Design**               | A   | C   | R    | C   | I   | I      | I    | I   | I     | I    |
+| **Design Approval**          | R/A | C   | C    | C   | C   | C      | I    | I   | I     | I    |
 
 ---
 
 ### 5.3 Development Activities
 
-| Activity | PM | BA | Devs | DBA | QA | DevOps | CSCS | DO | HHRMD | HROs |
-|----------|----|----|------|-----|-----|--------|------|-----|-------|------|
-| **Frontend Development** | A | C | R | I | C | I | I | I | I | I |
-| **Backend Development** | A | C | R | C | C | I | I | I | I | I |
-| **Database Implementation** | A | C | C | R | C | I | I | I | I | I |
-| **HRIMS Integration** | A | C | R | C | C | I | I | I | C | I |
-| **Security Implementation** | A | C | R | C | C | I | I | I | I | I |
-| **Code Review** | A | C | R | C | C | I | I | I | I | I |
-| **Defect Fixing** | A | C | R | C | C | I | I | I | I | I |
+| Activity                    | PM  | BA  | Devs | DBA | QA  | DevOps | CSCS | DO  | HHRMD | HROs |
+| --------------------------- | --- | --- | ---- | --- | --- | ------ | ---- | --- | ----- | ---- |
+| **Frontend Development**    | A   | C   | R    | I   | C   | I      | I    | I   | I     | I    |
+| **Backend Development**     | A   | C   | R    | C   | C   | I      | I    | I   | I     | I    |
+| **Database Implementation** | A   | C   | C    | R   | C   | I      | I    | I   | I     | I    |
+| **HRIMS Integration**       | A   | C   | R    | C   | C   | I      | I    | I   | C     | I    |
+| **Security Implementation** | A   | C   | R    | C   | C   | I      | I    | I   | I     | I    |
+| **Code Review**             | A   | C   | R    | C   | C   | I      | I    | I   | I     | I    |
+| **Defect Fixing**           | A   | C   | R    | C   | C   | I      | I    | I   | I     | I    |
 
 ---
 
 ### 5.4 Testing & QA
 
-| Activity | PM | BA | Devs | DBA | QA | DevOps | CSCS | DO | HHRMD | HROs |
-|----------|----|----|------|-----|-----|--------|------|-----|-------|------|
-| **QA Planning** | A | C | C | C | R | C | I | I | I | I |
-| **Test Case Development** | A | C | C | C | R | I | I | I | I | I |
-| **Factory Testing** | A | C | C | C | R | C | I | I | I | I |
-| **Performance Testing** | A | C | C | C | R | C | I | I | I | I |
-| **Security Testing** | A | C | C | C | R | C | I | I | I | I |
-| **Defect Management** | A | C | R | C | R | C | I | I | I | I |
-| **UAT Planning** | A | R | C | C | C | I | I | C | C | C |
-| **UAT Execution** | A | R | C | C | R | C | I | C | R | R |
-| **UAT Sign-off** | I | C | I | I | C | I | A | C | C | C |
+| Activity                  | PM  | BA  | Devs | DBA | QA  | DevOps | CSCS | DO  | HHRMD | HROs |
+| ------------------------- | --- | --- | ---- | --- | --- | ------ | ---- | --- | ----- | ---- |
+| **QA Planning**           | A   | C   | C    | C   | R   | C      | I    | I   | I     | I    |
+| **Test Case Development** | A   | C   | C    | C   | R   | I      | I    | I   | I     | I    |
+| **Factory Testing**       | A   | C   | C    | C   | R   | C      | I    | I   | I     | I    |
+| **Performance Testing**   | A   | C   | C    | C   | R   | C      | I    | I   | I     | I    |
+| **Security Testing**      | A   | C   | C    | C   | R   | C      | I    | I   | I     | I    |
+| **Defect Management**     | A   | C   | R    | C   | R   | C      | I    | I   | I     | I    |
+| **UAT Planning**          | A   | R   | C    | C   | C   | I      | I    | C   | C     | C    |
+| **UAT Execution**         | A   | R   | C    | C   | R   | C      | I    | C   | R     | R    |
+| **UAT Sign-off**          | I   | C   | I    | I   | C   | I      | A    | C   | C     | C    |
 
 ---
 
 ### 5.5 Deployment & Go-Live
 
-| Activity | PM | BA | Devs | DBA | QA | DevOps | CSCS | DO | HHRMD | HROs |
-|----------|----|----|------|-----|-----|--------|------|-----|-------|------|
-| **Environment Setup** | A | I | C | C | C | R | I | I | I | I |
-| **Data Migration** | A | C | C | R | C | C | I | I | C | I |
-| **Application Deployment** | A | C | C | C | C | R | I | I | I | I |
-| **Verification Testing** | A | C | C | C | R | C | I | I | I | I |
-| **Training Delivery** | A | R | C | I | C | I | I | C | C | R |
-| **Go-Live Decision** | C | C | I | I | C | I | R/A | C | C | I |
-| **Post-Launch Support** | R/A | R | R | R | R | R | I | I | C | I |
+| Activity                   | PM  | BA  | Devs | DBA | QA  | DevOps | CSCS | DO  | HHRMD | HROs |
+| -------------------------- | --- | --- | ---- | --- | --- | ------ | ---- | --- | ----- | ---- |
+| **Environment Setup**      | A   | I   | C    | C   | C   | R      | I    | I   | I     | I    |
+| **Data Migration**         | A   | C   | C    | R   | C   | C      | I    | I   | C     | I    |
+| **Application Deployment** | A   | C   | C    | C   | C   | R      | I    | I   | I     | I    |
+| **Verification Testing**   | A   | C   | C    | C   | R   | C      | I    | I   | I     | I    |
+| **Training Delivery**      | A   | R   | C    | I   | C   | I      | I    | C   | C     | R    |
+| **Go-Live Decision**       | C   | C   | I    | I   | C   | I      | R/A  | C   | C     | I    |
+| **Post-Launch Support**    | R/A | R   | R    | R   | R   | R      | I    | I   | C     | I    |
 
 ---
 
@@ -1089,6 +1170,7 @@ This document defines the organizational structure, roles, responsibilities, and
 ### 6.1 Daily Communication
 
 #### 6.1.1 Daily Standup
+
 **Frequency:** Daily (Monday - Friday)
 **Time:** 9:00 AM - 9:15 AM
 **Duration:** 15 minutes
@@ -1096,6 +1178,7 @@ This document defines the organizational structure, roles, responsibilities, and
 **Format:** In-person (or video call if remote)
 
 **Agenda:**
+
 1. Each team member answers:
    - What did you complete yesterday?
    - What will you work on today?
@@ -1104,6 +1187,7 @@ This document defines the organizational structure, roles, responsibilities, and
 3. Blockers escalated immediately after standup
 
 **Rules:**
+
 - Stand up (keep it brief)
 - No detailed discussions (take offline)
 - Focus on progress and blockers
@@ -1114,11 +1198,13 @@ This document defines the organizational structure, roles, responsibilities, and
 ### 6.2 Weekly Communication
 
 #### 6.2.1 Weekly Team Meeting
+
 **Frequency:** Weekly (Fridays)
 **Time:** 3:00 PM - 4:00 PM
 **Participants:** Core team (9 FTE)
 
 **Agenda:**
+
 1. Week accomplishments review
 2. Next week planning
 3. Risk and issue review
@@ -1128,10 +1214,12 @@ This document defines the organizational structure, roles, responsibilities, and
 ---
 
 #### 6.2.2 Weekly Status Report
+
 **Frequency:** Weekly (Fridays by 5 PM)
 **Distribution:** PM → DO, HHRMD, Steering Committee
 
 **Content:**
+
 - Overall status (RAG)
 - Week accomplishments
 - Next week plan
@@ -1144,11 +1232,13 @@ This document defines the organizational structure, roles, responsibilities, and
 ### 6.3 Bi-Weekly Communication
 
 #### 6.3.1 Sprint Review (Development Phase)
+
 **Frequency:** Every 2 weeks during development
 **Duration:** 1-2 hours
 **Participants:** Core team + stakeholders (DO, HHRMD, selected HROs)
 
 **Purpose:**
+
 - Demo completed features
 - Gather feedback
 - Adjust priorities
@@ -1159,11 +1249,13 @@ This document defines the organizational structure, roles, responsibilities, and
 ### 6.4 Monthly Communication
 
 #### 6.4.1 Steering Committee Meeting
+
 **Frequency:** Monthly
 **Duration:** 1-2 hours
 **Participants:** CSCS (chair), DO, E-GAZ rep, PM, CSC IT Head
 
 **Agenda:**
+
 - Project status and progress
 - Major accomplishments
 - Key risks and issues
@@ -1176,12 +1268,14 @@ This document defines the organizational structure, roles, responsibilities, and
 ### 6.5 Ad-Hoc Communication
 
 **Tools:**
+
 - **Email:** Official communication, approvals, status updates
 - **Phone/WhatsApp:** Urgent issues, quick clarifications
 - **In-Person:** Workshops, important discussions, conflict resolution
 - **Microsoft Teams/Slack:** (If available) Team chat, quick coordination
 
 **Response Time Expectations:**
+
 - **Critical Issues:** 1 hour
 - **High Priority:** 4 hours
 - **Normal:** 1 business day
@@ -1193,41 +1287,44 @@ This document defines the organizational structure, roles, responsibilities, and
 
 ### 7.1 Decision Authority Matrix
 
-| Decision Type | Authority | Requires Approval From |
-|---------------|-----------|------------------------|
-| **Day-to-day technical decisions** | Developers, DBA, DevOps | None (inform PM) |
-| **Minor code changes** | Developers | Code review (peer) |
-| **Test case modifications** | QA Lead | BA (if requirements impact) |
-| **Task assignment** | PM | None |
-| **Minor schedule adjustments** | PM | None (inform DO) |
-| **Moderate schedule changes (<1 week)** | PM | DO |
-| **Major schedule changes (>1 week)** | PM | Steering Committee |
-| **Minor scope clarifications** | BA | PM |
-| **Moderate scope changes** | PM | DO |
-| **Major scope changes** | PM | Change Control Board |
-| **Budget variances (<5%)** | PM | None (inform CSCS) |
-| **Budget variances (>5%)** | PM | CSCS |
-| **UAT sign-off** | CSCS, DO, HHRMD | None |
-| **Go-live decision** | CSCS | PM, QA Lead recommendations |
-| **Project continuation/cancellation** | CSCS | Steering Committee |
+| Decision Type                           | Authority               | Requires Approval From      |
+| --------------------------------------- | ----------------------- | --------------------------- |
+| **Day-to-day technical decisions**      | Developers, DBA, DevOps | None (inform PM)            |
+| **Minor code changes**                  | Developers              | Code review (peer)          |
+| **Test case modifications**             | QA Lead                 | BA (if requirements impact) |
+| **Task assignment**                     | PM                      | None                        |
+| **Minor schedule adjustments**          | PM                      | None (inform DO)            |
+| **Moderate schedule changes (<1 week)** | PM                      | DO                          |
+| **Major schedule changes (>1 week)**    | PM                      | Steering Committee          |
+| **Minor scope clarifications**          | BA                      | PM                          |
+| **Moderate scope changes**              | PM                      | DO                          |
+| **Major scope changes**                 | PM                      | Change Control Board        |
+| **Budget variances (<5%)**              | PM                      | None (inform CSCS)          |
+| **Budget variances (>5%)**              | PM                      | CSCS                        |
+| **UAT sign-off**                        | CSCS, DO, HHRMD         | None                        |
+| **Go-live decision**                    | CSCS                    | PM, QA Lead recommendations |
+| **Project continuation/cancellation**   | CSCS                    | Steering Committee          |
 
 ---
 
 ### 7.2 Escalation Thresholds
 
 **Escalate to PM if:**
+
 - Individual task blocked >1 day
 - Technical disagreement among team
 - Resource conflict
 - Requirements clarification needed
 
 **Escalate to DO if:**
+
 - Timeline risk >1 week
 - Major technical challenge
 - Stakeholder conflict
 - Resource unavailability
 
 **Escalate to CSCS if:**
+
 - Timeline risk >2 weeks
 - Critical issue blocking project
 - Major stakeholder conflict
@@ -1235,6 +1332,7 @@ This document defines the organizational structure, roles, responsibilities, and
 - Strategic decision needed
 
 **Escalate to Steering Committee if:**
+
 - Project continuation at risk
 - Major scope change
 - Budget overrun >15%
@@ -1299,6 +1397,7 @@ This document defines the organizational structure, roles, responsibilities, and
 ### 9.1 Team Onboarding
 
 **Week 1 (Project Kickoff):**
+
 - Project orientation
 - Roles and responsibilities clarification
 - Tool and environment setup
@@ -1306,6 +1405,7 @@ This document defines the organizational structure, roles, responsibilities, and
 - Establish team norms and working agreements
 
 **Ongoing:**
+
 - Knowledge sharing sessions
 - Cross-training opportunities
 - Technical workshops
@@ -1316,6 +1416,7 @@ This document defines the organizational structure, roles, responsibilities, and
 ### 9.2 Skills Development
 
 **Technical Skills:**
+
 - Next.js/React training (if needed)
 - TypeScript best practices
 - PostgreSQL/Prisma ORM
@@ -1323,12 +1424,14 @@ This document defines the organizational structure, roles, responsibilities, and
 - Security best practices
 
 **Project Management:**
+
 - Agile/Scrum methodology
 - Risk management
 - Stakeholder communication
 - E-GAZ compliance standards
 
 **Soft Skills:**
+
 - Effective communication
 - Presentation skills
 - Conflict resolution
@@ -1340,43 +1443,46 @@ This document defines the organizational structure, roles, responsibilities, and
 
 ### 10.1 Core Team Contacts
 
-| Role | Name | Email | Phone | Office |
-|------|------|-------|-------|--------|
-| **Project Manager** | [To be filled] | pm.csms@zanzibar.go.tz | [Phone] | CSC Offices |
-| **Business Analyst** | [To be filled] | ba.csms@zanzibar.go.tz | [Phone] | CSC Offices |
-| **Developer #1 (Lead)** | [To be filled] | dev1.csms@zanzibar.go.tz | [Phone] | CSC Offices |
-| **Developer #2** | [To be filled] | dev2.csms@zanzibar.go.tz | [Phone] | CSC Offices |
-| **Developer #3** | [To be filled] | dev3.csms@zanzibar.go.tz | [Phone] | CSC Offices |
-| **Database Administrator** | [To be filled] | dba.csms@zanzibar.go.tz | [Phone] | CSC Offices |
-| **QA Engineer #1 (Lead)** | [To be filled] | qa1.csms@zanzibar.go.tz | [Phone] | CSC Offices |
-| **QA Engineer #2** | [To be filled] | qa2.csms@zanzibar.go.tz | [Phone] | CSC Offices |
-| **DevOps Engineer** | [To be filled] | devops.csms@zanzibar.go.tz | [Phone] | CSC Offices |
+| Role                       | Name           | Email                      | Phone   | Office      |
+| -------------------------- | -------------- | -------------------------- | ------- | ----------- |
+| **Project Manager**        | [To be filled] | pm.csms@zanzibar.go.tz     | [Phone] | CSC Offices |
+| **Business Analyst**       | [To be filled] | ba.csms@zanzibar.go.tz     | [Phone] | CSC Offices |
+| **Developer #1 (Lead)**    | [To be filled] | dev1.csms@zanzibar.go.tz   | [Phone] | CSC Offices |
+| **Developer #2**           | [To be filled] | dev2.csms@zanzibar.go.tz   | [Phone] | CSC Offices |
+| **Developer #3**           | [To be filled] | dev3.csms@zanzibar.go.tz   | [Phone] | CSC Offices |
+| **Database Administrator** | [To be filled] | dba.csms@zanzibar.go.tz    | [Phone] | CSC Offices |
+| **QA Engineer #1 (Lead)**  | [To be filled] | qa1.csms@zanzibar.go.tz    | [Phone] | CSC Offices |
+| **QA Engineer #2**         | [To be filled] | qa2.csms@zanzibar.go.tz    | [Phone] | CSC Offices |
+| **DevOps Engineer**        | [To be filled] | devops.csms@zanzibar.go.tz | [Phone] | CSC Offices |
 
 ---
 
 ### 10.2 Key Stakeholder Contacts
 
-| Role | Name | Email | Phone |
-|------|------|-------|-------|
-| **Chief Secretary (CSCS)** | [To be filled] | cscs@zanzibar.go.tz | [Phone] |
-| **Director of Operations** | [To be filled] | do@zanzibar.go.tz | [Phone] |
-| **HHRMD** | [To be filled] | hhrmd@zanzibar.go.tz | [Phone] |
-| **HRMO** | [To be filled] | hrmo@zanzibar.go.tz | [Phone] |
-| **E-GAZ Representative** | [To be filled] | [Email] | [Phone] |
+| Role                       | Name           | Email                | Phone   |
+| -------------------------- | -------------- | -------------------- | ------- |
+| **Chief Secretary (CSCS)** | [To be filled] | cscs@zanzibar.go.tz  | [Phone] |
+| **Director of Operations** | [To be filled] | do@zanzibar.go.tz    | [Phone] |
+| **HHRMD**                  | [To be filled] | hhrmd@zanzibar.go.tz | [Phone] |
+| **HRMO**                   | [To be filled] | hrmo@zanzibar.go.tz  | [Phone] |
+| **E-GAZ Representative**   | [To be filled] | [Email]              | [Phone] |
 
 ---
 
 ### 10.3 Emergency Contacts
 
 **Project Emergencies:**
+
 - Primary: Project Manager (24/7 during critical phases)
 - Backup: Business Analyst
 
 **Technical Emergencies:**
+
 - Primary: DevOps Engineer
 - Backup: DBA / Developer Lead
 
 **Stakeholder Escalation:**
+
 - Primary: Project Manager
 - Backup: Director of Operations
 
@@ -1386,25 +1492,25 @@ This document defines the organizational structure, roles, responsibilities, and
 
 ### Document Review
 
-| Reviewer | Title | Date | Signature |
-|----------|-------|------|-----------|
-| [Name] | Project Manager | __________ | __________ |
-| [Name] | Business Analyst | __________ | __________ |
-| [Name] | QA Lead | __________ | __________ |
+| Reviewer | Title            | Date             | Signature        |
+| -------- | ---------------- | ---------------- | ---------------- |
+| [Name]   | Project Manager  | \***\*\_\_\*\*** | \***\*\_\_\*\*** |
+| [Name]   | Business Analyst | \***\*\_\_\*\*** | \***\*\_\_\*\*** |
+| [Name]   | QA Lead          | \***\*\_\_\*\*** | \***\*\_\_\*\*** |
 
 ### Document Approval
 
 **Approved By:**
-Name: _______________________________
+Name: **\*\***\*\***\*\***\_\_\_**\*\***\*\***\*\***
 Title: Chief Secretary Civil Service (CSCS)
-Date: _______________________________
-Signature: _______________________________
+Date: **\*\***\*\***\*\***\_\_\_**\*\***\*\***\*\***
+Signature: **\*\***\*\***\*\***\_\_\_**\*\***\*\***\*\***
 
 **Acknowledged By:**
-Name: _______________________________
+Name: **\*\***\*\***\*\***\_\_\_**\*\***\*\***\*\***
 Title: Director of Operations (DO)
-Date: _______________________________
-Signature: _______________________________
+Date: **\*\***\*\***\*\***\_\_\_**\*\***\*\***\*\***
+Signature: **\*\***\*\***\*\***\_\_\_**\*\***\*\***\*\***
 
 ---
 
@@ -1414,6 +1520,6 @@ Signature: _______________________________
 
 ---
 
-*This Project Team Structure document has been prepared for the Civil Service Management System (CSMS) project to define roles, responsibilities, and organizational framework for successful project delivery.*
+_This Project Team Structure document has been prepared for the Civil Service Management System (CSMS) project to define roles, responsibilities, and organizational framework for successful project delivery._
 
 **END OF PROJECT TEAM STRUCTURE DOCUMENT**

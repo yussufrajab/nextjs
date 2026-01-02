@@ -21,7 +21,10 @@ export function isCSCRole(userRole: string | null): boolean {
  * @param userInstitutionId - The user's institution ID
  * @returns true if institution filtering should be applied
  */
-export function shouldApplyInstitutionFilter(userRole: string | null, userInstitutionId: string | null): boolean {
+export function shouldApplyInstitutionFilter(
+  userRole: string | null,
+  userInstitutionId: string | null
+): boolean {
   if (!userRole || !userInstitutionId) return false;
   return !isCSCRole(userRole);
 }

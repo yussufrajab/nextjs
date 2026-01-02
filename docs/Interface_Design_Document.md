@@ -1,4 +1,5 @@
 # INTERFACE DESIGN DOCUMENT
+
 ## CIVIL SERVICE MANAGEMENT SYSTEM (CSMS)
 
 **Version 1.0 | December 25, 2025**
@@ -7,16 +8,16 @@
 
 ## Document Control
 
-| Item | Details |
-|------|---------|
-| **Document Title** | Interface Design Document |
-| **Project Name** | Civil Service Management System (CSMS) |
-| **Version** | 1.0 |
-| **Date Prepared** | December 25, 2025 |
-| **Prepared By** | Integration Team |
-| **Reviewed By** | System Architect, API Lead |
-| **Approved By** | IT Department Head |
-| **Status** | Final |
+| Item               | Details                                |
+| ------------------ | -------------------------------------- |
+| **Document Title** | Interface Design Document              |
+| **Project Name**   | Civil Service Management System (CSMS) |
+| **Version**        | 1.0                                    |
+| **Date Prepared**  | December 25, 2025                      |
+| **Prepared By**    | Integration Team                       |
+| **Reviewed By**    | System Architect, API Lead             |
+| **Approved By**    | IT Department Head                     |
+| **Status**         | Final                                  |
 
 ---
 
@@ -25,6 +26,7 @@
 This Interface Design Document provides comprehensive specifications for all interfaces in the Civil Service Management System (CSMS). It covers internal APIs, external integration points, data formats, communication protocols, and error handling strategies.
 
 **Key Interface Categories:**
+
 - **Internal REST APIs** - 50+ endpoints for frontend-backend communication
 - **External Integrations** - HRIMS, SMTP, Google AI (Genkit)
 - **File Storage Interface** - MinIO S3-compatible API
@@ -57,6 +59,7 @@ This Interface Design Document provides comprehensive specifications for all int
 **Character Encoding:** UTF-8
 
 **API Categories:**
+
 1. Authentication APIs (5 endpoints)
 2. Employee Management APIs (8 endpoints)
 3. Request Management APIs (36 endpoints - 9 request types × 4 operations)
@@ -81,11 +84,13 @@ This Interface Design Document provides comprehensive specifications for all int
 **Description:** Authenticate user and receive JWT tokens.
 
 **Request Headers:**
+
 ```http
 Content-Type: application/json
 ```
 
 **Request Body:**
+
 ```json
 {
   "username": "string",
@@ -94,10 +99,12 @@ Content-Type: application/json
 ```
 
 **Validation Rules:**
+
 - `username`: Required, min 3 characters
 - `password`: Required, min 6 characters
 
 **Success Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -123,6 +130,7 @@ Content-Type: application/json
 ```
 
 **Error Response (401 Unauthorized):**
+
 ```json
 {
   "success": false,
@@ -131,6 +139,7 @@ Content-Type: application/json
 ```
 
 **Error Response (403 Forbidden):**
+
 ```json
 {
   "success": false,
@@ -139,6 +148,7 @@ Content-Type: application/json
 ```
 
 **Business Rules:**
+
 - Account locks after 5 failed login attempts
 - JWT expires after 10 minutes
 - Refresh token expires after 7 days
@@ -153,6 +163,7 @@ Content-Type: application/json
 **Description:** Self-service login for employees using ZanID.
 
 **Request Body:**
+
 ```json
 {
   "zanId": "string",
@@ -171,12 +182,14 @@ Content-Type: application/json
 **Description:** Invalidate user session and tokens.
 
 **Request Headers:**
+
 ```http
 Authorization: Bearer {token}
 Cookie: token={jwt-token}
 ```
 
 **Success Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -185,6 +198,7 @@ Cookie: token={jwt-token}
 ```
 
 **Side Effects:**
+
 - Clears server-side session (if applicable)
 - Client must clear tokens from localStorage
 - Invalidates refresh token
@@ -198,16 +212,19 @@ Cookie: token={jwt-token}
 **Description:** Obtain new access token using refresh token.
 
 **Request Headers:**
+
 ```http
 Content-Type: text/plain
 ```
 
 **Request Body:** (Plain text, not JSON)
+
 ```
 eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
 
 **Success Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -219,6 +236,7 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
 
 **Error Response (401 Unauthorized):**
+
 ```json
 {
   "success": false,
@@ -233,12 +251,14 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 **Endpoint:** `POST /api/auth/change-password`
 
 **Request Headers:**
+
 ```http
 Authorization: Bearer {token}
 Content-Type: application/json
 ```
 
 **Request Body:**
+
 ```json
 {
   "currentPassword": "string",
@@ -247,9 +267,11 @@ Content-Type: application/json
 ```
 
 **Validation Rules:**
+
 - `newPassword`: Min 8 characters, must contain uppercase, lowercase, number
 
 **Success Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -268,11 +290,13 @@ Content-Type: application/json
 **Description:** Retrieve employees with role-based filtering.
 
 **Request Headers:**
+
 ```http
 Authorization: Bearer {token}
 ```
 
 **Query Parameters:**
+
 ```
 ?userRole={role}
 &userInstitutionId={uuid}
@@ -282,6 +306,7 @@ Authorization: Bearer {token}
 ```
 
 **Parameter Details:**
+
 - `userRole`: User's role (for RBAC filtering)
 - `userInstitutionId`: User's institution ID (for institution-specific filtering)
 - `q`: Search query (searches name, zanId, payrollNumber)
@@ -289,6 +314,7 @@ Authorization: Bearer {token}
 - `size`: Page size (default: 50)
 
 **Success Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -321,6 +347,7 @@ Authorization: Bearer {token}
 ```
 
 **RBAC Filtering Logic:**
+
 ```
 CSC Roles (HHRMD, HRMO, DO, PO, CSCS):
   - Return ALL employees across ALL institutions
@@ -337,9 +364,11 @@ Institution Roles (HRO):
 **Endpoint:** `GET /api/employees/{id}`
 
 **Path Parameters:**
+
 - `id`: Employee UUID
 
 **Success Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -357,6 +386,7 @@ Institution Roles (HRO):
 ```
 
 **Error Response (404 Not Found):**
+
 ```json
 {
   "success": false,
@@ -371,6 +401,7 @@ Institution Roles (HRO):
 **Endpoint:** `GET /api/employees/search`
 
 **Query Parameters:**
+
 ```
 ?q={search-term}
 &institutionId={uuid}
@@ -379,12 +410,14 @@ Institution Roles (HRO):
 ```
 
 **Search Fields:**
+
 - Employee name
 - ZanID
 - Payroll number
 - ZSSF number
 
 **Success Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -409,6 +442,7 @@ Institution Roles (HRO):
 **Endpoint:** `GET /api/employees/{id}/documents`
 
 **Success Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -428,6 +462,7 @@ Institution Roles (HRO):
 **Endpoint:** `GET /api/employees/{id}/certificates`
 
 **Success Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -455,6 +490,7 @@ Institution Roles (HRO):
 ### 1.4 Request Management APIs (Promotion Example)
 
 **Pattern:** All 9 request types follow the same API pattern:
+
 - Promotion
 - Confirmation
 - LWOP
@@ -469,6 +505,7 @@ Institution Roles (HRO):
 **Endpoint:** `GET /api/promotions`
 
 **Query Parameters:**
+
 ```
 ?userId={uuid}
 &userRole={role}
@@ -476,6 +513,7 @@ Institution Roles (HRO):
 ```
 
 **Success Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -528,6 +566,7 @@ Institution Roles (HRO):
 **Endpoint:** `POST /api/promotions`
 
 **Request Body:**
+
 ```json
 {
   "employeeId": "uuid-v4",
@@ -544,6 +583,7 @@ Institution Roles (HRO):
 ```
 
 **Validation Schema (Zod):**
+
 ```typescript
 {
   employeeId: z.string().uuid(),
@@ -564,19 +604,21 @@ Institution Roles (HRO):
 ```
 
 **Success Response (200 OK):**
+
 ```json
 {
   "success": true,
   "data": {
     "id": "uuid-v4",
     "status": "Pending HRMO/HHRMD Review",
-    "reviewStage": "initial",
+    "reviewStage": "initial"
     // ... full promotion request object
   }
 }
 ```
 
 **Error Response (400 Bad Request):**
+
 ```json
 {
   "success": false,
@@ -585,6 +627,7 @@ Institution Roles (HRO):
 ```
 
 **Error Response (403 Forbidden):**
+
 ```json
 {
   "success": false,
@@ -593,6 +636,7 @@ Institution Roles (HRO):
 ```
 
 **Error Response (404 Not Found):**
+
 ```json
 {
   "success": false,
@@ -601,12 +645,14 @@ Institution Roles (HRO):
 ```
 
 **Side Effects:**
+
 1. Creates promotion request record
 2. Sets initial status and review stage
 3. Sends notifications to HHRMD and DO roles
 4. Creates audit trail entry
 
 **Notification Triggered:**
+
 ```json
 {
   "roles": ["HHRMD", "DO"],
@@ -622,9 +668,11 @@ Institution Roles (HRO):
 **Endpoint:** `PATCH /api/promotions/{id}`
 
 **Path Parameters:**
+
 - `id`: Promotion request UUID
 
 **Request Body:**
+
 ```json
 {
   "status": "Approved by Commission",
@@ -636,6 +684,7 @@ Institution Roles (HRO):
 ```
 
 **Success Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -646,17 +695,19 @@ Institution Roles (HRO):
 ```
 
 **Side Effects:**
+
 - If `status === "Approved by Commission"`:
   - Updates `Employee.cadre` to `request.proposedCadre`
   - Logs cadre change in audit trail
 
 **Business Logic:**
+
 ```typescript
-if (status === "Approved by Commission") {
+if (status === 'Approved by Commission') {
   await db.Employee.update({
     where: { id: employeeId },
-    data: { cadre: proposedCadre }
-  })
+    data: { cadre: proposedCadre },
+  });
 }
 ```
 
@@ -669,6 +720,7 @@ if (status === "Approved by Commission") {
 **Endpoint:** `POST /api/complaints`
 
 **Request Body:**
+
 ```json
 {
   "complaintType": "Harassment | Discrimination | Unfair Treatment | Other",
@@ -686,6 +738,7 @@ if (status === "Approved by Commission") {
 ```
 
 **Validation Schema:**
+
 ```typescript
 {
   complaintType: z.string().min(1),
@@ -700,6 +753,7 @@ if (status === "Approved by Commission") {
 ```
 
 **Success Response (201 Created):**
+
 ```json
 {
   "id": "uuid-v4",
@@ -715,6 +769,7 @@ if (status === "Approved by Commission") {
 ```
 
 **Side Effects:**
+
 1. Creates complaint record
 2. Sends notifications to DO and HHRMD
 3. Sets status to "Submitted"
@@ -726,12 +781,14 @@ if (status === "Approved by Commission") {
 **Endpoint:** `GET /api/complaints`
 
 **Query Parameters:**
+
 ```
 ?userId={uuid}
 &userRole={role}
 ```
 
 **RBAC Logic:**
+
 ```
 If userRole === 'EMP':
   - Return only complaints where complainantId = userId
@@ -744,6 +801,7 @@ Else (Admin/CSCS):
 ```
 
 **Success Response (200 OK):**
+
 ```json
 [
   {
@@ -772,6 +830,7 @@ Else (Admin/CSCS):
 **Endpoint:** `PATCH /api/complaints/{id}`
 
 **Request Body:**
+
 ```json
 {
   "status": "Resolved | Under Review | Rejected",
@@ -784,6 +843,7 @@ Else (Admin/CSCS):
 ```
 
 **Success Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -802,23 +862,27 @@ Else (Admin/CSCS):
 **Endpoint:** `POST /api/files/upload`
 
 **Request Headers:**
+
 ```http
 Content-Type: multipart/form-data
 Authorization: Bearer {token}
 ```
 
 **Request Body:** (FormData)
+
 ```
 file: <binary-file-data>
 ```
 
 **File Validation:**
+
 - Max size: 2MB for documents, 1MB for images
 - Allowed types:
   - Documents: `application/pdf`, `image/jpeg`, `image/png`
   - Images: `image/jpeg`, `image/png`, `image/jpg`
 
 **Success Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -832,6 +896,7 @@ file: <binary-file-data>
 ```
 
 **Error Response (400 Bad Request):**
+
 ```json
 {
   "success": false,
@@ -840,6 +905,7 @@ file: <binary-file-data>
 ```
 
 **Error Response (415 Unsupported Media Type):**
+
 ```json
 {
   "success": false,
@@ -848,6 +914,7 @@ file: <binary-file-data>
 ```
 
 **Implementation Flow:**
+
 ```
 1. Validate file type and size
 2. Generate unique object key:
@@ -867,9 +934,11 @@ file: <binary-file-data>
 **Endpoint:** `GET /api/files/download/{...objectKey}`
 
 **Path Parameters:**
+
 - `objectKey`: Full object path (e.g., `documents/timestamp_random_file.pdf`)
 
 **Response Headers:**
+
 ```http
 Content-Type: application/pdf
 Content-Disposition: attachment; filename="file.pdf"
@@ -878,6 +947,7 @@ Content-Disposition: attachment; filename="file.pdf"
 **Response Body:** Binary file stream
 
 **Error Response (404 Not Found):**
+
 ```json
 {
   "success": false,
@@ -894,6 +964,7 @@ Content-Disposition: attachment; filename="file.pdf"
 **Description:** Same as download but with `inline` disposition for browser preview.
 
 **Response Headers:**
+
 ```http
 Content-Type: application/pdf
 Content-Disposition: inline; filename="file.pdf"
@@ -906,6 +977,7 @@ Content-Disposition: inline; filename="file.pdf"
 **Endpoint:** `GET /api/files/exists/{...objectKey}`
 
 **Success Response (200 OK):**
+
 ```json
 {
   "exists": true,
@@ -918,6 +990,7 @@ Content-Disposition: inline; filename="file.pdf"
 ```
 
 **Not Found Response (200 OK):**
+
 ```json
 {
   "exists": false
@@ -935,6 +1008,7 @@ Content-Disposition: inline; filename="file.pdf"
 **Description:** Fetch and sync employee data from external HRIMS system.
 
 **Request Body:**
+
 ```json
 {
   "zanId": "Z123456789",
@@ -947,10 +1021,12 @@ Content-Disposition: inline; filename="file.pdf"
 ```
 
 **Validation:**
+
 - Either `zanId` OR `payrollNumber` must be provided
 - `institutionVoteNumber` is required
 
 **Success Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -969,6 +1045,7 @@ Content-Disposition: inline; filename="file.pdf"
 ```
 
 **HRIMS API Call:**
+
 ```http
 GET https://hrims-api.example.com/api/employee/search?zanId=Z123456789&institutionVoteNumber=VOTE123
 Authorization: Bearer {hrimsApiKey}
@@ -976,6 +1053,7 @@ X-API-Key: {hrimsApiKey}
 ```
 
 **HRIMS Response Schema:**
+
 ```json
 {
   "success": true,
@@ -1005,6 +1083,7 @@ X-API-Key: {hrimsApiKey}
 ```
 
 **Flow:**
+
 ```
 1. Validate request parameters
 2. Find institution by vote number
@@ -1019,6 +1098,7 @@ X-API-Key: {hrimsApiKey}
 ```
 
 **Background Sync:**
+
 - Documents and certificates sync asynchronously
 - No blocking wait for completion
 - Status returned as "syncing" or "completed"
@@ -1030,6 +1110,7 @@ X-API-Key: {hrimsApiKey}
 **Endpoint:** `POST /api/hrims/sync-documents`
 
 **Request Body:**
+
 ```json
 {
   "zanId": "Z123456789",
@@ -1040,6 +1121,7 @@ X-API-Key: {hrimsApiKey}
 ```
 
 **Success Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -1071,6 +1153,7 @@ X-API-Key: {hrimsApiKey}
 **Endpoint:** `POST /api/hrims/sync-certificates`
 
 **Request Body:**
+
 ```json
 {
   "zanId": "Z123456789",
@@ -1081,6 +1164,7 @@ X-API-Key: {hrimsApiKey}
 ```
 
 **Success Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -1108,6 +1192,7 @@ X-API-Key: {hrimsApiKey}
 **Description:** Fetch multiple employees from an institution.
 
 **Request Body:**
+
 ```json
 {
   "institutionVoteNumber": "VOTE123",
@@ -1119,6 +1204,7 @@ X-API-Key: {hrimsApiKey}
 ```
 
 **Success Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -1140,6 +1226,7 @@ X-API-Key: {hrimsApiKey}
 **Endpoint:** `GET /api/users`
 
 **Success Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -1172,6 +1259,7 @@ X-API-Key: {hrimsApiKey}
 **Endpoint:** `POST /api/users`
 
 **Request Body:**
+
 ```json
 {
   "name": "John Doe",
@@ -1187,12 +1275,14 @@ X-API-Key: {hrimsApiKey}
 ```
 
 **Validation:**
+
 - Username must be unique
 - Password: min 8 chars, uppercase, lowercase, number
 - Role must be valid enum
 - Institution must exist
 
 **Success Response (201 Created):**
+
 ```json
 {
   "success": true,
@@ -1200,7 +1290,7 @@ X-API-Key: {hrimsApiKey}
     "id": "uuid-v4",
     "name": "John Doe",
     "username": "jdoe",
-    "role": "HRO",
+    "role": "HRO"
     // ... (password excluded)
   }
 }
@@ -1213,6 +1303,7 @@ X-API-Key: {hrimsApiKey}
 **Endpoint:** `PATCH /api/users/{id}`
 
 **Request Body:**
+
 ```json
 {
   "name": "John Doe Updated",
@@ -1222,6 +1313,7 @@ X-API-Key: {hrimsApiKey}
 ```
 
 **Success Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -1238,6 +1330,7 @@ X-API-Key: {hrimsApiKey}
 **Endpoint:** `DELETE /api/users/{id}`
 
 **Success Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -1254,6 +1347,7 @@ X-API-Key: {hrimsApiKey}
 **Endpoint:** `GET /api/institutions`
 
 **Success Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -1277,6 +1371,7 @@ X-API-Key: {hrimsApiKey}
 **Endpoint:** `POST /api/institutions`
 
 **Request Body:**
+
 ```json
 {
   "name": "Institution Name",
@@ -1288,17 +1383,19 @@ X-API-Key: {hrimsApiKey}
 ```
 
 **Validation:**
+
 - Name must be unique
 - TIN must be unique
 - Vote number format validation
 
 **Success Response (201 Created):**
+
 ```json
 {
   "success": true,
   "data": {
     "id": "uuid-v4",
-    "name": "Institution Name",
+    "name": "Institution Name"
     // ...
   }
 }
@@ -1313,11 +1410,13 @@ X-API-Key: {hrimsApiKey}
 **Endpoint:** `GET /api/notifications`
 
 **Query Parameters:**
+
 ```
 ?userId={uuid}
 ```
 
 **Success Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -1341,6 +1440,7 @@ X-API-Key: {hrimsApiKey}
 **Endpoint:** `POST /api/notifications`
 
 **Request Body:**
+
 ```json
 {
   "notificationIds": ["uuid-v4", "uuid-v4", "uuid-v4"]
@@ -1348,6 +1448,7 @@ X-API-Key: {hrimsApiKey}
 ```
 
 **Success Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -1364,12 +1465,14 @@ X-API-Key: {hrimsApiKey}
 **Endpoint:** `GET /api/dashboard/metrics`
 
 **Query Parameters:**
+
 ```
 ?userRole={role}
 &userInstitutionId={uuid}
 ```
 
 **Success Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -1409,6 +1512,7 @@ X-API-Key: {hrimsApiKey}
 **Endpoint:** `GET /api/reports`
 
 **Query Parameters:**
+
 ```
 ?type={report-type}
 &startDate={ISO-date}
@@ -1418,6 +1522,7 @@ X-API-Key: {hrimsApiKey}
 ```
 
 **Report Types:**
+
 - `employee-list`: List of employees
 - `requests-summary`: Summary of all requests
 - `promotions`: Promotion requests report
@@ -1425,6 +1530,7 @@ X-API-Key: {hrimsApiKey}
 - `complaints`: Complaints report
 
 **Success Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -1487,17 +1593,20 @@ X-API-Key: {hrimsApiKey}
 **Base URL:** `https://hrims-api.example.com`
 
 **Authentication:**
+
 ```http
 Authorization: Bearer {api-key}
 X-API-Key: {api-key}
 ```
 
 **Endpoint: Search Employee**
+
 ```http
 GET /api/employee/search?zanId={zanId}&institutionVoteNumber={voteNumber}
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -1535,11 +1644,13 @@ GET /api/employee/search?zanId={zanId}&institutionVoteNumber={voteNumber}
 ---
 
 **Endpoint: Fetch Documents**
+
 ```http
 GET /api/employee/documents?zanId={zanId}&institutionVoteNumber={voteNumber}
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -1560,11 +1671,13 @@ GET /api/employee/documents?zanId={zanId}&institutionVoteNumber={voteNumber}
 ---
 
 **Endpoint: Fetch Certificates**
+
 ```http
 GET /api/employee/certificates?zanId={zanId}&institutionVoteNumber={voteNumber}
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -1588,6 +1701,7 @@ GET /api/employee/certificates?zanId={zanId}&institutionVoteNumber={voteNumber}
 #### 2.2.2 HRIMS Integration Configuration
 
 **Environment Variables:**
+
 ```bash
 HRIMS_API_URL=https://hrims-api.example.com
 HRIMS_API_KEY=your-api-key-here
@@ -1595,15 +1709,18 @@ HRIMS_MOCK_MODE=false  # Set to true for development/testing
 ```
 
 **Timeout Settings:**
+
 - Connection timeout: 30 seconds
 - Read timeout: 60 seconds
 
 **Retry Logic:**
+
 - Max retries: 3
 - Backoff strategy: Exponential (1s, 2s, 4s)
 - Retry on: 408, 500, 502, 503, 504
 
 **Circuit Breaker:**
+
 - Failure threshold: 5 consecutive failures
 - Reset timeout: 60 seconds
 - Half-open state: Allow 1 request
@@ -1612,19 +1729,19 @@ HRIMS_MOCK_MODE=false  # Set to true for development/testing
 
 #### 2.2.3 Data Mapping (HRIMS ↔ CSMS)
 
-| HRIMS Field | CSMS Field | Transformation |
-|-------------|------------|----------------|
-| `zanId` | `Employee.zanId` | Direct mapping |
-| `fullName` | `Employee.name` | Direct mapping |
-| `gender` | `Employee.gender` | Direct mapping |
-| `dateOfBirth` | `Employee.dateOfBirth` | Parse ISO-8601 to Date |
-| `photo.content` | `Employee.profileImageUrl` | `data:image/jpeg;base64,{content}` |
-| `cadre` | `Employee.cadre` | Direct mapping |
-| `salaryScale` | `Employee.salaryScale` | Direct mapping |
-| `ministry` | `Employee.ministry` | Direct mapping |
-| `status` | `Employee.status` | Direct mapping |
-| `employmentDate` | `Employee.employmentDate` | Parse ISO-8601 to Date |
-| `institutionVoteNumber` | `Institution.voteNumber` | Lookup institution |
+| HRIMS Field             | CSMS Field                 | Transformation                     |
+| ----------------------- | -------------------------- | ---------------------------------- |
+| `zanId`                 | `Employee.zanId`           | Direct mapping                     |
+| `fullName`              | `Employee.name`            | Direct mapping                     |
+| `gender`                | `Employee.gender`          | Direct mapping                     |
+| `dateOfBirth`           | `Employee.dateOfBirth`     | Parse ISO-8601 to Date             |
+| `photo.content`         | `Employee.profileImageUrl` | `data:image/jpeg;base64,{content}` |
+| `cadre`                 | `Employee.cadre`           | Direct mapping                     |
+| `salaryScale`           | `Employee.salaryScale`     | Direct mapping                     |
+| `ministry`              | `Employee.ministry`        | Direct mapping                     |
+| `status`                | `Employee.status`          | Direct mapping                     |
+| `employmentDate`        | `Employee.employmentDate`  | Parse ISO-8601 to Date             |
+| `institutionVoteNumber` | `Institution.voteNumber`   | Lookup institution                 |
 
 ---
 
@@ -1638,6 +1755,7 @@ HRIMS_MOCK_MODE=false  # Set to true for development/testing
 #### 2.3.1 SMTP Configuration
 
 **Environment Variables:**
+
 ```bash
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
@@ -1647,6 +1765,7 @@ SMTP_FROM=CSMS <noreply@csms.go.tz>
 ```
 
 **NodeMailer Configuration:**
+
 ```typescript
 {
   host: process.env.SMTP_HOST,
@@ -1667,6 +1786,7 @@ SMTP_FROM=CSMS <noreply@csms.go.tz>
 #### 2.3.2 Email Templates
 
 **Template: Request Submission Notification**
+
 ```
 Subject: New {RequestType} Request - {EmployeeName}
 
@@ -1688,6 +1808,7 @@ Civil Service Management System
 ```
 
 **Template: Request Approved**
+
 ```
 Subject: Your {RequestType} Request has been Approved
 
@@ -1708,6 +1829,7 @@ Civil Service Commission
 ```
 
 **Template: Password Reset OTP**
+
 ```
 Subject: Password Reset - CSMS
 
@@ -1729,15 +1851,15 @@ CSMS Security Team
 
 #### 2.3.3 Email Use Cases
 
-| Trigger | Recipients | Template |
-|---------|-----------|----------|
-| User Registration | New user | Welcome email with credentials |
-| Password Reset Request | User | OTP email |
-| Request Submission | Reviewers (by role) | Request notification |
-| Request Approved | Submitter | Approval notification |
-| Request Rejected | Submitter | Rejection with reason |
-| Complaint Submitted | DO, HHRMD | Complaint notification |
-| Complaint Resolved | Complainant | Resolution notification |
+| Trigger                | Recipients          | Template                       |
+| ---------------------- | ------------------- | ------------------------------ |
+| User Registration      | New user            | Welcome email with credentials |
+| Password Reset Request | User                | OTP email                      |
+| Request Submission     | Reviewers (by role) | Request notification           |
+| Request Approved       | Submitter           | Approval notification          |
+| Request Rejected       | Submitter           | Rejection with reason          |
+| Complaint Submitted    | DO, HHRMD           | Complaint notification         |
+| Complaint Resolved     | Complainant         | Resolution notification        |
 
 ---
 
@@ -1751,11 +1873,13 @@ CSMS Security Team
 #### 2.4.1 Genkit Configuration
 
 **Environment Variables:**
+
 ```bash
 GOOGLE_API_KEY=your-google-api-key
 ```
 
 **Genkit Setup:**
+
 ```typescript
 import { gemini15Flash, googleAI } from '@genkit-ai/googleai';
 import { genkit } from 'genkit';
@@ -1773,13 +1897,15 @@ export const ai = genkit({
 **Endpoint (Internal):** Genkit flow, called via server action
 
 **Input:**
+
 ```typescript
 {
-  complaintText: string  // Original complaint text
+  complaintText: string; // Original complaint text
 }
 ```
 
 **Prompt:**
+
 ```
 You are an expert in standardizing employee complaints for the civil service commission.
 
@@ -1789,15 +1915,17 @@ Original Complaint: {complaintText}
 ```
 
 **Output:**
+
 ```typescript
 {
-  rewrittenComplaint: string  // Improved, standardized complaint text
+  rewrittenComplaint: string; // Improved, standardized complaint text
 }
 ```
 
 **AI Model:** Google Gemini 1.5 Flash
 
 **Processing:**
+
 1. Analyze original text
 2. Improve grammar and clarity
 3. Maintain formal, professional tone
@@ -1843,6 +1971,7 @@ User reviews and accepts/rejects
 #### 2.5.1 MinIO Configuration
 
 **Environment Variables:**
+
 ```bash
 MINIO_ENDPOINT=localhost
 MINIO_PORT=9000
@@ -1853,6 +1982,7 @@ MINIO_BUCKET_NAME=documents
 ```
 
 **MinIO Client:**
+
 ```typescript
 import { Client as MinioClient } from 'minio';
 
@@ -1870,45 +2000,45 @@ const minioClient = new MinioClient({
 #### 2.5.2 MinIO Operations
 
 **Upload Object:**
+
 ```typescript
-await minioClient.putObject(
-  bucketName,
-  objectKey,
-  fileBuffer,
-  fileSize,
-  {
-    'Content-Type': contentType,
-    'Upload-Date': new Date().toISOString()
-  }
-);
+await minioClient.putObject(bucketName, objectKey, fileBuffer, fileSize, {
+  'Content-Type': contentType,
+  'Upload-Date': new Date().toISOString(),
+});
 ```
 
 **Download Object:**
+
 ```typescript
 const stream = await minioClient.getObject(bucketName, objectKey);
 ```
 
 **Get Object Metadata:**
+
 ```typescript
 const stat = await minioClient.statObject(bucketName, objectKey);
 // Returns: { size, contentType, lastModified, etag }
 ```
 
 **Generate Presigned URL:**
+
 ```typescript
 const url = await minioClient.presignedGetObject(
   bucketName,
   objectKey,
-  24 * 60 * 60  // 24 hours
+  24 * 60 * 60 // 24 hours
 );
 ```
 
 **Delete Object:**
+
 ```typescript
 await minioClient.removeObject(bucketName, objectKey);
 ```
 
 **List Objects:**
+
 ```typescript
 const stream = minioClient.listObjects(bucketName, prefix, recursive);
 stream.on('data', (obj) => console.log(obj));
@@ -1950,6 +2080,7 @@ reports/
 ### 3.1 Standard Response Format
 
 **Success Response:**
+
 ```json
 {
   "success": true,
@@ -1959,6 +2090,7 @@ reports/
 ```
 
 **Error Response:**
+
 ```json
 {
   "success": false,
@@ -1976,15 +2108,17 @@ reports/
 **Timezone:** UTC
 
 **Examples:**
+
 ```
 2025-12-25T10:30:00.000Z  // Full datetime
 2025-12-25                // Date only (converted to 00:00:00 UTC)
 ```
 
 **JavaScript Serialization:**
+
 ```typescript
 const date = new Date();
-date.toISOString();  // "2025-12-25T10:30:00.000Z"
+date.toISOString(); // "2025-12-25T10:30:00.000Z"
 ```
 
 **Database Storage:** PostgreSQL `TIMESTAMP WITH TIME ZONE`
@@ -2000,6 +2134,7 @@ date.toISOString();  // "2025-12-25T10:30:00.000Z"
 **Example:** `550e8400-e29b-41d4-a716-446655440000`
 
 **Usage:**
+
 - All primary keys (id fields)
 - Request IDs
 - Employee IDs
@@ -2014,15 +2149,15 @@ date.toISOString();  // "2025-12-25T10:30:00.000Z"
 
 ```typescript
 type Role =
-  | 'HRO'      // HR Officer
-  | 'HHRMD'    // Head of HR Management Division
-  | 'HRMO'     // HR Management Officer
-  | 'DO'       // Director's Office
-  | 'CSCS'     // Commission Secretary
-  | 'EMP'      // Employee
-  | 'PO'       // Personnel Officer
-  | 'HRRP'     // HR Research & Planning
-  | 'ADMIN'    // System Administrator
+  | 'HRO' // HR Officer
+  | 'HHRMD' // Head of HR Management Division
+  | 'HRMO' // HR Management Officer
+  | 'DO' // Director's Office
+  | 'CSCS' // Commission Secretary
+  | 'EMP' // Employee
+  | 'PO' // Personnel Officer
+  | 'HRRP' // HR Research & Planning
+  | 'ADMIN'; // System Administrator
 ```
 
 ---
@@ -2038,7 +2173,7 @@ type RequestStatus =
   | 'Rejected by HRMO'
   | 'Rejected by HHRMD'
   | 'Rejected by DO'
-  | 'Rejected by Commission'
+  | 'Rejected by Commission';
 ```
 
 ---
@@ -2047,12 +2182,12 @@ type RequestStatus =
 
 ```typescript
 type ReviewStage =
-  | 'initial'        // Initial submission
-  | 'hrmo_review'    // Under HRMO review
-  | 'hrmd_approved'  // Approved by HHRMD
-  | 'do_approved'    // Approved by DO
-  | 'approved'       // Final approval (Commission)
-  | 'rejected'       // Rejected
+  | 'initial' // Initial submission
+  | 'hrmo_review' // Under HRMO review
+  | 'hrmd_approved' // Approved by HHRMD
+  | 'do_approved' // Approved by DO
+  | 'approved' // Final approval (Commission)
+  | 'rejected'; // Rejected
 ```
 
 ---
@@ -2061,8 +2196,8 @@ type ReviewStage =
 
 ```typescript
 type PromotionType =
-  | 'Experience'   // Experience-based promotion
-  | 'Education'    // Education-based promotion
+  | 'Experience' // Experience-based promotion
+  | 'Education'; // Education-based promotion
 ```
 
 ---
@@ -2074,7 +2209,7 @@ type ComplaintType =
   | 'Harassment'
   | 'Discrimination'
   | 'Unfair Treatment'
-  | 'Other'
+  | 'Other';
 ```
 
 ---
@@ -2090,7 +2225,7 @@ type EmployeeStatus =
   | 'Suspended'
   | 'Retired'
   | 'Terminated'
-  | 'Resigned'
+  | 'Resigned';
 ```
 
 ---
@@ -2100,25 +2235,28 @@ type EmployeeStatus =
 #### 3.5.1 Supported File Types
 
 **Documents:**
+
 - `application/pdf` - PDF documents
 - `image/jpeg` - JPEG images
 - `image/png` - PNG images
 - `image/jpg` - JPG images
 
 **Size Limits:**
+
 - Documents: 2 MB
 - Images: 1 MB
 
 **Validation:**
+
 ```typescript
 const ALLOWED_DOCUMENT_TYPES = [
   'application/pdf',
   'image/jpeg',
   'image/png',
-  'image/jpg'
+  'image/jpg',
 ];
 
-const MAX_FILE_SIZE = 2 * 1024 * 1024;  // 2MB
+const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 const MAX_IMAGE_SIZE = 1 * 1024 * 1024; // 1MB
 ```
 
@@ -2127,21 +2265,25 @@ const MAX_IMAGE_SIZE = 1 * 1024 * 1024; // 1MB
 #### 3.5.2 Base64 Encoding (HRIMS Integration)
 
 **Format:**
+
 ```
 data:{contentType};base64,{base64-encoded-data}
 ```
 
 **Example:**
+
 ```
 data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD...
 ```
 
 **Encoding:**
+
 ```typescript
 const base64 = Buffer.from(binaryData).toString('base64');
 ```
 
 **Decoding:**
+
 ```typescript
 const binaryData = Buffer.from(base64String, 'base64');
 ```
@@ -2151,11 +2293,13 @@ const binaryData = Buffer.from(base64String, 'base64');
 ### 3.6 Pagination Format
 
 **Request:**
+
 ```
 GET /api/resources?page=2&size=50
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -2182,6 +2326,7 @@ GET /api/resources?page=2&size=50
 **Cipher Suites:** Strong ciphers only (AES-256-GCM)
 
 **Required Headers:**
+
 ```http
 Content-Type: application/json
 Accept: application/json
@@ -2189,6 +2334,7 @@ User-Agent: CSMS-Client/1.0
 ```
 
 **Optional Headers:**
+
 ```http
 X-Request-ID: {uuid}          // Request tracking
 X-Correlation-ID: {uuid}      // Correlation across services
@@ -2200,6 +2346,7 @@ X-Correlation-ID: {uuid}      // Correlation across services
 
 **Algorithm:** HS256 (HMAC with SHA-256)
 **Header:**
+
 ```json
 {
   "alg": "HS256",
@@ -2208,18 +2355,20 @@ X-Correlation-ID: {uuid}      // Correlation across services
 ```
 
 **Payload:**
+
 ```json
 {
   "userId": "uuid-v4",
   "username": "admin",
   "role": "ADMIN",
   "institutionId": "uuid-v4",
-  "iat": 1703520123,  // Issued at (Unix timestamp)
-  "exp": 1703520723   // Expires at (Unix timestamp)
+  "iat": 1703520123, // Issued at (Unix timestamp)
+  "exp": 1703520723 // Expires at (Unix timestamp)
 }
 ```
 
 **Signature:**
+
 ```
 HMACSHA256(
   base64UrlEncode(header) + "." +
@@ -2229,16 +2378,19 @@ HMACSHA256(
 ```
 
 **Token Format:**
+
 ```
 eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ1dWlkLXY0IiwidXNlcm5hbWUiOiJhZG1pbiIsInJvbGUiOiJBRE1JTiIsImlhdCI6MTcwMzUyMDEyMywiZXhwIjoxNzAzNTIwNzIzfQ.signature
 ```
 
 **Token Transmission:**
+
 ```http
 Authorization: Bearer {token}
 ```
 
 **Token Expiry:**
+
 - Access Token: 10 minutes (600 seconds)
 - Refresh Token: 7 days (604800 seconds)
 
@@ -2247,32 +2399,38 @@ Authorization: Bearer {token}
 ### 4.3 CORS Configuration
 
 **Allowed Origins:**
+
 ```
 https://csms.zanzibar.go.tz
 http://localhost:9002  // Development only
 ```
 
 **Allowed Methods:**
+
 ```
 GET, POST, PATCH, PUT, DELETE, OPTIONS
 ```
 
 **Allowed Headers:**
+
 ```
 Content-Type, Authorization, X-Request-ID
 ```
 
 **Exposed Headers:**
+
 ```
 X-Total-Count, X-Request-ID
 ```
 
 **Credentials:**
+
 ```
 Access-Control-Allow-Credentials: true
 ```
 
 **Next.js Configuration:**
+
 ```typescript
 // next.config.ts
 {
@@ -2297,6 +2455,7 @@ Access-Control-Allow-Credentials: true
 ### 4.4 Rate Limiting
 
 **Configuration:**
+
 ```
 - Per IP: 100 requests per minute
 - Per User (authenticated): 1000 requests per hour
@@ -2305,6 +2464,7 @@ Access-Control-Allow-Credentials: true
 ```
 
 **Response Headers:**
+
 ```http
 X-RateLimit-Limit: 100
 X-RateLimit-Remaining: 95
@@ -2312,6 +2472,7 @@ X-RateLimit-Reset: 1703520723
 ```
 
 **Rate Limit Exceeded Response (429):**
+
 ```json
 {
   "success": false,
@@ -2329,11 +2490,13 @@ X-RateLimit-Reset: 1703520723
 **URL:** `wss://csms.zanzibar.go.tz/ws`
 
 **Authentication:**
+
 ```
 ws://csms.zanzibar.go.tz/ws?token={jwt-token}
 ```
 
 **Message Format:**
+
 ```json
 {
   "type": "notification",
@@ -2351,29 +2514,30 @@ ws://csms.zanzibar.go.tz/ws?token={jwt-token}
 
 ### 5.1 HTTP Status Codes
 
-| Code | Name | Usage |
-|------|------|-------|
-| **200** | OK | Successful GET, PATCH, DELETE |
-| **201** | Created | Successful POST (resource created) |
-| **204** | No Content | Successful DELETE (no response body) |
-| **400** | Bad Request | Invalid request parameters, validation errors |
-| **401** | Unauthorized | Missing or invalid authentication |
-| **403** | Forbidden | Authenticated but insufficient permissions |
-| **404** | Not Found | Resource not found |
-| **409** | Conflict | Duplicate resource (e.g., username exists) |
-| **415** | Unsupported Media Type | Invalid file type |
-| **422** | Unprocessable Entity | Validation failed (business rules) |
-| **429** | Too Many Requests | Rate limit exceeded |
-| **500** | Internal Server Error | Server error |
-| **502** | Bad Gateway | External service error (HRIMS) |
-| **503** | Service Unavailable | Service temporarily unavailable |
-| **504** | Gateway Timeout | External service timeout |
+| Code    | Name                   | Usage                                         |
+| ------- | ---------------------- | --------------------------------------------- |
+| **200** | OK                     | Successful GET, PATCH, DELETE                 |
+| **201** | Created                | Successful POST (resource created)            |
+| **204** | No Content             | Successful DELETE (no response body)          |
+| **400** | Bad Request            | Invalid request parameters, validation errors |
+| **401** | Unauthorized           | Missing or invalid authentication             |
+| **403** | Forbidden              | Authenticated but insufficient permissions    |
+| **404** | Not Found              | Resource not found                            |
+| **409** | Conflict               | Duplicate resource (e.g., username exists)    |
+| **415** | Unsupported Media Type | Invalid file type                             |
+| **422** | Unprocessable Entity   | Validation failed (business rules)            |
+| **429** | Too Many Requests      | Rate limit exceeded                           |
+| **500** | Internal Server Error  | Server error                                  |
+| **502** | Bad Gateway            | External service error (HRIMS)                |
+| **503** | Service Unavailable    | Service temporarily unavailable               |
+| **504** | Gateway Timeout        | External service timeout                      |
 
 ---
 
 ### 5.2 Error Response Format
 
 **Standard Error:**
+
 ```json
 {
   "success": false,
@@ -2386,6 +2550,7 @@ ws://csms.zanzibar.go.tz/ws?token={jwt-token}
 ```
 
 **Validation Error:**
+
 ```json
 {
   "success": false,
@@ -2408,6 +2573,7 @@ ws://csms.zanzibar.go.tz/ws?token={jwt-token}
 ### 5.3 Error Codes
 
 **Authentication Errors (AUTH\_\*):**
+
 ```
 AUTH_INVALID_CREDENTIALS    - Invalid username or password
 AUTH_ACCOUNT_LOCKED         - Account locked after failed attempts
@@ -2417,6 +2583,7 @@ AUTH_INSUFFICIENT_PERMISSIONS - User lacks required permissions
 ```
 
 **Validation Errors (VAL\_\*):**
+
 ```
 VAL_REQUIRED_FIELD          - Required field missing
 VAL_INVALID_FORMAT          - Invalid data format
@@ -2426,6 +2593,7 @@ VAL_INVALID_FILE_TYPE       - File type not allowed
 ```
 
 **Business Logic Errors (BUS\_\*):**
+
 ```
 BUS_EMPLOYEE_STATUS_INVALID - Employee status invalid for operation
 BUS_DUPLICATE_REQUEST       - Duplicate request exists
@@ -2434,6 +2602,7 @@ BUS_INSTITUTION_MISMATCH    - User/employee institution mismatch
 ```
 
 **External Integration Errors (EXT\_\*):**
+
 ```
 EXT_HRIMS_UNAVAILABLE       - HRIMS service unavailable
 EXT_HRIMS_TIMEOUT           - HRIMS request timeout
@@ -2443,6 +2612,7 @@ EXT_AI_UNAVAILABLE          - AI service unavailable
 ```
 
 **System Errors (SYS\_\*):**
+
 ```
 SYS_DATABASE_ERROR          - Database operation failed
 SYS_FILE_STORAGE_ERROR      - File storage operation failed
@@ -2456,6 +2626,7 @@ SYS_INTERNAL_ERROR          - Internal server error
 #### 5.4.1 Client-Side Error Handling
 
 **Fetch with Error Handling:**
+
 ```typescript
 try {
   const response = await fetch(url, options);
@@ -2467,7 +2638,6 @@ try {
 
   const data = await response.json();
   return data;
-
 } catch (error) {
   if (error.name === 'TypeError') {
     // Network error
@@ -2480,6 +2650,7 @@ try {
 ```
 
 **ApiClient Error Handling:**
+
 ```typescript
 const response = await apiClient.createEmployee(data);
 
@@ -2489,7 +2660,7 @@ if (!response.success) {
 
   if (response.errors) {
     // Display validation errors
-    response.errors.forEach(error => {
+    response.errors.forEach((error) => {
       setFieldError(error.field, error.message);
     });
   }
@@ -2505,6 +2676,7 @@ toast.success('Employee created successfully');
 #### 5.4.2 Server-Side Error Handling
 
 **API Route Pattern:**
+
 ```typescript
 export async function POST(req: Request) {
   try {
@@ -2516,53 +2688,67 @@ export async function POST(req: Request) {
     const result = await performOperation(validated);
 
     // 3. Success response
-    return NextResponse.json({
-      success: true,
-      data: result
-    }, { status: 200 });
-
+    return NextResponse.json(
+      {
+        success: true,
+        data: result,
+      },
+      { status: 200 }
+    );
   } catch (error) {
     console.error('[API_ERROR]', error);
 
     // Validation error (Zod)
     if (error instanceof z.ZodError) {
-      return NextResponse.json({
-        success: false,
-        message: 'Validation failed',
-        errors: error.errors.map(e => ({
-          field: e.path.join('.'),
-          message: e.message
-        }))
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Validation failed',
+          errors: error.errors.map((e) => ({
+            field: e.path.join('.'),
+            message: e.message,
+          })),
+        },
+        { status: 400 }
+      );
     }
 
     // Business logic error
     if (error instanceof BusinessError) {
-      return NextResponse.json({
-        success: false,
-        message: error.message,
-        code: error.code
-      }, { status: error.statusCode });
+      return NextResponse.json(
+        {
+          success: false,
+          message: error.message,
+          code: error.code,
+        },
+        { status: error.statusCode }
+      );
     }
 
     // Database error
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === 'P2002') {
         // Unique constraint violation
-        return NextResponse.json({
-          success: false,
-          message: 'Resource already exists',
-          code: 'BUS_DUPLICATE_REQUEST'
-        }, { status: 409 });
+        return NextResponse.json(
+          {
+            success: false,
+            message: 'Resource already exists',
+            code: 'BUS_DUPLICATE_REQUEST',
+          },
+          { status: 409 }
+        );
       }
     }
 
     // Generic error
-    return NextResponse.json({
-      success: false,
-      message: 'Internal server error',
-      code: 'SYS_INTERNAL_ERROR'
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        success: false,
+        message: 'Internal server error',
+        code: 'SYS_INTERNAL_ERROR',
+      },
+      { status: 500 }
+    );
   }
 }
 ```
@@ -2572,14 +2758,15 @@ export async function POST(req: Request) {
 #### 5.4.3 External Integration Error Handling
 
 **HRIMS Integration:**
+
 ```typescript
 try {
   const response = await fetch(hrimsUrl, {
     method: 'GET',
     headers: {
-      'Authorization': `Bearer ${apiKey}`,
+      Authorization: `Bearer ${apiKey}`,
     },
-    signal: AbortSignal.timeout(30000)  // 30s timeout
+    signal: AbortSignal.timeout(30000), // 30s timeout
   });
 
   if (!response.ok) {
@@ -2588,7 +2775,6 @@ try {
 
   const data = await response.json();
   return data;
-
 } catch (error) {
   if (error.name === 'AbortError') {
     // Timeout
@@ -2596,7 +2782,7 @@ try {
     return {
       success: false,
       message: 'HRIMS service timeout',
-      code: 'EXT_HRIMS_TIMEOUT'
+      code: 'EXT_HRIMS_TIMEOUT',
     };
   }
 
@@ -2611,7 +2797,7 @@ try {
   return {
     success: false,
     message: 'HRIMS service unavailable',
-    code: 'EXT_HRIMS_UNAVAILABLE'
+    code: 'EXT_HRIMS_UNAVAILABLE',
   };
 }
 ```
@@ -2623,20 +2809,26 @@ try {
 ```typescript
 // Size validation
 if (file.size > MAX_FILE_SIZE) {
-  return NextResponse.json({
-    success: false,
-    message: `File size exceeds maximum allowed (${MAX_FILE_SIZE / 1024 / 1024}MB)`,
-    code: 'VAL_FILE_TOO_LARGE'
-  }, { status: 400 });
+  return NextResponse.json(
+    {
+      success: false,
+      message: `File size exceeds maximum allowed (${MAX_FILE_SIZE / 1024 / 1024}MB)`,
+      code: 'VAL_FILE_TOO_LARGE',
+    },
+    { status: 400 }
+  );
 }
 
 // Type validation
 if (!ALLOWED_FILE_TYPES.includes(file.type)) {
-  return NextResponse.json({
-    success: false,
-    message: 'File type not allowed. Supported: PDF, JPEG, PNG',
-    code: 'VAL_INVALID_FILE_TYPE'
-  }, { status: 415 });
+  return NextResponse.json(
+    {
+      success: false,
+      message: 'File type not allowed. Supported: PDF, JPEG, PNG',
+      code: 'VAL_INVALID_FILE_TYPE',
+    },
+    { status: 415 }
+  );
 }
 
 // Upload error
@@ -2644,15 +2836,18 @@ try {
   const result = await uploadFile(file, objectKey, contentType);
   return NextResponse.json({
     success: true,
-    data: result
+    data: result,
   });
 } catch (error) {
   console.error('File upload error:', error);
-  return NextResponse.json({
-    success: false,
-    message: 'File upload failed',
-    code: 'SYS_FILE_STORAGE_ERROR'
-  }, { status: 500 });
+  return NextResponse.json(
+    {
+      success: false,
+      message: 'File upload failed',
+      code: 'SYS_FILE_STORAGE_ERROR',
+    },
+    { status: 500 }
+  );
 }
 ```
 
@@ -2661,6 +2856,7 @@ try {
 ### 5.5 Logging and Monitoring
 
 **Log Levels:**
+
 ```
 ERROR   - System errors, exceptions
 WARN    - Business rule violations, deprecated features
@@ -2669,6 +2865,7 @@ DEBUG   - Detailed debugging information
 ```
 
 **Log Format:**
+
 ```typescript
 {
   timestamp: "2025-12-25T10:30:00.000Z",
@@ -2689,6 +2886,7 @@ DEBUG   - Detailed debugging information
 ```
 
 **Error Tracking:**
+
 - All 5xx errors logged with full stack trace
 - All 4xx errors logged with request context
 - External integration failures logged separately
@@ -2701,12 +2899,14 @@ DEBUG   - Detailed debugging information
 ### 6.1 Authentication Security
 
 **JWT Security:**
+
 - Token signing: HS256 with strong secret (256-bit)
 - Short expiry: 10 minutes (reduces token theft risk)
 - Refresh token rotation: New refresh token on every refresh
 - Token storage: HttpOnly cookies (XSS protection)
 
 **Password Security:**
+
 - Hashing: bcrypt with cost factor 10
 - Password requirements: Min 8 chars, uppercase, lowercase, number
 - Account lockout: 5 failed attempts, 15-minute lockout
@@ -2717,18 +2917,21 @@ DEBUG   - Detailed debugging information
 ### 6.2 API Security
 
 **Input Validation:**
+
 - All inputs validated with Zod schemas
 - SQL injection prevention: Prisma ORM (parameterized queries)
 - XSS prevention: React auto-escaping + CSP headers
 - CSRF protection: SameSite cookies
 
 **Rate Limiting:**
+
 - Global: 100 req/min per IP
 - Authenticated: 1000 req/hour per user
 - File upload: 10 req/min
 - Login attempts: 5 req/15min
 
 **Request Security:**
+
 - All requests over HTTPS
 - Strict transport security (HSTS)
 - Certificate pinning (production)
@@ -2738,12 +2941,14 @@ DEBUG   - Detailed debugging information
 ### 6.3 Data Security
 
 **Encryption:**
+
 - In transit: TLS 1.2/1.3
 - At rest: MinIO AES-256
 - Passwords: bcrypt (cost 10)
 - Sensitive fields: Application-level encryption (future)
 
 **Access Control:**
+
 - Role-based access control (RBAC)
 - Institution-based data isolation
 - Field-level permissions
@@ -2754,6 +2959,7 @@ DEBUG   - Detailed debugging information
 ### 6.4 Integration Security
 
 **HRIMS Integration:**
+
 - OAuth 2.0 / API Key authentication
 - HTTPS only
 - Request signing (HMAC)
@@ -2761,11 +2967,13 @@ DEBUG   - Detailed debugging information
 - Circuit breaker pattern
 
 **SMTP:**
+
 - TLS encryption (STARTTLS)
 - Application-specific passwords
 - No plain-text credentials in code
 
 **MinIO:**
+
 - Access key + secret key authentication
 - Presigned URLs (time-limited)
 - Bucket policies (principle of least privilege)
@@ -2779,10 +2987,12 @@ DEBUG   - Detailed debugging information
 **Current Version:** v1 (implicit)
 
 **Future Versioning:**
+
 - URL-based versioning: `/api/v2/employees`
 - Header-based versioning: `Accept: application/vnd.csms.v2+json`
 
 **Backward Compatibility:**
+
 - Additive changes (new fields): No version bump
 - Breaking changes (remove/rename fields): New version
 - Deprecation period: 6 months notice
@@ -2792,11 +3002,13 @@ DEBUG   - Detailed debugging information
 ### 7.2 Schema Versioning
 
 **Database Schema:**
+
 - Prisma migrations for version control
 - Sequential migration files
 - Rollback capability
 
 **API Schema:**
+
 - JSON Schema versioning
 - OpenAPI/Swagger documentation (future)
 
@@ -2807,21 +3019,14 @@ DEBUG   - Detailed debugging information
 ### Appendix A: Complete API Endpoint List
 
 **Authentication:**
+
 1. `POST /api/auth/login`
 2. `POST /api/auth/employee-login`
 3. `POST /api/auth/logout`
 4. `POST /api/auth/refresh`
 5. `POST /api/auth/change-password`
 
-**Employees:**
-6. `GET /api/employees`
-7. `GET /api/employees/:id`
-8. `POST /api/employees`
-9. `PATCH /api/employees/:id`
-10. `DELETE /api/employees/:id`
-11. `GET /api/employees/search`
-12. `GET /api/employees/:id/documents`
-13. `GET /api/employees/:id/certificates`
+**Employees:** 6. `GET /api/employees` 7. `GET /api/employees/:id` 8. `POST /api/employees` 9. `PATCH /api/employees/:id` 10. `DELETE /api/employees/:id` 11. `GET /api/employees/search` 12. `GET /api/employees/:id/documents` 13. `GET /api/employees/:id/certificates`
 
 **Requests (9 types × 4 operations = 36):**
 14-17. Promotion: `GET/POST /api/promotions`, `GET/PATCH /api/promotions/:id`
@@ -2833,43 +3038,19 @@ DEBUG   - Detailed debugging information
 38-41. Termination: `GET/POST /api/termination`, `GET/PATCH /api/termination/:id`
 42-45. Service Extension: `GET/POST /api/service-extension`, `GET/PATCH /api/service-extension/:id`
 
-**Complaints:**
-46. `GET /api/complaints`
-47. `POST /api/complaints`
-48. `PATCH /api/complaints/:id`
+**Complaints:** 46. `GET /api/complaints` 47. `POST /api/complaints` 48. `PATCH /api/complaints/:id`
 
-**Files:**
-49. `POST /api/files/upload`
-50. `GET /api/files/download/:objectKey`
-51. `GET /api/files/preview/:objectKey`
-52. `GET /api/files/exists/:objectKey`
+**Files:** 49. `POST /api/files/upload` 50. `GET /api/files/download/:objectKey` 51. `GET /api/files/preview/:objectKey` 52. `GET /api/files/exists/:objectKey`
 
-**HRIMS Integration:**
-53. `POST /api/hrims/sync-employee`
-54. `POST /api/hrims/sync-documents`
-55. `POST /api/hrims/sync-certificates`
-56. `POST /api/hrims/fetch-by-institution`
-57. `POST /api/hrims/bulk-fetch`
+**HRIMS Integration:** 53. `POST /api/hrims/sync-employee` 54. `POST /api/hrims/sync-documents` 55. `POST /api/hrims/sync-certificates` 56. `POST /api/hrims/fetch-by-institution` 57. `POST /api/hrims/bulk-fetch`
 
-**Users:**
-58. `GET /api/users`
-59. `POST /api/users`
-60. `PATCH /api/users/:id`
-61. `DELETE /api/users/:id`
+**Users:** 58. `GET /api/users` 59. `POST /api/users` 60. `PATCH /api/users/:id` 61. `DELETE /api/users/:id`
 
-**Institutions:**
-62. `GET /api/institutions`
-63. `POST /api/institutions`
-64. `PATCH /api/institutions/:id`
-65. `DELETE /api/institutions/:id`
+**Institutions:** 62. `GET /api/institutions` 63. `POST /api/institutions` 64. `PATCH /api/institutions/:id` 65. `DELETE /api/institutions/:id`
 
-**Notifications:**
-66. `GET /api/notifications`
-67. `POST /api/notifications`
+**Notifications:** 66. `GET /api/notifications` 67. `POST /api/notifications`
 
-**Dashboard & Reports:**
-68. `GET /api/dashboard/metrics`
-69. `GET /api/reports`
+**Dashboard & Reports:** 68. `GET /api/dashboard/metrics` 69. `GET /api/reports`
 
 **Total:** 69 endpoints
 
@@ -2896,39 +3077,42 @@ See Section 5.3 for complete error code listing.
 ## Document Approval
 
 **Prepared By:**
-- Name: _______________________
+
+- Name: \***\*\*\*\*\***\_\_\_\***\*\*\*\*\***
 - Title: Integration Architect
-- Signature: _______________________
-- Date: _______________________
+- Signature: \***\*\*\*\*\***\_\_\_\***\*\*\*\*\***
+- Date: \***\*\*\*\*\***\_\_\_\***\*\*\*\*\***
 
 **Reviewed By:**
-- Name: _______________________
+
+- Name: \***\*\*\*\*\***\_\_\_\***\*\*\*\*\***
 - Title: System Architect
-- Signature: _______________________
-- Date: _______________________
+- Signature: \***\*\*\*\*\***\_\_\_\***\*\*\*\*\***
+- Date: \***\*\*\*\*\***\_\_\_\***\*\*\*\*\***
 
 **Approved By:**
-- Name: _______________________
+
+- Name: \***\*\*\*\*\***\_\_\_\***\*\*\*\*\***
 - Title: IT Department Head
-- Signature: _______________________
-- Date: _______________________
+- Signature: \***\*\*\*\*\***\_\_\_\***\*\*\*\*\***
+- Date: \***\*\*\*\*\***\_\_\_\***\*\*\*\*\***
 
 ---
 
 ## Revision History
 
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 0.1 | Dec 15, 2025 | Integration Team | Initial draft |
-| 0.5 | Dec 20, 2025 | Integration Team | Added HRIMS integration |
-| 1.0 | Dec 25, 2025 | Integration Team | Final version |
+| Version | Date         | Author           | Changes                 |
+| ------- | ------------ | ---------------- | ----------------------- |
+| 0.1     | Dec 15, 2025 | Integration Team | Initial draft           |
+| 0.5     | Dec 20, 2025 | Integration Team | Added HRIMS integration |
+| 1.0     | Dec 25, 2025 | Integration Team | Final version           |
 
 ---
 
 **END OF INTERFACE DESIGN DOCUMENT**
 
-*This document is confidential and proprietary to the Civil Service Commission of Zanzibar.*
+_This document is confidential and proprietary to the Civil Service Commission of Zanzibar._
 
-*For technical questions, contact: api-team@csms.go.tz*
+_For technical questions, contact: api-team@csms.go.tz_
 
-*Version 1.0 | December 25, 2025*
+_Version 1.0 | December 25, 2025_

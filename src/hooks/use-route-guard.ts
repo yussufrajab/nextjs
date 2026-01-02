@@ -61,7 +61,9 @@ interface RouteGuardState {
  * }
  * ```
  */
-export function useRouteGuard(options: RouteGuardOptions = {}): RouteGuardState {
+export function useRouteGuard(
+  options: RouteGuardOptions = {}
+): RouteGuardState {
   const {
     redirectOnDenied = true,
     redirectTo = '/dashboard',
@@ -81,7 +83,7 @@ export function useRouteGuard(options: RouteGuardOptions = {}): RouteGuardState 
   useEffect(() => {
     // Wait for auth to load
     if (isLoading) {
-      setState(prev => ({ ...prev, isChecking: true }));
+      setState((prev) => ({ ...prev, isChecking: true }));
       return;
     }
 
@@ -125,7 +127,16 @@ export function useRouteGuard(options: RouteGuardOptions = {}): RouteGuardState 
       isChecking: false,
       errorMessage: null,
     });
-  }, [isLoading, isAuthenticated, role, pathname, redirectOnDenied, redirectTo, onAccessDenied, router]);
+  }, [
+    isLoading,
+    isAuthenticated,
+    role,
+    pathname,
+    redirectOnDenied,
+    redirectTo,
+    onAccessDenied,
+    router,
+  ]);
 
   return state;
 }

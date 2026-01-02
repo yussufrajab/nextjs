@@ -50,7 +50,10 @@ export async function POST(req: Request) {
     // Prevent locking another admin (optional safety check)
     if (user.role === 'Admin') {
       return NextResponse.json(
-        { success: false, message: 'Cannot lock another administrator account' },
+        {
+          success: false,
+          message: 'Cannot lock another administrator account',
+        },
         { status: 403 }
       );
     }
@@ -73,7 +76,9 @@ export async function POST(req: Request) {
       link: undefined,
     });
 
-    console.log(`Account locked for user ${user.username} by admin ${admin.username}`);
+    console.log(
+      `Account locked for user ${user.username} by admin ${admin.username}`
+    );
 
     return NextResponse.json({
       success: true,

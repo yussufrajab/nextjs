@@ -37,7 +37,8 @@ describe('route-permissions', () => {
     it('should have either string or RegExp patterns', () => {
       ROUTE_PERMISSIONS.forEach((permission) => {
         const isStringOrRegExp =
-          typeof permission.pattern === 'string' || permission.pattern instanceof RegExp;
+          typeof permission.pattern === 'string' ||
+          permission.pattern instanceof RegExp;
         expect(isStringOrRegExp).toBe(true);
       });
     });
@@ -61,27 +62,39 @@ describe('route-permissions', () => {
 
     describe('Admin Routes', () => {
       it('should allow Admin to access admin routes', () => {
-        expect(canAccessRoute('/dashboard/admin', ROLES.ADMIN as Role)).toBe(true);
-        expect(canAccessRoute('/dashboard/admin/users', ROLES.ADMIN as Role)).toBe(true);
-        expect(canAccessRoute('/dashboard/admin/settings', ROLES.ADMIN as Role)).toBe(true);
+        expect(canAccessRoute('/dashboard/admin', ROLES.ADMIN as Role)).toBe(
+          true
+        );
+        expect(
+          canAccessRoute('/dashboard/admin/users', ROLES.ADMIN as Role)
+        ).toBe(true);
+        expect(
+          canAccessRoute('/dashboard/admin/settings', ROLES.ADMIN as Role)
+        ).toBe(true);
       });
 
       it('should deny non-Admin users from admin routes', () => {
         expect(canAccessRoute('/dashboard/admin', ROLES.HRO)).toBe(false);
         expect(canAccessRoute('/dashboard/admin', ROLES.HHRMD)).toBe(false);
         expect(canAccessRoute('/dashboard/admin', ROLES.EMPLOYEE)).toBe(false);
-        expect(canAccessRoute('/dashboard/admin/users', ROLES.CSCS)).toBe(false);
+        expect(canAccessRoute('/dashboard/admin/users', ROLES.CSCS)).toBe(
+          false
+        );
       });
     });
 
     describe('HR Officer Routes', () => {
       it('should allow HRO to access urgent actions', () => {
-        expect(canAccessRoute('/dashboard/urgent-actions', ROLES.HRO)).toBe(true);
+        expect(canAccessRoute('/dashboard/urgent-actions', ROLES.HRO)).toBe(
+          true
+        );
       });
 
       it('should allow HRO to access confirmation', () => {
         expect(canAccessRoute('/dashboard/confirmation', ROLES.HRO)).toBe(true);
-        expect(canAccessRoute('/dashboard/confirmation/new', ROLES.HRO)).toBe(true);
+        expect(canAccessRoute('/dashboard/confirmation/new', ROLES.HRO)).toBe(
+          true
+        );
       });
 
       it('should allow HRO to access LWOP', () => {
@@ -105,19 +118,25 @@ describe('route-permissions', () => {
       });
 
       it('should allow HRO to access service extension', () => {
-        expect(canAccessRoute('/dashboard/service-extension', ROLES.HRO)).toBe(true);
+        expect(canAccessRoute('/dashboard/service-extension', ROLES.HRO)).toBe(
+          true
+        );
       });
     });
 
     describe('HHRMD Routes', () => {
       it('should allow HHRMD to access approval routes', () => {
-        expect(canAccessRoute('/dashboard/confirmation', ROLES.HHRMD)).toBe(true);
+        expect(canAccessRoute('/dashboard/confirmation', ROLES.HHRMD)).toBe(
+          true
+        );
         expect(canAccessRoute('/dashboard/lwop', ROLES.HHRMD)).toBe(true);
         expect(canAccessRoute('/dashboard/promotion', ROLES.HHRMD)).toBe(true);
       });
 
       it('should allow HHRMD to access disciplinary routes', () => {
-        expect(canAccessRoute('/dashboard/termination', ROLES.HHRMD)).toBe(true);
+        expect(canAccessRoute('/dashboard/termination', ROLES.HHRMD)).toBe(
+          true
+        );
         expect(canAccessRoute('/dashboard/dismissal', ROLES.HHRMD)).toBe(true);
       });
 
@@ -126,19 +145,25 @@ describe('route-permissions', () => {
       });
 
       it('should allow HHRMD to access institutions', () => {
-        expect(canAccessRoute('/dashboard/institutions', ROLES.HHRMD)).toBe(true);
+        expect(canAccessRoute('/dashboard/institutions', ROLES.HHRMD)).toBe(
+          true
+        );
       });
     });
 
     describe('HRMO Routes', () => {
       it('should allow HRMO to access approval routes', () => {
-        expect(canAccessRoute('/dashboard/confirmation', ROLES.HRMO)).toBe(true);
+        expect(canAccessRoute('/dashboard/confirmation', ROLES.HRMO)).toBe(
+          true
+        );
         expect(canAccessRoute('/dashboard/lwop', ROLES.HRMO)).toBe(true);
         expect(canAccessRoute('/dashboard/promotion', ROLES.HRMO)).toBe(true);
       });
 
       it('should NOT allow HRMO to access disciplinary routes', () => {
-        expect(canAccessRoute('/dashboard/termination', ROLES.HRMO)).toBe(false);
+        expect(canAccessRoute('/dashboard/termination', ROLES.HRMO)).toBe(
+          false
+        );
         expect(canAccessRoute('/dashboard/dismissal', ROLES.HRMO)).toBe(false);
       });
 
@@ -147,7 +172,9 @@ describe('route-permissions', () => {
       });
 
       it('should allow HRMO to access institutions', () => {
-        expect(canAccessRoute('/dashboard/institutions', ROLES.HRMO)).toBe(true);
+        expect(canAccessRoute('/dashboard/institutions', ROLES.HRMO)).toBe(
+          true
+        );
       });
     });
 
@@ -174,7 +201,9 @@ describe('route-permissions', () => {
 
     describe('Employee Routes', () => {
       it('should allow EMPLOYEE to access complaints', () => {
-        expect(canAccessRoute('/dashboard/complaints', ROLES.EMPLOYEE)).toBe(true);
+        expect(canAccessRoute('/dashboard/complaints', ROLES.EMPLOYEE)).toBe(
+          true
+        );
       });
 
       it('should allow EMPLOYEE to access profile', () => {
@@ -182,7 +211,9 @@ describe('route-permissions', () => {
       });
 
       it('should allow EMPLOYEE to access track status', () => {
-        expect(canAccessRoute('/dashboard/track-status', ROLES.EMPLOYEE)).toBe(true);
+        expect(canAccessRoute('/dashboard/track-status', ROLES.EMPLOYEE)).toBe(
+          true
+        );
       });
 
       it('should allow EMPLOYEE to access dashboard home', () => {
@@ -190,31 +221,49 @@ describe('route-permissions', () => {
       });
 
       it('should NOT allow EMPLOYEE to access HR routes', () => {
-        expect(canAccessRoute('/dashboard/confirmation', ROLES.EMPLOYEE)).toBe(false);
+        expect(canAccessRoute('/dashboard/confirmation', ROLES.EMPLOYEE)).toBe(
+          false
+        );
         expect(canAccessRoute('/dashboard/lwop', ROLES.EMPLOYEE)).toBe(false);
-        expect(canAccessRoute('/dashboard/promotion', ROLES.EMPLOYEE)).toBe(false);
+        expect(canAccessRoute('/dashboard/promotion', ROLES.EMPLOYEE)).toBe(
+          false
+        );
       });
 
       it('should NOT allow EMPLOYEE to access institutions', () => {
-        expect(canAccessRoute('/dashboard/institutions', ROLES.EMPLOYEE)).toBe(false);
+        expect(canAccessRoute('/dashboard/institutions', ROLES.EMPLOYEE)).toBe(
+          false
+        );
       });
     });
 
     describe('CSCS Routes', () => {
       it('should allow CSCS to access most routes', () => {
-        expect(canAccessRoute('/dashboard/urgent-actions', ROLES.CSCS)).toBe(true);
-        expect(canAccessRoute('/dashboard/confirmation', ROLES.CSCS)).toBe(true);
+        expect(canAccessRoute('/dashboard/urgent-actions', ROLES.CSCS)).toBe(
+          true
+        );
+        expect(canAccessRoute('/dashboard/confirmation', ROLES.CSCS)).toBe(
+          true
+        );
         expect(canAccessRoute('/dashboard/termination', ROLES.CSCS)).toBe(true);
         expect(canAccessRoute('/dashboard/complaints', ROLES.CSCS)).toBe(true);
-        expect(canAccessRoute('/dashboard/institutions', ROLES.CSCS)).toBe(true);
+        expect(canAccessRoute('/dashboard/institutions', ROLES.CSCS)).toBe(
+          true
+        );
       });
     });
 
     describe('HRRP Routes', () => {
       it('should allow HRRP to access HR routes', () => {
-        expect(canAccessRoute('/dashboard/urgent-actions', ROLES.HRRP)).toBe(true);
-        expect(canAccessRoute('/dashboard/confirmation', ROLES.HRRP)).toBe(true);
-        expect(canAccessRoute('/dashboard/institutions', ROLES.HRRP)).toBe(true);
+        expect(canAccessRoute('/dashboard/urgent-actions', ROLES.HRRP)).toBe(
+          true
+        );
+        expect(canAccessRoute('/dashboard/confirmation', ROLES.HRRP)).toBe(
+          true
+        );
+        expect(canAccessRoute('/dashboard/institutions', ROLES.HRRP)).toBe(
+          true
+        );
       });
     });
 
@@ -265,20 +314,37 @@ describe('route-permissions', () => {
       });
 
       it('should match string patterns with sub-paths', () => {
-        expect(canAccessRoute('/dashboard/confirmation/123', ROLES.HRO)).toBe(true);
-        expect(canAccessRoute('/dashboard/profile/edit', ROLES.EMPLOYEE)).toBe(true);
+        expect(canAccessRoute('/dashboard/confirmation/123', ROLES.HRO)).toBe(
+          true
+        );
+        expect(canAccessRoute('/dashboard/profile/edit', ROLES.EMPLOYEE)).toBe(
+          true
+        );
       });
 
       it('should match RegExp patterns', () => {
-        expect(canAccessRoute('/dashboard/admin', ROLES.ADMIN as Role)).toBe(true);
-        expect(canAccessRoute('/dashboard/admin/users', ROLES.ADMIN as Role)).toBe(true);
-        expect(canAccessRoute('/dashboard/admin/settings/security', ROLES.ADMIN as Role)).toBe(true);
+        expect(canAccessRoute('/dashboard/admin', ROLES.ADMIN as Role)).toBe(
+          true
+        );
+        expect(
+          canAccessRoute('/dashboard/admin/users', ROLES.ADMIN as Role)
+        ).toBe(true);
+        expect(
+          canAccessRoute(
+            '/dashboard/admin/settings/security',
+            ROLES.ADMIN as Role
+          )
+        ).toBe(true);
       });
 
       it('should use first-match-wins strategy', () => {
         // More specific routes should match before general ones
-        expect(canAccessRoute('/dashboard/urgent-actions', ROLES.HRO)).toBe(true);
-        expect(canAccessRoute('/dashboard/urgent-actions', ROLES.EMPLOYEE)).toBe(false);
+        expect(canAccessRoute('/dashboard/urgent-actions', ROLES.HRO)).toBe(
+          true
+        );
+        expect(
+          canAccessRoute('/dashboard/urgent-actions', ROLES.EMPLOYEE)
+        ).toBe(false);
       });
     });
 
@@ -299,12 +365,16 @@ describe('route-permissions', () => {
     describe('Edge Cases', () => {
       it('should handle trailing slashes', () => {
         expect(canAccessRoute('/dashboard/', ROLES.HRO)).toBe(true);
-        expect(canAccessRoute('/dashboard/profile/', ROLES.EMPLOYEE)).toBe(true);
+        expect(canAccessRoute('/dashboard/profile/', ROLES.EMPLOYEE)).toBe(
+          true
+        );
       });
 
       it('should be case-sensitive', () => {
         expect(canAccessRoute('/Dashboard', ROLES.HRO)).toBe(false);
-        expect(canAccessRoute('/DASHBOARD/PROFILE', ROLES.EMPLOYEE)).toBe(false);
+        expect(canAccessRoute('/DASHBOARD/PROFILE', ROLES.EMPLOYEE)).toBe(
+          false
+        );
       });
 
       it('should handle empty pathname', () => {
@@ -409,7 +479,9 @@ describe('route-permissions', () => {
       expect(canAccessRoute('/dashboard/confirmation', ROLES.HRMO)).toBe(true);
 
       // Employee cannot access
-      expect(canAccessRoute('/dashboard/confirmation', ROLES.EMPLOYEE)).toBe(false);
+      expect(canAccessRoute('/dashboard/confirmation', ROLES.EMPLOYEE)).toBe(
+        false
+      );
     });
 
     it('should enforce disciplinary action permissions correctly', () => {
@@ -424,12 +496,16 @@ describe('route-permissions', () => {
       expect(canAccessRoute('/dashboard/termination', ROLES.HRMO)).toBe(false);
 
       // Employee cannot access
-      expect(canAccessRoute('/dashboard/termination', ROLES.EMPLOYEE)).toBe(false);
+      expect(canAccessRoute('/dashboard/termination', ROLES.EMPLOYEE)).toBe(
+        false
+      );
     });
 
     it('should enforce complaint workflow permissions correctly', () => {
       // Employee can submit
-      expect(canAccessRoute('/dashboard/complaints', ROLES.EMPLOYEE)).toBe(true);
+      expect(canAccessRoute('/dashboard/complaints', ROLES.EMPLOYEE)).toBe(
+        true
+      );
 
       // DO and HHRMD can handle
       expect(canAccessRoute('/dashboard/complaints', ROLES.DO)).toBe(true);

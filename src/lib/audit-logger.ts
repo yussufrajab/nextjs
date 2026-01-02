@@ -93,7 +93,9 @@ export async function logAuditEvent(data: AuditLogData): Promise<void> {
         isAuthenticated: data.isAuthenticated ?? false,
         wasBlocked: data.wasBlocked ?? true,
         blockReason: data.blockReason,
-        additionalData: data.additionalData ? JSON.parse(JSON.stringify(data.additionalData)) : null,
+        additionalData: data.additionalData
+          ? JSON.parse(JSON.stringify(data.additionalData))
+          : null,
       },
     });
 
@@ -109,7 +111,9 @@ export async function logAuditEvent(data: AuditLogData): Promise<void> {
     // Handle foreign key constraint errors - retry without userId
     // Check for P2003 error code (foreign key constraint violation)
     if (error?.code === 'P2003') {
-      console.warn('[AUDIT] Foreign key constraint error detected - retrying without userId');
+      console.warn(
+        '[AUDIT] Foreign key constraint error detected - retrying without userId'
+      );
       console.warn('[AUDIT] Original userId:', data.userId);
       console.warn('[AUDIT] Error details:', JSON.stringify(error?.meta || {}));
       try {
@@ -128,17 +132,25 @@ export async function logAuditEvent(data: AuditLogData): Promise<void> {
             isAuthenticated: data.isAuthenticated ?? false,
             wasBlocked: data.wasBlocked ?? true,
             blockReason: data.blockReason,
-            additionalData: data.additionalData ? JSON.parse(JSON.stringify(data.additionalData)) : null,
+            additionalData: data.additionalData
+              ? JSON.parse(JSON.stringify(data.additionalData))
+              : null,
           },
         });
-        console.log(`[AUDIT] ✅ ${data.severity} - ${data.eventType} (logged without userId):`, {
-          user: data.username || 'anonymous',
-          role: data.userRole || 'none',
-          route: data.attemptedRoute,
-          blocked: data.wasBlocked,
-        });
+        console.log(
+          `[AUDIT] ✅ ${data.severity} - ${data.eventType} (logged without userId):`,
+          {
+            user: data.username || 'anonymous',
+            role: data.userRole || 'none',
+            route: data.attemptedRoute,
+            blocked: data.wasBlocked,
+          }
+        );
       } catch (retryError) {
-        console.error('[AUDIT] ❌ Failed to log audit event even without userId:', retryError);
+        console.error(
+          '[AUDIT] ❌ Failed to log audit event even without userId:',
+          retryError
+        );
         console.error('[AUDIT] Event data:', data);
       }
     } else {
@@ -237,7 +249,9 @@ export async function logLoginAttempt(data: {
   additionalData?: Record<string, any>;
 }): Promise<void> {
   await logAuditEvent({
-    eventType: data.success ? AuditEventType.LOGIN_SUCCESS : AuditEventType.LOGIN_FAILED,
+    eventType: data.success
+      ? AuditEventType.LOGIN_SUCCESS
+      : AuditEventType.LOGIN_FAILED,
     eventCategory: AuditEventCategory.AUTHENTICATION,
     severity: data.success ? AuditSeverity.INFO : AuditSeverity.WARNING,
     userId: data.userId,
@@ -305,8 +319,13 @@ export async function getAuditLogs(filters?: {
   if (filters?.eventCategory) where.eventCategory = filters.eventCategory;
   if (filters?.severity) where.severity = filters.severity;
   if (filters?.userId) where.userId = filters.userId;
-  if (filters?.username) where.username = { contains: filters.username, mode: 'insensitive' };
-  if (filters?.attemptedRoute) where.attemptedRoute = { contains: filters.attemptedRoute, mode: 'insensitive' };
+  if (filters?.username)
+    where.username = { contains: filters.username, mode: 'insensitive' };
+  if (filters?.attemptedRoute)
+    where.attemptedRoute = {
+      contains: filters.attemptedRoute,
+      mode: 'insensitive',
+    };
 
   const [logs, total] = await Promise.all([
     prisma.auditLog.findMany({
@@ -362,7 +381,9 @@ export async function getAuditStatistics(filters?: {
   ] = await Promise.all([
     prisma.auditLog.count({ where }),
     prisma.auditLog.count({ where: { ...where, wasBlocked: true } }),
-    prisma.auditLog.count({ where: { ...where, severity: AuditSeverity.CRITICAL } }),
+    prisma.auditLog.count({
+      where: { ...where, severity: AuditSeverity.CRITICAL },
+    }),
     prisma.auditLog.groupBy({
       by: ['eventType'],
       where,

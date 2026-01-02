@@ -43,7 +43,8 @@ export function UnlockAccountModal({
     if (!identityVerified) {
       toast({
         title: 'Verification Required',
-        description: 'You must verify the user\'s identity before unlocking their account.',
+        description:
+          "You must verify the user's identity before unlocking their account.",
         variant: 'destructive',
       });
       return;
@@ -52,7 +53,8 @@ export function UnlockAccountModal({
     if (verificationNotes.length < 10) {
       toast({
         title: 'Verification Notes Required',
-        description: 'Please provide detailed verification notes (minimum 10 characters).',
+        description:
+          'Please provide detailed verification notes (minimum 10 characters).',
         variant: 'destructive',
       });
       return;
@@ -115,7 +117,8 @@ export function UnlockAccountModal({
             Unlock User Account
           </DialogTitle>
           <DialogDescription>
-            Unlock the account for <strong>{username}</strong>. Please verify the user's identity before proceeding.
+            Unlock the account for <strong>{username}</strong>. Please verify
+            the user's identity before proceeding.
           </DialogDescription>
         </DialogHeader>
 
@@ -124,12 +127,16 @@ export function UnlockAccountModal({
             <div className="flex items-start gap-3">
               <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5 flex-shrink-0" />
               <div className="text-sm text-yellow-800">
-                <p className="font-medium mb-1">Identity Verification Required</p>
+                <p className="font-medium mb-1">
+                  Identity Verification Required
+                </p>
                 <ul className="list-disc list-inside space-y-1 text-xs">
                   <li>Verify user's full name matches employment records</li>
                   <li>Confirm institution affiliation</li>
                   <li>Verify Employee ID or ZanID</li>
-                  <li>Document method of verification (phone, email, in-person)</li>
+                  <li>
+                    Document method of verification (phone, email, in-person)
+                  </li>
                 </ul>
               </div>
             </div>
@@ -157,14 +164,17 @@ export function UnlockAccountModal({
             <Checkbox
               id="identityVerified"
               checked={identityVerified}
-              onCheckedChange={(checked) => setIdentityVerified(checked as boolean)}
+              onCheckedChange={(checked) =>
+                setIdentityVerified(checked as boolean)
+              }
               disabled={isSubmitting}
             />
             <Label
               htmlFor="identityVerified"
               className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
             >
-              I have verified the user's identity and confirm this unlock request is legitimate
+              I have verified the user's identity and confirm this unlock
+              request is legitimate
             </Label>
           </div>
 
@@ -178,7 +188,9 @@ export function UnlockAccountModal({
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting || !identityVerified}>
-              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isSubmitting && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
               Unlock Account
             </Button>
           </DialogFooter>

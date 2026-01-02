@@ -1,21 +1,54 @@
 'use client';
 
 import { PageHeader } from '@/components/shared/page-header';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import React, { useState, useEffect } from 'react';
-import { Search, Loader2, Building, Users, Database, AlertCircle } from 'lucide-react';
+import {
+  Search,
+  Loader2,
+  Building,
+  Users,
+  Database,
+  AlertCircle,
+} from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Pagination } from '@/components/shared/pagination';
 
@@ -37,19 +70,24 @@ export interface EmployeeFetchResult {
   ministry?: string;
 }
 
-const employeeSearchSchema = z.object({
-  zanId: z.string().optional(),
-  payrollNumber: z.string().optional(),
-}).refine(data => data.zanId || data.payrollNumber, {
-  message: "Either ZanID or Payroll Number must be provided",
-});
+const employeeSearchSchema = z
+  .object({
+    zanId: z.string().optional(),
+    payrollNumber: z.string().optional(),
+  })
+  .refine((data) => data.zanId || data.payrollNumber, {
+    message: 'Either ZanID or Payroll Number must be provided',
+  });
 
 type EmployeeSearchFormValues = z.infer<typeof employeeSearchSchema>;
 
 export default function FetchDataPage() {
   const [institutions, setInstitutions] = useState<Institution[]>([]);
-  const [filteredInstitutions, setFilteredInstitutions] = useState<Institution[]>([]);
-  const [selectedInstitution, setSelectedInstitution] = useState<Institution | null>(null);
+  const [filteredInstitutions, setFilteredInstitutions] = useState<
+    Institution[]
+  >([]);
+  const [selectedInstitution, setSelectedInstitution] =
+    useState<Institution | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isFetching, setIsFetching] = useState(false);
@@ -57,7 +95,9 @@ export default function FetchDataPage() {
   const [fetchResults, setFetchResults] = useState<EmployeeFetchResult[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
-  const [identifierType, setIdentifierType] = useState<'votecode' | 'tin'>('votecode');
+  const [identifierType, setIdentifierType] = useState<'votecode' | 'tin'>(
+    'votecode'
+  );
   const [hrimsPageSize, setHrimsPageSize] = useState(100);
   const [progress, setProgress] = useState<{
     phase: 'fetching' | 'saving';
@@ -92,9 +132,9 @@ export default function FetchDataPage() {
         setFilteredInstitutions(data.data || []);
       } catch (error) {
         toast({
-          title: "Error",
-          description: "Failed to load institutions",
-          variant: "destructive"
+          title: 'Error',
+          description: 'Failed to load institutions',
+          variant: 'destructive',
         });
       } finally {
         setIsLoading(false);
@@ -109,12 +149,13 @@ export default function FetchDataPage() {
     if (!searchTerm) {
       setFilteredInstitutions(institutions);
     } else {
-      const filtered = institutions.filter(inst =>
-        inst.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        inst.voteNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        inst.tinNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        inst.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        inst.phoneNumber?.includes(searchTerm)
+      const filtered = institutions.filter(
+        (inst) =>
+          inst.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          inst.voteNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          inst.tinNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          inst.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          inst.phoneNumber?.includes(searchTerm)
       );
       setFilteredInstitutions(filtered);
     }
@@ -127,14 +168,16 @@ export default function FetchDataPage() {
     currentPage * itemsPerPage
   );
 
-  const totalInstitutionPages = Math.ceil(filteredInstitutions.length / itemsPerPage);
+  const totalInstitutionPages = Math.ceil(
+    filteredInstitutions.length / itemsPerPage
+  );
 
   const handleFetchEmployeeData = async (values: EmployeeSearchFormValues) => {
     if (!selectedInstitution?.voteNumber) {
       toast({
-        title: "Error",
-        description: "Institution vote number is required",
-        variant: "destructive"
+        title: 'Error',
+        description: 'Institution vote number is required',
+        variant: 'destructive',
       });
       return;
     }
@@ -167,11 +210,13 @@ export default function FetchDataPage() {
           successParts.push('Photo stored in MinIO.');
         }
         if (result.data.documents > 0) {
-          successParts.push(`${result.data.documents} document(s) stored in MinIO.`);
+          successParts.push(
+            `${result.data.documents} document(s) stored in MinIO.`
+          );
         }
 
         toast({
-          title: "Success",
+          title: 'Success',
           description: successParts.join(' '),
         });
         form.reset();
@@ -181,9 +226,12 @@ export default function FetchDataPage() {
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to fetch employee data",
-        variant: "destructive"
+        title: 'Error',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'Failed to fetch employee data',
+        variant: 'destructive',
       });
     } finally {
       setIsFetching(false);
@@ -194,9 +242,9 @@ export default function FetchDataPage() {
     // Check if institution is selected
     if (!selectedInstitution) {
       toast({
-        title: "Error",
-        description: "Please select an institution",
-        variant: "destructive"
+        title: 'Error',
+        description: 'Please select an institution',
+        variant: 'destructive',
       });
       return;
     }
@@ -204,18 +252,18 @@ export default function FetchDataPage() {
     // Validate based on selected identifier type
     if (identifierType === 'votecode' && !selectedInstitution.voteNumber) {
       toast({
-        title: "Error",
-        description: "Institution must have a vote number to use this option",
-        variant: "destructive"
+        title: 'Error',
+        description: 'Institution must have a vote number to use this option',
+        variant: 'destructive',
       });
       return;
     }
 
     if (identifierType === 'tin' && !selectedInstitution.tinNumber) {
       toast({
-        title: "Error",
-        description: "Institution must have a TIN number to use this option",
-        variant: "destructive"
+        title: 'Error',
+        description: 'Institution must have a TIN number to use this option',
+        variant: 'destructive',
       });
       return;
     }
@@ -253,12 +301,14 @@ export default function FetchDataPage() {
 
       // Show initial toast that job is queued
       toast({
-        title: "Sync Job Started",
+        title: 'Sync Job Started',
         description: `Background sync started for ${selectedInstitution.name}. Progress will update in real-time.`,
       });
 
       // Step 2: Connect to SSE endpoint for progress updates
-      const sseResponse = await fetch(`/api/hrims/sync-status/${jobData.jobId}`);
+      const sseResponse = await fetch(
+        `/api/hrims/sync-status/${jobData.jobId}`
+      );
 
       if (!sseResponse.ok) {
         throw new Error('Failed to connect to progress stream');
@@ -309,7 +359,7 @@ export default function FetchDataPage() {
           } else if (eventType === 'complete') {
             const result = data.result;
             toast({
-              title: "Fetch Successful",
+              title: 'Fetch Successful',
               description: `Fetched ${result.employeeCount} employees from ${selectedInstitution.name}. Pages: ${result.pagesFetched}, Total: ${result.totalFetched}${result.skippedCount > 0 ? `, Skipped: ${result.skippedCount}` : ''}.`,
             });
 
@@ -329,9 +379,12 @@ export default function FetchDataPage() {
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to fetch employees by institution",
-        variant: "destructive"
+        title: 'Error',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'Failed to fetch employees by institution',
+        variant: 'destructive',
       });
     } finally {
       setIsFetching(false);
@@ -367,7 +420,8 @@ export default function FetchDataPage() {
             Select Institution
           </CardTitle>
           <CardDescription>
-            Choose an institution to fetch employee data from HRIMS. Search by name, vote number, TIN number, email, or phone.
+            Choose an institution to fetch employee data from HRIMS. Search by
+            name, vote number, TIN number, email, or phone.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -398,7 +452,7 @@ export default function FetchDataPage() {
             </TableHeader>
             <TableBody>
               {paginatedInstitutions.length > 0 ? (
-                paginatedInstitutions.map(inst => (
+                paginatedInstitutions.map((inst) => (
                   <TableRow key={inst.id}>
                     <TableCell className="font-medium">{inst.name}</TableCell>
                     <TableCell>{inst.voteNumber || 'N/A'}</TableCell>
@@ -411,14 +465,18 @@ export default function FetchDataPage() {
                         onClick={() => setSelectedInstitution(inst)}
                         disabled={selectedInstitution?.id === inst.id}
                       >
-                        {selectedInstitution?.id === inst.id ? 'Selected' : 'Select'}
+                        {selectedInstitution?.id === inst.id
+                          ? 'Selected'
+                          : 'Select'}
                       </Button>
                     </TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center">No institutions found.</TableCell>
+                  <TableCell colSpan={6} className="text-center">
+                    No institutions found.
+                  </TableCell>
                 </TableRow>
               )}
             </TableBody>
@@ -452,46 +510,74 @@ export default function FetchDataPage() {
           <CardContent className="space-y-4">
             {/* Identifier Type Selector */}
             <div className="border rounded-lg p-4 bg-gray-50">
-              <Label className="text-base font-semibold mb-3 block">Select Identifier Type for Institution Fetch</Label>
-              <RadioGroup value={identifierType} onValueChange={(value) => setIdentifierType(value as 'votecode' | 'tin')}>
+              <Label className="text-base font-semibold mb-3 block">
+                Select Identifier Type for Institution Fetch
+              </Label>
+              <RadioGroup
+                value={identifierType}
+                onValueChange={(value) =>
+                  setIdentifierType(value as 'votecode' | 'tin')
+                }
+              >
                 <div className="flex items-center space-x-6">
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="votecode" id="votecode" />
-                    <Label htmlFor="votecode" className="cursor-pointer font-normal">
-                      Vote Code {selectedInstitution.voteNumber ? `(${selectedInstitution.voteNumber})` : '(Not Available)'}
+                    <Label
+                      htmlFor="votecode"
+                      className="cursor-pointer font-normal"
+                    >
+                      Vote Code{' '}
+                      {selectedInstitution.voteNumber
+                        ? `(${selectedInstitution.voteNumber})`
+                        : '(Not Available)'}
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="tin" id="tin" />
                     <Label htmlFor="tin" className="cursor-pointer font-normal">
-                      TIN Number {selectedInstitution.tinNumber ? `(${selectedInstitution.tinNumber})` : '(Not Available)'}
+                      TIN Number{' '}
+                      {selectedInstitution.tinNumber
+                        ? `(${selectedInstitution.tinNumber})`
+                        : '(Not Available)'}
                     </Label>
                   </div>
                 </div>
               </RadioGroup>
               <p className="text-xs text-gray-600 mt-2">
-                Choose which identifier to use when fetching employees from HRIMS for this institution.
+                Choose which identifier to use when fetching employees from
+                HRIMS for this institution.
               </p>
             </div>
 
             {/* Page Size Selector */}
             <div className="border rounded-lg p-4 bg-blue-50">
-              <Label htmlFor="hrimsPageSize" className="text-base font-semibold mb-2 block">HRIMS Pagination Settings</Label>
+              <Label
+                htmlFor="hrimsPageSize"
+                className="text-base font-semibold mb-2 block"
+              >
+                HRIMS Pagination Settings
+              </Label>
               <div className="flex items-center gap-4">
                 <div className="flex-1">
-                  <Label htmlFor="hrimsPageSize" className="text-sm mb-1 block">Records per Page</Label>
+                  <Label htmlFor="hrimsPageSize" className="text-sm mb-1 block">
+                    Records per Page
+                  </Label>
                   <Input
                     id="hrimsPageSize"
                     type="number"
                     min="10"
                     max="500"
                     value={hrimsPageSize}
-                    onChange={(e) => setHrimsPageSize(parseInt(e.target.value) || 100)}
+                    onChange={(e) =>
+                      setHrimsPageSize(parseInt(e.target.value) || 100)
+                    }
                     className="w-32"
                   />
                 </div>
                 <p className="text-xs text-gray-600 flex-1">
-                  Number of records to fetch per page from HRIMS. The system will automatically fetch all pages. Lower values are more reliable for large datasets.
+                  Number of records to fetch per page from HRIMS. The system
+                  will automatically fetch all pages. Lower values are more
+                  reliable for large datasets.
                 </p>
               </div>
             </div>
@@ -503,18 +589,27 @@ export default function FetchDataPage() {
                 className="flex items-center gap-2"
               >
                 <Users className="h-4 w-4" />
-                {isFetching ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                {isFetching ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : null}
                 Fetch Single Employee
               </Button>
 
               <Button
                 onClick={handleFetchByInstitution}
-                disabled={isFetching || (identifierType === 'votecode' && !selectedInstitution.voteNumber) || (identifierType === 'tin' && !selectedInstitution.tinNumber)}
+                disabled={
+                  isFetching ||
+                  (identifierType === 'votecode' &&
+                    !selectedInstitution.voteNumber) ||
+                  (identifierType === 'tin' && !selectedInstitution.tinNumber)
+                }
                 variant="secondary"
                 className="flex items-center gap-2"
               >
                 <Building className="h-4 w-4" />
-                {isFetching ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                {isFetching ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : null}
                 Fetch by {identifierType === 'votecode' ? 'Vote Code' : 'TIN'}
               </Button>
             </div>
@@ -525,27 +620,37 @@ export default function FetchDataPage() {
                 <Alert>
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>
-                    {progress.phase === 'fetching' ? 'Fetching employees from HRIMS...' : 'Saving employees to database...'}
+                    {progress.phase === 'fetching'
+                      ? 'Fetching employees from HRIMS...'
+                      : 'Saving employees to database...'}
                   </AlertDescription>
                 </Alert>
 
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="font-medium">{progress.message}</span>
-                    {progress.phase === 'fetching' && progress.totalFetched !== undefined && progress.estimatedTotal !== undefined && (
-                      <span className="text-muted-foreground">
-                        {progress.totalFetched} / {progress.estimatedTotal}
-                      </span>
-                    )}
-                    {progress.phase === 'saving' && progress.saved !== undefined && progress.total !== undefined && (
-                      <span className="text-muted-foreground">
-                        {progress.saved + (progress.skipped || 0)} / {progress.total}
-                      </span>
-                    )}
+                    {progress.phase === 'fetching' &&
+                      progress.totalFetched !== undefined &&
+                      progress.estimatedTotal !== undefined && (
+                        <span className="text-muted-foreground">
+                          {progress.totalFetched} / {progress.estimatedTotal}
+                        </span>
+                      )}
+                    {progress.phase === 'saving' &&
+                      progress.saved !== undefined &&
+                      progress.total !== undefined && (
+                        <span className="text-muted-foreground">
+                          {progress.saved + (progress.skipped || 0)} /{' '}
+                          {progress.total}
+                        </span>
+                      )}
                   </div>
 
                   {progress.progressPercent !== undefined && (
-                    <Progress value={progress.progressPercent} className="h-2" />
+                    <Progress
+                      value={progress.progressPercent}
+                      className="h-2"
+                    />
                   )}
 
                   <div className="flex gap-4 text-xs text-muted-foreground">
@@ -555,18 +660,25 @@ export default function FetchDataPage() {
                           <span>Page: {progress.currentPage}</span>
                         )}
                         {progress.totalFetched !== undefined && (
-                          <span className="text-blue-600">Fetched: {progress.totalFetched}</span>
+                          <span className="text-blue-600">
+                            Fetched: {progress.totalFetched}
+                          </span>
                         )}
                       </>
                     )}
                     {progress.phase === 'saving' && (
                       <>
                         {progress.saved !== undefined && (
-                          <span className="text-green-600">✓ {progress.saved} saved</span>
+                          <span className="text-green-600">
+                            ✓ {progress.saved} saved
+                          </span>
                         )}
-                        {progress.skipped !== undefined && progress.skipped > 0 && (
-                          <span className="text-yellow-600">⊘ {progress.skipped} skipped</span>
-                        )}
+                        {progress.skipped !== undefined &&
+                          progress.skipped > 0 && (
+                            <span className="text-yellow-600">
+                              ⊘ {progress.skipped} skipped
+                            </span>
+                          )}
                       </>
                     )}
                   </div>
@@ -578,8 +690,8 @@ export default function FetchDataPage() {
               <Alert className="mt-4">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  Initializing data fetch. This may take several minutes for large institutions.
-                  Please do not close this page.
+                  Initializing data fetch. This may take several minutes for
+                  large institutions. Please do not close this page.
                 </AlertDescription>
               </Alert>
             )}
@@ -587,23 +699,35 @@ export default function FetchDataPage() {
             {fetchResults.length > 0 && (
               <div className="border rounded-lg p-4 bg-green-50">
                 <h4 className="font-medium text-green-800 mb-2">
-                  {fetchResults.length === 1 ? 'Fetched Employee' : `Sample of Fetched Employees (showing first ${fetchResults.length})`}
+                  {fetchResults.length === 1
+                    ? 'Fetched Employee'
+                    : `Sample of Fetched Employees (showing first ${fetchResults.length})`}
                 </h4>
                 <div className="space-y-2">
                   {fetchResults.map((employee, index) => (
-                    <div key={index} className="text-sm text-green-700 border-b border-green-200 pb-2 last:border-0">
-                      <p><strong>{employee.name}</strong></p>
+                    <div
+                      key={index}
+                      className="text-sm text-green-700 border-b border-green-200 pb-2 last:border-0"
+                    >
+                      <p>
+                        <strong>{employee.name}</strong>
+                      </p>
                       <p>ZanID: {employee.zanId}</p>
-                      {employee.payrollNumber && <p>Payroll Number: {employee.payrollNumber}</p>}
+                      {employee.payrollNumber && (
+                        <p>Payroll Number: {employee.payrollNumber}</p>
+                      )}
                       {employee.cadre && <p>Cadre: {employee.cadre}</p>}
-                      {employee.ministry && <p>Ministry: {employee.ministry}</p>}
+                      {employee.ministry && (
+                        <p>Ministry: {employee.ministry}</p>
+                      )}
                       <p>Status: {employee.status}</p>
                     </div>
                   ))}
                 </div>
                 {fetchResults.length > 1 && (
                   <p className="text-xs text-green-600 mt-3 italic">
-                    This is a preview of the first few employees. Check the success notification for the total count.
+                    This is a preview of the first few employees. Check the
+                    success notification for the total count.
                   </p>
                 )}
               </div>
@@ -613,13 +737,19 @@ export default function FetchDataPage() {
       )}
 
       {/* Employee Search Dialog */}
-      <Dialog open={isEmployeeDialogOpen} onOpenChange={setIsEmployeeDialogOpen}>
+      <Dialog
+        open={isEmployeeDialogOpen}
+        onOpenChange={setIsEmployeeDialogOpen}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Fetch Single Employee Data</DialogTitle>
           </DialogHeader>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleFetchEmployeeData)} className="space-y-4">
+            <form
+              onSubmit={form.handleSubmit(handleFetchEmployeeData)}
+              className="space-y-4"
+            >
               <FormField
                 control={form.control}
                 name="zanId"
@@ -665,11 +795,17 @@ export default function FetchDataPage() {
               </div>
 
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsEmployeeDialogOpen(false)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsEmployeeDialogOpen(false)}
+                >
                   Cancel
                 </Button>
                 <Button type="submit" disabled={isFetching}>
-                  {isFetching ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                  {isFetching ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : null}
                   Fetch Employee Data
                 </Button>
               </DialogFooter>

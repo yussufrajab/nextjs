@@ -48,7 +48,7 @@ export function EmployeeLoginForm() {
 
   async function onSubmit(data: EmployeeLoginValues) {
     setIsLoading(true);
-    
+
     try {
       const response = await fetch('/api/auth/employee-login', {
         method: 'POST',
@@ -63,12 +63,12 @@ export function EmployeeLoginForm() {
       if (response.ok && result.success) {
         // Use the auth store to set user data
         setUserManually(result.user);
-        
+
         toast({
           title: 'Login Successful',
           description: `Welcome, ${result.user.name}!`,
         });
-        
+
         // Redirect to employee dashboard/profile
         router.push('/dashboard/profile');
       } else {
@@ -102,8 +102,8 @@ export function EmployeeLoginForm() {
                 ZAN ID
               </FormLabel>
               <FormControl>
-                <Input 
-                  placeholder="Enter your ZAN ID" 
+                <Input
+                  placeholder="Enter your ZAN ID"
                   {...field}
                   className="pl-4"
                 />
@@ -122,8 +122,8 @@ export function EmployeeLoginForm() {
                 ZSSF Number
               </FormLabel>
               <FormControl>
-                <Input 
-                  placeholder="Enter your ZSSF Number" 
+                <Input
+                  placeholder="Enter your ZSSF Number"
                   {...field}
                   className="pl-4"
                 />
@@ -142,8 +142,8 @@ export function EmployeeLoginForm() {
                 Payroll Number
               </FormLabel>
               <FormControl>
-                <Input 
-                  placeholder="Enter your Payroll Number" 
+                <Input
+                  placeholder="Enter your Payroll Number"
                   {...field}
                   className="pl-4"
                 />

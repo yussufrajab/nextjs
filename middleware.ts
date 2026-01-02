@@ -28,17 +28,34 @@ function logUnauthorizedAttempt(
   }
 ) {
   // Data will be passed via URL params and logged on the client side
-  const severityEmoji = data.severity === 'ERROR' ? '🔴' :
-                        data.severity === 'CRITICAL' ? '🚨' : '⚠️';
-  console.log(`[Middleware] ${severityEmoji} Blocked unauthorized access [${data.severity || 'WARNING'}]:`, {
-    route: data.attemptedRoute,
-    role: data.userRole,
-    authenticated: data.isAuthenticated,
-  });
+  const severityEmoji =
+    data.severity === 'ERROR'
+      ? '🔴'
+      : data.severity === 'CRITICAL'
+        ? '🚨'
+        : '⚠️';
+  console.log(
+    `[Middleware] ${severityEmoji} Blocked unauthorized access [${data.severity || 'WARNING'}]:`,
+    {
+      route: data.attemptedRoute,
+      role: data.userRole,
+      authenticated: data.isAuthenticated,
+    }
+  );
 }
 
 // Import types - using inline types since middleware can't import from @/lib
-type Role = "HRO" | "HHRMD" | "HRMO" | "DO" | "EMPLOYEE" | "CSCS" | "HRRP" | "PO" | "Admin" | null;
+type Role =
+  | 'HRO'
+  | 'HHRMD'
+  | 'HRMO'
+  | 'DO'
+  | 'EMPLOYEE'
+  | 'CSCS'
+  | 'HRRP'
+  | 'PO'
+  | 'Admin'
+  | null;
 
 const ROLES = {
   HRO: 'HRO',
@@ -119,25 +136,68 @@ const ROUTE_PERMISSIONS: RoutePermission[] = [
   // Profile access
   {
     pattern: '/dashboard/profile',
-    allowedRoles: [ROLES.HRO, ROLES.EMPLOYEE, ROLES.HHRMD, ROLES.HRMO, ROLES.DO, ROLES.CSCS, ROLES.HRRP, ROLES.PO],
+    allowedRoles: [
+      ROLES.HRO,
+      ROLES.EMPLOYEE,
+      ROLES.HHRMD,
+      ROLES.HRMO,
+      ROLES.DO,
+      ROLES.CSCS,
+      ROLES.HRRP,
+      ROLES.PO,
+    ],
   },
   // Tracking and reports - All roles can view their relevant data
   {
     pattern: '/dashboard/track-status',
-    allowedRoles: [ROLES.HRO, ROLES.HHRMD, ROLES.HRMO, ROLES.DO, ROLES.CSCS, ROLES.HRRP, ROLES.PO, ROLES.EMPLOYEE],
+    allowedRoles: [
+      ROLES.HRO,
+      ROLES.HHRMD,
+      ROLES.HRMO,
+      ROLES.DO,
+      ROLES.CSCS,
+      ROLES.HRRP,
+      ROLES.PO,
+      ROLES.EMPLOYEE,
+    ],
   },
   {
     pattern: '/dashboard/recent-activities',
-    allowedRoles: [ROLES.HRO, ROLES.HHRMD, ROLES.HRMO, ROLES.DO, ROLES.CSCS, ROLES.HRRP],
+    allowedRoles: [
+      ROLES.HRO,
+      ROLES.HHRMD,
+      ROLES.HRMO,
+      ROLES.DO,
+      ROLES.CSCS,
+      ROLES.HRRP,
+    ],
   },
   {
     pattern: '/dashboard/reports',
-    allowedRoles: [ROLES.HRO, ROLES.HHRMD, ROLES.HRMO, ROLES.DO, ROLES.CSCS, ROLES.HRRP, ROLES.PO],
+    allowedRoles: [
+      ROLES.HRO,
+      ROLES.HHRMD,
+      ROLES.HRMO,
+      ROLES.DO,
+      ROLES.CSCS,
+      ROLES.HRRP,
+      ROLES.PO,
+    ],
   },
   // Dashboard home - accessible to all authenticated users
   {
     pattern: '/dashboard',
-    allowedRoles: [ROLES.HRO, ROLES.HHRMD, ROLES.HRMO, ROLES.DO, ROLES.EMPLOYEE, ROLES.CSCS, ROLES.HRRP, ROLES.PO, ROLES.ADMIN as Role],
+    allowedRoles: [
+      ROLES.HRO,
+      ROLES.HHRMD,
+      ROLES.HRMO,
+      ROLES.DO,
+      ROLES.EMPLOYEE,
+      ROLES.CSCS,
+      ROLES.HRRP,
+      ROLES.PO,
+      ROLES.ADMIN as Role,
+    ],
   },
 ];
 
@@ -155,7 +215,9 @@ function canAccessRoute(pathname: string, userRole: Role | null): boolean {
 
     if (typeof permission.pattern === 'string') {
       // Exact match or starts with for string patterns
-      matches = pathname === permission.pattern || pathname.startsWith(permission.pattern + '/');
+      matches =
+        pathname === permission.pattern ||
+        pathname.startsWith(permission.pattern + '/');
     } else {
       // RegExp match
       matches = permission.pattern.test(pathname);
@@ -173,7 +235,11 @@ function canAccessRoute(pathname: string, userRole: Role | null): boolean {
 /**
  * Parse and validate the auth-storage cookie
  */
-function parseAuthStorage(cookieValue: string | undefined): { role: Role | null; isAuthenticated: boolean; userId: string | null } {
+function parseAuthStorage(cookieValue: string | undefined): {
+  role: Role | null;
+  isAuthenticated: boolean;
+  userId: string | null;
+} {
   if (!cookieValue) {
     return { role: null, isAuthenticated: false, userId: null };
   }
@@ -219,12 +285,18 @@ export function middleware(request: NextRequest) {
     const authCookie = request.cookies.get('auth-storage')?.value;
     const { role, isAuthenticated, userId } = parseAuthStorage(authCookie);
 
-    console.log('[Middleware] Checking access:', { pathname, role, isAuthenticated, userId });
+    console.log('[Middleware] Checking access:', {
+      pathname,
+      role,
+      isAuthenticated,
+      userId,
+    });
 
     // Get client info for audit logging
-    const ipAddress = request.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
-                     request.headers.get('x-real-ip') ||
-                     null;
+    const ipAddress =
+      request.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
+      request.headers.get('x-real-ip') ||
+      null;
     const userAgent = request.headers.get('user-agent') || null;
 
     // Check authentication
@@ -254,7 +326,10 @@ export function middleware(request: NextRequest) {
     const hasAccess = canAccessRoute(pathname, role);
 
     if (!hasAccess) {
-      console.log('[Middleware] User lacks permission for route:', { pathname, role });
+      console.log('[Middleware] User lacks permission for route:', {
+        pathname,
+        role,
+      });
 
       // Determine severity based on route sensitivity
       // Admin routes are more critical (ERROR), others are WARNING

@@ -8,18 +8,18 @@ export class DebugLogger {
     const logEntry = {
       timestamp,
       message,
-      data: data ? JSON.stringify(data) : undefined
+      data: data ? JSON.stringify(data) : undefined,
     };
 
     // Get existing logs
     const existingLogs = this.getLogs();
-    
+
     // Add new log
     existingLogs.push(logEntry);
-    
+
     // Keep only the last MAX_LOGS entries
     const trimmedLogs = existingLogs.slice(-this.MAX_LOGS);
-    
+
     // Save to localStorage
     try {
       localStorage.setItem(this.LOG_KEY, JSON.stringify(trimmedLogs));
@@ -47,7 +47,10 @@ export class DebugLogger {
     const logs = this.getLogs();
     console.log('=== AUTH DEBUG LOGS ===');
     logs.forEach((log: any) => {
-      console.log(`${log.timestamp}: ${log.message}`, log.data ? JSON.parse(log.data) : '');
+      console.log(
+        `${log.timestamp}: ${log.message}`,
+        log.data ? JSON.parse(log.data) : ''
+      );
     });
     console.log('=== END DEBUG LOGS ===');
   }

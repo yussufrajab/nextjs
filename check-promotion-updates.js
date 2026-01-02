@@ -16,19 +16,18 @@ async function checkRecentPromotions() {
         reviewedById: true,
         updatedAt: true,
         Employee: {
-          select: { name: true }
-        }
-      }
+          select: { name: true },
+        },
+      },
     });
 
     console.log('Recent promotion requests:');
-    recent.forEach(req => {
+    recent.forEach((req) => {
       console.log(`  ${req.Employee?.name}: ${req.status}`);
       console.log(`    Updated: ${req.updatedAt}`);
       console.log(`    ReviewedById: ${req.reviewedById || 'None'}`);
       console.log(`    ReviewStage: ${req.reviewStage}\n`);
     });
-
   } catch (error) {
     console.error('Error:', error);
   } finally {

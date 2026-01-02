@@ -14,11 +14,16 @@ interface FetchResult {
 }
 
 async function sleep(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 async function fetchInstitutionData(
-  institution: { id: string; name: string; voteNumber: string | null; tinNumber: string | null },
+  institution: {
+    id: string;
+    name: string;
+    voteNumber: string | null;
+    tinNumber: string | null;
+  },
   retryCount = 0,
   maxRetries = 2
 ): Promise<FetchResult> {
@@ -39,12 +44,14 @@ async function fetchInstitutionData(
       identifier: 'N/A',
       identifierType: 'votecode',
       success: false,
-      error: 'No vote number or TIN number available'
+      error: 'No vote number or TIN number available',
     };
   }
 
   try {
-    console.log(`\nFetching ${institution.name}...${retryCount > 0 ? ` (Retry ${retryCount}/${maxRetries})` : ''}`);
+    console.log(
+      `\nFetching ${institution.name}...${retryCount > 0 ? ` (Retry ${retryCount}/${maxRetries})` : ''}`
+    );
     console.log(`Using ${identifierType}: ${identifier}`);
 
     const response = await axios.post(
@@ -104,7 +111,12 @@ async function fetchInstitutionData(
     console.log(`❌ Error: ${errorMessage}`);
 
     // Retry on fetch failures (timeouts, network errors)
-    if (retryCount < maxRetries && (errorMessage.includes('timeout') || errorMessage.includes('ECONNABORTED') || errorMessage.includes('network'))) {
+    if (
+      retryCount < maxRetries &&
+      (errorMessage.includes('timeout') ||
+        errorMessage.includes('ECONNABORTED') ||
+        errorMessage.includes('network'))
+    ) {
       console.log(`⏳ Waiting 10 seconds before retry...`);
       await sleep(10000); // 10 second wait before retry
       return fetchInstitutionData(institution, retryCount + 1, maxRetries);
@@ -142,8 +154,8 @@ async function main() {
   const institutions = await prisma.institution.findMany({
     where: {
       name: {
-        in: failedInstitutionNames
-      }
+        in: failedInstitutionNames,
+      },
     },
     orderBy: { name: 'asc' },
   });
@@ -156,7 +168,9 @@ async function main() {
 
   for (let i = 0; i < institutions.length; i++) {
     const institution = institutions[i];
-    console.log(`\n[${i + 1}/${institutions.length}] Processing: ${institution.name}`);
+    console.log(
+      `\n[${i + 1}/${institutions.length}] Processing: ${institution.name}`
+    );
 
     // Check if institution has any identifier
     if (!institution.voteNumber && !institution.tinNumber) {
@@ -167,7 +181,7 @@ async function main() {
         identifier: 'N/A',
         identifierType: 'votecode',
         success: false,
-        error: 'No identifier available'
+        error: 'No identifier available',
       });
       failureCount++;
       continue;
@@ -203,26 +217,33 @@ async function main() {
   console.log('='.repeat(80));
 
   console.log('\n✅ Successful fetches:');
-  results.filter(r => r.success).forEach((r, i) => {
-    console.log(`${i + 1}. ${r.institutionName} (${r.identifierType}: ${r.identifier}) - ${r.employeeCount} employees`);
-  });
+  results
+    .filter((r) => r.success)
+    .forEach((r, i) => {
+      console.log(
+        `${i + 1}. ${r.institutionName} (${r.identifierType}: ${r.identifier}) - ${r.employeeCount} employees`
+      );
+    });
 
   console.log('\n❌ Failed fetches:');
-  results.filter(r => !r.success).forEach((r, i) => {
-    console.log(`${i + 1}. ${r.institutionName} - ${r.error}`);
-  });
+  results
+    .filter((r) => !r.success)
+    .forEach((r, i) => {
+      console.log(`${i + 1}. ${r.institutionName} - ${r.error}`);
+    });
 
   // Final employee count
   const totalEmployees = await prisma.employee.count();
   console.log('\n' + '='.repeat(80));
-  console.log(`\n📊 TOTAL EMPLOYEES IN DATABASE: ${totalEmployees.toLocaleString()}`);
+  console.log(
+    `\n📊 TOTAL EMPLOYEES IN DATABASE: ${totalEmployees.toLocaleString()}`
+  );
   console.log('='.repeat(80));
 
   await prisma.$disconnect();
 }
 
-main()
-  .catch((error) => {
-    console.error('Fatal error:', error);
-    process.exit(1);
-  });
+main().catch((error) => {
+  console.error('Fatal error:', error);
+  process.exit(1);
+});

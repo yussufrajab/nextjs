@@ -45,7 +45,8 @@ export function LockAccountModal({
     if (reason.length < 10) {
       toast({
         title: 'Reason Required',
-        description: 'Please provide a detailed reason (minimum 10 characters).',
+        description:
+          'Please provide a detailed reason (minimum 10 characters).',
         variant: 'destructive',
       });
       return;
@@ -108,7 +109,8 @@ export function LockAccountModal({
             Lock User Account
           </DialogTitle>
           <DialogDescription>
-            Lock the account for <strong>{username}</strong> ({userRole}). This will prevent the user from logging in.
+            Lock the account for <strong>{username}</strong> ({userRole}). This
+            will prevent the user from logging in.
           </DialogDescription>
         </DialogHeader>
 
@@ -119,8 +121,9 @@ export function LockAccountModal({
               <div className="text-sm text-red-800">
                 <p className="font-medium mb-1">Security Action</p>
                 <p className="text-xs">
-                  Locking this account will immediately prevent the user from accessing the system.
-                  The user will be notified and can only be unlocked by an administrator.
+                  Locking this account will immediately prevent the user from
+                  accessing the system. The user will be notified and can only
+                  be unlocked by an administrator.
                 </p>
               </div>
             </div>
@@ -139,13 +142,15 @@ export function LockAccountModal({
               required
             />
             <p className="text-xs text-muted-foreground">
-              Minimum 10 characters. This reason will be logged and shown to the user.
+              Minimum 10 characters. This reason will be logged and shown to the
+              user.
             </p>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="notes">
-              Additional Notes <span className="text-muted-foreground">(Optional)</span>
+              Additional Notes{' '}
+              <span className="text-muted-foreground">(Optional)</span>
             </Label>
             <Textarea
               id="notes"
@@ -169,12 +174,10 @@ export function LockAccountModal({
             >
               Cancel
             </Button>
-            <Button
-              type="submit"
-              variant="destructive"
-              disabled={isSubmitting}
-            >
-              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button type="submit" variant="destructive" disabled={isSubmitting}>
+              {isSubmitting && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
               Lock Account
             </Button>
           </DialogFooter>
