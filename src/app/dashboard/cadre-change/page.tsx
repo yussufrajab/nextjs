@@ -206,7 +206,8 @@ export default function CadreChangePage() {
     if (employee.status === 'On Probation' || employee.status === 'On LWOP') {
       error = `Employee is currently '${employee.status}' and is not eligible for a cadre change.`;
     } else if (employee.employmentDate) {
-      const yearsOfService = differenceInYears(new Date(), parseISO(employee.employmentDate));
+      const employmentDate = typeof employee.employmentDate === 'string' ? parseISO(employee.employmentDate) : employee.employmentDate;
+      const yearsOfService = differenceInYears(new Date(), employmentDate);
       if (yearsOfService < 3) {
         error = `Employee must have at least 3 years of service for a cadre change. Current service: ${yearsOfService} years.`;
       }
@@ -274,8 +275,8 @@ export default function CadreChangePage() {
     // Create optimistic request for immediate UI feedback
     const optimisticRequest: CadreChangeRequest = {
       id: `temp-${Date.now()}`,
-      employee: employeeDetails,
-      submittedBy: user,
+      employee: employeeDetails as any,
+      submittedBy: user as any,
       status: 'Pending HRMO/HHRMD Review',
       reviewStage: 'initial',
       newCadre,
@@ -501,8 +502,8 @@ export default function CadreChangePage() {
                       <div><Label className="text-muted-foreground">ZSSF Number:</Label> <p className="font-semibold text-foreground">{employeeDetails.zssfNumber || 'N/A'}</p></div>
                       <div><Label className="text-muted-foreground">Department:</Label> <p className="font-semibold text-foreground">{employeeDetails.department || 'N/A'}</p></div>
                       <div><Label className="text-muted-foreground">Current Cadre/Position:</Label> <p className="font-semibold text-foreground">{employeeDetails.cadre || 'N/A'}</p></div>
-                      <div><Label className="text-muted-foreground">Employment Date:</Label> <p className="font-semibold text-foreground">{employeeDetails.employmentDate ? format(parseISO(employeeDetails.employmentDate), 'PPP') : 'N/A'}</p></div>
-                      <div><Label className="text-muted-foreground">Date of Birth:</Label> <p className="font-semibold text-foreground">{employeeDetails.dateOfBirth ? format(parseISO(employeeDetails.dateOfBirth), 'PPP') : 'N/A'}</p></div>
+                      <div><Label className="text-muted-foreground">Employment Date:</Label> <p className="font-semibold text-foreground">{employeeDetails.employmentDate ? format(typeof employeeDetails.employmentDate === 'string' ? parseISO(employeeDetails.employmentDate) : employeeDetails.employmentDate, 'PPP') : 'N/A'}</p></div>
+                      <div><Label className="text-muted-foreground">Date of Birth:</Label> <p className="font-semibold text-foreground">{employeeDetails.dateOfBirth ? format(typeof employeeDetails.dateOfBirth === 'string' ? parseISO(employeeDetails.dateOfBirth) : employeeDetails.dateOfBirth, 'PPP') : 'N/A'}</p></div>
                       <div className="lg:col-span-1"><Label className="text-muted-foreground">Institution:</Label> <p className="font-semibold text-foreground">{typeof employeeDetails.institution === 'object' ? employeeDetails.institution?.name : employeeDetails.institution || 'N/A'}</p></div>
                     </div>
                   </div>
@@ -542,7 +543,7 @@ export default function CadreChangePage() {
                     description="Upload your qualification certificate (Optional)"
                     accept=".pdf"
                     value={certificateFile}
-                    onChange={setCertificateFile}
+                    onChange={(value) => setCertificateFile(Array.isArray(value) ? value[0] : value)}
                     folder="cadre-change"
                     disabled={isSubmitting || !!eligibilityError || hasPendingCadreChange}
                   />
@@ -558,7 +559,7 @@ export default function CadreChangePage() {
                       description="TCU verification form is required for foreign studies"
                       accept=".pdf"
                       value={tcuFormFile}
-                      onChange={setTcuFormFile}
+                      onChange={(value) => setTcuFormFile(Array.isArray(value) ? value[0] : value)}
                       folder="cadre-change"
                       disabled={isSubmitting || !!eligibilityError || hasPendingCadreChange}
                       required
@@ -569,7 +570,7 @@ export default function CadreChangePage() {
                     description="Official letter requesting cadre change (Required)"
                     accept=".pdf"
                     value={letterOfRequestFile}
-                    onChange={setLetterOfRequestFile}
+                    onChange={(value) => setLetterOfRequestFile(Array.isArray(value) ? value[0] : value)}
                     folder="cadre-change"
                     disabled={isSubmitting || !!eligibilityError || hasPendingCadreChange}
                     required
@@ -876,35 +877,35 @@ export default function CadreChangePage() {
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">ZanID:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedEmployeeData.zanId}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedEmployeeData?.zanId}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Payroll #:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedEmployeeData.payrollNumber || 'N/A'}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedEmployeeData?.payrollNumber || 'N/A'}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">ZSSF #:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedEmployeeData.zssfNumber || 'N/A'}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedEmployeeData?.zssfNumber || 'N/A'}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Department:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedEmployeeData.department}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedEmployeeData?.department}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Current Cadre:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedEmployeeData.cadre}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedEmployeeData?.cadre}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Employment Date:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedEmployeeData.employmentDate ? format(parseISO(selectedEmployeeData.employmentDate), 'PPP') : 'N/A'}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedEmployeeData?.employmentDate ? format(parseISO(typeof selectedEmployeeData.employmentDate === 'string' ? selectedEmployeeData.employmentDate : selectedEmployeeData.employmentDate.toISOString()), 'PPP') : 'N/A'}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Date of Birth:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedEmployeeData.dateOfBirth ? format(parseISO(selectedEmployeeData.dateOfBirth), 'PPP') : 'N/A'}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedEmployeeData?.dateOfBirth ? format(parseISO(typeof selectedEmployeeData.dateOfBirth === 'string' ? selectedEmployeeData.dateOfBirth : selectedEmployeeData.dateOfBirth.toISOString()), 'PPP') : 'N/A'}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Institution:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedEmployeeData.institution?.name || 'N/A'}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedEmployeeData?.institution ? (typeof selectedEmployeeData.institution === 'string' ? selectedEmployeeData.institution : selectedEmployeeData.institution.name) : 'N/A'}</p>
                     </div>
                 </div>
                 <div className="space-y-1">
@@ -1139,7 +1140,7 @@ export default function CadreChangePage() {
                   description="Upload your qualification certificate (Optional)"
                   accept=".pdf"
                   value={correctedCertificateFile}
-                  onChange={setCorrectedCertificateFile}
+                  onChange={(value) => setCorrectedCertificateFile(Array.isArray(value) ? value[0] : value)}
                   folder="cadre-change"
                 />
                 {correctedStudiedOutsideCountry && (
@@ -1148,7 +1149,7 @@ export default function CadreChangePage() {
                     description="TCU verification form is required for foreign studies"
                     accept=".pdf"
                     value={correctedTcuFormFile}
-                    onChange={setCorrectedTcuFormFile}
+                    onChange={(value) => setCorrectedTcuFormFile(Array.isArray(value) ? value[0] : value)}
                     folder="cadre-change"
                     required
                   />
@@ -1158,7 +1159,7 @@ export default function CadreChangePage() {
                   description="Official letter requesting cadre change (Required)"
                   accept=".pdf"
                   value={correctedLetterOfRequestFile}
-                  onChange={setCorrectedLetterOfRequestFile}
+                  onChange={(value) => setCorrectedLetterOfRequestFile(Array.isArray(value) ? value[0] : value)}
                   folder="cadre-change"
                   required
                 />

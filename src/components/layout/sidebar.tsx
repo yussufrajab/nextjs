@@ -63,7 +63,6 @@ export function AppSidebar() {
                       <Link href={child.href} legacyBehavior passHref>
                         <SidebarMenuSubButton
                           isActive={isActive(child.href)}
-                          disabled={child.disabled}
                           className="w-full justify-start"
                         >
                           {child.title}
@@ -101,7 +100,6 @@ export function AppSidebar() {
 
       <SidebarFooter className="p-2 border-t">
         <Button variant="ghost" className="w-full justify-start" onClick={logout}
-          tooltip={sidebarState === 'collapsed' ? 'Logout' : undefined}
         >
           <LogOut className={cn("transition-all", sidebarState === 'collapsed' ? 'mx-auto' : 'mr-2 h-4 w-4')} />
           {sidebarState === 'expanded' && 'Logout'}

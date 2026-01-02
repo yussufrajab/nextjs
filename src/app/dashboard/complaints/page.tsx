@@ -982,8 +982,9 @@ export default function ComplaintsPage() {
                         <FileUpload
                           value={complaintLetterFile}
                           onChange={(objectKey) => {
-                            setComplaintLetterFile(objectKey);
-                            field.onChange(objectKey);
+                            const key = Array.isArray(objectKey) ? objectKey[0] : objectKey;
+                            setComplaintLetterFile(key);
+                            field.onChange(key);
                           }}
                           folder="complaints"
                           maxSize={1.2}
@@ -1007,8 +1008,9 @@ export default function ComplaintsPage() {
                         <FileUpload
                           value={evidenceFile}
                           onChange={(objectKey) => {
-                            setEvidenceFile(objectKey);
-                            field.onChange(objectKey);
+                            const key = Array.isArray(objectKey) ? objectKey[0] : objectKey;
+                            setEvidenceFile(key);
+                            field.onChange(key);
                           }}
                           folder="complaints"
                           maxSize={1.2}

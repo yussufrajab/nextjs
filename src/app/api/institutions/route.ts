@@ -2,11 +2,14 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { v4 as uuidv4 } from 'uuid';
 
+// Cache configuration for institution data
+const CACHE_TTL = 300; // 5 minutes cache (institutions rarely change)
+
 export async function GET(req: Request) {
   try {
     console.log('Institutions API called');
 
-    const institutions = await db.Institution.findMany({
+    const institutions = await db.institution.findMany({
       select: {
         id: true,
         name: true,
@@ -20,10 +23,14 @@ export async function GET(req: Request) {
 
     console.log(`Found ${institutions.length} institutions`);
 
+    // Set cache headers for institutions (changes infrequently)
+    const headers = new Headers();
+    headers.set('Cache-Control', `public, s-maxage=${CACHE_TTL}, stale-while-revalidate=${CACHE_TTL * 2}`);
+
     return NextResponse.json({
       success: true,
       data: institutions
-    });
+    }, { headers });
   } catch (error) {
     console.error("[INSTITUTIONS_GET]", error);
     return NextResponse.json({ 
@@ -47,7 +54,7 @@ export async function POST(req: Request) {
     }
 
     // Check if institution with the same name already exists
-    const existingInstitution = await db.Institution.findFirst({
+    const existingInstitution = await db.institution.findFirst({
       where: {
         name: {
           equals: name.trim(),
@@ -65,7 +72,7 @@ export async function POST(req: Request) {
 
     // Check if institution with the same tin number already exists (only if tin number is provided)
     if (tinNumber && tinNumber.trim().length > 0) {
-      const existingTinNumber = await db.Institution.findFirst({
+      const existingTinNumber = await db.institution.findFirst({
         where: {
           tinNumber: tinNumber.trim()
         }
@@ -79,7 +86,7 @@ export async function POST(req: Request) {
       }
     }
 
-    const newInstitution = await db.Institution.create({
+    const newInstitution = await db.institution.create({
       data: {
         id: uuidv4(),
         name: name.trim(),

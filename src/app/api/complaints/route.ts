@@ -48,7 +48,7 @@ export async function POST(req: Request) {
     });
 
     // Get complainant's name for notification
-    const complainant = await db.User.findUnique({
+    const complainant = await db.user.findUnique({
       where: { id: complainantId },
       select: { name: true },
     });

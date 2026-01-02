@@ -1,0 +1,103 @@
+================================================================================
+QUICK START GUIDE - CSMS Database Restore
+================================================================================
+
+📦 PACKAGE CONTENTS: All 6,541 employees backed up successfully!
+
+================================================================================
+OPTION 1: AUTOMATED RESTORE (EASIEST)
+================================================================================
+
+1. Copy this entire folder (beky7) to your new server:
+
+   scp -r /home/nextjs/beky7 user@newserver:/path/to/destination/
+
+2. On the new server, run the restore script:
+
+   cd /path/to/beky7
+   chmod +x restore-database.sh
+   ./restore-database.sh
+
+3. The script will:
+   - Ask for your database password
+   - Create the database
+   - Restore all 6,541 employees
+   - Verify the restoration
+
+4. Done! ✓
+
+================================================================================
+OPTION 2: MANUAL RESTORE (ADVANCED)
+================================================================================
+
+# Step 1: Create database
+psql -h localhost -U postgres -c "CREATE DATABASE nody WITH ENCODING='UTF8';"
+
+# Step 2: Restore using custom format (faster)
+pg_restore -h localhost -U postgres -d nody nody_backup_*.backup
+
+# OR restore using SQL format (alternative)
+psql -h localhost -U postgres -d nody -f nody_backup_*.sql
+
+# Step 3: Verify all employees are there
+psql -h localhost -U postgres -d nody -c "SELECT COUNT(*) FROM \"Employee\";"
+# Should show: 6541
+
+================================================================================
+AFTER RESTORE: UPDATE YOUR APP
+================================================================================
+
+1. Update .env file:
+
+   DATABASE_URL="postgresql://postgres:PASSWORD@localhost:5432/nody"
+
+2. Generate Prisma client:
+
+   cd /your/app/directory
+   npx prisma generate
+
+3. Start your application:
+
+   npm run dev          # Development
+   npm run build        # Production build
+   npm start            # Production server
+
+================================================================================
+VERIFICATION
+================================================================================
+
+Check employee count:
+  psql -d nody -c "SELECT COUNT(*) FROM \"Employee\";"
+  Expected: 6541
+
+Check all key tables:
+  psql -d nody -c "SELECT 'Employee', COUNT(*) FROM \"Employee\"
+                   UNION ALL SELECT 'User', COUNT(*) FROM \"User\"
+                   UNION ALL SELECT 'Institution', COUNT(*) FROM \"Institution\";"
+
+================================================================================
+TROUBLESHOOTING
+================================================================================
+
+Problem: "database already exists"
+Solution: Drop it first: psql -U postgres -c "DROP DATABASE nody;"
+
+Problem: "permission denied"
+Solution: Use superuser: psql -U postgres ...
+
+Problem: "connection refused"
+Solution: Start PostgreSQL: sudo systemctl start postgresql
+
+================================================================================
+NEED HELP?
+================================================================================
+
+- See README.md for detailed documentation
+- See BACKUP_VERIFICATION.txt for backup details
+- PostgreSQL docs: https://postgresql.org/docs
+
+================================================================================
+✓ Backup includes all 6,541 employees
+✓ Created: December 5, 2025
+✓ Ready to restore to any PostgreSQL server
+================================================================================

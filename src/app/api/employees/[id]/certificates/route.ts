@@ -1,13 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { uploadFile, generateObjectKey } from '@/lib/minio';
-import { PrismaClient } from '@prisma/client';
+import { db as prisma } from '@/lib/db';
 import { v4 as uuidv4 } from 'uuid';
-
-const prisma = new PrismaClient();
 
 // Valid certificate types
 const VALID_CERTIFICATE_TYPES = [
-  'Certificate of primary education',
   'Certificate of Secondary education (Form IV)',
   'Advanced Certificate of Secondary education (Form VII)',
   'Certificate',
@@ -43,7 +40,7 @@ export async function POST(
     }
 
     // Verify employee exists
-    const employee = await prisma.Employee.findUnique({
+    const employee = await prisma.employee.findUnique({
       where: { id: employeeId }
     });
 
@@ -71,9 +68,9 @@ export async function POST(
       );
     }
 
-    if (!certificateType || !VALID_CERTIFICATE_TYPES.includes(certificateType as any)) {
+    if (!certificateType || certificateType.trim().length === 0) {
       return NextResponse.json(
-        { success: false, message: 'Invalid certificate type' },
+        { success: false, message: 'Certificate type is required' },
         { status: 400 }
       );
     }
@@ -186,7 +183,7 @@ export async function GET(
     const { id: employeeId } = await params;
 
     // Fetch employee to check access permissions
-    const employee = await prisma.Employee.findUnique({
+    const employee = await prisma.employee.findUnique({
       where: { id: employeeId },
       select: {
         id: true,

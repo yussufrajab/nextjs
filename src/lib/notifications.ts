@@ -27,7 +27,7 @@ export async function createNotification(data: NotificationData) {
 
 export async function createNotificationForRole(role: string, message: string, link?: string) {
   try {
-    const users = await db.User.findMany({
+    const users = await db.user.findMany({
       where: { role: role, active: true },
       select: { id: true },
     });
@@ -201,5 +201,57 @@ export const NotificationTemplates = {
   welcomeMessage: () => ({
     message: `Welcome to the Civil Service Management System (CSMS). This system will help you manage your employment requests.`,
     link: `/dashboard`,
+  }),
+
+  // Password Expiration Notifications
+  passwordExpiring14Days: (daysRemaining: number, expiresAt: Date) => ({
+    message: `Your password will expire in ${daysRemaining} days (on ${expiresAt.toLocaleDateString()}). Please change it soon to avoid account disruption.`,
+    link: `/change-password-required`,
+  }),
+
+  passwordExpiring7Days: (daysRemaining: number, expiresAt: Date) => ({
+    message: `Your password will expire in ${daysRemaining} days (on ${expiresAt.toLocaleDateString()}). Please change it as soon as possible.`,
+    link: `/change-password-required`,
+  }),
+
+  passwordExpiring3Days: (daysRemaining: number, expiresAt: Date) => ({
+    message: `URGENT: Your password will expire in ${daysRemaining} days (on ${expiresAt.toLocaleDateString()}). Change it immediately to maintain access.`,
+    link: `/change-password-required`,
+  }),
+
+  passwordExpiring1Day: (expiresAt: Date) => ({
+    message: `CRITICAL: Your password expires tomorrow (${expiresAt.toLocaleDateString()}). Change it now to avoid being locked out.`,
+    link: `/change-password-required`,
+  }),
+
+  passwordExpired: (graceDaysRemaining: number) => ({
+    message: `Your password has expired. You have ${graceDaysRemaining} days of grace period remaining. You must change your password on your next login.`,
+    link: `/change-password-required`,
+  }),
+
+  passwordExpiredFinal: () => ({
+    message: `Your password has expired and the grace period has ended. You cannot access the system until an administrator resets your password.`,
+    link: null,
+  }),
+
+  // Account Lockout Notifications
+  accountLockedFailedAttempts: (attempts: number, lockoutType: string) => ({
+    message: `Your account has been locked after ${attempts} failed login attempts. ${lockoutType === 'standard' ? 'It will automatically unlock in 30 minutes.' : 'Please contact an administrator to unlock your account.'}`,
+    link: null,
+  }),
+
+  accountLockedByAdmin: (reason: string) => ({
+    message: `Your account has been locked by an administrator. Reason: ${reason}. Please contact support for assistance.`,
+    link: null,
+  }),
+
+  accountUnlocked: () => ({
+    message: `Your account has been unlocked by an administrator. You can now log in to the system.`,
+    link: '/login',
+  }),
+
+  accountAutoUnlocked: () => ({
+    message: `Your account lockout period has expired. You can now log in to the system.`,
+    link: '/login',
   }),
 };

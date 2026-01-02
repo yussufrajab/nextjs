@@ -461,7 +461,8 @@ export default function LwopPage() {
       id: `temp-${Date.now()}`, // Temporary ID until server responds
       employee: {
         ...employeeDetails,
-        institution: { name: typeof employeeDetails.institution === 'object' ? employeeDetails.Institution.name : employeeDetails.institution || 'N/A' }
+        phoneNumber: employeeDetails.phoneNumber ?? undefined,
+        institution: { name: typeof employeeDetails.institution === 'object' ? employeeDetails.institution.name : employeeDetails.institution || 'N/A' }
       },
       submittedBy: { name: user.name },
       status: 'Pending HRMO/HHRMD Review',
@@ -640,7 +641,7 @@ export default function LwopPage() {
                       <div><Label className="text-muted-foreground">Cadre/Position:</Label> <p className="font-semibold text-foreground">{employeeDetails.cadre || 'N/A'}</p></div>
                       <div><Label className="text-muted-foreground">Employment Date:</Label> <p className="font-semibold text-foreground">{employeeDetails.employmentDate ? format(parseISO(String(employeeDetails.employmentDate)), 'PPP') : 'N/A'}</p></div>
                       <div><Label className="text-muted-foreground">Date of Birth:</Label> <p className="font-semibold text-foreground">{employeeDetails.dateOfBirth ? format(parseISO(String(employeeDetails.dateOfBirth)), 'PPP') : 'N/A'}</p></div>
-                      <div className="lg:col-span-1"><Label className="text-muted-foreground">Institution:</Label> <p className="font-semibold text-foreground">{typeof employeeDetails.institution === 'object' && employeeDetails.institution !== null ? employeeDetails.Institution.name : employeeDetails.institution || 'N/A'}</p></div>
+                      <div className="lg:col-span-1"><Label className="text-muted-foreground">Institution:</Label> <p className="font-semibold text-foreground">{typeof employeeDetails.institution === 'object' && employeeDetails.institution !== null ? employeeDetails.institution.name : employeeDetails.institution || 'N/A'}</p></div>
                       <div className="md:col-span-2 lg:col-span-3"><Label className="text-muted-foreground">Current Status:</Label> <p className={`font-semibold ${isEmployeeOnProbation ? 'text-destructive' : 'text-green-600'}`}>{employeeDetails.status || 'N/A'}</p></div>
                     </div>
                   </div>
@@ -685,7 +686,7 @@ export default function LwopPage() {
                     description="Upload the official letter of request (PDF only)"
                     accept=".pdf"
                     value={letterOfRequestKey}
-                    onChange={setLetterOfRequestKey}
+                    onChange={(key) => setLetterOfRequestKey(Array.isArray(key) ? key[0] : key)}
                     folder="lwop/letters"
                     disabled={isSubmitting || cannotSubmitLWOP}
                     required
@@ -695,7 +696,7 @@ export default function LwopPage() {
                     description="Upload the employee's consent letter (PDF only)"
                     accept=".pdf"
                     value={employeeConsentLetterKey}
-                    onChange={setEmployeeConsentLetterKey}
+                    onChange={(key) => setEmployeeConsentLetterKey(Array.isArray(key) ? key[0] : key)}
                     folder="lwop/consents"
                     disabled={isSubmitting || cannotSubmitLWOP}
                     required
@@ -898,7 +899,7 @@ export default function LwopPage() {
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Institution:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedEmployeeData?.Institution?.name || selectedEmployeeData?.institution?.name || 'N/A'}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedEmployeeData?.institution?.name || selectedEmployeeData?.institution?.name || 'N/A'}</p>
                     </div>
                 </div>
 
@@ -1099,7 +1100,7 @@ export default function LwopPage() {
               description="Upload the corrected letter of request"
               accept=".pdf"
               value={correctedLetterOfRequestKey}
-              onChange={setCorrectedLetterOfRequestKey}
+              onChange={(key) => setCorrectedLetterOfRequestKey(Array.isArray(key) ? key[0] : key)}
               folder="lwop/letters"
               required
             />
@@ -1108,7 +1109,7 @@ export default function LwopPage() {
               description="Upload the corrected consent letter"
               accept=".pdf"
               value={correctedEmployeeConsentLetterKey}
-              onChange={setCorrectedEmployeeConsentLetterKey}
+              onChange={(key) => setCorrectedEmployeeConsentLetterKey(Array.isArray(key) ? key[0] : key)}
               folder="lwop/consents"
               required
             />

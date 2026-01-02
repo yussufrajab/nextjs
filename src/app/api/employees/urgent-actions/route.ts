@@ -26,6 +26,12 @@ export async function GET(req: Request) {
     threeMonthsFromNow.setMonth(threeMonthsFromNow.getMonth() + 3);
     const threeYearsAgo = new Date(today.getFullYear() - 3, today.getMonth(), today.getDate());
 
+    // Calculate cutoff date for retirement: 59.5 years ago
+    // 59.5 years = 59 years + 6 months
+    const retirementAgeCutoff = new Date();
+    retirementAgeCutoff.setFullYear(retirementAgeCutoff.getFullYear() - 59);
+    retirementAgeCutoff.setMonth(retirementAgeCutoff.getMonth() - 6);
+
     // Build base where clause for institution filtering
     const baseWhere: any = {};
     if (shouldApplyInstitutionFilter(userRole, userInstitutionId)) {
@@ -38,18 +44,21 @@ export async function GET(req: Request) {
 
       // Parallel count queries for better performance
       const [nearingRetirementCount, probationOverdueCount] = await Promise.all([
-        // Count employees approaching retirement
-        db.Employee.count({
+        // Count employees approaching retirement (59.5 years or older)
+        db.employee.count({
           where: {
             ...baseWhere,
-            retirementDate: {
-              lte: threeMonthsFromNow,
-              gte: today
+            dateOfBirth: {
+              not: null,
+              lte: retirementAgeCutoff
+            },
+            status: {
+              in: ['On Probation', 'Confirmed']
             }
           }
         }),
         // Count employees with overdue probation
-        db.Employee.count({
+        db.employee.count({
           where: {
             ...baseWhere,
             status: { not: 'Confirmed' },
@@ -58,7 +67,7 @@ export async function GET(req: Request) {
         })
       ]);
 
-      console.log(`Urgent counts: ${nearingRetirementCount} retiring, ${probationOverdueCount} probation - completed in ${Date.now() - startTime}ms`);
+      console.log(`Urgent counts: ${nearingRetirementCount} aged 59.5+ years, ${probationOverdueCount} probation - completed in ${Date.now() - startTime}ms`);
 
       const headers = new Headers();
       headers.set('Cache-Control', `public, s-maxage=${CACHE_TTL}, stale-while-revalidate=${CACHE_TTL * 2}`);
@@ -84,17 +93,20 @@ export async function GET(req: Request) {
 
     const retirementWhere: any = {
       ...baseWhere,
-      retirementDate: {
-        lte: threeMonthsFromNow,
-        gte: today
+      dateOfBirth: {
+        not: null,
+        lte: retirementAgeCutoff
+      },
+      status: {
+        in: ['On Probation', 'Confirmed']
       }
     };
 
     // Fetch counts and data in parallel
     const [probationCount, retirementCount, probationEmployees, retirementEmployees] = await Promise.all([
-      db.Employee.count({ where: probationWhere }),
-      db.Employee.count({ where: retirementWhere }),
-      db.Employee.findMany({
+      db.employee.count({ where: probationWhere }),
+      db.employee.count({ where: retirementWhere }),
+      db.employee.findMany({
         where: probationWhere,
         select: {
           id: true,
@@ -116,7 +128,7 @@ export async function GET(req: Request) {
         skip,
         take: limit
       }),
-      db.Employee.findMany({
+      db.employee.findMany({
         where: retirementWhere,
         select: {
           id: true,

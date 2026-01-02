@@ -23,6 +23,8 @@ import {
   Building,
   Download,
   Activity,
+  Camera,
+  FileText,
 } from 'lucide-react';
 import type { NavItem, Role } from './types';
 import { ROLES } from './constants';
@@ -36,7 +38,15 @@ export const NAV_ITEMS: NavItem[] = [
     description: 'Overview of your activities and quick access to modules.',
   },
   {
+    title: 'Institutions',
+    href: '/dashboard/institutions',
+    icon: Building,
+    roles: [ROLES.HHRMD, ROLES.CSCS, ROLES.DO, ROLES.HRMO],
+    description: 'View institutions and their employees.',
+  },
+  {
     title: 'Admin Management',
+    href: '#',
     icon: ShieldCheck,
     roles: [ROLES.ADMIN as Role],
     children: [
@@ -62,11 +72,32 @@ export const NAV_ITEMS: NavItem[] = [
             description: 'Fetch employee data from HRIMS system.'
         },
         {
+            title: 'Get Photos',
+            href: '/dashboard/admin/get-photo',
+            icon: Camera,
+            roles: [ROLES.ADMIN as Role],
+            description: 'Bulk fetch employee photos from HRIMS by institution.'
+        },
+        {
+            title: 'Get Documents',
+            href: '/dashboard/admin/get-documents',
+            icon: FileText,
+            roles: [ROLES.ADMIN as Role],
+            description: 'Bulk fetch employee documents and certificates from HRIMS.'
+        },
+        {
             title: 'Test HRIMS',
             href: '/dashboard/admin/test-hrims',
             icon: AlertTriangle,
             roles: [ROLES.ADMIN as Role],
             description: 'Test HRIMS API connectivity and data fetching.'
+        },
+        {
+            title: 'Audit Trail',
+            href: '/dashboard/admin/audit-trail',
+            icon: ShieldAlert,
+            roles: [ROLES.ADMIN as Role],
+            description: 'Monitor security events and unauthorized access attempts.'
         }
     ]
   },

@@ -8,22 +8,46 @@ import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DebugLogger } from '@/lib/debug-logger';
+import { PasswordExpirationBanner } from '@/components/auth/password-expiration-banner';
+import { useInactivityTimeout } from '@/hooks/use-inactivity-timeout';
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { isAuthenticated, isLoading, role } = useAuth();
+  const { isAuthenticated, isLoading, role, user } = useAuth();
   const router = useRouter();
+
+  // Enable session inactivity timeout (7 minutes)
+  useInactivityTimeout({
+    enabled: isAuthenticated && !isLoading,
+  });
 
   React.useEffect(() => {
     DebugLogger.log('DASHBOARD_LAYOUT_AUTH_STATE', { isLoading, isAuthenticated, role });
+
+    // Check authentication first
     if (!isLoading && !isAuthenticated) {
       DebugLogger.log('DASHBOARD_LAYOUT_REDIRECTING_TO_LOGIN');
       router.replace('/login');
+      return;
     }
-  }, [isLoading, isAuthenticated, router, role]);
+
+    // Check if password change is required (middleware check to catch bypasses)
+    if (!isLoading && isAuthenticated && user) {
+      const needsPasswordChange = user.mustChangePassword || user.isTemporaryPassword;
+
+      if (needsPasswordChange) {
+        DebugLogger.log('DASHBOARD_LAYOUT_PASSWORD_CHANGE_REQUIRED', {
+          userId: user.id,
+          mustChangePassword: user.mustChangePassword,
+          isTemporaryPassword: user.isTemporaryPassword,
+        });
+        router.replace('/change-password-required');
+      }
+    }
+  }, [isLoading, isAuthenticated, user, router, role]);
 
   if (isLoading || !isAuthenticated) {
     // Show a loading state or a skeleton screen
@@ -47,6 +71,7 @@ export default function DashboardLayout({
       <SidebarInset className="flex flex-col">
         <AppHeader />
         <main className="flex-1 overflow-y-auto p-4 md:p-8 bg-background">
+          <PasswordExpirationBanner />
           {children}
         </main>
       </SidebarInset>

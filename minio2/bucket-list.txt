@@ -1,0 +1,45 @@
+# MinIO Bucket List and Details
+# Generated from current server configuration
+
+## Buckets Overview
+
+1. attachments/
+   - Policy: download (public read access)
+   - Purpose: Store attachment files
+
+2. certificates/
+   - Policy: download (public read access)
+   - Purpose: Store certificate files
+
+3. csms-files/
+   - Policy: private (no public access)
+   - Purpose: Store private CSMS system files
+
+4. documents/
+   - Policy: download (public read access)
+   - Purpose: Main document storage bucket (default bucket)
+
+5. photos/
+   - Policy: download (public read access)
+   - Purpose: Store employee photos and images
+
+## Policy Types Explained
+
+- **download**: Public read access (anyone can download files)
+- **private**: No public access (requires authentication)
+
+## Verification Commands
+
+# List all buckets
+mc ls local
+
+# Check specific bucket policy
+mc anonymous get local/attachments
+mc anonymous get local/certificates
+mc anonymous get local/csms-files
+mc anonymous get local/documents
+mc anonymous get local/photos
+
+# View bucket contents
+mc ls local/documents --recursive
+mc ls local/photos --recursive

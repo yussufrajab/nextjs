@@ -184,39 +184,27 @@ export function CertificateUpload({
       return;
     }
 
-    const urlPath = currentCertificate.url.replace('/api/files/download/', '');
-    
-    fetch(`/api/files/download/${urlPath}`, {
-      credentials: 'include'
-    })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`Download failed: ${response.status} ${response.statusText}`);
-      }
-      return response.blob();
-    })
-    .then(blob => {
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = getFileName(urlPath);
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-      
-      toast({
-        title: "Download successful",
-        description: `${certificateTitle} downloaded successfully`
-      });
-    })
-    .catch(error => {
-      console.error('Download error:', error);
-      toast({
-        title: "Download failed",
-        description: `Failed to download ${certificateTitle}`,
-        variant: "destructive"
-      });
+    // Extract the object key from the URL - handle different URL formats
+    let objectKey = '';
+    if (currentCertificate.url.startsWith('/api/files/download/')) {
+      objectKey = currentCertificate.url.replace('/api/files/download/', '');
+    } else if (currentCertificate.url.startsWith('/api/files/')) {
+      objectKey = currentCertificate.url.replace('/api/files/', '');
+    }
+
+    // Use direct link approach instead of blob for better compatibility
+    const downloadUrl = `/api/files/download/${objectKey}`;
+    const a = document.createElement('a');
+    a.href = downloadUrl;
+    a.download = getFileName(objectKey);
+    a.target = '_blank';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    toast({
+      title: "Download started",
+      description: `Downloading ${certificateTitle}...`
     });
   };
 
@@ -267,7 +255,12 @@ export function CertificateUpload({
 
   const getObjectKey = () => {
     if (!currentCertificate?.url) return null;
-    return currentCertificate.url.replace('/api/files/download/', '');
+    if (currentCertificate.url.startsWith('/api/files/download/')) {
+      return currentCertificate.url.replace('/api/files/download/', '');
+    } else if (currentCertificate.url.startsWith('/api/files/')) {
+      return currentCertificate.url.replace('/api/files/', '');
+    }
+    return null;
   };
 
   return (
@@ -314,16 +307,6 @@ export function CertificateUpload({
                         <Download className="h-3 w-3 mr-2" />
                         Download
                       </DropdownMenuItem>
-                      {canUpload && (
-                        <DropdownMenuItem 
-                          onClick={handleDelete}
-                          className="text-destructive focus:text-destructive"
-                          disabled={isDeleting}
-                        >
-                          <Trash2 className="h-3 w-3 mr-2" />
-                          {isDeleting ? 'Deleting...' : 'Delete'}
-                        </DropdownMenuItem>
-                      )}
                     </DropdownMenuContent>
                   </DropdownMenu>
                     )}

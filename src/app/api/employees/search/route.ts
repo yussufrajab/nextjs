@@ -74,7 +74,8 @@ export async function GET(req: Request) {
             OR: [
               { name: { contains: q, mode: 'insensitive' } },
               { zanId: { contains: q, mode: 'insensitive' } },
-              { payrollNumber: { contains: q, mode: 'insensitive' } }
+              { payrollNumber: { contains: q, mode: 'insensitive' } },
+              { Institution: { name: { contains: q, mode: 'insensitive' } } }
             ]
           }
         ];
@@ -84,12 +85,13 @@ export async function GET(req: Request) {
         whereClause.OR = [
           { name: { contains: q, mode: 'insensitive' } },
           { zanId: { contains: q, mode: 'insensitive' } },
-          { payrollNumber: { contains: q, mode: 'insensitive' } }
+          { payrollNumber: { contains: q, mode: 'insensitive' } },
+          { Institution: { name: { contains: q, mode: 'insensitive' } } }
         ];
       }
     }
 
-    const employees = await db.Employee.findMany({
+    const employees = await db.employee.findMany({
       where: whereClause,
       include: {
         Institution: {
@@ -130,17 +132,31 @@ export async function GET(req: Request) {
 
       const filteredEmployees = employees.filter(emp => emp.institutionId === userInstitutionId);
       console.log(`After institution validation: ${filteredEmployees.length} employees from institution ${userInstitutionId}`);
-      
+
+      // Map EmployeeCertificate to certificates to match TypeScript interface
+      const mappedEmployees = filteredEmployees.map(emp => ({
+        ...emp,
+        certificates: emp.EmployeeCertificate,
+        EmployeeCertificate: undefined
+      }));
+
       return NextResponse.json({
         success: true,
-        data: filteredEmployees
+        data: mappedEmployees
       });
     }
 
     // For CSC roles with full access
+    // Map EmployeeCertificate to certificates to match TypeScript interface
+    const mappedEmployees = employees.map(emp => ({
+      ...emp,
+      certificates: emp.EmployeeCertificate,
+      EmployeeCertificate: undefined
+    }));
+
     return NextResponse.json({
       success: true,
-      data: employees
+      data: mappedEmployees
     });
 
   } catch (error) {

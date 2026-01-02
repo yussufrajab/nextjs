@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { uploadFile, generateObjectKey } from '@/lib/minio';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { db as prisma } from '@/lib/db';
 
 // Document type mapping to database fields
 const DOCUMENT_FIELD_MAPPING = {
@@ -36,7 +34,7 @@ export async function POST(
     }
 
     // Verify employee exists
-    const employee = await prisma.Employee.findUnique({
+    const employee = await prisma.employee.findUnique({
       where: { id: employeeId }
     });
 
@@ -109,7 +107,7 @@ export async function POST(
     const fieldName = DOCUMENT_FIELD_MAPPING[documentType as keyof typeof DOCUMENT_FIELD_MAPPING];
     const documentUrl = `/api/files/download/${objectKey}`;
 
-    await prisma.Employee.update({
+    await prisma.employee.update({
       where: { id: employeeId },
       data: {
         [fieldName]: documentUrl
@@ -150,7 +148,7 @@ export async function GET(
     const { id: employeeId } = await params;
 
     // Fetch employee with document URLs
-    const employee = await prisma.Employee.findUnique({
+    const employee = await prisma.employee.findUnique({
       where: { id: employeeId },
       select: {
         id: true,

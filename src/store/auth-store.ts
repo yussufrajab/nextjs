@@ -3,18 +3,52 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import type { User, Role } from '@/lib/types';
 import { apiClient, LoginResponse } from '@/lib/api-client';
 
+/**
+ * Helper function to set a cookie for middleware authentication
+ * This allows Next.js middleware to read auth state server-side
+ */
+function setAuthCookie(state: { user: User | null; role: Role | null; isAuthenticated: boolean }) {
+  if (typeof window === 'undefined') return;
+
+  const cookieValue = JSON.stringify({
+    state: {
+      user: state.user ? { id: state.user.id, role: state.user.role, username: state.user.username } : null,
+      role: state.role,
+      isAuthenticated: state.isAuthenticated,
+    }
+  });
+
+  // Set cookie with 7 days expiry, httpOnly is not available from client-side
+  // This is read by middleware for server-side route protection
+  const expiryDate = new Date();
+  expiryDate.setDate(expiryDate.getDate() + 7);
+
+  document.cookie = `auth-storage=${encodeURIComponent(cookieValue)}; path=/; expires=${expiryDate.toUTCString()}; SameSite=Strict`;
+}
+
+/**
+ * Helper function to clear the auth cookie
+ */
+function clearAuthCookie() {
+  if (typeof window === 'undefined') return;
+  document.cookie = 'auth-storage=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+}
+
 interface AuthState {
   user: User | null;
   role: Role | null;
   isAuthenticated: boolean;
   accessToken: string | null;
   refreshToken: string | null;
+  sessionToken: string | null; // Session token for concurrent session management
+  csrfToken: string | null; // CSRF token for protection against CSRF attacks
   login: (username: string, password: string) => Promise<User | null>;
   logout: () => Promise<void>;
   setUserManually: (user: User) => void;
   refreshAuthToken: () => Promise<boolean>;
   initializeAuth: () => void;
   updateTokenFromApiClient: (newAccessToken: string) => void;
+  getCSRFToken: () => string | null; // Helper to get CSRF token
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -25,6 +59,8 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       accessToken: null,
       refreshToken: null,
+      sessionToken: null,
+      csrfToken: null,
       
       login: async (username: string, password: string) => {
         try {
@@ -136,6 +172,15 @@ export const useAuthStore = create<AuthState>()(
             // Convert dates to strings for proper serialization
             createdAt: userData.createdAt ? new Date(userData.createdAt) : new Date(),
             updatedAt: userData.lastLoginDate ? new Date(userData.lastLoginDate) : new Date(),
+
+            // Password Policy Fields
+            passwordHistory: userData.passwordHistory,
+            isTemporaryPassword: userData.isTemporaryPassword,
+            temporaryPasswordExpiry: userData.temporaryPasswordExpiry ? new Date(userData.temporaryPasswordExpiry) : null,
+            mustChangePassword: userData.mustChangePassword,
+            lastPasswordChange: userData.lastPasswordChange ? new Date(userData.lastPasswordChange) : null,
+            failedPasswordChangeAttempts: userData.failedPasswordChangeAttempts,
+            passwordChangeLockoutUntil: userData.passwordChangeLockoutUntil ? new Date(userData.passwordChangeLockoutUntil) : null,
           };
           
           console.log('Constructed user object:');
@@ -162,25 +207,38 @@ export const useAuthStore = create<AuthState>()(
           if (token) {
             apiClient.setToken(token);
           }
-          
-          set({ 
-            user, 
-            role: userRole, 
+
+          // Extract session token from backend response
+          const sessionToken = backendResponse?.sessionToken || null;
+          console.log('Session token:', sessionToken ? 'present' : 'missing');
+
+          // Extract CSRF token from backend response
+          const csrfToken = backendResponse?.csrfToken || null;
+          console.log('CSRF token:', csrfToken ? 'present' : 'missing');
+
+          set({
+            user,
+            role: userRole,
             isAuthenticated: true,
             accessToken: token || null,
             refreshToken: refreshToken || null,
+            sessionToken: sessionToken,
+            csrfToken: csrfToken,
           });
-          
+
+          // Set auth cookie for middleware
+          setAuthCookie({ user, role: userRole, isAuthenticated: true });
+
           // Verify the state was set correctly
           const newState = get();
-          console.log('Auth state after setting:', { 
-            userId: newState.user?.id, 
-            role: newState.role, 
+          console.log('Auth state after setting:', {
+            userId: newState.user?.id,
+            role: newState.role,
             isAuthenticated: newState.isAuthenticated,
             hasAccessToken: !!newState.accessToken,
             tokenPreview: newState.accessToken ? newState.accessToken.substring(0, 50) + '...' : 'none'
           });
-          
+
           return user;
         } catch (error) {
           console.error('Login error:', error);
@@ -190,27 +248,40 @@ export const useAuthStore = create<AuthState>()(
 
       logout: async () => {
         try {
-          // Call backend logout endpoint
-          await apiClient.logout();
+          // Get current user ID and session token before clearing state
+          const currentUserId = get().user?.id;
+          const currentSessionToken = get().sessionToken;
+
+          // Call backend logout endpoint with userId and sessionToken
+          await apiClient.logout(currentUserId, currentSessionToken);
         } catch (error) {
           console.error('Logout error:', error);
         } finally {
           // Clear tokens from API client
           apiClient.clearToken();
-          
+
           // Clear local storage
           if (typeof window !== 'undefined') {
             localStorage.removeItem('accessToken');
             localStorage.removeItem('refreshToken');
+            localStorage.removeItem('sessionToken');
           }
-          
+
+          // Clear auth cookie and CSRF cookie
+          clearAuthCookie();
+          if (typeof window !== 'undefined') {
+            document.cookie = 'csrf-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+          }
+
           // Reset store state
-          set({ 
-            user: null, 
-            role: null, 
+          set({
+            user: null,
+            role: null,
             isAuthenticated: false,
             accessToken: null,
             refreshToken: null,
+            sessionToken: null,
+            csrfToken: null,
           });
         }
       },
@@ -264,17 +335,18 @@ export const useAuthStore = create<AuthState>()(
       initializeAuth: () => {
         // For session-based auth, just check if user data is persisted
         const currentState = get();
-        console.log('initializeAuth - current state:', { 
-          hasUser: !!currentState.user, 
+        console.log('initializeAuth - current state:', {
+          hasUser: !!currentState.user,
           role: currentState.role,
           userRole: currentState.user?.role,
           isAuthenticated: currentState.isAuthenticated,
           username: currentState.user?.username
         });
-        
+
         // Clear inconsistent auth state - if authenticated but no user data
         if (currentState.isAuthenticated && (!currentState.user || !currentState.role)) {
           console.log('Clearing inconsistent auth state - authenticated but no user/role data');
+          clearAuthCookie();
           set({ user: null, role: null, isAuthenticated: false });
           if (typeof window !== 'undefined') {
             localStorage.removeItem('accessToken');
@@ -282,14 +354,15 @@ export const useAuthStore = create<AuthState>()(
           }
           return;
         }
-        
+
         // Clear stale development data
         if (currentState.user?.name === 'System Administrator') {
           console.log('Clearing stale development user data');
+          clearAuthCookie();
           set({ user: null, role: null, isAuthenticated: false });
           return;
         }
-        
+
         // Ensure role consistency after initialization
         if (currentState.user && currentState.user.role && currentState.role !== currentState.user.role) {
           console.log('initializeAuth: Fixing role mismatch', {
@@ -298,10 +371,19 @@ export const useAuthStore = create<AuthState>()(
           });
           set({ role: currentState.user.role });
         }
-        
+
         if (currentState.user && !currentState.isAuthenticated) {
           console.log('Setting isAuthenticated to true');
           set({ isAuthenticated: true });
+        }
+
+        // Ensure cookie is set for valid auth state
+        if (currentState.isAuthenticated && currentState.user && currentState.role) {
+          setAuthCookie({
+            user: currentState.user,
+            role: currentState.role,
+            isAuthenticated: currentState.isAuthenticated
+          });
         }
       },
 
@@ -311,6 +393,11 @@ export const useAuthStore = create<AuthState>()(
         if (typeof window !== 'undefined') {
           localStorage.setItem('accessToken', newAccessToken);
         }
+      },
+
+      // Helper to get CSRF token
+      getCSRFToken: () => {
+        return get().csrfToken;
       },
     }),
     {
@@ -331,6 +418,9 @@ export const useAuthStore = create<AuthState>()(
           ...state.user,
           createdAt: state.user.createdAt instanceof Date ? state.user.createdAt : new Date(state.user.createdAt),
           updatedAt: state.user.updatedAt instanceof Date ? state.user.updatedAt : new Date(state.user.updatedAt),
+          temporaryPasswordExpiry: state.user.temporaryPasswordExpiry instanceof Date ? state.user.temporaryPasswordExpiry : (state.user.temporaryPasswordExpiry ? new Date(state.user.temporaryPasswordExpiry) : null),
+          lastPasswordChange: state.user.lastPasswordChange instanceof Date ? state.user.lastPasswordChange : (state.user.lastPasswordChange ? new Date(state.user.lastPasswordChange) : null),
+          passwordChangeLockoutUntil: state.user.passwordChangeLockoutUntil instanceof Date ? state.user.passwordChangeLockoutUntil : (state.user.passwordChangeLockoutUntil ? new Date(state.user.passwordChangeLockoutUntil) : null),
         } : null;
         
         const persistedState = {
@@ -339,6 +429,8 @@ export const useAuthStore = create<AuthState>()(
           isAuthenticated: state.isAuthenticated,
           accessToken: state.accessToken,
           refreshToken: state.refreshToken,
+          sessionToken: state.sessionToken,
+          csrfToken: state.csrfToken,
         };
         
         console.log('State being persisted:', persistedState);
@@ -367,6 +459,16 @@ export const useAuthStore = create<AuthState>()(
               }
               if (typeof state.user.updatedAt === 'string') {
                 state.user.updatedAt = new Date(state.user.updatedAt);
+              }
+              // Restore password policy date fields
+              if (typeof state.user.temporaryPasswordExpiry === 'string') {
+                state.user.temporaryPasswordExpiry = new Date(state.user.temporaryPasswordExpiry);
+              }
+              if (typeof state.user.lastPasswordChange === 'string') {
+                state.user.lastPasswordChange = new Date(state.user.lastPasswordChange);
+              }
+              if (typeof state.user.passwordChangeLockoutUntil === 'string') {
+                state.user.passwordChangeLockoutUntil = new Date(state.user.passwordChangeLockoutUntil);
               }
             }
             

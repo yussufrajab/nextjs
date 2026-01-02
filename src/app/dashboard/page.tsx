@@ -101,6 +101,46 @@ export default function DashboardPage() {
   const [urgentCount, setUrgentCount] = React.useState(0);
   const [isPageLoading, setIsPageLoading] = React.useState(true);
 
+  // Handle unauthorized access errors from middleware
+  React.useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const error = searchParams.get('error');
+    const attemptedPath = searchParams.get('attempted');
+    const auditDataStr = searchParams.get('auditData');
+
+    if (error === 'unauthorized' && attemptedPath) {
+      // Show toast message to user
+      toast({
+        title: 'Access Denied',
+        description: `You do not have permission to access ${attemptedPath}. Please contact your administrator if you believe this is an error.`,
+        variant: 'destructive',
+      });
+
+      // Log audit event asynchronously
+      if (auditDataStr) {
+        try {
+          const auditData = JSON.parse(auditDataStr);
+          fetch('/api/audit/log', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(auditData),
+          }).catch(err => {
+            console.error('[Dashboard] Failed to log audit event:', err);
+          });
+        } catch (err) {
+          console.error('[Dashboard] Failed to parse audit data:', err);
+        }
+      }
+
+      // Clear the error from URL
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete('error');
+      newUrl.searchParams.delete('attempted');
+      newUrl.searchParams.delete('auditData');
+      window.history.replaceState({}, '', newUrl.pathname);
+    }
+  }, []);
+
   React.useEffect(() => {
     if (!isAuthLoading && (role === ROLES.EMPLOYEE || role === ROLES.PO)) {
       router.replace('/dashboard/profile');

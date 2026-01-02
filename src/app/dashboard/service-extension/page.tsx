@@ -393,9 +393,10 @@ export default function ServiceExtensionPage() {
     // Create optimistic new request to show immediately
     const optimisticRequest: ServiceExtensionRequest = {
       id: `temp-${Date.now()}`, // Temporary ID until server responds
-      employee: {
+      Employee: {
         ...employeeDetails,
-        institution: { name: typeof employeeDetails.institution === 'object' ? employeeDetails.Institution.name : employeeDetails.institution || 'N/A' }
+        phoneNumber: employeeDetails.phoneNumber ?? undefined,
+        institution: { name: typeof employeeDetails.institution === 'object' ? employeeDetails.institution.name : employeeDetails.institution || 'N/A' }
       },
       submittedBy: { name: user.name },
       status: 'Pending HRMO/HHRMD Review',
@@ -643,8 +644,8 @@ export default function ServiceExtensionPage() {
                       <div><Label className="text-muted-foreground">ZSSF Number:</Label> <p className="font-semibold text-foreground">{employeeDetails.zssfNumber || 'N/A'}</p></div>
                       <div><Label className="text-muted-foreground">Department:</Label> <p className="font-semibold text-foreground">{employeeDetails.department || 'N/A'}</p></div>
                       <div><Label className="text-muted-foreground">Cadre/Position:</Label> <p className="font-semibold text-foreground">{employeeDetails.cadre || 'N/A'}</p></div>
-                      <div><Label className="text-muted-foreground">Employment Date:</Label> <p className="font-semibold text-foreground">{employeeDetails.employmentDate ? format(parseISO(employeeDetails.employmentDate), 'PPP') : 'N/A'}</p></div>
-                      <div><Label className="text-muted-foreground">Date of Birth:</Label> <p className="font-semibold text-foreground">{employeeDetails.dateOfBirth ? format(parseISO(employeeDetails.dateOfBirth), 'PPP') : 'N/A'}</p></div>
+                      <div><Label className="text-muted-foreground">Employment Date:</Label> <p className="font-semibold text-foreground">{employeeDetails.employmentDate ? format(typeof employeeDetails.employmentDate === 'string' ? parseISO(employeeDetails.employmentDate) : employeeDetails.employmentDate, 'PPP') : 'N/A'}</p></div>
+                      <div><Label className="text-muted-foreground">Date of Birth:</Label> <p className="font-semibold text-foreground">{employeeDetails.dateOfBirth ? format(typeof employeeDetails.dateOfBirth === 'string' ? parseISO(employeeDetails.dateOfBirth) : employeeDetails.dateOfBirth, 'PPP') : 'N/A'}</p></div>
                       <div className="lg:col-span-1"><Label className="text-muted-foreground">Institution:</Label> <p className="font-semibold text-foreground">{typeof employeeDetails.institution === 'object' ? employeeDetails.institution?.name : employeeDetails.institution || 'N/A'}</p></div>
                     </div>
                   </div>
@@ -688,7 +689,7 @@ export default function ServiceExtensionPage() {
                     <FileUpload
                       folder="service-extension"
                       value={letterOfRequestFile}
-                      onChange={setLetterOfRequestFile}
+                      onChange={(key) => setLetterOfRequestFile(Array.isArray(key) ? key[0] : key)}
                       onPreview={handlePreviewFile}
                       disabled={isProbationError || hasPendingServiceExtension || isSubmitting}
                       required
@@ -699,7 +700,7 @@ export default function ServiceExtensionPage() {
                     <FileUpload
                       folder="service-extension"
                       value={employeeConsentLetterFile}
-                      onChange={setEmployeeConsentLetterFile}
+                      onChange={(key) => setEmployeeConsentLetterFile(Array.isArray(key) ? key[0] : key)}
                       onPreview={handlePreviewFile}
                       disabled={isProbationError || hasPendingServiceExtension || isSubmitting}
                       required
@@ -1026,14 +1027,14 @@ export default function ServiceExtensionPage() {
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Employment Date:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee?.employmentDate ? format(parseISO(selectedRequest.Employee.employmentDate), 'PPP') : 'N/A'}</p></div>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee?.employmentDate ? format(typeof selectedRequest.Employee.employmentDate === 'string' ? parseISO(selectedRequest.Employee.employmentDate) : selectedRequest.Employee.employmentDate, 'PPP') : 'N/A'}</p></div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Date of Birth:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee?.dateOfBirth ? format(parseISO(selectedRequest.Employee.dateOfBirth), 'PPP') : 'N/A'}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee?.dateOfBirth ? format(typeof selectedRequest.Employee.dateOfBirth === 'string' ? parseISO(selectedRequest.Employee.dateOfBirth) : selectedRequest.Employee.dateOfBirth, 'PPP') : 'N/A'}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Institution:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee?.Institution?.name || 'N/A'}</p>
+                        <p className="col-span-2 font-medium text-foreground">{typeof selectedRequest.Employee?.institution === 'object' ? selectedRequest.Employee.institution.name : (selectedRequest.Employee?.institution || 'N/A')}</p>
                     </div>
                 </div>
                  <div className="space-y-1">
@@ -1233,7 +1234,7 @@ export default function ServiceExtensionPage() {
                   <FileUpload
                     folder="service-extension"
                     value={correctedLetterOfRequestFile}
-                    onChange={setCorrectedLetterOfRequestFile}
+                    onChange={(key) => setCorrectedLetterOfRequestFile(Array.isArray(key) ? key[0] : key)}
                     onPreview={handlePreviewFile}
                     required
                   />
@@ -1246,7 +1247,7 @@ export default function ServiceExtensionPage() {
                   <FileUpload
                     folder="service-extension"
                     value={correctedEmployeeConsentLetterFile}
-                    onChange={setCorrectedEmployeeConsentLetterFile}
+                    onChange={(key) => setCorrectedEmployeeConsentLetterFile(Array.isArray(key) ? key[0] : key)}
                     onPreview={handlePreviewFile}
                     required
                   />

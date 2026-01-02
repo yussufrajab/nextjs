@@ -2,6 +2,10 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { shouldApplyInstitutionFilter } from '@/lib/role-utils';
 import { v4 as uuidv4 } from 'uuid';
+import { logRequestApproval, logRequestRejection, getClientIp } from '@/lib/audit-logger';
+
+// Cache configuration for retirement requests
+const CACHE_TTL = 30; // 30 seconds cache (request status changes frequently)
 
 export async function GET(req: Request) {
   try {
@@ -57,7 +61,11 @@ export async function GET(req: Request) {
       User_RetirementRequest_reviewedByIdToUser: undefined
     }));
 
-    return NextResponse.json(transformedRequests);
+    // Set cache headers for retirement requests
+    const headers = new Headers();
+    headers.set('Cache-Control', `public, s-maxage=${CACHE_TTL}, stale-while-revalidate=${CACHE_TTL * 2}`);
+
+    return NextResponse.json(transformedRequests, { headers });
   } catch (error) {
     console.error("[RETIREMENT_GET]", error);
     return NextResponse.json({ success: false, message: 'Internal Server Error' }, { status: 500 });
@@ -149,11 +157,16 @@ export async function PATCH(req: Request) {
     const { id, ...updateData } = body;
 
     if (!id) {
-      return NextResponse.json({ 
-        success: false, 
-        message: 'Request ID is required' 
+      return NextResponse.json({
+        success: false,
+        message: 'Request ID is required'
       }, { status: 400 });
     }
+
+    // Get IP and user agent for audit logging
+    const headers = new Headers(req.headers);
+    const ipAddress = getClientIp(headers);
+    const userAgent = headers.get('user-agent');
 
     // Convert date string to Date object if present
     if (updateData.proposedDate) {
@@ -185,14 +198,75 @@ export async function PATCH(req: Request) {
 
     // If retirement request is approved by Commission, update employee status
     if (updateData.status === "Approved by Commission" && updatedRequest.Employee) {
-      await db.Employee.update({
+      await db.employee.update({
         where: { id: updatedRequest.Employee.id },
         data: { status: "Retired" }
       });
       console.log(`Employee ${updatedRequest.Employee.name} status updated to "Retired" after retirement approval`);
     }
 
-    
+    // Log audit event for approvals and rejections
+    if (updateData.reviewedById && updateData.status) {
+      const reviewer = await db.user.findUnique({
+        where: { id: updateData.reviewedById },
+        select: { username: true, role: true }
+      });
+
+      if (reviewer) {
+        const statusLower = updateData.status.toLowerCase();
+        const isApproval = statusLower.includes('approved') && !statusLower.includes('rejected');
+        const isRejection = statusLower.includes('rejected');
+
+        console.log('[AUDIT] Retirement status update:', {
+          status: updateData.status,
+          isApproval,
+          isRejection,
+          reviewedById: updateData.reviewedById,
+          reviewer: reviewer.username,
+        });
+
+        if (isApproval) {
+          await logRequestApproval({
+            requestType: 'Retirement',
+            requestId: id,
+            employeeId: updatedRequest.employeeId,
+            employeeName: updatedRequest.Employee?.name,
+            employeeZanId: updatedRequest.Employee?.zanId,
+            approvedById: updateData.reviewedById,
+            approvedByUsername: reviewer.username,
+            approvedByRole: reviewer.role || 'Unknown',
+            reviewStage: updateData.reviewStage,
+            ipAddress,
+            userAgent,
+            additionalData: {
+              retirementType: updatedRequest.retirementType,
+              proposedDate: updatedRequest.proposedDate,
+            },
+          });
+        } else if (isRejection) {
+          await logRequestRejection({
+            requestType: 'Retirement',
+            requestId: id,
+            employeeId: updatedRequest.employeeId,
+            employeeName: updatedRequest.Employee?.name,
+            employeeZanId: updatedRequest.Employee?.zanId,
+            rejectedById: updateData.reviewedById,
+            rejectedByUsername: reviewer.username,
+            rejectedByRole: reviewer.role || 'Unknown',
+            rejectionReason: updateData.rejectionReason,
+            reviewStage: updateData.reviewStage,
+            ipAddress,
+            userAgent,
+            additionalData: {
+              retirementType: updatedRequest.retirementType,
+              proposedDate: updatedRequest.proposedDate,
+            },
+          });
+        }
+      }
+    }
+
+
     // Transform the data to match frontend expectations
     const transformedRequest = {
       ...updatedRequest,

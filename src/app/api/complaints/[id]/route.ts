@@ -13,13 +13,14 @@ const updateComplaintSchema = z.object({
   reviewedById: z.string().optional(),
 });
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const body = await req.json();
     const validatedData = updateComplaintSchema.parse(body);
 
     const updatedComplaint = await db.complaint.update({
-      where: { id: params.id },
+      where: { id },
       data: validatedData,
       include: {
         User_Complaint_complainantIdToUser: {
@@ -67,7 +68,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     // If the complainant has an employeeId, fetch employee details separately
     let employeeDetails = null;
     if (updatedComplaint.User_Complaint_complainantIdToUser.employeeId) {
-      employeeDetails = await db.Employee.findUnique({
+      employeeDetails = await db.employee.findUnique({
         where: { id: updatedComplaint.User_Complaint_complainantIdToUser.employeeId },
         select: {
           zanId: true,

@@ -14,8 +14,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 
 import { ROLES } from '@/lib/constants';
-import { Pencil, PlusCircle, Loader2, Trash2 } from 'lucide-react';
+import { Pencil, PlusCircle, Loader2, Trash2, Lock, Unlock, KeyRound, ShieldAlert } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
 import type { User, Role } from '@/lib/types';
 import type { Institution } from '../institutions/page';
 import { Switch } from '@/components/ui/switch';
@@ -23,6 +24,12 @@ import { Badge } from '@/components/ui/badge';
 import { Pagination } from '@/components/shared/pagination';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { apiClient } from '@/lib/api-client';
+import { PasswordStrengthMeter } from '@/components/auth/password-strength-meter';
+import { validatePasswordComplexity, isCommonPassword } from '@/lib/password-utils';
+import { RouteGuard } from '@/components/auth/route-guard';
+import { UnlockAccountModal } from '@/components/admin/unlock-account-modal';
+import { LockAccountModal } from '@/components/admin/lock-account-modal';
+import { ResetPasswordModal } from '@/components/admin/reset-password-modal';
 
 
 const userSchema = z.object({
@@ -35,7 +42,15 @@ const userSchema = z.object({
     .regex(/^\d{10}$/, "Phone number must contain only digits."),
   role: z.string().min(1, "Role is required"),
   institutionId: z.string().min(1, "Institution is required."),
-  password: z.string().min(6, "Password must be at least 6 characters.").optional(),
+  password: z.string()
+    .min(8, "Password must be at least 8 characters.")
+    .refine((pwd) => validatePasswordComplexity(pwd), {
+      message: "Password must contain at least one uppercase, lowercase, number, or special character."
+    })
+    .refine((pwd) => !isCommonPassword(pwd), {
+      message: "This password is too common and easily guessable. Please choose a stronger password."
+    })
+    .optional(),
 });
 
 const userEditSchema = z.object({
@@ -48,7 +63,15 @@ const userEditSchema = z.object({
     .regex(/^\d{10}$/, "Phone number must contain only digits."),
   role: z.string().min(1, "Role is required"),
   institutionId: z.string().min(1, "Institution is required."),
-  password: z.string().min(6, "Password must be at least 6 characters.").optional(),
+  password: z.string()
+    .min(8, "Password must be at least 8 characters.")
+    .refine((pwd) => validatePasswordComplexity(pwd), {
+      message: "Password must contain at least one uppercase, lowercase, number, or special character."
+    })
+    .refine((pwd) => !isCommonPassword(pwd), {
+      message: "This password is too common and easily guessable. Please choose a stronger password."
+    })
+    .optional(),
 });
 
 type UserFormValues = z.infer<typeof userSchema>;
@@ -56,6 +79,7 @@ type UserEditFormValues = z.infer<typeof userEditSchema>;
 type UserWithInstitutionName = User & { institution: string; isMockPhoneNumber?: boolean; isMockEmail?: boolean };
 
 export default function UserManagementPage() {
+  const { user: currentUser } = useAuth();
   const [users, setUsers] = useState<UserWithInstitutionName[]>([]);
   const [institutions, setInstitutions] = useState<Institution[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -64,6 +88,12 @@ export default function UserManagementPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRole, setSelectedRole] = useState<string>('');
+
+  // Lockout management modals
+  const [unlockModalOpen, setUnlockModalOpen] = useState(false);
+  const [lockModalOpen, setLockModalOpen] = useState(false);
+  const [resetPasswordModalOpen, setResetPasswordModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserWithInstitutionName | null>(null);
 
   // Define role categories based on clarified requirements
   const CSC_INTERNAL_ROLES = ['HHRMD', 'HRMO', 'DO', 'PO', 'CSCS']; // Must be from CSC only
@@ -87,7 +117,7 @@ export default function UserManagementPage() {
       // Transform the data to include institution name
       const transformedUsers = data.map((user: any) => ({
         ...user,
-        institution: user.institution || 'N/A'  // Backend returns institution name as string
+        institution: user.institution || 'N/A'  // Backend returns Institution (capital I) as string
       }));
       setUsers(transformedUsers);
     } catch (error) {
@@ -254,13 +284,34 @@ export default function UserManagementPage() {
     }
   };
 
+  // Lockout management handlers
+  const handleOpenUnlockModal = (user: UserWithInstitutionName) => {
+    setSelectedUser(user);
+    setUnlockModalOpen(true);
+  };
+
+  const handleOpenLockModal = (user: UserWithInstitutionName) => {
+    setSelectedUser(user);
+    setLockModalOpen(true);
+  };
+
+  const handleOpenResetPasswordModal = (user: UserWithInstitutionName) => {
+    setSelectedUser(user);
+    setResetPasswordModalOpen(true);
+  };
+
+  const handleModalSuccess = async () => {
+    await fetchUsers();
+  };
+
   const filteredUsers = users.filter(user =>
     user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (user.email && user.email.toLowerCase().includes(searchQuery.toLowerCase())) ||
     (user.zanId && user.zanId.toLowerCase().includes(searchQuery.toLowerCase())) ||
-    user.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (user.phoneNumber && user.phoneNumber.includes(searchQuery))
+    (user.role && user.role.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (user.phoneNumber && user.phoneNumber.includes(searchQuery)) ||
+    (user.institution && user.institution.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
@@ -270,11 +321,12 @@ export default function UserManagementPage() {
   );
 
   return (
-    <div>
-      <PageHeader
-        title="User Management"
-        description="Create, update, and manage user accounts and access levels."
-        actions={
+    <RouteGuard>
+      <div>
+        <PageHeader
+          title="User Management"
+          description="Create, update, and manage user accounts and access levels."
+          actions={
           <Button onClick={openCreateDialog}>
             <PlusCircle className="mr-2 h-4 w-4" /> Add New User
           </Button>
@@ -282,7 +334,7 @@ export default function UserManagementPage() {
       />
       <div className="flex justify-end mb-4">
         <Input
-          placeholder="Search by name, username, email, ZanID, role, or phone number..."
+          placeholder="Search by name, username, email, ZanID, role, institution, or phone..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="max-w-sm"
@@ -310,63 +362,120 @@ export default function UserManagementPage() {
                 <TableHead>Role</TableHead>
                 <TableHead>Institution</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Account</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedUsers.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-medium">{user.name}</TableCell>
-                  <TableCell>{user.username}</TableCell>
-                  <TableCell>
-                    {user.email || 'N/A'}
-                    {user.isMockEmail && (
-                      <span className="ml-1 text-xs text-muted-foreground">(mock)</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {user.phoneNumber || 'N/A'}
-                  </TableCell>
-                  <TableCell>{user.role}</TableCell>
-                  <TableCell>{user.institution || 'N/A'}</TableCell>
-                  <TableCell>
-                    <Badge variant={user.active ? 'default' : 'secondary'}>
-                      {user.active ? 'Active' : 'Inactive'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right space-x-2">
-                    <Switch
-                        checked={user.active}
-                        onCheckedChange={() => toggleUserStatus(user.id, user.active)}
-                        aria-label="Toggle user status"
-                      />
-                    <Button variant="outline" size="icon" onClick={() => openEditDialog(user)}>
-                      <Pencil className="h-4 w-4" />
-                      <span className="sr-only">Edit</span>
-                    </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                         <Button variant="destructive" size="icon">
-                            <Trash2 className="h-4 w-4" />
-                            <span className="sr-only">Delete</span>
+              {paginatedUsers.map((user) => {
+                // Determine if account is locked
+                const isLocked = !user.active && (user.isManuallyLocked || user.loginLockedUntil);
+                const lockType = user.isManuallyLocked ? 'Manual' : user.loginLockoutType === 'security' ? 'Security' : 'Standard';
+
+                return (
+                  <TableRow key={user.id}>
+                    <TableCell className="font-medium">{user.name}</TableCell>
+                    <TableCell>{user.username}</TableCell>
+                    <TableCell>
+                      {user.email || 'N/A'}
+                      {user.isMockEmail && (
+                        <span className="ml-1 text-xs text-muted-foreground">(mock)</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {user.phoneNumber || 'N/A'}
+                    </TableCell>
+                    <TableCell>{user.role}</TableCell>
+                    <TableCell>{user.institution || 'N/A'}</TableCell>
+                    <TableCell>
+                      <Badge variant={user.active ? 'default' : 'secondary'}>
+                        {user.active ? 'Active' : 'Inactive'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {isLocked ? (
+                        <Badge variant="destructive" className="gap-1">
+                          <ShieldAlert className="h-3 w-3" />
+                          Locked ({lockType})
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="gap-1">
+                          <Unlock className="h-3 w-3" />
+                          Unlocked
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <Switch
+                          checked={user.active}
+                          onCheckedChange={() => toggleUserStatus(user.id, user.active)}
+                          aria-label="Toggle user status"
+                        />
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => openEditDialog(user)}
+                          title="Edit user"
+                        >
+                          <Pencil className="h-4 w-4" />
+                          <span className="sr-only">Edit</span>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => handleOpenResetPasswordModal(user)}
+                          title="Reset password"
+                        >
+                          <KeyRound className="h-4 w-4" />
+                          <span className="sr-only">Reset Password</span>
+                        </Button>
+                        {isLocked ? (
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => handleOpenUnlockModal(user)}
+                            title="Unlock account"
+                          >
+                            <Unlock className="h-4 w-4 text-green-600" />
+                            <span className="sr-only">Unlock Account</span>
                           </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                          <AlertDialogHeader>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => handleOpenLockModal(user)}
+                            title="Lock account"
+                          >
+                            <Lock className="h-4 w-4 text-orange-600" />
+                            <span className="sr-only">Lock Account</span>
+                          </Button>
+                        )}
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="destructive" size="icon" title="Delete user">
+                              <Trash2 className="h-4 w-4" />
+                              <span className="sr-only">Delete</span>
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
                               <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                               <AlertDialogDescription>
-                                  This action cannot be undone. This will permanently delete the user account for {user.name}.
+                                This action cannot be undone. This will permanently delete the user account for {user.name}.
                               </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
                               <AlertDialogCancel>Cancel</AlertDialogCancel>
                               <AlertDialogAction onClick={() => handleDeleteUser(user.id)}>Continue</AlertDialogAction>
-                          </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </TableCell>
-                </TableRow>
-              ))}
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
           <Pagination
@@ -427,7 +536,31 @@ export default function UserManagementPage() {
                 <FormItem><FormLabel>Phone Number</FormLabel><FormControl><Input placeholder="e.g., 0777123456" maxLength={10} {...field} /></FormControl><FormMessage /></FormItem>
               )}/>
               <FormField name="password" control={form.control} render={({ field }) => (
-                <FormItem><FormLabel>Password</FormLabel><FormControl><Input type="password" placeholder={editingUser ? "New password (optional)" : "Enter temporary password"} {...field} /></FormControl><FormMessage /></FormItem>
+                <FormItem>
+                  <FormLabel>
+                    {editingUser ? "Password (Optional)" : "Temporary Password"}
+                    {!editingUser && <span className="text-red-500 ml-1">*</span>}
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      placeholder={editingUser ? "New password (optional)" : "Enter temporary password"}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                  {field.value && (
+                    <PasswordStrengthMeter
+                      password={field.value}
+                      showRequirements
+                    />
+                  )}
+                  {!editingUser && (
+                    <p className="text-sm text-muted-foreground mt-1">
+                      User must change this password on first login. Password expires in 7 days.
+                    </p>
+                  )}
+                </FormItem>
               )}/>
               <FormField name="role" control={form.control} render={({ field }) => (
                 <FormItem>
@@ -435,8 +568,8 @@ export default function UserManagementPage() {
                   <Select onValueChange={handleRoleChange} defaultValue={field.value}>
                     <FormControl><SelectTrigger><SelectValue placeholder="Select a role" /></SelectTrigger></FormControl>
                     <SelectContent>
-                      {Object.values(ROLES).map(role => (
-                        <SelectItem key={role} value={role}>
+                      {Object.values(ROLES).filter(role => role !== null).map(role => (
+                        <SelectItem key={role!} value={role!}>
                           {role}
                           {CSC_INTERNAL_ROLES.includes(role) && (
                             <span className="text-xs text-muted-foreground ml-2">(CSC Internal)</span>
@@ -515,6 +648,40 @@ export default function UserManagementPage() {
           </Form>
         </DialogContent>
       </Dialog>
-    </div>
+
+      {/* Lockout Management Modals */}
+      {selectedUser && currentUser && (
+        <>
+          <UnlockAccountModal
+            isOpen={unlockModalOpen}
+            onClose={() => setUnlockModalOpen(false)}
+            userId={selectedUser.id}
+            username={selectedUser.username}
+            adminId={currentUser.id}
+            onSuccess={handleModalSuccess}
+          />
+
+          <LockAccountModal
+            isOpen={lockModalOpen}
+            onClose={() => setLockModalOpen(false)}
+            userId={selectedUser.id}
+            username={selectedUser.username}
+            userRole={selectedUser.role as string}
+            adminId={currentUser.id}
+            onSuccess={handleModalSuccess}
+          />
+
+          <ResetPasswordModal
+            isOpen={resetPasswordModalOpen}
+            onClose={() => setResetPasswordModalOpen(false)}
+            userId={selectedUser.id}
+            username={selectedUser.username}
+            adminId={currentUser.id}
+            onSuccess={handleModalSuccess}
+          />
+        </>
+      )}
+      </div>
+    </RouteGuard>
   );
 }

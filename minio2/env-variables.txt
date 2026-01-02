@@ -1,0 +1,15 @@
+# MinIO Environment Variables
+# Copy these to your .env.local file on the new server
+
+MINIO_ACCESS_KEY=csmsadmin
+MINIO_SECRET_KEY=Mamlaka2020MinIO
+MINIO_ENDPOINT=localhost
+MINIO_PORT=9000
+MINIO_CONSOLE_PORT=9001
+MINIO_USE_SSL=false
+MINIO_BUCKET_NAME=documents
+MINIO_DATA_DIR=/minio/data
+
+# MinIO Server Root Credentials (for server startup)
+MINIO_ROOT_USER=csmsadmin
+MINIO_ROOT_PASSWORD=Mamlaka2020MinIO

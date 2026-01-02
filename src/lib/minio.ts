@@ -25,7 +25,7 @@ const minioClient = new MinioClient({
 });
 
 // Default bucket name
-export const DEFAULT_BUCKET = 'csms-files';
+export const DEFAULT_BUCKET = process.env.MINIO_BUCKET_NAME || 'documents';
 
 // Initialize MinIO bucket if it doesn't exist
 export async function ensureBucketExists(bucketName: string = DEFAULT_BUCKET) {

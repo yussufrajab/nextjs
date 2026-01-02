@@ -498,8 +498,8 @@ export default function ResignationPage() {
                       <div><Label className="text-muted-foreground">ZSSF Number:</Label> <p className="font-semibold text-foreground">{employeeDetails.zssfNumber || 'N/A'}</p></div>
                       <div><Label className="text-muted-foreground">Department:</Label> <p className="font-semibold text-foreground">{employeeDetails.department || 'N/A'}</p></div>
                       <div><Label className="text-muted-foreground">Cadre/Position:</Label> <p className="font-semibold text-foreground">{employeeDetails.cadre || 'N/A'}</p></div>
-                      <div><Label className="text-muted-foreground">Employment Date:</Label> <p className="font-semibold text-foreground">{employeeDetails.employmentDate ? format(parseISO(employeeDetails.employmentDate), 'PPP') : 'N/A'}</p></div>
-                      <div><Label className="text-muted-foreground">Date of Birth:</Label> <p className="font-semibold text-foreground">{employeeDetails.dateOfBirth ? format(parseISO(employeeDetails.dateOfBirth), 'PPP') : 'N/A'}</p></div>
+                      <div><Label className="text-muted-foreground">Employment Date:</Label> <p className="font-semibold text-foreground">{employeeDetails.employmentDate ? format(typeof employeeDetails.employmentDate === 'string' ? parseISO(employeeDetails.employmentDate) : employeeDetails.employmentDate, 'PPP') : 'N/A'}</p></div>
+                      <div><Label className="text-muted-foreground">Date of Birth:</Label> <p className="font-semibold text-foreground">{employeeDetails.dateOfBirth ? format(typeof employeeDetails.dateOfBirth === 'string' ? parseISO(employeeDetails.dateOfBirth) : employeeDetails.dateOfBirth, 'PPP') : 'N/A'}</p></div>
                       <div className="lg:col-span-1"><Label className="text-muted-foreground">Institution:</Label> <p className="font-semibold text-foreground">{typeof employeeDetails.institution === 'object' ? employeeDetails.institution?.name : employeeDetails.institution || 'N/A'}</p></div>
                       <div className="md:col-span-2 lg:col-span-3"><Label className="text-muted-foreground">Current Status:</Label> <p className={`font-semibold ${cannotSubmitResignation ? 'text-destructive' : 'text-green-600'}`}>{employeeDetails.status || 'N/A'}</p></div>
                     </div>
@@ -536,7 +536,7 @@ export default function ResignationPage() {
                     <FileUpload
                       folder="resignation"
                       value={letterOfRequestFile}
-                      onChange={setLetterOfRequestFile}
+                      onChange={(key) => setLetterOfRequestFile(Array.isArray(key) ? key[0] : key)}
                       onPreview={handlePreviewFile}
                       disabled={isSubmitting || cannotSubmitResignation || hasPendingResignation}
                       required
@@ -547,7 +547,7 @@ export default function ResignationPage() {
                     <FileUpload
                       folder="resignation"
                       value={noticeOrReceiptFile}
-                      onChange={setNoticeOrReceiptFile}
+                      onChange={(key) => setNoticeOrReceiptFile(Array.isArray(key) ? key[0] : key)}
                       onPreview={handlePreviewFile}
                       disabled={isSubmitting || cannotSubmitResignation || hasPendingResignation}
                       required
@@ -861,15 +861,15 @@ export default function ResignationPage() {
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Employment Date:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.employmentDate ? format(parseISO(selectedRequest.Employee.employmentDate), 'PPP') : 'N/A'}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.employmentDate ? format(typeof selectedRequest.Employee.employmentDate === 'string' ? parseISO(selectedRequest.Employee.employmentDate) : selectedRequest.Employee.employmentDate, 'PPP') : 'N/A'}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Date of Birth:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.dateOfBirth ? format(parseISO(selectedRequest.Employee.dateOfBirth), 'PPP') : 'N/A'}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.dateOfBirth ? format(typeof selectedRequest.Employee.dateOfBirth === 'string' ? parseISO(selectedRequest.Employee.dateOfBirth) : selectedRequest.Employee.dateOfBirth, 'PPP') : 'N/A'}</p>
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Institution:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.institution?.name || 'N/A'}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.institution && typeof selectedRequest.Employee.institution === 'object' ? selectedRequest.Employee.institution.name : (selectedRequest.Employee.institution || 'N/A')}</p>
                     </div>
                 </div>
                 <div className="space-y-1">
@@ -1048,7 +1048,7 @@ export default function ResignationPage() {
                   <FileUpload
                     folder="resignation"
                     value={correctedLetterOfRequestFile}
-                    onChange={setCorrectedLetterOfRequestFile}
+                    onChange={(key) => setCorrectedLetterOfRequestFile(Array.isArray(key) ? key[0] : key)}
                     onPreview={handlePreviewFile}
                     required
                   />
@@ -1061,7 +1061,7 @@ export default function ResignationPage() {
                   <FileUpload
                     folder="resignation"
                     value={correctedNoticeOrReceiptFile}
-                    onChange={setCorrectedNoticeOrReceiptFile}
+                    onChange={(key) => setCorrectedNoticeOrReceiptFile(Array.isArray(key) ? key[0] : key)}
                     onPreview={handlePreviewFile}
                     required
                   />

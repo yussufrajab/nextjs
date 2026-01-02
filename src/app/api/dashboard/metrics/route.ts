@@ -33,6 +33,11 @@ export async function GET(req: Request) {
     const userRole = searchParams.get('userRole');
     const userInstitutionId = searchParams.get('userInstitutionId');
 
+    // Get pagination parameters
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '10');
+    const skip = (page - 1) * limit;
+
     console.log('Dashboard metrics API called with:', { userRole, userInstitutionId });
 
     // Determine if institution filtering should be applied
@@ -160,7 +165,7 @@ export async function GET(req: Request) {
       pendingResignationsResult,
       pendingServiceExtensionsResult
     ] = await Promise.allSettled([
-      db.Employee.count({ where: employeeCountWhereClause }),
+      db.employee.count({ where: employeeCountWhereClause }),
       db.confirmationRequest.count({
         where: shouldFilter
           ? { status: { in: getConfirmationStatuses(userRole) }, ...requestEmployeeWhereClause }
@@ -171,7 +176,7 @@ export async function GET(req: Request) {
           ? { status: { in: getPromotionStatuses(userRole) }, ...requestEmployeeWhereClause }
           : { status: { in: getPromotionStatuses(userRole) } }
       }),
-      db.Employee.count({
+      db.employee.count({
         where: shouldFilter
           ? { status: 'On LWOP', ...employeeCountWhereClause }
           : { status: 'On LWOP' }
@@ -228,10 +233,14 @@ export async function GET(req: Request) {
     console.log('Employee where clause:', employeeWhereClause);
     console.log('Complaint where clause:', complaintWhereClause);
 
-    // Fetch more items for CSC roles (CSCS only) who need comprehensive oversight
-    // Regular roles get 3 items per category, CSC roles get 5 items per category
-    const itemsPerCategory = isCSCRole(userRole) ? 5 : 3;
-    console.log(`Fetching ${itemsPerCategory} items per category for role: ${userRole}`);
+    // PAGINATION STRATEGY for multiple tables:
+    // True server-side pagination requires UNION query across 9 tables (not supported by Prisma)
+    // Hybrid approach: Fetch recent items from each table, merge, sort, then paginate
+    // - Fetches last 100 items from each of 9 tables = ~900 total items
+    // - Supports pagination of recent activities (last few weeks/months)
+    // - For true historical pagination across ALL time, would need raw SQL UNION
+    const itemsPerTable = 100; // Fetch last 100 from each table
+    console.log(`Fetching ${itemsPerTable} recent items per table for pagination`);
     const [
       confirmationsResult,
       promotionsResult,
@@ -252,7 +261,7 @@ export async function GET(req: Request) {
           Employee: { select: { name: true } }
         },
         orderBy: { updatedAt: 'desc' },
-        take: itemsPerCategory
+        take: itemsPerTable
       }),
       db.promotionRequest.findMany({
         where: employeeWhereClause,
@@ -263,7 +272,7 @@ export async function GET(req: Request) {
           Employee: { select: { name: true } }
         },
         orderBy: { updatedAt: 'desc' },
-        take: itemsPerCategory
+        take: itemsPerTable
       }),
       db.lwopRequest.findMany({
         where: employeeWhereClause,
@@ -274,7 +283,7 @@ export async function GET(req: Request) {
           Employee: { select: { name: true } }
         },
         orderBy: { updatedAt: 'desc' },
-        take: itemsPerCategory
+        take: itemsPerTable
       }),
       db.complaint.findMany({
         where: complaintWhereClause,
@@ -285,7 +294,7 @@ export async function GET(req: Request) {
           User_Complaint_complainantIdToUser: { select: { name: true } }
         },
         orderBy: { updatedAt: 'desc' },
-        take: itemsPerCategory
+        take: itemsPerTable
       }),
       db.separationRequest.findMany({
         where: employeeWhereClause,
@@ -297,7 +306,7 @@ export async function GET(req: Request) {
           Employee: { select: { name: true } }
         },
         orderBy: { updatedAt: 'desc' },
-        take: itemsPerCategory
+        take: itemsPerTable
       }),
       db.cadreChangeRequest.findMany({
         where: employeeWhereClause,
@@ -308,7 +317,7 @@ export async function GET(req: Request) {
           Employee: { select: { name: true } }
         },
         orderBy: { updatedAt: 'desc' },
-        take: itemsPerCategory
+        take: itemsPerTable
       }),
       db.retirementRequest.findMany({
         where: employeeWhereClause,
@@ -319,7 +328,7 @@ export async function GET(req: Request) {
           Employee: { select: { name: true } }
         },
         orderBy: { updatedAt: 'desc' },
-        take: itemsPerCategory
+        take: itemsPerTable
       }),
       db.resignationRequest.findMany({
         where: employeeWhereClause,
@@ -330,7 +339,7 @@ export async function GET(req: Request) {
           Employee: { select: { name: true } }
         },
         orderBy: { updatedAt: 'desc' },
-        take: itemsPerCategory
+        take: itemsPerTable
       }),
       db.serviceExtensionRequest.findMany({
         where: employeeWhereClause,
@@ -341,7 +350,7 @@ export async function GET(req: Request) {
           Employee: { select: { name: true } }
         },
         orderBy: { updatedAt: 'desc' },
-        take: itemsPerCategory
+        take: itemsPerTable
       })
     ]);
 
@@ -381,10 +390,19 @@ export async function GET(req: Request) {
       ...resignations.map(r => ({ id: r.id, type: 'Resignation', employee: r.Employee.name, status: r.status, updatedAt: r.updatedAt })),
       ...serviceExtensions.map(r => ({ id: r.id, type: 'Service Extension', employee: r.Employee.name, status: r.status, updatedAt: r.updatedAt })),
     ];
-    
-    const recentActivities = allActivities
-      .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
-      .slice(0, 10)
+
+    // Sort all activities by date
+    const sortedActivities = allActivities.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+
+    // Calculate pagination metadata
+    const totalActivities = sortedActivities.length;
+    const totalPages = Math.ceil(totalActivities / limit);
+    const hasNextPage = page < totalPages;
+    const hasPrevPage = page > 1;
+
+    // Apply pagination
+    const recentActivities = sortedActivities
+      .slice(skip, skip + limit)
       .map(activity => ({
           ...activity,
           href: getRequestHref(activity.type)
@@ -409,7 +427,18 @@ export async function GET(req: Request) {
 
     const response = {
       success: true,
-      data: { stats, recentActivities }
+      data: {
+        stats,
+        recentActivities,
+        pagination: {
+          currentPage: page,
+          totalPages,
+          totalActivities,
+          limit,
+          hasNextPage,
+          hasPrevPage
+        }
+      }
     };
 
     // ===== OPTIMIZATION: Add caching headers for better performance =====

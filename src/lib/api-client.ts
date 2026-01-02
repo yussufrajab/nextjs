@@ -161,8 +161,8 @@ class ApiClient {
     retryCount: number = 0
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`;
-    
-    
+
+
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       ...((options.headers as Record<string, string>) || {}),
@@ -172,6 +172,24 @@ class ApiClient {
     const currentToken = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : this.token;
     if (currentToken) {
       headers['Authorization'] = `Bearer ${currentToken}`;
+    }
+
+    // Add CSRF token for state-changing requests (POST, PUT, PATCH, DELETE)
+    const method = options.method?.toUpperCase() || 'GET';
+    const requiresCSRF = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method);
+
+    if (requiresCSRF && typeof window !== 'undefined') {
+      // Get CSRF token from cookie
+      const csrfToken = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrf-token='))
+        ?.split('=')[1];
+
+      if (csrfToken) {
+        headers['x-csrf-token'] = csrfToken;
+      } else {
+        console.warn('[API Client] CSRF token not found for state-changing request:', method, endpoint);
+      }
     }
 
     try {
@@ -329,9 +347,10 @@ class ApiClient {
     return result;
   }
 
-  async logout(): Promise<ApiResponse<void>> {
+  async logout(userId?: string, sessionToken?: string | null): Promise<ApiResponse<void>> {
     const result = await this.request<void>('/auth/logout', {
       method: 'POST',
+      body: JSON.stringify({ userId, sessionToken }),
     });
     this.clearToken();
     return result;
@@ -595,6 +614,3 @@ class ApiClient {
 
 // Export singleton instance
 export const apiClient = new ApiClient();
-
-// Export types for use in components
-export type { ApiResponse, LoginResponse, Employee, Request, Complaint, Institution, User };

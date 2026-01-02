@@ -2,18 +2,74 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { shouldApplyInstitutionFilter, isCSCRole } from '@/lib/role-utils';
 
+// Cache configuration for employee data
+const CACHE_TTL = 60; // 60 seconds cache (employee data changes infrequently)
+
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const userRole = searchParams.get('userRole');
     const userInstitutionId = searchParams.get('userInstitutionId');
+    const employeeId = searchParams.get('id');
     const q = searchParams.get('q');
     const status = searchParams.get('status');
     const gender = searchParams.get('gender');
     const page = parseInt(searchParams.get('page') || '1');
     const size = parseInt(searchParams.get('size') || '200'); // Default to 200 for latest profiles
 
-    console.log('Employees API called with params:', { userRole, userInstitutionId, q, status, gender, page, size });
+    console.log('Employees API called with params:', { userRole, userInstitutionId, employeeId, q, status, gender, page, size });
+
+    // If a specific employee ID is requested, fetch that employee directly
+    if (employeeId) {
+      const employee = await db.employee.findUnique({
+        where: { id: employeeId },
+        include: {
+          Institution: {
+            select: {
+              id: true,
+              name: true
+            }
+          },
+          EmployeeCertificate: {
+            select: {
+              id: true,
+              type: true,
+              name: true,
+              url: true
+            }
+          }
+        }
+      });
+
+      if (!employee) {
+        return NextResponse.json({
+          success: false,
+          message: 'Employee not found'
+        }, { status: 404 });
+      }
+
+      // Map EmployeeCertificate to certificates
+      const mappedEmployee = {
+        ...employee,
+        certificates: employee.EmployeeCertificate,
+        EmployeeCertificate: undefined
+      };
+
+      // Set cache headers for single employee lookup
+      const headers = new Headers();
+      headers.set('Cache-Control', `public, s-maxage=${CACHE_TTL}, stale-while-revalidate=${CACHE_TTL * 2}`);
+
+      return NextResponse.json({
+        success: true,
+        data: [mappedEmployee],
+        pagination: {
+          page: 1,
+          size: 1,
+          total: 1,
+          totalPages: 1
+        }
+      }, { headers });
+    }
 
     // Build where clause based on parameters
     let whereClause: any = {};
@@ -30,12 +86,21 @@ export async function GET(req: Request) {
       console.log('No user role provided - showing ALL employees (default behavior)');
     }
 
-    // If search query provided, search by name or zanId
+    // If a specific institution ID is provided, filter by that institution
+    const institutionId = searchParams.get('institutionId')
+    if (institutionId) {
+      whereClause.institutionId = institutionId
+      console.log('Filtering by specific institution:', institutionId)
+    }
+
+    // If search query provided, search by name, zanId, payrollNumber, cadre, or institution name
     if (q) {
       whereClause.OR = [
         { name: { contains: q, mode: 'insensitive' } },
         { zanId: { contains: q, mode: 'insensitive' } },
-        { cadre: { contains: q, mode: 'insensitive' } }
+        { payrollNumber: { contains: q, mode: 'insensitive' } },
+        { cadre: { contains: q, mode: 'insensitive' } },
+        { Institution: { name: { contains: q, mode: 'insensitive' } } }
       ];
     }
 
@@ -50,10 +115,10 @@ export async function GET(req: Request) {
     }
 
     // Get total count for pagination
-    const total = await db.Employee.count({ where: whereClause }).catch(() => 0);
+    const total = await db.employee.count({ where: whereClause }).catch(() => 0);
 
     // Get employees with pagination (latest 200 by default, ordered by most recent updates)
-    const employees = await db.Employee.findMany({
+    const employees = await db.employee.findMany({
       where: whereClause,
       include: {
         Institution: {
@@ -81,16 +146,27 @@ export async function GET(req: Request) {
 
     console.log(`Found ${employees.length} employees out of ${total} total`);
 
+    // Map EmployeeCertificate to certificates to match TypeScript interface
+    const mappedEmployees = employees.map(emp => ({
+      ...emp,
+      certificates: emp.EmployeeCertificate,
+      EmployeeCertificate: undefined
+    }));
+
+    // Set cache headers for employee list
+    const headers = new Headers();
+    headers.set('Cache-Control', `public, s-maxage=${CACHE_TTL}, stale-while-revalidate=${CACHE_TTL * 2}`);
+
     return NextResponse.json({
       success: true,
-      data: employees,
+      data: mappedEmployees,
       pagination: {
         page,
         size,
         total,
         totalPages: Math.ceil(total / size)
       }
-    });
+    }, { headers });
 
   } catch (error) {
     console.error("[EMPLOYEES_GET]", error);

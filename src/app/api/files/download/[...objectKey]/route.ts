@@ -4,13 +4,16 @@ import { Readable } from 'stream';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { objectKey: string[] } }
+  { params }: { params: Promise<{ objectKey: string[] }> }
 ) {
   try {
+    // Await params in Next.js 15+
+    const resolvedParams = await params;
+
     // Reconstruct the object key from the dynamic route segments
-    const objectKey = decodeURIComponent(params.objectKey.join('/'));
-    
-    console.log('Download API - Object key segments:', params.objectKey);
+    const objectKey = decodeURIComponent(resolvedParams.objectKey.join('/'));
+
+    console.log('Download API - Object key segments:', resolvedParams.objectKey);
     console.log('Download API - Reconstructed object key:', objectKey);
     
     // Get file metadata first to validate existence

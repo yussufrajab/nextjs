@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { ROLES } from '@/lib/constants';
 import bcrypt from 'bcryptjs';
 import { randomBytes } from 'crypto';
+import { hashPassword, calculateTemporaryPasswordExpiry } from '@/lib/password-utils';
 
 const employeeLoginSchema = z.object({
   zanId: z.string().min(1),
@@ -36,7 +37,7 @@ export async function POST(req: Request) {
     });
 
     // Find employee with matching credentials
-    const employee = await db.Employee.findFirst({
+    const employee = await db.employee.findFirst({
       where: {
         zanId: normalizedZanId,
         zssfNumber: normalizedZssfNumber,
@@ -84,29 +85,36 @@ export async function POST(req: Request) {
         // Check if username already exists and make it unique if necessary
         let username = baseUsername;
         let counter = 1;
-        while (await db.User.findUnique({ where: { username } })) {
+        while (await db.user.findUnique({ where: { username } })) {
           username = `${baseUsername}${counter}`;
           counter++;
         }
 
         // Generate default password (using ZAN ID as default for security)
         const defaultPassword = employee.zanId;
-        const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+        const hashedPassword = await hashPassword(defaultPassword);
 
         // Generate unique id for user
         const userId = `emp_${randomBytes(16).toString('hex')}`;
 
-        // Create user account
-        user = await db.User.create({
+        // Create user account with temporary password flags
+        user = await db.user.create({
           data: {
             id: userId,
             username,
             password: hashedPassword,
             name: employee.name,
-            role: ROLES.EMPLOYEE,
+            role: ROLES.EMPLOYEE as string,
             active: true,
             employeeId: employee.id,
             institutionId: employee.institutionId,
+            // Set temporary password flags
+            isTemporaryPassword: true,
+            temporaryPasswordExpiry: calculateTemporaryPasswordExpiry(),
+            mustChangePassword: true,
+            passwordHistory: [],
+            lastPasswordChange: new Date(),
+            failedPasswordChangeAttempts: 0,
             updatedAt: new Date(),
           },
           select: {
@@ -157,6 +165,47 @@ export async function POST(req: Request) {
       );
     }
 
+    // Set initial activity timestamp for session timeout tracking
+    await db.user.update({
+      where: { id: user.id },
+      data: { lastActivity: new Date() },
+    });
+
+    // Get client info for session creation
+    const ipAddress = req.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
+                     req.headers.get('x-real-ip') ||
+                     null;
+    const userAgent = req.headers.get('user-agent') || null;
+
+    // Detect suspicious login and create session
+    const { detectSuspiciousLogin, getLoginSummary } = await import('@/lib/suspicious-login-detector');
+    const { createSession } = await import('@/lib/session-manager');
+    const { createNotification } = await import('@/lib/notifications');
+
+    const suspiciousCheck = await detectSuspiciousLogin({
+      userId: user.id,
+      ipAddress,
+      userAgent,
+    });
+
+    // Create session with suspicious flag
+    const session = await createSession(
+      user.id,
+      ipAddress,
+      userAgent,
+      suspiciousCheck.isSuspicious
+    );
+
+    // Notify user if login is suspicious
+    if (suspiciousCheck.shouldNotify) {
+      const loginInfo = getLoginSummary({ userId: user.id, ipAddress, userAgent });
+      await createNotification({
+        userId: user.id,
+        message: `New login detected from ${loginInfo.device} at ${loginInfo.location} on ${loginInfo.time}. If this wasn't you, please contact HR immediately.`,
+        link: '/dashboard/profile',
+      });
+    }
+
     // Successful authentication - return user data
     const userData = {
       id: user.id,
@@ -177,6 +226,7 @@ export async function POST(req: Request) {
       success: true,
       message: 'Login successful',
       user: userData,
+      sessionToken: session.sessionToken, // Include session token
     });
 
   } catch (error) {

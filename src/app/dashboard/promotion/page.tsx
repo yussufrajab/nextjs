@@ -305,7 +305,8 @@ export default function PromotionPage() {
         id: `temp-${Date.now()}`, // Temporary ID until server responds
         Employee: {
           ...employeeDetails,
-          Institution: { name: typeof employeeDetails.institution === 'object' ? employeeDetails.Institution.name : employeeDetails.institution || 'N/A' }
+          phoneNumber: employeeDetails.phoneNumber ?? undefined,
+          Institution: { name: typeof employeeDetails.institution === 'object' ? employeeDetails.institution.name : employeeDetails.institution || 'N/A' }
         },
         submittedBy: { name: user.name },
         status: 'Pending HRMO/HHRMD Review',
@@ -663,7 +664,7 @@ export default function PromotionPage() {
                       <div><Label className="text-muted-foreground">Current Cadre/Position:</Label> <p className="font-semibold text-foreground">{employeeDetails.cadre || 'N/A'}</p></div>
                       <div><Label className="text-muted-foreground">Employment Date:</Label> <p className="font-semibold text-foreground">{employeeDetails.employmentDate ? format(parseISO(employeeDetails.employmentDate.toString()), 'PPP') : 'N/A'}</p></div>
                       <div><Label className="text-muted-foreground">Date of Birth:</Label> <p className="font-semibold text-foreground">{employeeDetails.dateOfBirth ? format(parseISO(employeeDetails.dateOfBirth.toString()), 'PPP') : 'N/A'}</p></div>
-                      <div className="lg:col-span-1"><Label className="text-muted-foreground">Institution:</Label> <p className="font-semibold text-foreground">{typeof employeeDetails.institution === 'object' ? employeeDetails.Institution.name : employeeDetails.institution || 'N/A'}</p></div>
+                      <div className="lg:col-span-1"><Label className="text-muted-foreground">Institution:</Label> <p className="font-semibold text-foreground">{typeof employeeDetails.institution === 'object' ? employeeDetails.institution.name : employeeDetails.institution || 'N/A'}</p></div>
                     </div>
                   </div>
                 </div>
@@ -713,7 +714,7 @@ export default function PromotionPage() {
                                 <Label className="flex items-center mb-2"><Star className="mr-2 h-4 w-4 text-primary" />Upload Performance Appraisal Form (Year 1)</Label>
                                 <FileUpload
                                   value={performanceAppraisalFileY1}
-                                  onChange={setPerformanceAppraisalFileY1}
+                                  onChange={(key) => setPerformanceAppraisalFileY1(Array.isArray(key) ? key[0] : key)}
                                   folder="promotion/performance-appraisals"
                                   accept=".pdf"
                                   maxSize={2}
@@ -724,7 +725,7 @@ export default function PromotionPage() {
                                 <Label className="flex items-center mb-2"><Star className="mr-2 h-4 w-4 text-primary" />Upload Performance Appraisal Form (Year 2)</Label>
                                 <FileUpload
                                   value={performanceAppraisalFileY2}
-                                  onChange={setPerformanceAppraisalFileY2}
+                                  onChange={(key) => setPerformanceAppraisalFileY2(Array.isArray(key) ? key[0] : key)}
                                   folder="promotion/performance-appraisals"
                                   accept=".pdf"
                                   maxSize={2}
@@ -735,7 +736,7 @@ export default function PromotionPage() {
                                 <Label className="flex items-center mb-2"><Star className="mr-2 h-4 w-4 text-primary" />Upload Performance Appraisal Form (Year 3)</Label>
                                 <FileUpload
                                   value={performanceAppraisalFileY3}
-                                  onChange={setPerformanceAppraisalFileY3}
+                                  onChange={(key) => setPerformanceAppraisalFileY3(Array.isArray(key) ? key[0] : key)}
                                   folder="promotion/performance-appraisals"
                                   accept=".pdf"
                                   maxSize={2}
@@ -746,7 +747,7 @@ export default function PromotionPage() {
                                 <Label className="flex items-center mb-2"><FileText className="mr-2 h-4 w-4 text-primary" />Upload Civil Service Commission Promotion Form (Tume ya Utumishi)</Label>
                                 <FileUpload
                                   value={cscPromotionFormFile}
-                                  onChange={setCscPromotionFormFile}
+                                  onChange={(key) => setCscPromotionFormFile(Array.isArray(key) ? key[0] : key)}
                                   folder="promotion/csc-forms"
                                   accept=".pdf"
                                   maxSize={2}
@@ -762,7 +763,7 @@ export default function PromotionPage() {
                                 <Label className="flex items-center mb-2"><Award className="mr-2 h-4 w-4 text-primary" />Upload Academic Certificate</Label>
                                 <FileUpload
                                   value={certificateFile}
-                                  onChange={setCertificateFile}
+                                  onChange={(key) => setCertificateFile(Array.isArray(key) ? key[0] : key)}
                                   folder="promotion/certificates"
                                   accept=".pdf"
                                   maxSize={2}
@@ -778,7 +779,7 @@ export default function PromotionPage() {
                                     <Label className="flex items-center mb-2"><ChevronsUpDown className="mr-2 h-4 w-4 text-primary" />Upload TCU Form</Label>
                                     <FileUpload
                                       value={tcuFormFile}
-                                      onChange={setTcuFormFile}
+                                      onChange={(key) => setTcuFormFile(Array.isArray(key) ? key[0] : key)}
                                       folder="promotion/tcu-forms"
                                       accept=".pdf"
                                       maxSize={2}
@@ -792,7 +793,7 @@ export default function PromotionPage() {
                             <Label className="flex items-center mb-2"><FileText className="mr-2 h-4 w-4 text-primary" />Upload Letter of Request</Label>
                             <FileUpload
                               value={letterOfRequestFile}
-                              onChange={setLetterOfRequestFile}
+                              onChange={(key) => setLetterOfRequestFile(Array.isArray(key) ? key[0] : key)}
                               folder="promotion/letters"
                               accept=".pdf"
                               maxSize={2}
@@ -998,7 +999,7 @@ export default function PromotionPage() {
                     </div>
                     <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
                         <Label className="text-right text-muted-foreground">Institution:</Label>
-                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.Institution?.name || 'N/A'}</p>
+                        <p className="col-span-2 font-medium text-foreground">{selectedRequest.Employee.institution && typeof selectedRequest.Employee.institution === 'object' ? selectedRequest.Employee.institution.name : (selectedRequest.Employee.institution || 'N/A')}</p>
                     </div>
                 </div>
                 <div className="space-y-1">
@@ -1189,7 +1190,7 @@ export default function PromotionPage() {
                       </Label>
                       <FileUpload
                         value={performanceAppraisalFileY1}
-                        onChange={setPerformanceAppraisalFileY1}
+                        onChange={(key) => setPerformanceAppraisalFileY1(Array.isArray(key) ? key[0] : key)}
                         folder="promotion/performance-appraisals"
                         accept=".pdf"
                         maxSize={2}
@@ -1202,7 +1203,7 @@ export default function PromotionPage() {
                       </Label>
                       <FileUpload
                         value={performanceAppraisalFileY2}
-                        onChange={setPerformanceAppraisalFileY2}
+                        onChange={(key) => setPerformanceAppraisalFileY2(Array.isArray(key) ? key[0] : key)}
                         folder="promotion/performance-appraisals"
                         accept=".pdf"
                         maxSize={2}
@@ -1215,7 +1216,7 @@ export default function PromotionPage() {
                       </Label>
                       <FileUpload
                         value={performanceAppraisalFileY3}
-                        onChange={setPerformanceAppraisalFileY3}
+                        onChange={(key) => setPerformanceAppraisalFileY3(Array.isArray(key) ? key[0] : key)}
                         folder="promotion/performance-appraisals"
                         accept=".pdf"
                         maxSize={2}
@@ -1228,7 +1229,7 @@ export default function PromotionPage() {
                       </Label>
                       <FileUpload
                         value={cscPromotionFormFile}
-                        onChange={setCscPromotionFormFile}
+                        onChange={(key) => setCscPromotionFormFile(Array.isArray(key) ? key[0] : key)}
                         folder="promotion/csc-forms"
                         accept=".pdf"
                         maxSize={2}
@@ -1241,7 +1242,7 @@ export default function PromotionPage() {
                       </Label>
                       <FileUpload
                         value={letterOfRequestFile}
-                        onChange={setLetterOfRequestFile}
+                        onChange={(key) => setLetterOfRequestFile(Array.isArray(key) ? key[0] : key)}
                         folder="promotion/letters"
                         accept=".pdf"
                         maxSize={2}
@@ -1259,17 +1260,17 @@ export default function PromotionPage() {
                       </Label>
                       <FileUpload
                         value={certificateFile}
-                        onChange={setCertificateFile}
+                        onChange={(key) => setCertificateFile(Array.isArray(key) ? key[0] : key)}
                         folder="promotion/certificates"
                         accept=".pdf"
                         maxSize={2}
                       />
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="correctedStudiedOutside" 
-                        checked={studiedOutsideCountry} 
-                        onCheckedChange={(checked) => setStudiedOutsideCountry(checked as boolean)} 
+                      <Checkbox
+                        id="correctedStudiedOutside"
+                        checked={studiedOutsideCountry}
+                        onCheckedChange={(checked) => setStudiedOutsideCountry(checked as boolean)}
                       />
                       <Label htmlFor="correctedStudiedOutside" className="text-sm font-medium">
                         Employee studied outside the country? (Requires TCU Form)
@@ -1283,7 +1284,7 @@ export default function PromotionPage() {
                         </Label>
                         <FileUpload
                           value={tcuFormFile}
-                          onChange={setTcuFormFile}
+                          onChange={(key) => setTcuFormFile(Array.isArray(key) ? key[0] : key)}
                           folder="promotion/tcu-forms"
                           accept=".pdf"
                           maxSize={2}
@@ -1297,9 +1298,9 @@ export default function PromotionPage() {
                       </Label>
                       <FileUpload
                         value={letterOfRequestFile}
-                        onChange={setLetterOfRequestFile}
+                        onChange={(key) => setLetterOfRequestFile(Array.isArray(key) ? key[0] : key)}
                         folder="promotion/letters"
-                        accept=".pdf"  
+                        accept=".pdf"
                         maxSize={2}
                       />
                     </div>

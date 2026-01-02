@@ -139,7 +139,7 @@ export function DocumentUpload({
 
   const handleDownload = () => {
     if (!currentUrl) return;
-    
+
     if (!fileExists.exists) {
       toast({
         title: "Document not available",
@@ -149,40 +149,27 @@ export function DocumentUpload({
       return;
     }
 
-    // Extract the object key from the URL
-    const urlPath = currentUrl.replace('/api/files/download/', '');
-    
-    fetch(`/api/files/download/${urlPath}`, {
-      credentials: 'include'
-    })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`Download failed: ${response.status} ${response.statusText}`);
-      }
-      return response.blob();
-    })
-    .then(blob => {
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = getFileName(urlPath);
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-      
-      toast({
-        title: "Download successful",
-        description: `${documentTitle} downloaded successfully`
-      });
-    })
-    .catch(error => {
-      console.error('Download error:', error);
-      toast({
-        title: "Download failed",
-        description: `Failed to download ${documentTitle}`,
-        variant: "destructive"
-      });
+    // Extract the object key from the URL - handle different URL formats
+    let objectKey = '';
+    if (currentUrl.startsWith('/api/files/download/')) {
+      objectKey = currentUrl.replace('/api/files/download/', '');
+    } else if (currentUrl.startsWith('/api/files/')) {
+      objectKey = currentUrl.replace('/api/files/', '');
+    }
+
+    // Use direct link approach instead of blob for better compatibility
+    const downloadUrl = `/api/files/download/${objectKey}`;
+    const a = document.createElement('a');
+    a.href = downloadUrl;
+    a.download = getFileName(objectKey);
+    a.target = '_blank';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    toast({
+      title: "Download started",
+      description: `Downloading ${documentTitle}...`
     });
   };
 
@@ -193,7 +180,12 @@ export function DocumentUpload({
 
   const getObjectKey = () => {
     if (!currentUrl) return null;
-    return currentUrl.replace('/api/files/download/', '');
+    if (currentUrl.startsWith('/api/files/download/')) {
+      return currentUrl.replace('/api/files/download/', '');
+    } else if (currentUrl.startsWith('/api/files/')) {
+      return currentUrl.replace('/api/files/', '');
+    }
+    return null;
   };
 
   return (

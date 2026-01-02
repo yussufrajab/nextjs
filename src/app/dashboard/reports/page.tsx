@@ -11,9 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableCaption } from '@/components/ui/table';
 import { Loader2, FileDown } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
-import * as XLSX from 'xlsx';
+import { loadPdfExporter, loadExcelExporter } from '@/lib/export-utils';
 import { useAuth } from '@/hooks/use-auth';
 import { ROLES } from '@/lib/constants';
 import { Pagination } from '@/components/shared/pagination';
@@ -62,6 +60,7 @@ export default function ReportsPage() {
   const [reportTotals, setReportTotals] = useState<any>(null);
   const [reportDataKeys, setReportDataKeys] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const [isExporting, setIsExporting] = useState<boolean>(false);
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -170,101 +169,131 @@ export default function ReportsPage() {
     }
   };
 
-  const handleExportToPdf = () => {
+  const handleExportToPdf = async () => {
     if (!reportData || reportData.length === 0 || !reportHeaders || reportHeaders.length === 0) {
       toast({ title: "Kosa la Kuhamisha", description: "Hakuna data ya kuhamisha.", variant: "destructive" });
       return;
     }
 
-    const doc = new jsPDF({ orientation: 'landscape' });
-    doc.setFontSize(18);
-    doc.text(reportTitle, 14, 22);
-    doc.setFontSize(10);
-    doc.text(`Kipindi: ${fromDate || 'N/A'} hadi ${toDate || 'N/A'}`, 14, 30);
-    if(isHigherLevelUser && institutionFilter && institutionFilter !== ALL_INSTITUTIONS_FILTER_VALUE) {
-        const instName = availableInstitutions.find(i => i.id === institutionFilter)?.name;
-        doc.text(`Taasisi: ${instName}`, 14, 36);
-    } else if(role === ROLES.HRO && user?.institution) {
-        doc.text(`Taasisi: ${typeof user.institution === 'object' ? user.institution.name : user.institution}`, 14, 36);
-    }
+    setIsExporting(true);
+    try {
+      // Dynamically load jsPDF library (lazy loading)
+      const jsPDF = await loadPdfExporter();
 
-    const tableColumn = reportHeaders;
-    const tableRows: any[][] = [];
-
-    reportData.forEach(item => {
-      const rowData = (reportDataKeys || []).map(key => item[key] !== undefined ? String(item[key]) : '');
-      tableRows.push(rowData);
-    });
-
-    const footRows: any[][] = [];
-    if (reportTotals) {
-      if (selectedReportType === 'confirmation' && reportTotals.descriptionMale) {
-        const emptyCells = Array(Math.max(0, (reportDataKeys || []).length - 2)).fill('');
-        footRows.push([reportTotals.descriptionMale, ...emptyCells, String(reportTotals.valueMale)]);
-        footRows.push([reportTotals.descriptionFemale, ...emptyCells, String(reportTotals.valueFemale)]);
-        footRows.push([reportTotals.descriptionTotal, ...emptyCells, String(reportTotals.valueTotal)]);
-      } else if (Object.keys(reportTotals).length > 0) {
-        const totalRow = (reportDataKeys || []).map((key, index) => {
-          if (index === 0 && (reportTotals.sn || reportTotals.sno || reportTotals.nam)) {
-            return String(reportTotals.sn || reportTotals.sno || reportTotals.nam);
-          }
-          return reportTotals[key] !== undefined ? String(reportTotals[key]) : '';
-        });
-        footRows.push(totalRow);
+      const doc = new jsPDF({ orientation: 'landscape' });
+      doc.setFontSize(18);
+      doc.text(reportTitle, 14, 22);
+      doc.setFontSize(10);
+      doc.text(`Kipindi: ${fromDate || 'N/A'} hadi ${toDate || 'N/A'}`, 14, 30);
+      if(isHigherLevelUser && institutionFilter && institutionFilter !== ALL_INSTITUTIONS_FILTER_VALUE) {
+          const instName = availableInstitutions.find(i => i.id === institutionFilter)?.name;
+          doc.text(`Taasisi: ${instName}`, 14, 36);
+      } else if(role === ROLES.HRO && user?.institution) {
+          doc.text(`Taasisi: ${typeof user.institution === 'object' ? user.institution.name : user.institution}`, 14, 36);
       }
+
+      const tableColumn = reportHeaders;
+      const tableRows: any[][] = [];
+
+      reportData.forEach(item => {
+        const rowData = (reportDataKeys || []).map(key => item[key] !== undefined ? String(item[key]) : '');
+        tableRows.push(rowData);
+      });
+
+      const footRows: any[][] = [];
+      if (reportTotals) {
+        if (selectedReportType === 'confirmation' && reportTotals.descriptionMale) {
+          const emptyCells = Array(Math.max(0, (reportDataKeys || []).length - 2)).fill('');
+          footRows.push([reportTotals.descriptionMale, ...emptyCells, String(reportTotals.valueMale)]);
+          footRows.push([reportTotals.descriptionFemale, ...emptyCells, String(reportTotals.valueFemale)]);
+          footRows.push([reportTotals.descriptionTotal, ...emptyCells, String(reportTotals.valueTotal)]);
+        } else if (Object.keys(reportTotals).length > 0) {
+          const totalRow = (reportDataKeys || []).map((key, index) => {
+            if (index === 0 && (reportTotals.sn || reportTotals.sno || reportTotals.nam)) {
+              return String(reportTotals.sn || reportTotals.sno || reportTotals.nam);
+            }
+            return reportTotals[key] !== undefined ? String(reportTotals[key]) : '';
+          });
+          footRows.push(totalRow);
+        }
+      }
+
+      doc.autoTable({
+        head: [tableColumn],
+        body: tableRows,
+        foot: footRows.length > 0 ? footRows : undefined,
+        startY: 40,
+        theme: 'grid',
+        headStyles: { fillColor: [22, 160, 133] },
+        footStyles: { fillColor: [211, 211, 211], textColor: [0,0,0], fontStyle: 'bold' },
+        styles: { fontSize: 8, cellPadding: 1.5 },
+        columnStyles: { 0: { cellWidth: 'auto' } },
+      });
+
+      doc.save(`${reportTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_report.pdf`);
+      toast({ title: "PDF Imehamishwa", description: "Ripoti imehamishwa kwenda PDF." });
+    } catch (error) {
+      console.error('PDF export error:', error);
+      toast({
+        title: "Kosa la Kuhamisha",
+        description: "Imeshindwa kuhamisha PDF. Tafadhali jaribu tena.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsExporting(false);
     }
-    
-    doc.autoTable({
-      head: [tableColumn],
-      body: tableRows,
-      foot: footRows.length > 0 ? footRows : undefined,
-      startY: 40,
-      theme: 'grid',
-      headStyles: { fillColor: [22, 160, 133] },
-      footStyles: { fillColor: [211, 211, 211], textColor: [0,0,0], fontStyle: 'bold' },
-      styles: { fontSize: 8, cellPadding: 1.5 },
-      columnStyles: { 0: { cellWidth: 'auto' } },
-    });
-    
-    doc.save(`${reportTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_report.pdf`);
-    toast({ title: "PDF Imehamishwa", description: "Ripoti imehamishwa kwenda PDF." });
   };
 
-  const handleExportToExcel = () => {
+  const handleExportToExcel = async () => {
     if (!reportData || reportData.length === 0 || !reportHeaders || reportHeaders.length === 0) {
       toast({ title: "Kosa la Kuhamisha", description: "Hakuna data ya kuhamisha.", variant: "destructive" });
       return;
     }
 
-    const wsData: any[][] = [reportHeaders];
+    setIsExporting(true);
+    try {
+      // Dynamically load XLSX library (lazy loading)
+      const XLSX = await loadExcelExporter();
 
-    reportData.forEach(item => {
-      const rowData = (reportDataKeys || []).map(key => item[key] !== undefined ? item[key] : '');
-      wsData.push(rowData);
-    });
+      const wsData: any[][] = [reportHeaders];
 
-    if (reportTotals) {
-      if (selectedReportType === 'confirmation' && reportTotals.descriptionMale) {
-         const emptyCells = Array(Math.max(0, (reportDataKeys || []).length - 2)).fill('');
-        wsData.push([reportTotals.descriptionMale, ...emptyCells, reportTotals.valueMale]);
-        wsData.push([reportTotals.descriptionFemale, ...emptyCells, reportTotals.valueFemale]);
-        wsData.push([reportTotals.descriptionTotal, ...emptyCells, reportTotals.valueTotal]);
-      } else if (Object.keys(reportTotals).length > 0) {
-        const totalRow = (reportDataKeys || []).map((key, index) => {
-           if (index === 0 && (reportTotals.sn || reportTotals.sno || reportTotals.nam)) {
-            return reportTotals.sn || reportTotals.sno || reportTotals.nam;
-          }
-          return reportTotals[key] !== undefined ? reportTotals[key] : '';
-        });
-        wsData.push(totalRow);
+      reportData.forEach(item => {
+        const rowData = (reportDataKeys || []).map(key => item[key] !== undefined ? item[key] : '');
+        wsData.push(rowData);
+      });
+
+      if (reportTotals) {
+        if (selectedReportType === 'confirmation' && reportTotals.descriptionMale) {
+           const emptyCells = Array(Math.max(0, (reportDataKeys || []).length - 2)).fill('');
+          wsData.push([reportTotals.descriptionMale, ...emptyCells, reportTotals.valueMale]);
+          wsData.push([reportTotals.descriptionFemale, ...emptyCells, reportTotals.valueFemale]);
+          wsData.push([reportTotals.descriptionTotal, ...emptyCells, reportTotals.valueTotal]);
+        } else if (Object.keys(reportTotals).length > 0) {
+          const totalRow = (reportDataKeys || []).map((key, index) => {
+             if (index === 0 && (reportTotals.sn || reportTotals.sno || reportTotals.nam)) {
+              return reportTotals.sn || reportTotals.sno || reportTotals.nam;
+            }
+            return reportTotals[key] !== undefined ? reportTotals[key] : '';
+          });
+          wsData.push(totalRow);
+        }
       }
-    }
 
-    const ws = XLSX.utils.aoa_to_sheet(wsData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Ripoti");
-    XLSX.writeFile(wb, `${reportTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_report.xlsx`);
-    toast({ title: "Excel Imehamishwa", description: "Ripoti imehamishwa kwenda Excel." });
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Ripoti");
+      XLSX.writeFile(wb, `${reportTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_report.xlsx`);
+      toast({ title: "Excel Imehamishwa", description: "Ripoti imehamishwa kwenda Excel." });
+    } catch (error) {
+      console.error('Excel export error:', error);
+      toast({
+        title: "Kosa la Kuhamisha",
+        description: "Imeshindwa kuhamisha Excel. Tafadhali jaribu tena.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsExporting(false);
+    }
   };
   
   const totalPages = Math.ceil((reportData?.length || 0) / itemsPerPage);
@@ -410,12 +439,12 @@ export default function ReportsPage() {
             </div>
             {reportData && reportData.length > 0 && (
                  <div className="flex space-x-2">
-                    <Button variant="outline" size="sm" onClick={handleExportToPdf}>
-                      <FileDown className="mr-2 h-4 w-4" />
+                    <Button variant="outline" size="sm" onClick={handleExportToPdf} disabled={isExporting}>
+                      {isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileDown className="mr-2 h-4 w-4" />}
                       Hamisha PDF
                     </Button>
-                    <Button variant="outline" size="sm" onClick={handleExportToExcel}>
-                      <FileDown className="mr-2 h-4 w-4" />
+                    <Button variant="outline" size="sm" onClick={handleExportToExcel} disabled={isExporting}>
+                      {isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileDown className="mr-2 h-4 w-4" />}
                       Hamisha Excel
                     </Button>
                   </div>

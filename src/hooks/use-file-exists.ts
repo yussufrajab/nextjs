@@ -30,6 +30,14 @@ export function useFileExists(url: string | null | undefined): FileExistsResult 
         if (fileUrl.startsWith('/api/files/download/')) {
           return fileUrl.replace('/api/files/download/', '');
         }
+        // Handle employee-documents URLs (e.g., /api/files/employee-documents/...)
+        if (fileUrl.startsWith('/api/files/employee-documents/')) {
+          return fileUrl.replace('/api/files/', '');
+        }
+        // Handle employee-photos URLs (e.g., /api/files/employee-photos/...)
+        if (fileUrl.startsWith('/api/files/employee-photos/')) {
+          return fileUrl.replace('/api/files/', '');
+        }
         return null;
       } catch {
         return null;

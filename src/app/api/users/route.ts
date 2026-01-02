@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
+import { hashPassword, calculateTemporaryPasswordExpiry } from '@/lib/password-utils';
 
 const userSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -19,7 +20,7 @@ const userSchema = z.object({
 
 export async function GET() {
   try {
-    const users = await db.User.findMany({
+    const users = await db.user.findMany({
       orderBy: { name: 'asc' },
       include: {
         Institution: {
@@ -79,11 +80,11 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const { name, username, email, phoneNumber, role, institutionId, password } = userSchema.parse(body);
-    
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
 
-    const newUser = await db.User.create({
+    // Hash the password (provided by admin as temporary password)
+    const hashedPassword = await hashPassword(password);
+
+    const newUser = await db.user.create({
       data: {
         id: uuidv4(),
         name,
@@ -93,6 +94,13 @@ export async function POST(req: Request) {
         role,
         institutionId,
         password: hashedPassword,
+        // Set temporary password flags
+        isTemporaryPassword: true,
+        temporaryPasswordExpiry: calculateTemporaryPasswordExpiry(),
+        mustChangePassword: true,
+        passwordHistory: [],
+        lastPasswordChange: new Date(),
+        failedPasswordChangeAttempts: 0,
         updatedAt: new Date(),
       },
        select: { id: true, name: true, username: true, email: true, phoneNumber: true, role: true, active: true, Institution: { select: { name: true } } },

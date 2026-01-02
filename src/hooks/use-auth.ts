@@ -7,7 +7,7 @@ interface AuthHookState {
   user: User | null;
   role: Role | null;
   isAuthenticated: boolean;
-  login: (username: string, password?: string) => Promise<User | null>;
+  login: (username: string, password: string) => Promise<User | null>;
   logout: () => void;
   isLoading: boolean;
 }

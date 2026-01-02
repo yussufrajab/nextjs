@@ -72,7 +72,7 @@ export async function POST(req: Request) {
     const validatedRequest = hrimsRequestSchema.parse(body);
 
     // Find institution by vote number
-    const institution = await db.Institution.findFirst({
+    const institution = await db.institution.findFirst({
       where: {
         voteNumber: validatedRequest.institutionVoteNumber
       }
@@ -108,14 +108,14 @@ export async function POST(req: Request) {
     // Trigger background sync for documents and certificates if they exist
     const backgroundTasks = [];
     
-    if (documentStats?.totalDocuments > 0) {
+    if ((documentStats?.totalDocuments ?? 0) > 0) {
       // Trigger documents sync in background
       backgroundTasks.push(
         triggerBackgroundDocumentsSync(validatedRequest, validatedHrimsData.data.Employee.zanId)
       );
     }
 
-    if (documentStats?.totalCertificates > 0) {
+    if ((documentStats?.totalCertificates ?? 0) > 0) {
       // Trigger certificates sync in background
       backgroundTasks.push(
         triggerBackgroundCertificatesSync(validatedRequest, validatedHrimsData.data.Employee.zanId)
@@ -140,8 +140,8 @@ export async function POST(req: Request) {
         institutionId: savedEmployee.institutionId,
         documentsCount: documentStats?.totalDocuments || 0,
         certificatesCount: documentStats?.totalCertificates || 0,
-        documentsStatus: documentStats?.totalDocuments > 0 ? "syncing" : "completed", // Status based on background sync
-        certificatesStatus: documentStats?.totalCertificates > 0 ? "syncing" : "completed" // Status based on background sync
+        documentsStatus: (documentStats?.totalDocuments ?? 0) > 0 ? "syncing" : "completed", // Status based on background sync
+        certificatesStatus: (documentStats?.totalCertificates ?? 0) > 0 ? "syncing" : "completed" // Status based on background sync
       }
     }, { status: 200 });
 
@@ -183,7 +183,7 @@ async function fetchEmployeeFromHRIMS(request: z.infer<typeof hrimsRequestSchema
         'Authorization': `Bearer ${hrimsApiKey}`,
         'X-API-Key': hrimsApiKey || '',
       },
-      timeout: 30000, // 30 seconds timeout
+      signal: AbortSignal.timeout(30000), // 30 seconds timeout
     });
 
     if (!response.ok) {
@@ -216,7 +216,7 @@ async function upsertEmployeeFromHRIMS(
   const { Employee } = hrimsData.data;
 
   // Check if employee already exists
-  const existingEmployee = await db.Employee.findFirst({
+  const existingEmployee = await db.employee.findFirst({
     where: {
       zanId: Employee.zanId
     }
@@ -255,17 +255,17 @@ async function upsertEmployeeFromHRIMS(
 
   if (existingEmployee) {
     // Update existing employee
-    savedEmployee = await db.Employee.update({
+    savedEmployee = await db.employee.update({
       where: { id: existingEmployee.id },
-      data: employeeData
+      data: employeeData as any
     });
   } else {
     // Create new employee
-    savedEmployee = await db.Employee.create({
+    savedEmployee = await db.employee.create({
       data: {
         id: uuidv4(),
         ...employeeData
-      }
+      } as any
     });
   }
 
