@@ -39,6 +39,9 @@ vi.mock('@/lib/db', () => ({
 // Import the mocked db
 import { db } from '@/lib/db';
 
+// Type the mocked db methods (bypass Prisma type checking for test mocks)
+const mockedDb = db as any;
+
 describe('session-manager', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -200,13 +203,13 @@ describe('session-manager', () => {
         location: null,
       };
 
-      db.session.findMany.mockResolvedValue([]);
-      db.session.create.mockResolvedValue(mockSession);
+      mockedDb.session.findMany.mockResolvedValue([]);
+      mockedDb.session.create.mockResolvedValue(mockSession);
 
       const session = await createSession(userId, ipAddress, userAgent);
 
       expect(session).toEqual(mockSession);
-      expect(db.session.create).toHaveBeenCalledWith({
+      expect(mockedDb.session.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           userId,
           ipAddress,
@@ -233,12 +236,12 @@ describe('session-manager', () => {
         location: null,
       };
 
-      db.session.findMany.mockResolvedValue([]);
-      db.session.create.mockResolvedValue(mockSession);
+      mockedDb.session.findMany.mockResolvedValue([]);
+      mockedDb.session.create.mockResolvedValue(mockSession);
 
       await createSession(userId, ipAddress, userAgent);
 
-      expect(db.session.create).toHaveBeenCalledWith({
+      expect(mockedDb.session.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           deviceInfo: 'Windows PC',
         }),
@@ -261,12 +264,12 @@ describe('session-manager', () => {
         location: null,
       };
 
-      db.session.findMany.mockResolvedValue([]);
-      db.session.create.mockResolvedValue(mockSession);
+      mockedDb.session.findMany.mockResolvedValue([]);
+      mockedDb.session.create.mockResolvedValue(mockSession);
 
       await createSession(userId, ipAddress, userAgent, true);
 
-      expect(db.session.create).toHaveBeenCalledWith({
+      expect(mockedDb.session.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           isSuspicious: true,
         }),
@@ -314,18 +317,18 @@ describe('session-manager', () => {
         location: null,
       };
 
-      db.session.findMany.mockResolvedValue(oldSessions as any);
-      db.session.deleteMany.mockResolvedValue({ count: 1 });
-      db.session.create.mockResolvedValue(mockNewSession);
+      mockedDb.session.findMany.mockResolvedValue(oldSessions as any);
+      mockedDb.session.deleteMany.mockResolvedValue({ count: 1 });
+      mockedDb.session.create.mockResolvedValue(mockNewSession);
 
       await createSession(userId, ipAddress, userAgent);
 
-      expect(db.session.deleteMany).toHaveBeenCalledWith({
+      expect(mockedDb.session.deleteMany).toHaveBeenCalledWith({
         where: {
           id: { in: ['session-1'] }, // Oldest session
         },
       });
-      expect(db.session.create).toHaveBeenCalled();
+      expect(mockedDb.session.create).toHaveBeenCalled();
     });
 
     it('should not delete sessions when below limit', async () => {
@@ -354,17 +357,17 @@ describe('session-manager', () => {
         location: null,
       };
 
-      db.session.findMany.mockResolvedValue(oldSessions as any);
-      db.session.create.mockResolvedValue(mockNewSession);
+      mockedDb.session.findMany.mockResolvedValue(oldSessions as any);
+      mockedDb.session.create.mockResolvedValue(mockNewSession);
 
       await createSession(userId, ipAddress, userAgent);
 
-      expect(db.session.deleteMany).not.toHaveBeenCalled();
-      expect(db.session.create).toHaveBeenCalled();
+      expect(mockedDb.session.deleteMany).not.toHaveBeenCalled();
+      expect(mockedDb.session.create).toHaveBeenCalled();
     });
 
     it('should throw error on database failure', async () => {
-      db.session.findMany.mockRejectedValue(new Error('DB Error'));
+      mockedDb.session.findMany.mockRejectedValue(new Error('DB Error'));
 
       await expect(
         createSession(userId, ipAddress, userAgent)
@@ -400,20 +403,20 @@ describe('session-manager', () => {
         },
       };
 
-      db.session.findUnique.mockResolvedValue(mockSession as any);
-      db.session.update.mockResolvedValue(mockSession as any);
+      mockedDb.session.findUnique.mockResolvedValue(mockSession as any);
+      mockedDb.session.update.mockResolvedValue(mockSession as any);
 
       const session = await validateSession(sessionToken);
 
       expect(session).toEqual(mockSession);
-      expect(db.session.update).toHaveBeenCalledWith({
+      expect(mockedDb.session.update).toHaveBeenCalledWith({
         where: { id: 'session-1' },
         data: { lastActivity: expect.any(Date) },
       });
     });
 
     it('should return null if session not found', async () => {
-      db.session.findUnique.mockResolvedValue(null);
+      mockedDb.session.findUnique.mockResolvedValue(null);
 
       const session = await validateSession(sessionToken);
 
@@ -441,13 +444,13 @@ describe('session-manager', () => {
         },
       };
 
-      db.session.findUnique.mockResolvedValue(mockSession as any);
-      db.session.delete.mockResolvedValue(mockSession as any);
+      mockedDb.session.findUnique.mockResolvedValue(mockSession as any);
+      mockedDb.session.delete.mockResolvedValue(mockSession as any);
 
       const session = await validateSession(sessionToken);
 
       expect(session).toBeNull();
-      expect(db.session.delete).toHaveBeenCalledWith({
+      expect(mockedDb.session.delete).toHaveBeenCalledWith({
         where: { id: 'session-1' },
       });
     });
@@ -462,19 +465,19 @@ describe('session-manager', () => {
         User: { id: 'user-123' },
       };
 
-      db.session.findUnique.mockResolvedValue(mockSession as any);
-      db.session.update.mockResolvedValue(mockSession as any);
+      mockedDb.session.findUnique.mockResolvedValue(mockSession as any);
+      mockedDb.session.update.mockResolvedValue(mockSession as any);
 
       await validateSession(sessionToken);
 
-      expect(db.session.update).toHaveBeenCalledWith({
+      expect(mockedDb.session.update).toHaveBeenCalledWith({
         where: { id: 'session-1' },
         data: { lastActivity: expect.any(Date) },
       });
     });
 
     it('should return null on database error', async () => {
-      db.session.findUnique.mockRejectedValue(new Error('DB Error'));
+      mockedDb.session.findUnique.mockRejectedValue(new Error('DB Error'));
 
       const session = await validateSession(sessionToken);
 
@@ -490,7 +493,7 @@ describe('session-manager', () => {
     const sessionToken = 'token-to-terminate';
 
     it('should terminate session successfully', async () => {
-      db.session.delete.mockResolvedValue({
+      mockedDb.session.delete.mockResolvedValue({
         id: 'session-1',
         sessionToken,
       } as any);
@@ -498,13 +501,13 @@ describe('session-manager', () => {
       const result = await terminateSession(sessionToken);
 
       expect(result).toBe(true);
-      expect(db.session.delete).toHaveBeenCalledWith({
+      expect(mockedDb.session.delete).toHaveBeenCalledWith({
         where: { sessionToken },
       });
     });
 
     it('should return false on database error', async () => {
-      db.session.delete.mockRejectedValue(new Error('DB Error'));
+      mockedDb.session.delete.mockRejectedValue(new Error('DB Error'));
 
       const result = await terminateSession(sessionToken);
 
@@ -516,18 +519,18 @@ describe('session-manager', () => {
     const userId = 'user-123';
 
     it('should terminate all sessions for user', async () => {
-      db.session.deleteMany.mockResolvedValue({ count: 3 });
+      mockedDb.session.deleteMany.mockResolvedValue({ count: 3 });
 
       const count = await terminateAllUserSessions(userId);
 
       expect(count).toBe(3);
-      expect(db.session.deleteMany).toHaveBeenCalledWith({
+      expect(mockedDb.session.deleteMany).toHaveBeenCalledWith({
         where: { userId },
       });
     });
 
     it('should return 0 if no sessions found', async () => {
-      db.session.deleteMany.mockResolvedValue({ count: 0 });
+      mockedDb.session.deleteMany.mockResolvedValue({ count: 0 });
 
       const count = await terminateAllUserSessions(userId);
 
@@ -535,7 +538,7 @@ describe('session-manager', () => {
     });
 
     it('should return 0 on database error', async () => {
-      db.session.deleteMany.mockRejectedValue(new Error('DB Error'));
+      mockedDb.session.deleteMany.mockRejectedValue(new Error('DB Error'));
 
       const count = await terminateAllUserSessions(userId);
 
@@ -576,12 +579,12 @@ describe('session-manager', () => {
         },
       ];
 
-      db.session.findMany.mockResolvedValue(mockSessions as any);
+      mockedDb.session.findMany.mockResolvedValue(mockSessions as any);
 
       const sessions = await getUserActiveSessions(userId);
 
       expect(sessions).toEqual(mockSessions);
-      expect(db.session.findMany).toHaveBeenCalledWith({
+      expect(mockedDb.session.findMany).toHaveBeenCalledWith({
         where: {
           userId,
           expiresAt: { gt: expect.any(Date) },
@@ -597,7 +600,7 @@ describe('session-manager', () => {
     });
 
     it('should return empty array if no active sessions', async () => {
-      db.session.findMany.mockResolvedValue([]);
+      mockedDb.session.findMany.mockResolvedValue([]);
 
       const sessions = await getUserActiveSessions(userId);
 
@@ -605,7 +608,7 @@ describe('session-manager', () => {
     });
 
     it('should return empty array on database error', async () => {
-      db.session.findMany.mockRejectedValue(new Error('DB Error'));
+      mockedDb.session.findMany.mockRejectedValue(new Error('DB Error'));
 
       const sessions = await getUserActiveSessions(userId);
 
@@ -619,12 +622,12 @@ describe('session-manager', () => {
 
   describe('cleanupExpiredSessions', () => {
     it('should delete expired sessions', async () => {
-      db.session.deleteMany.mockResolvedValue({ count: 5 });
+      mockedDb.session.deleteMany.mockResolvedValue({ count: 5 });
 
       const count = await cleanupExpiredSessions();
 
       expect(count).toBe(5);
-      expect(db.session.deleteMany).toHaveBeenCalledWith({
+      expect(mockedDb.session.deleteMany).toHaveBeenCalledWith({
         where: {
           expiresAt: { lt: expect.any(Date) },
         },
@@ -632,7 +635,7 @@ describe('session-manager', () => {
     });
 
     it('should return 0 if no expired sessions', async () => {
-      db.session.deleteMany.mockResolvedValue({ count: 0 });
+      mockedDb.session.deleteMany.mockResolvedValue({ count: 0 });
 
       const count = await cleanupExpiredSessions();
 
@@ -640,7 +643,7 @@ describe('session-manager', () => {
     });
 
     it('should return 0 on database error', async () => {
-      db.session.deleteMany.mockRejectedValue(new Error('DB Error'));
+      mockedDb.session.deleteMany.mockRejectedValue(new Error('DB Error'));
 
       const count = await cleanupExpiredSessions();
 
@@ -656,12 +659,12 @@ describe('session-manager', () => {
     const userId = 'user-123';
 
     it('should return count of active sessions', async () => {
-      db.session.count.mockResolvedValue(3);
+      mockedDb.session.count.mockResolvedValue(3);
 
       const count = await getUserSessionCount(userId);
 
       expect(count).toBe(3);
-      expect(db.session.count).toHaveBeenCalledWith({
+      expect(mockedDb.session.count).toHaveBeenCalledWith({
         where: {
           userId,
           expiresAt: { gt: expect.any(Date) },
@@ -670,7 +673,7 @@ describe('session-manager', () => {
     });
 
     it('should return 0 if no active sessions', async () => {
-      db.session.count.mockResolvedValue(0);
+      mockedDb.session.count.mockResolvedValue(0);
 
       const count = await getUserSessionCount(userId);
 
@@ -678,7 +681,7 @@ describe('session-manager', () => {
     });
 
     it('should return 0 on database error', async () => {
-      db.session.count.mockRejectedValue(new Error('DB Error'));
+      mockedDb.session.count.mockRejectedValue(new Error('DB Error'));
 
       const count = await getUserSessionCount(userId);
 
@@ -707,8 +710,8 @@ describe('session-manager', () => {
         location: null,
       };
 
-      db.session.findMany.mockResolvedValue([]);
-      db.session.create.mockResolvedValue(mockSession);
+      mockedDb.session.findMany.mockResolvedValue([]);
+      mockedDb.session.create.mockResolvedValue(mockSession);
 
       const session = await createSession('user-123', null, null);
 
@@ -744,13 +747,13 @@ describe('session-manager', () => {
         location: null,
       };
 
-      db.session.findMany.mockResolvedValue(exactlyMaxSessions as any);
-      db.session.deleteMany.mockResolvedValue({ count: 1 });
-      db.session.create.mockResolvedValue(mockNewSession);
+      mockedDb.session.findMany.mockResolvedValue(exactlyMaxSessions as any);
+      mockedDb.session.deleteMany.mockResolvedValue({ count: 1 });
+      mockedDb.session.create.mockResolvedValue(mockNewSession);
 
       await createSession('user-123', '192.168.1.1', 'Mozilla/5.0');
 
-      expect(db.session.deleteMany).toHaveBeenCalled();
+      expect(mockedDb.session.deleteMany).toHaveBeenCalled();
     });
   });
 });
