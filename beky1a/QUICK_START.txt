@@ -1,0 +1,298 @@
+================================================================================
+CSMS DATABASE BACKUP & RESTORE - QUICK START GUIDE
+================================================================================
+Platform: Ubuntu 24.04 LTS
+Database: PostgreSQL with Prisma ORM
+Location: /home/latest/beky1a
+
+================================================================================
+🚀 CREATING A BACKUP (SIMPLE)
+================================================================================
+
+1. Navigate to the backup directory:
+   cd /home/latest/beky1a
+
+2. Run the backup script:
+   ./backup-database.sh
+
+3. Enter your PostgreSQL password when prompted
+
+4. Done! Backup files created:
+   ✓ nody_backup_TIMESTAMP.backup (compressed)
+   ✓ nody_backup_TIMESTAMP.sql (plain text)
+   ✓ Verification reports and checksums
+
+================================================================================
+🔄 RESTORING A BACKUP (SIMPLE)
+================================================================================
+
+1. Navigate to the backup directory:
+   cd /home/latest/beky1a
+
+2. Run the restore script:
+   ./restore-database.sh
+
+3. Enter your PostgreSQL password when prompted
+
+4. Select backup to restore (or press Enter for latest)
+
+5. Confirm database drop if it exists (type 'yes')
+
+6. Done! Database restored and verified
+
+================================================================================
+📋 ADVANCED BACKUP OPTIONS
+================================================================================
+
+# Backup to custom directory
+./backup-database.sh -o /path/to/custom/directory
+
+# Backup specific database
+./backup-database.sh -d my_database
+
+# Backup from remote server
+./backup-database.sh -h 192.168.1.100 -p 5432 -U postgres -d nody
+
+# Backup with password in command (NOT recommended for security)
+./backup-database.sh -W YourPassword
+
+# Skip verification (faster)
+./backup-database.sh --no-verify
+
+# Full example
+./backup-database.sh -h localhost -p 5432 -U postgres -d nody -o ~/backups
+
+================================================================================
+📋 ADVANCED RESTORE OPTIONS
+================================================================================
+
+# Restore specific backup file
+./restore-database.sh -b /home/latest/beky1a/nody_backup_20260103_120000.backup
+
+# Restore to different database name
+./restore-database.sh -d nody_test
+
+# Restore from remote server
+./restore-database.sh -h 192.168.1.100 -p 5432 -U postgres
+
+# Force restore without prompts (use with caution!)
+./restore-database.sh --force
+
+# Restore specific format
+./restore-database.sh -f custom    # or -f sql
+
+# Skip verification (faster)
+./restore-database.sh --no-verify
+
+# Full example
+./restore-database.sh -h localhost -p 5432 -U postgres -d nody -f custom
+
+================================================================================
+🔍 VERIFY BACKUP INTEGRITY
+================================================================================
+
+# Check checksums
+cd /home/latest/beky1a
+sha256sum -c nody_backup_*_checksums.txt
+
+# List backup contents (custom format)
+pg_restore -l nody_backup_*.backup | head -20
+
+# View backup file (SQL format)
+head -50 nody_backup_*.sql
+
+================================================================================
+📊 CHECK BACKUP STATUS
+================================================================================
+
+# List all backups
+cd /home/latest/beky1a
+ls -lh nody_backup_*.backup
+ls -lh nody_backup_*.sql
+
+# Check backup size
+du -sh nody_backup_*
+
+# View verification report
+cat nody_backup_*_verification.txt | less
+
+================================================================================
+⚙️ POST-RESTORE STEPS
+================================================================================
+
+After restoring a database, you must:
+
+1. Update .env file:
+
+   DATABASE_URL="postgresql://postgres:PASSWORD@localhost:5432/nody?schema=public"
+
+2. Generate Prisma Client:
+
+   cd /path/to/your/app
+   npx prisma generate
+
+3. Verify connection:
+
+   npx prisma db pull
+   npx prisma studio
+
+4. Start your application:
+
+   npm run dev      # Development
+   npm run build    # Production build
+   npm start        # Production
+
+================================================================================
+🛠️ TROUBLESHOOTING
+================================================================================
+
+Problem: "psql: command not found"
+Solution: Install PostgreSQL client
+  sudo apt update
+  sudo apt install postgresql-client
+
+Problem: "pg_dump: command not found"
+Solution: Install PostgreSQL client tools
+  sudo apt install postgresql-client-common postgresql-client
+
+Problem: "Connection refused"
+Solution: Start PostgreSQL service
+  sudo systemctl status postgresql
+  sudo systemctl start postgresql
+
+Problem: "Permission denied"
+Solution: Use superuser or grant permissions
+  psql -U postgres -c "ALTER USER postgres WITH SUPERUSER;"
+
+Problem: "Database already exists"
+Solution: The restore script will prompt you to drop it
+  Or manually: psql -U postgres -c "DROP DATABASE nody;"
+
+Problem: "Out of disk space"
+Solution: Free up space or backup to external drive
+  df -h                    # Check disk usage
+  ./backup-database.sh -o /mnt/external/backups
+
+================================================================================
+🔐 SECURITY BEST PRACTICES
+================================================================================
+
+1. Protect backups - Use encryption:
+
+   # Encrypt backup
+   gpg -c nody_backup_*.backup
+
+   # Decrypt backup
+   gpg nody_backup_*.backup.gpg
+
+2. Secure transfer - Use SCP:
+
+   scp nody_backup_*.backup user@remote:/path/
+
+3. Limit access:
+
+   chmod 600 nody_backup_*
+   chown postgres:postgres nody_backup_*
+
+4. Regular testing:
+
+   # Test restore to temporary database monthly
+   ./restore-database.sh -d nody_test
+
+5. Store offsite:
+
+   # Upload to secure cloud storage
+   # Keep multiple backup locations
+
+================================================================================
+📅 AUTOMATED BACKUPS (CRON)
+================================================================================
+
+# Daily backup at 2 AM
+crontab -e
+
+Add this line:
+0 2 * * * /home/latest/beky1a/backup-database.sh -W YourPassword >> /var/log/csms-backup.log 2>&1
+
+# Weekly backup (Sundays at 3 AM)
+0 3 * * 0 /home/latest/beky1a/backup-database.sh -W YourPassword
+
+# Monthly backup (1st day of month at 4 AM)
+0 4 1 * * /home/latest/beky1a/backup-database.sh -W YourPassword
+
+Note: Storing passwords in cron is a security risk. Consider using:
+  - PostgreSQL .pgpass file
+  - Environment variables
+  - Secure credential management system
+
+================================================================================
+📁 BACKUP FILE STRUCTURE
+================================================================================
+
+/home/latest/beky1a/
+  ├── backup-database.sh              # Backup script
+  ├── restore-database.sh             # Restore script
+  ├── README.md                       # Full documentation
+  ├── QUICK_START.txt                 # This file
+  ├── nody_backup_TIMESTAMP.backup    # Custom format (compressed)
+  ├── nody_backup_TIMESTAMP.sql       # SQL format (plain text)
+  ├── nody_backup_TIMESTAMP_checksums.txt
+  ├── nody_backup_TIMESTAMP_verification.txt
+  └── restore_report_TIMESTAMP.txt
+
+The scripts automatically keep only the 5 most recent backups to save space.
+
+================================================================================
+💡 TIPS & TRICKS
+================================================================================
+
+1. Test backups regularly - Restore to test database monthly
+
+2. Monitor backup size - Growing size may indicate issues
+
+   du -h nody_backup_* | sort -h
+
+3. Verify checksums - Always verify backup integrity
+
+   sha256sum -c nody_backup_*_checksums.txt
+
+4. Keep multiple copies - 3-2-1 backup rule:
+   - 3 copies of data
+   - 2 different storage types
+   - 1 offsite backup
+
+5. Document restore procedures - Ensure team can restore
+
+6. Monitor disk space - Ensure enough space for backups
+
+   df -h /home/latest/beky1a
+
+7. Use compression for transfers:
+
+   tar czf backups.tar.gz nody_backup_*
+   scp backups.tar.gz user@remote:/path/
+
+================================================================================
+📞 NEED HELP?
+================================================================================
+
+1. Check verification report:
+   cat nody_backup_*_verification.txt
+
+2. Review README.md for detailed documentation
+
+3. Check PostgreSQL logs:
+   sudo tail -f /var/log/postgresql/postgresql-*.log
+
+4. Verify PostgreSQL is running:
+   sudo systemctl status postgresql
+
+5. Test database connection:
+   psql -U postgres -d nody -c "SELECT version();"
+
+================================================================================
+✓ Scripts created by CSMS Development Team
+✓ Tested on Ubuntu 24.04 LTS
+✓ Compatible with PostgreSQL 12+ and Prisma ORM
+✓ Last updated: January 2026
+================================================================================
