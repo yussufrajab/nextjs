@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { updateUserActivity, getUserActivity, isSessionTimedOut } from '@/lib/session-timeout-utils';
+import {
+  updateUserActivity,
+  getUserActivity,
+  isSessionTimedOut,
+} from '@/lib/session-timeout-utils';
 
 const activitySchema = z.object({
   userId: z.string().min(1, 'User ID is required'),

@@ -56,9 +56,10 @@ export function PasswordExpirationBanner() {
         <AlertTitle>Password Expired - Grace Period Active</AlertTitle>
         <AlertDescription className="flex items-center justify-between">
           <span>
-            Your password has expired. You have {status.gracePeriodDaysRemaining} day
-            {status.gracePeriodDaysRemaining !== 1 ? 's' : ''} remaining to change it before your
-            account is locked.
+            Your password has expired. You have{' '}
+            {status.gracePeriodDaysRemaining} day
+            {status.gracePeriodDaysRemaining !== 1 ? 's' : ''} remaining to
+            change it before your account is locked.
           </span>
           <Button
             variant="outline"
@@ -87,7 +88,8 @@ export function PasswordExpirationBanner() {
           <span>
             Your password will expire in {status.daysUntilExpiration} day
             {status.daysUntilExpiration !== 1 ? 's' : ''} (on{' '}
-            {new Date(status.passwordExpiresAt).toLocaleDateString()}). Please change it soon.
+            {new Date(status.passwordExpiresAt).toLocaleDateString()}). Please
+            change it soon.
           </span>
           <Button
             variant={isUrgent ? 'default' : 'outline'}

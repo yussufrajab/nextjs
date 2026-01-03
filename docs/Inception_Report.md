@@ -1,18 +1,19 @@
 # INCEPTION REPORT
+
 ## CIVIL SERVICE MANAGEMENT SYSTEM (CSMS)
 
 ---
 
 ## Document Control
 
-| Item | Details |
-|------|---------|
+| Item               | Details                                            |
+| ------------------ | -------------------------------------------------- |
 | **Document Title** | Inception Report - Civil Service Management System |
-| **Project Name** | Civil Service Management System (CSMS) |
-| **Version** | 1.0 |
-| **Date Prepared** | December 25, 2025 |
-| **Prepared By** | Project Team |
-| **Status** | Draft |
+| **Project Name**   | Civil Service Management System (CSMS)             |
+| **Version**        | 1.0                                                |
+| **Date Prepared**  | December 25, 2025                                  |
+| **Prepared By**    | Project Team                                       |
+| **Status**         | Draft                                              |
 
 ---
 
@@ -27,6 +28,7 @@ The Civil Service Management System (CSMS) is a comprehensive digital platform d
 **Target Users:** 9 distinct user roles managing 50,000+ employees across multiple government institutions.
 
 **Expected Benefits:**
+
 - Reduced processing time for HR requests by 70%
 - Improved transparency and accountability through audit trails
 - Enhanced data security and document management
@@ -145,6 +147,7 @@ The Civil Service Commission requires a unified digital system to:
     - Compliance reporting
 
 **Technical Infrastructure:**
+
 - Full-stack Next.js 16 application
 - PostgreSQL 15 database with Prisma ORM
 - MinIO object storage for documents
@@ -173,24 +176,24 @@ The following items are explicitly excluded from this project:
 
 ### 3.1 Primary Stakeholders
 
-| Stakeholder | Role | Responsibilities |
-|-------------|------|------------------|
-| **Civil Service Commission** | Client/Owner | Overall project sponsorship and approval |
-| **Head of HR Management Division (HHRMD)** | Primary User | Approve HR and disciplinary requests, strategic oversight |
-| **HR Management Officers (HRMO)** | Primary Users | Process and approve HR requests |
-| **Disciplinary Officers (DO)** | Primary Users | Handle complaints and disciplinary matters |
-| **HR Officers (HRO)** | Primary Users | Submit requests on behalf of employees |
-| **Planning Officers (PO)** | Report Users | Access reports for strategic planning |
+| Stakeholder                                | Role          | Responsibilities                                          |
+| ------------------------------------------ | ------------- | --------------------------------------------------------- |
+| **Civil Service Commission**               | Client/Owner  | Overall project sponsorship and approval                  |
+| **Head of HR Management Division (HHRMD)** | Primary User  | Approve HR and disciplinary requests, strategic oversight |
+| **HR Management Officers (HRMO)**          | Primary Users | Process and approve HR requests                           |
+| **Disciplinary Officers (DO)**             | Primary Users | Handle complaints and disciplinary matters                |
+| **HR Officers (HRO)**                      | Primary Users | Submit requests on behalf of employees                    |
+| **Planning Officers (PO)**                 | Report Users  | Access reports for strategic planning                     |
 
 ### 3.2 Secondary Stakeholders
 
-| Stakeholder | Role | Interest |
-|-------------|------|----------|
-| **Civil Service Commission Secretary (CSCS)** | Executive Oversight | Monitor all system activities and institutional performance |
-| **HR Responsible Personnel (HRRP)** | Institutional Supervisors | Monitor HR activities within their institutions |
-| **Employees** | End Users | Submit complaints, view personal profiles |
-| **System Administrators** | Technical Support | System maintenance and user management |
-| **IT Department** | Technical Support | Infrastructure and technical support |
+| Stakeholder                                   | Role                      | Interest                                                    |
+| --------------------------------------------- | ------------------------- | ----------------------------------------------------------- |
+| **Civil Service Commission Secretary (CSCS)** | Executive Oversight       | Monitor all system activities and institutional performance |
+| **HR Responsible Personnel (HRRP)**           | Institutional Supervisors | Monitor HR activities within their institutions             |
+| **Employees**                                 | End Users                 | Submit complaints, view personal profiles                   |
+| **System Administrators**                     | Technical Support         | System maintenance and user management                      |
+| **IT Department**                             | Technical Support         | Infrastructure and technical support                        |
 
 ### 3.3 External Stakeholders
 
@@ -206,6 +209,7 @@ The following items are explicitly excluded from this project:
 ### 4.1 Functional Requirements Summary
 
 **Authentication & Authorization (FR1.1 - FR1.6)**
+
 - Username/password authentication with strong password policy
 - Password recovery via OTP (60-minute validity)
 - Role-based access control with 9 predefined roles
@@ -213,18 +217,21 @@ The following items are explicitly excluded from this project:
 - Account lockout after 5 failed login attempts
 
 **Dashboard (FR2.1 - FR2.4)**
+
 - Role-based personalized dashboards
 - Real-time request counts by category
 - Quick access widgets for common functions
 - SLA deadline alerts
 
 **Employee Profile (FR3.1 - FR3.4)**
+
 - CRUD operations on employee profiles
 - Mandatory field validation
 - Document upload (PDF only, 2MB limit)
 - Advanced search and filtering
 
 **Request Workflows (FR4.1 - FR12.6)**
+
 - Each module supports complete approval workflows
 - Document upload requirements
 - Status tracking (Pending, Approved, Rejected)
@@ -232,12 +239,14 @@ The following items are explicitly excluded from this project:
 - Notification system
 
 **Reports & Analytics (FR13.1 - FR13.4)**
+
 - Standard reports in PDF/Excel formats
 - Custom report builder with drag-and-drop
 - Real-time analytics dashboard
 - Scheduled report distribution
 
 **Audit Trail (FR14.1 - FR14.4)**
+
 - Complete user action logging
 - Monthly compliance reports
 - Filtered audit data views
@@ -246,33 +255,39 @@ The following items are explicitly excluded from this project:
 ### 4.2 Non-Functional Requirements Summary
 
 **Performance (NFR1.2, NFR2.1, NFR3.1, etc.)**
+
 - Login completion within 1.5 seconds
 - Dashboard load within 5 seconds
 - Profile search results within 1 second
 - Report generation (10,000+ records) within 30 seconds
 
 **Security (NFR1.3, NFR2.002, NFR3.2)**
+
 - 99.9% authentication service availability
 - All authentication attempts logged
 - AES-256 encryption for documents at rest
 - Role-based data access control
 
 **Scalability (NFR5.1)**
+
 - Support for 50,000+ employee records
 - Efficient pagination and indexing
 
 **Usability (NFR6.001)**
+
 - Intuitive user interface
 - Maximum 1 hour training requirement
 - Clear error messages and validation
 
 **Data Retention (NFR5.1, NFR7.1, etc.)**
+
 - LWOP records: 5 years post-retirement
 - Retirement records: 10 years minimum
 - Audit logs: 10 years minimum
 - Termination records: Immutable after approval
 
 **Availability**
+
 - 99.5% uptime during working hours
 - Scheduled maintenance windows
 
@@ -283,27 +298,32 @@ The following items are explicitly excluded from this project:
 ### 5.1 Technology Stack
 
 **Frontend:**
+
 - Framework: Next.js 16
 - Styling: Tailwind CSS
 - Component Library: Radix UI
 - Icons: Lucide React
 
 **Backend:**
+
 - Framework: Next.js 16 API Routes
 - ORM: Prisma
 - Authentication: JWT-based
 
 **Database:**
+
 - RDBMS: PostgreSQL 15
 - Migration Tool: Prisma Migrate
 
 **Storage:**
+
 - Object Storage: MinIO (S3-compatible)
 - Port: 9001
 - Document Types: PDF only
 - Max File Size: 2MB per file
 
 **Deployment:**
+
 - Server: Ubuntu Server
 - Control Panel: aaPanel
 - Web Server: Nginx (reverse proxy)
@@ -357,6 +377,7 @@ The following items are explicitly excluded from this project:
 ### 5.3 Database Design Highlights
 
 **Core Tables:**
+
 - `users` - User accounts and authentication
 - `institutions` - Government institutions/ministries
 - `employees` - Employee profile data
@@ -375,6 +396,7 @@ The following items are explicitly excluded from this project:
 - `notifications` - User notifications
 
 **Key Relationships:**
+
 - All requests link to `employees` table
 - All records track creator (`created_by`) and approver
 - Document tables link to MinIO storage paths
@@ -383,17 +405,20 @@ The following items are explicitly excluded from this project:
 ### 5.4 Security Architecture
 
 **Authentication:**
+
 - JWT-based token authentication
 - Secure password hashing (bcrypt)
 - Session timeout (10 minutes inactivity)
 - Account lockout (5 failed attempts)
 
 **Authorization:**
+
 - Role-based access control (RBAC)
 - Institution-based data isolation for HRO and HRRP
 - Global access for CSC internal users (HHRMD, HRMO, DO, PO, CSCS)
 
 **Data Protection:**
+
 - AES-256 encryption for sensitive documents
 - HTTPS for all communications
 - SQL injection prevention via Prisma ORM
@@ -401,6 +426,7 @@ The following items are explicitly excluded from this project:
 - CSRF token validation
 
 **Audit & Compliance:**
+
 - Immutable audit logs
 - Cryptographic signing of audit records
 - 10-year retention policy
@@ -412,62 +438,62 @@ The following items are explicitly excluded from this project:
 
 ### 6.1 User Role Definitions
 
-| Role Code | Role Name | Scope | Key Permissions |
-|-----------|-----------|-------|-----------------|
-| **HRO** | HR Officer | Institution-specific | Submit all HR requests except complaints |
-| **HHRMD** | Head of HR Management Division | CSC-wide | Approve all HR and disciplinary requests |
-| **HRMO** | HR Management Officer | CSC-wide | Approve HR requests (not disciplinary) |
-| **DO** | Disciplinary Officer | CSC-wide | Approve complaints, termination, dismissal |
-| **EMP** | Employee | Own data only | Submit complaints, view own profile |
-| **PO** | Planning Officer | CSC-wide (read-only) | View reports and dashboards |
-| **CSCS** | CSC Secretary | CSC-wide (executive) | View all activities, download reports |
-| **HRRP** | HR Responsible Personnel | Institution-specific | Monitor HR activities in their institution |
-| **ADMIN** | System Administrator | System-wide | User management, system configuration |
+| Role Code | Role Name                      | Scope                | Key Permissions                            |
+| --------- | ------------------------------ | -------------------- | ------------------------------------------ |
+| **HRO**   | HR Officer                     | Institution-specific | Submit all HR requests except complaints   |
+| **HHRMD** | Head of HR Management Division | CSC-wide             | Approve all HR and disciplinary requests   |
+| **HRMO**  | HR Management Officer          | CSC-wide             | Approve HR requests (not disciplinary)     |
+| **DO**    | Disciplinary Officer           | CSC-wide             | Approve complaints, termination, dismissal |
+| **EMP**   | Employee                       | Own data only        | Submit complaints, view own profile        |
+| **PO**    | Planning Officer               | CSC-wide (read-only) | View reports and dashboards                |
+| **CSCS**  | CSC Secretary                  | CSC-wide (executive) | View all activities, download reports      |
+| **HRRP**  | HR Responsible Personnel       | Institution-specific | Monitor HR activities in their institution |
+| **ADMIN** | System Administrator           | System-wide          | User management, system configuration      |
 
 ### 6.2 Detailed Permission Matrix
 
-| Function | HRO | HHRMD | HRMO | DO | EMP | PO | CSCS | HRRP | ADMIN |
-|----------|-----|-------|------|----|----|----|----|------|-------|
-| **Employee Profiles** |
-| View (own institution) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| View (all institutions) | ✗ | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✗ | ✓ |
-| Create/Edit | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✓ |
+| Function                  | HRO | HHRMD | HRMO | DO  | EMP | PO  | CSCS | HRRP | ADMIN |
+| ------------------------- | --- | ----- | ---- | --- | --- | --- | ---- | ---- | ----- |
+| **Employee Profiles**     |
+| View (own institution)    | ✓   | ✓     | ✓    | ✓   | ✓   | ✓   | ✓    | ✓    | ✓     |
+| View (all institutions)   | ✗   | ✓     | ✓    | ✓   | ✗   | ✓   | ✓    | ✗    | ✓     |
+| Create/Edit               | ✗   | ✗     | ✗    | ✗   | ✗   | ✗   | ✗    | ✗    | ✓     |
 | **Confirmation Requests** |
-| Submit | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
-| Approve/Reject | ✗ | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
-| View (own institution) | ✓ | ✓ | ✓ | ✗ | ✗ | ✓ | ✓ | ✓ | ✓ |
-| **Promotion Requests** |
-| Submit | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
-| Approve/Reject | ✗ | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
-| **LWOP Requests** |
-| Submit | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
-| Approve/Reject | ✗ | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
-| **Cadre Change** |
-| Submit | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
-| Approve/Reject | ✗ | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
-| **Retirement** |
-| Submit | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
-| Approve/Reject | ✗ | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
-| **Resignation** |
-| Submit | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
-| Approve/Reject | ✗ | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
-| **Service Extension** |
-| Submit | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
-| Approve/Reject | ✗ | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
+| Submit                    | ✓   | ✗     | ✗    | ✗   | ✗   | ✗   | ✗    | ✗    | ✗     |
+| Approve/Reject            | ✗   | ✓     | ✓    | ✗   | ✗   | ✗   | ✗    | ✗    | ✗     |
+| View (own institution)    | ✓   | ✓     | ✓    | ✗   | ✗   | ✓   | ✓    | ✓    | ✓     |
+| **Promotion Requests**    |
+| Submit                    | ✓   | ✗     | ✗    | ✗   | ✗   | ✗   | ✗    | ✗    | ✗     |
+| Approve/Reject            | ✗   | ✓     | ✓    | ✗   | ✗   | ✗   | ✗    | ✗    | ✗     |
+| **LWOP Requests**         |
+| Submit                    | ✓   | ✗     | ✗    | ✗   | ✗   | ✗   | ✗    | ✗    | ✗     |
+| Approve/Reject            | ✗   | ✓     | ✓    | ✗   | ✗   | ✗   | ✗    | ✗    | ✗     |
+| **Cadre Change**          |
+| Submit                    | ✓   | ✗     | ✗    | ✗   | ✗   | ✗   | ✗    | ✗    | ✗     |
+| Approve/Reject            | ✗   | ✓     | ✓    | ✗   | ✗   | ✗   | ✗    | ✗    | ✗     |
+| **Retirement**            |
+| Submit                    | ✓   | ✗     | ✗    | ✗   | ✗   | ✗   | ✗    | ✗    | ✗     |
+| Approve/Reject            | ✗   | ✓     | ✓    | ✗   | ✗   | ✗   | ✗    | ✗    | ✗     |
+| **Resignation**           |
+| Submit                    | ✓   | ✗     | ✗    | ✗   | ✗   | ✗   | ✗    | ✗    | ✗     |
+| Approve/Reject            | ✗   | ✓     | ✓    | ✗   | ✗   | ✗   | ✗    | ✗    | ✗     |
+| **Service Extension**     |
+| Submit                    | ✓   | ✗     | ✗    | ✗   | ✗   | ✗   | ✗    | ✗    | ✗     |
+| Approve/Reject            | ✗   | ✓     | ✓    | ✗   | ✗   | ✗   | ✗    | ✗    | ✗     |
 | **Termination/Dismissal** |
-| Submit | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
-| Approve/Reject | ✗ | ✓ | ✗ | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ |
-| **Complaints** |
-| Submit | ✗ | ✗ | ✗ | ✗ | ✓ | ✗ | ✗ | ✗ | ✗ |
-| Review/Resolve | ✗ | ✓ | ✗ | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ |
-| **Reports** |
-| View Reports | ✓ | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ✓ |
-| Generate Reports | ✗ | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✓ | ✓ |
-| **User Management** |
-| Create Users | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✓ |
-| Manage Institutions | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✓ |
-| Assign Roles | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✓ |
-| View Audit Logs | ✗ | ✓ | ✗ | ✗ | ✗ | ✗ | ✓ | ✗ | ✓ |
+| Submit                    | ✓   | ✗     | ✗    | ✗   | ✗   | ✗   | ✗    | ✗    | ✗     |
+| Approve/Reject            | ✗   | ✓     | ✗    | ✓   | ✗   | ✗   | ✗    | ✗    | ✗     |
+| **Complaints**            |
+| Submit                    | ✗   | ✗     | ✗    | ✗   | ✓   | ✗   | ✗    | ✗    | ✗     |
+| Review/Resolve            | ✗   | ✓     | ✗    | ✓   | ✗   | ✗   | ✗    | ✗    | ✗     |
+| **Reports**               |
+| View Reports              | ✓   | ✓     | ✓    | ✓   | ✗   | ✓   | ✓    | ✓    | ✓     |
+| Generate Reports          | ✗   | ✓     | ✓    | ✓   | ✗   | ✓   | ✓    | ✓    | ✓     |
+| **User Management**       |
+| Create Users              | ✗   | ✗     | ✗    | ✗   | ✗   | ✗   | ✗    | ✗    | ✓     |
+| Manage Institutions       | ✗   | ✗     | ✗    | ✗   | ✗   | ✗   | ✗    | ✗    | ✓     |
+| Assign Roles              | ✗   | ✗     | ✗    | ✗   | ✗   | ✗   | ✗    | ✗    | ✓     |
+| View Audit Logs           | ✗   | ✓     | ✗    | ✗   | ✗   | ✗   | ✓    | ✗    | ✓     |
 
 ---
 
@@ -482,7 +508,7 @@ All HR request modules follow this standard pattern:
 │                  REQUEST WORKFLOW                          │
 └────────────────────────────────────────────────────────────┘
 
-[HRO Login] 
+[HRO Login]
     │
     ▼
 [Navigate to Module]
@@ -680,12 +706,14 @@ Note: Special transitions not shown:
 **Integration Type:** Bidirectional data sync
 
 **Data Exchange:**
+
 - Employee demographics
 - Employment status updates
 - Retirement notifications
 - LWOP period data
 
 **Technical Approach:**
+
 - RESTful API endpoints
 - JSON data format
 - Scheduled batch synchronization (daily)
@@ -698,10 +726,12 @@ Note: Special transitions not shown:
 **Integration Type:** Read-only verification
 
 **Data Exchange:**
+
 - Certificate verification requests
 - Verification status responses
 
 **Technical Approach:**
+
 - Manual upload of TCU verification letters
 - Future enhancement: API integration for automated verification
 
@@ -712,11 +742,13 @@ Note: Special transitions not shown:
 **Integration Type:** One-way notification
 
 **Data Exchange:**
+
 - Retirement approval notifications
 - Employee pension eligibility data
 - Effective retirement dates
 
 **Technical Approach:**
+
 - Export data files in specified format
 - Future enhancement: Real-time API notifications
 
@@ -728,30 +760,33 @@ Note: Special transitions not shown:
 
 The system shall provide 10 predefined report types:
 
-| Report # | Report Name | Description | Primary Users |
-|----------|-------------|-------------|---------------|
-| 1 | **Employee Profile Report** | Complete employee records with all fields | All roles (filtered by access) |
-| 2 | **Confirmation Status Report** | Employees on probation and confirmation dates | HHRMD, HRMO, PO, CSCS |
-| 3 | **Promotion History Report** | All promotions by type, date, and institution | HHRMD, HRMO, PO, CSCS |
-| 4 | **LWOP Summary Report** | Active and historical LWOP periods | HHRMD, HRMO, PO, CSCS |
-| 5 | **Retirement Pipeline Report** | Employees nearing retirement age | HHRMD, HRMO, PO, CSCS |
-| 6 | **Complaint Status Report** | All complaints by category and status | DO, HHRMD, CSCS |
-| 7 | **Pending Requests Report** | All pending requests across modules | All CSC internal users |
-| 8 | **Institutional Summary Report** | Employee count and status by institution | All roles (filtered by access) |
-| 9 | **Termination/Dismissal Report** | All terminations and dismissals with reasons | DO, HHRMD, CSCS |
-| 10 | **Audit Activity Report** | User actions and system changes | ADMIN, CSCS, HHRMD |
+| Report # | Report Name                      | Description                                   | Primary Users                  |
+| -------- | -------------------------------- | --------------------------------------------- | ------------------------------ |
+| 1        | **Employee Profile Report**      | Complete employee records with all fields     | All roles (filtered by access) |
+| 2        | **Confirmation Status Report**   | Employees on probation and confirmation dates | HHRMD, HRMO, PO, CSCS          |
+| 3        | **Promotion History Report**     | All promotions by type, date, and institution | HHRMD, HRMO, PO, CSCS          |
+| 4        | **LWOP Summary Report**          | Active and historical LWOP periods            | HHRMD, HRMO, PO, CSCS          |
+| 5        | **Retirement Pipeline Report**   | Employees nearing retirement age              | HHRMD, HRMO, PO, CSCS          |
+| 6        | **Complaint Status Report**      | All complaints by category and status         | DO, HHRMD, CSCS                |
+| 7        | **Pending Requests Report**      | All pending requests across modules           | All CSC internal users         |
+| 8        | **Institutional Summary Report** | Employee count and status by institution      | All roles (filtered by access) |
+| 9        | **Termination/Dismissal Report** | All terminations and dismissals with reasons  | DO, HHRMD, CSCS                |
+| 10       | **Audit Activity Report**        | User actions and system changes               | ADMIN, CSCS, HHRMD             |
 
 ### 9.2 Report Features
 
 **Language Support:**
+
 - All reports available in English and Swahili
 - User-selectable at report generation time
 
 **Export Formats:**
+
 - PDF (formatted, print-ready)
 - Excel (data analysis, pivot tables)
 
 **Filtering Options:**
+
 - Date range
 - Institution
 - Employee status
@@ -759,6 +794,7 @@ The system shall provide 10 predefined report types:
 - User role
 
 **Scheduling:**
+
 - On-demand generation
 - Scheduled distribution via email
 - Frequency: Daily, Weekly, Monthly
@@ -769,29 +805,29 @@ The system shall provide 10 predefined report types:
 
 ### 10.1 Project Phases
 
-| Phase | Duration | Start Date | End Date | Key Deliverables |
-|-------|----------|------------|----------|------------------|
-| **Phase 1: Inception** | 2 weeks | Jan 1, 2025 | Jan 14, 2025 | - Inception Report<br>- Requirements Document<br>- Project Charter |
-| **Phase 2: Planning & Design** | 4 weeks | Jan 15, 2025 | Feb 11, 2025 | - System Architecture Document<br>- Database Schema<br>- UI/UX Mockups<br>- API Specifications |
-| **Phase 3: Development** | 12 weeks | Feb 12, 2025 | May 6, 2025 | - Core Modules Development<br>- Database Implementation<br>- API Development<br>- UI Implementation |
-| **Phase 4: Testing** | 4 weeks | May 7, 2025 | Jun 3, 2025 | - Unit Testing<br>- Integration Testing<br>- System Testing<br>- Bug Fixes |
-| **Phase 5: UAT** | 3 weeks | Jun 4, 2025 | Jun 24, 2025 | - UAT Execution<br>- User Feedback<br>- Final Adjustments |
-| **Phase 6: Deployment** | 2 weeks | Jun 25, 2025 | Jul 8, 2025 | - Production Deployment<br>- Data Migration<br>- Go-Live Support |
-| **Phase 7: Post-Launch** | 4 weeks | Jul 9, 2025 | Aug 5, 2025 | - User Training<br>- Hypercare Support<br>- Performance Tuning |
+| Phase                          | Duration | Start Date   | End Date     | Key Deliverables                                                                                    |
+| ------------------------------ | -------- | ------------ | ------------ | --------------------------------------------------------------------------------------------------- |
+| **Phase 1: Inception**         | 2 weeks  | Jan 1, 2025  | Jan 14, 2025 | - Inception Report<br>- Requirements Document<br>- Project Charter                                  |
+| **Phase 2: Planning & Design** | 4 weeks  | Jan 15, 2025 | Feb 11, 2025 | - System Architecture Document<br>- Database Schema<br>- UI/UX Mockups<br>- API Specifications      |
+| **Phase 3: Development**       | 12 weeks | Feb 12, 2025 | May 6, 2025  | - Core Modules Development<br>- Database Implementation<br>- API Development<br>- UI Implementation |
+| **Phase 4: Testing**           | 4 weeks  | May 7, 2025  | Jun 3, 2025  | - Unit Testing<br>- Integration Testing<br>- System Testing<br>- Bug Fixes                          |
+| **Phase 5: UAT**               | 3 weeks  | Jun 4, 2025  | Jun 24, 2025 | - UAT Execution<br>- User Feedback<br>- Final Adjustments                                           |
+| **Phase 6: Deployment**        | 2 weeks  | Jun 25, 2025 | Jul 8, 2025  | - Production Deployment<br>- Data Migration<br>- Go-Live Support                                    |
+| **Phase 7: Post-Launch**       | 4 weeks  | Jul 9, 2025  | Aug 5, 2025  | - User Training<br>- Hypercare Support<br>- Performance Tuning                                      |
 
 **Total Project Duration:** 31 weeks (approximately 7.5 months)
 
 ### 10.2 Major Milestones
 
-| Milestone | Target Date | Success Criteria |
-|-----------|-------------|------------------|
-| M1: Requirements Sign-off | Jan 14, 2025 | Approved SRS document |
-| M2: Design Approval | Feb 11, 2025 | Approved architecture and mockups |
-| M3: Development Complete | May 6, 2025 | All modules coded and unit tested |
-| M4: Testing Sign-off | Jun 3, 2025 | All test cases passed, <5 open bugs |
-| M5: UAT Approval | Jun 24, 2025 | User acceptance documented |
-| M6: Production Go-Live | Jul 8, 2025 | System live and accessible |
-| M7: Project Closure | Aug 5, 2025 | Training complete, support transitioned |
+| Milestone                 | Target Date  | Success Criteria                        |
+| ------------------------- | ------------ | --------------------------------------- |
+| M1: Requirements Sign-off | Jan 14, 2025 | Approved SRS document                   |
+| M2: Design Approval       | Feb 11, 2025 | Approved architecture and mockups       |
+| M3: Development Complete  | May 6, 2025  | All modules coded and unit tested       |
+| M4: Testing Sign-off      | Jun 3, 2025  | All test cases passed, <5 open bugs     |
+| M5: UAT Approval          | Jun 24, 2025 | User acceptance documented              |
+| M6: Production Go-Live    | Jul 8, 2025  | System live and accessible              |
+| M7: Project Closure       | Aug 5, 2025  | Training complete, support transitioned |
 
 ---
 
@@ -800,6 +836,7 @@ The system shall provide 10 predefined report types:
 ### 11.1 Human Resources
 
 **Development Team:**
+
 - Project Manager: 1 FTE (full project duration)
 - Business Analyst: 1 FTE (Phases 1-2, Phase 5)
 - System Architect: 1 FTE (Phases 2-3)
@@ -810,6 +847,7 @@ The system shall provide 10 predefined report types:
 - DevOps Engineer: 1 FTE (Phases 3-7)
 
 **Client Team:**
+
 - Project Sponsor (CSCS): As needed
 - Subject Matter Experts (HHRMD, HRMO, DO): Part-time during requirements and UAT
 - UAT Testers: 5-10 users during Phase 5
@@ -818,6 +856,7 @@ The system shall provide 10 predefined report types:
 ### 11.2 Infrastructure Requirements
 
 **Development Environment:**
+
 - Development servers (3)
 - Development database server (1)
 - MinIO storage instance (development)
@@ -825,12 +864,14 @@ The system shall provide 10 predefined report types:
 - CI/CD pipeline
 
 **UAT Environment:**
+
 - UAT application server (1)
 - UAT database server (1)
 - MinIO storage instance (UAT)
 - Replica of production configuration
 
 **Production Environment:**
+
 - Production application server (Ubuntu + aaPanel)
 - Production database server (PostgreSQL 15)
 - MinIO object storage (production)
@@ -855,32 +896,32 @@ The system shall provide 10 predefined report types:
 
 ### 12.1 Technical Risks
 
-| Risk | Probability | Impact | Mitigation Strategy |
-|------|-------------|--------|---------------------|
-| **Performance issues with 50,000+ records** | Medium | High | - Implement database indexing<br>- Use pagination<br>- Optimize queries<br>- Load testing before launch |
-| **MinIO storage capacity issues** | Low | Medium | - Monitor storage usage<br>- Plan for capacity expansion<br>- Implement document retention policies |
-| **HRIMS integration failures** | Medium | Medium | - Build robust error handling<br>- Implement retry mechanisms<br>- Manual fallback procedures |
-| **Security vulnerabilities** | Medium | Critical | - Code security audits<br>- Penetration testing<br>- Regular security updates<br>- Security training |
-| **Data migration issues** | High | High | - Thorough data validation<br>- Staged migration approach<br>- Rollback procedures<br>- Extensive testing |
+| Risk                                        | Probability | Impact   | Mitigation Strategy                                                                                       |
+| ------------------------------------------- | ----------- | -------- | --------------------------------------------------------------------------------------------------------- |
+| **Performance issues with 50,000+ records** | Medium      | High     | - Implement database indexing<br>- Use pagination<br>- Optimize queries<br>- Load testing before launch   |
+| **MinIO storage capacity issues**           | Low         | Medium   | - Monitor storage usage<br>- Plan for capacity expansion<br>- Implement document retention policies       |
+| **HRIMS integration failures**              | Medium      | Medium   | - Build robust error handling<br>- Implement retry mechanisms<br>- Manual fallback procedures             |
+| **Security vulnerabilities**                | Medium      | Critical | - Code security audits<br>- Penetration testing<br>- Regular security updates<br>- Security training      |
+| **Data migration issues**                   | High        | High     | - Thorough data validation<br>- Staged migration approach<br>- Rollback procedures<br>- Extensive testing |
 
 ### 12.2 Project Risks
 
-| Risk | Probability | Impact | Mitigation Strategy |
-|------|-------------|--------|---------------------|
-| **Requirement changes mid-project** | Medium | High | - Change control process<br>- Regular stakeholder reviews<br>- Flexible development approach<br>- Buffer time in schedule |
-| **Resource unavailability** | Medium | Medium | - Cross-training team members<br>- Knowledge documentation<br>- Backup resource planning |
-| **UAT delays** | High | Medium | - Early UAT planning<br>- Clear UAT criteria<br>- Stakeholder commitment<br>- Dedicated UAT coordinator |
-| **User adoption resistance** | Medium | High | - Comprehensive training<br>- Change management plan<br>- User involvement in design<br>- Phased rollout |
-| **Timeline overruns** | Medium | High | - Realistic scheduling<br>- Regular progress monitoring<br>- Early issue escalation<br>- Contingency buffer |
+| Risk                                | Probability | Impact | Mitigation Strategy                                                                                                       |
+| ----------------------------------- | ----------- | ------ | ------------------------------------------------------------------------------------------------------------------------- |
+| **Requirement changes mid-project** | Medium      | High   | - Change control process<br>- Regular stakeholder reviews<br>- Flexible development approach<br>- Buffer time in schedule |
+| **Resource unavailability**         | Medium      | Medium | - Cross-training team members<br>- Knowledge documentation<br>- Backup resource planning                                  |
+| **UAT delays**                      | High        | Medium | - Early UAT planning<br>- Clear UAT criteria<br>- Stakeholder commitment<br>- Dedicated UAT coordinator                   |
+| **User adoption resistance**        | Medium      | High   | - Comprehensive training<br>- Change management plan<br>- User involvement in design<br>- Phased rollout                  |
+| **Timeline overruns**               | Medium      | High   | - Realistic scheduling<br>- Regular progress monitoring<br>- Early issue escalation<br>- Contingency buffer               |
 
 ### 12.3 Business Risks
 
-| Risk | Probability | Impact | Mitigation Strategy |
-|------|-------------|--------|---------------------|
-| **Insufficient user training** | Medium | High | - Comprehensive training plan<br>- Training materials development<br>- Train-the-trainer approach<br>- Ongoing support |
-| **Data quality issues from legacy system** | High | Medium | - Data cleansing procedures<br>- Validation rules<br>- Manual review process<br>- Gradual data improvement |
-| **Lack of stakeholder engagement** | Low | High | - Regular communication<br>- Progress demonstrations<br>- Stakeholder involvement<br>- Executive sponsorship |
-| **Operational disruption during transition** | Medium | Medium | - Parallel running period<br>- Phased implementation<br>- 24/7 support during cutover<br>- Rollback plan |
+| Risk                                         | Probability | Impact | Mitigation Strategy                                                                                                    |
+| -------------------------------------------- | ----------- | ------ | ---------------------------------------------------------------------------------------------------------------------- |
+| **Insufficient user training**               | Medium      | High   | - Comprehensive training plan<br>- Training materials development<br>- Train-the-trainer approach<br>- Ongoing support |
+| **Data quality issues from legacy system**   | High        | Medium | - Data cleansing procedures<br>- Validation rules<br>- Manual review process<br>- Gradual data improvement             |
+| **Lack of stakeholder engagement**           | Low         | High   | - Regular communication<br>- Progress demonstrations<br>- Stakeholder involvement<br>- Executive sponsorship           |
+| **Operational disruption during transition** | Medium      | Medium | - Parallel running period<br>- Phased implementation<br>- 24/7 support during cutover<br>- Rollback plan               |
 
 ---
 
@@ -889,12 +930,14 @@ The system shall provide 10 predefined report types:
 ### 13.1 Testing Approach
 
 **Unit Testing:**
+
 - Target: 80% code coverage
 - Tools: Jest for JavaScript/TypeScript
 - Responsibility: Developers
 - Frequency: Continuous during development
 
 **Integration Testing:**
+
 - API endpoint testing
 - Database integration validation
 - MinIO storage integration
@@ -903,6 +946,7 @@ The system shall provide 10 predefined report types:
 - Responsibility: QA Team
 
 **System Testing:**
+
 - End-to-end workflow validation
 - Security testing
 - Performance testing
@@ -910,6 +954,7 @@ The system shall provide 10 predefined report types:
 - Responsibility: QA Team
 
 **User Acceptance Testing:**
+
 - Real-world scenario validation
 - Usability testing
 - Business process verification
@@ -918,19 +963,20 @@ The system shall provide 10 predefined report types:
 
 ### 13.2 Quality Metrics
 
-| Metric | Target | Measurement Method |
-|--------|--------|--------------------|
-| **Code Coverage** | ≥80% | Automated testing tools |
-| **Defect Density** | <5 defects per module | Defect tracking system |
-| **Test Case Pass Rate** | ≥95% | Test execution reports |
-| **Response Time (Login)** | <1.5 seconds | Performance monitoring |
-| **Response Time (Dashboard)** | <5 seconds | Performance monitoring |
-| **System Availability** | ≥99.5% | Uptime monitoring |
-| **User Satisfaction** | ≥4/5 rating | Post-UAT surveys |
+| Metric                        | Target                | Measurement Method      |
+| ----------------------------- | --------------------- | ----------------------- |
+| **Code Coverage**             | ≥80%                  | Automated testing tools |
+| **Defect Density**            | <5 defects per module | Defect tracking system  |
+| **Test Case Pass Rate**       | ≥95%                  | Test execution reports  |
+| **Response Time (Login)**     | <1.5 seconds          | Performance monitoring  |
+| **Response Time (Dashboard)** | <5 seconds            | Performance monitoring  |
+| **System Availability**       | ≥99.5%                | Uptime monitoring       |
+| **User Satisfaction**         | ≥4/5 rating           | Post-UAT surveys        |
 
 ### 13.3 Documentation Requirements
 
 **Technical Documentation:**
+
 - System Architecture Document
 - Database Schema Documentation
 - API Documentation (Swagger/OpenAPI)
@@ -938,6 +984,7 @@ The system shall provide 10 predefined report types:
 - System Administration Manual
 
 **User Documentation:**
+
 - User Manuals (by role)
 - Quick Reference Guides
 - Video Tutorials
@@ -945,6 +992,7 @@ The system shall provide 10 predefined report types:
 - Training Materials
 
 **Project Documentation:**
+
 - Inception Report (this document)
 - Requirements Specification (SRS)
 - Design Documents
@@ -982,6 +1030,7 @@ The system shall provide 10 predefined report types:
    - Delivery: Video tutorials, written guides
 
 **Training Materials:**
+
 - Role-based user manuals (English & Swahili)
 - Quick reference cards
 - Video tutorials (5-10 minutes each)
@@ -992,28 +1041,33 @@ The system shall provide 10 predefined report types:
 ### 14.2 Support Structure
 
 **Tier 1 Support:**
+
 - Support channel: Help desk (email, phone)
 - Response time: 4 hours during business hours
 - Resolution: Basic troubleshooting, password resets, navigation help
 - Staffing: 2 support agents
 
 **Tier 2 Support:**
+
 - Support channel: Escalation from Tier 1
 - Response time: 8 hours
 - Resolution: Technical issues, data corrections, configuration changes
 - Staffing: System administrators
 
 **Tier 3 Support:**
+
 - Support channel: Escalation from Tier 2
 - Response time: 24 hours
 - Resolution: Critical system issues, bugs, code fixes
 - Staffing: Development team (on-call)
 
 **Support Hours:**
+
 - Business hours: Monday-Friday, 8:00 AM - 5:00 PM
 - Emergency support: Available for critical issues outside business hours
 
 **Support Tools:**
+
 - Ticketing system for issue tracking
 - Knowledge base for common issues
 - Remote access tools for troubleshooting
@@ -1132,24 +1186,24 @@ The system shall provide 10 predefined report types:
 
 ### 17.1 Internal Dependencies
 
-| Dependency | Type | Impact if Delayed | Mitigation |
-|------------|------|-------------------|------------|
-| **Stakeholder requirement approval** | Critical | Project cannot proceed | Early engagement, regular communication |
-| **Server infrastructure readiness** | Critical | Development environment unavailable | Parallel preparation, early provisioning |
-| **Legacy data availability** | High | Migration delayed | Early data extraction, parallel running |
-| **Subject matter expert availability** | High | Requirements incomplete | Schedule in advance, document thoroughly |
-| **UAT tester availability** | High | UAT delayed | Early calendar blocking, incentives |
-| **Executive sponsorship** | Medium | Change resistance | Regular executive updates, demonstrate value |
+| Dependency                             | Type     | Impact if Delayed                   | Mitigation                                   |
+| -------------------------------------- | -------- | ----------------------------------- | -------------------------------------------- |
+| **Stakeholder requirement approval**   | Critical | Project cannot proceed              | Early engagement, regular communication      |
+| **Server infrastructure readiness**    | Critical | Development environment unavailable | Parallel preparation, early provisioning     |
+| **Legacy data availability**           | High     | Migration delayed                   | Early data extraction, parallel running      |
+| **Subject matter expert availability** | High     | Requirements incomplete             | Schedule in advance, document thoroughly     |
+| **UAT tester availability**            | High     | UAT delayed                         | Early calendar blocking, incentives          |
+| **Executive sponsorship**              | Medium   | Change resistance                   | Regular executive updates, demonstrate value |
 
 ### 17.2 External Dependencies
 
-| Dependency | Type | Impact if Delayed | Mitigation |
-|------------|------|-------------------|------------|
-| **HRIMS API documentation** | Medium | Integration delayed | Manual data sync as fallback |
-| **TCU verification process** | Low | Promotion verification manual | Accept manual verification initially |
-| **Internet connectivity** | Critical | System inaccessible | Backup connection, local caching |
-| **Government policy changes** | Medium | Requirement changes | Flexible architecture, change management |
-| **Third-party service availability** | Low | Some features delayed | Core functionality independent of externals |
+| Dependency                           | Type     | Impact if Delayed             | Mitigation                                  |
+| ------------------------------------ | -------- | ----------------------------- | ------------------------------------------- |
+| **HRIMS API documentation**          | Medium   | Integration delayed           | Manual data sync as fallback                |
+| **TCU verification process**         | Low      | Promotion verification manual | Accept manual verification initially        |
+| **Internet connectivity**            | Critical | System inaccessible           | Backup connection, local caching            |
+| **Government policy changes**        | Medium   | Requirement changes           | Flexible architecture, change management    |
+| **Third-party service availability** | Low      | Some features delayed         | Core functionality independent of externals |
 
 ### 17.3 Dependency Management
 
@@ -1165,18 +1219,19 @@ The system shall provide 10 predefined report types:
 
 ### 18.1 Stakeholder Communication
 
-| Stakeholder Group | Communication Method | Frequency | Content |
-|-------------------|---------------------|-----------|---------|
-| **Project Sponsor (CSCS)** | Executive briefing | Bi-weekly | Progress, risks, decisions needed |
-| **Steering Committee** | Status meetings | Monthly | Milestones, budget, major issues |
-| **End Users (HHRMD, HRMO, DO)** | Demos, workshops | Monthly | Feature previews, feedback sessions |
-| **IT Department** | Technical meetings | Weekly | Infrastructure, deployment, support |
-| **All Institutions** | Email updates | Monthly | Progress updates, upcoming changes |
-| **Project Team** | Daily standup | Daily | Tasks, blockers, coordination |
+| Stakeholder Group               | Communication Method | Frequency | Content                             |
+| ------------------------------- | -------------------- | --------- | ----------------------------------- |
+| **Project Sponsor (CSCS)**      | Executive briefing   | Bi-weekly | Progress, risks, decisions needed   |
+| **Steering Committee**          | Status meetings      | Monthly   | Milestones, budget, major issues    |
+| **End Users (HHRMD, HRMO, DO)** | Demos, workshops     | Monthly   | Feature previews, feedback sessions |
+| **IT Department**               | Technical meetings   | Weekly    | Infrastructure, deployment, support |
+| **All Institutions**            | Email updates        | Monthly   | Progress updates, upcoming changes  |
+| **Project Team**                | Daily standup        | Daily     | Tasks, blockers, coordination       |
 
 ### 18.2 Reporting Structure
 
 **Weekly Status Reports:**
+
 - Progress against plan
 - Completed tasks
 - Upcoming tasks
@@ -1184,6 +1239,7 @@ The system shall provide 10 predefined report types:
 - Resource status
 
 **Monthly Progress Reports:**
+
 - Milestone achievement
 - Budget status
 - Quality metrics
@@ -1191,6 +1247,7 @@ The system shall provide 10 predefined report types:
 - Change requests
 
 **Ad-Hoc Reports:**
+
 - Critical issues
 - Major decision points
 - Significant risks
@@ -1211,18 +1268,21 @@ The system shall provide 10 predefined report types:
 ### 19.1 Change Control Process
 
 **Request Submission:**
+
 1. Stakeholder identifies need for change
 2. Change request form completed
 3. Impact assessment conducted (time, cost, scope)
 4. Business justification documented
 
 **Review and Approval:**
+
 1. Project Manager reviews change request
 2. Technical team assesses feasibility
 3. Change Control Board (CCB) evaluates
 4. Decision: Approve, Reject, Defer
 
 **Implementation:**
+
 1. Update project plan and schedule
 2. Communicate change to stakeholders
 3. Implement approved changes
@@ -1230,6 +1290,7 @@ The system shall provide 10 predefined report types:
 5. Update documentation
 
 **Change Control Board:**
+
 - Members: Project Sponsor, Project Manager, Lead Developer, Business Analyst
 - Meeting: As needed (within 5 business days of request)
 - Authority: Approve changes within defined thresholds
@@ -1269,12 +1330,14 @@ The system shall provide 10 predefined report types:
 ### 20.1 Hypercare Support (4 weeks post-launch)
 
 **Objectives:**
+
 - Ensure system stability
 - Resolve issues quickly
 - Support user adaptation
 - Monitor performance
 
 **Activities:**
+
 - 24/7 on-call support team
 - Daily system health checks
 - Rapid issue resolution
@@ -1285,6 +1348,7 @@ The system shall provide 10 predefined report types:
 ### 20.2 Continuous Improvement
 
 **Month 1-3:**
+
 - Collect user feedback
 - Analyze usage patterns
 - Identify enhancement opportunities
@@ -1292,6 +1356,7 @@ The system shall provide 10 predefined report types:
 - Optimize performance bottlenecks
 
 **Month 4-6:**
+
 - Implement quick wins
 - Plan major enhancements
 - Refine business processes
@@ -1299,6 +1364,7 @@ The system shall provide 10 predefined report types:
 - Expand system capabilities
 
 **Ongoing:**
+
 - Regular system updates
 - Security patches
 - Performance tuning
@@ -1308,30 +1374,35 @@ The system shall provide 10 predefined report types:
 ### 20.3 System Maintenance
 
 **Daily:**
+
 - Automated backups
 - Log monitoring
 - Performance checks
 - Error monitoring
 
 **Weekly:**
+
 - Database optimization
 - Storage cleanup
 - Security updates
 - Backup verification
 
 **Monthly:**
+
 - System health report
 - User access review
 - Audit log analysis
 - Capacity planning review
 
 **Quarterly:**
+
 - Disaster recovery test
 - Security audit
 - Performance benchmark
 - User training refresher
 
 **Annually:**
+
 - Comprehensive system audit
 - Technology stack review
 - Business process review
@@ -1343,20 +1414,21 @@ The system shall provide 10 predefined report types:
 
 ### 21.1 Budget Categories
 
-| Category | Estimated Cost | Notes |
-|----------|---------------|-------|
-| **Personnel Costs** | $XXX,XXX | Development team, QA, PM for 7.5 months |
-| **Infrastructure** | $XX,XXX | Servers, storage, network equipment |
-| **Software Licenses** | $0 | All open-source technologies |
-| **Training** | $X,XXX | Training materials, sessions, travel |
-| **Contingency (15%)** | $XX,XXX | Risk mitigation buffer |
-| **TOTAL** | $XXX,XXX | |
+| Category              | Estimated Cost | Notes                                   |
+| --------------------- | -------------- | --------------------------------------- |
+| **Personnel Costs**   | $XXX,XXX       | Development team, QA, PM for 7.5 months |
+| **Infrastructure**    | $XX,XXX        | Servers, storage, network equipment     |
+| **Software Licenses** | $0             | All open-source technologies            |
+| **Training**          | $X,XXX         | Training materials, sessions, travel    |
+| **Contingency (15%)** | $XX,XXX        | Risk mitigation buffer                  |
+| **TOTAL**             | $XXX,XXX       |                                         |
 
 **Note:** Actual budget figures to be determined based on organizational rates and procurement processes.
 
 ### 21.2 Cost-Benefit Analysis
 
 **Estimated Annual Savings:**
+
 - Reduced paper and printing costs: $XX,XXX
 - Reduced processing time (70% faster): $XXX,XXX in labor savings
 - Reduced errors and rework: $XX,XXX
@@ -1364,10 +1436,12 @@ The system shall provide 10 predefined report types:
 - **Total Annual Savings:** $XXX,XXX
 
 **Return on Investment (ROI):**
+
 - Payback period: X.X years
 - 5-year ROI: XXX%
 
 **Intangible Benefits:**
+
 - Improved employee satisfaction
 - Enhanced transparency and accountability
 - Better strategic planning capability
@@ -1405,6 +1479,7 @@ For this project to succeed, the following must be in place:
 ### 22.3 Immediate Next Steps
 
 **Week 1-2 (Current):**
+
 - [ ] Review and approve Inception Report
 - [ ] Finalize project budget and resource allocation
 - [ ] Establish project governance structure
@@ -1412,6 +1487,7 @@ For this project to succeed, the following must be in place:
 - [ ] Conduct project kickoff meeting
 
 **Week 3-4:**
+
 - [ ] Begin detailed requirements gathering workshops
 - [ ] Finalize Software Requirements Specification (SRS)
 - [ ] Start system architecture design
@@ -1419,6 +1495,7 @@ For this project to succeed, the following must be in place:
 - [ ] Create UI/UX wireframes and mockups
 
 **Week 5-6:**
+
 - [ ] Complete and approve design documents
 - [ ] Set up development environment
 - [ ] Establish coding standards and practices
@@ -1428,6 +1505,7 @@ For this project to succeed, the following must be in place:
 ### 22.4 Key Deliverables - Next Phase
 
 **Phase 2: Planning & Design (4 weeks)**
+
 1. Detailed Software Requirements Specification (SRS)
 2. System Architecture Document
 3. Database Schema and ER Diagrams
@@ -1445,12 +1523,12 @@ This Inception Report serves as the foundation for the CSMS project. Approval of
 
 **Approval Signatures:**
 
-| Role | Name | Signature | Date |
-|------|------|-----------|------|
-| **Project Sponsor** | | | |
-| **Head of HR Management Division** | | | |
-| **IT Department Head** | | | |
-| **Project Manager** | | | |
+| Role                               | Name | Signature | Date |
+| ---------------------------------- | ---- | --------- | ---- |
+| **Project Sponsor**                |      |           |      |
+| **Head of HR Management Division** |      |           |      |
+| **IT Department Head**             |      |           |      |
+| **Project Manager**                |      |           |      |
 
 ---
 
@@ -1458,31 +1536,31 @@ This Inception Report serves as the foundation for the CSMS project. Approval of
 
 ### Appendix A: Acronyms and Definitions
 
-| Acronym | Full Form | Definition |
-|---------|-----------|------------|
-| **CSMS** | Civil Service Management System | The HR management system being developed |
-| **CSC** | Civil Service Commission | The government body overseeing civil service |
-| **HRO** | HR Officer | Institution-level HR personnel who submit requests |
-| **HHRMD** | Head of HR Management Division | Senior approver for all HR and disciplinary matters |
-| **HRMO** | HR Management Officer | Approver for HR requests (not disciplinary) |
-| **DO** | Disciplinary Officer | Approver for complaints, termination, dismissal |
-| **CSCS** | Civil Service Commission Secretary | Highest authority, executive oversight |
-| **HRRP** | HR Responsible Personnel | Institutional supervisor of HR activities |
-| **PO** | Planning Officer | Views reports for strategic planning |
-| **EMP** | Employee | Submit complaints, view own profile |
-| **LWOP** | Leave Without Pay | Unpaid leave period (1 month - 3 years) |
-| **TCU** | Tanzania Commission for Universities | Verifies foreign educational qualifications |
-| **HRIMS** | HR Information Management System | Existing external system for integration |
-| **SRS** | Software Requirements Specification | Detailed requirements document |
-| **UAT** | User Acceptance Testing | Testing phase with end users |
-| **RBAC** | Role-Based Access Control | Permission system based on user roles |
-| **MinIO** | Minimal Object Storage | S3-compatible object storage system |
-| **ORM** | Object-Relational Mapping | Database abstraction layer (Prisma) |
-| **API** | Application Programming Interface | Backend service endpoints |
-| **JWT** | JSON Web Token | Authentication token standard |
-| **PDF** | Portable Document Format | Document file format (only supported type) |
-| **ROI** | Return on Investment | Financial benefit metric |
-| **SLA** | Service Level Agreement | Performance and response time targets |
+| Acronym   | Full Form                            | Definition                                          |
+| --------- | ------------------------------------ | --------------------------------------------------- |
+| **CSMS**  | Civil Service Management System      | The HR management system being developed            |
+| **CSC**   | Civil Service Commission             | The government body overseeing civil service        |
+| **HRO**   | HR Officer                           | Institution-level HR personnel who submit requests  |
+| **HHRMD** | Head of HR Management Division       | Senior approver for all HR and disciplinary matters |
+| **HRMO**  | HR Management Officer                | Approver for HR requests (not disciplinary)         |
+| **DO**    | Disciplinary Officer                 | Approver for complaints, termination, dismissal     |
+| **CSCS**  | Civil Service Commission Secretary   | Highest authority, executive oversight              |
+| **HRRP**  | HR Responsible Personnel             | Institutional supervisor of HR activities           |
+| **PO**    | Planning Officer                     | Views reports for strategic planning                |
+| **EMP**   | Employee                             | Submit complaints, view own profile                 |
+| **LWOP**  | Leave Without Pay                    | Unpaid leave period (1 month - 3 years)             |
+| **TCU**   | Tanzania Commission for Universities | Verifies foreign educational qualifications         |
+| **HRIMS** | HR Information Management System     | Existing external system for integration            |
+| **SRS**   | Software Requirements Specification  | Detailed requirements document                      |
+| **UAT**   | User Acceptance Testing              | Testing phase with end users                        |
+| **RBAC**  | Role-Based Access Control            | Permission system based on user roles               |
+| **MinIO** | Minimal Object Storage               | S3-compatible object storage system                 |
+| **ORM**   | Object-Relational Mapping            | Database abstraction layer (Prisma)                 |
+| **API**   | Application Programming Interface    | Backend service endpoints                           |
+| **JWT**   | JSON Web Token                       | Authentication token standard                       |
+| **PDF**   | Portable Document Format             | Document file format (only supported type)          |
+| **ROI**   | Return on Investment                 | Financial benefit metric                            |
+| **SLA**   | Service Level Agreement              | Performance and response time targets               |
 
 ### Appendix B: Reference Documents
 
@@ -1494,24 +1572,24 @@ This Inception Report serves as the foundation for the CSMS project. Approval of
 
 ### Appendix C: Contact Information
 
-| Role | Name | Email | Phone |
-|------|------|-------|-------|
-| **Project Sponsor** | [TBD] | [TBD] | [TBD] |
-| **Project Manager** | [TBD] | [TBD] | [TBD] |
-| **Lead Developer** | [TBD] | [TBD] | [TBD] |
+| Role                 | Name  | Email | Phone |
+| -------------------- | ----- | ----- | ----- |
+| **Project Sponsor**  | [TBD] | [TBD] | [TBD] |
+| **Project Manager**  | [TBD] | [TBD] | [TBD] |
+| **Lead Developer**   | [TBD] | [TBD] | [TBD] |
 | **Business Analyst** | [TBD] | [TBD] | [TBD] |
-| **QA Lead** | [TBD] | [TBD] | [TBD] |
+| **QA Lead**          | [TBD] | [TBD] | [TBD] |
 
 ### Appendix D: Document Revision History
 
-| Version | Date | Author | Description of Changes |
-|---------|------|--------|------------------------|
-| 0.1 | Dec 20, 2025 | Project Team | Initial draft |
-| 0.2 | Dec 23, 2025 | Project Team | Added risk assessment and budget |
-| 1.0 | Dec 25, 2025 | Project Team | Final version for approval |
+| Version | Date         | Author       | Description of Changes           |
+| ------- | ------------ | ------------ | -------------------------------- |
+| 0.1     | Dec 20, 2025 | Project Team | Initial draft                    |
+| 0.2     | Dec 23, 2025 | Project Team | Added risk assessment and budget |
+| 1.0     | Dec 25, 2025 | Project Team | Final version for approval       |
 
 ---
 
 **END OF INCEPTION REPORT**
 
-*This document is confidential and proprietary to the Civil Service Commission of Zanzibar. Unauthorized distribution or reproduction is prohibited.*
+_This document is confidential and proprietary to the Civil Service Commission of Zanzibar. Unauthorized distribution or reproduction is prohibited._

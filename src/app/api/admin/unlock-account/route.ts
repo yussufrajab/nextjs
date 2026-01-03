@@ -7,7 +7,9 @@ import { createNotification } from '@/lib/notifications';
 const unlockAccountSchema = z.object({
   userId: z.string().min(1, 'User ID is required'),
   adminId: z.string().min(1, 'Admin ID is required'),
-  verificationNotes: z.string().min(10, 'Verification notes must be at least 10 characters'),
+  verificationNotes: z
+    .string()
+    .min(10, 'Verification notes must be at least 10 characters'),
   identityVerified: z.boolean().refine((val) => val === true, {
     message: 'Identity verification is required',
   }),
@@ -16,7 +18,8 @@ const unlockAccountSchema = z.object({
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { userId, adminId, verificationNotes, identityVerified } = unlockAccountSchema.parse(body);
+    const { userId, adminId, verificationNotes, identityVerified } =
+      unlockAccountSchema.parse(body);
 
     // Verify admin user exists and has admin role
     const admin = await db.user.findUnique({
@@ -60,7 +63,9 @@ export async function POST(req: Request) {
       link: '/login',
     });
 
-    console.log(`Account unlocked for user ${user.username} by admin ${admin.username}`);
+    console.log(
+      `Account unlocked for user ${user.username} by admin ${admin.username}`
+    );
 
     return NextResponse.json({
       success: true,

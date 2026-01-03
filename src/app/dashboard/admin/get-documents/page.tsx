@@ -2,14 +2,34 @@
 
 import { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/shared/page-header';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
-import { Loader2, FileText, CheckCircle, XCircle, AlertCircle, Building } from 'lucide-react';
+import {
+  Loader2,
+  FileText,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  Building,
+} from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Pagination } from '@/components/shared/pagination';
 
@@ -52,8 +72,11 @@ interface FetchResponse {
 
 export default function GetDocumentsPage() {
   const [institutions, setInstitutions] = useState<Institution[]>([]);
-  const [filteredInstitutions, setFilteredInstitutions] = useState<Institution[]>([]);
-  const [selectedInstitution, setSelectedInstitution] = useState<Institution | null>(null);
+  const [filteredInstitutions, setFilteredInstitutions] = useState<
+    Institution[]
+  >([]);
+  const [selectedInstitution, setSelectedInstitution] =
+    useState<Institution | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isFetchingInstitutions, setIsFetchingInstitutions] = useState(true);
@@ -109,10 +132,11 @@ export default function GetDocumentsPage() {
     if (!searchTerm) {
       setFilteredInstitutions(institutions);
     } else {
-      const filtered = institutions.filter(inst =>
-        inst.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        inst.voteNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        inst.tinNumber?.toLowerCase().includes(searchTerm.toLowerCase())
+      const filtered = institutions.filter(
+        (inst) =>
+          inst.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          inst.voteNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          inst.tinNumber?.toLowerCase().includes(searchTerm.toLowerCase())
       );
       setFilteredInstitutions(filtered);
     }
@@ -125,7 +149,9 @@ export default function GetDocumentsPage() {
     currentPage * itemsPerPage
   );
 
-  const totalInstitutionPages = Math.ceil(filteredInstitutions.length / itemsPerPage);
+  const totalInstitutionPages = Math.ceil(
+    filteredInstitutions.length / itemsPerPage
+  );
 
   const handleFetchDocuments = async () => {
     if (!selectedInstitution) {
@@ -142,15 +168,18 @@ export default function GetDocumentsPage() {
     setProgress(null);
 
     try {
-      const response = await fetch('/api/hrims/fetch-documents-by-institution', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          institutionId: selectedInstitution.id,
-        }),
-      });
+      const response = await fetch(
+        '/api/hrims/fetch-documents-by-institution',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            institutionId: selectedInstitution.id,
+          }),
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -216,7 +245,10 @@ export default function GetDocumentsPage() {
       console.error('Error fetching documents:', error);
       toast({
         title: 'Error',
-        description: error instanceof Error ? error.message : 'An error occurred while fetching documents',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'An error occurred while fetching documents',
         variant: 'destructive',
       });
     } finally {
@@ -228,7 +260,10 @@ export default function GetDocumentsPage() {
   if (isFetchingInstitutions) {
     return (
       <div>
-        <PageHeader title="Fetch Employee Documents from HRIMS" description="Loading..." />
+        <PageHeader
+          title="Fetch Employee Documents from HRIMS"
+          description="Loading..."
+        />
         <Card>
           <CardContent className="py-10">
             <div className="flex items-center justify-center">
@@ -290,14 +325,19 @@ export default function GetDocumentsPage() {
                           className={`cursor-pointer ${selectedInstitution?.id === inst.id ? 'bg-primary/10' : ''}`}
                           onClick={() => setSelectedInstitution(inst)}
                         >
-                          <TableCell className="font-medium">{inst.name}</TableCell>
+                          <TableCell className="font-medium">
+                            {inst.name}
+                          </TableCell>
                           <TableCell>{inst.voteNumber || 'N/A'}</TableCell>
                           <TableCell>{inst.tinNumber || 'N/A'}</TableCell>
                         </TableRow>
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={3} className="text-center text-muted-foreground">
+                        <TableCell
+                          colSpan={3}
+                          className="text-center text-muted-foreground"
+                        >
                           No institutions found
                         </TableCell>
                       </TableRow>
@@ -324,28 +364,34 @@ export default function GetDocumentsPage() {
               <FileText className="h-5 w-5" />
               Fetch Configuration
             </CardTitle>
-            <CardDescription>
-              Configure document fetch settings
-            </CardDescription>
+            <CardDescription>Configure document fetch settings</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
               {selectedInstitution ? (
                 <>
                   <div className="bg-secondary/20 p-4 rounded-lg">
-                    <p className="text-sm font-medium mb-1">Selected Institution:</p>
-                    <p className="text-lg font-bold">{selectedInstitution.name}</p>
+                    <p className="text-sm font-medium mb-1">
+                      Selected Institution:
+                    </p>
+                    <p className="text-lg font-bold">
+                      {selectedInstitution.name}
+                    </p>
                     <div className="mt-2 text-sm text-muted-foreground">
-                      <p>Vote Code: {selectedInstitution.voteNumber || 'N/A'}</p>
+                      <p>
+                        Vote Code: {selectedInstitution.voteNumber || 'N/A'}
+                      </p>
                       <p>TIN: {selectedInstitution.tinNumber || 'N/A'}</p>
                     </div>
                   </div>
 
                   <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
                     <p className="text-sm text-blue-800 dark:text-blue-300">
-                      <strong>How it works:</strong><br/>
-                      This will fetch documents and certificates from HRIMS for all employees in this institution.
-                      Documents include CV, confirmation letter, job contract, and birth certificate.
+                      <strong>How it works:</strong>
+                      <br />
+                      This will fetch documents and certificates from HRIMS for
+                      all employees in this institution. Documents include CV,
+                      confirmation letter, job contract, and birth certificate.
                       All files will be stored in MinIO storage.
                     </p>
                   </div>
@@ -375,20 +421,26 @@ export default function GetDocumentsPage() {
                       <Alert>
                         <AlertCircle className="h-4 w-4" />
                         <AlertDescription>
-                          Processing {progress.total} employees. Please do not close this page.
+                          Processing {progress.total} employees. Please do not
+                          close this page.
                         </AlertDescription>
                       </Alert>
 
                       <div className="space-y-2">
                         <div className="flex justify-between text-sm">
                           <span className="font-medium">
-                            {progress.employee ? `Processing: ${progress.employee}` : 'Starting...'}
+                            {progress.employee
+                              ? `Processing: ${progress.employee}`
+                              : 'Starting...'}
                           </span>
                           <span className="text-muted-foreground">
                             {progress.current} / {progress.total}
                           </span>
                         </div>
-                        <Progress value={(progress.current / progress.total) * 100} className="h-2" />
+                        <Progress
+                          value={(progress.current / progress.total) * 100}
+                          className="h-2"
+                        />
                         {progress.summary && (
                           <div className="flex gap-4 text-xs text-muted-foreground">
                             <span className="text-green-600">
@@ -414,8 +466,8 @@ export default function GetDocumentsPage() {
                     <Alert className="mt-4">
                       <AlertCircle className="h-4 w-4" />
                       <AlertDescription>
-                        Initializing document fetch. This may take several minutes.
-                        Please do not close this page.
+                        Initializing document fetch. This may take several
+                        minutes. Please do not close this page.
                       </AlertDescription>
                     </Alert>
                   )}
@@ -442,8 +494,12 @@ export default function GetDocumentsPage() {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="p-4 border rounded-lg">
-                <div className="text-2xl font-bold">{results.summary.total}</div>
-                <div className="text-sm text-muted-foreground">Total Processed</div>
+                <div className="text-2xl font-bold">
+                  {results.summary.total}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Total Processed
+                </div>
               </div>
               <div className="p-4 border rounded-lg bg-green-50">
                 <div className="text-2xl font-bold text-green-600">
@@ -474,8 +530,8 @@ export default function GetDocumentsPage() {
                     result.status === 'success'
                       ? 'bg-green-50 border-green-200'
                       : result.status === 'partial'
-                      ? 'bg-yellow-50 border-yellow-200'
-                      : 'bg-red-50 border-red-200'
+                        ? 'bg-yellow-50 border-yellow-200'
+                        : 'bg-red-50 border-red-200'
                   }`}
                 >
                   <div className="flex items-start justify-between">
@@ -488,7 +544,9 @@ export default function GetDocumentsPage() {
                         ) : (
                           <XCircle className="h-4 w-4 text-red-600" />
                         )}
-                        <span className="font-medium">{result.employeeName}</span>
+                        <span className="font-medium">
+                          {result.employeeName}
+                        </span>
                         <span className="text-sm text-muted-foreground">
                           ({result.payrollNumber})
                         </span>

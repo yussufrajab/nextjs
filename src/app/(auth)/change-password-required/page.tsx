@@ -43,7 +43,9 @@ type ChangePasswordFormValues = z.infer<typeof changePasswordSchema>;
 
 export default function ChangePasswordRequiredPage() {
   const [isLoading, setIsLoading] = useState(false);
-  const [reason, setReason] = useState<'temporary' | 'expired' | 'policy'>('temporary');
+  const [reason, setReason] = useState<'temporary' | 'expired' | 'policy'>(
+    'temporary'
+  );
   const [expiryDate, setExpiryDate] = useState<Date | null>(null);
   const { user, logout } = useAuth();
   const { toast } = useToast();
@@ -108,7 +110,8 @@ export default function ChangePasswordRequiredPage() {
 
       toast({
         title: 'Success',
-        description: 'Your password has been changed successfully. Please login again.',
+        description:
+          'Your password has been changed successfully. Please login again.',
       });
 
       // Logout and redirect to login
@@ -117,7 +120,8 @@ export default function ChangePasswordRequiredPage() {
     } catch (error) {
       toast({
         title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to change password',
+        description:
+          error instanceof Error ? error.message : 'Failed to change password',
         variant: 'destructive',
       });
     } finally {
@@ -146,12 +150,14 @@ export default function ChangePasswordRequiredPage() {
       case 'expired':
         return {
           title: 'Password Expired',
-          description: 'Your temporary password has expired. Please set a new password.',
+          description:
+            'Your temporary password has expired. Please set a new password.',
         };
       case 'policy':
         return {
           title: 'Password Change Required',
-          description: 'Your password must be changed to meet security policy requirements.',
+          description:
+            'Your password must be changed to meet security policy requirements.',
         };
     }
   };
@@ -190,8 +196,8 @@ export default function ChangePasswordRequiredPage() {
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Important</AlertTitle>
             <AlertDescription>
-              You cannot access the system until you change your password. This page cannot be
-              closed or skipped.
+              You cannot access the system until you change your password. This
+              page cannot be closed or skipped.
             </AlertDescription>
           </Alert>
 
@@ -231,7 +237,10 @@ export default function ChangePasswordRequiredPage() {
                       />
                     </FormControl>
                     <FormMessage />
-                    <PasswordStrengthMeter password={field.value} showRequirements />
+                    <PasswordStrengthMeter
+                      password={field.value}
+                      showRequirements
+                    />
                   </FormItem>
                 )}
               />
@@ -264,7 +273,9 @@ export default function ChangePasswordRequiredPage() {
                   Logout
                 </Button>
                 <Button type="submit" disabled={isLoading} className="flex-1">
-                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {isLoading && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
                   Change Password
                 </Button>
               </div>

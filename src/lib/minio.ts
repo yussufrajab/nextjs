@@ -13,7 +13,7 @@ console.log('MinIO credentials check:', {
   endPoint,
   port,
   useSSL,
-  NODE_ENV: process.env.NODE_ENV
+  NODE_ENV: process.env.NODE_ENV,
 });
 
 const minioClient = new MinioClient({
@@ -42,7 +42,10 @@ export async function ensureBucketExists(bucketName: string = DEFAULT_BUCKET) {
 }
 
 // Generate unique object key
-export function generateObjectKey(folder: string, originalName: string): string {
+export function generateObjectKey(
+  folder: string,
+  originalName: string
+): string {
   const timestamp = Date.now();
   const randomSuffix = Math.random().toString(36).substring(2, 8);
   const sanitizedName = originalName.replace(/[^a-zA-Z0-9.-]/g, '_');
@@ -58,7 +61,7 @@ export async function uploadFile(
 ) {
   try {
     await ensureBucketExists(bucketName);
-    
+
     const uploadResult = await minioClient.putObject(
       bucketName,
       objectKey,
@@ -105,7 +108,8 @@ export async function getFileMetadata(
     const stat = await minioClient.statObject(bucketName, objectKey);
     return {
       size: stat.size,
-      contentType: stat.metaData?.['content-type'] || 'application/octet-stream',
+      contentType:
+        stat.metaData?.['content-type'] || 'application/octet-stream',
       lastModified: stat.lastModified,
       etag: stat.etag,
     };
@@ -122,7 +126,11 @@ export async function generatePresignedUrl(
   bucketName: string = DEFAULT_BUCKET
 ) {
   try {
-    const url = await minioClient.presignedGetObject(bucketName, objectKey, expiry);
+    const url = await minioClient.presignedGetObject(
+      bucketName,
+      objectKey,
+      expiry
+    );
     return url;
   } catch (error) {
     console.error('MinIO presigned URL error:', error);
@@ -152,7 +160,7 @@ export async function listFiles(
   try {
     const objects: any[] = [];
     const stream = minioClient.listObjects(bucketName, prefix, true);
-    
+
     return new Promise((resolve, reject) => {
       stream.on('data', (obj) => objects.push(obj));
       stream.on('error', reject);

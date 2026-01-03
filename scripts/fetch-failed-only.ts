@@ -26,7 +26,10 @@ const FAILED_INSTITUTIONS = [
   { voteNumber: '025', name: 'Hospitali ya Mnazi Mmoja' },
   { voteNumber: '008', name: 'WIZARA YA AFYA' },
   { voteNumber: '011', name: 'WIZARA YA ELIMU NA MAFUNZO YA AMALI' },
-  { voteNumber: '012', name: 'WIZARA YA KILIMO UMWAGILIAJI MALIASILI NA MIFUGO' },
+  {
+    voteNumber: '012',
+    name: 'WIZARA YA KILIMO UMWAGILIAJI MALIASILI NA MIFUGO',
+  },
 ];
 
 // ============================================================================
@@ -34,7 +37,7 @@ const FAILED_INSTITUTIONS = [
 // ============================================================================
 
 function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function formatDuration(seconds: number): string {
@@ -65,7 +68,8 @@ async function fetchInstitution(
   logFile?: fs.WriteStream
 ): Promise<any> {
   const startTime = Date.now();
-  const retryText = retryAttempt > 0 ? ` (Retry ${retryAttempt}/${CONFIG.MAX_RETRIES})` : '';
+  const retryText =
+    retryAttempt > 0 ? ` (Retry ${retryAttempt}/${CONFIG.MAX_RETRIES})` : '';
 
   log(`\n${'='.repeat(70)}`, logFile);
   log(`Fetching: ${institution.name}${retryText}`, logFile);
@@ -93,8 +97,14 @@ async function fetchInstitution(
 
     if (response.status === 200 && response.data.success) {
       const data = response.data.data;
-      log(`✅ SUCCESS: Fetched ${data.employeeCount} employees in ${formatDuration(duration)}`, logFile);
-      log(`   Pages: ${data.pagesFetched}, Skipped: ${data.skippedCount}`, logFile);
+      log(
+        `✅ SUCCESS: Fetched ${data.employeeCount} employees in ${formatDuration(duration)}`,
+        logFile
+      );
+      log(
+        `   Pages: ${data.pagesFetched}, Skipped: ${data.skippedCount}`,
+        logFile
+      );
       return { success: true, institution, data, duration };
     } else {
       const error = response.data?.message || `HTTP ${response.status}`;
@@ -102,7 +112,10 @@ async function fetchInstitution(
 
       // Retry if possible
       if (retryAttempt < CONFIG.MAX_RETRIES) {
-        log(`⏳ Waiting ${CONFIG.RETRY_DELAY / 1000}s before retry...`, logFile);
+        log(
+          `⏳ Waiting ${CONFIG.RETRY_DELAY / 1000}s before retry...`,
+          logFile
+        );
         await sleep(CONFIG.RETRY_DELAY);
         return fetchInstitution(institution, retryAttempt + 1, logFile);
       }
@@ -148,7 +161,10 @@ async function main() {
 
   // Create log file
   const timestamp = new Date().toISOString().replace(/:/g, '-').split('.')[0];
-  const logFilePath = path.join(CONFIG.LOG_DIR, `fetch-failed-retry-${timestamp}.log`);
+  const logFilePath = path.join(
+    CONFIG.LOG_DIR,
+    `fetch-failed-retry-${timestamp}.log`
+  );
   const logFile = fs.createWriteStream(logFilePath, { flags: 'a' });
 
   log('\n' + '='.repeat(80), logFile);
@@ -156,7 +172,10 @@ async function main() {
   log('='.repeat(80), logFile);
   log(`Started: ${getCurrentTimestamp()}`, logFile);
   log(`Log: ${logFilePath}`, logFile);
-  log(`Page Size: ${CONFIG.PAGE_SIZE} (smaller for large institutions)`, logFile);
+  log(
+    `Page Size: ${CONFIG.PAGE_SIZE} (smaller for large institutions)`,
+    logFile
+  );
   log(`Max Retries: ${CONFIG.MAX_RETRIES}`, logFile);
   log('='.repeat(80) + '\n', logFile);
 
@@ -168,11 +187,14 @@ async function main() {
   for (let i = 0; i < FAILED_INSTITUTIONS.length; i++) {
     const failedInst = FAILED_INSTITUTIONS[i];
 
-    log(`\n[${i + 1}/${FAILED_INSTITUTIONS.length}] Processing: ${failedInst.name}`, logFile);
+    log(
+      `\n[${i + 1}/${FAILED_INSTITUTIONS.length}] Processing: ${failedInst.name}`,
+      logFile
+    );
 
     // Find institution in database
     const institution = await prisma.institution.findFirst({
-      where: { voteNumber: failedInst.voteNumber }
+      where: { voteNumber: failedInst.voteNumber },
     });
 
     if (!institution) {
@@ -192,7 +214,10 @@ async function main() {
 
     // Pause before next institution
     if (i < FAILED_INSTITUTIONS.length - 1) {
-      log(`\n⏳ Pausing ${CONFIG.PAUSE_BETWEEN_INSTITUTIONS / 1000}s...`, logFile);
+      log(
+        `\n⏳ Pausing ${CONFIG.PAUSE_BETWEEN_INSTITUTIONS / 1000}s...`,
+        logFile
+      );
       await sleep(CONFIG.PAUSE_BETWEEN_INSTITUTIONS);
     }
   }
@@ -210,16 +235,23 @@ async function main() {
   // Detailed results
   if (successCount > 0) {
     log('\n✅ Successfully Retried:', logFile);
-    results.filter(r => r.success).forEach((r, i) => {
-      log(`${i + 1}. ${r.institution.name} - ${r.data.employeeCount} employees`, logFile);
-    });
+    results
+      .filter((r) => r.success)
+      .forEach((r, i) => {
+        log(
+          `${i + 1}. ${r.institution.name} - ${r.data.employeeCount} employees`,
+          logFile
+        );
+      });
   }
 
   if (failureCount > 0) {
     log('\n❌ Still Failed:', logFile);
-    results.filter(r => !r.success).forEach((r, i) => {
-      log(`${i + 1}. ${r.institution.name} - ${r.error}`, logFile);
-    });
+    results
+      .filter((r) => !r.success)
+      .forEach((r, i) => {
+        log(`${i + 1}. ${r.institution.name} - ${r.error}`, logFile);
+      });
     log('\n💡 Suggestions for still-failed institutions:', logFile);
     log('   - Try smaller page size (e.g., PAGE_SIZE: 25)', logFile);
     log('   - Increase timeout (e.g., TIMEOUT: 7200000)', logFile);

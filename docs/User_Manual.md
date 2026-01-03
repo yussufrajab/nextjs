@@ -1,4 +1,5 @@
 # USER MANUAL
+
 ## Civil Service Management System (CSMS)
 
 **System Version:** 1.0
@@ -30,6 +31,7 @@
 This User Manual provides comprehensive guidance for using the Civil Service Management System (CSMS). It contains step-by-step instructions, feature descriptions, and troubleshooting information to help you efficiently manage civil service HR operations in Zanzibar.
 
 **Who Should Use This Manual:**
+
 - Human Resources Officers (HRO)
 - HR Management Officers (HRMO)
 - Head of HR and Disciplinary (HHRMD)
@@ -43,14 +45,14 @@ This User Manual provides comprehensive guidance for using the Civil Service Man
 
 Throughout this manual, the following conventions are used:
 
-| Convention | Meaning | Example |
-|------------|---------|---------|
-| **Bold** | Important terms, buttons, menu items | Click **Submit** |
-| *Italic* | Field names, filenames | Enter employee name in *Name* field |
-| `Code` | System messages, URLs | Navigate to `https://csms.zanajira.go.tz` |
-| 📋 Note | Additional information | 📋 **Note:** PDF files only, max 2MB |
-| ⚠️ Warning | Important warnings | ⚠️ **Warning:** This action cannot be undone |
-| ✅ Tip | Helpful tips | ✅ **Tip:** Use Ctrl+F to search |
+| Convention | Meaning                              | Example                                      |
+| ---------- | ------------------------------------ | -------------------------------------------- |
+| **Bold**   | Important terms, buttons, menu items | Click **Submit**                             |
+| _Italic_   | Field names, filenames               | Enter employee name in _Name_ field          |
+| `Code`     | System messages, URLs                | Navigate to `https://csms.zanajira.go.tz`    |
+| 📋 Note    | Additional information               | 📋 **Note:** PDF files only, max 2MB         |
+| ⚠️ Warning | Important warnings                   | ⚠️ **Warning:** This action cannot be undone |
+| ✅ Tip     | Helpful tips                         | ✅ **Tip:** Use Ctrl+F to search             |
 
 ### 1.3 Getting Help
 
@@ -74,6 +76,7 @@ The **Civil Service Management System (CSMS)** is a comprehensive web-based appl
 ### 2.2 Key Features
 
 **Core Modules:**
+
 1. **Employee Profile Management** - Comprehensive employee records with photos and documents
 2. **Request Management** - 8 types of HR requests with approval workflows
 3. **Complaint Management** - Employee grievance handling
@@ -84,6 +87,7 @@ The **Civil Service Management System (CSMS)** is a comprehensive web-based appl
 8. **User Management** - Role-based access control
 
 **Request Types Managed:**
+
 1. ✅ **Confirmation Requests** - Probation completion
 2. 📈 **Promotion Requests** - Experience or education-based
 3. 🏖️ **LWOP Requests** - Leave without pay
@@ -119,16 +123,19 @@ The **Civil Service Management System (CSMS)** is a comprehensive web-based appl
 ### 2.4 Browser Requirements
 
 **Supported Browsers:**
+
 - ✅ Google Chrome 90+ (Recommended)
 - ✅ Mozilla Firefox 88+
 - ✅ Microsoft Edge 90+
 - ✅ Safari 14+
 
 **Screen Resolution:**
+
 - Minimum: 1366 x 768
 - Recommended: 1920 x 1080
 
 **Internet Connection:**
+
 - Minimum: 2 Mbps
 - Recommended: 5 Mbps or higher
 
@@ -141,6 +148,7 @@ The **Civil Service Management System (CSMS)** is a comprehensive web-based appl
 #### Staff Login
 
 **Step 1:** Open your web browser and navigate to:
+
 ```
 https://csms.zanajira.go.tz
 ```
@@ -168,6 +176,7 @@ https://csms.zanajira.go.tz
 ```
 
 **Step 3:** Enter your credentials:
+
 - **Username:** Your assigned username (e.g., kmnyonge)
 - **Password:** Your password
 
@@ -180,6 +189,7 @@ https://csms.zanajira.go.tz
 Employees use a different login method:
 
 **Step 1:** Navigate to:
+
 ```
 https://csms.zanajira.go.tz/employee-login
 ```
@@ -218,12 +228,13 @@ After your first successful login:
 
 **To change your password on first login:**
 
-1. Enter your *Current Password*
-2. Enter your *New Password* (minimum 8 characters, must contain uppercase, lowercase, and numbers)
-3. Confirm your *New Password*
+1. Enter your _Current Password_
+2. Enter your _New Password_ (minimum 8 characters, must contain uppercase, lowercase, and numbers)
+3. Confirm your _New Password_
 4. Click **Change Password**
 
 **Password Requirements:**
+
 - Minimum 8 characters
 - At least one uppercase letter (A-Z)
 - At least one lowercase letter (a-z)
@@ -261,13 +272,13 @@ After login, you will see the main dashboard:
 
 **Dashboard Components:**
 
-| Component | Description |
-|-----------|-------------|
-| **Top Navigation Bar** | Access to main modules and user menu |
-| **Statistics Cards** | Quick overview of key metrics |
-| **Recent Activities** | Latest request activities |
-| **Notifications Bell (🔔)** | Unread notifications counter |
-| **User Menu (👤)** | Profile, settings, logout |
+| Component                   | Description                          |
+| --------------------------- | ------------------------------------ |
+| **Top Navigation Bar**      | Access to main modules and user menu |
+| **Statistics Cards**        | Quick overview of key metrics        |
+| **Recent Activities**       | Latest request activities            |
+| **Notifications Bell (🔔)** | Unread notifications counter         |
+| **User Menu (👤)**          | Profile, settings, logout            |
 
 ### 3.4 Navigation Menu
 
@@ -305,11 +316,13 @@ Click the **☰ Menu** icon to open the sidebar:
 **To log out safely:**
 
 **Option 1:** Using sidebar menu
+
 1. Click **☰ Menu**
 2. Scroll to bottom
 3. Click **🚪 Logout**
 
 **Option 2:** Using user menu
+
 1. Click **👤** (top right)
 2. Select **Logout**
 
@@ -323,70 +336,74 @@ Click the **☰ Menu** icon to open the sidebar:
 
 CSMS implements role-based access control (RBAC) with 9 distinct roles:
 
-| Role Code | Full Name | Access Scope | Primary Function |
-|-----------|-----------|--------------|------------------|
-| **HRO** | Human Resources Officer | Institution only | Submit HR requests |
-| **HHRMD** | Head of HR & Disciplinary | All institutions | Approve HR & disciplinary |
-| **HRMO** | HR Management Officer | All institutions | Approve HR requests |
-| **DO** | Disciplinary Officer | All institutions | Handle complaints/terminations |
-| **PO** | Planning Officer | All institutions (read-only) | View reports |
-| **CSCS** | Civil Service Commission Secretary | All institutions | Executive oversight |
-| **HRRP** | HR Responsible Personnel | Institution only | Institutional supervisor |
-| **ADMIN** | Administrator | System-wide | System management |
-| **EMPLOYEE** | Employee | Own data only | Submit complaints, view profile |
+| Role Code    | Full Name                          | Access Scope                 | Primary Function                |
+| ------------ | ---------------------------------- | ---------------------------- | ------------------------------- |
+| **HRO**      | Human Resources Officer            | Institution only             | Submit HR requests              |
+| **HHRMD**    | Head of HR & Disciplinary          | All institutions             | Approve HR & disciplinary       |
+| **HRMO**     | HR Management Officer              | All institutions             | Approve HR requests             |
+| **DO**       | Disciplinary Officer               | All institutions             | Handle complaints/terminations  |
+| **PO**       | Planning Officer                   | All institutions (read-only) | View reports                    |
+| **CSCS**     | Civil Service Commission Secretary | All institutions             | Executive oversight             |
+| **HRRP**     | HR Responsible Personnel           | Institution only             | Institutional supervisor        |
+| **ADMIN**    | Administrator                      | System-wide                  | System management               |
+| **EMPLOYEE** | Employee                           | Own data only                | Submit complaints, view profile |
 
 ### 4.2 CSC Roles vs Institution Roles
 
 **CSC Roles** (Civil Service Commission):
+
 - **HHRMD**, **HRMO**, **DO**, **PO**, **CSCS**
 - Can access data from **ALL institutions**
 - Have approval authority across institutions
 - See system-wide dashboard
 
 **Institution-Based Roles:**
+
 - **HRO**, **HRRP**
 - Can only access data from **their own institution**
 - Submit requests for their institution only
 - See institution-specific dashboard
 
 **Example:**
+
 - **HRO at OFISI YA RAIS** can only see employees from OFISI YA RAIS
 - **HRMO** can see employees from all 41 institutions
 
 ### 4.3 Role Permissions Matrix
 
-| Function | HRO | HHRMD | HRMO | DO | PO | CSCS | HRRP | ADMIN | EMPLOYEE |
-|----------|-----|-------|------|----|----|------|------|-------|----------|
-| **View Dashboard** | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ | ❌ |
-| **Submit Confirmations** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **Approve Confirmations** | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **Submit Promotions** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **Approve Promotions** | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **Submit LWOP** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **Approve LWOP** | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **Submit Cadre Change** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **Approve Cadre Change** | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **Submit Retirement** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **Approve Retirement** | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **Submit Resignation** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **Approve Resignation** | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **Submit Service Extension** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **Approve Service Extension** | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **Submit Complaints** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
-| **Approve Complaints** | ❌ | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **Submit Termination** | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **Approve Termination** | ❌ | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **View Reports** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
-| **Export Reports** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
-| **Manage Users** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ |
-| **Manage Institutions** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ |
-| **HRIMS Sync** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ |
-| **View Own Profile** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Change Password** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Function                      | HRO | HHRMD | HRMO | DO  | PO  | CSCS | HRRP | ADMIN | EMPLOYEE |
+| ----------------------------- | --- | ----- | ---- | --- | --- | ---- | ---- | ----- | -------- |
+| **View Dashboard**            | ✅  | ✅    | ✅   | ✅  | ❌  | ✅   | ✅   | ✅    | ❌       |
+| **Submit Confirmations**      | ✅  | ❌    | ❌   | ❌  | ❌  | ❌   | ❌   | ❌    | ❌       |
+| **Approve Confirmations**     | ❌  | ✅    | ✅   | ❌  | ❌  | ❌   | ❌   | ❌    | ❌       |
+| **Submit Promotions**         | ✅  | ❌    | ❌   | ❌  | ❌  | ❌   | ❌   | ❌    | ❌       |
+| **Approve Promotions**        | ❌  | ✅    | ✅   | ❌  | ❌  | ❌   | ❌   | ❌    | ❌       |
+| **Submit LWOP**               | ✅  | ❌    | ❌   | ❌  | ❌  | ❌   | ❌   | ❌    | ❌       |
+| **Approve LWOP**              | ❌  | ✅    | ✅   | ❌  | ❌  | ❌   | ❌   | ❌    | ❌       |
+| **Submit Cadre Change**       | ✅  | ❌    | ❌   | ❌  | ❌  | ❌   | ❌   | ❌    | ❌       |
+| **Approve Cadre Change**      | ❌  | ✅    | ✅   | ❌  | ❌  | ❌   | ❌   | ❌    | ❌       |
+| **Submit Retirement**         | ✅  | ❌    | ❌   | ❌  | ❌  | ❌   | ❌   | ❌    | ❌       |
+| **Approve Retirement**        | ❌  | ✅    | ✅   | ❌  | ❌  | ❌   | ❌   | ❌    | ❌       |
+| **Submit Resignation**        | ✅  | ❌    | ❌   | ❌  | ❌  | ❌   | ❌   | ❌    | ❌       |
+| **Approve Resignation**       | ❌  | ✅    | ✅   | ❌  | ❌  | ❌   | ❌   | ❌    | ❌       |
+| **Submit Service Extension**  | ✅  | ❌    | ❌   | ❌  | ❌  | ❌   | ❌   | ❌    | ❌       |
+| **Approve Service Extension** | ❌  | ✅    | ✅   | ❌  | ❌  | ❌   | ❌   | ❌    | ❌       |
+| **Submit Complaints**         | ❌  | ❌    | ❌   | ❌  | ❌  | ❌   | ❌   | ❌    | ✅       |
+| **Approve Complaints**        | ❌  | ✅    | ❌   | ✅  | ❌  | ❌   | ❌   | ❌    | ❌       |
+| **Submit Termination**        | ❌  | ❌    | ❌   | ✅  | ❌  | ❌   | ❌   | ❌    | ❌       |
+| **Approve Termination**       | ❌  | ✅    | ❌   | ✅  | ❌  | ❌   | ❌   | ❌    | ❌       |
+| **View Reports**              | ✅  | ✅    | ✅   | ✅  | ✅  | ✅   | ✅   | ✅    | ❌       |
+| **Export Reports**            | ✅  | ✅    | ✅   | ✅  | ✅  | ✅   | ✅   | ✅    | ❌       |
+| **Manage Users**              | ❌  | ❌    | ❌   | ❌  | ❌  | ❌   | ❌   | ✅    | ❌       |
+| **Manage Institutions**       | ❌  | ❌    | ❌   | ❌  | ❌  | ❌   | ❌   | ✅    | ❌       |
+| **HRIMS Sync**                | ❌  | ❌    | ❌   | ❌  | ❌  | ❌   | ❌   | ✅    | ❌       |
+| **View Own Profile**          | ✅  | ✅    | ✅   | ✅  | ✅  | ✅   | ✅   | ✅    | ✅       |
+| **Change Password**           | ✅  | ✅    | ✅   | ✅  | ✅  | ✅   | ✅   | ✅    | ✅       |
 
 ### 4.4 Request Approval Authority
 
 **HR Requests** (Can be approved by HHRMD OR HRMO):
+
 - ✅ Confirmation
 - 📈 Promotion
 - 🏖️ LWOP
@@ -396,6 +413,7 @@ CSMS implements role-based access control (RBAC) with 9 distinct roles:
 - ⏱️ Service Extension
 
 **Disciplinary Requests** (Can be approved by HHRMD OR DO):
+
 - 📢 Complaints
 - ⛔ Termination/Dismissal
 
@@ -410,6 +428,7 @@ CSMS implements role-based access control (RBAC) with 9 distinct roles:
 **Purpose:** Maintain comprehensive records for all civil service employees
 
 **Key Information Stored:**
+
 - Personal details (name, ZAN ID, date of birth, contact)
 - Employment details (cadre, salary scale, employment date)
 - Status (On Probation, Confirmed, On LWOP, Retired, etc.)
@@ -420,6 +439,7 @@ CSMS implements role-based access control (RBAC) with 9 distinct roles:
 - Educational certificates
 
 **Document Types:**
+
 1. **Ardhil Hali** - Employment verification
 2. **Confirmation Letter** - Probation completion
 3. **Job Contract** - Employment agreement
@@ -427,6 +447,7 @@ CSMS implements role-based access control (RBAC) with 9 distinct roles:
 5. **Educational Certificates** - Academic qualifications
 
 **Employee Statuses:**
+
 - **On Probation** - New employee in probation period
 - **Confirmed** - Successfully completed probation
 - **On LWOP** - Currently on leave without pay
@@ -472,6 +493,7 @@ CSMS implements role-based access control (RBAC) with 9 distinct roles:
 ```
 
 **Common Request Fields:**
+
 - Employee selection
 - Supporting documents (PDF, max 2MB each)
 - Request-specific details
@@ -479,6 +501,7 @@ CSMS implements role-based access control (RBAC) with 9 distinct roles:
 - Approval/rejection reason
 
 **Request Statuses:**
+
 - **Pending** - Awaiting review
 - **Approved** - Approved by Commission
 - **Rejected** - Rejected with reason
@@ -488,15 +511,16 @@ CSMS implements role-based access control (RBAC) with 9 distinct roles:
 
 **Notification Types:**
 
-| Event | Recipient | Message (English) | Message (Swahili) |
-|-------|-----------|-------------------|-------------------|
-| Login | User | Welcome to CSMS! | Karibu CSMS! |
+| Event             | Recipient       | Message (English)                | Message (Swahili)                  |
+| ----------------- | --------------- | -------------------------------- | ---------------------------------- |
+| Login             | User            | Welcome to CSMS!                 | Karibu CSMS!                       |
 | Request Submitted | HHRMD, HRMO, DO | New request requires your review | Ombi jipya linahitaji ukaguzi wako |
-| Request Approved | HRO | Your request has been approved | Ombi lako limeidhinishwa |
-| Request Rejected | HRO | Your request has been rejected | Ombi lako limekataliwa |
-| Password Changed | User | Your password has been changed | Nenosiri lako limebadilishwa |
+| Request Approved  | HRO             | Your request has been approved   | Ombi lako limeidhinishwa           |
+| Request Rejected  | HRO             | Your request has been rejected   | Ombi lako limekataliwa             |
+| Password Changed  | User            | Your password has been changed   | Nenosiri lako limebadilishwa       |
 
 **Notification Features:**
+
 - Real-time alerts
 - Bilingual support (English/Swahili)
 - Read/unread status
@@ -504,6 +528,7 @@ CSMS implements role-based access control (RBAC) with 9 distinct roles:
 - Direct links to related items
 
 **To view notifications:**
+
 1. Click the **🔔 Bell icon** in top navigation
 2. See unread count badge
 3. Click to open notification panel
@@ -514,13 +539,13 @@ CSMS implements role-based access control (RBAC) with 9 distinct roles:
 
 **File Upload Specifications:**
 
-| Requirement | Specification |
-|-------------|---------------|
-| **File Format** | PDF only (.pdf) |
-| **Maximum Size** | 2 MB per file |
-| **Storage** | MinIO S3-compatible storage |
-| **Security** | Secure signed URLs |
-| **Features** | Upload, Download, Preview |
+| Requirement      | Specification               |
+| ---------------- | --------------------------- |
+| **File Format**  | PDF only (.pdf)             |
+| **Maximum Size** | 2 MB per file               |
+| **Storage**      | MinIO S3-compatible storage |
+| **Security**     | Secure signed URLs          |
+| **Features**     | Upload, Download, Preview   |
 
 **Supported Operations:**
 
@@ -543,6 +568,7 @@ CSMS implements role-based access control (RBAC) with 9 distinct roles:
 ### 5.5 Search and Filter
 
 **Employee Search:**
+
 - Search by ZAN ID
 - Search by Payroll Number
 - Search by Name
@@ -550,6 +576,7 @@ CSMS implements role-based access control (RBAC) with 9 distinct roles:
 - Search by Institution
 
 **Request Filters:**
+
 - Filter by status
 - Filter by date range
 - Filter by request type
@@ -557,6 +584,7 @@ CSMS implements role-based access control (RBAC) with 9 distinct roles:
 - Filter by institution (CSC roles only)
 
 **Search Tips:**
+
 - ✅ Partial matching supported
 - ✅ Case-insensitive search
 - ✅ Use quotation marks for exact match
@@ -571,6 +599,7 @@ CSMS implements role-based access control (RBAC) with 9 distinct roles:
 **Purpose:** Confirm employees who have completed probation period
 
 **Prerequisites:**
+
 - Employee must have status "On Probation"
 - Employee must have completed probation period (typically 6 months)
 - Required documents prepared (PDF format, max 2MB each)
@@ -580,22 +609,26 @@ CSMS implements role-based access control (RBAC) with 9 distinct roles:
 #### Part 1: Submit Confirmation Request (HRO)
 
 **Step 1:** Access Confirmation Module
+
 1. Log in as HRO
 2. Click **☰ Menu**
 3. Select **Confirmation**
 
 **Step 2:** Start New Request
+
 1. Click **+ New Confirmation Request** button
 2. Confirmation form appears
 
 **Step 3:** Search for Employee
-1. Locate the *Employee Search* section
+
+1. Locate the _Employee Search_ section
 2. Enter employee's **ZAN ID** or **Payroll Number**
 3. Click **Search**
 4. Employee details populate automatically
 
 **Step 4:** Verify Employee Information
 Review the displayed information:
+
 - Employee name
 - ZAN ID
 - Current status (should be "On Probation")
@@ -605,17 +638,20 @@ Review the displayed information:
 ⚠️ **Warning:** If employee status is not "On Probation", you cannot submit confirmation
 
 **Step 5:** Upload Supporting Documents
-1. Scroll to *Documents* section
+
+1. Scroll to _Documents_ section
 2. Click **Upload Document** or drag PDF file
 3. Wait for upload confirmation (progress bar shown)
 4. Repeat for multiple documents if needed
 
 📋 **Note:**
+
 - Only PDF files accepted
 - Maximum 2MB per file
 - Multiple documents can be uploaded
 
 **Step 6:** Review and Submit
+
 1. Review all information carefully
 2. Ensure all required documents uploaded
 3. Click **Submit Confirmation Request**
@@ -624,6 +660,7 @@ Review the displayed information:
 
 **Step 7:** Confirmation
 You will see:
+
 ```
 ┌─────────────────────────────────────┐
 │  ✓ Success!                         │
@@ -643,22 +680,26 @@ You will see:
 #### Part 2: Review and Approve Confirmation (HHRMD/HRMO)
 
 **Step 1:** View Pending Confirmations
+
 1. Log in as HHRMD or HRMO
 2. Navigate to **Confirmation** module
 3. See list of pending requests
 
 **Step 2:** Open Request for Review
+
 1. Click **View Details** on a pending request
 2. Request details modal opens
 
 **Step 3:** Review Request Information
 Review:
+
 - Employee personal information
 - Current employment status
 - Employment date
 - Supporting documents
 
 **Step 4:** Review Documents
+
 1. Click **Preview** to view documents in browser
 2. Click **Download** to save document
 3. Verify all required documents present and valid
@@ -666,6 +707,7 @@ Review:
 **Step 5:** Make Decision
 
 **Option A: Approve**
+
 1. Click **Approve** button
 2. Optional: Add approval comments
 3. Click **Confirm Approval**
@@ -676,6 +718,7 @@ Review:
    - HRO receives notification
 
 **Option B: Reject**
+
 1. Click **Reject** button
 2. Rejection reason modal appears
 3. Enter detailed rejection reason (required)
@@ -687,6 +730,7 @@ Review:
 
 **Step 6:** Confirmation
 Success message displays:
+
 ```
 ┌─────────────────────────────────────┐
 │  ✓ Request Approved                 │
@@ -704,15 +748,18 @@ Success message displays:
 #### Part 3: Track Request Status (HRO)
 
 **Step 1:** Navigate to Track Status
+
 1. Click **☰ Menu**
 2. Select **Track Status**
 
 **Step 2:** Find Your Request
+
 1. Use search or filter by request type
 2. Locate your confirmation request
 3. View current status
 
 **Step 3:** View Status Timeline
+
 ```
 Timeline:
   ● Submitted by HRO        2025-12-25 09:00
@@ -728,6 +775,7 @@ Timeline:
 **Purpose:** Request promotion for employee based on performance/experience
 
 **Prerequisites:**
+
 - Employee must be "Confirmed" (not on probation or LWOP)
 - Employee must have minimum 3 years of service
 - Performance appraisals for last 3 years (PDF format)
@@ -739,17 +787,20 @@ Timeline:
 #### Part 1: Submit Promotion Request (HRO)
 
 **Step 1:** Access Promotion Module
+
 1. Log in as HRO
 2. Navigate to **Promotion**
 3. Click **+ New Promotion Request**
 
 **Step 2:** Search for Employee
+
 1. Enter employee's **ZAN ID** or **Payroll Number**
 2. Click **Search**
 3. Employee details populate
 
 **Step 3:** Verify Employee Eligibility
 System automatically checks:
+
 - ✅ Employee status is "Confirmed"
 - ✅ Not currently on LWOP
 - ✅ Has at least 3 years of service
@@ -758,12 +809,14 @@ System automatically checks:
 ⚠️ **Warning:** If any check fails, you will see error message and cannot proceed
 
 **Step 4:** Select Promotion Type
-1. Click on *Promotion Type* dropdown
+
+1. Click on _Promotion Type_ dropdown
 2. Select **"Promotion Based on Experience (Performance)"**
 3. Form updates to show experience-based fields
 
 **Step 5:** Enter Proposed Cadre
-1. In *Proposed Cadre* field, enter new position
+
+1. In _Proposed Cadre_ field, enter new position
 2. Example: "Senior Administrative Officer Grade I"
 
 📋 **Note:** Be specific about grade level
@@ -792,12 +845,14 @@ You must upload 5 documents:
 ⚠️ **Warning:** All 5 documents are required. Submit button will be disabled until all uploaded.
 
 **Step 7:** Review and Submit
+
 1. Review employee details
 2. Verify proposed cadre correct
 3. Confirm all 5 documents uploaded
 4. Click **Submit Promotion Request**
 
 **Step 8:** Success Confirmation
+
 ```
 ┌─────────────────────────────────────┐
 │  ✓ Promotion Request Submitted      │
@@ -816,11 +871,13 @@ You must upload 5 documents:
 #### Part 2: Review and Approve Promotion (HHRMD/HRMO)
 
 **Step 1:** View Pending Promotions
+
 1. Log in as HHRMD or HRMO
 2. Navigate to **Promotion** module
 3. See list of pending requests
 
 **Step 2:** Open Request Details
+
 1. Click **View Details** on request
 2. Details modal opens showing:
    - Employee information
@@ -829,6 +886,7 @@ You must upload 5 documents:
    - All uploaded documents
 
 **Step 3:** Review Documents
+
 1. Click **Preview** on each document
 2. Review:
    - Performance appraisal Year 1
@@ -839,6 +897,7 @@ You must upload 5 documents:
 
 **Step 4:** Verify Promotion Justification
 Check:
+
 - ✅ Performance ratings acceptable
 - ✅ All appraisals signed and approved
 - ✅ Proposed cadre appropriate
@@ -848,6 +907,7 @@ Check:
 **Step 5:** Make Decision
 
 **To Approve:**
+
 1. Click **Approve** button
 2. Optional: Add comments about approval decision
 3. Click **Confirm Approval**
@@ -858,6 +918,7 @@ Check:
    - Sends notification to HRO
 
 **To Reject:**
+
 1. Click **Reject** button
 2. Enter detailed rejection reason
 3. Examples:
@@ -869,6 +930,7 @@ Check:
 6. HRO notified with rejection reason
 
 **Step 6:** Confirmation
+
 ```
 ┌─────────────────────────────────────┐
 │  ✓ Promotion Approved               │
@@ -891,6 +953,7 @@ Check:
 **Purpose:** Request promotion based on educational advancement
 
 **Prerequisites:**
+
 - Employee status must be "Confirmed"
 - New educational certificate obtained
 - TCU form (if studied outside Tanzania)
@@ -899,28 +962,34 @@ Check:
 **Step-by-Step Instructions:**
 
 **Step 1:** Access Promotion Module
+
 1. Log in as HRO
 2. Navigate to **Promotion**
 3. Click **+ New Promotion Request**
 
 **Step 2:** Search and Select Employee
+
 1. Search by ZAN ID or Payroll Number
 2. Verify employee eligible
 
 **Step 3:** Select Promotion Type
+
 1. Select **"Promotion Based on Education Advancement"**
 2. Form updates to show education-based fields
 
 **Step 4:** Enter Proposed Cadre
+
 1. Enter new position based on educational qualification
 2. Example: "Assistant Lecturer" (with new Master's degree)
 
 **Step 5:** Upload Educational Certificate
+
 1. Click **Upload** under "Academic Certificate"
 2. Select PDF of educational certificate
 3. Wait for upload confirmation
 
 **Step 6:** Studied Outside Country?
+
 1. If employee studied outside Tanzania, check **"Employee studied outside the country?"**
 2. Additional field appears: "Upload TCU Form"
 3. Upload Tanzania Commission for Universities verification form
@@ -928,10 +997,12 @@ Check:
 📋 **Note:** TCU form is required if checkbox is selected
 
 **Step 7:** Upload Letter of Request
+
 1. Upload official letter requesting promotion
 2. Ensure letter references new educational qualification
 
 **Step 8:** Review and Submit
+
 1. Verify proposed cadre
 2. Confirm certificate uploaded
 3. Confirm TCU form uploaded (if applicable)
@@ -949,6 +1020,7 @@ Request submitted and notifications sent to HHRMD/HRMO
 **Purpose:** Request unpaid leave for employee
 
 **Prerequisites:**
+
 - Employee must be "Confirmed"
 - Employee must not already be on LWOP
 - Supporting documents prepared
@@ -956,11 +1028,13 @@ Request submitted and notifications sent to HHRMD/HRMO
 **Step-by-Step Instructions:**
 
 **Step 1:** Access LWOP Module
+
 1. Log in as HRO
 2. Navigate to **LWOP**
 3. Click **+ New LWOP Request**
 
 **Step 2:** Select Employee
+
 1. Search by ZAN ID or Payroll Number
 2. Verify employee status is "Confirmed"
 
@@ -982,6 +1056,7 @@ Request submitted and notifications sent to HHRMD/HRMO
    - Examples: "Further studies abroad", "Personal family matters", "Health reasons"
 
 **Step 4:** Upload Supporting Documents
+
 1. Upload relevant supporting documents
 2. Examples:
    - Admission letter (if for studies)
@@ -989,6 +1064,7 @@ Request submitted and notifications sent to HHRMD/HRMO
    - Personal statement
 
 **Step 5:** Review and Submit
+
 1. Verify dates are correct
 2. Verify end date is after start date
 3. Ensure duration specified
@@ -996,6 +1072,7 @@ Request submitted and notifications sent to HHRMD/HRMO
 
 **Step 6:** Approval Process
 HHRMD or HRMO reviews and approves:
+
 - If approved: Employee status changes to "On LWOP"
 - If rejected: Employee status unchanged
 
@@ -1006,6 +1083,7 @@ HHRMD or HRMO reviews and approves:
 **Purpose:** Process employee retirement (voluntary, compulsory, or medical)
 
 **Prerequisites:**
+
 - Employee must be "Confirmed"
 - Appropriate retirement age or conditions met
 - Supporting documents
@@ -1013,11 +1091,13 @@ HHRMD or HRMO reviews and approves:
 **Step-by-Step Instructions:**
 
 **Step 1:** Access Retirement Module
+
 1. Log in as HRO
 2. Navigate to **Retirement**
 3. Click **+ New Retirement Request**
 
 **Step 2:** Select Employee
+
 1. Search and select employee
 2. Verify employee eligible for retirement
 
@@ -1052,20 +1132,24 @@ Choose one of three types:
 Upload required documents based on retirement type:
 
 **For All Types:**
+
 - Retirement application letter
 - Employment verification
 
 **For Medical Retirement:**
+
 - Medical certificate from approved physician
 - Medical board recommendation (if applicable)
 
 **Step 6:** Submit Request
+
 1. Review all information
 2. Click **Submit Retirement Request**
 3. Await HHRMD/HRMO approval
 
 **Step 7:** After Approval
 When approved:
+
 - Employee status → "Retired"
 - Retirement date recorded
 - Employee no longer appears in active employee lists
@@ -1077,6 +1161,7 @@ When approved:
 **Purpose:** Allow employees to submit grievances
 
 **Prerequisites:**
+
 - Valid employee credentials (ZAN ID, Payroll Number, ZSSF Number)
 - Details of complaint
 - Supporting evidence (optional)
@@ -1084,6 +1169,7 @@ When approved:
 **Step-by-Step Instructions:**
 
 **Step 1:** Access Employee Portal
+
 1. Navigate to `https://csms.zanajira.go.tz/employee-login`
 2. Enter your credentials:
    - ZAN ID
@@ -1092,6 +1178,7 @@ When approved:
 3. Click **Login**
 
 **Step 2:** Navigate to Complaints
+
 1. After login, you see your employee profile
 2. Click **Submit Complaint** button
 
@@ -1117,16 +1204,19 @@ When approved:
    - Enter emergency contact
 
 **Step 4:** Upload Supporting Documents (Optional)
+
 1. If you have evidence, click **Upload**
 2. Upload documents (PDF, max 2MB each)
 3. Examples: emails, photos of issues, written statements
 
 **Step 5:** Review and Submit
+
 1. Review all information
 2. Ensure contact numbers correct
 3. Click **Submit Complaint**
 
 **Step 6:** Confirmation
+
 ```
 ┌─────────────────────────────────────┐
 │  ✓ Complaint Submitted              │
@@ -1143,6 +1233,7 @@ When approved:
 ```
 
 **Step 7:** Track Your Complaint
+
 1. Log in anytime to employee portal
 2. View your complaint status
 3. Check for updates
@@ -1156,6 +1247,7 @@ When approved:
 **Purpose:** Create and manage user accounts
 
 **Prerequisites:**
+
 - Admin role
 - User information
 - Institution assignment
@@ -1163,6 +1255,7 @@ When approved:
 **Step-by-Step Instructions:**
 
 **Step 1:** Access User Management
+
 1. Log in as Admin
 2. Navigate to **Admin** → **Users**
 3. Click **+ Create New User**
@@ -1204,16 +1297,19 @@ When approved:
    - Or enter custom password
 
 **Step 3:** Set Employee Link (Optional)
+
 1. If user is also an employee, link to employee record
 2. Search employee by ZAN ID
 3. Select matching employee
 
 **Step 4:** Review and Create
+
 1. Verify all information
 2. Click **Create User**
 3. User account created
 
 **Step 5:** Communicate Credentials
+
 1. Securely share credentials with new user:
    - Username
    - Initial password
@@ -1224,6 +1320,7 @@ When approved:
 #### Deactivate User
 
 **To deactivate a user account:**
+
 1. Navigate to **Users** list
 2. Find user to deactivate
 3. Click **Actions** → **Deactivate**
@@ -1233,6 +1330,7 @@ When approved:
 #### Reset User Password
 
 **To reset a user's password:**
+
 1. Find user in Users list
 2. Click **Actions** → **Reset Password**
 3. System generates new password
@@ -1245,6 +1343,7 @@ When approved:
 **Purpose:** Sync employee data from external HRIMS system
 
 **Prerequisites:**
+
 - Admin role
 - HRIMS system accessible
 - Institution ID to sync
@@ -1252,6 +1351,7 @@ When approved:
 **Step-by-Step Instructions:**
 
 **Step 1:** Access HRIMS Integration
+
 1. Log in as Admin
 2. Navigate to **Admin** → **HRIMS Integration**
 
@@ -1277,6 +1377,7 @@ Choose one of:
 2. Select institution from dropdown
 3. Click **Start Sync**
 4. Progress indicator shows:
+
    ```
    ┌──────────────────────────────────┐
    │  Syncing Institution Data...     │
@@ -1292,6 +1393,7 @@ Choose one of:
 5. Wait for completion (can take 5-15 minutes for large institutions)
 
 **Step 4:** Review Sync Results
+
 ```
 ┌──────────────────────────────────────┐
 │  ✓ Sync Completed                    │
@@ -1309,6 +1411,7 @@ Choose one of:
 ```
 
 **Step 5:** Verify Data
+
 1. Navigate to Employees module
 2. Filter by institution
 3. Spot-check employee records
@@ -1319,6 +1422,7 @@ Choose one of:
 **Step 6:** Fetch Employee Photos (Separate Step)
 
 After fetching employee data:
+
 1. Click **Fetch Photos by Institution**
 2. Select same institution
 3. Click **Start Fetch**
@@ -1327,6 +1431,7 @@ After fetching employee data:
 **Step 7:** Fetch Employee Documents (Separate Step)
 
 To sync documents:
+
 1. Click **Fetch Documents by Institution**
 2. Select institution
 3. Click **Start Fetch**
@@ -1342,29 +1447,31 @@ To sync documents:
 
 CSMS provides 10 comprehensive report types:
 
-| Report Name | Description | Data Included | Permissions |
-|-------------|-------------|---------------|-------------|
-| **1. Confirmation Report** | Employee confirmations | Employee details, confirmation dates, status | All roles except Employee |
-| **2. Promotion Report** | Promotions granted | Employee, promotion type, old/new cadre, approval date | All roles except Employee |
-| **3. LWOP Report** | Leave without pay | Employee, start date, end date, duration, status | All roles except Employee |
-| **4. Cadre Change Report** | Job title changes | Employee, old/new cadre, reason, approval | All roles except Employee |
-| **5. Retirement Report** | Retirements | Employee, retirement type, retirement date, status | All roles except Employee |
-| **6. Resignation Report** | Resignations | Employee, resignation date, reason | All roles except Employee |
-| **7. Service Extension Report** | Post-retirement extensions | Employee, extension period, justification | All roles except Employee |
-| **8. Termination Report** | Dismissals/terminations | Employee, termination type, reason, date | All roles except Employee |
-| **9. Complaint Report** | Employee grievances | Complaint type, status, resolution | All roles except Employee |
-| **10. Employee List Report** | All employees | Complete employee roster with details | All roles except Employee |
+| Report Name                     | Description                | Data Included                                          | Permissions               |
+| ------------------------------- | -------------------------- | ------------------------------------------------------ | ------------------------- |
+| **1. Confirmation Report**      | Employee confirmations     | Employee details, confirmation dates, status           | All roles except Employee |
+| **2. Promotion Report**         | Promotions granted         | Employee, promotion type, old/new cadre, approval date | All roles except Employee |
+| **3. LWOP Report**              | Leave without pay          | Employee, start date, end date, duration, status       | All roles except Employee |
+| **4. Cadre Change Report**      | Job title changes          | Employee, old/new cadre, reason, approval              | All roles except Employee |
+| **5. Retirement Report**        | Retirements                | Employee, retirement type, retirement date, status     | All roles except Employee |
+| **6. Resignation Report**       | Resignations               | Employee, resignation date, reason                     | All roles except Employee |
+| **7. Service Extension Report** | Post-retirement extensions | Employee, extension period, justification              | All roles except Employee |
+| **8. Termination Report**       | Dismissals/terminations    | Employee, termination type, reason, date               | All roles except Employee |
+| **9. Complaint Report**         | Employee grievances        | Complaint type, status, resolution                     | All roles except Employee |
+| **10. Employee List Report**    | All employees              | Complete employee roster with details                  | All roles except Employee |
 
 ### 7.2 Generating Reports
 
 **Step-by-Step Instructions:**
 
 **Step 1:** Access Reports Module
+
 1. Log in with appropriate role
 2. Click **☰ Menu**
 3. Select **Reports**
 
 **Step 2:** Select Report Type
+
 1. You will see report cards:
    ```
    ┌───────────────────┐  ┌───────────────────┐
@@ -1400,6 +1507,7 @@ Most reports offer filters:
    - All
 
 **Step 4:** Generate Report
+
 1. Click **Generate Report** button
 2. System processes request
 3. Report displays in browser
@@ -1427,18 +1535,19 @@ Report displays in table format:
 
 **Reports include both English and Swahili columns:**
 
-| English Column | Swahili Column | Values |
-|----------------|----------------|---------|
-| Status | Hali | Pending / Inasubiri, Approved / Imekamilika, Rejected / Imekataliwa |
-| Employee Name | Jina la Mfanyakazi | [Employee names] |
-| Institution | Taasisi | [Institution names] |
-| Date | Tarehe | [Dates in DD/MM/YYYY] |
-| Gender | Jinsia | Male / Mwanaume, Female / Mwanamke |
-| Department | Idara | [Department names] |
+| English Column | Swahili Column     | Values                                                              |
+| -------------- | ------------------ | ------------------------------------------------------------------- |
+| Status         | Hali               | Pending / Inasubiri, Approved / Imekamilika, Rejected / Imekataliwa |
+| Employee Name  | Jina la Mfanyakazi | [Employee names]                                                    |
+| Institution    | Taasisi            | [Institution names]                                                 |
+| Date           | Tarehe             | [Dates in DD/MM/YYYY]                                               |
+| Gender         | Jinsia             | Male / Mwanaume, Female / Mwanamke                                  |
+| Department     | Idara              | [Department names]                                                  |
 
 ### 7.4 Exporting Reports
 
 **Available Export Formats:**
+
 1. **PDF** - For printing and archiving
 2. **Excel** - For further analysis
 3. **CSV** - For data import to other systems
@@ -1448,6 +1557,7 @@ Report displays in table format:
 **Step 1:** Generate report (see section 7.2)
 
 **Step 2:** Click Export Button
+
 - Located at top-right of report
 - Shows export options:
   ```
@@ -1461,11 +1571,13 @@ Report displays in table format:
   ```
 
 **Step 3:** Select Format
+
 1. Click desired format (PDF, Excel, or CSV)
 2. Browser initiates download
 3. File saved to Downloads folder
 
 **PDF Export Features:**
+
 - Professional formatting
 - Company header/footer
 - Page numbers
@@ -1473,6 +1585,7 @@ Report displays in table format:
 - Report parameters shown
 
 **Excel Export Features:**
+
 - One sheet per report
 - Column headers
 - Filterable data
@@ -1480,6 +1593,7 @@ Report displays in table format:
 - Sum totals where applicable
 
 **CSV Export Features:**
+
 - UTF-8 encoding (supports Swahili characters)
 - Comma-separated values
 - Headers included
@@ -1490,6 +1604,7 @@ Report displays in table format:
 📋 **Note:** Report scheduling is planned for future release
 
 Planned features:
+
 - Schedule recurring reports (daily, weekly, monthly)
 - Email delivery to stakeholders
 - Automatic archiving
@@ -1503,6 +1618,7 @@ Planned features:
 #### Problem: "Invalid username or password"
 
 **Possible Causes:**
+
 - Incorrect username
 - Incorrect password
 - Caps Lock enabled
@@ -1533,6 +1649,7 @@ Planned features:
 **Cause:** Your account has been deactivated
 
 **Solution:**
+
 1. Contact system administrator
 2. Request account reactivation
 3. Provide reason for reactivation
@@ -1542,6 +1659,7 @@ Planned features:
 **Cause:** You've been inactive for too long
 
 **Solution:**
+
 1. Click **OK** on session expired message
 2. Log in again
 3. Continue your work
@@ -1551,6 +1669,7 @@ Planned features:
 #### Problem: Employee login not working
 
 **Possible Causes:**
+
 - Incorrect ZAN ID
 - Incorrect Payroll Number
 - Incorrect ZSSF Number
@@ -1575,6 +1694,7 @@ Planned features:
 **Cause:** Trying to upload non-PDF file
 
 **Solution:**
+
 1. Convert document to PDF format
 2. Use PDF conversion tools:
    - Microsoft Word → Save As → PDF
@@ -1606,6 +1726,7 @@ Planned features:
 #### Problem: File upload stuck at "Uploading..."
 
 **Possible Causes:**
+
 - Slow internet connection
 - Large file size
 - Browser issue
@@ -1638,6 +1759,7 @@ Planned features:
 **Cause:** Upload may have failed silently
 
 **Solution:**
+
 1. Refresh the page
 2. Check if file appears
 3. If not, re-upload file
@@ -1648,6 +1770,7 @@ Planned features:
 #### Problem: Employee not found in search
 
 **Possible Causes:**
+
 - Typo in search term
 - Employee not in system
 - Institution filter applied
@@ -1700,15 +1823,18 @@ Planned features:
 **Causes vary by request type:**
 
 **Confirmation:**
+
 - Employee status not "On Probation"
 - Employee already confirmed
 
 **Promotion:**
+
 - Employee status is "On Probation" or "On LWOP"
 - Employee has pending promotion request
 - Employee has less than 3 years service
 
 **LWOP:**
+
 - Employee already on LWOP
 - Employee status not "Confirmed"
 
@@ -1732,6 +1858,7 @@ Planned features:
 #### Problem: Submit button disabled
 
 **Possible Causes:**
+
 - Required fields not filled
 - Documents not uploaded
 - Form validation errors
@@ -1739,7 +1866,7 @@ Planned features:
 **Solutions:**
 
 1. **Check Required Fields:**
-   - Look for red asterisks (*)
+   - Look for red asterisks (\*)
    - Fill all required fields
    - Ensure no empty fields
 
@@ -1777,6 +1904,7 @@ Planned features:
 #### Problem: Report shows "No data"
 
 **Possible Causes:**
+
 - Date range has no records
 - Filters too restrictive
 - No data for selected criteria
@@ -1821,6 +1949,7 @@ Planned features:
 #### Problem: System slow or unresponsive
 
 **Possible Causes:**
+
 - Internet connection slow
 - Server load high
 - Browser issues
@@ -1857,16 +1986,19 @@ Planned features:
 **Specific Issues:**
 
 **Dashboard loading slowly:**
+
 - Dashboard loads many statistics
 - Wait 5-10 seconds
 - Refresh if >30 seconds
 
 **Employee list loading slowly:**
+
 - Large institutions have many employees
 - Use pagination (default 200 per page)
 - Apply filters to reduce dataset
 
 **HRIMS sync taking long:**
+
 - Normal for large institutions
 - Can take 5-15 minutes
 - Progress indicator shows status
@@ -1881,6 +2013,7 @@ Planned features:
 **Q1: What browsers are supported?**
 
 A: CSMS works best on:
+
 - Google Chrome 90+ (Recommended)
 - Mozilla Firefox 88+
 - Microsoft Edge 90+
@@ -1893,6 +2026,7 @@ A: CSMS is optimized for desktop/laptop use. While it may work on tablets and ph
 **Q3: Is my data secure?**
 
 A: Yes. CSMS uses:
+
 - Encrypted connections (HTTPS)
 - Role-based access control
 - Secure password storage (bcrypt hashing)
@@ -1912,6 +2046,7 @@ A: Contact your system administrator to reset your password. For security reason
 **Q6: How often is employee data synced from HRIMS?**
 
 A: Data sync frequency depends on administrator schedule. Typically:
+
 - New institutions: Initial sync when added
 - Updates: On-demand when requested
 - Major updates: Quarterly
@@ -1925,6 +2060,7 @@ A: No. CSMS is read-only for employee data from HRIMS. Employee data must be upd
 **Q8: What does each employee status mean?**
 
 A:
+
 - **On Probation:** New employee in probation period (typically 6 months)
 - **Confirmed:** Probation successfully completed, permanent employee
 - **On LWOP:** Currently on approved leave without pay
@@ -1938,6 +2074,7 @@ A:
 **Q9: How long does request approval take?**
 
 A: Approval timeline varies:
+
 - **Target:** Within 5 business days
 - **Simple requests:** 2-3 days
 - **Complex requests:** Up to 2 weeks
@@ -1948,6 +2085,7 @@ Check Track Status for real-time updates.
 **Q10: Can I edit a submitted request?**
 
 A: No. Once submitted, requests cannot be edited. If you need to make changes:
+
 1. Wait for rejection
 2. HRO can resubmit corrected request
 3. Or contact approver to reject with reason
@@ -1955,6 +2093,7 @@ A: No. Once submitted, requests cannot be edited. If you need to make changes:
 **Q11: What if my request is rejected?**
 
 A: When rejected:
+
 1. You receive notification with rejection reason
 2. Review reason carefully
 3. Address issues mentioned
@@ -1969,6 +2108,7 @@ Exception: Different request types can be submitted simultaneously (e.g., one co
 **Q13: Why can't I submit promotion for employee on probation?**
 
 A: Employees must be confirmed before promotion. Business rules:
+
 - Complete probation first
 - Get confirmation approved
 - Then eligible for promotion
@@ -1977,17 +2117,17 @@ A: Employees must be confirmed before promotion. Business rules:
 
 A:
 
-| Request Type | Required Documents |
-|--------------|-------------------|
-| Confirmation | Any supporting documents (performance reviews, etc.) |
-| Promotion (Experience) | Performance appraisals (3 years), CSC form, letter of request |
-| Promotion (Education) | Educational certificate, TCU form (if applicable), letter of request |
-| LWOP | Supporting documents based on reason |
-| Cadre Change | Justification letter, supporting documents |
-| Retirement | Retirement application, relevant certificates |
-| Resignation | Resignation letter |
-| Service Extension | Extension request, justification |
-| Termination | Disciplinary documentation |
+| Request Type           | Required Documents                                                   |
+| ---------------------- | -------------------------------------------------------------------- |
+| Confirmation           | Any supporting documents (performance reviews, etc.)                 |
+| Promotion (Experience) | Performance appraisals (3 years), CSC form, letter of request        |
+| Promotion (Education)  | Educational certificate, TCU form (if applicable), letter of request |
+| LWOP                   | Supporting documents based on reason                                 |
+| Cadre Change           | Justification letter, supporting documents                           |
+| Retirement             | Retirement application, relevant certificates                        |
+| Resignation            | Resignation letter                                                   |
+| Service Extension      | Extension request, justification                                     |
+| Termination            | Disciplinary documentation                                           |
 
 All documents must be PDF format, max 2MB each.
 
@@ -1996,6 +2136,7 @@ All documents must be PDF format, max 2MB each.
 **Q15: How do I receive notifications?**
 
 A: Notifications appear in system:
+
 1. Bell icon (🔔) in top navigation
 2. Red badge shows unread count
 3. Click to view notifications
@@ -2006,12 +2147,14 @@ Email notifications may be added in future.
 **Q16: Can I disable notifications?**
 
 A: No. Notifications are essential for workflow. However, you can:
+
 - Mark as read to clear badge
 - Acknowledge and dismiss
 
 **Q17: What triggers a notification?**
 
 A:
+
 - Someone submits a request (for approvers)
 - Your request is approved/rejected (for submitters)
 - You receive a complaint (for DO)
@@ -2030,6 +2173,7 @@ A: No. Report formats are standardized for consistency across institutions. All 
 **Q20: Why do reports show both English and Swahili?**
 
 A: CSMS supports bilingual operations to serve all users. Reports include:
+
 - English columns for technical users
 - Swahili columns for wider accessibility
 - Status translations (Pending → Inasubiri, etc.)
@@ -2037,6 +2181,7 @@ A: CSMS supports bilingual operations to serve all users. Reports include:
 **Q21: Can I export partial data from report?**
 
 A: Use filters before generating report:
+
 1. Set date range for specific period
 2. Filter by institution
 3. Filter by status
@@ -2048,6 +2193,7 @@ A: Use filters before generating report:
 **Q22: Why only PDF files?**
 
 A: PDF format ensures:
+
 - Consistent display across all devices
 - Cannot be easily edited (integrity)
 - Smaller file sizes than Word documents
@@ -2056,6 +2202,7 @@ A: PDF format ensures:
 **Q23: How do I convert Word document to PDF?**
 
 A: Multiple methods:
+
 1. **Microsoft Word:** File → Save As → PDF
 2. **Google Docs:** File → Download → PDF
 3. **Online converters:** Adobe, Smallpdf, iLovePDF
@@ -2064,6 +2211,7 @@ A: Multiple methods:
 **Q24: What if my PDF is larger than 2MB?**
 
 A: Compress the PDF:
+
 1. Use online compression tool
 2. Reduce scan quality
 3. Remove unnecessary pages
@@ -2076,6 +2224,7 @@ A: Yes. Click **Preview** button to view PDF in browser without downloading.
 **Q26: Where are uploaded files stored?**
 
 A: Files are stored securely in MinIO object storage with:
+
 - Encrypted connections
 - Access control
 - Backup and redundancy
@@ -2086,6 +2235,7 @@ A: Files are stored securely in MinIO object storage with:
 **Q27: Can HRO see other institutions' data?**
 
 A: No. HRO is institution-based role. You can only see:
+
 - Employees from your institution
 - Requests for your institution
 - Reports filtered to your institution
@@ -2094,13 +2244,13 @@ A: No. HRO is institution-based role. You can only see:
 
 A:
 
-| Aspect | HHRMD | HRMO |
-|--------|-------|------|
-| Full Name | Head of HR & Disciplinary | HR Management Officer |
-| HR Requests | ✅ Can approve | ✅ Can approve |
-| Complaints | ✅ Can approve | ❌ Cannot approve |
-| Terminations | ✅ Can approve | ❌ Cannot approve |
-| Scope | HR + Disciplinary | HR only |
+| Aspect       | HHRMD                     | HRMO                  |
+| ------------ | ------------------------- | --------------------- |
+| Full Name    | Head of HR & Disciplinary | HR Management Officer |
+| HR Requests  | ✅ Can approve            | ✅ Can approve        |
+| Complaints   | ✅ Can approve            | ❌ Cannot approve     |
+| Terminations | ✅ Can approve            | ❌ Cannot approve     |
+| Scope        | HR + Disciplinary         | HR only               |
 
 **Q29: Can Planning Officer (PO) approve requests?**
 
@@ -2115,6 +2265,7 @@ A: No. Each user account has one role. If you need multiple permissions, contact
 **Q31: What if browser shows "Connection is not secure"?**
 
 A: This shouldn't happen with CSMS production URL (https://csms.zanajira.go.tz). If it does:
+
 1. Verify URL is exactly correct
 2. Check with IT department
 3. Do not proceed if certificate invalid
@@ -2126,6 +2277,7 @@ A: No. CSMS requires active internet connection to function.
 **Q33: What browsers are NOT supported?**
 
 A:
+
 - Internet Explorer (any version)
 - Very old browser versions (Chrome <80, Firefox <75)
 - Unknown/untested browsers
@@ -2146,28 +2298,28 @@ A: Session timeout is set by administrator for security. Cannot be changed by in
 
 ### Appendix A: Keyboard Shortcuts
 
-| Shortcut | Action | Context |
-|----------|--------|---------|
-| `Ctrl + F` or `Cmd + F` | Search within page | Any page |
-| `Ctrl + B` or `Cmd + B` | Toggle sidebar | Any page |
-| `Esc` | Close modal/dialog | When modal open |
-| `Tab` | Next field | Forms |
-| `Shift + Tab` | Previous field | Forms |
-| `Enter` | Submit form | Forms |
-| `Ctrl + R` or `F5` | Refresh page | Any page |
+| Shortcut                | Action             | Context         |
+| ----------------------- | ------------------ | --------------- |
+| `Ctrl + F` or `Cmd + F` | Search within page | Any page        |
+| `Ctrl + B` or `Cmd + B` | Toggle sidebar     | Any page        |
+| `Esc`                   | Close modal/dialog | When modal open |
+| `Tab`                   | Next field         | Forms           |
+| `Shift + Tab`           | Previous field     | Forms           |
+| `Enter`                 | Submit form        | Forms           |
+| `Ctrl + R` or `F5`      | Refresh page       | Any page        |
 
 ### Appendix B: System Limits
 
-| Resource | Limit | Notes |
-|----------|-------|-------|
-| File upload size | 2 MB | Per file |
-| File format | PDF only | .pdf extension |
-| Concurrent uploads | 10 files | Per request |
-| Search results | 200 per page | Use pagination |
-| Report records | Unlimited | May take time for large datasets |
-| Session timeout | 30-60 minutes | Varies by config |
-| Password length | 8-128 characters | Min/max |
-| Username length | 3-50 characters | Lowercase, no spaces |
+| Resource           | Limit            | Notes                            |
+| ------------------ | ---------------- | -------------------------------- |
+| File upload size   | 2 MB             | Per file                         |
+| File format        | PDF only         | .pdf extension                   |
+| Concurrent uploads | 10 files         | Per request                      |
+| Search results     | 200 per page     | Use pagination                   |
+| Report records     | Unlimited        | May take time for large datasets |
+| Session timeout    | 30-60 minutes    | Varies by config                 |
+| Password length    | 8-128 characters | Min/max                          |
+| Username length    | 3-50 characters  | Lowercase, no spaces             |
 
 ### Appendix C: Request Status Workflow
 
@@ -2203,24 +2355,24 @@ A: Session timeout is set by administrator for security. Cannot be changed by in
 
 **Possible Statuses:**
 
-| Status | Meaning | Next Action |
-|--------|---------|-------------|
-| Pending | Awaiting approval | Approver reviews |
-| Approved | Commission approved | Employee status updated |
-| Rejected | Request denied | HRO notified, can resubmit |
-| Completed | Fully processed | Archived |
+| Status    | Meaning             | Next Action                |
+| --------- | ------------------- | -------------------------- |
+| Pending   | Awaiting approval   | Approver reviews           |
+| Approved  | Commission approved | Employee status updated    |
+| Rejected  | Request denied      | HRO notified, can resubmit |
+| Completed | Fully processed     | Archived                   |
 
 ### Appendix D: Employee Status Change Matrix
 
-| From Status | To Status | Triggering Request | Approver |
-|-------------|-----------|-------------------|----------|
-| On Probation | Confirmed | Confirmation | HHRMD/HRMO |
-| Confirmed | Confirmed (new cadre) | Promotion | HHRMD/HRMO |
-| Confirmed | On LWOP | LWOP | HHRMD/HRMO |
-| On LWOP | Confirmed | LWOP end | Automatic or HHRMD/HRMO |
-| Confirmed | Retired | Retirement | HHRMD/HRMO |
-| Confirmed | Resigned | Resignation | HHRMD/HRMO |
-| Confirmed | Dismissed | Termination | HHRMD/DO |
+| From Status  | To Status             | Triggering Request | Approver                |
+| ------------ | --------------------- | ------------------ | ----------------------- |
+| On Probation | Confirmed             | Confirmation       | HHRMD/HRMO              |
+| Confirmed    | Confirmed (new cadre) | Promotion          | HHRMD/HRMO              |
+| Confirmed    | On LWOP               | LWOP               | HHRMD/HRMO              |
+| On LWOP      | Confirmed             | LWOP end           | Automatic or HHRMD/HRMO |
+| Confirmed    | Retired               | Retirement         | HHRMD/HRMO              |
+| Confirmed    | Resigned              | Resignation        | HHRMD/HRMO              |
+| Confirmed    | Dismissed             | Termination        | HHRMD/DO                |
 
 📋 **Note:** Once employee is Retired, Resigned, or Dismissed, no further status changes possible.
 
@@ -2228,68 +2380,71 @@ A: Session timeout is set by administrator for security. Cannot be changed by in
 
 **Common Terms:**
 
-| English | Swahili |
-|---------|---------|
-| Status | Hali |
-| Pending | Inasubiri |
-| Approved | Imekamilika |
-| Rejected | Imekataliwa |
-| Employee | Mfanyakazi |
-| Request | Ombi |
-| Confirmation | Uthibitisho |
-| Promotion | Kupandishwa Cheo |
-| Retirement | Kustaafu |
-| Complaint | Malalamiko |
-| Institution | Taasisi |
-| Department | Idara |
-| Gender | Jinsia |
-| Male | Mwanaume |
-| Female | Mwanamke |
-| Date | Tarehe |
+| English      | Swahili          |
+| ------------ | ---------------- |
+| Status       | Hali             |
+| Pending      | Inasubiri        |
+| Approved     | Imekamilika      |
+| Rejected     | Imekataliwa      |
+| Employee     | Mfanyakazi       |
+| Request      | Ombi             |
+| Confirmation | Uthibitisho      |
+| Promotion    | Kupandishwa Cheo |
+| Retirement   | Kustaafu         |
+| Complaint    | Malalamiko       |
+| Institution  | Taasisi          |
+| Department   | Idara            |
+| Gender       | Jinsia           |
+| Male         | Mwanaume         |
+| Female       | Mwanamke         |
+| Date         | Tarehe           |
 
 ### Appendix F: Contact Information
 
 **System Support:**
+
 - **Email:** csms-support@zanajira.go.tz
 - **Phone:** +255 24 223 XXXX
 - **Hours:** Monday - Friday, 8:00 AM - 4:00 PM
 
 **Civil Service Commission:**
+
 - **Institution:** Tume ya Utumishi Serikalini
 - **Address:** [Commission Address]
 - **Phone:** +255 24 XXX XXXX
 
 **HRIMS Integration Support:**
+
 - **Technical Team:** hrims-tech@zanajira.go.tz
 - **Phone:** +255 24 XXX XXXX
 
 ### Appendix G: Document Revision History
 
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 1.0 | 2025-12-25 | CSMS Team | Initial release |
+| Version | Date       | Author    | Changes         |
+| ------- | ---------- | --------- | --------------- |
+| 1.0     | 2025-12-25 | CSMS Team | Initial release |
 
 ### Appendix H: Glossary
 
-| Term | Definition |
-|------|------------|
-| **CSMS** | Civil Service Management System - the web application for managing HR operations |
-| **HRIMS** | Human Resource Information Management System - external system for employee data |
-| **CSC** | Civil Service Commission - governing body for civil service |
-| **ZAN ID** | Zanzibar Identification Number - unique employee identifier |
-| **ZSSF** | Zanzibar Social Security Fund - pension/social security number |
-| **LWOP** | Leave Without Pay - unpaid leave status |
-| **HRO** | Human Resources Officer - submits HR requests |
-| **HHRMD** | Head of HR and Disciplinary - approves HR and disciplinary requests |
-| **HRMO** | HR Management Officer - approves HR requests |
-| **DO** | Disciplinary Officer - handles complaints and terminations |
-| **PO** | Planning Officer - views reports (read-only) |
-| **CSCS** | Civil Service Commission Secretary - executive oversight |
-| **HRRP** | HR Responsible Personnel - institutional supervisor |
-| **MinIO** | S3-compatible object storage for PDF files |
-| **Cadre** | Job title/position in civil service |
-| **Probation** | Trial period for new employees (typically 6 months) |
-| **Commission** | The Civil Service Commission - approval authority |
+| Term           | Definition                                                                       |
+| -------------- | -------------------------------------------------------------------------------- |
+| **CSMS**       | Civil Service Management System - the web application for managing HR operations |
+| **HRIMS**      | Human Resource Information Management System - external system for employee data |
+| **CSC**        | Civil Service Commission - governing body for civil service                      |
+| **ZAN ID**     | Zanzibar Identification Number - unique employee identifier                      |
+| **ZSSF**       | Zanzibar Social Security Fund - pension/social security number                   |
+| **LWOP**       | Leave Without Pay - unpaid leave status                                          |
+| **HRO**        | Human Resources Officer - submits HR requests                                    |
+| **HHRMD**      | Head of HR and Disciplinary - approves HR and disciplinary requests              |
+| **HRMO**       | HR Management Officer - approves HR requests                                     |
+| **DO**         | Disciplinary Officer - handles complaints and terminations                       |
+| **PO**         | Planning Officer - views reports (read-only)                                     |
+| **CSCS**       | Civil Service Commission Secretary - executive oversight                         |
+| **HRRP**       | HR Responsible Personnel - institutional supervisor                              |
+| **MinIO**      | S3-compatible object storage for PDF files                                       |
+| **Cadre**      | Job title/position in civil service                                              |
+| **Probation**  | Trial period for new employees (typically 6 months)                              |
+| **Commission** | The Civil Service Commission - approval authority                                |
 
 ---
 

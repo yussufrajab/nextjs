@@ -1,5 +1,11 @@
 import { EmployeeLoginForm } from '@/components/auth/employee-login-form';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Logo } from '@/components/icons/logo';
 import { APP_NAME } from '@/lib/constants';
 import Link from 'next/link';
@@ -14,7 +20,9 @@ export default function EmployeeLoginPage() {
             <Logo />
           </div>
           <CardTitle className="text-3xl font-headline">{APP_NAME}</CardTitle>
-          <CardDescription>Employee Portal - Sign in with your employee credentials</CardDescription>
+          <CardDescription>
+            Employee Portal - Sign in with your employee credentials
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <EmployeeLoginForm />
@@ -28,7 +36,8 @@ export default function EmployeeLoginPage() {
         </CardContent>
       </Card>
       <footer className="mt-8 text-center text-sm text-muted-foreground">
-        © {new Date().getFullYear()} Civil Service Commission. All rights reserved.
+        © {new Date().getFullYear()} Civil Service Commission. All rights
+        reserved.
       </footer>
     </div>
   );

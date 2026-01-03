@@ -7,7 +7,10 @@ export async function POST(req: Request) {
     // For now, allow in development only
     if (process.env.NODE_ENV !== 'development') {
       return NextResponse.json(
-        { success: false, message: 'This endpoint is only available in development mode' },
+        {
+          success: false,
+          message: 'This endpoint is only available in development mode',
+        },
         { status: 403 }
       );
     }
@@ -24,7 +27,8 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         success: false,
-        message: error instanceof Error ? error.message : 'Internal Server Error',
+        message:
+          error instanceof Error ? error.message : 'Internal Server Error',
       },
       { status: 500 }
     );

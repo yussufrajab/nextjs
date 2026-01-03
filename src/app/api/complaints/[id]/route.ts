@@ -13,7 +13,10 @@ const updateComplaintSchema = z.object({
   reviewedById: z.string().optional(),
 });
 
-export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function PUT(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     const { id } = await params;
     const body = await req.json();
@@ -35,19 +38,26 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
           select: {
             name: true,
             role: true,
-          }
-        }
+          },
+        },
       },
     });
 
     // Create appropriate notifications based on status changes
-    if (validatedData.status && updatedComplaint.User_Complaint_complainantIdToUser) {
+    if (
+      validatedData.status &&
+      updatedComplaint.User_Complaint_complainantIdToUser
+    ) {
       let notification = null;
 
-      if (validatedData.status === "Resolved - Pending Employee Confirmation") {
-        notification = NotificationTemplates.complaintResolved(updatedComplaint.id);
-      } else if (validatedData.status === "Awaiting More Information") {
-        notification = NotificationTemplates.complaintMoreInfoRequested(updatedComplaint.id);
+      if (validatedData.status === 'Resolved - Pending Employee Confirmation') {
+        notification = NotificationTemplates.complaintResolved(
+          updatedComplaint.id
+        );
+      } else if (validatedData.status === 'Awaiting More Information') {
+        notification = NotificationTemplates.complaintMoreInfoRequested(
+          updatedComplaint.id
+        );
       } else {
         // Generic status update notification
         notification = {
@@ -69,12 +79,14 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     let employeeDetails = null;
     if (updatedComplaint.User_Complaint_complainantIdToUser.employeeId) {
       employeeDetails = await db.employee.findUnique({
-        where: { id: updatedComplaint.User_Complaint_complainantIdToUser.employeeId },
+        where: {
+          id: updatedComplaint.User_Complaint_complainantIdToUser.employeeId,
+        },
         select: {
           zanId: true,
           department: true,
           cadre: true,
-        }
+        },
       });
     }
 
@@ -83,13 +95,13 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       ...updatedComplaint,
       User_Complaint_complainantIdToUser: {
         ...updatedComplaint.User_Complaint_complainantIdToUser,
-        Employee: employeeDetails
-      }
+        Employee: employeeDetails,
+      },
     };
 
     return NextResponse.json(formattedResponse);
   } catch (error) {
-    console.error("[COMPLAINT_PUT]", error);
+    console.error('[COMPLAINT_PUT]', error);
     if (error instanceof z.ZodError) {
       return new NextResponse(JSON.stringify(error.errors), { status: 400 });
     }

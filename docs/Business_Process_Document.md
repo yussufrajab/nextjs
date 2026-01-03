@@ -1,20 +1,21 @@
 # BUSINESS PROCESS DOCUMENT (FINAL VERSION)
+
 ## CIVIL SERVICE MANAGEMENT SYSTEM (CSMS)
 
 ---
 
 ## Document Control
 
-| Item | Details |
-|------|---------|
+| Item               | Details                                   |
+| ------------------ | ----------------------------------------- |
 | **Document Title** | Business Process Document - Final Version |
-| **Project Name** | Civil Service Management System (CSMS) |
-| **Version** | 1.0 |
-| **Date Prepared** | January 2025 |
-| **Prepared By** | Business Analysis Team |
-| **Reviewed By** | Project Stakeholders |
-| **Approved By** | Civil Service Commission |
-| **Status** | Final |
+| **Project Name**   | Civil Service Management System (CSMS)    |
+| **Version**        | 1.0                                       |
+| **Date Prepared**  | January 2025                              |
+| **Prepared By**    | Business Analysis Team                    |
+| **Reviewed By**    | Project Stakeholders                      |
+| **Approved By**    | Civil Service Commission                  |
+| **Status**         | Final                                     |
 
 ---
 
@@ -25,6 +26,7 @@ This Business Process Document provides comprehensive documentation of all busin
 The CSMS manages the complete employee lifecycle across Zanzibar's civil service, serving 50,000+ employees across 41 government institutions. This document formalizes the transformation from manual, paper-based HR processes to automated, digital workflows that ensure transparency, accountability, and efficiency.
 
 **Processes Covered:**
+
 1. Employee Confirmation Process
 2. Promotion Request Process
 3. Leave Without Pay (LWOP) Process
@@ -65,24 +67,28 @@ Each process is documented with detailed workflow steps, actor responsibilities,
 This Business Process Document serves multiple critical purposes:
 
 **For Operations:**
+
 - Provides standard operating procedures for all HR workflows
 - Ensures consistency in process execution across all institutions
 - Serves as training material for new users
 - Acts as reference guide for existing users
 
 **For Compliance:**
+
 - Documents adherence to civil service regulations
 - Provides audit trail of process design and implementation
 - Demonstrates transparency in HR decision-making
 - Supports quality assurance and e-GAZ compliance
 
 **For System Development:**
+
 - Validates that implemented system matches business requirements
 - Serves as basis for user acceptance testing
 - Guides future system enhancements and modifications
 - Documents business rules coded into the system
 
 **For Management:**
+
 - Enables process monitoring and performance measurement
 - Supports continuous process improvement initiatives
 - Facilitates identification of bottlenecks and inefficiencies
@@ -93,6 +99,7 @@ This Business Process Document serves multiple critical purposes:
 This document covers all nine core business processes implemented in CSMS Version 1.0:
 
 **In Scope:**
+
 - All HR request workflows from initiation to completion
 - Complaint management from submission to resolution
 - Actor roles and responsibilities at each process step
@@ -104,6 +111,7 @@ This document covers all nine core business processes implemented in CSMS Versio
 - Exception handling procedures
 
 **Out of Scope:**
+
 - Technical system architecture and implementation details (see System Design Document)
 - Database schema and data models (see Technical Architecture Document)
 - User interface specifications (see User Manual)
@@ -114,6 +122,7 @@ This document covers all nine core business processes implemented in CSMS Versio
 ### 1.3 Audience
 
 This document is intended for:
+
 - **HR Officers (HRO):** To understand request submission procedures
 - **HHRMD/HRMO/DO:** To understand review and approval workflows
 - **CSCS/PO:** To understand process oversight and monitoring
@@ -125,6 +134,7 @@ This document is intended for:
 ### 1.4 Document Conventions
 
 **Process Flow Notation:**
+
 - `[Action]` - Represents a process step or action
 - `{Decision}` - Represents a decision point
 - `→` - Indicates process flow direction
@@ -132,10 +142,12 @@ This document is intended for:
 - `■` - Represents process end
 
 **Status Values:**
+
 - All request statuses are shown in UPPERCASE (e.g., PENDING, APPROVED, REJECTED)
 - Review stages are shown in Title Case (e.g., HR Officer Review, HHRMD Review)
 
 **Role Abbreviations:**
+
 - HRO = HR Officer (institution-specific)
 - HHRMD = Head of HR Management Division (CSC internal)
 - HRMO = HR Management Officer (CSC internal)
@@ -231,36 +243,42 @@ All HR request processes in CSMS follow a standardized framework designed to ens
 The CSMS processes are designed according to the following principles:
 
 #### 2.2.1 Transparency
+
 - Every request has a unique tracking ID
 - Status visible to all authorized stakeholders
 - Complete audit trail of all actions
 - Clear documentation of decisions and rationale
 
 #### 2.2.2 Accountability
+
 - Every action attributed to specific user
 - All decisions require named approver
 - Timestamps recorded for all activities
 - Immutable audit logs prevent tampering
 
 #### 2.2.3 Efficiency
+
 - Automated routing to appropriate approvers
 - Instant notifications reduce delays
 - Digital document management eliminates physical routing
 - Parallel processing where appropriate (multiple pending requests)
 
 #### 2.2.4 Data Quality
+
 - Validation at point of entry
 - Mandatory field enforcement
 - Business rule checking before submission
 - Document format and size verification
 
 #### 2.2.5 Compliance
+
 - All processes aligned with civil service regulations
 - Required documents enforced by system
 - Approval authority properly segregated
 - Data retention policies enforced
 
 #### 2.2.6 User-Centric Design
+
 - Clear error messages guide users
 - Intuitive workflow progression
 - Role-based interfaces show only relevant information
@@ -269,9 +287,11 @@ The CSMS processes are designed according to the following principles:
 ### 2.3 Actor Roles and Responsibilities
 
 #### HR Officer (HRO)
+
 **Institutional Role:** One HRO per institution (41 institutions)
 
 **Responsibilities:**
+
 - Receive HR requests from employees within their institution
 - Verify employee eligibility for requested action
 - Gather required documents from employee
@@ -286,9 +306,11 @@ The CSMS processes are designed according to the following principles:
 **Applicable Processes:** All except Complaints (employee self-service)
 
 #### Head of HR Management Division (HHRMD)
+
 **CSC Internal Role:** Senior approver with broad authority
 
 **Responsibilities:**
+
 - Approve or reject Confirmation requests
 - Approve or reject Promotion requests
 - Approve or reject LWOP requests
@@ -307,9 +329,11 @@ The CSMS processes are designed according to the following principles:
 **Applicable Processes:** All 9 processes
 
 #### HR Management Officer (HRMO)
+
 **CSC Internal Role:** Operational approver for standard HR requests
 
 **Responsibilities:**
+
 - Approve or reject Confirmation requests
 - Approve or reject Promotion requests
 - Approve or reject LWOP requests
@@ -327,9 +351,11 @@ The CSMS processes are designed according to the following principles:
 **Note:** HRMO cannot approve Cadre Change (HHRMD-only), Termination/Dismissal (DO/HHRMD-only), or Complaints (DO/HHRMD-only)
 
 #### Disciplinary Officer (DO)
+
 **CSC Internal Role:** Specialist for disciplinary and complaint matters
 
 **Responsibilities:**
+
 - Approve or reject Termination requests
 - Approve or reject Dismissal requests
 - Resolve or reject Complaints
@@ -342,9 +368,11 @@ The CSMS processes are designed according to the following principles:
 **Applicable Processes:** Termination/Dismissal, Complaints
 
 #### Employee (EMP)
+
 **End User Role:** Individual civil servants
 
 **Responsibilities:**
+
 - Submit complaints directly via employee portal
 - Authenticate using ZanID + Payroll Number + ZSSF Number
 - Provide accurate complaint information
@@ -363,7 +391,9 @@ The CSMS processes are designed according to the following principles:
 The following business rules apply across all or multiple processes:
 
 #### BR-001: Request Uniqueness
+
 Each request must have a unique system-generated ID with the following format:
+
 - Confirmation: `CONF-[Institution]-YYYY-NNNNNN`
 - Promotion: `PROM-[Institution]-YYYY-NNNNNN`
 - LWOP: `LWOP-[Institution]-YYYY-NNNNNN`
@@ -375,13 +405,16 @@ Each request must have a unique system-generated ID with the following format:
 - Complaint: `COMP-YYYY-NNNNNN`
 
 #### BR-002: Document Requirements
+
 - All uploaded documents must be in PDF format only
 - Maximum file size: 2MB per document
 - Document names must be descriptive and relevant
 - At least one supporting document required per request (process-specific)
 
 #### BR-003: Status Transitions
+
 Valid status transitions for all requests:
+
 - `PENDING` → `APPROVED` (approver action)
 - `PENDING` → `REJECTED` (approver action)
 - `PENDING` → `SENT_BACK` (approver action)
@@ -389,13 +422,16 @@ Valid status transitions for all requests:
 - No reverse transitions allowed (audit integrity)
 
 #### BR-004: Review Stage Tracking
+
 Each request tracks review stage:
+
 - `Submitted` - HRO has submitted request
 - `Under Review` - Approver is reviewing
 - `Decision Made` - Approved/Rejected/Sent Back
 - Review stage independent of status for detailed tracking
 
 #### BR-005: Approval Authority
+
 - HRO can submit but NOT approve requests
 - HHRMD can approve ALL request types
 - HRMO can approve ONLY: Confirmation, Promotion, LWOP, Retirement, Resignation, Service Extension
@@ -403,13 +439,16 @@ Each request tracks review stage:
 - Employees can ONLY submit Complaints (not HR requests)
 
 #### BR-006: Institutional Data Isolation
+
 - HRO can view/submit requests for their institution ONLY
 - HRRP can view requests for their institution ONLY
 - CSC internal users (HHRMD, HRMO, DO, CSCS, PO) can view ALL institutions
 - Employees can view ONLY their own data
 
 #### BR-007: Mandatory Fields
+
 All requests require:
+
 - Employee identification (Name, ZanID, Payroll Number)
 - Institution
 - Request type and specific details
@@ -418,7 +457,9 @@ All requests require:
 - Submission date (auto-generated)
 
 #### BR-008: Notification Rules
+
 System automatically sends notifications:
+
 - To approver when request submitted (PENDING)
 - To HRO when request approved (APPROVED)
 - To HRO when request rejected (REJECTED)
@@ -426,7 +467,9 @@ System automatically sends notifications:
 - To employee when complaint status changes (Complaints only)
 
 #### BR-009: Audit Logging
+
 All actions must be logged:
+
 - User ID of actor
 - Action type (Create, Update, Approve, Reject, etc.)
 - Timestamp (date and time)
@@ -435,6 +478,7 @@ All actions must be logged:
 - Related request/complaint ID
 
 #### BR-010: Data Retention
+
 - Approved requests: Retained indefinitely
 - Rejected requests: Retained for 5 years
 - Audit logs: Retained for 10 years (immutable)
@@ -482,22 +526,22 @@ All HR requests follow this status lifecycle:
 
 **Status Definitions:**
 
-| Status | Description | Actor | Next Actions |
-|--------|-------------|-------|--------------|
-| **PENDING** | Request submitted, awaiting review | System | Approver reviews, HRO can view status |
-| **APPROVED** | Request approved by authorized approver | HHRMD/HRMO/DO | Employee record updated, HRO notified, process complete |
-| **REJECTED** | Request denied by approver | HHRMD/HRMO/DO | HRO notified with reason, process complete |
-| **SENT_BACK** | Request returned to HRO for corrections | HHRMD/HRMO/DO | HRO rectifies and resubmits, returns to PENDING |
+| Status        | Description                             | Actor         | Next Actions                                            |
+| ------------- | --------------------------------------- | ------------- | ------------------------------------------------------- |
+| **PENDING**   | Request submitted, awaiting review      | System        | Approver reviews, HRO can view status                   |
+| **APPROVED**  | Request approved by authorized approver | HHRMD/HRMO/DO | Employee record updated, HRO notified, process complete |
+| **REJECTED**  | Request denied by approver              | HHRMD/HRMO/DO | HRO notified with reason, process complete              |
+| **SENT_BACK** | Request returned to HRO for corrections | HHRMD/HRMO/DO | HRO rectifies and resubmits, returns to PENDING         |
 
 ### 3.2 Review Stages
 
 Within each status, review stages provide more granular tracking:
 
-| Review Stage | Description | Typical Duration |
-|--------------|-------------|------------------|
-| **Submitted** | HRO has submitted request | Immediate |
-| **Under Review** | Approver is actively reviewing | 1-5 business days |
-| **Decision Made** | Approver has made final decision | Terminal stage |
+| Review Stage      | Description                      | Typical Duration  |
+| ----------------- | -------------------------------- | ----------------- |
+| **Submitted**     | HRO has submitted request        | Immediate         |
+| **Under Review**  | Approver is actively reviewing   | 1-5 business days |
+| **Decision Made** | Approver has made final decision | Terminal stage    |
 
 ### 3.3 Document Management
 
@@ -543,34 +587,35 @@ Within each status, review stages provide more granular tracking:
 
 #### 3.3.3 Required Documents by Process
 
-| Process | Required Documents | Optional Documents |
-|---------|-------------------|-------------------|
-| **Confirmation** | • Confirmation letter<br>• IPA certificate<br>• Performance appraisal | • Additional certificates |
-| **Promotion** | • New qualification certificate<br>• TCU verification (if foreign)<br>• Performance appraisals (2+ years) | • Supporting letters |
-| **LWOP** | • LWOP application letter<br>• Reason justification document | • Supporting evidence |
-| **Cadre Change** | • Qualification certificates<br>• TCU verification (if applicable) | • Transfer approval letter |
-| **Service Extension** | • Extension request letter<br>• Employee consent form | • Medical fitness (if applicable) |
-| **Retirement** | • Retirement application<br>• Medical certificate (illness type)<br>• ID documents | • Pension documents |
-| **Resignation** | • Resignation letter<br>• 3-month notice (or payment proof) | • Exit clearance |
-| **Termination/Dismissal** | • Disciplinary report<br>• Evidence documents<br>• Investigation findings | • Witness statements |
-| **Complaint** | • Complaint description<br>• Evidence (if available) | • Supporting documents |
+| Process                   | Required Documents                                                                                        | Optional Documents                |
+| ------------------------- | --------------------------------------------------------------------------------------------------------- | --------------------------------- |
+| **Confirmation**          | • Confirmation letter<br>• IPA certificate<br>• Performance appraisal                                     | • Additional certificates         |
+| **Promotion**             | • New qualification certificate<br>• TCU verification (if foreign)<br>• Performance appraisals (2+ years) | • Supporting letters              |
+| **LWOP**                  | • LWOP application letter<br>• Reason justification document                                              | • Supporting evidence             |
+| **Cadre Change**          | • Qualification certificates<br>• TCU verification (if applicable)                                        | • Transfer approval letter        |
+| **Service Extension**     | • Extension request letter<br>• Employee consent form                                                     | • Medical fitness (if applicable) |
+| **Retirement**            | • Retirement application<br>• Medical certificate (illness type)<br>• ID documents                        | • Pension documents               |
+| **Resignation**           | • Resignation letter<br>• 3-month notice (or payment proof)                                               | • Exit clearance                  |
+| **Termination/Dismissal** | • Disciplinary report<br>• Evidence documents<br>• Investigation findings                                 | • Witness statements              |
+| **Complaint**             | • Complaint description<br>• Evidence (if available)                                                      | • Supporting documents            |
 
 ### 3.4 Notification System
 
 #### 3.4.1 Notification Triggers
 
-| Event | Recipient | Notification Type | Content |
-|-------|-----------|-------------------|---------|
-| Request Submitted | Approver (HHRMD/HRMO/DO) | Email + In-app | New request awaiting review |
-| Request Approved | HRO | Email + In-app | Request [ID] approved |
-| Request Rejected | HRO | Email + In-app | Request [ID] rejected - see reason |
-| Request Sent Back | HRO | Email + In-app | Request [ID] needs rectification |
-| Complaint Submitted | DO/HHRMD | Email + In-app | New complaint [ID] submitted |
-| Complaint Resolved | Employee | Email + In-app | Your complaint [ID] has been resolved |
+| Event               | Recipient                | Notification Type | Content                               |
+| ------------------- | ------------------------ | ----------------- | ------------------------------------- |
+| Request Submitted   | Approver (HHRMD/HRMO/DO) | Email + In-app    | New request awaiting review           |
+| Request Approved    | HRO                      | Email + In-app    | Request [ID] approved                 |
+| Request Rejected    | HRO                      | Email + In-app    | Request [ID] rejected - see reason    |
+| Request Sent Back   | HRO                      | Email + In-app    | Request [ID] needs rectification      |
+| Complaint Submitted | DO/HHRMD                 | Email + In-app    | New complaint [ID] submitted          |
+| Complaint Resolved  | Employee                 | Email + In-app    | Your complaint [ID] has been resolved |
 
 #### 3.4.2 Notification Format
 
 **Email Notification Template:**
+
 ```
 Subject: [CSMS] [Action] - [Request Type] Request [ID]
 
@@ -596,6 +641,7 @@ CSMS Automated Notification System
 ```
 
 **In-App Notification:**
+
 - Displayed in notification bell icon (top right)
 - Unread count badge
 - Click to view details
@@ -607,6 +653,7 @@ CSMS Automated Notification System
 For APPROVED requests, approvers must upload a decision letter:
 
 **Decision Letter Requirements:**
+
 - PDF format, max 2MB
 - Official CSC letterhead
 - Reference to request ID
@@ -617,6 +664,7 @@ For APPROVED requests, approvers must upload a decision letter:
 - Date of approval
 
 **Decision Letter Storage:**
+
 - Uploaded via approver interface
 - Stored in MinIO object storage
 - URL saved in request record
@@ -628,6 +676,7 @@ For APPROVED requests, approvers must upload a decision letter:
 For REJECTED requests, approvers must provide rejection reason:
 
 **Rejection Reason Requirements:**
+
 - Free text field (minimum 20 characters)
 - Must clearly state reason for rejection
 - Reference specific deficiency or regulation
@@ -635,6 +684,7 @@ For REJECTED requests, approvers must provide rejection reason:
 - Visible to HRO, CSCS, HRRP
 
 **Common Rejection Reasons by Process:**
+
 - **Confirmation:** "Employee has not completed minimum 12-month probation period"
 - **Promotion:** "Insufficient service years (minimum 2 years required)"
 - **LWOP:** "Reason provided is on prohibited list as per regulations"
@@ -683,6 +733,7 @@ When approver identifies correctable deficiencies:
 ```
 
 **Rectification Instruction Examples:**
+
 - "Please upload TCU verification letter for foreign qualification"
 - "Employee confirmation date is incorrect - please verify and update"
 - "Missing performance appraisal document for last year"
@@ -708,13 +759,13 @@ When approver identifies correctable deficiencies:
 
 An employee is eligible for confirmation if ALL of the following conditions are met:
 
-| Criterion | Requirement | System Validation |
-|-----------|-------------|-------------------|
-| **Probation Duration** | Minimum 12 months from employment date | ✓ Automatic calculation |
-| **Current Status** | Employee status = "On Probation" | ✓ Database check |
-| **Performance** | Satisfactory performance appraisals | Manual verification (HRO) |
-| **No Active Disciplinary Actions** | No pending termination/dismissal | Manual verification (HRO) |
-| **No Previous Confirmation** | Employee not already confirmed | ✓ Database check |
+| Criterion                          | Requirement                            | System Validation         |
+| ---------------------------------- | -------------------------------------- | ------------------------- |
+| **Probation Duration**             | Minimum 12 months from employment date | ✓ Automatic calculation   |
+| **Current Status**                 | Employee status = "On Probation"       | ✓ Database check          |
+| **Performance**                    | Satisfactory performance appraisals    | Manual verification (HRO) |
+| **No Active Disciplinary Actions** | No pending termination/dismissal       | Manual verification (HRO) |
+| **No Previous Confirmation**       | Employee not already confirmed         | ✓ Database check          |
 
 ### 4.3 Process Flow Diagram
 
@@ -862,18 +913,21 @@ START: Employee Completes 12+ Months
 #### Phase 1: Request Submission (HRO)
 
 **Step 1.1: Identify Eligible Employee**
+
 - **Actor:** HRO
 - **Action:** Review institution employees to identify those who have completed 12+ months probation
 - **Tools:** Employee list in CSMS, filtered by "On Probation" status
 - **Output:** List of confirmation-eligible employees
 
 **Step 1.2: Access Confirmation Request Module**
+
 - **Actor:** HRO
 - **Action:** Login to CSMS → Navigate to "Confirmation Requests" → Click "New Request"
 - **Precondition:** HRO must be logged in with valid credentials
 - **Interface:** CSMS Dashboard → Confirmation Menu
 
 **Step 1.3: Select Employee**
+
 - **Actor:** HRO
 - **Action:** Search employee by name, ZanID, or payroll number → Select from results
 - **System Validation:**
@@ -884,6 +938,7 @@ START: Employee Completes 12+ Months
 - **Error Handling:** Display specific error if employee ineligible
 
 **Step 1.4: Complete Request Form**
+
 - **Actor:** HRO
 - **Fields:**
   - Employee Information (auto-filled from employee record)
@@ -902,6 +957,7 @@ START: Employee Completes 12+ Months
   - All mandatory fields must be filled
 
 **Step 1.5: Upload Required Documents**
+
 - **Actor:** HRO
 - **Required Documents:**
   1. **Confirmation Letter** - Official letter requesting employee confirmation
@@ -923,6 +979,7 @@ START: Employee Completes 12+ Months
   - Clear error messages if validation fails
 
 **Step 1.6: Review and Submit**
+
 - **Actor:** HRO
 - **Action:** Review all entered information → Click "Submit Request"
 - **System Processing:**
@@ -941,6 +998,7 @@ START: Employee Completes 12+ Months
 #### Phase 2: Request Review and Decision (HHRMD/HRMO)
 
 **Step 2.1: Receive and Access Request**
+
 - **Actor:** HHRMD or HRMO
 - **Trigger:** Email + In-app notification of new confirmation request
 - **Action:** Login to CSMS → Navigate to "Pending Confirmations" → View list
@@ -953,6 +1011,7 @@ START: Employee Completes 12+ Months
   - HRO who submitted
 
 **Step 2.2: Open Request Details**
+
 - **Actor:** HHRMD/HRMO
 - **Action:** Click on request to view full details
 - **System Action:** Update review stage to "Under Review"
@@ -979,6 +1038,7 @@ START: Employee Completes 12+ Months
     - Any previous send-back events (if resubmission)
 
 **Step 2.3: Review Request Content**
+
 - **Actor:** HHRMD/HRMO
 - **Activities:**
   1. Verify employee eligibility
@@ -1000,6 +1060,7 @@ START: Employee Completes 12+ Months
 The approver has three options:
 
 **Option A: APPROVE**
+
 - **When:** Request meets all criteria, employee deserves confirmation
 - **Required Actions:**
   1. Click "Approve" button
@@ -1026,6 +1087,7 @@ The approver has three options:
   11. Display success message to approver
 
 **Option B: REJECT**
+
 - **When:** Employee does not meet criteria or has performance/disciplinary issues
 - **Required Actions:**
   1. Click "Reject" button
@@ -1046,6 +1108,7 @@ The approver has three options:
   10. **Employee status remains "On Probation"** (not updated)
 
 **Option C: SEND BACK**
+
 - **When:** Request has correctable deficiencies (missing/incorrect documents, data errors)
 - **Required Actions:**
   1. Click "Send Back" button
@@ -1067,16 +1130,19 @@ The approver has three options:
 #### Phase 3: Rectification and Resubmission (if Sent Back)
 
 **Step 3.1: HRO Receives Send-Back Notification**
+
 - **Actor:** HRO
 - **Trigger:** Email + In-app notification
 - **Content:** Request ID, reason for send-back, specific instructions
 
 **Step 3.2: HRO Accesses Sent-Back Request**
+
 - **Actor:** HRO
 - **Action:** Login to CSMS → Navigate to "My Requests" → Filter by "Sent Back" status
 - **Display:** Request shown with SENT_BACK status and rectification instructions prominently displayed
 
 **Step 3.3: HRO Makes Corrections**
+
 - **Actor:** HRO
 - **Actions** (based on instructions):
   - Update form fields if data was incorrect
@@ -1087,6 +1153,7 @@ The approver has three options:
 - **Validation:** Same validations as original submission
 
 **Step 3.4: HRO Resubmits Request**
+
 - **Actor:** HRO
 - **Action:** Review corrections → Click "Resubmit" button
 - **System Processing:**
@@ -1102,6 +1169,7 @@ The approver has three options:
   10. Display success message to HRO
 
 **Step 3.5: Return to Step 2.1**
+
 - Process continues with approver review of resubmitted request
 
 ### 4.5 Data Requirements
@@ -1111,6 +1179,7 @@ The approver has three options:
 **Primary Table:** `ConfirmationRequest`
 
 **Fields:**
+
 ```typescript
 id: String (Primary Key, UUID)
 status: String ("PENDING" | "APPROVED" | "REJECTED" | "SENT_BACK")
@@ -1127,6 +1196,7 @@ updatedAt: DateTime (auto-updated)
 ```
 
 **Related Tables:**
+
 - `Employee` - Employee being confirmed
 - `User` - HRO who submitted, HHRMD/HRMO who reviewed
 - `Institution` - Employee's institution
@@ -1135,70 +1205,80 @@ updatedAt: DateTime (auto-updated)
 
 #### Data Validation Rules
 
-| Field | Rule | Error Message |
-|-------|------|---------------|
-| employeeId | Must exist in Employee table | "Employee not found" |
-| employeeId | Employee status must be "On Probation" | "Employee is not on probation" |
-| employeeId | Employment date ≥ 12 months ago | "Employee has not completed minimum probation period" |
-| documents | Array must contain exactly 3 URLs | "All required documents must be uploaded" |
-| documents | Each URL must be valid MinIO path | "Invalid document reference" |
-| status | Must be one of enum values | "Invalid status value" |
-| decisionDate | Cannot be in the future | "Decision date cannot be in future" |
-| rejectionReason | Required if status = REJECTED | "Rejection reason is required" |
-| rejectionReason | Minimum 20 characters if provided | "Rejection reason must be at least 20 characters" |
+| Field           | Rule                                   | Error Message                                         |
+| --------------- | -------------------------------------- | ----------------------------------------------------- |
+| employeeId      | Must exist in Employee table           | "Employee not found"                                  |
+| employeeId      | Employee status must be "On Probation" | "Employee is not on probation"                        |
+| employeeId      | Employment date ≥ 12 months ago        | "Employee has not completed minimum probation period" |
+| documents       | Array must contain exactly 3 URLs      | "All required documents must be uploaded"             |
+| documents       | Each URL must be valid MinIO path      | "Invalid document reference"                          |
+| status          | Must be one of enum values             | "Invalid status value"                                |
+| decisionDate    | Cannot be in the future                | "Decision date cannot be in future"                   |
+| rejectionReason | Required if status = REJECTED          | "Rejection reason is required"                        |
+| rejectionReason | Minimum 20 characters if provided      | "Rejection reason must be at least 20 characters"     |
 
 ### 4.6 Business Rules
 
 **BR-CONF-001: Probation Period Validation**
+
 - Employee must have completed minimum 12 months from employment date
 - System calculates: `TODAY - employmentDate ≥ 365 days`
 - If false, system prevents request submission
 
 **BR-CONF-002: Single Active Request**
+
 - Employee can have only ONE active (PENDING or SENT_BACK) confirmation request at a time
 - System checks for existing requests before allowing new submission
 - If active request exists, show error: "Employee already has a pending confirmation request"
 
 **BR-CONF-003: Status-Based Eligibility**
+
 - Only employees with status "On Probation" can be confirmed
 - Employees with status "Confirmed", "Retired", "Resigned", etc. cannot be confirmed
 - System enforces via database query filter
 
 **BR-CONF-004: Document Requirement Enforcement**
+
 - All three documents (Confirmation Letter, IPA Certificate, Performance Appraisal) are mandatory
 - System prevents submission if any document missing
 - Each document must meet format (PDF) and size (≤ 2MB) requirements
 
 **BR-CONF-005: Approval Authority**
+
 - HHRMD can approve/reject/send-back confirmation requests
 - HRMO can approve/reject/send-back confirmation requests
 - DO CANNOT approve confirmation requests (not in scope of authority)
 - HRO CANNOT approve requests (can only submit)
 
 **BR-CONF-006: Employee Record Update**
+
 - Employee status updated ONLY when request APPROVED
 - Status remains unchanged if REJECTED or SENT_BACK
 - Confirmation date set to decision date when approved
 - Changes to employee record are immediate and permanent
 
 **BR-CONF-007: Decision Letter Requirement**
+
 - Decision letter (PDF) REQUIRED for APPROVED requests
 - Decision letter NOT required for REJECTED or SENT_BACK
 - Decision letter uploaded by approver, not HRO
 - Decision letter stored permanently in employee record
 
 **BR-CONF-008: Request Immutability After Decision**
+
 - Once status is APPROVED or REJECTED, request cannot be edited
 - Only SENT_BACK requests can be edited (by HRO) and resubmitted
 - Audit log maintains complete history even if edited
 
 **BR-CONF-009: Resubmission Retention**
+
 - Resubmitted requests retain original Request ID
 - Request history shows all submission/send-back/resubmission events
 - Each resubmission creates new audit log entry
 - No limit on number of send-back/resubmit cycles
 
 **BR-CONF-010: Notification Timing**
+
 - Notifications sent immediately upon status change
 - Email notifications sent asynchronously (non-blocking)
 - In-app notifications appear in real-time
@@ -1206,33 +1286,34 @@ updatedAt: DateTime (auto-updated)
 
 ### 4.7 Exception Handling
 
-| Exception Scenario | System Behavior | User Guidance |
-|-------------------|-----------------|---------------|
-| **Employee not found** | Show error, prevent submission | "Selected employee does not exist or has been deleted. Please refresh and try again." |
-| **Probation period insufficient** | Show error, prevent submission | "Employee has only completed [X] months of probation. Minimum 12 months required." |
-| **Document upload fails** | Allow retry, show error | "Document upload failed. Please check file format (PDF) and size (≤ 2MB) and try again." |
-| **Network timeout during submission** | Transaction rollback, allow retry | "Submission failed due to network error. Please check your connection and try again." |
-| **Approver uploads invalid decision letter** | Show error, require re-upload | "Decision letter must be PDF format and ≤ 2MB. Please upload a valid file." |
-| **Employee record update fails** | Transaction rollback, log error, alert admin | "System error occurred. Please contact administrator. Error ID: [XXX]" |
-| **Duplicate submission detected** | Prevent submission, show existing request | "Employee already has pending confirmation request [ID]. Please view existing request." |
+| Exception Scenario                           | System Behavior                              | User Guidance                                                                            |
+| -------------------------------------------- | -------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| **Employee not found**                       | Show error, prevent submission               | "Selected employee does not exist or has been deleted. Please refresh and try again."    |
+| **Probation period insufficient**            | Show error, prevent submission               | "Employee has only completed [X] months of probation. Minimum 12 months required."       |
+| **Document upload fails**                    | Allow retry, show error                      | "Document upload failed. Please check file format (PDF) and size (≤ 2MB) and try again." |
+| **Network timeout during submission**        | Transaction rollback, allow retry            | "Submission failed due to network error. Please check your connection and try again."    |
+| **Approver uploads invalid decision letter** | Show error, require re-upload                | "Decision letter must be PDF format and ≤ 2MB. Please upload a valid file."              |
+| **Employee record update fails**             | Transaction rollback, log error, alert admin | "System error occurred. Please contact administrator. Error ID: [XXX]"                   |
+| **Duplicate submission detected**            | Prevent submission, show existing request    | "Employee already has pending confirmation request [ID]. Please view existing request."  |
 
 ### 4.8 Process Metrics
 
 **Key Performance Indicators (KPIs):**
 
-| Metric | Definition | Target | Measurement Frequency |
-|--------|------------|--------|----------------------|
-| **Average Processing Time** | Days from submission to decision | ≤ 5 business days | Weekly |
-| **Approval Rate** | % of requests approved | ≥ 85% | Monthly |
-| **Send-Back Rate** | % of requests sent back | ≤ 15% | Monthly |
-| **Rejection Rate** | % of requests rejected | ≤ 10% | Monthly |
-| **Resubmission Success Rate** | % of sent-back requests eventually approved | ≥ 90% | Monthly |
-| **Overdue Requests** | Requests pending > 10 days | 0 | Daily |
-| **Document Compliance** | % of requests with all required docs on first submission | ≥ 90% | Monthly |
+| Metric                        | Definition                                               | Target            | Measurement Frequency |
+| ----------------------------- | -------------------------------------------------------- | ----------------- | --------------------- |
+| **Average Processing Time**   | Days from submission to decision                         | ≤ 5 business days | Weekly                |
+| **Approval Rate**             | % of requests approved                                   | ≥ 85%             | Monthly               |
+| **Send-Back Rate**            | % of requests sent back                                  | ≤ 15%             | Monthly               |
+| **Rejection Rate**            | % of requests rejected                                   | ≤ 10%             | Monthly               |
+| **Resubmission Success Rate** | % of sent-back requests eventually approved              | ≥ 90%             | Monthly               |
+| **Overdue Requests**          | Requests pending > 10 days                               | 0                 | Daily                 |
+| **Document Compliance**       | % of requests with all required docs on first submission | ≥ 90%             | Monthly               |
 
 ### 4.9 Process Outputs
 
 **Successful Completion (Approved):**
+
 1. Request record with status APPROVED
 2. Updated employee record:
    - Status changed to "Confirmed"
@@ -1244,6 +1325,7 @@ updatedAt: DateTime (auto-updated)
 6. Employee eligible for promotions and other confirmed-employee processes
 
 **Unsuccessful Completion (Rejected):**
+
 1. Request record with status REJECTED
 2. Rejection reason documented
 3. Employee record unchanged (remains "On Probation")
@@ -1252,6 +1334,7 @@ updatedAt: DateTime (auto-updated)
 6. Employee may be subject to further review or dismissal
 
 **Pending Rectification (Sent Back):**
+
 1. Request record with status SENT_BACK
 2. Rectification instructions documented
 3. Employee record unchanged
@@ -1268,6 +1351,7 @@ updatedAt: DateTime (auto-updated)
 ### 5.1 Common Pattern (All Remaining Processes)
 
 All processes share this structure:
+
 1. **Eligibility Check** → HRO validates employee meets criteria
 2. **Request Submission** → HRO fills form, uploads documents, submits
 3. **System Validation** → Automated business rule checking
@@ -1281,6 +1365,7 @@ All processes share this structure:
 #### **Process 2: Promotion Request (PROM-XXX-YYYY-NNNNNN)**
 
 **Unique Characteristics:**
+
 - **Two Promotion Types:**
   1. Education-Based: Employee acquired new degree/qualification
   2. Performance-Based: Consecutive exceptional performance appraisals (2+ years)
@@ -1320,6 +1405,7 @@ All processes share this structure:
 #### **Process 3: Leave Without Pay - LWOP (LWOP-XXX-YYYY-NNNNNN)**
 
 **Unique Characteristics:**
+
 - **Purpose:** Grant unpaid leave for valid personal reasons
 - **Duration Range:** Minimum 1 month, Maximum 3 years
 - **Frequency Limit:** Maximum 2 LWOP periods per employee (lifetime)
@@ -1334,7 +1420,7 @@ All processes share this structure:
   - Political campaigning
   - Working for competitor organization
   - Activities conflicting with civil service ethics
-  (HRO must verify reason is acceptable)
+    (HRO must verify reason is acceptable)
 
 - **Required Documents:**
   - LWOP application letter
@@ -1366,6 +1452,7 @@ All processes share this structure:
 #### **Process 4: Change of Cadre (CADR-XXX-YYYY-NNNNNN)**
 
 **Unique Characteristics:**
+
 - **Purpose:** Transfer employee to different job category/cadre
 - **Approval Authority:** HHRMD ONLY (HRMO cannot approve)
 - **Basis:** Organizational need or employee qualification upgrade
@@ -1404,6 +1491,7 @@ All processes share this structure:
 #### **Process 5: Service Extension (SEXT-XXX-YYYY-NNNNNN)**
 
 **Unique Characteristics:**
+
 - **Purpose:** Extend service beyond normal retirement age
 - **Trigger:** Employee approaching retirement date
 - **Duration:** 6 months to 3 years per extension
@@ -1447,6 +1535,7 @@ All processes share this structure:
 #### **Process 6: Retirement (RETR-XXX-YYYY-NNNNNN)**
 
 **Unique Characteristics:**
+
 - **Three Retirement Types:**
   1. **Compulsory:** Age-based mandatory retirement (e.g., age 60)
   2. **Voluntary:** Employee chooses to retire early
@@ -1494,6 +1583,7 @@ All processes share this structure:
 #### **Process 7: Resignation (RESN-XXX-YYYY-NNNNNN)**
 
 **Unique Characteristics:**
+
 - **Two Notice Types:**
   1. **3-Month Notice:** Standard resignation (free, no payment)
   2. **24-Hour Notice:** Immediate resignation with 3-month salary payment
@@ -1530,6 +1620,7 @@ All processes share this structure:
 #### **Process 8: Termination and Dismissal (TERM-XXX-YYYY-NNNNNN)**
 
 **Unique Characteristics:**
+
 - **Approval Authority:** DO or HHRMD ONLY (disciplinary matter)
 - **Two Types:**
   1. **Termination:** For "Confirmed" employees (disciplinary action)
@@ -1574,6 +1665,7 @@ All processes share this structure:
 #### **Process 9: Complaint Management (COMP-YYYY-NNNNNN)**
 
 **Unique Characteristics:**
+
 - **Submitter:** EMPLOYEE (self-service, not via HRO)
 - **Authentication:** ZanID + Payroll Number + ZSSF Number
 - **Portal:** Separate employee login portal (https://csms.zanajira.go.tz/employee-login)
@@ -1581,6 +1673,7 @@ All processes share this structure:
 - **AI Enhancement:** Google Genkit AI rewrites complaint if poorly formatted
 
 **Complaint Categories:**
+
 1. **Unconfirmed Employees:** Probation-related complaints
 2. **Job-Related:** Work conditions, assignments, disputes
 3. **Other:** Miscellaneous employee concerns
@@ -1663,10 +1756,12 @@ All processes share this structure:
 ```
 
 **Required Documents:**
+
 - Complaint description (embedded in form, not separate document)
 - Evidence documents (optional, PDF, 1MB max per file)
 
 **Business Rules:**
+
 - **BR-COMP-001:** Only employees can submit complaints (not HRO)
 - **BR-COMP-002:** Employee must authenticate with all three IDs (ZanID, Payroll, ZSSF)
 - **BR-COMP-003:** Complaint ID format: COMP-YYYY-NNNNNN (no institution prefix)
@@ -1677,6 +1772,7 @@ All processes share this structure:
 - **BR-COMP-008:** AI rewriting is optional (employee can decline)
 
 **Data Fields:**
+
 ```typescript
 id: String (e.g., COMP-2025-000045)
 complaintType: "Unconfirmed Employees" | "Job-Related" | "Other"
@@ -1698,11 +1794,13 @@ updatedAt: DateTime
 ```
 
 **Employee Record Impact:**
+
 - NO direct employee record update (complaints don't change status)
 - Complaint history viewable by employee
 - Resolution actions may trigger separate HR processes (e.g., if complaint leads to confirmation)
 
 **AI Enhancement (Google Genkit):**
+
 - Analyzes complaint text for clarity and completeness
 - If poorly written, suggests improved version
 - Maintains factual accuracy (doesn't change facts)
@@ -1716,41 +1814,41 @@ updatedAt: DateTime
 
 ### 13.1 Overall HR Request Metrics
 
-| Metric | Target | Measurement | Reporting Frequency |
-|--------|--------|-------------|-------------------|
-| **Overall Processing Time** | ≤ 7 business days | Average days from submission to decision | Weekly |
-| **Request Volume by Type** | - | Count of each request type | Monthly |
-| **Approval Rate** | ≥ 80% | Approved / Total Submitted | Monthly |
-| **Rejection Rate** | ≤ 15% | Rejected / Total Submitted | Monthly |
-| **Send-Back Rate** | ≤ 20% | Sent Back / Total Submitted | Monthly |
-| **First-Time Submission Success** | ≥ 75% | Approved on first submission / Total | Monthly |
-| **Overdue Requests** | 0 | Requests pending > 10 days | Daily |
-| **HRO Performance** | - | Requests by institution, approval rates | Monthly |
-| **Approver Workload** | Balanced | Requests per approver | Weekly |
+| Metric                            | Target            | Measurement                              | Reporting Frequency |
+| --------------------------------- | ----------------- | ---------------------------------------- | ------------------- |
+| **Overall Processing Time**       | ≤ 7 business days | Average days from submission to decision | Weekly              |
+| **Request Volume by Type**        | -                 | Count of each request type               | Monthly             |
+| **Approval Rate**                 | ≥ 80%             | Approved / Total Submitted               | Monthly             |
+| **Rejection Rate**                | ≤ 15%             | Rejected / Total Submitted               | Monthly             |
+| **Send-Back Rate**                | ≤ 20%             | Sent Back / Total Submitted              | Monthly             |
+| **First-Time Submission Success** | ≥ 75%             | Approved on first submission / Total     | Monthly             |
+| **Overdue Requests**              | 0                 | Requests pending > 10 days               | Daily               |
+| **HRO Performance**               | -                 | Requests by institution, approval rates  | Monthly             |
+| **Approver Workload**             | Balanced          | Requests per approver                    | Weekly              |
 
 ### 13.2 Process-Specific Targets
 
-| Process | Average Processing Time | Approval Rate Target | Critical SLA |
-|---------|------------------------|---------------------|--------------|
-| **Confirmation** | 5 days | ≥ 85% | 10 days |
-| **Promotion** | 7 days | ≥ 75% | 14 days |
-| **LWOP** | 5 days | ≥ 80% | 10 days |
-| **Cadre Change** | 10 days | ≥ 70% | 21 days |
-| **Service Extension** | 7 days | ≥ 85% | 14 days |
-| **Retirement** | 7 days | ≥ 90% | 14 days |
-| **Resignation** | 3 days | ≥ 95% | 7 days |
-| **Termination/Dismissal** | 14 days | ≥ 60% | 30 days |
-| **Complaints** | 10 days | ≥ 70% resolution | 21 days |
+| Process                   | Average Processing Time | Approval Rate Target | Critical SLA |
+| ------------------------- | ----------------------- | -------------------- | ------------ |
+| **Confirmation**          | 5 days                  | ≥ 85%                | 10 days      |
+| **Promotion**             | 7 days                  | ≥ 75%                | 14 days      |
+| **LWOP**                  | 5 days                  | ≥ 80%                | 10 days      |
+| **Cadre Change**          | 10 days                 | ≥ 70%                | 21 days      |
+| **Service Extension**     | 7 days                  | ≥ 85%                | 14 days      |
+| **Retirement**            | 7 days                  | ≥ 90%                | 14 days      |
+| **Resignation**           | 3 days                  | ≥ 95%                | 7 days       |
+| **Termination/Dismissal** | 14 days                 | ≥ 60%                | 30 days      |
+| **Complaints**            | 10 days                 | ≥ 70% resolution     | 21 days      |
 
 ### 13.3 Data Quality Metrics
 
-| Metric | Target | Impact |
-|--------|--------|--------|
-| **Document Upload Compliance** | ≥ 95% | All required docs on first submission |
-| **Data Completeness** | 100% | All mandatory fields filled |
-| **Resubmission Success Rate** | ≥ 90% | Sent-back requests eventually approved |
-| **Employee Record Accuracy** | 100% | Status updates applied correctly |
-| **Audit Log Completeness** | 100% | All actions logged |
+| Metric                         | Target | Impact                                 |
+| ------------------------------ | ------ | -------------------------------------- |
+| **Document Upload Compliance** | ≥ 95%  | All required docs on first submission  |
+| **Data Completeness**          | 100%   | All mandatory fields filled            |
+| **Resubmission Success Rate**  | ≥ 90%  | Sent-back requests eventually approved |
+| **Employee Record Accuracy**   | 100%   | Status updates applied correctly       |
+| **Audit Log Completeness**     | 100%   | All actions logged                     |
 
 ---
 
@@ -1777,31 +1875,31 @@ updatedAt: DateTime
 
 ### Appendix A: Process Comparison Matrix
 
-| Aspect | Confirmation | Promotion | LWOP | Cadre Change | Service Ext | Retirement | Resignation | Term/Dismiss | Complaints |
-|--------|-------------|-----------|------|--------------|-------------|------------|-------------|--------------|------------|
-| **Submitter** | HRO | HRO | HRO | HRO | HRO | HRO | HRO | HRO | Employee |
-| **Approver** | HHRMD/HRMO | HHRMD/HRMO | HHRMD/HRMO | HHRMD only | HHRMD/HRMO | HHRMD/HRMO | HHRMD/HRMO | DO/HHRMD | DO/HHRMD |
-| **Eligible Status** | On Probation | Confirmed | Confirmed | Confirmed | Confirmed | Confirmed | Confirmed | Any | Any |
-| **Min Duration** | 12 months | 2 years | 1 month | - | 6 months | - | 3 months | - | - |
-| **Max Duration** | 18 months | - | 3 years | - | 3 years | - | - | - | - |
-| **Frequency Limit** | Once | Multiple | 2 lifetime | Multiple | 2 lifetime | Once | Once | - | Unlimited |
-| **Decision Letter** | Required | Required | Required | Required | Required | Required | Required | Optional | N/A |
-| **Status Change** | → Confirmed | Update Cadre | → On LWOP | Update Cadre | Extend Date | → Retired | → Resigned | → Terminated | None |
-| **Reversible** | No | No | No | No | No | No | No | No | N/A |
+| Aspect              | Confirmation | Promotion    | LWOP       | Cadre Change | Service Ext | Retirement | Resignation | Term/Dismiss | Complaints |
+| ------------------- | ------------ | ------------ | ---------- | ------------ | ----------- | ---------- | ----------- | ------------ | ---------- |
+| **Submitter**       | HRO          | HRO          | HRO        | HRO          | HRO         | HRO        | HRO         | HRO          | Employee   |
+| **Approver**        | HHRMD/HRMO   | HHRMD/HRMO   | HHRMD/HRMO | HHRMD only   | HHRMD/HRMO  | HHRMD/HRMO | HHRMD/HRMO  | DO/HHRMD     | DO/HHRMD   |
+| **Eligible Status** | On Probation | Confirmed    | Confirmed  | Confirmed    | Confirmed   | Confirmed  | Confirmed   | Any          | Any        |
+| **Min Duration**    | 12 months    | 2 years      | 1 month    | -            | 6 months    | -          | 3 months    | -            | -          |
+| **Max Duration**    | 18 months    | -            | 3 years    | -            | 3 years     | -          | -           | -            | -          |
+| **Frequency Limit** | Once         | Multiple     | 2 lifetime | Multiple     | 2 lifetime  | Once       | Once        | -            | Unlimited  |
+| **Decision Letter** | Required     | Required     | Required   | Required     | Required    | Required   | Required    | Optional     | N/A        |
+| **Status Change**   | → Confirmed  | Update Cadre | → On LWOP  | Update Cadre | Extend Date | → Retired  | → Resigned  | → Terminated | None       |
+| **Reversible**      | No           | No           | No         | No           | No          | No         | No          | No           | N/A        |
 
 ### Appendix B: Document Requirements Summary
 
-| Process | Mandatory Documents | Optional Documents | Max File Size |
-|---------|-------------------|-------------------|---------------|
-| **Confirmation** | Confirmation letter, IPA certificate, Performance appraisal | - | 2MB each |
-| **Promotion** | Qualification certificates, Performance appraisals, TCU verification (if foreign) | Supporting letters | 2MB each |
-| **LWOP** | LWOP application, Justification | Supporting evidence | 2MB each |
-| **Cadre Change** | Request letter, Educational certificates, TCU (if foreign) | Org approval letter | 2MB each |
-| **Service Extension** | Request letter, Justification, Employee consent | Medical fitness | 2MB each |
-| **Retirement** | Retirement application, ID documents, Medical cert (illness type) | Pension docs | 2MB each |
-| **Resignation** | Resignation letter, Payment proof (24-hr notice) | Exit clearance | 2MB each |
-| **Termination/Dismissal** | Investigation report, Evidence documents | Witness statements | 2MB each |
-| **Complaints** | Complaint description (inline) | Evidence | 1MB each |
+| Process                   | Mandatory Documents                                                               | Optional Documents  | Max File Size |
+| ------------------------- | --------------------------------------------------------------------------------- | ------------------- | ------------- |
+| **Confirmation**          | Confirmation letter, IPA certificate, Performance appraisal                       | -                   | 2MB each      |
+| **Promotion**             | Qualification certificates, Performance appraisals, TCU verification (if foreign) | Supporting letters  | 2MB each      |
+| **LWOP**                  | LWOP application, Justification                                                   | Supporting evidence | 2MB each      |
+| **Cadre Change**          | Request letter, Educational certificates, TCU (if foreign)                        | Org approval letter | 2MB each      |
+| **Service Extension**     | Request letter, Justification, Employee consent                                   | Medical fitness     | 2MB each      |
+| **Retirement**            | Retirement application, ID documents, Medical cert (illness type)                 | Pension docs        | 2MB each      |
+| **Resignation**           | Resignation letter, Payment proof (24-hr notice)                                  | Exit clearance      | 2MB each      |
+| **Termination/Dismissal** | Investigation report, Evidence documents                                          | Witness statements  | 2MB each      |
+| **Complaints**            | Complaint description (inline)                                                    | Evidence            | 1MB each      |
 
 ### Appendix C: Status Transition Rules
 
@@ -1821,20 +1919,20 @@ Employee Status Transitions:
 
 ### Appendix D: Glossary of Terms
 
-| Term | Definition |
-|------|------------|
-| **Approver** | HHRMD, HRMO, or DO authorized to approve requests |
-| **Audit Log** | Immutable record of all system actions |
-| **Decision Letter** | Official PDF document confirming approval of HR request |
-| **HRO** | HR Officer at institution level who submits requests |
-| **MinIO** | Object storage system for documents (S3-compatible) |
-| **Probation Period** | Initial 12-18 month evaluation period for new employees |
-| **Rectification** | Corrections made by HRO after request sent back |
-| **Review Stage** | Granular tracking within status (Submitted, Under Review, Decision Made) |
-| **Send Back** | Approver returns request to HRO for corrections |
-| **TCU** | Tanzania Commission for Universities (foreign qualification verification) |
-| **ZanID** | Zanzibar National ID Number |
-| **ZSSF** | Zanzibar Social Security Fund Number |
+| Term                 | Definition                                                                |
+| -------------------- | ------------------------------------------------------------------------- |
+| **Approver**         | HHRMD, HRMO, or DO authorized to approve requests                         |
+| **Audit Log**        | Immutable record of all system actions                                    |
+| **Decision Letter**  | Official PDF document confirming approval of HR request                   |
+| **HRO**              | HR Officer at institution level who submits requests                      |
+| **MinIO**            | Object storage system for documents (S3-compatible)                       |
+| **Probation Period** | Initial 12-18 month evaluation period for new employees                   |
+| **Rectification**    | Corrections made by HRO after request sent back                           |
+| **Review Stage**     | Granular tracking within status (Submitted, Under Review, Decision Made)  |
+| **Send Back**        | Approver returns request to HRO for corrections                           |
+| **TCU**              | Tanzania Commission for Universities (foreign qualification verification) |
+| **ZanID**            | Zanzibar National ID Number                                               |
+| **ZSSF**             | Zanzibar Social Security Fund Number                                      |
 
 ### Appendix E: Business Rule Reference
 
@@ -1858,26 +1956,26 @@ Employee Status Transitions:
 
 This Business Process Document has been reviewed and approved by:
 
-| Role | Name | Signature | Date |
-|------|------|-----------|------|
-| **Head of HR Management Division (HHRMD)** | | | |
-| **Business Analyst** | | | |
-| **Project Manager** | | | |
-| **Civil Service Commission Secretary (CSCS)** | | | |
+| Role                                          | Name | Signature | Date |
+| --------------------------------------------- | ---- | --------- | ---- |
+| **Head of HR Management Division (HHRMD)**    |      |           |      |
+| **Business Analyst**                          |      |           |      |
+| **Project Manager**                           |      |           |      |
+| **Civil Service Commission Secretary (CSCS)** |      |           |      |
 
 ---
 
 ## Document Revision History
 
-| Version | Date | Author | Description of Changes |
-|---------|------|--------|------------------------|
-| 0.1 | Jan 10, 2025 | Business Analyst | Initial draft |
-| 0.2 | Jan 15, 2025 | Business Analyst | Added all 9 processes |
-| 0.3 | Jan 20, 2025 | Business Analyst | Added metrics and appendices |
-| 1.0 | Jan 25, 2025 | Business Analyst | Final version for approval |
+| Version | Date         | Author           | Description of Changes       |
+| ------- | ------------ | ---------------- | ---------------------------- |
+| 0.1     | Jan 10, 2025 | Business Analyst | Initial draft                |
+| 0.2     | Jan 15, 2025 | Business Analyst | Added all 9 processes        |
+| 0.3     | Jan 20, 2025 | Business Analyst | Added metrics and appendices |
+| 1.0     | Jan 25, 2025 | Business Analyst | Final version for approval   |
 
 ---
 
 **END OF BUSINESS PROCESS DOCUMENT**
 
-*This document is confidential and proprietary to the Civil Service Commission of Zanzibar. Unauthorized distribution or reproduction is prohibited.*
+_This document is confidential and proprietary to the Civil Service Commission of Zanzibar. Unauthorized distribution or reproduction is prohibited._

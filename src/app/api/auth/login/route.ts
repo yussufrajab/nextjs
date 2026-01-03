@@ -27,13 +27,11 @@ export async function POST(req: Request) {
 
     // Find user in database by either email or username
     const user = await db.user.findFirst({
-      where: isEmail
-        ? { email: username }
-        : { username: username },
+      where: isEmail ? { email: username } : { username: username },
       include: {
         Institution: true,
-        Employee: true
-      }
+        Employee: true,
+      },
     });
 
     if (!user) {
@@ -55,7 +53,14 @@ export async function POST(req: Request) {
     }
 
     // Auto-unlock expired standard lockouts
-    const { autoUnlockExpiredAccounts, isAccountLocked, getRemainingLockoutTime, getAccountLockoutStatus, incrementFailedLoginAttempts, resetFailedLoginAttempts } = await import('@/lib/account-lockout-utils');
+    const {
+      autoUnlockExpiredAccounts,
+      isAccountLocked,
+      getRemainingLockoutTime,
+      getAccountLockoutStatus,
+      incrementFailedLoginAttempts,
+      resetFailedLoginAttempts,
+    } = await import('@/lib/account-lockout-utils');
     await autoUnlockExpiredAccounts();
 
     // Refresh user data after auto-unlock
@@ -118,10 +123,7 @@ export async function POST(req: Request) {
         message += 'Please contact an administrator to unlock your account.';
       }
 
-      return NextResponse.json(
-        { success: false, message },
-        { status: 403 }
-      );
+      return NextResponse.json({ success: false, message }, { status: 403 });
     }
 
     if (!user.active) {
@@ -145,13 +147,20 @@ export async function POST(req: Request) {
     }
 
     // Verify password
-    const isPasswordValid = await comparePassword(password, currentUser.password);
+    const isPasswordValid = await comparePassword(
+      password,
+      currentUser.password
+    );
 
     if (!isPasswordValid) {
       console.log('Invalid password for user:', username);
 
       // Increment failed login attempts
-      const lockoutResult = await incrementFailedLoginAttempts(currentUser.id, ipAddress, userAgent);
+      const lockoutResult = await incrementFailedLoginAttempts(
+        currentUser.id,
+        ipAddress,
+        userAgent
+      );
 
       // Log failed login attempt
       await logLoginAttempt({
@@ -166,7 +175,8 @@ export async function POST(req: Request) {
 
       let message = 'Invalid username/email or password';
       if (lockoutResult.locked) {
-        message = 'Too many failed login attempts. Your account has been locked. ';
+        message =
+          'Too many failed login attempts. Your account has been locked. ';
         if (lockoutResult.lockoutType === 'standard') {
           message += 'Please try again in 30 minutes.';
         } else {
@@ -176,10 +186,7 @@ export async function POST(req: Request) {
         message += `. ${lockoutResult.remainingAttempts} attempt(s) remaining before account lockout.`;
       }
 
-      return NextResponse.json(
-        { success: false, message },
-        { status: 401 }
-      );
+      return NextResponse.json({ success: false, message }, { status: 401 });
     }
 
     // Reset failed login attempts on successful login
@@ -216,7 +223,7 @@ export async function POST(req: Request) {
       const {
         isPasswordExpired,
         isInGracePeriod,
-        getPasswordExpirationStatus
+        getPasswordExpirationStatus,
       } = await import('@/lib/password-expiration-utils');
 
       const expirationStatus = getPasswordExpirationStatus({
@@ -243,7 +250,8 @@ export async function POST(req: Request) {
         return NextResponse.json(
           {
             success: false,
-            message: 'Your password has expired. Please contact an administrator to reset your password.',
+            message:
+              'Your password has expired. Please contact an administrator to reset your password.',
           },
           { status: 401 }
         );
@@ -251,7 +259,9 @@ export async function POST(req: Request) {
 
       // If in grace period, allow login but set mustChangePassword
       if (expirationStatus.isInGracePeriod) {
-        console.log(`User ${username} logging in with expired password (grace period: ${expirationStatus.gracePeriodDaysRemaining} days remaining)`);
+        console.log(
+          `User ${username} logging in with expired password (grace period: ${expirationStatus.gracePeriodDaysRemaining} days remaining)`
+        );
 
         // Update user to require password change
         await db.user.update({
@@ -292,7 +302,7 @@ export async function POST(req: Request) {
         mustChangePassword: currentUser.mustChangePassword || false,
         isTemporaryPassword: currentUser.isTemporaryPassword || false,
         temporaryPasswordExpiry: currentUser.temporaryPasswordExpiry,
-      }
+      },
     };
 
     // Password status for frontend to handle redirects
@@ -330,9 +340,11 @@ export async function POST(req: Request) {
     });
 
     // Detect suspicious login and create session
-    const { detectSuspiciousLogin, getLoginSummary } = await import('@/lib/suspicious-login-detector');
+    const { detectSuspiciousLogin, getLoginSummary } =
+      await import('@/lib/suspicious-login-detector');
     const { createSession } = await import('@/lib/session-manager');
-    const { createNotification: createSuspiciousNotification } = await import('@/lib/notifications');
+    const { createNotification: createSuspiciousNotification } =
+      await import('@/lib/notifications');
 
     const suspiciousCheck = await detectSuspiciousLogin({
       userId: currentUser.id,
@@ -350,7 +362,11 @@ export async function POST(req: Request) {
 
     // Notify user if login is suspicious
     if (suspiciousCheck.shouldNotify) {
-      const loginInfo = getLoginSummary({ userId: currentUser.id, ipAddress, userAgent });
+      const loginInfo = getLoginSummary({
+        userId: currentUser.id,
+        ipAddress,
+        userAgent,
+      });
       await createSuspiciousNotification({
         userId: currentUser.id,
         message: `New login detected from ${loginInfo.device} at ${loginInfo.location} on ${loginInfo.time}. If this wasn't you, please change your password immediately.`,
@@ -363,7 +379,7 @@ export async function POST(req: Request) {
       generateCSRFToken,
       signCSRFToken,
       getCSRFCookieOptions,
-      CSRF_COOKIE_NAME
+      CSRF_COOKIE_NAME,
     } = await import('@/lib/csrf-utils');
 
     const csrfToken = generateCSRFToken();
@@ -379,19 +395,24 @@ export async function POST(req: Request) {
       passwordStatus,
       sessionToken: session.sessionToken, // Include session token in response
       csrfToken: signedCSRFToken, // Include CSRF token in response for client-side storage
-      message: 'Login successful'
+      message: 'Login successful',
     });
 
     // Set CSRF token cookie (readable by JavaScript, but protected by SameSite)
     response.cookies.set(CSRF_COOKIE_NAME, signedCSRFToken, csrfCookieOptions);
 
     return response;
-
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ success: false, errors: error.errors }, { status: 400 });
+      return NextResponse.json(
+        { success: false, errors: error.errors },
+        { status: 400 }
+      );
     }
-    console.error("[LOGIN_POST]", error);
-    return NextResponse.json({ success: false, message: 'Internal Server Error' }, { status: 500 });
+    console.error('[LOGIN_POST]', error);
+    return NextResponse.json(
+      { success: false, message: 'Internal Server Error' },
+      { status: 500 }
+    );
   }
 }

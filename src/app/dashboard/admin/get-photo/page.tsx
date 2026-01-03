@@ -1,15 +1,35 @@
 'use client';
 
 import { PageHeader } from '@/components/shared/page-header';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import React, { useState, useEffect } from 'react';
-import { Search, Loader2, Building, Image, Camera, AlertCircle } from 'lucide-react';
+import {
+  Search,
+  Loader2,
+  Building,
+  Image,
+  Camera,
+  AlertCircle,
+} from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Pagination } from '@/components/shared/pagination';
 import { Badge } from '@/components/ui/badge';
@@ -32,8 +52,11 @@ export interface PhotoFetchResult {
 
 export default function GetPhotoPage() {
   const [institutions, setInstitutions] = useState<Institution[]>([]);
-  const [filteredInstitutions, setFilteredInstitutions] = useState<Institution[]>([]);
-  const [selectedInstitution, setSelectedInstitution] = useState<Institution | null>(null);
+  const [filteredInstitutions, setFilteredInstitutions] = useState<
+    Institution[]
+  >([]);
+  const [selectedInstitution, setSelectedInstitution] =
+    useState<Institution | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isFetching, setIsFetching] = useState(false);
@@ -71,9 +94,9 @@ export default function GetPhotoPage() {
         setFilteredInstitutions(data.data || []);
       } catch (error) {
         toast({
-          title: "Error",
-          description: "Failed to load institutions",
-          variant: "destructive"
+          title: 'Error',
+          description: 'Failed to load institutions',
+          variant: 'destructive',
         });
       } finally {
         setIsLoading(false);
@@ -88,12 +111,13 @@ export default function GetPhotoPage() {
     if (!searchTerm) {
       setFilteredInstitutions(institutions);
     } else {
-      const filtered = institutions.filter(inst =>
-        inst.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        inst.voteNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        inst.tinNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        inst.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        inst.phoneNumber?.includes(searchTerm)
+      const filtered = institutions.filter(
+        (inst) =>
+          inst.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          inst.voteNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          inst.tinNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          inst.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          inst.phoneNumber?.includes(searchTerm)
       );
       setFilteredInstitutions(filtered);
     }
@@ -106,14 +130,16 @@ export default function GetPhotoPage() {
     currentPage * itemsPerPage
   );
 
-  const totalInstitutionPages = Math.ceil(filteredInstitutions.length / itemsPerPage);
+  const totalInstitutionPages = Math.ceil(
+    filteredInstitutions.length / itemsPerPage
+  );
 
   const handleFetchPhotosByInstitution = async () => {
     if (!selectedInstitution) {
       toast({
-        title: "Error",
-        description: "Please select an institution",
-        variant: "destructive"
+        title: 'Error',
+        description: 'Please select an institution',
+        variant: 'destructive',
       });
       return;
     }
@@ -175,7 +201,7 @@ export default function GetPhotoPage() {
                 setFetchResults(data.data.results || []);
                 setSummary(data.data.summary);
                 toast({
-                  title: "Photo Fetch Complete",
+                  title: 'Photo Fetch Complete',
                   description: `Processed ${data.data.summary.total} employees. Success: ${data.data.summary.success}, Failed: ${data.data.summary.failed}, Skipped: ${data.data.summary.skipped}`,
                 });
               }
@@ -189,7 +215,7 @@ export default function GetPhotoPage() {
           setFetchResults(result.data.results || []);
           setSummary(result.data.summary);
           toast({
-            title: "Photo Fetch Complete",
+            title: 'Photo Fetch Complete',
             description: `Processed ${result.data.summary.total} employees. Success: ${result.data.summary.success}, Failed: ${result.data.summary.failed}, Skipped: ${result.data.summary.skipped}`,
           });
         } else {
@@ -198,9 +224,10 @@ export default function GetPhotoPage() {
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to fetch photos",
-        variant: "destructive"
+        title: 'Error',
+        description:
+          error instanceof Error ? error.message : 'Failed to fetch photos',
+        variant: 'destructive',
       });
     } finally {
       setIsFetching(false);
@@ -211,7 +238,10 @@ export default function GetPhotoPage() {
   if (isLoading) {
     return (
       <div>
-        <PageHeader title="Fetch Employee Photos from HRIMS" description="Loading..." />
+        <PageHeader
+          title="Fetch Employee Photos from HRIMS"
+          description="Loading..."
+        />
         <Card>
           <CardContent className="py-10">
             <div className="flex items-center justify-center">
@@ -273,14 +303,19 @@ export default function GetPhotoPage() {
                           className={`cursor-pointer ${selectedInstitution?.id === inst.id ? 'bg-primary/10' : ''}`}
                           onClick={() => setSelectedInstitution(inst)}
                         >
-                          <TableCell className="font-medium">{inst.name}</TableCell>
+                          <TableCell className="font-medium">
+                            {inst.name}
+                          </TableCell>
                           <TableCell>{inst.voteNumber || 'N/A'}</TableCell>
                           <TableCell>{inst.tinNumber || 'N/A'}</TableCell>
                         </TableRow>
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={3} className="text-center text-muted-foreground">
+                        <TableCell
+                          colSpan={3}
+                          className="text-center text-muted-foreground"
+                        >
                           No institutions found
                         </TableCell>
                       </TableRow>
@@ -307,28 +342,35 @@ export default function GetPhotoPage() {
               <Camera className="h-5 w-5" />
               Fetch Configuration
             </CardTitle>
-            <CardDescription>
-              Configure photo fetch settings
-            </CardDescription>
+            <CardDescription>Configure photo fetch settings</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
               {selectedInstitution ? (
                 <>
                   <div className="bg-secondary/20 p-4 rounded-lg">
-                    <p className="text-sm font-medium mb-1">Selected Institution:</p>
-                    <p className="text-lg font-bold">{selectedInstitution.name}</p>
+                    <p className="text-sm font-medium mb-1">
+                      Selected Institution:
+                    </p>
+                    <p className="text-lg font-bold">
+                      {selectedInstitution.name}
+                    </p>
                     <div className="mt-2 text-sm text-muted-foreground">
-                      <p>Vote Code: {selectedInstitution.voteNumber || 'N/A'}</p>
+                      <p>
+                        Vote Code: {selectedInstitution.voteNumber || 'N/A'}
+                      </p>
                       <p>TIN: {selectedInstitution.tinNumber || 'N/A'}</p>
                     </div>
                   </div>
 
                   <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
                     <p className="text-sm text-blue-800 dark:text-blue-300">
-                      <strong>How it works:</strong><br/>
-                      This will fetch photos from HRIMS for all employees in this institution that are stored in your database.
-                      Each employee photo will be fetched individually using their payroll number.
+                      <strong>How it works:</strong>
+                      <br />
+                      This will fetch photos from HRIMS for all employees in
+                      this institution that are stored in your database. Each
+                      employee photo will be fetched individually using their
+                      payroll number.
                     </p>
                   </div>
 
@@ -357,20 +399,26 @@ export default function GetPhotoPage() {
                       <Alert>
                         <AlertCircle className="h-4 w-4" />
                         <AlertDescription>
-                          Processing {progress.total} employees. Please do not close this page.
+                          Processing {progress.total} employees. Please do not
+                          close this page.
                         </AlertDescription>
                       </Alert>
 
                       <div className="space-y-2">
                         <div className="flex justify-between text-sm">
                           <span className="font-medium">
-                            {progress.employee ? `Processing: ${progress.employee}` : 'Starting...'}
+                            {progress.employee
+                              ? `Processing: ${progress.employee}`
+                              : 'Starting...'}
                           </span>
                           <span className="text-muted-foreground">
                             {progress.current} / {progress.total}
                           </span>
                         </div>
-                        <Progress value={(progress.current / progress.total) * 100} className="h-2" />
+                        <Progress
+                          value={(progress.current / progress.total) * 100}
+                          className="h-2"
+                        />
                         {progress.summary && (
                           <div className="flex gap-4 text-xs text-muted-foreground">
                             <span className="text-green-600">
@@ -426,15 +474,21 @@ export default function GetPhotoPage() {
                 <p className="text-sm text-muted-foreground">Total Employees</p>
               </div>
               <div className="text-center p-4 bg-green-100 dark:bg-green-900/20 rounded-lg">
-                <p className="text-2xl font-bold text-green-700 dark:text-green-400">{summary.success}</p>
+                <p className="text-2xl font-bold text-green-700 dark:text-green-400">
+                  {summary.success}
+                </p>
                 <p className="text-sm text-muted-foreground">Success</p>
               </div>
               <div className="text-center p-4 bg-red-100 dark:bg-red-900/20 rounded-lg">
-                <p className="text-2xl font-bold text-red-700 dark:text-red-400">{summary.failed}</p>
+                <p className="text-2xl font-bold text-red-700 dark:text-red-400">
+                  {summary.failed}
+                </p>
                 <p className="text-sm text-muted-foreground">Failed</p>
               </div>
               <div className="text-center p-4 bg-yellow-100 dark:bg-yellow-900/20 rounded-lg">
-                <p className="text-2xl font-bold text-yellow-700 dark:text-yellow-400">{summary.skipped}</p>
+                <p className="text-2xl font-bold text-yellow-700 dark:text-yellow-400">
+                  {summary.skipped}
+                </p>
                 <p className="text-sm text-muted-foreground">Skipped</p>
               </div>
             </div>
@@ -465,7 +519,9 @@ export default function GetPhotoPage() {
                 <TableBody>
                   {fetchResults.map((result, index) => (
                     <TableRow key={index}>
-                      <TableCell className="font-medium">{result.employeeName}</TableCell>
+                      <TableCell className="font-medium">
+                        {result.employeeName}
+                      </TableCell>
                       <TableCell>{result.payrollNumber}</TableCell>
                       <TableCell>
                         {result.status === 'success' && (

@@ -6,8 +6,8 @@ export const STANDARD_LOCKOUT_DURATION_MINUTES = 30;
 
 // Lockout types
 export enum LockoutType {
-  STANDARD = 'standard',     // Auto-unlocks after 30 minutes
-  SECURITY = 'security',      // Requires admin unlock
+  STANDARD = 'standard', // Auto-unlocks after 30 minutes
+  SECURITY = 'security', // Requires admin unlock
 }
 
 // Lockout reasons
@@ -23,7 +23,9 @@ export enum LockoutReason {
  */
 export function calculateStandardLockoutExpiry(): Date {
   const expiryDate = new Date();
-  expiryDate.setMinutes(expiryDate.getMinutes() + STANDARD_LOCKOUT_DURATION_MINUTES);
+  expiryDate.setMinutes(
+    expiryDate.getMinutes() + STANDARD_LOCKOUT_DURATION_MINUTES
+  );
   return expiryDate;
 }
 
@@ -116,9 +118,10 @@ export async function incrementFailedLoginAttempts(
   // Lock account if threshold reached
   if (newAttemptCount >= MAX_FAILED_LOGIN_ATTEMPTS) {
     const lockoutType = determineLockoutType(newAttemptCount);
-    const lockedUntil = lockoutType === LockoutType.STANDARD
-      ? calculateStandardLockoutExpiry()
-      : null; // Security lockout has no auto-unlock
+    const lockedUntil =
+      lockoutType === LockoutType.STANDARD
+        ? calculateStandardLockoutExpiry()
+        : null; // Security lockout has no auto-unlock
 
     await db.user.update({
       where: { id: userId },
@@ -133,11 +136,15 @@ export async function incrementFailedLoginAttempts(
     });
 
     // Log lockout event
-    const { logAuditEvent, AuditEventCategory, AuditSeverity } = await import('@/lib/audit-logger');
+    const { logAuditEvent, AuditEventCategory, AuditSeverity } =
+      await import('@/lib/audit-logger');
     await logAuditEvent({
       eventType: 'ACCOUNT_LOCKED',
       eventCategory: AuditEventCategory.SECURITY,
-      severity: lockoutType === LockoutType.SECURITY ? AuditSeverity.CRITICAL : AuditSeverity.WARNING,
+      severity:
+        lockoutType === LockoutType.SECURITY
+          ? AuditSeverity.CRITICAL
+          : AuditSeverity.WARNING,
       userId: user.id,
       username: user.username,
       userRole: null,
@@ -220,10 +227,14 @@ export async function lockAccountManually(
   });
 
   // Log admin lock event
-  const { logAuditEvent, AuditEventCategory, AuditSeverity } = await import('@/lib/audit-logger');
+  const { logAuditEvent, AuditEventCategory, AuditSeverity } =
+    await import('@/lib/audit-logger');
   const [user, admin] = await Promise.all([
     db.user.findUnique({ where: { id: userId }, select: { username: true } }),
-    db.user.findUnique({ where: { id: adminId }, select: { username: true, role: true } }),
+    db.user.findUnique({
+      where: { id: adminId },
+      select: { username: true, role: true },
+    }),
   ]);
 
   await logAuditEvent({
@@ -287,7 +298,8 @@ export async function unlockAccount(
   });
 
   // Log unlock event
-  const { logAuditEvent, AuditEventCategory, AuditSeverity } = await import('@/lib/audit-logger');
+  const { logAuditEvent, AuditEventCategory, AuditSeverity } =
+    await import('@/lib/audit-logger');
   const admin = await db.user.findUnique({
     where: { id: adminId },
     select: { username: true, role: true },
@@ -344,7 +356,8 @@ export function getAccountLockoutStatus(user: {
 }): AccountLockoutStatus {
   const isLocked = isAccountLocked(user);
   const remainingMinutes = getRemainingLockoutTime(user.loginLockedUntil);
-  const canAutoUnlock = !user.isManuallyLocked && user.loginLockoutType === LockoutType.STANDARD;
+  const canAutoUnlock =
+    !user.isManuallyLocked && user.loginLockoutType === LockoutType.STANDARD;
 
   return {
     isLocked,

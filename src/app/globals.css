@@ -38,7 +38,9 @@ body {
     --sidebar-background: 220 30% 94%; /* Richer light cool gray/blue for sidebar */
     --sidebar-foreground: 215 25% 25%; /* Darker text for sidebar */
     --sidebar-primary: hsl(var(--primary)); /* Use main primary color */
-    --sidebar-primary-foreground: hsl(var(--primary-foreground)); /* White text */
+    --sidebar-primary-foreground: hsl(
+      var(--primary-foreground)
+    ); /* White text */
     --sidebar-accent: 217 70% 88%; /* Light blue for hover/active BG - more distinct */
     --sidebar-accent-foreground: 217 71% 50%; /* Primary blue for hover/active text */
     --sidebar-border: 220 20% 85%; /* Slightly darker border */

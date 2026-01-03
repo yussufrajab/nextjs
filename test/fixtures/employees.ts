@@ -99,7 +99,9 @@ export const testEmployees = {
 /**
  * Create a custom test employee
  */
-export const createTestEmployee = (overrides: Partial<typeof testEmployees.active> = {}) => {
+export const createTestEmployee = (
+  overrides: Partial<typeof testEmployees.active> = {}
+) => {
   return {
     id: 'test-emp-' + Math.random().toString(36).substring(7),
     fileNumber: 'ZAN-' + Math.floor(Math.random() * 90000 + 10000),

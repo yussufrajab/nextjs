@@ -2,10 +2,17 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { shouldApplyInstitutionFilter } from '@/lib/role-utils';
 import { validateEmployeeStatusForRequest } from '@/lib/employee-status-validation';
-import { createNotificationForRole, NotificationTemplates } from '@/lib/notifications';
+import {
+  createNotificationForRole,
+  NotificationTemplates,
+} from '@/lib/notifications';
 import { ROLES } from '@/lib/constants';
 import { v4 as uuidv4 } from 'uuid';
-import { logRequestApproval, logRequestRejection, getClientIp } from '@/lib/audit-logger';
+import {
+  logRequestApproval,
+  logRequestRejection,
+  getClientIp,
+} from '@/lib/audit-logger';
 
 // Cache configuration for LWOP requests
 const CACHE_TTL = 30; // 30 seconds cache (request status changes frequently)
@@ -17,43 +24,57 @@ export async function GET(req: Request) {
     const userRole = searchParams.get('userRole');
     const userInstitutionId = searchParams.get('userInstitutionId');
 
-    console.log('LWOP API called with:', { userId, userRole, userInstitutionId });
+    console.log('LWOP API called with:', {
+      userId,
+      userRole,
+      userInstitutionId,
+    });
 
     // Build where clause based on user role and institution
-    let whereClause: any = {};
+    const whereClause: any = {};
 
     // Apply institution filtering based on role
     if (shouldApplyInstitutionFilter(userRole, userInstitutionId)) {
-      console.log(`Applying institution filter for role ${userRole} with institutionId ${userInstitutionId}`);
+      console.log(
+        `Applying institution filter for role ${userRole} with institutionId ${userInstitutionId}`
+      );
       whereClause.Employee = {
-        institutionId: userInstitutionId
+        institutionId: userInstitutionId,
       };
     } else {
-      console.log(`Role ${userRole} is a CSC role - showing all LWOP data across institutions`);
+      console.log(
+        `Role ${userRole} is a CSC role - showing all LWOP data across institutions`
+      );
     }
 
-    const requests = await db.lwopRequest.findMany({
-      where: whereClause,
-      include: {
-        Employee: {
-          select: {
-            id: true,
-            name: true,
-            zanId: true,
-            payrollNumber: true,
-            zssfNumber: true,
-            department: true,
-            cadre: true,
-            dateOfBirth: true,
-            employmentDate: true,
-            Institution: { select: { id: true, name: true } }
-          }
+    const requests = await db.lwopRequest
+      .findMany({
+        where: whereClause,
+        include: {
+          Employee: {
+            select: {
+              id: true,
+              name: true,
+              zanId: true,
+              payrollNumber: true,
+              zssfNumber: true,
+              department: true,
+              cadre: true,
+              dateOfBirth: true,
+              employmentDate: true,
+              Institution: { select: { id: true, name: true } },
+            },
+          },
+          User_LwopRequest_submittedByIdToUser: {
+            select: { id: true, name: true, username: true },
+          },
+          User_LwopRequest_reviewedByIdToUser: {
+            select: { id: true, name: true, username: true },
+          },
         },
-        User_LwopRequest_submittedByIdToUser: { select: { id: true, name: true, username: true } },
-        User_LwopRequest_reviewedByIdToUser: { select: { id: true, name: true, username: true } }
-      },
-      orderBy: { createdAt: 'desc' }
-    }).catch(() => []);
+        orderBy: { createdAt: 'desc' },
+      })
+      .catch(() => []);
 
     // Transform the data to match frontend expectations
     const transformedRequests = requests.map((req: any) => ({
@@ -61,17 +82,23 @@ export async function GET(req: Request) {
       submittedBy: req.User_LwopRequest_submittedByIdToUser,
       reviewedBy: req.User_LwopRequest_reviewedByIdToUser,
       User_LwopRequest_submittedByIdToUser: undefined,
-      User_LwopRequest_reviewedByIdToUser: undefined
+      User_LwopRequest_reviewedByIdToUser: undefined,
     }));
 
     // Set cache headers for LWOP requests
     const headers = new Headers();
-    headers.set('Cache-Control', `public, s-maxage=${CACHE_TTL}, stale-while-revalidate=${CACHE_TTL * 2}`);
+    headers.set(
+      'Cache-Control',
+      `public, s-maxage=${CACHE_TTL}, stale-while-revalidate=${CACHE_TTL * 2}`
+    );
 
     return NextResponse.json(transformedRequests, { headers });
   } catch (error) {
-    console.error("[LWOP_GET]", error);
-    return NextResponse.json({ success: false, message: 'Internal Server Error' }, { status: 500 });
+    console.error('[LWOP_GET]', error);
+    return NextResponse.json(
+      { success: false, message: 'Internal Server Error' },
+      { status: 500 }
+    );
   }
 }
 
@@ -81,33 +108,51 @@ export async function POST(req: Request) {
     console.log('Creating LWOP request:', body);
 
     // Basic validation
-    if (!body.employeeId || !body.submittedById || !body.duration || !body.reason) {
-      return NextResponse.json({ 
-        success: false, 
-        message: 'Missing required fields: employeeId, submittedById, duration, reason' 
-      }, { status: 400 });
+    if (
+      !body.employeeId ||
+      !body.submittedById ||
+      !body.duration ||
+      !body.reason
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            'Missing required fields: employeeId, submittedById, duration, reason',
+        },
+        { status: 400 }
+      );
     }
 
     // Get employee details to check status
     const employee = await db.employee.findUnique({
       where: { id: body.employeeId },
-      select: { id: true, name: true, status: true }
+      select: { id: true, name: true, status: true },
     });
 
     if (!employee) {
-      return NextResponse.json({ 
-        success: false, 
-        message: 'Employee not found' 
-      }, { status: 404 });
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Employee not found',
+        },
+        { status: 404 }
+      );
     }
 
     // Validate employee status for LWOP request
-    const statusValidation = validateEmployeeStatusForRequest(employee.status, 'lwop');
+    const statusValidation = validateEmployeeStatusForRequest(
+      employee.status,
+      'lwop'
+    );
     if (!statusValidation.isValid) {
-      return NextResponse.json({ 
-        success: false, 
-        message: statusValidation.message 
-      }, { status: 403 });
+      return NextResponse.json(
+        {
+          success: false,
+          message: statusValidation.message,
+        },
+        { status: 403 }
+      );
     }
 
     const lwopRequest = await db.lwopRequest.create({
@@ -123,7 +168,7 @@ export async function POST(req: Request) {
         status: body.status || 'Pending',
         reviewStage: body.reviewStage || 'initial',
         rejectionReason: body.rejectionReason,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       },
       include: {
         Employee: {
@@ -137,11 +182,13 @@ export async function POST(req: Request) {
             cadre: true,
             dateOfBirth: true,
             employmentDate: true,
-            Institution: { select: { id: true, name: true } }
-          }
+            Institution: { select: { id: true, name: true } },
+          },
         },
-        User_LwopRequest_submittedByIdToUser: { select: { id: true, name: true, username: true } }
-      }
+        User_LwopRequest_submittedByIdToUser: {
+          select: { id: true, name: true, username: true },
+        },
+      },
     });
 
     console.log('Created LWOP request:', lwopRequest.id);
@@ -152,28 +199,38 @@ export async function POST(req: Request) {
       lwopRequest.id
     );
 
-    await createNotificationForRole(ROLES.HHRMD || 'HHRMD', notification.message, notification.link);
-    await createNotificationForRole(ROLES.DO || 'DO', notification.message, notification.link);
+    await createNotificationForRole(
+      ROLES.HHRMD || 'HHRMD',
+      notification.message,
+      notification.link
+    );
+    await createNotificationForRole(
+      ROLES.DO || 'DO',
+      notification.message,
+      notification.link
+    );
 
     // Transform the data to match frontend expectations
     const transformedRequest = {
       ...lwopRequest,
       submittedBy: (lwopRequest as any).User_LwopRequest_submittedByIdToUser,
-      User_LwopRequest_submittedByIdToUser: undefined
+      User_LwopRequest_submittedByIdToUser: undefined,
     };
 
     return NextResponse.json({
       success: true,
-      data: transformedRequest
+      data: transformedRequest,
     });
-
   } catch (error) {
-    console.error("[LWOP_POST]", error);
-    return NextResponse.json({ 
-      success: false, 
-      message: 'Internal Server Error',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+    console.error('[LWOP_POST]', error);
+    return NextResponse.json(
+      {
+        success: false,
+        message: 'Internal Server Error',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
   }
 }
 
@@ -183,10 +240,13 @@ export async function PATCH(req: Request) {
     const { id, ...updateData } = body;
 
     if (!id) {
-      return NextResponse.json({
-        success: false,
-        message: 'Request ID is required'
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Request ID is required',
+        },
+        { status: 400 }
+      );
     }
 
     // Get IP and user agent for audit logging
@@ -211,33 +271,43 @@ export async function PATCH(req: Request) {
             cadre: true,
             dateOfBirth: true,
             employmentDate: true,
-            Institution: { select: { id: true, name: true } }
-          }
+            Institution: { select: { id: true, name: true } },
+          },
         },
-        User_LwopRequest_submittedByIdToUser: { select: { id: true, name: true, username: true } },
-        User_LwopRequest_reviewedByIdToUser: { select: { id: true, name: true, username: true } }
-      }
+        User_LwopRequest_submittedByIdToUser: {
+          select: { id: true, name: true, username: true },
+        },
+        User_LwopRequest_reviewedByIdToUser: {
+          select: { id: true, name: true, username: true },
+        },
+      },
     });
 
     // If LWOP request is approved by Commission, update employee status to "On LWOP"
-    if (updateData.status === "Approved by Commission" && updatedRequest.Employee) {
+    if (
+      updateData.status === 'Approved by Commission' &&
+      updatedRequest.Employee
+    ) {
       await db.employee.update({
         where: { id: updatedRequest.Employee.id },
-        data: { status: "On LWOP" }
+        data: { status: 'On LWOP' },
       });
-      console.log(`Employee ${updatedRequest.Employee.name} status updated to "On LWOP" after LWOP approval`);
+      console.log(
+        `Employee ${updatedRequest.Employee.name} status updated to "On LWOP" after LWOP approval`
+      );
     }
 
     // Log audit event for approvals and rejections
     if (updateData.reviewedById && updateData.status) {
       const reviewer = await db.user.findUnique({
         where: { id: updateData.reviewedById },
-        select: { username: true, role: true }
+        select: { username: true, role: true },
       });
 
       if (reviewer) {
         const statusLower = updateData.status.toLowerCase();
-        const isApproval = statusLower.includes('approved') && !statusLower.includes('rejected');
+        const isApproval =
+          statusLower.includes('approved') && !statusLower.includes('rejected');
         const isRejection = statusLower.includes('rejected');
 
         console.log('[AUDIT] LWOP status update:', {
@@ -295,20 +365,22 @@ export async function PATCH(req: Request) {
       submittedBy: (updatedRequest as any).User_LwopRequest_submittedByIdToUser,
       reviewedBy: (updatedRequest as any).User_LwopRequest_reviewedByIdToUser,
       User_LwopRequest_submittedByIdToUser: undefined,
-      User_LwopRequest_reviewedByIdToUser: undefined
+      User_LwopRequest_reviewedByIdToUser: undefined,
     };
 
     return NextResponse.json({
       success: true,
-      data: transformedRequest
+      data: transformedRequest,
     });
-
   } catch (error) {
-    console.error("[LWOP_PATCH]", error);
-    return NextResponse.json({ 
-      success: false, 
-      message: 'Internal Server Error',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+    console.error('[LWOP_PATCH]', error);
+    return NextResponse.json(
+      {
+        success: false,
+        message: 'Internal Server Error',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
   }
 }

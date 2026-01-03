@@ -43,6 +43,7 @@ Prior to the CSMS initiative, the CSC relied heavily on manual, paper-based proc
 ### 1.3 Strategic Alignment
 
 The CSMS project aligns with:
+
 - Zanzibar's Digital Transformation Strategy
 - E-Government initiatives for improved service delivery
 - Public Service Reform Program objectives
@@ -70,6 +71,7 @@ The CSC faces several critical challenges with the current manual HR management 
 ### 2.2 Impact Analysis
 
 These problems result in:
+
 - **Operational Costs:** High administrative overhead for manual processing
 - **Service Delivery:** Delayed HR actions affecting employee satisfaction and institutional operations
 - **Decision Quality:** Limited data-driven insights for workforce planning and policy-making
@@ -194,6 +196,7 @@ The Civil Service Management System (CSMS) is a comprehensive, web-based platfor
 #### 5.1.1 Functional Scope
 
 **Core HR Request Types (8):**
+
 1. Employee Confirmation Requests
 2. Promotion Requests
 3. Leave Without Pay (LWOP) Requests
@@ -204,6 +207,7 @@ The Civil Service Management System (CSMS) is a comprehensive, web-based platfor
 8. Termination/Dismissal Processing
 
 **Supporting Functions:**
+
 - User authentication and authorization
 - Employee profile management
 - Institution management
@@ -426,32 +430,32 @@ The CSMS project will be considered successful when the following criteria are m
 
 ### 8.1 Primary Stakeholders
 
-| Stakeholder | Role | Interest/Involvement |
-|-------------|------|---------------------|
-| **Civil Service Commission (CSC)** | Project Owner | Oversees project, provides requirements, approves deliverables |
-| **Chief Secretary Civil Service (CSCS)** | Executive Sponsor | Strategic direction, final approval authority |
-| **Director of Operations (DO)** | Operations Lead | Operational approval, business process validation |
-| **Head of HR Management Division (HHRMD)** | Functional Lead | HR process expertise, user requirements |
-| **41 Government Institutions** | End Users | Submit HR requests, benefit from system |
-| **50,000+ Civil Servants** | End Beneficiaries | Self-service capabilities, request tracking |
+| Stakeholder                                | Role              | Interest/Involvement                                           |
+| ------------------------------------------ | ----------------- | -------------------------------------------------------------- |
+| **Civil Service Commission (CSC)**         | Project Owner     | Oversees project, provides requirements, approves deliverables |
+| **Chief Secretary Civil Service (CSCS)**   | Executive Sponsor | Strategic direction, final approval authority                  |
+| **Director of Operations (DO)**            | Operations Lead   | Operational approval, business process validation              |
+| **Head of HR Management Division (HHRMD)** | Functional Lead   | HR process expertise, user requirements                        |
+| **41 Government Institutions**             | End Users         | Submit HR requests, benefit from system                        |
+| **50,000+ Civil Servants**                 | End Beneficiaries | Self-service capabilities, request tracking                    |
 
 ### 8.2 Secondary Stakeholders
 
-| Stakeholder | Role | Interest/Involvement |
-|-------------|------|---------------------|
-| **IT Department** | Technical Support | System administration, maintenance, infrastructure |
-| **HRIMS Team** | Integration Partner | Data synchronization, technical coordination |
-| **Project Management Office** | Governance | Project oversight, risk management |
-| **Quality Assurance Team** | QA Validators | Testing, quality validation, UAT coordination |
-| **Training Coordinators** | Change Management | User training, adoption support |
+| Stakeholder                   | Role                | Interest/Involvement                               |
+| ----------------------------- | ------------------- | -------------------------------------------------- |
+| **IT Department**             | Technical Support   | System administration, maintenance, infrastructure |
+| **HRIMS Team**                | Integration Partner | Data synchronization, technical coordination       |
+| **Project Management Office** | Governance          | Project oversight, risk management                 |
+| **Quality Assurance Team**    | QA Validators       | Testing, quality validation, UAT coordination      |
+| **Training Coordinators**     | Change Management   | User training, adoption support                    |
 
 ### 8.3 External Stakeholders
 
-| Stakeholder | Role | Interest/Involvement |
-|-------------|------|---------------------|
-| **E-Government Authority** | Compliance | E-GAZ QA standards, compliance verification |
-| **Ministry of Finance** | Budget Authority | Funding approval, financial oversight |
-| **Auditor General's Office** | Audit Authority | Audit trail requirements, compliance validation |
+| Stakeholder                  | Role             | Interest/Involvement                            |
+| ---------------------------- | ---------------- | ----------------------------------------------- |
+| **E-Government Authority**   | Compliance       | E-GAZ QA standards, compliance verification     |
+| **Ministry of Finance**      | Budget Authority | Funding approval, financial oversight           |
+| **Auditor General's Office** | Audit Authority  | Audit trail requirements, compliance validation |
 
 ---
 
@@ -463,28 +467,28 @@ The CSMS project will be considered successful when the following criteria are m
 
 #### Phase Breakdown:
 
-| Phase | Duration | Period | Key Deliverables |
-|-------|----------|--------|------------------|
-| **Phase 1: Inception** | 2 weeks | Jan 1-14, 2025 | Project charter, stakeholder analysis, initial requirements |
-| **Phase 2: Planning & Design** | 4 weeks | Jan 15 - Feb 11, 2025 | SRS, SDD, architecture, database design, UI/UX mockups |
-| **Phase 3: Development** | 12 weeks | Feb 12 - May 6, 2025 | Core system development, HRIMS integration, features implementation |
-| **Phase 4: Testing** | 4 weeks | May 7 - Jun 3, 2025 | Unit testing, integration testing, factory testing |
-| **Phase 5: UAT** | 3 weeks | Jun 4-24, 2025 | User acceptance testing, bug fixes, refinements |
-| **Phase 6: Deployment** | 2 weeks | Jun 25 - Jul 8, 2025 | Production deployment, data migration, go-live support |
-| **Phase 7: Post-Launch Support** | 4 weeks | Jul 9 - Aug 5, 2025 | Hypercare, issue resolution, optimization, stabilization |
+| Phase                            | Duration | Period                | Key Deliverables                                                    |
+| -------------------------------- | -------- | --------------------- | ------------------------------------------------------------------- |
+| **Phase 1: Inception**           | 2 weeks  | Jan 1-14, 2025        | Project charter, stakeholder analysis, initial requirements         |
+| **Phase 2: Planning & Design**   | 4 weeks  | Jan 15 - Feb 11, 2025 | SRS, SDD, architecture, database design, UI/UX mockups              |
+| **Phase 3: Development**         | 12 weeks | Feb 12 - May 6, 2025  | Core system development, HRIMS integration, features implementation |
+| **Phase 4: Testing**             | 4 weeks  | May 7 - Jun 3, 2025   | Unit testing, integration testing, factory testing                  |
+| **Phase 5: UAT**                 | 3 weeks  | Jun 4-24, 2025        | User acceptance testing, bug fixes, refinements                     |
+| **Phase 6: Deployment**          | 2 weeks  | Jun 25 - Jul 8, 2025  | Production deployment, data migration, go-live support              |
+| **Phase 7: Post-Launch Support** | 4 weeks  | Jul 9 - Aug 5, 2025   | Hypercare, issue resolution, optimization, stabilization            |
 
 ### 9.2 Team Composition
 
 **Total Team Size:** 9 Full-Time Equivalents (FTE)
 
-| Role | FTE | Responsibility |
-|------|-----|----------------|
-| **Project Manager** | 1 | Planning, coordination, risk management, stakeholder communication |
-| **Business Analyst** | 1 | Requirements gathering, process mapping, UAT coordination |
-| **Full-Stack Developers** | 3 | Next.js development, API implementation, UI/UX implementation |
-| **Database Administrator** | 1 | PostgreSQL management, Prisma schema, optimization, backups |
-| **QA Engineers** | 2 | Test planning, UAT execution, quality assurance, defect tracking |
-| **DevOps Engineer** | 1 | Deployment, infrastructure, monitoring, CI/CD, security |
+| Role                       | FTE | Responsibility                                                     |
+| -------------------------- | --- | ------------------------------------------------------------------ |
+| **Project Manager**        | 1   | Planning, coordination, risk management, stakeholder communication |
+| **Business Analyst**       | 1   | Requirements gathering, process mapping, UAT coordination          |
+| **Full-Stack Developers**  | 3   | Next.js development, API implementation, UI/UX implementation      |
+| **Database Administrator** | 1   | PostgreSQL management, Prisma schema, optimization, backups        |
+| **QA Engineers**           | 2   | Test planning, UAT execution, quality assurance, defect tracking   |
+| **DevOps Engineer**        | 1   | Deployment, infrastructure, monitoring, CI/CD, security            |
 
 ### 9.3 Budget Estimate
 
@@ -520,16 +524,16 @@ The CSMS project will be considered successful when the following criteria are m
 
 ### 9.4 Key Milestones
 
-| Milestone | Target Date | Deliverable |
-|-----------|-------------|-------------|
-| M1: Project Kickoff | Jan 1, 2025 | Project charter, team mobilization |
-| M2: Requirements Signed-Off | Feb 11, 2025 | Approved SRS document |
-| M3: Design Approved | Feb 11, 2025 | Approved SDD, architecture, database design |
-| M4: Development Complete | May 6, 2025 | All features implemented, code complete |
-| M5: Factory Testing Complete | Jun 3, 2025 | Factory test results, defects resolved |
-| M6: UAT Sign-Off | Jun 24, 2025 | UAT report, user acceptance |
-| M7: Production Go-Live | Jul 8, 2025 | System live in production |
-| M8: Project Closure | Aug 5, 2025 | Final documentation, lessons learned, handover |
+| Milestone                    | Target Date  | Deliverable                                    |
+| ---------------------------- | ------------ | ---------------------------------------------- |
+| M1: Project Kickoff          | Jan 1, 2025  | Project charter, team mobilization             |
+| M2: Requirements Signed-Off  | Feb 11, 2025 | Approved SRS document                          |
+| M3: Design Approved          | Feb 11, 2025 | Approved SDD, architecture, database design    |
+| M4: Development Complete     | May 6, 2025  | All features implemented, code complete        |
+| M5: Factory Testing Complete | Jun 3, 2025  | Factory test results, defects resolved         |
+| M6: UAT Sign-Off             | Jun 24, 2025 | UAT report, user acceptance                    |
+| M7: Production Go-Live       | Jul 8, 2025  | System live in production                      |
+| M8: Project Closure          | Aug 5, 2025  | Final documentation, lessons learned, handover |
 
 ---
 
@@ -543,7 +547,7 @@ The CSMS project will be considered successful when the following criteria are m
 4. **Scope Creep:** Additional requirements emerging during development (Mitigation: Change control process, prioritization)
 5. **Resource Availability:** Team members or stakeholders may have competing priorities (Mitigation: Resource planning, escalation protocols)
 
-*(Full risk register maintained separately in Risk_Register.md with 60 identified risks)*
+_(Full risk register maintained separately in Risk_Register.md with 60 identified risks)_
 
 ### 10.2 Key Assumptions
 
@@ -581,28 +585,28 @@ The CSMS project will be considered successful when the following criteria are m
 
 ### 12.1 Document Review
 
-| Reviewer | Title | Date | Signature |
-|----------|-------|------|-----------|
-| [Name] | Chief Secretary Civil Service (CSCS) | __________ | __________ |
-| [Name] | Director of Operations (DO) | __________ | __________ |
-| [Name] | Head of HR Management Division (HHRMD) | __________ | __________ |
-| [Name] | Project Manager | __________ | __________ |
+| Reviewer | Title                                  | Date             | Signature        |
+| -------- | -------------------------------------- | ---------------- | ---------------- |
+| [Name]   | Chief Secretary Civil Service (CSCS)   | \***\*\_\_\*\*** | \***\*\_\_\*\*** |
+| [Name]   | Director of Operations (DO)            | \***\*\_\_\*\*** | \***\*\_\_\*\*** |
+| [Name]   | Head of HR Management Division (HHRMD) | \***\*\_\_\*\*** | \***\*\_\_\*\*** |
+| [Name]   | Project Manager                        | \***\*\_\_\*\*** | \***\*\_\_\*\*** |
 
 ### 12.2 Document Approval
 
 **Approved By:**
-Name: _______________________________
+Name: **\*\***\*\***\*\***\_\_\_**\*\***\*\***\*\***
 Title: Chief Secretary Civil Service (CSCS)
-Date: _______________________________
-Signature: _______________________________
+Date: **\*\***\*\***\*\***\_\_\_**\*\***\*\***\*\***
+Signature: **\*\***\*\***\*\***\_\_\_**\*\***\*\***\*\***
 
 ---
 
 ## Document Control
 
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 1.0 | January 1, 2025 | CSMS Project Team | Initial concept note for e-GAZ QA compliance |
+| Version | Date            | Author            | Changes                                      |
+| ------- | --------------- | ----------------- | -------------------------------------------- |
+| 1.0     | January 1, 2025 | CSMS Project Team | Initial concept note for e-GAZ QA compliance |
 
 ---
 
@@ -612,4 +616,4 @@ Signature: _______________________________
 
 ---
 
-*This concept note has been prepared for the Civil Service Management System (CSMS) project to support e-GAZ Quality Assurance compliance requirements.*
+_This concept note has been prepared for the Civil Service Management System (CSMS) project to support e-GAZ Quality Assurance compliance requirements._

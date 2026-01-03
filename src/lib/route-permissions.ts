@@ -96,31 +96,74 @@ export const ROUTE_PERMISSIONS: RoutePermission[] = [
   // Profile access
   {
     pattern: '/dashboard/profile',
-    allowedRoles: [ROLES.HRO, ROLES.EMPLOYEE, ROLES.HHRMD, ROLES.HRMO, ROLES.DO, ROLES.CSCS, ROLES.HRRP, ROLES.PO],
+    allowedRoles: [
+      ROLES.HRO,
+      ROLES.EMPLOYEE,
+      ROLES.HHRMD,
+      ROLES.HRMO,
+      ROLES.DO,
+      ROLES.CSCS,
+      ROLES.HRRP,
+      ROLES.PO,
+    ],
     description: 'Employee profiles',
   },
 
   // Tracking and reports - All roles can view their relevant data
   {
     pattern: '/dashboard/track-status',
-    allowedRoles: [ROLES.HRO, ROLES.HHRMD, ROLES.HRMO, ROLES.DO, ROLES.CSCS, ROLES.HRRP, ROLES.PO, ROLES.EMPLOYEE],
+    allowedRoles: [
+      ROLES.HRO,
+      ROLES.HHRMD,
+      ROLES.HRMO,
+      ROLES.DO,
+      ROLES.CSCS,
+      ROLES.HRRP,
+      ROLES.PO,
+      ROLES.EMPLOYEE,
+    ],
     description: 'Track status of submitted requests',
   },
   {
     pattern: '/dashboard/recent-activities',
-    allowedRoles: [ROLES.HRO, ROLES.HHRMD, ROLES.HRMO, ROLES.DO, ROLES.CSCS, ROLES.HRRP],
+    allowedRoles: [
+      ROLES.HRO,
+      ROLES.HHRMD,
+      ROLES.HRMO,
+      ROLES.DO,
+      ROLES.CSCS,
+      ROLES.HRRP,
+    ],
     description: 'Recent activities overview',
   },
   {
     pattern: '/dashboard/reports',
-    allowedRoles: [ROLES.HRO, ROLES.HHRMD, ROLES.HRMO, ROLES.DO, ROLES.CSCS, ROLES.HRRP, ROLES.PO],
+    allowedRoles: [
+      ROLES.HRO,
+      ROLES.HHRMD,
+      ROLES.HRMO,
+      ROLES.DO,
+      ROLES.CSCS,
+      ROLES.HRRP,
+      ROLES.PO,
+    ],
     description: 'System-wide reports and analytics - PO has read-only access',
   },
 
   // Dashboard home - accessible to all authenticated users
   {
     pattern: '/dashboard',
-    allowedRoles: [ROLES.HRO, ROLES.HHRMD, ROLES.HRMO, ROLES.DO, ROLES.EMPLOYEE, ROLES.CSCS, ROLES.HRRP, ROLES.PO, ROLES.ADMIN as Role],
+    allowedRoles: [
+      ROLES.HRO,
+      ROLES.HHRMD,
+      ROLES.HRMO,
+      ROLES.DO,
+      ROLES.EMPLOYEE,
+      ROLES.CSCS,
+      ROLES.HRRP,
+      ROLES.PO,
+      ROLES.ADMIN as Role,
+    ],
     description: 'Dashboard home',
   },
 ];
@@ -128,7 +171,10 @@ export const ROUTE_PERMISSIONS: RoutePermission[] = [
 /**
  * Check if a user with the given role can access a route
  */
-export function canAccessRoute(pathname: string, userRole: Role | null): boolean {
+export function canAccessRoute(
+  pathname: string,
+  userRole: Role | null
+): boolean {
   if (!userRole) {
     return false;
   }
@@ -139,7 +185,9 @@ export function canAccessRoute(pathname: string, userRole: Role | null): boolean
 
     if (typeof permission.pattern === 'string') {
       // Exact match or starts with for string patterns
-      matches = pathname === permission.pattern || pathname.startsWith(permission.pattern + '/');
+      matches =
+        pathname === permission.pattern ||
+        pathname.startsWith(permission.pattern + '/');
     } else {
       // RegExp match
       matches = permission.pattern.test(pathname);
@@ -162,7 +210,9 @@ export function getAllowedRolesForRoute(pathname: string): Role[] {
     let matches = false;
 
     if (typeof permission.pattern === 'string') {
-      matches = pathname === permission.pattern || pathname.startsWith(permission.pattern + '/');
+      matches =
+        pathname === permission.pattern ||
+        pathname.startsWith(permission.pattern + '/');
     } else {
       matches = permission.pattern.test(pathname);
     }

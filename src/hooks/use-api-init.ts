@@ -20,23 +20,31 @@ export function useApiInit() {
     // Set up automatic token refresh
     const setupTokenRefresh = () => {
       // Only set up refresh if we have a refresh token (JWT-based auth)
-      const storedRefreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null;
+      const storedRefreshToken =
+        typeof window !== 'undefined'
+          ? localStorage.getItem('refreshToken')
+          : null;
 
       if (!storedRefreshToken) {
-        console.log('No refresh token found, skipping automatic token refresh (session-based auth)');
+        console.log(
+          'No refresh token found, skipping automatic token refresh (session-based auth)'
+        );
         return null;
       }
 
       // Refresh token every 8 minutes (tokens expire in 10 minutes)
-      const refreshInterval = setInterval(async () => {
-        if (isAuthenticated) {
-          const success = await refreshAuthToken();
-          if (!success) {
-            console.log('Token refresh failed, logging out');
-            clearInterval(refreshInterval);
+      const refreshInterval = setInterval(
+        async () => {
+          if (isAuthenticated) {
+            const success = await refreshAuthToken();
+            if (!success) {
+              console.log('Token refresh failed, logging out');
+              clearInterval(refreshInterval);
+            }
           }
-        }
-      }, 8 * 60 * 1000); // 8 minutes
+        },
+        8 * 60 * 1000
+      ); // 8 minutes
 
       return refreshInterval;
     };

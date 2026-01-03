@@ -43,6 +43,7 @@ redis-cli ping
 ### Windows
 
 **Option 1: WSL (Recommended)**
+
 ```bash
 # Install WSL if not already installed
 wsl --install
@@ -54,6 +55,7 @@ redis-server
 ```
 
 **Option 2: Native Windows (Unofficial Port)**
+
 1. Download from: https://github.com/tporadowski/redis/releases
 2. Extract the zip file
 3. Run `redis-server.exe`
@@ -115,6 +117,7 @@ npm run worker
 ```
 
 You should see:
+
 ```
 🚀 Starting HRIMS Sync Worker...
 ✅ Redis connected
@@ -129,12 +132,14 @@ If you see `✅ Redis connected`, you're all set!
 Create or update your `.env.local` file:
 
 ### For Local Redis (Default)
+
 ```env
 # No configuration needed!
 # Defaults to localhost:6379
 ```
 
 ### For Cloud Redis
+
 ```env
 REDIS_HOST=your-redis-host.com
 REDIS_PORT=6379
@@ -146,6 +151,7 @@ REDIS_PASSWORD=your-password
 Once Redis is set up, run the system in 3 terminals:
 
 ### Terminal 1: Start Redis (if local)
+
 ```bash
 # Linux/macOS
 redis-server
@@ -158,11 +164,13 @@ redis-server
 ```
 
 ### Terminal 2: Start Background Worker
+
 ```bash
 npm run worker
 ```
 
 ### Terminal 3: Start Next.js Application
+
 ```bash
 npm run dev
 ```
@@ -174,11 +182,13 @@ npm run dev
 **Problem:** Worker can't connect to Redis
 
 **Solution:**
+
 1. Check if Redis is running:
    ```bash
    redis-cli ping
    ```
 2. If not running, start Redis:
+
    ```bash
    # Linux
    sudo systemctl start redis-server
@@ -195,6 +205,7 @@ npm run dev
 **Problem:** Cloud Redis requires password
 
 **Solution:** Add password to `.env.local`:
+
 ```env
 REDIS_PASSWORD=your-password-here
 ```
@@ -204,6 +215,7 @@ REDIS_PASSWORD=your-password-here
 **Problem:** Another process is using port 6379
 
 **Solution:**
+
 1. Find the process:
    ```bash
    lsof -i :6379
@@ -228,6 +240,7 @@ sudo nano /etc/redis/redis.conf
 ```
 
 Recommended settings:
+
 ```conf
 # Increase max memory (e.g., 256MB)
 maxmemory 256mb
@@ -243,6 +256,7 @@ maxclients 10000
 ```
 
 Restart Redis after changes:
+
 ```bash
 sudo systemctl restart redis-server
 ```
@@ -250,16 +264,19 @@ sudo systemctl restart redis-server
 ## Monitoring Redis
 
 ### Check Memory Usage
+
 ```bash
 redis-cli INFO memory
 ```
 
 ### Monitor Commands in Real-time
+
 ```bash
 redis-cli MONITOR
 ```
 
 ### View Job Queue
+
 ```bash
 redis-cli
 > KEYS bull:hrims-sync:*
@@ -268,17 +285,18 @@ redis-cli
 
 ## Comparison: Docker vs Local vs Cloud
 
-| Feature | Local Redis | Cloud Redis | Docker Redis |
-|---------|------------|-------------|--------------|
-| Setup Time | 2 minutes | 5 minutes | 1 minute |
-| Cost | Free | Free tier | Free |
-| Performance | Fastest | Network latency | Fast |
-| Persistence | Yes | Yes | Yes |
-| Auto-restart | Yes (systemd) | Yes | Yes (Docker) |
-| Internet Required | No | Yes | No |
-| Maintenance | Manual updates | Managed | Manual updates |
+| Feature           | Local Redis    | Cloud Redis     | Docker Redis   |
+| ----------------- | -------------- | --------------- | -------------- |
+| Setup Time        | 2 minutes      | 5 minutes       | 1 minute       |
+| Cost              | Free           | Free tier       | Free           |
+| Performance       | Fastest        | Network latency | Fast           |
+| Persistence       | Yes            | Yes             | Yes            |
+| Auto-restart      | Yes (systemd)  | Yes             | Yes (Docker)   |
+| Internet Required | No             | Yes             | No             |
+| Maintenance       | Manual updates | Managed         | Manual updates |
 
 **Recommendation:**
+
 - **Development:** Local Redis (fastest, no internet needed)
 - **Production:** Cloud Redis (managed, scalable, backups)
 - **Quick Testing:** Docker (if you already have it)

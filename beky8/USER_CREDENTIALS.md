@@ -1,11 +1,13 @@
 # HR Management System - User Credentials
 
 ## Login Information
+
 **All users use the same password:** `password123`
 
 ## Key Administrative Users
 
 ### System Administrator
+
 - **Username:** `akassim`
 - **Name:** Amina Kassim
 - **Role:** Admin
@@ -13,6 +15,7 @@
 - **Access:** Full system administration, User Management, Institution Management
 
 ### Senior Management
+
 - **Username:** `skhamis`
 - **Name:** Safia Khamis
 - **Role:** HHRMD (Head of HR Management Department)
@@ -26,6 +29,7 @@
 - **Access:** Commission oversight, reports, audit trail
 
 ### HR Officers
+
 - **Username:** `hro_commission`
 - **Name:** HRO (Tume)
 - **Role:** HRO (Human Resource Officer)
@@ -51,6 +55,7 @@
 - **Access:** Full HR processes for Health Ministry
 
 ### Other Management Roles
+
 - **Username:** `fiddi`
 - **Name:** Fauzia Iddi
 - **Role:** HRMO (Human Resource Management Officer)
@@ -76,14 +81,17 @@
 - **Access:** Urgent actions, request tracking
 
 ## Employee Users (Sample)
+
 **Total: 148 employees across various institutions**
 
 Some notable employees for testing:
+
 - **Username:** `alijuma` - Ali Juma Ali (OFISI YA RAIS, FEDHA NA MIPANGO)
 - **Username:** `khadijanassor` - Khadija Nassor (WIZARA YA ELIMU NA MAFUNZO YA AMALI)
 - **Username:** `yussufmakame` - Yussuf Makame (WIZARA YA ELIMU NA MAFUNZO YA AMALI)
 
 ## Role Summary
+
 - **Admin:** 1 user (Full system access)
 - **CSCS:** 1 user (Commission Secretary)
 - **DO:** 1 user (Director Officer)
@@ -97,6 +105,7 @@ Some notable employees for testing:
 ## Role Permissions
 
 ### Admin (akassim)
+
 - Dashboard with system statistics
 - User Management (create, edit, delete users)
 - Institution Management (manage institutions)
@@ -105,6 +114,7 @@ Some notable employees for testing:
 - Reports and analytics
 
 ### HHRMD (skhamis)
+
 - Dashboard with HR statistics
 - All HR request types (confirmation, promotion, LWOP, etc.)
 - Employee management
@@ -113,6 +123,7 @@ Some notable employees for testing:
 - Track status
 
 ### HRO (hro_commission, kmnyonge, ahmedm, mariamj)
+
 - Dashboard with HR statistics
 - All HR request types
 - Urgent actions
@@ -122,6 +133,7 @@ Some notable employees for testing:
 - Track status
 
 ### CSCS (zhaji)
+
 - Dashboard
 - Employee profiles
 - Track status
@@ -129,6 +141,7 @@ Some notable employees for testing:
 - Audit trail access
 
 ### DO (mussi)
+
 - Dashboard
 - Employee profiles
 - Complaint handling
@@ -137,6 +150,7 @@ Some notable employees for testing:
 - Reports and analytics
 
 ### HRMO (fiddi)
+
 - Dashboard
 - All HR request types
 - Employee management
@@ -144,6 +158,7 @@ Some notable employees for testing:
 - Reports and analytics
 
 ### HRRP (khamadi)
+
 - Dashboard
 - Urgent actions
 - Employee profiles
@@ -151,12 +166,14 @@ Some notable employees for testing:
 - Reports and analytics
 
 ### PO (mishak)
+
 - Dashboard (redirects to profile)
 - Employee profiles
 - Track status
 - Reports and analytics
 
 ### EMPLOYEE (all others)
+
 - Dashboard (redirects to profile)
 - Employee profiles (own profile)
 - Complaint submission
@@ -170,6 +187,7 @@ Some notable employees for testing:
 4. **Cross-Institution Testing:** Use HROs from different institutions to test access controls
 
 ## Security Notes
+
 - All passwords are currently set to `password123` for development
 - In production, implement individual secure passwords
 - Consider implementing password reset functionality

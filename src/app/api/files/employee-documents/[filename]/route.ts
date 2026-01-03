@@ -31,7 +31,10 @@ export async function GET(
     try {
       fileStream = await downloadFile(filePath);
     } catch (downloadError) {
-      console.error(`Failed to download file from MinIO: ${filePath}`, downloadError);
+      console.error(
+        `Failed to download file from MinIO: ${filePath}`,
+        downloadError
+      );
       return NextResponse.json(
         { success: false, message: 'Document not found' },
         { status: 404 }
@@ -48,17 +51,18 @@ export async function GET(
     // Determine content type from file extension
     const extension = filename.split('.').pop()?.toLowerCase();
     const contentTypeMap: { [key: string]: string } = {
-      'pdf': 'application/pdf',
-      'jpg': 'image/jpeg',
-      'jpeg': 'image/jpeg',
-      'png': 'image/png',
-      'gif': 'image/gif',
-      'doc': 'application/msword',
-      'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'xls': 'application/vnd.ms-excel',
-      'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      pdf: 'application/pdf',
+      jpg: 'image/jpeg',
+      jpeg: 'image/jpeg',
+      png: 'image/png',
+      gif: 'image/gif',
+      doc: 'application/msword',
+      docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      xls: 'application/vnd.ms-excel',
+      xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     };
-    const contentType = contentTypeMap[extension || 'pdf'] || 'application/octet-stream';
+    const contentType =
+      contentTypeMap[extension || 'pdf'] || 'application/octet-stream';
 
     // Return the document with proper headers
     return new NextResponse(fileBuffer, {
@@ -70,14 +74,13 @@ export async function GET(
         'Content-Length': fileBuffer.length.toString(),
       },
     });
-
   } catch (error) {
     console.error('Error serving employee document:', error);
     return NextResponse.json(
       {
         success: false,
         message: 'Failed to serve document',
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );

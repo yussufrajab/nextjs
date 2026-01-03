@@ -1,4 +1,5 @@
 # TRAINING MANUAL
+
 ## CIVIL SERVICE MANAGEMENT SYSTEM (CSMS)
 
 **Version 1.0 | December 25, 2025**
@@ -7,16 +8,16 @@
 
 ## Document Control
 
-| Item | Details |
-|------|---------|
-| **Document Title** | User Training Manual - Civil Service Management System |
-| **Project Name** | Civil Service Management System (CSMS) |
-| **Version** | 1.0 |
-| **Date Prepared** | December 25, 2025 |
-| **Prepared By** | Training & Documentation Team |
-| **Target Audience** | All CSMS Users |
-| **Training Duration** | 2-4 hours (role-dependent) |
-| **Status** | Final for Training Sessions |
+| Item                  | Details                                                |
+| --------------------- | ------------------------------------------------------ |
+| **Document Title**    | User Training Manual - Civil Service Management System |
+| **Project Name**      | Civil Service Management System (CSMS)                 |
+| **Version**           | 1.0                                                    |
+| **Date Prepared**     | December 25, 2025                                      |
+| **Prepared By**       | Training & Documentation Team                          |
+| **Target Audience**   | All CSMS Users                                         |
+| **Training Duration** | 2-4 hours (role-dependent)                             |
+| **Status**            | Final for Training Sessions                            |
 
 ---
 
@@ -38,6 +39,7 @@
 The **Civil Service Management System (CSMS)** is a web-based platform designed to automate and streamline Human Resource management processes for the Civil Service Commission of Zanzibar. The system manages HR operations for over 50,000 employees across all government institutions.
 
 **Key Benefits:**
+
 - ✅ **Faster Processing:** 70% reduction in request processing time
 - ✅ **Paperless Operations:** Complete digital workflow
 - ✅ **Transparency:** Real-time status tracking
@@ -48,6 +50,7 @@ The **Civil Service Management System (CSMS)** is a web-based platform designed 
 ### 1.2 System Overview
 
 **CSMS manages:**
+
 - Employee profiles and documents
 - Employment confirmation requests
 - Promotion requests
@@ -65,21 +68,22 @@ The **Civil Service Management System (CSMS)** is a web-based platform designed 
 
 **Nine User Roles:**
 
-| Role | Full Name | Primary Functions |
-|------|-----------|-------------------|
-| **HRO** | HR Officer | Submit HR requests for institution |
-| **HHRMD** | Head of HR Management Division | Approve all request types |
-| **HRMO** | HR Management Officer | Approve HR requests (not disciplinary) |
-| **DO** | Disciplinary Officer | Handle complaints and disciplinary matters |
-| **EMP** | Employee | Submit complaints, view own profile |
-| **PO** | Planning Officer | Generate reports for planning |
-| **CSCS** | CSC Secretary | Executive oversight and monitoring |
-| **HRRP** | HR Responsible Personnel | Monitor institutional HR activities |
-| **ADMIN** | System Administrator | Manage users and system configuration |
+| Role      | Full Name                      | Primary Functions                          |
+| --------- | ------------------------------ | ------------------------------------------ |
+| **HRO**   | HR Officer                     | Submit HR requests for institution         |
+| **HHRMD** | Head of HR Management Division | Approve all request types                  |
+| **HRMO**  | HR Management Officer          | Approve HR requests (not disciplinary)     |
+| **DO**    | Disciplinary Officer           | Handle complaints and disciplinary matters |
+| **EMP**   | Employee                       | Submit complaints, view own profile        |
+| **PO**    | Planning Officer               | Generate reports for planning              |
+| **CSCS**  | CSC Secretary                  | Executive oversight and monitoring         |
+| **HRRP**  | HR Responsible Personnel       | Monitor institutional HR activities        |
+| **ADMIN** | System Administrator           | Manage users and system configuration      |
 
 ### 1.4 System Requirements
 
 **To use CSMS, you need:**
+
 - ✅ Computer or laptop (tablet supported)
 
 - ✅ Internet connection (minimum 2 Mbps)
@@ -88,21 +92,18 @@ The **Civil Service Management System (CSMS)** is a web-based platform designed 
   - Google Chrome 90+ (Recommended)
   - Mozilla Firefox 88+
   - Microsoft Edge 90+
-  
 - ✅ Screen resolution: 1024x768 or higher
 
 - ✅ Valid user account (provided by administrator)
 
-  
-
 ### 1.5 Accessing CSMS
 
-**System URL:** `https://csms.zanajira.go.tz`  and   https://malalamiko.zanajira.go.tz
+**System URL:** `https://csms.zanajira.go.tz` and https://malalamiko.zanajira.go.tz
 
 **Supported Languages:**
 
 - English
-- Swahili 
+- Swahili
 
 ---
 
@@ -111,17 +112,20 @@ The **Civil Service Management System (CSMS)** is a web-based platform designed 
 ### 2.1 First-Time Login
 
 **Step 1: Navigate to Login Page**
+
 1. Open your web browser
 2. Type the CSMS URL in the address bar
 3. Press Enter
 4. You will see the login page
 
 **Step 2: Enter Your Credentials**
+
 1. Enter your **Username** (provided by administrator)
 2. Enter your **Password** (temporary password from welcome email)
 3. Click **"Login"** button
 
 **Step 3: Change Temporary Password (First Login Only)**
+
 1. After first login, system will prompt you to change password
 2. Enter your temporary password
 3. Create a new password following these rules:
@@ -129,7 +133,7 @@ The **Civil Service Management System (CSMS)** is a web-based platform designed 
    - At least one uppercase letter (A-Z)
    - At least one lowercase letter (a-z)
    - At least one number (0-9)
-   - At least one special character (!@#$%^&*)
+   - At least one special character (!@#$%^&\*)
 4. Confirm your new password
 5. Click **"Change Password"**
 
@@ -196,6 +200,7 @@ After successful login, you will see your personalized dashboard:
 - **Admin:** User and system management (ADMIN only)
 
 **User Profile Menu:**
+
 - View Profile
 - Change Password
 - User Preferences
@@ -204,6 +209,7 @@ After successful login, you will see your personalized dashboard:
 ### 2.4 Changing Your Password
 
 **Steps:**
+
 1. Click your name in the top right corner
 2. Select **"Change Password"**
 3. Enter your current password
@@ -213,6 +219,7 @@ After successful login, you will see your personalized dashboard:
 7. You will receive confirmation email
 
 **Password Tips:**
+
 - ✅ Use a mix of letters, numbers, and symbols
 - ✅ Make it at least 12 characters for better security
 - ✅ Don't use personal information (name, birthday)
@@ -233,6 +240,7 @@ After successful login, you will see your personalized dashboard:
 8. Click **"Reset Password"**
 
 **Important:**
+
 - OTP is valid for 60 minutes only
 - OTP can only be used once
 - If OTP expires, request a new one
@@ -241,9 +249,11 @@ After successful login, you will see your personalized dashboard:
 ### 2.6 Session Timeout
 
 **For security, CSMS automatically logs you out after:**
+
 - **10 minutes of inactivity**
 
 **Warning System:**
+
 - At 9 minutes, you'll see a popup: "Session expiring in 1 minute"
 - Options:
   - Click **"Stay Logged In"** to continue
@@ -251,6 +261,7 @@ After successful login, you will see your personalized dashboard:
   - Do nothing → Auto-logout at 10 minutes
 
 **If you're logged out:**
+
 - Your work is saved automatically (for most forms)
 - Simply log in again to continue
 
@@ -264,6 +275,7 @@ After successful login, you will see your personalized dashboard:
 4. You'll be redirected to login page
 
 **Why logout is important:**
+
 - Protects your account from unauthorized access
 - Especially important on shared computers
 - Good security practice
@@ -278,6 +290,7 @@ After successful login, you will see your personalized dashboard:
 
 **Learning Objectives:**
 By the end of this training, HRO users will be able to:
+
 - ✅ Search and view employee profiles
 - ✅ Submit all types of HR requests
 - ✅ Upload required documents
@@ -301,6 +314,7 @@ By the end of this training, HRO users will be able to:
    - **Sort by:** Name, Employment Date
 
 **Example: Search for an Employee**
+
 ```
 1. In the search box, type: "Fatma"
 2. Click "Search" or press Enter
@@ -309,6 +323,7 @@ By the end of this training, HRO users will be able to:
 ```
 
 **Employee Profile Page Shows:**
+
 - Personal information
 - Employment details
 - Current status
@@ -316,7 +331,8 @@ By the end of this training, HRO users will be able to:
 - Employment history
 - Request history
 
-**Important:** 
+**Important:**
+
 - You can only view employees from YOUR institution
 - You cannot edit employee profiles (Admin only)
 - You can download employee documents
@@ -328,6 +344,7 @@ By the end of this training, HRO users will be able to:
 **Purpose:** Confirm employees who have completed probation
 
 **Prerequisites:**
+
 - Employee has completed minimum 12 months probation
 - Required documents available:
   1. Confirmation letter
@@ -369,12 +386,14 @@ By the end of this training, HRO users will be able to:
    - Request is now "Pending" and routed to HHRMD/HRMO
 
 **After Submission:**
+
 - Request appears in your "My Requests" list
 - Status: Pending
 - You'll receive email notification when decision is made
 - You can view request but cannot edit (unless sent back)
 
 **Example Scenario:**
+
 ```
 Employee: Ali Juma Ali
 Payroll: PRL20230001
@@ -392,10 +411,12 @@ Action: Submit confirmation request
 **Purpose:** Request promotion for employee based on education or performance
 
 **Types of Promotion:**
+
 1. **Education-Based:** Employee obtained new degree/qualification
 2. **Performance-Based:** Employee has excellent consecutive appraisals
 
 **Prerequisites:**
+
 - Employee must be confirmed (not on probation)
 - Minimum 2 years in current position
 - Required documents based on type
@@ -440,6 +461,7 @@ Action: Submit confirmation request
    - Click **"Submit Request"**
 
 **Important Notes:**
+
 - Education promotions require original certificates
 - Performance promotions need consecutive excellent appraisals
 - TCU verification required for qualifications from outside Tanzania
@@ -452,6 +474,7 @@ Action: Submit confirmation request
 **Purpose:** Request Leave Without Pay for employee
 
 **LWOP Rules:**
+
 - Minimum duration: 1 month
 - Maximum duration: 3 years
 - Maximum 2 LWOP periods per employee (lifetime)
@@ -459,6 +482,7 @@ Action: Submit confirmation request
 
 **Prohibited LWOP Reasons:**
 ⚠️ System will REJECT if reason contains:
+
 - Employment in internal organizations
 - Spouse relocation
 - Engagement in politics
@@ -500,8 +524,9 @@ Action: Submit confirmation request
    - Request routed to HHRMD/HRMO
 
 **Example:**
+
 ```
-Good LWOP Reason: 
+Good LWOP Reason:
 "Employee requests LWOP to pursue postgraduate studies at University of Edinburgh"
 
 Bad LWOP Reason :
@@ -572,6 +597,7 @@ Bad LWOP Reason :
    - Routed to HHRMD/HRMO
 
 **After Approval:**
+
 - Employee status changes to "Retired"
 - Information sent to Pension system (future integration)
 - Final settlement processed
@@ -581,27 +607,32 @@ Bad LWOP Reason :
 #### 3.1.6 HRO: Submitting Other Request Types
 
 **Resignation Request:**
+
 - Two types: 3-month notice OR 24-hour with payment
 - 24-hour requires payment of 3 months' salary
 - Upload: Resignation letter, payment receipt (if 24-hour)
 
 **Change of Cadre:**
+
 - Request to change employee's job category
 - Requires educational certificates or justification
 - HHRMD approval only (not HRMO)
 
 **Service Extension:**
+
 - For employees nearing retirement
 - Duration: 6 months to 3 years
 - Maximum 2 extensions lifetime
 - Requires employee consent
 
 **Termination (Confirmed Employees):**
+
 - Disciplinary action
 - Requires multiple warning letters, investigation report
 - DO or HHRMD approval only
 
 **Dismissal (Probationary Employees):**
+
 - For employees on probation
 - Less strict documentation requirements
 - DO or HHRMD approval only
@@ -629,16 +660,17 @@ Bad LWOP Reason :
 
 **Request Statuses:**
 
-| Status | Icon | Meaning | Action Required |
-|--------|------|---------|-----------------|
-| **Pending** | 🟡 | Awaiting approval | None - wait for decision |
-| **Approved** | 🟢 | Request approved | None - completed |
-| **Rejected** | 🔴 | Request rejected | Review reason, may resubmit |
-| **Returned** | 🟠 | Sent back for rectification | Follow instructions, resubmit |
+| Status       | Icon | Meaning                     | Action Required               |
+| ------------ | ---- | --------------------------- | ----------------------------- |
+| **Pending**  | 🟡   | Awaiting approval           | None - wait for decision      |
+| **Approved** | 🟢   | Request approved            | None - completed              |
+| **Rejected** | 🔴   | Request rejected            | Review reason, may resubmit   |
+| **Returned** | 🟠   | Sent back for rectification | Follow instructions, resubmit |
 
 **Understanding Returned Requests:**
 
 If a request is "Returned":
+
 1. Click on the request to view
 2. Read the rectification instructions
 3. Click **"Edit Request"**
@@ -647,6 +679,7 @@ If a request is "Returned":
 6. Click **"Resubmit"**
 
 **Notifications:**
+
 - Email notification when request status changes
 - In-app notification (bell icon 🔔)
 - Click notification to view request details
@@ -658,6 +691,7 @@ If a request is "Returned":
 **Purpose:** Generate reports for your institution
 
 **Available Reports for HRO:**
+
 - Institutional Employee Report
 - Institutional Request Status Report
 - Pending Requests Report
@@ -687,6 +721,7 @@ If a request is "Returned":
    - Click **"Download"**
 
 **Report Features:**
+
 - Reports are filtered to your institution only
 - PDF reports are formatted and ready to print
 - Excel reports contain raw data for further analysis
@@ -697,6 +732,7 @@ If a request is "Returned":
 #### 3.1.9 HRO: Best Practices
 
 **✅ DO:**
+
 - Verify employee eligibility before submitting requests
 - Ensure all required documents are ready before starting
 - Double-check all information before submission
@@ -706,6 +742,7 @@ If a request is "Returned":
 - Log out when finished
 
 **❌ DON'T:**
+
 - Submit requests for employees from other institutions
 - Upload documents in wrong format (only PDF accepted)
 - Exceed file size limit (2MB per file)
@@ -715,6 +752,7 @@ If a request is "Returned":
 - Use prohibited words in LWOP reasons
 
 **Common Mistakes to Avoid:**
+
 1. Forgetting to upload all required documents
 2. Uploading oversized files (>2MB)
 3. Not checking probation period before confirmation request
@@ -728,6 +766,7 @@ If a request is "Returned":
 **Duration:** 3 hours
 
 **Learning Objectives:**
+
 - ✅ Review pending requests efficiently
 - ✅ Approve or reject requests with proper documentation
 - ✅ Send requests back for rectification
@@ -742,18 +781,21 @@ If a request is "Returned":
 **Your dashboard shows:**
 
 **Pending Approvals:**
+
 - Total pending requests (all types)
 - Breakdown by request type
 - Urgent requests (>5 days old) in RED
 - Warning requests (3-5 days old) in ORANGE
 
 **Workload Statistics:**
+
 - Requests approved this week/month
 - Requests rejected this week/month
 - Average processing time
 - SLA compliance rate
 
 **Quick Actions:**
+
 - Review Pending Requests
 - View Urgent Requests
 - Generate Approval Report
@@ -761,19 +803,19 @@ If a request is "Returned":
 
 **Difference: HHRMD vs HRMO**
 
-| Feature | HHRMD | HRMO |
-|---------|-------|------|
-| Confirmation | ✅ | ✅ |
-| Promotion | ✅ | ✅ |
-| LWOP | ✅ | ✅ |
-| Retirement | ✅ | ✅ |
-| Resignation | ✅ | ✅ |
-| Cadre Change | ✅ | ❌ (HHRMD only) |
-| Service Extension | ✅ | ✅ |
-| **Termination** | ✅ | ❌ |
-| **Dismissal** | ✅ | ❌ |
-| **Complaints** | ✅ | ❌ |
-| View All Institutions | ✅ | ✅ |
+| Feature               | HHRMD | HRMO            |
+| --------------------- | ----- | --------------- |
+| Confirmation          | ✅    | ✅              |
+| Promotion             | ✅    | ✅              |
+| LWOP                  | ✅    | ✅              |
+| Retirement            | ✅    | ✅              |
+| Resignation           | ✅    | ✅              |
+| Cadre Change          | ✅    | ❌ (HHRMD only) |
+| Service Extension     | ✅    | ✅              |
+| **Termination**       | ✅    | ❌              |
+| **Dismissal**         | ✅    | ❌              |
+| **Complaints**        | ✅    | ❌              |
+| View All Institutions | ✅    | ✅              |
 
 ---
 
@@ -794,21 +836,25 @@ If a request is "Returned":
 **Review Checklist:**
 
 ✅ **Employee Information:**
+
 - Name, Payroll, ZanID correct?
 - Current status appropriate?
 - Eligibility met? (probation period, service years, etc.)
 
 ✅ **Request Details:**
+
 - Dates logical and correct?
 - Justification reasonable?
 - Information complete?
 
 ✅ **Documents:**
+
 - All required documents uploaded?
 - Documents clear and readable?
 - Documents authentic and valid?
 
 ✅ **Business Rules:**
+
 - Probation minimum 12 months (confirmation)
 - Service minimum 2 years (promotion)
 - LWOP duration 1 month - 3 years
@@ -827,6 +873,7 @@ If a request is "Returned":
 #### 3.2.3 HHRMD/HRMO: Approving Requests
 
 **When to Approve:**
+
 - All requirements met
 - Documents complete and valid
 - Information accurate
@@ -858,19 +905,20 @@ If a request is "Returned":
 
 **Automatic Actions on Approval:**
 
-| Request Type | System Updates |
-|--------------|----------------|
-| Confirmation | Employee status → "Confirmed" |
-| LWOP | Employee status → "On LWOP" |
-| Retirement | Employee status → "Retired" |
-| Resignation | Employee status → "Resigned" |
-| Termination | Employee status → "Terminated" |
-| Dismissal | Employee status → "Dismissed" |
-| Promotion | Promotion record created |
-| Cadre Change | Cadre change history updated |
-| Service Extension | Extension dates recorded |
+| Request Type      | System Updates                 |
+| ----------------- | ------------------------------ |
+| Confirmation      | Employee status → "Confirmed"  |
+| LWOP              | Employee status → "On LWOP"    |
+| Retirement        | Employee status → "Retired"    |
+| Resignation       | Employee status → "Resigned"   |
+| Termination       | Employee status → "Terminated" |
+| Dismissal         | Employee status → "Dismissed"  |
+| Promotion         | Promotion record created       |
+| Cadre Change      | Cadre change history updated   |
+| Service Extension | Extension dates recorded       |
 
 **After Approval:**
+
 - Request status: Approved
 - Approval date and time recorded
 - Your name recorded as approver
@@ -883,6 +931,7 @@ If a request is "Returned":
 #### 3.2.4 HHRMD/HRMO: Rejecting Requests
 
 **When to Reject:**
+
 - Employee not eligible
 - Documents incomplete or invalid
 - Information incorrect
@@ -907,21 +956,23 @@ If a request is "Returned":
    - Be professional and constructive
 
 **Example Good Rejection Reasons:**
+
 ```
-✅ "Employee has completed only 10 months of probation. 
-   Minimum 12 months required for confirmation. 
+✅ "Employee has completed only 10 months of probation.
+   Minimum 12 months required for confirmation.
    Please resubmit after February 1, 2026."
 
-✅ "Performance appraisal document is missing. 
-   Please upload the complete appraisal form signed 
+✅ "Performance appraisal document is missing.
+   Please upload the complete appraisal form signed
    by supervisor and submit again."
 
-✅ "LWOP reason states 'spouse relocation' which is 
-   a prohibited reason as per CSC regulations. 
+✅ "LWOP reason states 'spouse relocation' which is
+   a prohibited reason as per CSC regulations.
    Please provide different justification if applicable."
 ```
 
 **Example Poor Rejection Reasons:**
+
 ```
 ❌ "Not eligible"
 ❌ "Documents missing"
@@ -935,6 +986,7 @@ If a request is "Returned":
    - HRO can view reason and may resubmit
 
 **Important:**
+
 - Rejection is final - no reversal
 - Clear reasons help HRO correct issues
 - Constructive feedback improves future submissions
@@ -945,12 +997,14 @@ If a request is "Returned":
 #### 3.2.5 HHRMD/HRMO: Sending Back for Rectification
 
 **When to Send Back:**
+
 - Minor issues that can be corrected
 - Missing non-critical information
 - Document needs replacement
 - Additional clarification needed
 
 **Difference from Rejection:**
+
 - **Send Back:** HRO can edit and resubmit same request
 - **Reject:** HRO must create new request
 
@@ -965,8 +1019,9 @@ If a request is "Returned":
    - Deadline for resubmission (optional)
 
 **Example Instructions:**
+
 ```
-"Please replace the IPA certificate with a clear, 
+"Please replace the IPA certificate with a clear,
 readable scan. Current upload is too dark.
 
 Also add the supervisor's phone number in the form.
@@ -981,6 +1036,7 @@ Resubmit within 5 working days."
    - HRO can edit and resubmit
 
 **After HRO Resubmits:**
+
 - Request returns to your pending queue
 - You'll see "Resubmitted" flag
 - Review corrections made
@@ -993,37 +1049,44 @@ Resubmit within 5 working days."
 **Prioritization Strategy:**
 
 **Priority 1 - URGENT (Review First):**
+
 - Requests pending >7 days (RED)
 - Manually flagged urgent requests
 - Retirement requests (pension processing)
 
 **Priority 2 - WARNING (Review Soon):**
+
 - Requests pending 5-7 days (ORANGE)
 - Service extension nearing expiration
 
 **Priority 3 - NORMAL (Review in Order):**
+
 - Requests pending <5 days (YELLOW)
 - Process in order of submission (oldest first)
 
 **Daily Workflow Recommendation:**
 
 **Morning (8:00 AM - 12:00 PM):**
+
 1. Check dashboard for urgent requests
 2. Review and process 5-10 urgent/warning requests
 3. Respond to any escalations
 
 **Afternoon (2:00 PM - 5:00 PM):**
+
 1. Process normal priority requests
 2. Review any returned and resubmitted requests
 3. Generate daily report
 4. Prepare decision letters for next day
 
 **SLA Targets:**
+
 - HR Requests: 5 business days
 - Disciplinary Requests: 10 business days
 - Complaints: 15 business days
 
 **Tips for Efficiency:**
+
 1. Process similar requests in batches
 2. Have decision letter templates ready
 3. Use saved comments for common issues
@@ -1035,6 +1098,7 @@ Resubmit within 5 working days."
 #### 3.2.7 HHRMD/HRMO: Best Practices
 
 **✅ DO:**
+
 - Review requests daily
 - Process oldest requests first
 - Provide clear, detailed rejection reasons
@@ -1045,6 +1109,7 @@ Resubmit within 5 working days."
 - Communicate with HROs for complex cases
 
 **❌ DON'T:**
+
 - Delay decisions without valid reason
 - Approve requests without proper verification
 - Reject without clear explanation
@@ -1054,6 +1119,7 @@ Resubmit within 5 working days."
 - Share sensitive employee information
 
 **Quality Control:**
+
 - Double-check employee eligibility
 - Verify document authenticity when in doubt
 - Consult regulations for complex cases
@@ -1068,6 +1134,7 @@ Resubmit within 5 working days."
 **Duration:** 2.5 hours
 
 **Learning Objectives:**
+
 - ✅ Manage and resolve employee complaints
 - ✅ Process termination and dismissal requests
 - ✅ Respond to complaints professionally
@@ -1097,6 +1164,7 @@ Resubmit within 5 working days."
    - Any complaint not fitting above categories
 
 **Complaint Priority Levels:**
+
 - **High:** Harassment, safety, discrimination
 - **Medium:** Job-related issues
 - **Low:** Administrative matters
@@ -1146,23 +1214,27 @@ Resubmit within 5 working days."
 **Investigation Process:**
 
 **Step 1: Gather Information**
+
 - Review complaint details thoroughly
 - Review attached evidence
 - Check employee history
 - Review related documents
 
 **Step 2: Contact Involved Parties**
+
 - Interview complainant (if needed)
 - Interview supervisor
 - Interview witnesses
 - Get written statements
 
 **Step 3: Document Investigation**
+
 - Add internal notes (not visible to employee)
 - Upload investigation report
 - Record findings
 
 **Step 4: Add Response**
+
 1. Click **"Add Response"**
 2. **Select Response Type:**
    - **Internal Note:** Only DO/HHRMD can see
@@ -1171,6 +1243,7 @@ Resubmit within 5 working days."
 4. Click **"Save Response"**
 
 **Investigation Timeline:**
+
 - Acknowledge complaint within 2 days
 - Complete investigation within 15 days
 - Provide interim update if investigation takes longer
@@ -1182,16 +1255,19 @@ Resubmit within 5 working days."
 **Resolution Options:**
 
 **1. Resolved (Upheld):**
+
 - Complaint is valid
 - Corrective action taken
 - Issue addressed
 
 **2. Resolved (Not Upheld):**
+
 - Complaint investigated but not substantiated
 - No violation found
 - No action needed
 
 **3. Rejected:**
+
 - Complaint is frivolous or malicious
 - Outside jurisdiction
 - Insufficient evidence
@@ -1211,21 +1287,23 @@ Resubmit within 5 working days."
    - Be professional and objective
 
 **Example Resolution Summary (Upheld):**
+
 ```
-"Investigation confirmed that the employee's complaint 
-regarding discriminatory treatment is valid. Supervisor 
-Mr. John Doe has been counseled and warned. Employee 
-will be reassigned to different supervisor. HR training 
-on diversity and inclusion has been scheduled for all 
+"Investigation confirmed that the employee's complaint
+regarding discriminatory treatment is valid. Supervisor
+Mr. John Doe has been counseled and warned. Employee
+will be reassigned to different supervisor. HR training
+on diversity and inclusion has been scheduled for all
 supervisors."
 ```
 
 **Example Resolution Summary (Not Upheld):**
+
 ```
-"Thorough investigation including interviews with 
-supervisor, colleagues, and review of documentation 
-shows no evidence of unfair treatment. Performance 
-reviews were conducted according to standard procedures. 
+"Thorough investigation including interviews with
+supervisor, colleagues, and review of documentation
+shows no evidence of unfair treatment. Performance
+reviews were conducted according to standard procedures.
 Employee's concerns have been noted and will be monitored."
 ```
 
@@ -1245,6 +1323,7 @@ Employee's concerns have been noted and will be monitored."
 #### 3.3.5 DO: Rejecting Complaints
 
 **When to Reject:**
+
 - Complaint clearly frivolous
 - No jurisdiction
 - Duplicate complaint
@@ -1260,10 +1339,11 @@ Employee's concerns have been noted and will be monitored."
    - Professional tone
 
 **Example:**
+
 ```
-"This complaint is outside the jurisdiction of the 
-Disciplinary Office. Matters related to salary 
-adjustments should be directed to the Salary Review 
+"This complaint is outside the jurisdiction of the
+Disciplinary Office. Matters related to salary
+adjustments should be directed to the Salary Review
 Committee through your institution's HR Officer."
 ```
 
@@ -1277,6 +1357,7 @@ Committee through your institution's HR Officer."
 #### 3.3.6 DO: Escalating Complaints
 
 **When to Escalate to HHRMD:**
+
 - Case involves senior management
 - Policy interpretation needed
 - Potential legal implications
@@ -1298,6 +1379,7 @@ Committee through your institution's HR Officer."
    - HHRMD will take over
 
 **Automatic Escalation:**
+
 - System automatically escalates complaints open >15 days
 - You receive reminder at 10 days, 12 days, 15 days
 
@@ -1308,6 +1390,7 @@ Committee through your institution's HR Officer."
 **Termination (Confirmed Employees):**
 
 **Required Documents:**
+
 - Termination request letter
 - Investigation report
 - Warning letters (multiple)
@@ -1315,6 +1398,7 @@ Committee through your institution's HR Officer."
 - Witness statements
 
 **Grounds for Termination:**
+
 - Gross misconduct
 - Repeated violations
 - Criminal activity
@@ -1322,6 +1406,7 @@ Committee through your institution's HR Officer."
 - Unauthorized absence
 
 **Review Checklist:**
+
 - ✅ Due process followed?
 - ✅ Investigation thorough?
 - ✅ Progressive discipline applied?
@@ -1331,16 +1416,19 @@ Committee through your institution's HR Officer."
 **Dismissal (Probationary Employees):**
 
 **Less Stringent Requirements:**
+
 - Performance issues
 - Misconduct during probation
 - Unsuitable for position
 
 **Review Checklist:**
+
 - ✅ Performance documented?
 - ✅ Supervisor recommendation?
 - ✅ Fair assessment?
 
 **Approval/Rejection:**
+
 - Similar process to other requests
 - Upload decision letter
 - Employee status updated automatically
@@ -1350,6 +1438,7 @@ Committee through your institution's HR Officer."
 #### 3.3.8 DO: Best Practices
 
 **✅ DO:**
+
 - Maintain strict confidentiality
 - Be objective and impartial
 - Document everything
@@ -1360,6 +1449,7 @@ Committee through your institution's HR Officer."
 - Keep HHRMD informed of sensitive cases
 
 **❌ DON'T:**
+
 - Discuss complaints outside system
 - Make hasty decisions
 - Show bias
@@ -1370,6 +1460,7 @@ Committee through your institution's HR Officer."
 - Take sides before investigation
 
 **Handling Sensitive Complaints:**
+
 - Harassment: Immediate priority, separate parties
 - Discrimination: Thorough documentation needed
 - Violence/threats: Escalate immediately, ensure safety
@@ -1382,6 +1473,7 @@ Committee through your institution's HR Officer."
 **Duration:** 1 hour
 
 **Learning Objectives:**
+
 - ✅ Access CSMS with employee credentials
 - ✅ View personal profile
 - ✅ Submit complaints
@@ -1396,6 +1488,7 @@ Committee through your institution's HR Officer."
 **You do NOT use username/password**
 
 Instead, you use:
+
 1. ZanID (Zanzibar ID Number)
 2. Payroll Number
 3. ZSSF Number (Social Security Number)
@@ -1410,12 +1503,14 @@ Instead, you use:
 6. Click **"Login"**
 
 **Important:**
+
 - All THREE numbers must match exactly
 - System validates against employee database
 - If any number is wrong, login fails
 - Contact your HR Officer if you have issues
 
 **Example:**
+
 ```
 ZanID: 123456789
 Payroll Number: PRL20230001
@@ -1423,6 +1518,7 @@ ZSSF Number: ZSSF123456
 ```
 
 **Security:**
+
 - Session expires after 30 minutes (shorter than staff)
 - No password required
 - Cannot change employee credentials
@@ -1435,6 +1531,7 @@ ZSSF Number: ZSSF123456
 **After Login:**
 
 You see your personal dashboard with:
+
 - Your photo
 - Name and Payroll Number
 - Current position
@@ -1443,6 +1540,7 @@ You see your personal dashboard with:
 - Contact information
 
 **What You Can View:**
+
 - ✅ Personal information
 - ✅ Employment details
 - ✅ Current status
@@ -1450,6 +1548,7 @@ You see your personal dashboard with:
 - ✅ Employment history
 
 **What You CANNOT Do:**
+
 - ❌ Edit your information (only Admin can)
 - ❌ Upload documents (HRO does this)
 - ❌ Change your status
@@ -1457,6 +1556,7 @@ You see your personal dashboard with:
 - ❌ Submit HR requests (HRO does this)
 
 **If Information is Wrong:**
+
 - Contact your institution's HR Officer
 - They will update it in the system
 
@@ -1465,6 +1565,7 @@ You see your personal dashboard with:
 #### 3.4.3 Employee: Submitting a Complaint
 
 **What Can You Complain About:**
+
 - Unfair treatment at work
 - Discrimination or harassment
 - Working conditions
@@ -1473,6 +1574,7 @@ You see your personal dashboard with:
 - Other work-related issues
 
 **What You CANNOT Complain About:**
+
 - General government policies
 - Matters outside your workplace
 - Personal disputes unrelated to work
@@ -1501,15 +1603,16 @@ You see your personal dashboard with:
    - Location: Where did this happen?
 
 **Writing a Good Complaint:**
+
 ```
 ✅ Good Example:
-"On December 15, 2025, my supervisor Mr. Makame Ussi 
-publicly reprimanded me in front of other staff for 
-an error that was not my fault. The mistake was made 
-by the previous shift employee. When I tried to explain, 
-he refused to listen and threatened to report me for 
-insubordination. This has happened three times in the 
-past month. I feel this is unfair and affects my ability 
+"On December 15, 2025, my supervisor Mr. Makame Ussi
+publicly reprimanded me in front of other staff for
+an error that was not my fault. The mistake was made
+by the previous shift employee. When I tried to explain,
+he refused to listen and threatened to report me for
+insubordination. This has happened three times in the
+past month. I feel this is unfair and affects my ability
 to work effectively."
 
 ❌ Bad Example:
@@ -1517,6 +1620,7 @@ to work effectively."
 ```
 
 **Tips for Description:**
+
 - Be specific (dates, times, places)
 - Stick to facts, not opinions
 - Include names of witnesses if any
@@ -1543,6 +1647,7 @@ to work effectively."
    - Write down your complaint number
 
 **After Submission:**
+
 - Status: Pending
 - DO will review within 2 days
 - You'll receive updates via:
@@ -1575,26 +1680,30 @@ to work effectively."
 **Internal Note:** You won't see this (DO working notes)
 
 **Employee Response:** You will see this
+
 ```
 Example:
-"We have received your complaint and assigned it 
-to investigator. We will contact you within 3 days 
-for an interview. Please be available at your office 
+"We have received your complaint and assigned it
+to investigator. We will contact you within 3 days
+for an interview. Please be available at your office
 on December 28, 2025 at 10:00 AM."
 ```
 
 **What to Do If:**
 
 **Under Review for >15 Days:**
+
 - System automatically escalates
 - You don't need to do anything
 
 **Need to Add More Information:**
+
 - You cannot edit submitted complaint
 - Contact DO through your HR Officer
 - Provide additional information verbally
 
 **Disagree with Resolution:**
+
 - Review resolution carefully
 - If you still disagree, contact:
   - Your HR Officer
@@ -1606,6 +1715,7 @@ on December 28, 2025 at 10:00 AM."
 #### 3.4.5 Employee: Best Practices
 
 **✅ DO:**
+
 - Be honest and factual
 - Provide evidence when possible
 - Be patient during investigation
@@ -1614,6 +1724,7 @@ on December 28, 2025 at 10:00 AM."
 - Follow up appropriately
 
 **❌ DON'T:**
+
 - Make false accusations
 - Exaggerate or lie
 - Submit multiple complaints for same issue
@@ -1623,6 +1734,7 @@ on December 28, 2025 at 10:00 AM."
 - Threaten retaliation
 
 **Your Rights:**
+
 - ✅ Right to submit complaint without fear
 - ✅ Right to fair investigation
 - ✅ Right to be heard
@@ -1630,6 +1742,7 @@ on December 28, 2025 at 10:00 AM."
 - ✅ Right to appeal decision
 
 **Confidentiality:**
+
 - Your complaint is confidential
 - Only DO and HHRMD can see it
 - Investigator will maintain privacy
@@ -1642,6 +1755,7 @@ on December 28, 2025 at 10:00 AM."
 **Duration:** 2 hours
 
 **Learning Objectives:**
+
 - ✅ Generate all report types
 - ✅ Create custom reports
 - ✅ Schedule automated reports
@@ -1705,10 +1819,12 @@ on December 28, 2025 at 10:00 AM."
     - Security events
 
 **Report Formats:**
+
 - **PDF:** Formatted, ready to print
 - **Excel:** Raw data for analysis
 
 **Report Languages:**
+
 - **English**
 - **Swahili**
 
@@ -1756,6 +1872,7 @@ on December 28, 2025 at 10:00 AM."
    - File name format: `EmployeeReport_20251225_153045.pdf`
 
 **Example: Retirement Pipeline Report**
+
 ```
 Parameters:
 - Institution: Ministry of Health
@@ -1811,6 +1928,7 @@ Output:
    - Set value
 
 **Example Filters:**
+
 ```
 Status equals "Retired"
 AND
@@ -1892,6 +2010,7 @@ Institution equals "Ministry of Education"
    - Separate with commas
 
 **Example:**
+
 ```
 Report: Employee Profile Report
 Frequency: Monthly (1st of month)
@@ -1913,12 +2032,13 @@ Recipients: planning@csm.go.tz, director@csm.go.tz
    - Delete schedule
 
 **Email Notification:**
+
 ```
 Subject: Scheduled Report: Employee Profile Report
 
 Dear Planning Officer,
 
-Please find attached your scheduled report "Employee 
+Please find attached your scheduled report "Employee
 Profile Report" for the period January 1-31, 2025.
 
 Generated: February 1, 2025 at 08:00 AM
@@ -1935,6 +2055,7 @@ This is an automated message from CSMS.
 **Common Analysis Tasks:**
 
 **1. Workforce Demographics:**
+
 - Age distribution
 - Gender ratio
 - Education levels
@@ -1945,6 +2066,7 @@ This is an automated message from CSMS.
 **Analysis:** Create age bands, calculate percentages
 
 **2. Retirement Planning:**
+
 - Projected retirements (5-year view)
 - Replacement needs
 - Knowledge transfer planning
@@ -1954,11 +2076,13 @@ This is an automated message from CSMS.
 **Analysis:** Group by year, identify critical positions
 
 **3. Turnover Analysis:**
+
 - Resignation rates
 - Termination rates
 - Retention rates by institution
 
-**Reports to Use:** 
+**Reports to Use:**
+
 - Resignation Request Report
 - Termination/Dismissal Report
 - Employee Status Report
@@ -1966,6 +2090,7 @@ This is an automated message from CSMS.
 **Analysis:** Calculate monthly/quarterly rates
 
 **4. Request Processing Efficiency:**
+
 - Average approval time
 - SLA compliance
 - Bottleneck identification
@@ -1975,6 +2100,7 @@ This is an automated message from CSMS.
 **Analysis:** Calculate processing time, identify delays
 
 **5. Institutional Comparison:**
+
 - Employee distribution
 - Request volumes
 - Complaint rates
@@ -1987,6 +2113,7 @@ This is an automated message from CSMS.
 #### 3.5.6 PO: Best Practices
 
 **✅ DO:**
+
 - Generate reports regularly (weekly/monthly)
 - Save custom report configurations
 - Use filters to focus on relevant data
@@ -1997,6 +2124,7 @@ This is an automated message from CSMS.
 - Validate data before presenting
 
 **❌ DON'T:**
+
 - Generate overly broad reports (slow, too much data)
 - Share reports with unauthorized persons
 - Make decisions on incomplete data
@@ -2005,6 +2133,7 @@ This is an automated message from CSMS.
 - Schedule too many automated reports (email overload)
 
 **Data Quality Tips:**
+
 - Verify totals make sense
 - Cross-check with multiple reports
 - Report data issues to Administrator
@@ -2012,6 +2141,7 @@ This is an automated message from CSMS.
 - Use appropriate date ranges
 
 **Presentation Tips:**
+
 - Use charts for trends
 - Summarize key findings first
 - Provide context and explanations
@@ -2025,6 +2155,7 @@ This is an automated message from CSMS.
 **Duration:** 2 hours
 
 **Learning Objectives:**
+
 - ✅ Create and manage user accounts
 - ✅ Configure institutions
 - ✅ Reset passwords and unlock accounts
@@ -2083,6 +2214,7 @@ This is an automated message from CSMS.
    - Welcome email sent to user automatically
 
 **Welcome Email Template:**
+
 ```
 Subject: Welcome to CSMS
 
@@ -2106,6 +2238,7 @@ CSMS Administrator
 ```
 
 **Important:**
+
 - Username cannot be changed later
 - Email cannot be reused (even for deleted accounts)
 - Temporary password expires after 24 hours
@@ -2133,6 +2266,7 @@ CSMS Administrator
 2. Click **"Edit"** button
 
 **Editable Fields:**
+
 - ✅ Full Name
 - ✅ Email (must remain unique)
 - ✅ Phone Number
@@ -2141,6 +2275,7 @@ CSMS Administrator
 - ✅ Status
 
 **Non-Editable Fields:**
+
 - ❌ Username (permanent)
 - ❌ Password (use reset function)
 - ❌ Created Date
@@ -2148,7 +2283,8 @@ CSMS Administrator
 3. Make changes
 4. Click **"Save Changes"**
 
-**Important:** 
+**Important:**
+
 - If role changes, user must logout and login again
 - User receives email notification of changes
 - All changes logged in audit trail
@@ -2156,6 +2292,7 @@ CSMS Administrator
 **Activating/Deactivating Accounts:**
 
 **To Activate:**
+
 - Find inactive user
 - Click **"Activate"**
 - Confirm action
@@ -2163,6 +2300,7 @@ CSMS Administrator
 - Failed login counter reset
 
 **To Deactivate:**
+
 - Find active user
 - Click **"Deactivate"**
 - Provide reason (required)
@@ -2176,11 +2314,13 @@ CSMS Administrator
 ⚠️ **CAUTION: This is a serious action**
 
 **Cannot Delete If:**
+
 - User has submitted requests
 - User has approved requests
 - User has audit log entries (always has)
 
 **Soft Delete Process:**
+
 1. Find user
 2. Click **"Delete"**
 3. System checks dependencies
@@ -2191,6 +2331,7 @@ CSMS Administrator
 8. Audit entry created
 
 **What Happens:**
+
 - User immediately logged out
 - Cannot login
 - Historical data preserved (for audit)
@@ -2203,6 +2344,7 @@ CSMS Administrator
 **Resetting User Password:**
 
 **When to Reset:**
+
 - User forgets password
 - Account security concern
 - User locked out
@@ -2218,6 +2360,7 @@ CSMS Administrator
 7. User receives email with temporary password
 
 **Password Reset Email:**
+
 ```
 Subject: CSMS Password Reset
 
@@ -2232,11 +2375,12 @@ Please login and change your password immediately.
 
 Login: https://csms.go.tz
 
-If you did not request this reset, contact the 
+If you did not request this reset, contact the
 administrator immediately.
 ```
 
 **Manual Password Provision:**
+
 - If email fails, provide password manually
 - Call user or meet in person
 - Do NOT send via SMS or other unsecure means
@@ -2244,6 +2388,7 @@ administrator immediately.
 **Unlocking Locked Accounts:**
 
 **Account Locked When:**
+
 - 5 failed login attempts
 - Auto-lock duration: 15 minutes
 
@@ -2285,6 +2430,7 @@ administrator immediately.
 4. Click **"Save"**
 
 **Important:**
+
 - Do NOT delete institutions with active employees
 - Do NOT delete institutions with users assigned
 - Deletion is permanent - use with extreme caution
@@ -2302,7 +2448,7 @@ administrator immediately.
 2. **Filter Audit Logs:**
    - **Date Range:** Last 24 hours, Last 7 days, Last 30 days, Custom
    - **User:** All or specific user
-   - **Action Type:** 
+   - **Action Type:**
      - LOGIN
      - LOGOUT
      - CREATE
@@ -2323,6 +2469,7 @@ administrator immediately.
 3. **View Log Entries:**
 
 Each log shows:
+
 - Timestamp (date and time)
 - Username and role
 - Action performed
@@ -2334,6 +2481,7 @@ Each log shows:
 - Error message (if failed)
 
 **Example Audit Entry:**
+
 ```
 Timestamp: 2025-12-25 14:30:15
 User: johndoe (HRO)
@@ -2348,24 +2496,29 @@ Result: Success
 **Common Audit Investigations:**
 
 **1. Failed Login Attempts:**
+
 - Filter: Action=LOGIN, Result=Failed
 - Check for patterns (brute force attack?)
 - Check IP addresses
 
 **2. Unauthorized Access Attempts:**
+
 - Filter: Action=ACCESS_DENIED
 - Review user roles and permissions
 
 **3. Data Modifications:**
+
 - Filter: Action=UPDATE, DELETE
 - Review before/after values
 - Verify authorization
 
 **4. Off-Hours Activity:**
+
 - Filter: Time range outside 8 AM - 5 PM
 - Investigate unusual activity
 
 **Security Alerts:**
+
 - System auto-generates alerts for suspicious activity
 - Review alerts daily
 - Investigate and document findings
@@ -2429,6 +2582,7 @@ Result: Success
 #### 3.6.7 ADMIN: Best Practices
 
 **✅ DO:**
+
 - Create accounts promptly when requested
 - Use principle of least privilege (minimal role needed)
 - Reset passwords immediately when requested
@@ -2442,6 +2596,7 @@ Result: Success
 - Maintain user account documentation
 
 **❌ DON'T:**
+
 - Create admin accounts unnecessarily
 - Share admin credentials
 - Ignore failed login patterns
@@ -2454,6 +2609,7 @@ Result: Success
 - Create accounts without approval
 
 **Security Best Practices:**
+
 - Review user access quarterly
 - Deactivate accounts for departed staff immediately
 - Enforce strong password policy
@@ -2471,6 +2627,7 @@ Result: Success
 **Scenario:** Employee has completed 12 months probation and is ready for confirmation.
 
 **Actors:**
+
 - Employee: Ali Juma Ali
 - HRO: Fatma Said (Ministry of Health)
 - HHRMD: Hassan Khamis
@@ -2520,9 +2677,10 @@ Result: Success
 10. Adds comment: "Approved. Effective date: January 15, 2025"
 11. Confirms approval
 12. System updates:
-   - Request status: Approved
-   - Employee status: Confirmed
-   - Confirmation date: January 15, 2025
+
+- Request status: Approved
+- Employee status: Confirmed
+- Confirmation date: January 15, 2025
 
 **Day 2 - Notifications Sent:**
 
@@ -2541,6 +2699,7 @@ Result: Success
 6. Updates employee file manually (if needed)
 
 **Timeline:**
+
 - Day 1: Submission
 - Day 2: Approval
 - Total: 1 business day (excellent!)
@@ -2566,16 +2725,18 @@ Result: Success
 3. Clicks "Reject"
 4. Selects category: "Policy Violation"
 5. Provides reason:
+
    ```
-   "This LWOP request is rejected because 'spouse 
-   relocation' is a prohibited reason according to 
-   CSC Regulation 5.2.3. 
-   
-   If the employee has other valid grounds for LWOP 
-   (e.g., pursuing postgraduate studies, medical 
-   treatment, etc.), please submit a new request with 
+   "This LWOP request is rejected because 'spouse
+   relocation' is a prohibited reason according to
+   CSC Regulation 5.2.3.
+
+   If the employee has other valid grounds for LWOP
+   (e.g., pursuing postgraduate studies, medical
+   treatment, etc.), please submit a new request with
    appropriate justification and supporting documents."
    ```
+
 6. Confirms rejection
 7. Status: Rejected
 
@@ -2619,20 +2780,22 @@ Result: Success
 3. Category: Job-Related
 4. Subcategory: Unfair Treatment
 5. Description:
+
    ```
-   "My supervisor repeatedly assigns me overtime work 
-   without compensation while other staff members are 
-   not given such tasks. This has been happening for 
-   the past 3 months. When I requested explanation, 
-   supervisor told me to 'just do the work or leave'. 
-   
-   I have worked overtime 45 hours in November and 
-   38 hours in December without any overtime pay, while 
+   "My supervisor repeatedly assigns me overtime work
+   without compensation while other staff members are
+   not given such tasks. This has been happening for
+   the past 3 months. When I requested explanation,
+   supervisor told me to 'just do the work or leave'.
+
+   I have worked overtime 45 hours in November and
+   38 hours in December without any overtime pay, while
    colleagues work normal hours.
-   
-   This affects my ability to care for my family and 
+
+   This affects my ability to care for my family and
    is creating financial hardship."
    ```
+
 6. Incident Date: December 15, 2025
 7. Uploads:
    - Photos of overtime log book (3 files)
@@ -2655,7 +2818,7 @@ Result: Success
 7. Status: Under Review
 8. Sends acknowledgment:
    ```
-   "Your complaint has been received and assigned 
+   "Your complaint has been received and assigned
    to investigator. We will contact you within 2 days."
    ```
 
@@ -2673,6 +2836,7 @@ Result: Success
 **Day 6 - Investigation Complete:**
 
 **Findings:**
+
 - Employee's claims verified ✅
 - Supervisor confirms assigning overtime
 - Overtime log book shows 83 hours in 2 months
@@ -2685,24 +2849,26 @@ Result: Success
 1. DO clicks "Resolve Complaint"
 2. Resolution Type: Upheld
 3. Resolution Summary:
+
    ```
-   "Investigation confirmed employee's complaint. 
-   
+   "Investigation confirmed employee's complaint.
+
    Findings:
    - Employee worked 83 hours overtime (Nov-Dec)
    - Other staff averaged 5 hours overtime
    - Supervisor confirmed unequal distribution
    - Overtime compensation was not provided
-   
+
    Actions Taken:
    - Supervisor has been counseled and warned
    - Employee will be compensated for all overtime
    - HR will process payment within 2 pay cycles
    - Supervisor must distribute overtime fairly
    - HR will monitor overtime assignments monthly
-   
+
    Employee may contact DO if issue persists."
    ```
+
 4. Uploads formal resolution letter
 5. Confirms resolution
 6. Status: Resolved
@@ -2812,23 +2978,27 @@ Sheet 7: Charts
 **Issue 1: Cannot Login**
 
 **Symptoms:**
+
 - "Invalid username or password" error
 - Account locked message
 
 **Solutions:**
 
 **If Password Wrong:**
+
 1. Try typing password carefully (check Caps Lock)
 2. If still fails, use "Forgot Password"
 3. Enter email, receive OTP
 4. Reset password
 
 **If Account Locked:**
+
 1. Wait 15 minutes for auto-unlock
 2. Or contact administrator to unlock immediately
 3. After unlock, try login again
 
 **If Employee Login Fails:**
+
 1. Verify all three numbers correct:
    - ZanID (9 digits)
    - Payroll Number
@@ -2841,13 +3011,16 @@ Sheet 7: Charts
 **Issue 2: Session Expired**
 
 **Symptoms:**
+
 - "Session expired" message
 - Automatically logged out
 
 **Cause:**
+
 - 10 minutes of inactivity
 
 **Solutions:**
+
 1. Simply login again
 2. Your work is usually auto-saved
 3. To prevent:
@@ -2859,10 +3032,12 @@ Sheet 7: Charts
 **Issue 3: File Upload Failed**
 
 **Symptoms:**
+
 - "File upload failed" error
 - Upload bar stuck at 0%
 
 **Possible Causes:**
+
 1. File too large (>2MB for documents, >1MB for complaints)
 2. Wrong file type (not PDF for documents)
 3. Network issue
@@ -2871,6 +3046,7 @@ Sheet 7: Charts
 **Solutions:**
 
 **If File Too Large:**
+
 1. Compress PDF file:
    - Use online tool (e.g., ilovepdf.com)
    - Or Adobe Acrobat
@@ -2878,17 +3054,20 @@ Sheet 7: Charts
 2. Re-upload compressed file
 
 **If Wrong File Type:**
+
 1. Convert document to PDF
 2. Use Microsoft Word: Save As → PDF
 3. Or use online converter
 4. Re-upload PDF
 
 **If Network Issue:**
+
 1. Check internet connection
 2. Try again when connection is stable
 3. Try different browser
 
 **If Server Issue:**
+
 1. Wait 5 minutes
 2. Try again
 3. If persists, contact support
@@ -2898,10 +3077,12 @@ Sheet 7: Charts
 **Issue 4: Cannot See Employee/Request**
 
 **Symptoms:**
+
 - Employee/request not appearing in list
 - Search returns no results
 
 **Possible Causes:**
+
 1. Wrong institution (for HRO/HRRP)
 2. Wrong filters applied
 3. Employee/request doesn't exist
@@ -2910,20 +3091,24 @@ Sheet 7: Charts
 **Solutions:**
 
 **Check Filters:**
+
 1. Click "Clear Filters"
 2. Try search again
 
 **Verify Institution (HRO/HRRP):**
+
 1. Check which institution you're assigned to
 2. You can ONLY see your institution's data
 3. If employee is in different institution, contact their HRO
 
 **Verify Permissions:**
+
 1. Check your role
 2. Some data restricted by role
 3. For example: HRMO cannot see complaints
 
 **Verify Existence:**
+
 1. Check spelling of name/payroll
 2. Try partial search
 3. Ask colleague to verify
@@ -2933,10 +3118,12 @@ Sheet 7: Charts
 **Issue 5: Report Generation Failed**
 
 **Symptoms:**
+
 - "Report generation failed" error
 - Very long wait time (>5 minutes)
 
 **Possible Causes:**
+
 1. Too much data requested
 2. Server busy
 3. Invalid parameters
@@ -2945,16 +3132,19 @@ Sheet 7: Charts
 **Solutions:**
 
 **Reduce Data Range:**
+
 1. Narrow date range
 2. Filter by institution
 3. Smaller data = faster report
 
 **Check Parameters:**
+
 1. Verify date range valid (From < To)
 2. Check all required fields filled
 3. Try different format (PDF vs Excel)
 
 **Try Again:**
+
 1. Wait a few minutes
 2. Try during off-peak hours (early morning)
 3. Contact support if persists
@@ -2964,9 +3154,11 @@ Sheet 7: Charts
 **Issue 6: Forgot Username**
 
 **Symptoms:**
+
 - Don't remember username
 
 **Solution:**
+
 1. Check welcome email (when account created)
 2. Contact administrator
 3. Provide:
@@ -2980,11 +3172,13 @@ Sheet 7: Charts
 **Issue 7: Dashboard Widgets Not Loading**
 
 **Symptoms:**
+
 - Blank widgets
 - Loading spinner doesn't stop
 - "Error loading data"
 
 **Possible Causes:**
+
 1. Network issue
 2. Server issue
 3. Browser cache issue
@@ -2992,20 +3186,24 @@ Sheet 7: Charts
 **Solutions:**
 
 **Refresh Page:**
+
 1. Press F5 or click browser refresh
 2. Wait for page to reload
 
 **Clear Browser Cache:**
+
 1. Press Ctrl+Shift+Delete
 2. Select "Cached images and files"
 3. Click "Clear data"
 4. Reload CSMS
 
 **Try Different Browser:**
+
 1. If Chrome fails, try Firefox or Edge
 2. If works in different browser, clear original browser cache
 
 **Check Network:**
+
 1. Verify internet connection
 2. Try accessing other websites
 3. Contact IT support if general network issue
@@ -3033,19 +3231,23 @@ Sheet 7: Charts
 **Contacting Support:**
 
 **Level 1: Institution HR Officer**
+
 - For: General questions, account issues, process questions
 - Contact: Your institution's HRO
 
 **Level 2: System Administrator**
+
 - For: Technical issues, account creation, system errors
 - Contact: admin@csm.go.tz (Example)
 
 **Level 3: Technical Support**
+
 - For: System down, critical errors, urgent issues
 - Contact: itsupport@csm.go.tz (Example)
 - Phone: +255-XX-XXXXXXX (Example)
 
 **When Contacting Support, Provide:**
+
 1. Your name and role
 2. Institution
 3. Username (if applicable)
@@ -3056,6 +3258,7 @@ Sheet 7: Charts
 8. Browser and operating system
 
 **Example Support Request:**
+
 ```
 Subject: Cannot Upload Document - Error Message
 
@@ -3066,7 +3269,7 @@ Role: HR Officer
 Institution: Ministry of Health
 Username: fatma.said
 
-Problem: I cannot upload confirmation letter for 
+Problem: I cannot upload confirmation letter for
 employee Ali Juma Ali.
 
 What I'm doing:
@@ -3104,20 +3307,24 @@ Fatma
 4. **Safari 14+** (macOS only, acceptable)
 
 **Not Supported:**
+
 - ❌ Internet Explorer (all versions)
 - ❌ Mobile browsers (use desktop)
 
 **Browser Settings:**
+
 - ✅ JavaScript: Enabled
 - ✅ Cookies: Enabled
 - ✅ Pop-ups: Allow for CSMS site
 - ✅ Downloads: Allowed
 
 **To Check JavaScript:**
+
 1. Chrome: Settings → Privacy and Security → Site Settings → JavaScript → Allowed
 2. Firefox: about:config → javascript.enabled → true
 
 **To Enable Cookies:**
+
 1. Chrome: Settings → Privacy and Security → Cookies → Allow all cookies (or allow for CSMS site)
 2. Firefox: Options → Privacy & Security → Cookies → Accept cookies
 
@@ -3126,6 +3333,7 @@ Fatma
 ### 5.4 Tips for Better Performance
 
 **For Faster Page Loading:**
+
 1. Use Chrome (fastest)
 2. Close unnecessary browser tabs
 3. Clear browser cache weekly
@@ -3133,6 +3341,7 @@ Fatma
 5. Use wired internet (not WiFi) if possible
 
 **For Reliable File Uploads:**
+
 1. Compress PDFs before upload
 2. Use stable internet connection
 3. Upload one file at a time
@@ -3140,6 +3349,7 @@ Fatma
 5. Wait for confirmation before closing
 
 **For Accurate Data Entry:**
+
 1. Type carefully
 2. Double-check before submitting
 3. Use copy-paste for long numbers (payroll, IDs)
@@ -3152,30 +3362,31 @@ Fatma
 
 ### Appendix A: Keyboard Shortcuts
 
-| Shortcut | Action |
-|----------|--------|
-| **Ctrl + S** | Save draft (if available) |
-| **Ctrl + F** | Find on page |
-| **Escape** | Close modal/dialog |
-| **Enter** | Submit form (when on button) |
-| **Tab** | Move to next field |
-| **Shift + Tab** | Move to previous field |
-| **F5** | Refresh page |
-| **Ctrl + P** | Print current page |
+| Shortcut        | Action                       |
+| --------------- | ---------------------------- |
+| **Ctrl + S**    | Save draft (if available)    |
+| **Ctrl + F**    | Find on page                 |
+| **Escape**      | Close modal/dialog           |
+| **Enter**       | Submit form (when on button) |
+| **Tab**         | Move to next field           |
+| **Shift + Tab** | Move to previous field       |
+| **F5**          | Refresh page                 |
+| **Ctrl + P**    | Print current page           |
 
 ### Appendix B: File Requirements Summary
 
-| Document Type | Format | Max Size | Notes |
-|---------------|--------|----------|-------|
-| Employee Documents | PDF | 2MB | Ardhilhali, contracts, certificates |
-| Request Attachments | PDF | 2MB | All request supporting documents |
-| Decision Letters | PDF | 2MB | Signed approval/rejection letters |
-| Complaint Evidence | PDF, JPEG, PNG | 1MB | Max 5 files |
-| Profile Images | JPEG, PNG | 2MB | Passport-size photo |
+| Document Type       | Format         | Max Size | Notes                               |
+| ------------------- | -------------- | -------- | ----------------------------------- |
+| Employee Documents  | PDF            | 2MB      | Ardhilhali, contracts, certificates |
+| Request Attachments | PDF            | 2MB      | All request supporting documents    |
+| Decision Letters    | PDF            | 2MB      | Signed approval/rejection letters   |
+| Complaint Evidence  | PDF, JPEG, PNG | 1MB      | Max 5 files                         |
+| Profile Images      | JPEG, PNG      | 2MB      | Passport-size photo                 |
 
 ### Appendix C: Status Definitions
 
 **Employee Statuses:**
+
 - **On Probation:** Employee in initial 12-18 month evaluation period
 - **Confirmed:** Employee who passed probation
 - **On LWOP:** Employee on approved leave without pay
@@ -3186,12 +3397,14 @@ Fatma
 - **Deceased:** Employee passed away
 
 **Request Statuses:**
+
 - **Pending:** Awaiting approval decision
 - **Approved:** Request approved by approver
 - **Rejected:** Request rejected with reason
 - **Returned:** Sent back to HRO for corrections
 
 **Complaint Statuses:**
+
 - **Pending:** Awaiting DO assignment
 - **Under Review:** Being investigated by DO
 - **Resolved:** Complaint investigated and closed
@@ -3199,26 +3412,28 @@ Fatma
 
 ### Appendix D: Glossary
 
-| Term | Swahili | Definition |
-|------|---------|------------|
-| **Ardhilhali** | Ardhilhali | Employment certificate document |
-| **Cadre** | Ngazi | Job category or classification |
-| **Confirmation** | Uthibitisho | Making probationary employee permanent |
-| **LWOP** | Likizo bila Malipo | Leave Without Pay (unpaid leave) |
-| **Probation** | Kipindi cha Mtihani | Initial employment evaluation period |
-| **SLA** | SLA | Service Level Agreement (time target) |
-| **Termination** | Kufukuzwa | Separation due to disciplinary action |
-| **ZanID** | Kitambulisho cha Zanzibar | Zanzibar National ID Number |
-| **ZSSF** | ZSSF | Zanzibar Social Security Fund Number |
+| Term             | Swahili                   | Definition                             |
+| ---------------- | ------------------------- | -------------------------------------- |
+| **Ardhilhali**   | Ardhilhali                | Employment certificate document        |
+| **Cadre**        | Ngazi                     | Job category or classification         |
+| **Confirmation** | Uthibitisho               | Making probationary employee permanent |
+| **LWOP**         | Likizo bila Malipo        | Leave Without Pay (unpaid leave)       |
+| **Probation**    | Kipindi cha Mtihani       | Initial employment evaluation period   |
+| **SLA**          | SLA                       | Service Level Agreement (time target)  |
+| **Termination**  | Kufukuzwa                 | Separation due to disciplinary action  |
+| **ZanID**        | Kitambulisho cha Zanzibar | Zanzibar National ID Number            |
+| **ZSSF**         | ZSSF                      | Zanzibar Social Security Fund Number   |
 
 ### Appendix E: Quick Reference Card
 
 **Login:**
+
 1. Go to CSMS website
 2. Enter username and password
 3. Click Login
 
 **Submit Request (HRO):**
+
 1. Requests → Type → New Request
 2. Select Employee
 3. Fill Form
@@ -3226,6 +3441,7 @@ Fatma
 5. Submit
 
 **Approve Request (HHRMD/HRMO):**
+
 1. Requests → Pending Approvals
 2. Click Request
 3. Review Details
@@ -3234,6 +3450,7 @@ Fatma
 6. Confirm
 
 **Submit Complaint (Employee):**
+
 1. Employee Login (ZanID/Payroll/ZSSF)
 2. Submit Complaint
 3. Select Category
@@ -3242,6 +3459,7 @@ Fatma
 6. Submit
 
 **Generate Report (PO):**
+
 1. Reports
 2. Select Report Type
 3. Set Parameters
@@ -3250,6 +3468,7 @@ Fatma
 6. Download
 
 **Emergency Contacts:**
+
 - Administrator: admin@csm.go.tz
 - IT Support: itsupport@csm.go.tz
 - Help Desk: +255-XX-XXXXXXX
@@ -3260,26 +3479,27 @@ Fatma
 
 **This is to certify that:**
 
-**Name:** _______________________________
+**Name:** **\*\***\*\***\*\***\_\_\_**\*\***\*\***\*\***
 
-**Institution:** _______________________________
+**Institution:** **\*\***\*\***\*\***\_\_\_**\*\***\*\***\*\***
 
-**Role:** _______________________________
+**Role:** **\*\***\*\***\*\***\_\_\_**\*\***\*\***\*\***
 
 **Has successfully completed CSMS training on:**
 
-**Date:** _______________________________
+**Date:** **\*\***\*\***\*\***\_\_\_**\*\***\*\***\*\***
 
 **Topics Covered:**
+
 - ☐ System Introduction
 - ☐ Login and Navigation
 - ☐ Role-Specific Functions
 - ☐ Common Tasks
 - ☐ Troubleshooting
 
-**Trainer:** _______________________________
+**Trainer:** **\*\***\*\***\*\***\_\_\_**\*\***\*\***\*\***
 
-**Signature:** _______________________________
+**Signature:** **\*\***\*\***\*\***\_\_\_**\*\***\*\***\*\***
 
 ---
 
@@ -3299,6 +3519,6 @@ Fatma
 
 **END OF TRAINING MANUAL**
 
-*For the latest version of this manual, visit: https://csms.go.tz/training*
+_For the latest version of this manual, visit: https://csms.go.tz/training_
 
-*Version 1.0 | December 25, 2025*
+_Version 1.0 | December 25, 2025_

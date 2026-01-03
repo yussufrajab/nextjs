@@ -33,6 +33,7 @@ npx tsx scripts/fetch-all-institution-documents.ts
 ```
 
 This will:
+
 - Process all institutions in the database
 - Fetch documents for all employees in each institution
 - Add a 3-second delay between institutions
@@ -67,6 +68,7 @@ Body: { institutionId: "..." }
 ```
 
 This endpoint:
+
 - Fetches all employees for the institution from the database
 - Makes **3 separate HRIMS API calls per employee** (one for each document type):
   - RequestBody: `2` → Ardhil Hali (CV)
@@ -83,11 +85,13 @@ This endpoint:
 The script fetches the following document types:
 
 **Core Documents:**
+
 - **Ardhil Hali** (CV) - Stored in `ardhilHaliUrl` field
 - **Job Contract** - Stored in `jobContractUrl` field
 - **Birth Certificate** - Stored in `birthCertificateUrl` field
 
 **Educational Certificates:**
+
 - Certificate of Secondary education (Form IV)
 - Advanced Certificate of Secondary education (Form VII)
 - Certificate
@@ -110,6 +114,7 @@ The script shows real-time progress with detailed statistics:
 ```
 
 Legend:
+
 - ✓ = Successful (all documents fetched)
 - ⚠ = Partial (some documents fetched)
 - ✗ = Failed (no documents fetched)
@@ -218,11 +223,11 @@ Documents are stored in MinIO with the following structure:
 
 ### Document Type Mapping
 
-| HRIMS Document | Database Field | MinIO Filename Pattern |
-|---------------|----------------|------------------------|
-| Ardhil Hali | `ardhilHaliUrl` | `{employeeId}_ardhilHali.pdf` |
-| Job Contract | `jobContractUrl` | `{employeeId}_jobContract.pdf` |
-| Birth Certificate | `birthCertificateUrl` | `{employeeId}_birthCertificate.pdf` |
+| HRIMS Document           | Database Field              | MinIO Filename Pattern                |
+| ------------------------ | --------------------------- | ------------------------------------- |
+| Ardhil Hali              | `ardhilHaliUrl`             | `{employeeId}_ardhilHali.pdf`         |
+| Job Contract             | `jobContractUrl`            | `{employeeId}_jobContract.pdf`        |
+| Birth Certificate        | `birthCertificateUrl`       | `{employeeId}_birthCertificate.pdf`   |
 | Educational Certificates | `EmployeeCertificate` table | `{employeeId}_certificate_{type}.pdf` |
 
 ## HRIMS API Details
@@ -234,7 +239,7 @@ The script uses HRIMS RequestId `206` with three different RequestBody values:
   "RequestId": "206",
   "SearchCriteria": "{payrollNumber}",
   "RequestPayloadData": {
-    "RequestBody": "2"  // or "3" or "4"
+    "RequestBody": "2" // or "3" or "4"
   }
 }
 ```
@@ -244,6 +249,7 @@ The script uses HRIMS RequestId `206` with three different RequestBody values:
 - **RequestBody: "4"** → Birth Certificate
 
 Each API call returns an array of attachments with:
+
 - `attachmentType`: String identifying the document type
 - `attachmentContent`: Base64-encoded PDF content
 - `contentSize`: Size of the attachment in bytes
@@ -259,6 +265,7 @@ Each API call returns an array of attachments with:
 ### Estimated Duration
 
 For 50 institutions with ~100 employees each:
+
 - Per document type: ~2-3 seconds (includes 2s delay)
 - Per employee: ~6-9 seconds (3 document types)
 - Per institution: ~10-15 minutes (100 employees)
@@ -280,6 +287,7 @@ For 50 institutions with ~100 employees each:
 ### API Connection Errors
 
 If you get connection errors, ensure:
+
 1. The Next.js app is running on the specified port (default: 9002)
 2. Update `API_BASE_URL` if running on a different URL
 3. Check that the API endpoint is accessible: `/api/hrims/fetch-documents-by-institution`
@@ -287,6 +295,7 @@ If you get connection errors, ensure:
 ### MinIO Errors
 
 If documents fail to upload to MinIO:
+
 1. Check MinIO server is running
 2. Verify MinIO credentials in environment variables
 3. Ensure the `documents` bucket exists
@@ -295,6 +304,7 @@ If documents fail to upload to MinIO:
 ### HRIMS API Errors
 
 If HRIMS returns errors:
+
 1. Check network connectivity to HRIMS server (http://10.0.217.11:8135)
 2. Verify API credentials in `/src/app/api/hrims/fetch-documents-by-institution/route.ts`
 3. Check HRIMS server status and load
@@ -304,6 +314,7 @@ If HRIMS returns errors:
 ### Timeout Errors
 
 If you encounter timeout errors:
+
 1. The script uses a 120-second timeout per HRIMS request
 2. Increase the timeout in the API route if needed
 3. Check HRIMS server performance
@@ -311,6 +322,7 @@ If you encounter timeout errors:
 ### Partial Results
 
 If many employees show partial results:
+
 1. Check HRIMS logs for specific document type failures
 2. Some employees may not have all documents in HRIMS
 3. Verify document type codes are correct (2, 3, 4)
@@ -318,6 +330,7 @@ If many employees show partial results:
 ## Monitoring
 
 Watch for:
+
 - Institutions with high failure or partial rates
 - Consistent HRIMS API errors for specific document types
 - MinIO upload failures
@@ -329,15 +342,15 @@ Failed institutions can be re-run manually through the web UI at:
 
 ## Comparison with Photo Fetch Script
 
-| Feature | Document Fetch | Photo Fetch |
-|---------|---------------|-------------|
-| API calls per employee | 3 (one per document type) | 1 |
-| Delay between institutions | 3 seconds | 2 seconds |
-| Processing time per employee | 6-9 seconds | 0.1-0.3 seconds |
-| Storage location | `employee-documents/` | `employee-photos/` |
-| File format | PDF | JPG/PNG/WebP |
-| Success levels | Success/Partial/Failed | Success/Failed/Skipped |
-| Typical duration (50 inst.) | 2-3 hours | 45-60 minutes |
+| Feature                      | Document Fetch            | Photo Fetch            |
+| ---------------------------- | ------------------------- | ---------------------- |
+| API calls per employee       | 3 (one per document type) | 1                      |
+| Delay between institutions   | 3 seconds                 | 2 seconds              |
+| Processing time per employee | 6-9 seconds               | 0.1-0.3 seconds        |
+| Storage location             | `employee-documents/`     | `employee-photos/`     |
+| File format                  | PDF                       | JPG/PNG/WebP           |
+| Success levels               | Success/Partial/Failed    | Success/Failed/Skipped |
+| Typical duration (50 inst.)  | 2-3 hours                 | 45-60 minutes          |
 
 ## Advanced Usage
 
@@ -349,9 +362,11 @@ If you need to re-run for specific institutions, modify the script to filter:
 const institutions = await db.institution.findMany({
   where: {
     // Add filter here, e.g.:
-    id: { in: ['inst-id-1', 'inst-id-2'] }
+    id: { in: ['inst-id-1', 'inst-id-2'] },
   },
-  select: { /* ... */ },
+  select: {
+    /* ... */
+  },
 });
 ```
 
@@ -381,6 +396,7 @@ const DELAY_BETWEEN_INSTITUTIONS = 5000; // Increase to 5 seconds
 ## Support
 
 For issues or questions:
+
 1. Check the troubleshooting section above
 2. Review the API endpoint logs: `/api/hrims/fetch-documents-by-institution`
 3. Test individual institution processing through the web UI

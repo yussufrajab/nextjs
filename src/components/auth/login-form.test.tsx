@@ -62,7 +62,9 @@ describe('LoginForm', () => {
 
       expect(screen.getByLabelText(/username or email/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /login/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /login/i })
+      ).toBeInTheDocument();
     });
 
     it('should render empty input fields initially', () => {
@@ -102,7 +104,9 @@ describe('LoginForm', () => {
       await user.click(loginButton);
 
       await waitFor(() => {
-        expect(screen.getByText(/username or email is required/i)).toBeInTheDocument();
+        expect(
+          screen.getByText(/username or email is required/i)
+        ).toBeInTheDocument();
       });
     });
 
@@ -126,7 +130,9 @@ describe('LoginForm', () => {
       await user.click(loginButton);
 
       await waitFor(() => {
-        expect(screen.getByText(/username or email is required/i)).toBeInTheDocument();
+        expect(
+          screen.getByText(/username or email is required/i)
+        ).toBeInTheDocument();
         expect(screen.getByText(/password is required/i)).toBeInTheDocument();
       });
     });
@@ -147,8 +153,12 @@ describe('LoginForm', () => {
       await user.click(screen.getByRole('button', { name: /login/i }));
 
       await waitFor(() => {
-        expect(screen.queryByText(/username or email is required/i)).not.toBeInTheDocument();
-        expect(screen.queryByText(/password is required/i)).not.toBeInTheDocument();
+        expect(
+          screen.queryByText(/username or email is required/i)
+        ).not.toBeInTheDocument();
+        expect(
+          screen.queryByText(/password is required/i)
+        ).not.toBeInTheDocument();
       });
     });
   });
@@ -214,7 +224,19 @@ describe('LoginForm', () => {
     it('should show loading state during submission', async () => {
       const user = userEvent.setup();
       mockLogin.mockImplementation(
-        () => new Promise((resolve) => setTimeout(() => resolve({ id: '1', username: 'test', role: 'HRO', name: 'Test' }), 100))
+        () =>
+          new Promise((resolve) =>
+            setTimeout(
+              () =>
+                resolve({
+                  id: '1',
+                  username: 'test',
+                  role: 'HRO',
+                  name: 'Test',
+                }),
+              100
+            )
+          )
       );
 
       render(<LoginForm />);
@@ -326,7 +348,9 @@ describe('LoginForm', () => {
 
       await waitFor(() => {
         expect(mockLogin).not.toHaveBeenCalled();
-        expect(screen.getByText(/username or email is required/i)).toBeInTheDocument();
+        expect(
+          screen.getByText(/username or email is required/i)
+        ).toBeInTheDocument();
       });
     });
   });
@@ -347,7 +371,10 @@ describe('LoginForm', () => {
 
       render(<LoginForm />);
 
-      await user.type(screen.getByLabelText(/username or email/i), 'test@user.com');
+      await user.type(
+        screen.getByLabelText(/username or email/i),
+        'test@user.com'
+      );
       await user.type(screen.getByLabelText(/password/i), 'Password123!');
       await user.click(screen.getByRole('button', { name: /login/i }));
 
@@ -367,13 +394,19 @@ describe('LoginForm', () => {
 
       render(<LoginForm />);
 
-      await user.type(screen.getByLabelText(/username or email/i), '  testuser  ');
+      await user.type(
+        screen.getByLabelText(/username or email/i),
+        '  testuser  '
+      );
       await user.type(screen.getByLabelText(/password/i), '  Password123!  ');
       await user.click(screen.getByRole('button', { name: /login/i }));
 
       await waitFor(() => {
         // Should preserve whitespace (backend will handle trimming if needed)
-        expect(mockLogin).toHaveBeenCalledWith('  testuser  ', '  Password123!  ');
+        expect(mockLogin).toHaveBeenCalledWith(
+          '  testuser  ',
+          '  Password123!  '
+        );
       });
     });
   });

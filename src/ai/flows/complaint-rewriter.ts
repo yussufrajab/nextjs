@@ -8,22 +8,28 @@
  * - StandardizeComplaintFormattingOutput - The return type for the standardizeComplaintFormatting function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { ai } from '@/ai/genkit';
+import { z } from 'genkit';
 
 const StandardizeComplaintFormattingInputSchema = z.object({
   complaintText: z
     .string()
     .describe('The original text of the employee complaint.'),
 });
-export type StandardizeComplaintFormattingInput = z.infer<typeof StandardizeComplaintFormattingInputSchema>;
+export type StandardizeComplaintFormattingInput = z.infer<
+  typeof StandardizeComplaintFormattingInputSchema
+>;
 
 const StandardizeComplaintFormattingOutputSchema = z.object({
   rewrittenComplaint: z
     .string()
-    .describe('The rewritten complaint text, conforming to civil service commission standards.'),
+    .describe(
+      'The rewritten complaint text, conforming to civil service commission standards.'
+    ),
 });
-export type StandardizeComplaintFormattingOutput = z.infer<typeof StandardizeComplaintFormattingOutputSchema>;
+export type StandardizeComplaintFormattingOutput = z.infer<
+  typeof StandardizeComplaintFormattingOutputSchema
+>;
 
 export async function standardizeComplaintFormatting(
   input: StandardizeComplaintFormattingInput
@@ -33,8 +39,8 @@ export async function standardizeComplaintFormatting(
 
 const prompt = ai.definePrompt({
   name: 'standardizeComplaintFormattingPrompt',
-  input: {schema: StandardizeComplaintFormattingInputSchema},
-  output: {schema: StandardizeComplaintFormattingOutputSchema},
+  input: { schema: StandardizeComplaintFormattingInputSchema },
+  output: { schema: StandardizeComplaintFormattingOutputSchema },
   prompt: `You are an expert in standardizing employee complaints for the civil service commission.
 
 You will receive the original complaint text and rewrite it to conform to the commission's standards, ensuring clarity and compliance, without altering the facts.
@@ -48,8 +54,8 @@ const standardizeComplaintFormattingFlow = ai.defineFlow(
     inputSchema: StandardizeComplaintFormattingInputSchema,
     outputSchema: StandardizeComplaintFormattingOutputSchema,
   },
-  async input => {
-    const {output} = await prompt(input);
+  async (input) => {
+    const { output } = await prompt(input);
     return output!;
   }
 );

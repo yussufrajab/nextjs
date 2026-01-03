@@ -1,4 +1,5 @@
 # Disaster Recovery Plan (DRP)
+
 ## Civil Service Management System (CSMS)
 
 **Document Version:** 1.0
@@ -28,6 +29,7 @@
 This Disaster Recovery Plan (DRP) establishes procedures for recovering the Civil Service Management System (CSMS) in the event of a disaster that impacts system availability. The plan ensures business continuity, minimizes data loss, and provides clear recovery procedures for all critical system components.
 
 ### Critical System Components
+
 - **Application Server**: Next.js 14 application (Port 9002)
 - **Database**: PostgreSQL 14+ (nody database)
 - **Object Storage**: MinIO S3-compatible storage
@@ -35,6 +37,7 @@ This Disaster Recovery Plan (DRP) establishes procedures for recovering the Civi
 - **Process Manager**: PM2 cluster (4 instances)
 
 ### Recovery Objectives
+
 - **Recovery Time Objective (RTO)**: 4 hours
 - **Recovery Point Objective (RPO)**: 24 hours
 - **Maximum Tolerable Downtime (MTD)**: 24 hours
@@ -46,23 +49,23 @@ This Disaster Recovery Plan (DRP) establishes procedures for recovering the Civi
 
 ### 1. Recovery Time Objectives (RTO)
 
-| Component | RTO | Description |
-|-----------|-----|-------------|
-| Database (PostgreSQL) | 4 hours | Time to restore database to operational state |
-| Application Server | 2 hours | Time to deploy and start application |
-| Object Storage (MinIO) | 4 hours | Time to restore file storage system |
-| Web Server (Nginx) | 1 hour | Time to configure and start web server |
-| Full System Recovery | 6 hours | Time to restore complete system functionality |
+| Component              | RTO     | Description                                   |
+| ---------------------- | ------- | --------------------------------------------- |
+| Database (PostgreSQL)  | 4 hours | Time to restore database to operational state |
+| Application Server     | 2 hours | Time to deploy and start application          |
+| Object Storage (MinIO) | 4 hours | Time to restore file storage system           |
+| Web Server (Nginx)     | 1 hour  | Time to configure and start web server        |
+| Full System Recovery   | 6 hours | Time to restore complete system functionality |
 
 ### 2. Recovery Point Objectives (RPO)
 
-| Data Type | RPO | Backup Frequency |
-|-----------|-----|------------------|
-| Database Data | 24 hours | Daily at 02:00 EAT |
-| Employee Documents | 7 days | Weekly on Saturday |
-| Application Code | 1 hour | Git repository (continuous) |
-| Configuration Files | 7 days | Weekly on Sunday |
-| System Logs | 24 hours | Daily rotation and backup |
+| Data Type           | RPO      | Backup Frequency            |
+| ------------------- | -------- | --------------------------- |
+| Database Data       | 24 hours | Daily at 02:00 EAT          |
+| Employee Documents  | 7 days   | Weekly on Saturday          |
+| Application Code    | 1 hour   | Git repository (continuous) |
+| Configuration Files | 7 days   | Weekly on Sunday            |
+| System Logs         | 24 hours | Daily rotation and backup   |
 
 ### 3. Critical Success Factors
 
@@ -86,12 +89,14 @@ This Disaster Recovery Plan (DRP) establishes procedures for recovering the Civi
 **RPO:** 24 hours
 
 **Indicators:**
+
 - Database connection errors in application logs
 - PostgreSQL service not responding
 - Database corruption errors
 - Hardware failure alerts
 
 **Root Causes:**
+
 - Hardware failure (disk, memory, CPU)
 - Database corruption
 - Operating system crash
@@ -99,6 +104,7 @@ This Disaster Recovery Plan (DRP) establishes procedures for recovering the Civi
 - Configuration error during update
 
 **Business Impact:**
+
 - Complete system unavailability
 - All HR operations halted
 - Employee data inaccessible
@@ -115,6 +121,7 @@ This Disaster Recovery Plan (DRP) establishes procedures for recovering the Civi
 **RPO:** 1 hour
 
 **Indicators:**
+
 - HTTP 502/503 errors
 - PM2 process crashes
 - Node.js out of memory errors
@@ -122,6 +129,7 @@ This Disaster Recovery Plan (DRP) establishes procedures for recovering the Civi
 - Application not responding to health checks
 
 **Root Causes:**
+
 - Memory leaks in application
 - Unhandled exceptions causing crashes
 - Deployment errors
@@ -129,6 +137,7 @@ This Disaster Recovery Plan (DRP) establishes procedures for recovering the Civi
 - Operating system issues
 
 **Business Impact:**
+
 - System unavailable to all users
 - Business operations halted
 - Data entry and processing stopped
@@ -144,6 +153,7 @@ This Disaster Recovery Plan (DRP) establishes procedures for recovering the Civi
 **RPO:** 7 days
 
 **Indicators:**
+
 - File upload/download failures
 - MinIO service not responding
 - Storage bucket access errors
@@ -151,6 +161,7 @@ This Disaster Recovery Plan (DRP) establishes procedures for recovering the Civi
 - S3 API connection errors
 
 **Root Causes:**
+
 - Storage disk failure
 - MinIO service crash
 - Network connectivity issues
@@ -158,6 +169,7 @@ This Disaster Recovery Plan (DRP) establishes procedures for recovering the Civi
 - Configuration errors
 
 **Business Impact:**
+
 - Employee documents unavailable
 - Request attachments inaccessible
 - Photo uploads failing
@@ -174,12 +186,14 @@ This Disaster Recovery Plan (DRP) establishes procedures for recovering the Civi
 **RPO:** 24 hours
 
 **Indicators:**
+
 - Server completely unreachable
 - No response to ping or SSH
 - Physical hardware damage
 - Data center notification of hardware failure
 
 **Root Causes:**
+
 - Complete hardware failure
 - Fire or physical damage
 - Power supply failure
@@ -188,6 +202,7 @@ This Disaster Recovery Plan (DRP) establishes procedures for recovering the Civi
 - Severe security breach requiring rebuild
 
 **Business Impact:**
+
 - Complete system outage
 - All services unavailable
 - All 500+ users affected
@@ -204,12 +219,14 @@ This Disaster Recovery Plan (DRP) establishes procedures for recovering the Civi
 **RPO:** 24 hours
 
 **Indicators:**
+
 - Complete loss of connectivity to data center
 - Data center provider notifications
 - Physical access to facility restricted
 - Multiple systems affected
 
 **Root Causes:**
+
 - Natural disasters (flooding, earthquake, fire)
 - Extended power outage
 - Network infrastructure failure
@@ -217,6 +234,7 @@ This Disaster Recovery Plan (DRP) establishes procedures for recovering the Civi
 - HVAC failure causing overheating
 
 **Business Impact:**
+
 - Complete system unavailability
 - Extended recovery time
 - Potential data loss if backups not current
@@ -233,6 +251,7 @@ This Disaster Recovery Plan (DRP) establishes procedures for recovering the Civi
 **RPO:** 24 hours
 
 **Indicators:**
+
 - Unusual authentication patterns
 - Unauthorized access attempts
 - Malware/ransomware detection
@@ -241,6 +260,7 @@ This Disaster Recovery Plan (DRP) establishes procedures for recovering the Civi
 - Unexpected admin account creation
 
 **Root Causes:**
+
 - Ransomware attack
 - Data breach
 - Malware infection
@@ -249,6 +269,7 @@ This Disaster Recovery Plan (DRP) establishes procedures for recovering the Civi
 - Phishing attack success
 
 **Business Impact:**
+
 - System must be taken offline for investigation
 - Potential data confidentiality breach
 - Regulatory compliance implications
@@ -266,12 +287,14 @@ This Disaster Recovery Plan (DRP) establishes procedures for recovering the Civi
 **RPO:** 0 hours (no data loss)
 
 **Indicators:**
+
 - Users cannot access system
 - Network connectivity errors
 - DNS resolution failures
 - Firewall or router failures
 
 **Root Causes:**
+
 - ISP outage
 - Network equipment failure
 - DDoS attack
@@ -279,6 +302,7 @@ This Disaster Recovery Plan (DRP) establishes procedures for recovering the Civi
 - Firewall misconfiguration
 
 **Business Impact:**
+
 - System unreachable but data intact
 - Users cannot perform work
 - External integrations (HRIMS) fail
@@ -294,12 +318,14 @@ This Disaster Recovery Plan (DRP) establishes procedures for recovering the Civi
 **RPO:** 24 hours
 
 **Indicators:**
+
 - Weather warnings or alerts
 - Physical damage to facility
 - Power loss
 - Evacuation orders
 
 **Root Causes:**
+
 - Flooding
 - Tropical storms
 - Earthquakes
@@ -307,6 +333,7 @@ This Disaster Recovery Plan (DRP) establishes procedures for recovering the Civi
 - Extended power outage
 
 **Business Impact:**
+
 - Prolonged system unavailability
 - Staff safety concerns
 - Potential equipment damage
@@ -320,6 +347,7 @@ This Disaster Recovery Plan (DRP) establishes procedures for recovering the Civi
 ### 1. High Availability Architecture
 
 #### Current Architecture
+
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                    Load Balancer (Nginx)                 │
@@ -348,6 +376,7 @@ This Disaster Recovery Plan (DRP) establishes procedures for recovering the Civi
 ```
 
 #### Recommended High Availability Improvements
+
 1. **Database Replication**: Implement PostgreSQL streaming replication
 2. **Load Balancing**: Deploy multiple application servers
 3. **Storage Replication**: MinIO distributed mode across multiple nodes
@@ -356,24 +385,28 @@ This Disaster Recovery Plan (DRP) establishes procedures for recovering the Civi
 ### 2. Backup Strategy
 
 #### Primary Backups (On-site)
+
 - **Location**: `/var/backups/csms/`
 - **Retention**: 30 days (rolling)
 - **Schedule**: Daily at 02:00 EAT
 - **Components**: Database, configurations, logs
 
 #### Secondary Backups (Network Storage)
+
 - **Location**: Network-attached storage (NAS)
 - **Retention**: 90 days
 - **Schedule**: Weekly full backups
 - **Components**: Database, MinIO data, complete system state
 
 #### Offsite Backups (Remote)
+
 - **Location**: Cloud storage or remote data center
 - **Retention**: 365 days (annual archives)
 - **Schedule**: Daily synchronization at 05:00 EAT
 - **Components**: All critical data and configurations
 
 #### Backup Verification
+
 - **Daily**: Automated integrity checks (md5sum verification)
 - **Weekly**: Test restore to staging environment
 - **Monthly**: Full disaster recovery drill
@@ -382,12 +415,14 @@ This Disaster Recovery Plan (DRP) establishes procedures for recovering the Civi
 ### 3. Alternate Site Strategy
 
 #### Cold Site (Current)
+
 - **Location**: Designated backup facility
 - **Setup Time**: 6-8 hours
 - **Equipment**: Minimal (requires hardware procurement/relocation)
 - **Cost**: Low
 
 #### Warm Site (Recommended)
+
 - **Location**: Secondary data center or cloud provider
 - **Setup Time**: 2-4 hours
 - **Equipment**: Pre-configured servers with periodic updates
@@ -395,6 +430,7 @@ This Disaster Recovery Plan (DRP) establishes procedures for recovering the Civi
 - **Benefits**: Faster recovery, reduced downtime
 
 #### Hot Site (Future Consideration)
+
 - **Location**: Active secondary site
 - **Setup Time**: <1 hour (automatic failover)
 - **Equipment**: Fully redundant active system
@@ -404,6 +440,7 @@ This Disaster Recovery Plan (DRP) establishes procedures for recovering the Civi
 ### 4. Data Replication Strategy
 
 #### Database Replication (Recommended Implementation)
+
 ```bash
 # Primary Server Configuration
 # /etc/postgresql/14/main/postgresql.conf
@@ -419,6 +456,7 @@ promote_trigger_file = '/tmp/postgresql.trigger.5432'
 ```
 
 #### File Storage Replication
+
 ```bash
 # MinIO Mirror to Secondary Site
 mc mirror --watch csms-primary/csms-documents csms-secondary/csms-documents
@@ -427,18 +465,21 @@ mc mirror --watch csms-primary/csms-documents csms-secondary/csms-documents
 ### 5. Recovery Prioritization
 
 #### Priority 1 (Critical - Recover First)
+
 1. Database server
 2. Application server (core functionality)
 3. Authentication system
 4. Network connectivity
 
 #### Priority 2 (High - Recover Second)
+
 1. MinIO storage (documents)
 2. Email notifications
 3. HRIMS integration
 4. Reporting functionality
 
 #### Priority 3 (Medium - Recover Third)
+
 1. Advanced features
 2. Analytics and dashboards
 3. Historical data access
@@ -451,6 +492,7 @@ mc mirror --watch csms-primary/csms-documents csms-secondary/csms-documents
 ### Procedure 1: Database Server Recovery
 
 #### Prerequisites
+
 - Access to latest database backup
 - PostgreSQL 14+ installation available
 - Root/sudo access to server
@@ -459,6 +501,7 @@ mc mirror --watch csms-primary/csms-documents csms-secondary/csms-documents
 #### Step-by-Step Recovery
 
 **Step 1: Assess the Situation (15 minutes)**
+
 ```bash
 # Check database service status
 sudo systemctl status postgresql
@@ -474,6 +517,7 @@ sudo -u postgres psql -c "SELECT * FROM pg_stat_activity;"
 ```
 
 **Step 2: Stop All Services (10 minutes)**
+
 ```bash
 # Stop application to prevent connection attempts
 pm2 stop csms-production
@@ -487,6 +531,7 @@ sudo systemctl status postgresql
 ```
 
 **Step 3: Backup Current State (15 minutes)**
+
 ```bash
 # Even if corrupted, backup current state for analysis
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
@@ -499,6 +544,7 @@ sudo mv /tmp/postgresql-failed-state-${TIMESTAMP}.tar.gz /var/backups/incident/
 ```
 
 **Step 4: Restore Database (60 minutes)**
+
 ```bash
 # Remove corrupted database cluster
 sudo -u postgres rm -rf /var/lib/postgresql/14/main/*
@@ -538,6 +584,7 @@ sudo -u postgres psql nody -c "SELECT COUNT(*) FROM \"Employee\";"
 ```
 
 **Step 5: Verify Database Integrity (30 minutes)**
+
 ```bash
 # Run database integrity checks
 sudo -u postgres psql nody <<EOF
@@ -576,6 +623,7 @@ test();
 ```
 
 **Step 6: Restart Application (15 minutes)**
+
 ```bash
 # Start application
 pm2 start ecosystem.config.js
@@ -595,6 +643,7 @@ curl http://localhost:9002/api/test-db
 ```
 
 **Step 7: Verification and Testing (30 minutes)**
+
 ```bash
 # Test critical functions
 # 1. User login
@@ -621,6 +670,7 @@ LIMIT 10;
 ```
 
 **Step 8: Resume Normal Operations (15 minutes)**
+
 ```bash
 # Disable maintenance mode
 sudo rm /var/www/html/index.html
@@ -646,6 +696,7 @@ echo "*/5 * * * * /opt/csms/scripts/enhanced-monitoring.sh" | crontab -
 ### Procedure 2: Application Server Recovery
 
 #### Prerequisites
+
 - Access to latest application code (Git repository)
 - Node.js 18 LTS or 20 LTS installed
 - PM2 installed globally
@@ -654,6 +705,7 @@ echo "*/5 * * * * /opt/csms/scripts/enhanced-monitoring.sh" | crontab -
 #### Step-by-Step Recovery
 
 **Step 1: Assess Application Status (10 minutes)**
+
 ```bash
 # Check PM2 status
 pm2 status
@@ -667,6 +719,7 @@ ls -lh /var/www/csms/
 ```
 
 **Step 2: Stop Application (5 minutes)**
+
 ```bash
 # Stop all PM2 processes
 pm2 stop all
@@ -680,6 +733,7 @@ ps aux | grep node
 ```
 
 **Step 3: Backup Current State (10 minutes)**
+
 ```bash
 # Backup current application directory
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
@@ -694,6 +748,7 @@ sudo cp ~/.pm2/dump.pm2 /var/backups/incident/pm2-dump-${TIMESTAMP}.pm2
 ```
 
 **Step 4: Restore Application (45 minutes)**
+
 ```bash
 # Navigate to application directory
 cd /var/www/csms
@@ -720,6 +775,7 @@ ls -lh .next/
 ```
 
 **Step 5: Restore Configuration (15 minutes)**
+
 ```bash
 # Restore environment configuration
 sudo cp /var/backups/csms/config/.env.production /var/www/csms/.env
@@ -733,6 +789,7 @@ sudo chmod 600 /var/www/csms/.env
 ```
 
 **Step 6: Database Migration (if needed) (20 minutes)**
+
 ```bash
 # Check migration status
 npx prisma migrate status
@@ -748,6 +805,7 @@ npx prisma db pull
 ```
 
 **Step 7: Start Application (15 minutes)**
+
 ```bash
 # Start with PM2
 pm2 start ecosystem.config.js
@@ -764,6 +822,7 @@ pm2 monit
 ```
 
 **Step 8: Verification (20 minutes)**
+
 ```bash
 # Test health endpoint
 curl http://localhost:9002/api/health
@@ -786,6 +845,7 @@ curl https://csms.zanzibar.go.tz/api/health
 ```
 
 **Step 9: Resume Operations (10 minutes)**
+
 ```bash
 # Save PM2 configuration
 pm2 save
@@ -810,6 +870,7 @@ echo "Application server recovery completed at $(date)" | \
 ### Procedure 3: Storage System (MinIO) Recovery
 
 #### Prerequisites
+
 - MinIO backup available
 - MinIO installed and configured
 - Network connectivity operational
@@ -817,6 +878,7 @@ echo "Application server recovery completed at $(date)" | \
 #### Step-by-Step Recovery
 
 **Step 1: Assess MinIO Status (10 minutes)**
+
 ```bash
 # Check MinIO service
 sudo systemctl status minio
@@ -832,6 +894,7 @@ mc admin info local
 ```
 
 **Step 2: Stop MinIO Service (5 minutes)**
+
 ```bash
 # Stop MinIO
 sudo systemctl stop minio
@@ -842,6 +905,7 @@ ps aux | grep minio
 ```
 
 **Step 3: Backup Current State (15 minutes)**
+
 ```bash
 # Backup current MinIO data (if accessible)
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
@@ -854,6 +918,7 @@ sudo cp -r /etc/minio /var/backups/incident/minio-config-${TIMESTAMP}
 ```
 
 **Step 4: Restore MinIO Data (90 minutes)**
+
 ```bash
 # Clear corrupted data
 sudo rm -rf /data/minio/*
@@ -873,6 +938,7 @@ sudo chmod -R 755 /data/minio
 ```
 
 **Step 5: Restore MinIO Configuration (10 minutes)**
+
 ```bash
 # Restore MinIO configuration
 sudo cp /var/backups/csms/config/minio /etc/default/minio
@@ -885,6 +951,7 @@ sudo chmod 600 /etc/default/minio
 ```
 
 **Step 6: Start MinIO Service (10 minutes)**
+
 ```bash
 # Start MinIO
 sudo systemctl start minio
@@ -900,6 +967,7 @@ sudo journalctl -u minio -n 50
 ```
 
 **Step 7: Verification (30 minutes)**
+
 ```bash
 # Configure mc client
 mc alias set local http://localhost:9000 $MINIO_ROOT_USER $MINIO_ROOT_PASSWORD
@@ -926,6 +994,7 @@ mc admin info local
 ```
 
 **Step 8: Application Integration Test (15 minutes)**
+
 ```bash
 # Restart application to reconnect to MinIO
 pm2 restart csms-production
@@ -944,6 +1013,7 @@ curl -I https://csms.zanzibar.go.tz/api/documents/test-id
 ```
 
 **Step 9: Resume Operations (10 minutes)**
+
 ```bash
 # Enable MinIO monitoring
 mc admin trace local &
@@ -967,6 +1037,7 @@ echo "$(date): MinIO storage recovery completed" >> \
 ### Procedure 4: Complete System Recovery (Bare Metal)
 
 #### Prerequisites
+
 - Clean Ubuntu 22.04 LTS server
 - All backup files accessible
 - Network configured
@@ -975,6 +1046,7 @@ echo "$(date): MinIO storage recovery completed" >> \
 #### Step-by-Step Recovery
 
 **Step 1: Prepare Server (30 minutes)**
+
 ```bash
 # Update system
 sudo apt update && sudo apt upgrade -y
@@ -990,6 +1062,7 @@ sudo timedatectl set-timezone Africa/Dar_es_Salaam
 ```
 
 **Step 2: Install Dependencies (45 minutes)**
+
 ```bash
 # Install Node.js 20 LTS
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
@@ -1018,6 +1091,7 @@ sudo mv minio /usr/local/bin/
 ```
 
 **Step 3: Restore PostgreSQL (60 minutes)**
+
 ```bash
 # Start PostgreSQL
 sudo systemctl start postgresql
@@ -1049,6 +1123,7 @@ sudo -u postgres psql nody -c "SELECT COUNT(*) FROM \"User\";"
 ```
 
 **Step 4: Restore Application (45 minutes)**
+
 ```bash
 # Create application user
 sudo useradd -m -s /bin/bash csms
@@ -1081,6 +1156,7 @@ sudo -u csms npx prisma generate
 ```
 
 **Step 5: Restore MinIO (60 minutes)**
+
 ```bash
 # Create MinIO user and directories
 sudo useradd -r -s /sbin/nologin minio
@@ -1128,6 +1204,7 @@ sudo systemctl enable minio
 ```
 
 **Step 6: Configure Nginx (30 minutes)**
+
 ```bash
 # Restore Nginx configuration
 sudo cp /var/backups/csms/config/nginx-csms.conf /etc/nginx/sites-available/csms
@@ -1147,6 +1224,7 @@ sudo systemctl enable nginx
 ```
 
 **Step 7: Start Application (30 minutes)**
+
 ```bash
 # Start application with PM2
 cd /var/www/csms
@@ -1166,6 +1244,7 @@ sudo -u csms pm2 status
 ```
 
 **Step 8: Comprehensive Verification (60 minutes)**
+
 ```bash
 # Test database connectivity
 sudo -u postgres psql nody -c "SELECT COUNT(*) FROM \"User\";"
@@ -1195,6 +1274,7 @@ sudo -u csms pm2 logs csms-production
 ```
 
 **Step 9: Post-Recovery Tasks (30 minutes)**
+
 ```bash
 # Setup monitoring
 sudo cp /var/backups/csms/scripts/monitoring.sh /opt/csms/scripts/
@@ -1240,16 +1320,16 @@ echo "Complete system recovery finished at $(date)" | \
 
 ### 2. Stakeholder Groups
 
-| Stakeholder Group | Communication Method | Update Frequency | Key Information |
-|-------------------|---------------------|------------------|-----------------|
-| Executive Management | Email + Phone | Every 2 hours | Impact, ETA, business implications |
-| IT Leadership | Phone + Slack | Every hour | Technical details, progress, blockers |
-| Recovery Team | Slack + In-person | Continuous | Task assignments, status, coordination |
-| End Users | Email + System Banner | Every 4 hours | Availability, expected restoration time |
-| HR Department | Email + Phone | Every 2 hours | Operational impact, workarounds |
-| PSC Leadership | Email | Every 4 hours | Status summary, regulatory implications |
-| IT Support Staff | Slack + Email | Every hour | User impact, support procedures |
-| Vendors/Partners | Email | As needed | Required assistance, SLA activation |
+| Stakeholder Group    | Communication Method  | Update Frequency | Key Information                         |
+| -------------------- | --------------------- | ---------------- | --------------------------------------- |
+| Executive Management | Email + Phone         | Every 2 hours    | Impact, ETA, business implications      |
+| IT Leadership        | Phone + Slack         | Every hour       | Technical details, progress, blockers   |
+| Recovery Team        | Slack + In-person     | Continuous       | Task assignments, status, coordination  |
+| End Users            | Email + System Banner | Every 4 hours    | Availability, expected restoration time |
+| HR Department        | Email + Phone         | Every 2 hours    | Operational impact, workarounds         |
+| PSC Leadership       | Email                 | Every 4 hours    | Status summary, regulatory implications |
+| IT Support Staff     | Slack + Email         | Every hour       | User impact, support procedures         |
+| Vendors/Partners     | Email                 | As needed        | Required assistance, SLA activation     |
 
 ### 3. Communication Templates
 
@@ -1395,16 +1475,16 @@ IT Operations Manager
 ```html
 <div class="alert alert-warning" role="alert">
   <strong>System Maintenance Notice:</strong>
-  CSMS is currently undergoing emergency recovery procedures.
-  Expected restoration time: [XX:XX EAT].
-  We apologize for the inconvenience.
-  For urgent HR matters, please contact [phone number].
+  CSMS is currently undergoing emergency recovery procedures. Expected
+  restoration time: [XX:XX EAT]. We apologize for the inconvenience. For urgent
+  HR matters, please contact [phone number].
 </div>
 ```
 
 ### 4. Communication Channels
 
 #### Primary Channels
+
 - **Email**: Formal communications, documentation
 - **Phone**: Urgent matters, executive updates
 - **Slack** (#csms-incident): Real-time team coordination
@@ -1440,21 +1520,25 @@ IT Operations Manager
 ### 5. Escalation Procedures
 
 #### Level 1: Initial Response (0-30 minutes)
+
 - **Actions**: Assess incident, activate recovery team, initial notification
 - **Contacts**: IT Operations Manager, Recovery Team Lead
 - **Communication**: Internal team only
 
 #### Level 2: Recovery In Progress (30 minutes - 2 hours)
+
 - **Actions**: Execute recovery procedures, hourly updates
 - **Contacts**: IT Leadership, HR Department
 - **Communication**: Internal stakeholders, affected users
 
 #### Level 3: Extended Outage (2-4 hours)
+
 - **Actions**: Activate alternate procedures, vendor support
 - **Contacts**: Executive Management, PSC Leadership
 - **Communication**: All stakeholders, public announcement
 
 #### Level 4: Critical Escalation (>4 hours)
+
 - **Actions**: Crisis management, media relations, regulatory notification
 - **Contacts**: Director General, Government IT Authority
 - **Communication**: Full transparency, external communications
@@ -1480,9 +1564,11 @@ IT Operations Manager
 ### 2. Role Definitions
 
 #### Incident Commander
+
 **Primary Responsibility**: Overall disaster recovery coordination
 
 **Key Duties**:
+
 - Declare disaster and activate DRP
 - Coordinate all recovery activities
 - Make critical decisions on recovery strategy
@@ -1492,6 +1578,7 @@ IT Operations Manager
 - Approve return to normal operations
 
 **Authority**:
+
 - Override normal change control procedures
 - Authorize emergency expenditures up to $10,000
 - Mobilize resources from other departments
@@ -1502,9 +1589,11 @@ IT Operations Manager
 ---
 
 #### Technical Recovery Lead
+
 **Primary Responsibility**: Execute technical recovery procedures
 
 **Key Duties**:
+
 - Assess technical damage and recovery requirements
 - Coordinate technical team members
 - Execute recovery procedures
@@ -1514,6 +1603,7 @@ IT Operations Manager
 - Document all technical actions taken
 
 **Authority**:
+
 - Direct technical team activities
 - Access all system resources
 - Modify system configurations as needed
@@ -1524,9 +1614,11 @@ IT Operations Manager
 ---
 
 #### Database Administrator
+
 **Primary Responsibility**: Database recovery and verification
 
 **Key Duties**:
+
 - Assess database integrity
 - Execute database recovery procedures
 - Restore from backups
@@ -1536,6 +1628,7 @@ IT Operations Manager
 - Document data loss (if any)
 
 **Skills Required**:
+
 - PostgreSQL administration
 - Backup/restore procedures
 - Database performance tuning
@@ -1546,9 +1639,11 @@ IT Operations Manager
 ---
 
 #### Application Recovery Specialist
+
 **Primary Responsibility**: Application server recovery
 
 **Key Duties**:
+
 - Restore application code
 - Configure application environment
 - Execute database migrations
@@ -1558,6 +1653,7 @@ IT Operations Manager
 - Test critical user workflows
 
 **Skills Required**:
+
 - Next.js application deployment
 - Node.js/npm
 - PM2 process management
@@ -1568,9 +1664,11 @@ IT Operations Manager
 ---
 
 #### Infrastructure Specialist
+
 **Primary Responsibility**: Infrastructure and network recovery
 
 **Key Duties**:
+
 - Restore server infrastructure
 - Configure network connectivity
 - Restore storage systems (MinIO)
@@ -1580,6 +1678,7 @@ IT Operations Manager
 - Ensure high availability configurations
 
 **Skills Required**:
+
 - Linux system administration
 - Nginx configuration
 - MinIO administration
@@ -1590,9 +1689,11 @@ IT Operations Manager
 ---
 
 #### Communications Coordinator
+
 **Primary Responsibility**: Stakeholder communications
 
 **Key Duties**:
+
 - Draft and send incident notifications
 - Provide regular status updates
 - Manage stakeholder expectations
@@ -1602,6 +1703,7 @@ IT Operations Manager
 - Prepare post-incident communications
 
 **Skills Required**:
+
 - Professional communication
 - Stakeholder management
 - Crisis communication
@@ -1612,9 +1714,11 @@ IT Operations Manager
 ---
 
 #### Security Officer
+
 **Primary Responsibility**: Security assessment and compliance
 
 **Key Duties**:
+
 - Assess security implications of disaster
 - Ensure recovery procedures maintain security
 - Investigate if disaster was security-related
@@ -1624,6 +1728,7 @@ IT Operations Manager
 - Ensure compliance with regulations
 
 **Skills Required**:
+
 - Information security
 - Incident response
 - Forensics (basic)
@@ -1634,9 +1739,11 @@ IT Operations Manager
 ---
 
 #### Logistics Coordinator
+
 **Primary Responsibility**: Resource management and support
 
 **Key Duties**:
+
 - Coordinate physical resources
 - Arrange vendor support
 - Manage recovery site access
@@ -1646,6 +1753,7 @@ IT Operations Manager
 - Coordinate with facilities management
 
 **Skills Required**:
+
 - Project coordination
 - Vendor management
 - Resource planning
@@ -1657,18 +1765,18 @@ IT Operations Manager
 
 ### 3. RACI Matrix
 
-| Task | Incident Commander | Technical Lead | DBA | App Specialist | Infra Specialist | Comms | Security |
-|------|-------------------|----------------|-----|----------------|------------------|-------|----------|
-| Declare Disaster | A | C | I | I | I | I | C |
-| Assess Damage | I | A | R | R | R | I | R |
-| Execute DB Recovery | I | C | A | I | I | I | C |
-| Execute App Recovery | I | C | C | A | C | I | I |
-| Execute Infra Recovery | I | C | I | I | A | I | C |
-| Stakeholder Comms | A | I | I | I | I | R | I |
-| Security Assessment | C | I | I | I | I | I | A |
-| Vendor Coordination | A | C | R | R | R | I | I |
-| Approve RTN | A | C | C | C | C | I | C |
-| Post-Incident Report | A | C | R | R | R | R | R |
+| Task                   | Incident Commander | Technical Lead | DBA | App Specialist | Infra Specialist | Comms | Security |
+| ---------------------- | ------------------ | -------------- | --- | -------------- | ---------------- | ----- | -------- |
+| Declare Disaster       | A                  | C              | I   | I              | I                | I     | C        |
+| Assess Damage          | I                  | A              | R   | R              | R                | I     | R        |
+| Execute DB Recovery    | I                  | C              | A   | I              | I                | I     | C        |
+| Execute App Recovery   | I                  | C              | C   | A              | C                | I     | I        |
+| Execute Infra Recovery | I                  | C              | I   | I              | A                | I     | C        |
+| Stakeholder Comms      | A                  | I              | I   | I              | I                | R     | I        |
+| Security Assessment    | C                  | I              | I   | I              | I                | I     | A        |
+| Vendor Coordination    | A                  | C              | R   | R              | R                | I     | I        |
+| Approve RTN            | A                  | C              | C   | C              | C                | I     | C        |
+| Post-Incident Report   | A                  | C              | R   | R              | R                | R     | R        |
 
 **Legend**: A = Accountable, R = Responsible, C = Consulted, I = Informed
 
@@ -1677,6 +1785,7 @@ IT Operations Manager
 ### 4. Team Mobilization Procedures
 
 #### Step 1: Initial Alert
+
 ```bash
 # Automated alert (if monitoring detects outage)
 /opt/csms/scripts/alert-recovery-team.sh "Database Server Failure"
@@ -1687,15 +1796,18 @@ IT Operations Manager
 ```
 
 #### Step 2: Acknowledgment
+
 - All team members must acknowledge within 15 minutes
 - If no acknowledgment, escalate to backup person
 
 #### Step 3: Assembly
+
 - Virtual assembly: Join Slack channel #csms-incident
 - Physical assembly (if needed): IT Operations Center
 - Target assembly time: 30 minutes from alert
 
 #### Step 4: Briefing
+
 - Incident Commander provides situation briefing
 - Assign roles and tasks
 - Establish communication protocols
@@ -1717,11 +1829,13 @@ IT Operations Manager
 ### 2. Testing Types
 
 #### Tabletop Exercise (Quarterly)
+
 **Duration**: 2-3 hours
 **Participants**: Recovery team, management
 **Approach**: Discussion-based walkthrough
 
 **Procedure**:
+
 1. Present disaster scenario
 2. Discuss response actions
 3. Identify decision points
@@ -1729,6 +1843,7 @@ IT Operations Manager
 5. Document findings and gaps
 
 **Success Criteria**:
+
 - All team members understand their roles
 - Communication procedures validated
 - Recovery steps documented
@@ -1737,11 +1852,13 @@ IT Operations Manager
 ---
 
 #### Backup Restore Test (Monthly)
+
 **Duration**: 4 hours
 **Participants**: DBA, Technical Lead
 **Approach**: Restore backup to test environment
 
 **Procedure**:
+
 ```bash
 # 1. Select random backup from last 30 days
 BACKUP_FILE=$(ls /var/backups/csms/nody_*.sql.gz | shuf -n 1)
@@ -1767,6 +1884,7 @@ echo "Backup Test $(date): $BACKUP_FILE - PASSED" >> /var/log/csms/backup-tests.
 ```
 
 **Success Criteria**:
+
 - Backup restores without errors
 - Data integrity verified
 - Application connects successfully
@@ -1775,17 +1893,20 @@ echo "Backup Test $(date): $BACKUP_FILE - PASSED" >> /var/log/csms/backup-tests.
 ---
 
 #### Partial Failover Test (Quarterly)
+
 **Duration**: 6 hours
 **Participants**: Full recovery team
 **Approach**: Simulate single component failure
 
 **Scenarios** (rotate quarterly):
+
 - Q1: Database failover
 - Q2: Application server failover
 - Q3: Storage system failover
 - Q4: Network/connectivity failover
 
 **Procedure**:
+
 1. Schedule test during maintenance window
 2. Notify stakeholders of test
 3. Simulate component failure
@@ -1796,6 +1917,7 @@ echo "Backup Test $(date): $BACKUP_FILE - PASSED" >> /var/log/csms/backup-tests.
 8. Document lessons learned
 
 **Success Criteria**:
+
 - Recovery completed within RTO
 - No data loss (RPO met)
 - All functionality restored
@@ -1805,11 +1927,13 @@ echo "Backup Test $(date): $BACKUP_FILE - PASSED" >> /var/log/csms/backup-tests.
 ---
 
 #### Full Disaster Recovery Drill (Annual)
+
 **Duration**: 8-12 hours
 **Participants**: Full recovery team, management, vendors
 **Approach**: Complete system recovery to alternate site
 
 **Procedure**:
+
 1. **Planning Phase (2 weeks prior)**
    - Schedule drill date
    - Notify all stakeholders
@@ -1817,6 +1941,7 @@ echo "Backup Test $(date): $BACKUP_FILE - PASSED" >> /var/log/csms/backup-tests.
    - Review procedures
 
 2. **Execution Phase (Drill Day)**
+
    ```
    08:00 - Drill kickoff, scenario briefing
    08:30 - Declare disaster, activate DRP
@@ -1843,6 +1968,7 @@ echo "Backup Test $(date): $BACKUP_FILE - PASSED" >> /var/log/csms/backup-tests.
    - Create action plan for improvements
 
 **Success Criteria**:
+
 - Full recovery within 6 hours
 - All systems functional
 - No data loss
@@ -1854,31 +1980,32 @@ echo "Backup Test $(date): $BACKUP_FILE - PASSED" >> /var/log/csms/backup-tests.
 
 ### 3. Annual Testing Calendar
 
-| Month | Testing Activity | Focus Area | Duration | Participants |
-|-------|-----------------|------------|----------|--------------|
-| January | Backup Restore Test | Database | 4 hours | DBA, Tech Lead |
-| February | Tabletop Exercise | Database Failure Scenario | 2 hours | Full team |
-| February | Backup Restore Test | Database | 4 hours | DBA, Tech Lead |
-| March | Partial Failover Test | Database Failover (Q1) | 6 hours | Full team |
-| March | Backup Restore Test | Database | 4 hours | DBA, Tech Lead |
-| April | Backup Restore Test | Database + MinIO | 4 hours | DBA, Infra Specialist |
-| May | Tabletop Exercise | Cyber Security Incident | 2 hours | Full team + Security |
-| May | Backup Restore Test | Database | 4 hours | DBA, Tech Lead |
-| June | Partial Failover Test | Application Server (Q2) | 6 hours | Full team |
-| June | Backup Restore Test | Database | 4 hours | DBA, Tech Lead |
-| July | Backup Restore Test | Database + MinIO | 4 hours | DBA, Infra Specialist |
-| August | Tabletop Exercise | Natural Disaster Scenario | 2 hours | Full team + Management |
-| August | Backup Restore Test | Database | 4 hours | DBA, Tech Lead |
-| September | Partial Failover Test | Storage System (Q3) | 6 hours | Full team |
-| September | Backup Restore Test | Database | 4 hours | DBA, Tech Lead |
-| October | **FULL DR DRILL** | Complete System Recovery | 12 hours | All participants |
-| October | Backup Restore Test | Database | 4 hours | DBA, Tech Lead |
-| November | Tabletop Exercise | Data Center Outage | 2 hours | Full team |
-| November | Backup Restore Test | Database + MinIO | 4 hours | DBA, Infra Specialist |
-| December | Partial Failover Test | Network Failover (Q4) | 6 hours | Full team |
-| December | Backup Restore Test | Database | 4 hours | DBA, Tech Lead |
+| Month     | Testing Activity      | Focus Area                | Duration | Participants           |
+| --------- | --------------------- | ------------------------- | -------- | ---------------------- |
+| January   | Backup Restore Test   | Database                  | 4 hours  | DBA, Tech Lead         |
+| February  | Tabletop Exercise     | Database Failure Scenario | 2 hours  | Full team              |
+| February  | Backup Restore Test   | Database                  | 4 hours  | DBA, Tech Lead         |
+| March     | Partial Failover Test | Database Failover (Q1)    | 6 hours  | Full team              |
+| March     | Backup Restore Test   | Database                  | 4 hours  | DBA, Tech Lead         |
+| April     | Backup Restore Test   | Database + MinIO          | 4 hours  | DBA, Infra Specialist  |
+| May       | Tabletop Exercise     | Cyber Security Incident   | 2 hours  | Full team + Security   |
+| May       | Backup Restore Test   | Database                  | 4 hours  | DBA, Tech Lead         |
+| June      | Partial Failover Test | Application Server (Q2)   | 6 hours  | Full team              |
+| June      | Backup Restore Test   | Database                  | 4 hours  | DBA, Tech Lead         |
+| July      | Backup Restore Test   | Database + MinIO          | 4 hours  | DBA, Infra Specialist  |
+| August    | Tabletop Exercise     | Natural Disaster Scenario | 2 hours  | Full team + Management |
+| August    | Backup Restore Test   | Database                  | 4 hours  | DBA, Tech Lead         |
+| September | Partial Failover Test | Storage System (Q3)       | 6 hours  | Full team              |
+| September | Backup Restore Test   | Database                  | 4 hours  | DBA, Tech Lead         |
+| October   | **FULL DR DRILL**     | Complete System Recovery  | 12 hours | All participants       |
+| October   | Backup Restore Test   | Database                  | 4 hours  | DBA, Tech Lead         |
+| November  | Tabletop Exercise     | Data Center Outage        | 2 hours  | Full team              |
+| November  | Backup Restore Test   | Database + MinIO          | 4 hours  | DBA, Infra Specialist  |
+| December  | Partial Failover Test | Network Failover (Q4)     | 6 hours  | Full team              |
+| December  | Backup Restore Test   | Database                  | 4 hours  | DBA, Tech Lead         |
 
 **Total Annual Testing**:
+
 - 12 Backup Restore Tests (monthly)
 - 4 Tabletop Exercises (quarterly)
 - 4 Partial Failover Tests (quarterly)
@@ -1891,6 +2018,7 @@ echo "Backup Test $(date): $BACKUP_FILE - PASSED" >> /var/log/csms/backup-tests.
 #### For Each Test, Document:
 
 **Pre-Test**:
+
 - Test date and time
 - Test type and objectives
 - Participants and roles
@@ -1898,6 +2026,7 @@ echo "Backup Test $(date): $BACKUP_FILE - PASSED" >> /var/log/csms/backup-tests.
 - Expected outcomes
 
 **During Test**:
+
 - Start time of each major step
 - Issues encountered
 - Deviations from procedure
@@ -1905,6 +2034,7 @@ echo "Backup Test $(date): $BACKUP_FILE - PASSED" >> /var/log/csms/backup-tests.
 - Communication effectiveness
 
 **Post-Test**:
+
 - Actual vs. expected RTO
 - Actual vs. expected RPO
 - Success/failure of each objective
@@ -1914,6 +2044,7 @@ echo "Backup Test $(date): $BACKUP_FILE - PASSED" >> /var/log/csms/backup-tests.
 - Procedure updates needed
 
 **Test Report Template**:
+
 ```markdown
 # Disaster Recovery Test Report
 
@@ -1922,17 +2053,21 @@ echo "Backup Test $(date): $BACKUP_FILE - PASSED" >> /var/log/csms/backup-tests.
 **Test ID**: DRT-[YYYY]-[MM]-[Number]
 
 ## Test Objectives
+
 1. [Objective 1]
 2. [Objective 2]
 
 ## Participants
+
 - [Role]: [Name]
 - [Role]: [Name]
 
 ## Scenario
+
 [Description of disaster scenario tested]
 
 ## Results Summary
+
 - **Overall Status**: PASS / PARTIAL / FAIL
 - **RTO Target**: [X] hours
 - **RTO Actual**: [Y] hours
@@ -1940,30 +2075,36 @@ echo "Backup Test $(date): $BACKUP_FILE - PASSED" >> /var/log/csms/backup-tests.
 - **RPO Actual**: [Y] hours
 
 ## Detailed Results
-| Objective | Status | Notes |
-|-----------|--------|-------|
-| [Obj 1] | PASS | [Notes] |
-| [Obj 2] | FAIL | [Reason] |
+
+| Objective | Status | Notes    |
+| --------- | ------ | -------- |
+| [Obj 1]   | PASS   | [Notes]  |
+| [Obj 2]   | FAIL   | [Reason] |
 
 ## Issues Encountered
+
 1. [Issue 1] - Severity: [High/Medium/Low] - Status: [Resolved/Pending]
 2. [Issue 2] - Severity: [High/Medium/Low] - Status: [Resolved/Pending]
 
 ## Lessons Learned
+
 1. [Lesson 1]
 2. [Lesson 2]
 
 ## Action Items
-| Item | Owner | Due Date | Priority |
-|------|-------|----------|----------|
-| [Action 1] | [Name] | [Date] | High |
-| [Action 2] | [Name] | [Date] | Medium |
+
+| Item       | Owner  | Due Date | Priority |
+| ---------- | ------ | -------- | -------- |
+| [Action 1] | [Name] | [Date]   | High     |
+| [Action 2] | [Name] | [Date]   | Medium   |
 
 ## Recommendations
+
 1. [Recommendation 1]
 2. [Recommendation 2]
 
 ## Procedure Updates
+
 - [ ] [Update to procedure 1]
 - [ ] [Update to procedure 2]
 
@@ -1977,6 +2118,7 @@ echo "Backup Test $(date): $BACKUP_FILE - PASSED" >> /var/log/csms/backup-tests.
 ### 5. Continuous Improvement Process
 
 #### After Each Test:
+
 1. **Immediate Debrief** (within 24 hours)
    - What worked well?
    - What didn't work?
@@ -2009,18 +2151,19 @@ echo "Backup Test $(date): $BACKUP_FILE - PASSED" >> /var/log/csms/backup-tests.
 
 ### 1. Document Review Schedule
 
-| Component | Review Frequency | Reviewer | Approver |
-|-----------|-----------------|----------|----------|
-| Entire DRP | Quarterly | IT Operations Manager | IT Director |
-| Recovery Procedures | Monthly | Technical Lead | IT Operations Manager |
-| Contact Lists | Monthly | All team leads | IT Operations Manager |
-| Communication Templates | Quarterly | Communications Coordinator | IT Operations Manager |
-| Test Results | After each test | Test Lead | IT Operations Manager |
-| Vendor Contacts | Quarterly | Logistics Coordinator | IT Operations Manager |
+| Component               | Review Frequency | Reviewer                   | Approver              |
+| ----------------------- | ---------------- | -------------------------- | --------------------- |
+| Entire DRP              | Quarterly        | IT Operations Manager      | IT Director           |
+| Recovery Procedures     | Monthly          | Technical Lead             | IT Operations Manager |
+| Contact Lists           | Monthly          | All team leads             | IT Operations Manager |
+| Communication Templates | Quarterly        | Communications Coordinator | IT Operations Manager |
+| Test Results            | After each test  | Test Lead                  | IT Operations Manager |
+| Vendor Contacts         | Quarterly        | Logistics Coordinator      | IT Operations Manager |
 
 ### 2. Triggers for Document Updates
 
 **Immediate Update Required**:
+
 - Change in critical infrastructure
 - Change in recovery team personnel
 - Failed recovery test
@@ -2029,6 +2172,7 @@ echo "Backup Test $(date): $BACKUP_FILE - PASSED" >> /var/log/csms/backup-tests.
 - Major security incident
 
 **Update Within 1 Week**:
+
 - New system components added
 - Vendor changes
 - Network topology changes
@@ -2036,6 +2180,7 @@ echo "Backup Test $(date): $BACKUP_FILE - PASSED" >> /var/log/csms/backup-tests.
 - Backup procedure changes
 
 **Update Within 1 Month**:
+
 - Test results and lessons learned
 - Minor procedure improvements
 - Contact information changes
@@ -2044,22 +2189,25 @@ echo "Backup Test $(date): $BACKUP_FILE - PASSED" >> /var/log/csms/backup-tests.
 ### 3. Version Control
 
 **Document Versioning**:
+
 - Format: `Major.Minor.Patch`
 - Major: Significant restructuring or strategy change
 - Minor: New procedures, significant updates
 - Patch: Minor corrections, contact updates
 
 **Change Log**:
+
 ```markdown
-| Version | Date | Author | Changes | Approver |
-|---------|------|--------|---------|----------|
-| 1.0 | 2025-12-26 | IT Ops Manager | Initial release | IT Director |
-| 1.1 | [Date] | [Name] | [Changes] | [Approver] |
+| Version | Date       | Author         | Changes         | Approver    |
+| ------- | ---------- | -------------- | --------------- | ----------- |
+| 1.0     | 2025-12-26 | IT Ops Manager | Initial release | IT Director |
+| 1.1     | [Date]     | [Name]         | [Changes]       | [Approver]  |
 ```
 
 ### 4. Distribution and Training
 
 **Document Distribution**:
+
 - All recovery team members (digital + printed copy)
 - IT Operations Center (printed copy in DRP binder)
 - Executive management (digital summary)
@@ -2067,6 +2215,7 @@ echo "Backup Test $(date): $BACKUP_FILE - PASSED" >> /var/log/csms/backup-tests.
 - Secure cloud storage (encrypted digital copy)
 
 **Training Requirements**:
+
 - New recovery team members: Full DRP training within 2 weeks
 - Existing team members: Annual refresher training
 - Management: Annual DRP overview
@@ -2075,6 +2224,7 @@ echo "Backup Test $(date): $BACKUP_FILE - PASSED" >> /var/log/csms/backup-tests.
 ### 5. Compliance and Audit
 
 **Annual Audit Checklist**:
+
 - [ ] DRP document reviewed and current
 - [ ] All tests completed per schedule
 - [ ] Test results documented
@@ -2093,6 +2243,7 @@ echo "Backup Test $(date): $BACKUP_FILE - PASSED" >> /var/log/csms/backup-tests.
 ### Appendix A: Quick Reference Cards
 
 **Database Recovery Quick Reference**:
+
 ```
 1. STOP APPLICATION: pm2 stop csms-production
 2. STOP DATABASE: sudo systemctl stop postgresql
@@ -2104,6 +2255,7 @@ echo "Backup Test $(date): $BACKUP_FILE - PASSED" >> /var/log/csms/backup-tests.
 ```
 
 **Application Recovery Quick Reference**:
+
 ```
 1. STOP APP: pm2 stop all
 2. BACKUP: tar -czf /tmp/app-backup-$(date +%s).tar.gz /var/www/csms
@@ -2141,21 +2293,21 @@ echo "Backup Test $(date): $BACKUP_FILE - PASSED" >> /var/log/csms/backup-tests.
 
 **Approval**:
 
-| Role | Name | Signature | Date |
-|------|------|-----------|------|
-| IT Operations Manager | _________________ | _________________ | _______ |
-| IT Director | _________________ | _________________ | _______ |
-| HR Director | _________________ | _________________ | _______ |
-| Director General | _________________ | _________________ | _______ |
+| Role                  | Name                       | Signature                  | Date       |
+| --------------------- | -------------------------- | -------------------------- | ---------- |
+| IT Operations Manager | **\*\*\*\***\_**\*\*\*\*** | **\*\*\*\***\_**\*\*\*\*** | **\_\_\_** |
+| IT Director           | **\*\*\*\***\_**\*\*\*\*** | **\*\*\*\***\_**\*\*\*\*** | **\_\_\_** |
+| HR Director           | **\*\*\*\***\_**\*\*\*\*** | **\*\*\*\***\_**\*\*\*\*** | **\_\_\_** |
+| Director General      | **\*\*\*\***\_**\*\*\*\*** | **\*\*\*\***\_**\*\*\*\*** | **\_\_\_** |
 
 **Change History**:
 
-| Version | Date | Author | Changes | Approver |
-|---------|------|--------|---------|----------|
-| 1.0 | 2025-12-26 | IT Operations Manager | Initial release | IT Director |
+| Version | Date       | Author                | Changes         | Approver    |
+| ------- | ---------- | --------------------- | --------------- | ----------- |
+| 1.0     | 2025-12-26 | IT Operations Manager | Initial release | IT Director |
 
 ---
 
-*This Disaster Recovery Plan is a living document and must be reviewed and updated regularly to remain effective. All recovery team members are responsible for reporting any gaps or improvements to the document owner.*
+_This Disaster Recovery Plan is a living document and must be reviewed and updated regularly to remain effective. All recovery team members are responsible for reporting any gaps or improvements to the document owner._
 
 **END OF DISASTER RECOVERY PLAN**

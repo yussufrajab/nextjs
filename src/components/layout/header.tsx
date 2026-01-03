@@ -14,7 +14,7 @@ export function AppHeader() {
         <div className="mr-4 flex">
           <SidebarTrigger className="md:hidden" />
         </div>
-        
+
         <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
           {/* Add breadcrumbs or page title here if needed */}
           <nav className="flex items-center space-x-2">

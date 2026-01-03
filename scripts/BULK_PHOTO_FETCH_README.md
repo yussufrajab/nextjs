@@ -31,6 +31,7 @@ npx tsx scripts/fetch-all-institution-photos.ts
 ```
 
 This will:
+
 - Process all institutions in the database
 - Fetch photos for all employees in each institution
 - Add a 2-second delay between institutions
@@ -65,6 +66,7 @@ Body: { institutionId: "..." }
 ```
 
 This endpoint:
+
 - Fetches all employees for the institution from the database
 - Calls HRIMS API for each employee's photo
 - Uploads photos to MinIO (`employee-photos/` folder)
@@ -157,24 +159,26 @@ The script handles various error scenarios:
 
 ### vs `fetch-all-photos.ts`
 
-| Feature | fetch-all-institution-photos.ts | fetch-all-photos.ts |
-|---------|--------------------------------|---------------------|
-| Approach | Calls web API endpoint | Direct HRIMS calls |
-| Grouping | By institution | By institution (optional) |
-| Progress | Real-time streaming | Per-employee logs |
-| Delay | Between institutions (2s) | Between employees (100ms) |
-| Storage | MinIO (via API) | MinIO (direct) |
-| Use Case | Bulk institution processing | Fine-grained control |
+| Feature  | fetch-all-institution-photos.ts | fetch-all-photos.ts       |
+| -------- | ------------------------------- | ------------------------- |
+| Approach | Calls web API endpoint          | Direct HRIMS calls        |
+| Grouping | By institution                  | By institution (optional) |
+| Progress | Real-time streaming             | Per-employee logs         |
+| Delay    | Between institutions (2s)       | Between employees (100ms) |
+| Storage  | MinIO (via API)                 | MinIO (direct)            |
+| Use Case | Bulk institution processing     | Fine-grained control      |
 
 ### When to Use This Script
 
 Use `fetch-all-institution-photos.ts` when:
+
 - You want to process all institutions systematically
 - You prefer institution-level rate limiting
 - You want to use the same logic as the web UI
 - You need real-time streaming progress updates
 
 Use `fetch-all-photos.ts` when:
+
 - You need fine-grained control (batch size, specific institution)
 - You want to skip existing photos
 - You want faster processing with employee-level delays
@@ -189,6 +193,7 @@ Photos are stored in MinIO with the following structure:
 - **URL in DB**: `/api/files/employee-photos/{employeeId}.{ext}`
 
 The file extension is determined from the MIME type:
+
 - `image/jpeg` → `.jpg`
 - `image/png` → `.png`
 - `image/gif` → `.gif`
@@ -207,12 +212,14 @@ The file extension is determined from the MIME type:
 ### API Connection Errors
 
 If you get connection errors, ensure:
+
 1. The Next.js app is running on the specified port (default: 9002)
 2. Update `API_BASE_URL` if running on a different URL
 
 ### MinIO Errors
 
 If photos fail to upload to MinIO:
+
 1. Check MinIO server is running
 2. Verify MinIO credentials in environment variables
 3. Ensure the `documents` bucket exists
@@ -220,6 +227,7 @@ If photos fail to upload to MinIO:
 ### HRIMS API Errors
 
 If HRIMS returns errors:
+
 1. Check network connectivity to HRIMS server
 2. Verify API credentials in the API route configuration
 3. Check HRIMS server status
@@ -236,6 +244,7 @@ If HRIMS returns errors:
 ## Monitoring
 
 Watch for:
+
 - Institutions with high failure rates
 - Consistent HRIMS API errors
 - MinIO upload failures

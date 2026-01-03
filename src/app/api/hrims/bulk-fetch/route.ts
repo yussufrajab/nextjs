@@ -4,64 +4,89 @@ import { v4 as uuidv4 } from 'uuid';
 
 // HRIMS API Configuration
 const HRIMS_CONFIG = {
-  BASE_URL: "http://10.0.217.11:8135/api",
-  API_KEY: "0ea1e3f5-ea57-410b-a199-246fa288b851",
-  TOKEN: "CfDJ8M6SKjORsSdBliudb_vdU_DEea8FKIcQckiBxdvt4EJgtcP0ba_3REOpGvWYeOF46fvqw8heVnqFnXTwOmD5Wg5Qg3yNJlwyGDHVhqbgyKxB31Bjh2pI6C2qAYnLMovU4XLlQFVu7cTpIqtgItNZpM4"
+  BASE_URL: 'http://10.0.217.11:8135/api',
+  API_KEY: '0ea1e3f5-ea57-410b-a199-246fa288b851',
+  TOKEN:
+    'CfDJ8M6SKjORsSdBliudb_vdU_DEea8FKIcQckiBxdvt4EJgtcP0ba_3REOpGvWYeOF46fvqw8heVnqFnXTwOmD5Wg5Qg3yNJlwyGDHVhqbgyKxB31Bjh2pI6C2qAYnLMovU4XLlQFVu7cTpIqtgItNZpM4',
 };
 
-async function fetchFromHRIMS(requestId: string, requestPayloadData: any): Promise<any> {
+async function fetchFromHRIMS(
+  requestId: string,
+  requestPayloadData: any
+): Promise<any> {
   const response = await fetch(`${HRIMS_CONFIG.BASE_URL}/Employees`, {
     method: 'POST',
     headers: {
-      'ApiKey': HRIMS_CONFIG.API_KEY,
-      'Token': HRIMS_CONFIG.TOKEN,
+      ApiKey: HRIMS_CONFIG.API_KEY,
+      Token: HRIMS_CONFIG.TOKEN,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
       RequestId: requestId,
-      RequestPayloadData: requestPayloadData
-    })
+      RequestPayloadData: requestPayloadData,
+    }),
   });
 
   if (!response.ok) {
-    throw new Error(`HRIMS API error: ${response.status} ${response.statusText}`);
+    throw new Error(
+      `HRIMS API error: ${response.status} ${response.statusText}`
+    );
   }
 
   return response.json();
 }
 
-async function saveEmployeeFromDetailedData(hrimsData: any, institutionId: string) {
+async function saveEmployeeFromDetailedData(
+  hrimsData: any,
+  institutionId: string
+) {
   try {
     const personalInfo = hrimsData.personalInfo;
-    const currentEmployment = hrimsData.employmentHistories?.find((emp: any) => emp.isCurrent) || hrimsData.employmentHistories?.[0];
-    const currentSalary = hrimsData.salaryInformation?.find((sal: any) => sal.isCurrent) || hrimsData.salaryInformation?.[0];
+    const currentEmployment =
+      hrimsData.employmentHistories?.find((emp: any) => emp.isCurrent) ||
+      hrimsData.employmentHistories?.[0];
+    const currentSalary =
+      hrimsData.salaryInformation?.find((sal: any) => sal.isCurrent) ||
+      hrimsData.salaryInformation?.[0];
 
     // Find or create employee
     const existingEmployee = await db.employee.findUnique({
-      where: { zanId: personalInfo.zanIdNumber }
+      where: { zanId: personalInfo.zanIdNumber },
     });
 
     const employeeId = existingEmployee?.id || uuidv4();
 
     // Build full name
-    const fullName = [personalInfo.firstName, personalInfo.middleName, personalInfo.lastName]
-      .filter(name => name && name.trim())
+    const fullName = [
+      personalInfo.firstName,
+      personalInfo.middleName,
+      personalInfo.lastName,
+    ]
+      .filter((name) => name && name.trim())
       .join(' ');
 
     // Map detailed HRIMS data to our database structure
     const dbEmployeeData = {
       id: employeeId,
       name: fullName,
-      gender: personalInfo.genderName === 'Mwanamme' ? 'Male' : personalInfo.genderName === 'Mwanamke' ? 'Female' : personalInfo.genderName,
-      dateOfBirth: personalInfo.birthDate ? new Date(personalInfo.birthDate) : null,
+      gender:
+        personalInfo.genderName === 'Mwanamme'
+          ? 'Male'
+          : personalInfo.genderName === 'Mwanamke'
+            ? 'Female'
+            : personalInfo.genderName,
+      dateOfBirth: personalInfo.birthDate
+        ? new Date(personalInfo.birthDate)
+        : null,
       placeOfBirth: personalInfo.placeOfBirth,
       region: personalInfo.regionName,
       countryOfBirth: personalInfo.birthCountryName,
       zanId: personalInfo.zanIdNumber,
       phoneNumber: personalInfo.primaryPhone || personalInfo.workPhone,
-      contactAddress: [personalInfo.houseNumber, personalInfo.street, personalInfo.city]
-        .filter(part => part && part.trim())
-        .join(', ') || null,
+      contactAddress:
+        [personalInfo.houseNumber, personalInfo.street, personalInfo.city]
+          .filter((part) => part && part.trim())
+          .join(', ') || null,
       zssfNumber: personalInfo.zssfNumber,
       payrollNumber: personalInfo.payrollNumber || '',
       cadre: currentEmployment?.titleName,
@@ -70,12 +95,20 @@ async function saveEmployeeFromDetailedData(hrimsData: any, institutionId: strin
       department: currentEmployment?.subEntityName,
       appointmentType: currentEmployment?.appointmentTypeName,
       contractType: null,
-      recentTitleDate: currentEmployment?.fromDate ? new Date(currentEmployment.fromDate) : null,
+      recentTitleDate: currentEmployment?.fromDate
+        ? new Date(currentEmployment.fromDate)
+        : null,
       currentReportingOffice: currentEmployment?.subEntityName,
       currentWorkplace: currentEmployment?.entityName,
-      employmentDate: personalInfo.employmentDate ? new Date(personalInfo.employmentDate) : null,
-      confirmationDate: personalInfo.employmentConfirmationDate ? new Date(personalInfo.employmentConfirmationDate) : null,
-      retirementDate: currentEmployment?.toDate ? new Date(currentEmployment.toDate) : null,
+      employmentDate: personalInfo.employmentDate
+        ? new Date(personalInfo.employmentDate)
+        : null,
+      confirmationDate: personalInfo.employmentConfirmationDate
+        ? new Date(personalInfo.employmentConfirmationDate)
+        : null,
+      retirementDate: currentEmployment?.toDate
+        ? new Date(currentEmployment.toDate)
+        : null,
       status: personalInfo.isEmployeeConfirmed ? 'Confirmed' : 'On Probation',
       institutionId: institutionId,
       employeeEntityId: personalInfo.zanIdNumber,
@@ -95,40 +128,65 @@ async function saveEmployeeFromDetailedData(hrimsData: any, institutionId: strin
   }
 }
 
-async function saveEmployeeFromListData(employeeBasicInfo: any, institutionId: string) {
+async function saveEmployeeFromListData(
+  employeeBasicInfo: any,
+  institutionId: string
+) {
   try {
     // Skip employees without valid ZanID
-    if (!employeeBasicInfo.zanIdNumber || employeeBasicInfo.zanIdNumber.trim() === '') {
-      console.log(`Skipping employee without ZanID: ${employeeBasicInfo.firstName} ${employeeBasicInfo.lastName}`);
+    if (
+      !employeeBasicInfo.zanIdNumber ||
+      employeeBasicInfo.zanIdNumber.trim() === ''
+    ) {
+      console.log(
+        `Skipping employee without ZanID: ${employeeBasicInfo.firstName} ${employeeBasicInfo.lastName}`
+      );
       return null;
     }
 
     // Find or create employee
     const existingEmployee = await db.employee.findUnique({
-      where: { zanId: employeeBasicInfo.zanIdNumber }
+      where: { zanId: employeeBasicInfo.zanIdNumber },
     });
 
     const employeeId = existingEmployee?.id || uuidv4();
 
     // Build full name
-    const fullName = [employeeBasicInfo.firstName, employeeBasicInfo.middleName, employeeBasicInfo.lastName]
-      .filter(name => name && name.trim())
+    const fullName = [
+      employeeBasicInfo.firstName,
+      employeeBasicInfo.middleName,
+      employeeBasicInfo.lastName,
+    ]
+      .filter((name) => name && name.trim())
       .join(' ');
 
     // Map list format HRIMS data to our database structure
     const dbEmployeeData = {
       id: employeeId,
       name: fullName,
-      gender: employeeBasicInfo.genderName === 'Mwanamme' ? 'Male' : employeeBasicInfo.genderName === 'Mwanamke' ? 'Female' : employeeBasicInfo.genderName,
-      dateOfBirth: employeeBasicInfo.birthDate ? new Date(employeeBasicInfo.birthDate) : null,
+      gender:
+        employeeBasicInfo.genderName === 'Mwanamme'
+          ? 'Male'
+          : employeeBasicInfo.genderName === 'Mwanamke'
+            ? 'Female'
+            : employeeBasicInfo.genderName,
+      dateOfBirth: employeeBasicInfo.birthDate
+        ? new Date(employeeBasicInfo.birthDate)
+        : null,
       placeOfBirth: employeeBasicInfo.placeOfBirth,
       region: employeeBasicInfo.regionName,
       countryOfBirth: employeeBasicInfo.birthCountryName,
       zanId: employeeBasicInfo.zanIdNumber,
-      phoneNumber: employeeBasicInfo.primaryPhone || employeeBasicInfo.workPhone,
-      contactAddress: [employeeBasicInfo.houseNumber, employeeBasicInfo.street, employeeBasicInfo.city]
-        .filter(part => part && part.trim())
-        .join(', ') || null,
+      phoneNumber:
+        employeeBasicInfo.primaryPhone || employeeBasicInfo.workPhone,
+      contactAddress:
+        [
+          employeeBasicInfo.houseNumber,
+          employeeBasicInfo.street,
+          employeeBasicInfo.city,
+        ]
+          .filter((part) => part && part.trim())
+          .join(', ') || null,
       zssfNumber: employeeBasicInfo.zssfNumber,
       payrollNumber: employeeBasicInfo.payrollNumber || '',
       cadre: null, // Not available in list format
@@ -140,10 +198,16 @@ async function saveEmployeeFromListData(employeeBasicInfo: any, institutionId: s
       recentTitleDate: null, // Not available in list format
       currentReportingOffice: null, // Not available in list format
       currentWorkplace: null, // Not available in list format
-      employmentDate: employeeBasicInfo.employmentDate ? new Date(employeeBasicInfo.employmentDate) : null,
-      confirmationDate: employeeBasicInfo.employmentConfirmationDate ? new Date(employeeBasicInfo.employmentConfirmationDate) : null,
+      employmentDate: employeeBasicInfo.employmentDate
+        ? new Date(employeeBasicInfo.employmentDate)
+        : null,
+      confirmationDate: employeeBasicInfo.employmentConfirmationDate
+        ? new Date(employeeBasicInfo.employmentConfirmationDate)
+        : null,
       retirementDate: null, // Not available in list format
-      status: employeeBasicInfo.isEmployeeConfirmed ? 'Confirmed' : 'On Probation',
+      status: employeeBasicInfo.isEmployeeConfirmed
+        ? 'Confirmed'
+        : 'On Probation',
       institutionId: institutionId,
       employeeEntityId: employeeBasicInfo.zanIdNumber,
     };
@@ -151,7 +215,7 @@ async function saveEmployeeFromListData(employeeBasicInfo: any, institutionId: s
     console.log('Saving employee from list data:', {
       zanId: dbEmployeeData.zanId,
       name: dbEmployeeData.name,
-      status: dbEmployeeData.status
+      status: dbEmployeeData.status,
     });
 
     // Save/update employee
@@ -168,11 +232,15 @@ async function saveEmployeeFromListData(employeeBasicInfo: any, institutionId: s
   }
 }
 
-async function processEmployeeDocuments(zanId: string, payrollNumber: string, employeeId: string) {
+async function processEmployeeDocuments(
+  zanId: string,
+  payrollNumber: string,
+  employeeId: string
+) {
   try {
     // Fetch documents
-    const documentsResponse = await fetchFromHRIMS("202", {
-      RequestBody: payrollNumber || zanId
+    const documentsResponse = await fetchFromHRIMS('202', {
+      RequestBody: payrollNumber || zanId,
     });
 
     if (!documentsResponse.success || !documentsResponse.data?.documents) {
@@ -183,10 +251,10 @@ async function processEmployeeDocuments(zanId: string, payrollNumber: string, em
     for (const doc of documentsResponse.data.documents) {
       try {
         const documentTypeMap: { [key: string]: string } = {
-          'ardhilHali': 'ardhilHaliUrl',
-          'confirmationLetter': 'confirmationLetterUrl',
-          'jobContract': 'jobContractUrl',
-          'birthCertificate': 'birthCertificateUrl'
+          ardhilHali: 'ardhilHaliUrl',
+          confirmationLetter: 'confirmationLetterUrl',
+          jobContract: 'jobContractUrl',
+          birthCertificate: 'birthCertificateUrl',
         };
 
         const fieldName = documentTypeMap[doc.type];
@@ -196,7 +264,7 @@ async function processEmployeeDocuments(zanId: string, payrollNumber: string, em
 
         await db.employee.update({
           where: { id: employeeId },
-          data: { [fieldName]: documentUrl }
+          data: { [fieldName]: documentUrl },
         });
 
         savedDocuments++;
@@ -212,14 +280,21 @@ async function processEmployeeDocuments(zanId: string, payrollNumber: string, em
   }
 }
 
-async function processEmployeeCertificates(zanId: string, payrollNumber: string, employeeId: string) {
+async function processEmployeeCertificates(
+  zanId: string,
+  payrollNumber: string,
+  employeeId: string
+) {
   try {
     // Fetch certificates
-    const certificatesResponse = await fetchFromHRIMS("203", {
-      RequestBody: payrollNumber || zanId
+    const certificatesResponse = await fetchFromHRIMS('203', {
+      RequestBody: payrollNumber || zanId,
     });
 
-    if (!certificatesResponse.success || !certificatesResponse.data?.certificates) {
+    if (
+      !certificatesResponse.success ||
+      !certificatesResponse.data?.certificates
+    ) {
       return 0;
     }
 
@@ -233,7 +308,7 @@ async function processEmployeeCertificates(zanId: string, payrollNumber: string,
             type: cert.type,
             name: cert.name,
             url: `data:${cert.contentType};base64,${cert.content}`,
-          }
+          },
         });
 
         savedCertificates++;
@@ -249,23 +324,29 @@ async function processEmployeeCertificates(zanId: string, payrollNumber: string,
   }
 }
 
-async function processBulkFetch(institutionVoteNumber: string, institutionId: string, fetchMode: 'fast' | 'detailed' = 'fast') {
+async function processBulkFetch(
+  institutionVoteNumber: string,
+  institutionId: string,
+  fetchMode: 'fast' | 'detailed' = 'fast'
+) {
   let totalEmployees = 0;
-  let totalDocuments = 0;
-  let totalCertificates = 0;
+  const totalDocuments = 0;
+  const totalCertificates = 0;
   let page = 0;
   let hasMoreData = true;
 
-  console.log(`Starting bulk fetch for institution vote number: ${institutionVoteNumber} in ${fetchMode} mode`);
+  console.log(
+    `Starting bulk fetch for institution vote number: ${institutionVoteNumber} in ${fetchMode} mode`
+  );
 
   try {
     while (hasMoreData) {
       console.log(`Fetching page ${page} of employees...`);
 
       // Fetch employees page using RequestId 201
-      const employeeListResponse = await fetchFromHRIMS("201", {
+      const employeeListResponse = await fetchFromHRIMS('201', {
         PageNumber: page,
-        PageSize: fetchMode === 'fast' ? 100 : 50 // Larger batches for fast mode
+        PageSize: fetchMode === 'fast' ? 100 : 50, // Larger batches for fast mode
       });
 
       console.log(`Page ${page} response:`, {
@@ -273,32 +354,45 @@ async function processBulkFetch(institutionVoteNumber: string, institutionId: st
         status: employeeListResponse.status,
         hasData: !!employeeListResponse.data,
         currentDataSize: employeeListResponse.currentDataSize,
-        overallDataSize: employeeListResponse.overallDataSize
+        overallDataSize: employeeListResponse.overallDataSize,
       });
 
       // Check if we have data
-      if (employeeListResponse.code !== 200 || !employeeListResponse.data || employeeListResponse.data.length === 0) {
+      if (
+        employeeListResponse.code !== 200 ||
+        !employeeListResponse.data ||
+        employeeListResponse.data.length === 0
+      ) {
         console.log('No more employee data available');
         break;
       }
 
-      console.log(`Processing ${employeeListResponse.data.length} employees from page ${page}`);
+      console.log(
+        `Processing ${employeeListResponse.data.length} employees from page ${page}`
+      );
 
       if (fetchMode === 'fast') {
         // Fast mode: Save employees directly from list data
         for (const employeeBasicInfo of employeeListResponse.data) {
           try {
-            const employeeId = await saveEmployeeFromListData(employeeBasicInfo, institutionId);
+            const employeeId = await saveEmployeeFromListData(
+              employeeBasicInfo,
+              institutionId
+            );
             if (employeeId) {
               totalEmployees++;
-              console.log(`✅ Saved employee (fast): ${employeeBasicInfo.firstName} ${employeeBasicInfo.lastName} (${employeeBasicInfo.zanIdNumber})`);
+              console.log(
+                `✅ Saved employee (fast): ${employeeBasicInfo.firstName} ${employeeBasicInfo.lastName} (${employeeBasicInfo.zanIdNumber})`
+              );
             }
 
             // Very small delay for fast processing
-            await new Promise(resolve => setTimeout(resolve, 50)); // 50ms delay
-
+            await new Promise((resolve) => setTimeout(resolve, 50)); // 50ms delay
           } catch (error) {
-            console.error(`Error processing employee ${employeeBasicInfo.zanIdNumber}:`, error);
+            console.error(
+              `Error processing employee ${employeeBasicInfo.zanIdNumber}:`,
+              error
+            );
           }
         }
       } else {
@@ -306,36 +400,55 @@ async function processBulkFetch(institutionVoteNumber: string, institutionId: st
         for (const employeeBasicInfo of employeeListResponse.data) {
           try {
             // Skip employees without valid ZanID
-            if (!employeeBasicInfo.zanIdNumber || employeeBasicInfo.zanIdNumber.trim() === '') {
-              console.log(`Skipping employee without ZanID: ${employeeBasicInfo.firstName} ${employeeBasicInfo.lastName}`);
+            if (
+              !employeeBasicInfo.zanIdNumber ||
+              employeeBasicInfo.zanIdNumber.trim() === ''
+            ) {
+              console.log(
+                `Skipping employee without ZanID: ${employeeBasicInfo.firstName} ${employeeBasicInfo.lastName}`
+              );
               continue;
             }
 
-            console.log(`Fetching detailed data for: ${employeeBasicInfo.firstName} ${employeeBasicInfo.lastName} (${employeeBasicInfo.zanIdNumber})`);
+            console.log(
+              `Fetching detailed data for: ${employeeBasicInfo.firstName} ${employeeBasicInfo.lastName} (${employeeBasicInfo.zanIdNumber})`
+            );
 
             // Fetch detailed employee data using RequestId 202
-            const detailedResponse = await fetchFromHRIMS("202", {
-              RequestBody: employeeBasicInfo.zanIdNumber
+            const detailedResponse = await fetchFromHRIMS('202', {
+              RequestBody: employeeBasicInfo.zanIdNumber,
             });
 
-            if (detailedResponse.code === 200 && detailedResponse.data?.personalInfo) {
+            if (
+              detailedResponse.code === 200 &&
+              detailedResponse.data?.personalInfo
+            ) {
               // Save employee to database with detailed info
-              const employeeId = await saveEmployeeFromDetailedData(detailedResponse.data, institutionId);
+              const employeeId = await saveEmployeeFromDetailedData(
+                detailedResponse.data,
+                institutionId
+              );
               totalEmployees++;
 
-              console.log(`✅ Saved employee (detailed): ${detailedResponse.data.personalInfo.firstName} ${detailedResponse.data.personalInfo.lastName}`);
+              console.log(
+                `✅ Saved employee (detailed): ${detailedResponse.data.personalInfo.firstName} ${detailedResponse.data.personalInfo.lastName}`
+              );
 
               // Skip documents and certificates for bulk processing to improve performance
               // These can be fetched separately if needed
             } else {
-              console.log(`❌ Failed to fetch detailed data for ${employeeBasicInfo.zanIdNumber}: ${detailedResponse.message || 'Unknown error'}`);
+              console.log(
+                `❌ Failed to fetch detailed data for ${employeeBasicInfo.zanIdNumber}: ${detailedResponse.message || 'Unknown error'}`
+              );
             }
 
             // Add a delay to avoid overwhelming the HRIMS system
-            await new Promise(resolve => setTimeout(resolve, 200)); // 200ms delay
-
+            await new Promise((resolve) => setTimeout(resolve, 200)); // 200ms delay
           } catch (error) {
-            console.error(`Error processing employee ${employeeBasicInfo.zanIdNumber}:`, error);
+            console.error(
+              `Error processing employee ${employeeBasicInfo.zanIdNumber}:`,
+              error
+            );
           }
         }
       }
@@ -348,7 +461,9 @@ async function processBulkFetch(institutionVoteNumber: string, institutionId: st
       } else {
         page++;
         // Add a longer delay between pages
-        await new Promise(resolve => setTimeout(resolve, fetchMode === 'fast' ? 500 : 1000));
+        await new Promise((resolve) =>
+          setTimeout(resolve, fetchMode === 'fast' ? 500 : 1000)
+        );
       }
     }
 
@@ -357,11 +472,11 @@ async function processBulkFetch(institutionVoteNumber: string, institutionId: st
       totalDocuments,
       totalCertificates,
       fetchMode,
-      note: fetchMode === 'fast'
-        ? 'Fast mode: Basic employee info saved. Use detailed mode for employment history and job details.'
-        : 'Detailed mode: Complete employee profiles with employment history saved.'
+      note:
+        fetchMode === 'fast'
+          ? 'Fast mode: Basic employee info saved. Use detailed mode for employment history and job details.'
+          : 'Detailed mode: Complete employee profiles with employment history saved.',
     };
-
   } catch (error) {
     console.error('Error in bulk fetch:', error);
     throw error;
@@ -382,7 +497,7 @@ export async function POST(req: NextRequest) {
 
     // Find institution by vote number
     const institution = await db.institution.findFirst({
-      where: { voteNumber: institutionVoteNumber }
+      where: { voteNumber: institutionVoteNumber },
     });
 
     if (!institution) {
@@ -393,7 +508,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Start bulk fetch process in the background
-    console.log(`Starting bulk fetch for Institution: ${institution.name} (${institutionVoteNumber})`);
+    console.log(
+      `Starting bulk fetch for Institution: ${institution.name} (${institutionVoteNumber})`
+    );
 
     // Note: In a production environment, you would typically use a job queue system
     // like Bull, Agenda, or a background worker service for this kind of operation
@@ -411,17 +528,17 @@ export async function POST(req: NextRequest) {
       data: {
         institutionName: institution.name,
         institutionVoteNumber,
-        status: 'started'
-      }
+        status: 'started',
+      },
     });
-
   } catch (error) {
     console.error('Error in HRIMS bulk-fetch API:', error);
 
     return NextResponse.json(
       {
         success: false,
-        message: error instanceof Error ? error.message : 'Internal server error'
+        message:
+          error instanceof Error ? error.message : 'Internal server error',
       },
       { status: 500 }
     );

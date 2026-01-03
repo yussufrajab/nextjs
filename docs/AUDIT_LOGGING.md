@@ -5,6 +5,7 @@ Comprehensive audit logging for security monitoring, compliance, and incident re
 ## Overview
 
 The CSMS application now includes a full audit logging system that tracks:
+
 - ✅ All unauthorized access attempts
 - ✅ Authentication events (login, logout, failures)
 - ✅ Authorization violations
@@ -47,6 +48,7 @@ model AuditLog {
 ```
 
 **Indexes:**
+
 - `userId` - Quick lookups by user
 - `timestamp` - Time-based queries and sorting
 - `eventType` - Filter by event type
@@ -56,6 +58,7 @@ model AuditLog {
 ### 2. Audit Logger Utility (`src/lib/audit-logger.ts`)
 
 **Functions:**
+
 - `logAuditEvent(data)` - Log any audit event
 - `logUnauthorizedAccess(data)` - Log unauthorized access attempts
 - `logAccessDenied(data)` - Log access denied events
@@ -66,6 +69,7 @@ model AuditLog {
 - `getAuditStatistics(filters)` - Get aggregated statistics
 
 **Event Types:**
+
 ```typescript
 enum AuditEventType {
   UNAUTHORIZED_ACCESS = 'UNAUTHORIZED_ACCESS',
@@ -84,6 +88,7 @@ enum AuditEventType {
 ```
 
 **Severity Levels:**
+
 - `INFO` - Informational events (successful logins)
 - `WARNING` - Warning events (access denied)
 - `ERROR` - Error events (failed logins)
@@ -94,6 +99,7 @@ enum AuditEventType {
 **Location:** `middleware.ts`
 
 The middleware automatically logs:
+
 1. **Unauthenticated Access Attempts**
    - Event: `UNAUTHORIZED_ACCESS`
    - Severity: `WARNING`
@@ -105,6 +111,7 @@ The middleware automatically logs:
    - Logged when: Authenticated user tries to access route they don't have permission for
 
 **Example Log Entry:**
+
 ```json
 {
   "eventType": "UNAUTHORIZED_ACCESS",
@@ -125,9 +132,11 @@ The middleware automatically logs:
 ### 4. API Endpoints
 
 #### POST `/api/audit/log`
+
 Log an audit event (called by middleware and application)
 
 **Request:**
+
 ```json
 {
   "userId": "user_123",
@@ -143,9 +152,11 @@ Log an audit event (called by middleware and application)
 ```
 
 #### GET `/api/audit/logs`
+
 Retrieve audit logs (Admin and CSCS only)
 
 **Query Parameters:**
+
 - `startDate` - Filter by start date (ISO 8601)
 - `endDate` - Filter by end date (ISO 8601)
 - `eventType` - Filter by event type
@@ -158,6 +169,7 @@ Retrieve audit logs (Admin and CSCS only)
 - `statsOnly=true` - Return statistics only
 
 **Response (Logs):**
+
 ```json
 {
   "success": true,
@@ -186,6 +198,7 @@ Retrieve audit logs (Admin and CSCS only)
 ```
 
 **Response (Statistics):**
+
 ```json
 {
   "success": true,
@@ -212,6 +225,7 @@ Retrieve audit logs (Admin and CSCS only)
 **Access:** Admin role only (protected by admin routes middleware)
 
 **Features:**
+
 - ✅ Real-time audit log viewing
 - ✅ Statistics dashboard (total events, blocked attempts, critical events, success rate)
 - ✅ Advanced filtering:
@@ -226,12 +240,14 @@ Retrieve audit logs (Admin and CSCS only)
 - ✅ Detailed event information
 
 **Statistics Cards:**
+
 1. **Total Events** - All logged events in the selected timeframe
 2. **Blocked Attempts** - Number of blocked access attempts
 3. **Critical Events** - Number of CRITICAL severity events
 4. **Success Rate** - Percentage of allowed vs. blocked events
 
 **Table Columns:**
+
 - Timestamp
 - Severity (with color-coded badge)
 - Event Type
@@ -261,23 +277,28 @@ Retrieve audit logs (Admin and CSCS only)
 **Common Queries:**
 
 **1. Find all blocked access attempts in the last 24 hours:**
+
 - Start Date: Yesterday
 - End Date: Today
 - Status: (Look for "Blocked" badge)
 - Severity: WARNING or ERROR
 
 **2. Find all login failures:**
+
 - Event Type: LOGIN_FAILED
 - Severity: ERROR
 
 **3. Find all attempts by a specific user:**
+
 - Search: Enter username
 - Click Search button
 
 **4. Find all critical security events:**
+
 - Severity: CRITICAL
 
 **5. Find all admin route access attempts:**
+
 - Search Route: "/dashboard/admin"
 
 ### Best Practices
@@ -306,6 +327,7 @@ Retrieve audit logs (Admin and CSCS only)
 ## Security Considerations
 
 ### What's Logged
+
 ✅ All unauthorized access attempts
 ✅ All authentication events
 ✅ IP addresses and user agents
@@ -314,18 +336,21 @@ Retrieve audit logs (Admin and CSCS only)
 ✅ Block reasons
 
 ### What's NOT Logged
+
 ❌ Password values
 ❌ Personal identifiable information (PII) beyond username
 ❌ Session tokens or cookies
 ❌ Request bodies (unless explicitly added to additionalData)
 
 ### Privacy
+
 - Audit logs contain user identification data (username, IP)
 - Access is restricted to Admin and CSCS only
 - Logs should be treated as confidential
 - Comply with data protection regulations in your jurisdiction
 
 ### Performance Impact
+
 - Audit logging uses async operations (fire-and-forget)
 - Middleware calls API endpoint asynchronously
 - Minimal impact on request latency (~5-10ms)
@@ -336,11 +361,13 @@ Retrieve audit logs (Admin and CSCS only)
 ### Issue: Logs not appearing
 
 **Possible Causes:**
+
 1. Middleware API call failing
 2. Database connection issue
 3. Permission issue (audit/log endpoint)
 
 **Solution:**
+
 1. Check browser console for errors
 2. Check server logs for Prisma errors
 3. Verify database connection is healthy
@@ -349,11 +376,13 @@ Retrieve audit logs (Admin and CSCS only)
 ### Issue: Slow query performance
 
 **Possible Causes:**
+
 1. Large date range selected
 2. No filters applied
 3. Many audit logs in database
 
 **Solution:**
+
 1. Narrow date range
 2. Apply specific filters (severity, event type)
 3. Check database indexes are created
@@ -361,11 +390,13 @@ Retrieve audit logs (Admin and CSCS only)
 ### Issue: Unable to access Audit Trail page
 
 **Possible Causes:**
+
 1. User is not Admin or CSCS
 2. Route guard is blocking access
 3. API endpoint returning 403
 
 **Solution:**
+
 1. Verify user has Admin or CSCS role
 2. Check route permissions in `route-permissions.ts`
 3. Check browser console for API errors

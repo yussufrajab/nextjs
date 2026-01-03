@@ -7,30 +7,38 @@
 
 import { Worker, Job } from 'bullmq';
 import { createRedisConnection } from '../redis';
-import { HRIMS_SYNC_QUEUE_NAME, HRIMSSyncJobData, HRIMSSyncProgress } from './hrims-sync-queue';
+import {
+  HRIMS_SYNC_QUEUE_NAME,
+  HRIMSSyncJobData,
+  HRIMSSyncProgress,
+} from './hrims-sync-queue';
 import { db } from '../db';
 import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
 
 // HRIMS API Configuration
 const HRIMS_CONFIG = {
-  BASE_URL: "http://10.0.217.11:8135/api",
-  API_KEY: "0ea1e3f5-ea57-410b-a199-246fa288b851",
-  TOKEN: "CfDJ8M6SKjORsSdBliudb_vdU_DEea8FKIcQckiBxdvt4EJgtcP0ba_3REOpGvWYeOF46fvqw8heVnqFnXTwOmD5Wg5Qg3yNJlwyGDHVhqbgyKxB31Bjh2pI6C2qAYnLMovU4XLlQFVu7cTpIqtgItNZpM4"
+  BASE_URL: 'http://10.0.217.11:8135/api',
+  API_KEY: '0ea1e3f5-ea57-410b-a199-246fa288b851',
+  TOKEN:
+    'CfDJ8M6SKjORsSdBliudb_vdU_DEea8FKIcQckiBxdvt4EJgtcP0ba_3REOpGvWYeOF46fvqw8heVnqFnXTwOmD5Wg5Qg3yNJlwyGDHVhqbgyKxB31Bjh2pI6C2qAYnLMovU4XLlQFVu7cTpIqtgItNZpM4',
 };
 
-async function fetchFromHRIMS(requestId: string, requestPayloadData: any): Promise<any> {
+async function fetchFromHRIMS(
+  requestId: string,
+  requestPayloadData: any
+): Promise<any> {
   try {
     const response = await axios.post(
       `${HRIMS_CONFIG.BASE_URL}/Employees`,
       {
         RequestId: requestId,
-        RequestPayloadData: requestPayloadData
+        RequestPayloadData: requestPayloadData,
       },
       {
         headers: {
-          'ApiKey': HRIMS_CONFIG.API_KEY,
-          'Token': HRIMS_CONFIG.TOKEN,
+          ApiKey: HRIMS_CONFIG.API_KEY,
+          Token: HRIMS_CONFIG.TOKEN,
           'Content-Type': 'application/json',
         },
         timeout: 900000, // 15 minutes
@@ -40,7 +48,9 @@ async function fetchFromHRIMS(requestId: string, requestPayloadData: any): Promi
     );
 
     if (response.status !== 200) {
-      throw new Error(`HRIMS API error: ${response.status} ${response.statusText}`);
+      throw new Error(
+        `HRIMS API error: ${response.status} ${response.statusText}`
+      );
     }
 
     return response.data;
@@ -55,7 +65,10 @@ async function fetchFromHRIMS(requestId: string, requestPayloadData: any): Promi
   }
 }
 
-async function saveEmployeeFromDetailedData(hrimsData: any, institutionId: string) {
+async function saveEmployeeFromDetailedData(
+  hrimsData: any,
+  institutionId: string
+) {
   try {
     const personalInfo = hrimsData.personalInfo;
 
@@ -63,18 +76,29 @@ async function saveEmployeeFromDetailedData(hrimsData: any, institutionId: strin
       return null;
     }
 
-    const currentEmployment = hrimsData.employmentHistories?.find((emp: any) => emp.isCurrent) || hrimsData.employmentHistories?.[0];
-    const currentSalary = hrimsData.salaryInformation?.find((sal: any) => sal.isCurrent) || hrimsData.salaryInformation?.[0];
-    const highestEducation = hrimsData.educationHistories?.find((edu: any) => edu.isEmploymentHighest) || hrimsData.educationHistories?.[0];
+    const currentEmployment =
+      hrimsData.employmentHistories?.find((emp: any) => emp.isCurrent) ||
+      hrimsData.employmentHistories?.[0];
+    const currentSalary =
+      hrimsData.salaryInformation?.find((sal: any) => sal.isCurrent) ||
+      hrimsData.salaryInformation?.[0];
+    const highestEducation =
+      hrimsData.educationHistories?.find(
+        (edu: any) => edu.isEmploymentHighest
+      ) || hrimsData.educationHistories?.[0];
 
     const existingEmployee = await db.employee.findUnique({
-      where: { zanId: personalInfo.zanIdNumber }
+      where: { zanId: personalInfo.zanIdNumber },
     });
 
     const employeeId = existingEmployee?.id || uuidv4();
 
-    const fullName = [personalInfo.firstName, personalInfo.middleName, personalInfo.lastName]
-      .filter(name => name && name.trim())
+    const fullName = [
+      personalInfo.firstName,
+      personalInfo.middleName,
+      personalInfo.lastName,
+    ]
+      .filter((name) => name && name.trim())
       .join(' ');
 
     let gender = 'Male';
@@ -83,19 +107,28 @@ async function saveEmployeeFromDetailedData(hrimsData: any, institutionId: strin
         gender = 'Male';
       } else if (personalInfo.genderName === 'Mwanamke') {
         gender = 'Female';
-      } else if (personalInfo.genderName === 'Male' || personalInfo.genderName === 'Female') {
+      } else if (
+        personalInfo.genderName === 'Male' ||
+        personalInfo.genderName === 'Female'
+      ) {
         gender = personalInfo.genderName;
       }
     }
 
-    const contactAddress = [personalInfo.houseNumber, personalInfo.street, personalInfo.city]
-      .filter(part => part && part.trim())
-      .join(', ') || null;
+    const contactAddress =
+      [personalInfo.houseNumber, personalInfo.street, personalInfo.city]
+        .filter((part) => part && part.trim())
+        .join(', ') || null;
 
-    const cadre = currentEmployment ?
-      [currentEmployment.titlePrefixName, currentEmployment.titleName, currentEmployment.gradeName]
-        .filter(part => part && part.trim())
-        .join(' ') : null;
+    const cadre = currentEmployment
+      ? [
+          currentEmployment.titlePrefixName,
+          currentEmployment.titleName,
+          currentEmployment.gradeName,
+        ]
+          .filter((part) => part && part.trim())
+          .join(' ')
+      : null;
 
     let status = 'On Probation';
     if (personalInfo.isEmployeeConfirmed) {
@@ -106,12 +139,20 @@ async function saveEmployeeFromDetailedData(hrimsData: any, institutionId: strin
       else if (empStatus?.includes('hayupo')) status = 'Resigned';
       else if (empStatus?.includes('aachishwa')) status = 'Terminated';
       else if (empStatus?.includes('fukuzwa')) status = 'Dismissed';
-      else if (currentEmployment.employmentStatusName?.toLowerCase().includes('hai')) status = 'Confirmed';
+      else if (
+        currentEmployment.employmentStatusName?.toLowerCase().includes('hai')
+      )
+        status = 'Confirmed';
     }
 
     let retirementDate = null;
-    const activeContract = hrimsData.contractDetails?.find((c: any) => c.isActive);
-    if (activeContract?.toDate && activeContract.toDate !== '1900-01-01T00:00:00') {
+    const activeContract = hrimsData.contractDetails?.find(
+      (c: any) => c.isActive
+    );
+    if (
+      activeContract?.toDate &&
+      activeContract.toDate !== '1900-01-01T00:00:00'
+    ) {
       retirementDate = new Date(activeContract.toDate);
     }
 
@@ -119,9 +160,14 @@ async function saveEmployeeFromDetailedData(hrimsData: any, institutionId: strin
       id: employeeId,
       name: fullName,
       gender: gender,
-      dateOfBirth: personalInfo.birthDate ? new Date(personalInfo.birthDate) : null,
+      dateOfBirth: personalInfo.birthDate
+        ? new Date(personalInfo.birthDate)
+        : null,
       placeOfBirth: personalInfo.placeOfBirth,
-      region: personalInfo.districtName || personalInfo.birthRegionName || personalInfo.regionName,
+      region:
+        personalInfo.districtName ||
+        personalInfo.birthRegionName ||
+        personalInfo.regionName,
       countryOfBirth: personalInfo.birthCountryName,
       zanId: personalInfo.zanIdNumber,
       phoneNumber: personalInfo.primaryPhone || personalInfo.workPhone,
@@ -130,22 +176,31 @@ async function saveEmployeeFromDetailedData(hrimsData: any, institutionId: strin
       payrollNumber: personalInfo.payrollNumber || '',
       cadre: cadre,
       salaryScale: currentSalary?.salaryScaleName,
-      ministry: currentEmployment?.parentEntityName || currentEmployment?.entityName,
+      ministry:
+        currentEmployment?.parentEntityName || currentEmployment?.entityName,
       department: currentEmployment?.subEntityName,
       appointmentType: currentEmployment?.appointmentTypeName,
       contractType: activeContract?.contractTypeName,
-      recentTitleDate: currentEmployment?.fromDate ? new Date(currentEmployment.fromDate) : null,
-      currentReportingOffice: currentEmployment?.divisionName || currentEmployment?.subEntityName,
+      recentTitleDate: currentEmployment?.fromDate
+        ? new Date(currentEmployment.fromDate)
+        : null,
+      currentReportingOffice:
+        currentEmployment?.divisionName || currentEmployment?.subEntityName,
       currentWorkplace: currentEmployment?.entityName,
-      employmentDate: personalInfo.employmentDate ? new Date(personalInfo.employmentDate) : null,
-      confirmationDate: personalInfo.employmentConfirmationDate ? new Date(personalInfo.employmentConfirmationDate) : null,
+      employmentDate: personalInfo.employmentDate
+        ? new Date(personalInfo.employmentDate)
+        : null,
+      confirmationDate: personalInfo.employmentConfirmationDate
+        ? new Date(personalInfo.employmentConfirmationDate)
+        : null,
       retirementDate: retirementDate,
       status: status,
       institutionId: institutionId,
       employeeEntityId: personalInfo.zanIdNumber,
     };
 
-    const { institutionId: instId, ...employeeDataWithoutInstId } = dbEmployeeData;
+    const { institutionId: instId, ...employeeDataWithoutInstId } =
+      dbEmployeeData;
 
     await db.employee.upsert({
       where: { zanId: personalInfo.zanIdNumber },
@@ -153,8 +208,8 @@ async function saveEmployeeFromDetailedData(hrimsData: any, institutionId: strin
       create: {
         ...employeeDataWithoutInstId,
         Institution: {
-          connect: { id: institutionId }
-        }
+          connect: { id: institutionId },
+        },
       },
     });
 
@@ -164,7 +219,7 @@ async function saveEmployeeFromDetailedData(hrimsData: any, institutionId: strin
       name: dbEmployeeData.name,
       cadre: dbEmployeeData.cadre,
       ministry: dbEmployeeData.ministry,
-      status: dbEmployeeData.status
+      status: dbEmployeeData.status,
     };
   } catch (error) {
     console.error('Error saving employee:', error);
@@ -176,7 +231,14 @@ async function saveEmployeeFromDetailedData(hrimsData: any, institutionId: strin
  * Process a single HRIMS sync job
  */
 async function processHRIMSSyncJob(job: Job<HRIMSSyncJobData>): Promise<any> {
-  const { institutionId, institutionName, requestId, identifier, identifierLabel, pageSize } = job.data;
+  const {
+    institutionId,
+    institutionName,
+    requestId,
+    identifier,
+    identifierLabel,
+    pageSize,
+  } = job.data;
 
   const startTime = Date.now();
   console.log(`\n${'='.repeat(80)}`);
@@ -219,7 +281,7 @@ async function processHRIMSSyncJob(job: Job<HRIMSSyncJobData>): Promise<any> {
       const employeeListResponse = await fetchFromHRIMS(requestId, {
         PageNumber: currentPage,
         PageSize: pageSize,
-        RequestBody: identifier
+        RequestBody: identifier,
       });
 
       const pageFetchTime = Date.now() - pageStartTime;
@@ -227,10 +289,15 @@ async function processHRIMSSyncJob(job: Job<HRIMSSyncJobData>): Promise<any> {
 
       if (employeeListResponse.code !== 200) {
         failedPages++;
-        console.log(`   ❌ Page ${currentPage} failed with code ${employeeListResponse.code}`);
+        console.log(
+          `   ❌ Page ${currentPage} failed with code ${employeeListResponse.code}`
+        );
 
         if (currentPage === 0) {
-          throw new Error(employeeListResponse.message || `No employees found for ${identifierLabel}: ${identifier}`);
+          throw new Error(
+            employeeListResponse.message ||
+              `No employees found for ${identifierLabel}: ${identifier}`
+          );
         }
 
         if (failedPages >= 3) {
@@ -257,11 +324,19 @@ async function processHRIMSSyncJob(job: Job<HRIMSSyncJobData>): Promise<any> {
         } as HRIMSSyncProgress);
       }
 
-      if (employeeListResponse.data && Array.isArray(employeeListResponse.data)) {
+      if (
+        employeeListResponse.data &&
+        Array.isArray(employeeListResponse.data)
+      ) {
         allEmployees.push(...employeeListResponse.data);
-        const progress = overallDataSize > 0 ? ((allEmployees.length / overallDataSize) * 100) : 0;
+        const progress =
+          overallDataSize > 0
+            ? (allEmployees.length / overallDataSize) * 100
+            : 0;
         console.log(`   ✓ Added ${employeeListResponse.data.length} employees`);
-        console.log(`   📈 Progress: ${allEmployees.length}/${overallDataSize} (${progress.toFixed(1)}%)`);
+        console.log(
+          `   📈 Progress: ${allEmployees.length}/${overallDataSize} (${progress.toFixed(1)}%)`
+        );
 
         await job.updateProgress({
           type: 'progress',
@@ -274,17 +349,23 @@ async function processHRIMSSyncJob(job: Job<HRIMSSyncJobData>): Promise<any> {
         } as HRIMSSyncProgress);
       }
 
-      const currentDataSize = employeeListResponse.currentDataSize || employeeListResponse.data?.length || 0;
+      const currentDataSize =
+        employeeListResponse.currentDataSize ||
+        employeeListResponse.data?.length ||
+        0;
 
-      if (currentDataSize === 0 ||
-          currentDataSize < pageSize ||
-          (overallDataSize > 0 && allEmployees.length >= overallDataSize)) {
+      if (
+        currentDataSize === 0 ||
+        currentDataSize < pageSize ||
+        (overallDataSize > 0 && allEmployees.length >= overallDataSize)
+      ) {
         hasMoreData = false;
-        console.log(`\n✅ Pagination complete. Fetched ${allEmployees.length} total employees`);
+        console.log(
+          `\n✅ Pagination complete. Fetched ${allEmployees.length} total employees`
+        );
       } else {
         currentPage++;
       }
-
     } catch (error) {
       failedPages++;
       console.error(`   ❌ Error fetching page ${currentPage}:`, error);
@@ -318,12 +399,20 @@ async function processHRIMSSyncJob(job: Job<HRIMSSyncJobData>): Promise<any> {
 
   for (let i = 0; i < allEmployees.length; i++) {
     try {
-      const employeeData = await saveEmployeeFromDetailedData(allEmployees[i], institutionId);
+      const employeeData = await saveEmployeeFromDetailedData(
+        allEmployees[i],
+        institutionId
+      );
       if (employeeData) {
         savedEmployees.push(employeeData);
 
-        if ((savedEmployees.length + skippedCount) % 10 === 0 || i === allEmployees.length - 1) {
-          const percentage = (((savedEmployees.length + skippedCount) / allEmployees.length) * 100);
+        if (
+          (savedEmployees.length + skippedCount) % 10 === 0 ||
+          i === allEmployees.length - 1
+        ) {
+          const percentage =
+            ((savedEmployees.length + skippedCount) / allEmployees.length) *
+            100;
           await job.updateProgress({
             type: 'progress',
             phase: 'saving',
@@ -338,14 +427,17 @@ async function processHRIMSSyncJob(job: Job<HRIMSSyncJobData>): Promise<any> {
         skippedCount++;
       }
 
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
     } catch (error) {
       console.error(`   ❌ Error processing employee:`, error);
       skippedCount++;
     }
   }
 
-  const saveTime = ((Date.now() - startTime - parseFloat(fetchTime) * 1000) / 1000).toFixed(1);
+  const saveTime = (
+    (Date.now() - startTime - parseFloat(fetchTime) * 1000) /
+    1000
+  ).toFixed(1);
   const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
 
   console.log(`\n✅ Processing complete!`);

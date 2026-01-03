@@ -2,7 +2,13 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { FileUpload } from '@/components/ui/file-upload';
 import { toast } from '@/hooks/use-toast';
 import { Eye, Download, Trash2 } from 'lucide-react';
@@ -13,24 +19,30 @@ export function MinioFileExample() {
 
   const handleFileUpload = (objectKeys: string | string[]) => {
     const keys = Array.isArray(objectKeys) ? objectKeys : [objectKeys];
-    setUploadedFiles(prev => [...prev, ...keys]);
+    setUploadedFiles((prev) => [...prev, ...keys]);
   };
 
   const handlePreview = (objectKey: string) => {
     // Open preview in new tab
-    window.open(`/api/files/preview/${encodeURIComponent(objectKey)}`, '_blank');
+    window.open(
+      `/api/files/preview/${encodeURIComponent(objectKey)}`,
+      '_blank'
+    );
   };
 
   const handleDownload = (objectKey: string) => {
     // Trigger download
-    window.open(`/api/files/download/${encodeURIComponent(objectKey)}`, '_blank');
+    window.open(
+      `/api/files/download/${encodeURIComponent(objectKey)}`,
+      '_blank'
+    );
   };
 
   const handleDelete = async (objectKey: string) => {
     try {
       // Note: You would need to implement a delete API endpoint
       // For now, just remove from the UI
-      setUploadedFiles(prev => prev.filter(key => key !== objectKey));
+      setUploadedFiles((prev) => prev.filter((key) => key !== objectKey));
       toast({
         title: 'Success',
         description: 'File has been removed',
@@ -39,7 +51,7 @@ export function MinioFileExample() {
       toast({
         title: 'Error',
         description: 'Failed to remove file',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     }
   };
@@ -55,7 +67,8 @@ export function MinioFileExample() {
         <CardHeader>
           <CardTitle>MinIO File Management Demo</CardTitle>
           <CardDescription>
-            Try uploading, previewing, and downloading PDF files using MinIO (Max size: 2MB)
+            Try uploading, previewing, and downloading PDF files using MinIO
+            (Max size: 2MB)
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -73,7 +86,9 @@ export function MinioFileExample() {
 
           {/* Manual File Upload Section */}
           <div className="border-t pt-4">
-            <h3 className="text-lg font-medium mb-3">Or Select PDF File Manually</h3>
+            <h3 className="text-lg font-medium mb-3">
+              Or Select PDF File Manually
+            </h3>
             <input
               type="file"
               multiple
@@ -97,11 +112,14 @@ export function MinioFileExample() {
                     if (response.ok) {
                       const result = await response.json();
                       if (result.success) {
-                        setUploadedFiles(prev => [...prev, result.data.objectKey]);
+                        setUploadedFiles((prev) => [
+                          ...prev,
+                          result.data.objectKey,
+                        ]);
                       }
                     }
                   }
-                  
+
                   toast({
                     title: 'Success',
                     description: 'Files have been uploaded',
@@ -110,7 +128,7 @@ export function MinioFileExample() {
                   toast({
                     title: 'Error',
                     description: 'Failed to upload files',
-                    variant: 'destructive'
+                    variant: 'destructive',
                   });
                 } finally {
                   setUploading(false);
@@ -140,7 +158,7 @@ export function MinioFileExample() {
                         {objectKey}
                       </p>
                     </div>
-                    
+
                     <div className="flex items-center space-x-2">
                       <Button
                         type="button"
@@ -152,7 +170,7 @@ export function MinioFileExample() {
                       >
                         <Eye className="h-3 w-3" />
                       </Button>
-                      
+
                       <Button
                         type="button"
                         variant="outline"
@@ -163,7 +181,7 @@ export function MinioFileExample() {
                       >
                         <Download className="h-3 w-3" />
                       </Button>
-                      
+
                       <Button
                         type="button"
                         variant="outline"
@@ -193,7 +211,7 @@ export function MinioFileExample() {
                     toast({
                       title: 'No Files',
                       description: 'Upload a file first',
-                      variant: 'destructive'
+                      variant: 'destructive',
                     });
                   }
                 }}
@@ -202,7 +220,7 @@ export function MinioFileExample() {
                 <Eye className="h-4 w-4 mr-2" />
                 Preview First File
               </Button>
-              
+
               <Button
                 onClick={() => {
                   if (uploadedFiles.length > 0) {
@@ -211,7 +229,7 @@ export function MinioFileExample() {
                     toast({
                       title: 'No Files',
                       description: 'Upload a file first',
-                      variant: 'destructive'
+                      variant: 'destructive',
                     });
                   }
                 }}

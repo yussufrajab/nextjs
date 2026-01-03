@@ -4,7 +4,10 @@ import { z } from 'zod';
 import { ROLES } from '@/lib/constants';
 import bcrypt from 'bcryptjs';
 import { randomBytes } from 'crypto';
-import { hashPassword, calculateTemporaryPasswordExpiry } from '@/lib/password-utils';
+import {
+  hashPassword,
+  calculateTemporaryPasswordExpiry,
+} from '@/lib/password-utils';
 
 const employeeLoginSchema = z.object({
   zanId: z.string().min(1),
@@ -23,7 +26,8 @@ function generateUsername(name: string): string {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { zanId, zssfNumber, payrollNumber } = employeeLoginSchema.parse(body);
+    const { zanId, zssfNumber, payrollNumber } =
+      employeeLoginSchema.parse(body);
 
     // Trim whitespace and normalize input
     const normalizedZanId = zanId.trim();
@@ -33,7 +37,7 @@ export async function POST(req: Request) {
     console.log('[EMPLOYEE_LOGIN] Search criteria:', {
       zanId: normalizedZanId,
       zssfNumber: normalizedZssfNumber,
-      payrollNumber: normalizedPayrollNumber
+      payrollNumber: normalizedPayrollNumber,
     });
 
     // Find employee with matching credentials
@@ -47,7 +51,7 @@ export async function POST(req: Request) {
         Institution: {
           select: {
             name: true,
-          }
+          },
         },
         User: {
           select: {
@@ -56,17 +60,20 @@ export async function POST(req: Request) {
             username: true,
             role: true,
             active: true,
-          }
-        }
-      }
+          },
+        },
+      },
     });
 
     if (!employee) {
-      console.log('[EMPLOYEE_LOGIN] No employee found with provided credentials');
+      console.log(
+        '[EMPLOYEE_LOGIN] No employee found with provided credentials'
+      );
       return NextResponse.json(
-        { 
-          success: false, 
-          message: 'Invalid employee credentials. Please check your ZAN ID, ZSSF Number, and Payroll Number.' 
+        {
+          success: false,
+          message:
+            'Invalid employee credentials. Please check your ZAN ID, ZSSF Number, and Payroll Number.',
         },
         { status: 401 }
       );
@@ -76,7 +83,10 @@ export async function POST(req: Request) {
     let user = employee.User;
 
     if (!user) {
-      console.log('[EMPLOYEE_LOGIN] No user account found. Auto-provisioning user account for employee:', employee.name);
+      console.log(
+        '[EMPLOYEE_LOGIN] No user account found. Auto-provisioning user account for employee:',
+        employee.name
+      );
 
       try {
         // Generate username from employee name
@@ -123,20 +133,26 @@ export async function POST(req: Request) {
             username: true,
             role: true,
             active: true,
+          },
+        });
+
+        console.log(
+          '[EMPLOYEE_LOGIN] User account auto-provisioned successfully:',
+          {
+            username: user.username,
+            employeeId: employee.id,
           }
-        });
-
-        console.log('[EMPLOYEE_LOGIN] User account auto-provisioned successfully:', {
-          username: user.username,
-          employeeId: employee.id
-        });
-
+        );
       } catch (provisionError) {
-        console.error('[EMPLOYEE_LOGIN] Error auto-provisioning user account:', provisionError);
+        console.error(
+          '[EMPLOYEE_LOGIN] Error auto-provisioning user account:',
+          provisionError
+        );
         return NextResponse.json(
           {
             success: false,
-            message: 'Failed to create user account. Please contact HR for assistance.'
+            message:
+              'Failed to create user account. Please contact HR for assistance.',
           },
           { status: 500 }
         );
@@ -148,7 +164,8 @@ export async function POST(req: Request) {
       return NextResponse.json(
         {
           success: false,
-          message: 'Your account has been deactivated. Please contact HR for assistance.'
+          message:
+            'Your account has been deactivated. Please contact HR for assistance.',
         },
         { status: 401 }
       );
@@ -159,7 +176,8 @@ export async function POST(req: Request) {
       return NextResponse.json(
         {
           success: false,
-          message: 'This login is only for employees. Please use the staff login page.'
+          message:
+            'This login is only for employees. Please use the staff login page.',
         },
         { status: 403 }
       );
@@ -172,13 +190,15 @@ export async function POST(req: Request) {
     });
 
     // Get client info for session creation
-    const ipAddress = req.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
-                     req.headers.get('x-real-ip') ||
-                     null;
+    const ipAddress =
+      req.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
+      req.headers.get('x-real-ip') ||
+      null;
     const userAgent = req.headers.get('user-agent') || null;
 
     // Detect suspicious login and create session
-    const { detectSuspiciousLogin, getLoginSummary } = await import('@/lib/suspicious-login-detector');
+    const { detectSuspiciousLogin, getLoginSummary } =
+      await import('@/lib/suspicious-login-detector');
     const { createSession } = await import('@/lib/session-manager');
     const { createNotification } = await import('@/lib/notifications');
 
@@ -198,7 +218,11 @@ export async function POST(req: Request) {
 
     // Notify user if login is suspicious
     if (suspiciousCheck.shouldNotify) {
-      const loginInfo = getLoginSummary({ userId: user.id, ipAddress, userAgent });
+      const loginInfo = getLoginSummary({
+        userId: user.id,
+        ipAddress,
+        userAgent,
+      });
       await createNotification({
         userId: user.id,
         message: `New login detected from ${loginInfo.device} at ${loginInfo.location} on ${loginInfo.time}. If this wasn't you, please contact HR immediately.`,
@@ -228,25 +252,24 @@ export async function POST(req: Request) {
       user: userData,
       sessionToken: session.sessionToken, // Include session token
     });
-
   } catch (error) {
     console.error('[EMPLOYEE_LOGIN]', error);
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           message: 'Invalid input data',
-          errors: error.errors 
+          errors: error.errors,
         },
         { status: 400 }
       );
     }
 
     return NextResponse.json(
-      { 
-        success: false, 
-        message: 'Internal server error. Please try again later.' 
+      {
+        success: false,
+        message: 'Internal server error. Please try again later.',
       },
       { status: 500 }
     );

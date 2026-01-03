@@ -1,21 +1,22 @@
 # SECURITY POLICY DOCUMENT
+
 ## CIVIL SERVICE MANAGEMENT SYSTEM (CSMS)
 
 ---
 
 ## Document Control
 
-| Item | Details |
-|------|---------|
+| Item               | Details                                                    |
+| ------------------ | ---------------------------------------------------------- |
 | **Document Title** | Security Policy Document - Civil Service Management System |
-| **Project Name** | Civil Service Management System (CSMS) |
-| **Version** | 1.0 |
-| **Date Prepared** | December 26, 2025 |
-| **Effective Date** | January 1, 2026 |
-| **Review Date** | January 1, 2027 |
-| **Classification** | RESTRICTED |
-| **Approved By** | Civil Service Commission |
-| **Document Owner** | Chief Information Security Officer |
+| **Project Name**   | Civil Service Management System (CSMS)                     |
+| **Version**        | 1.0                                                        |
+| **Date Prepared**  | December 26, 2025                                          |
+| **Effective Date** | January 1, 2026                                            |
+| **Review Date**    | January 1, 2027                                            |
+| **Classification** | RESTRICTED                                                 |
+| **Approved By**    | Civil Service Commission                                   |
+| **Document Owner** | Chief Information Security Officer                         |
 
 ---
 
@@ -59,6 +60,7 @@ This policy covers:
 This policy applies to:
 
 **Personnel:**
+
 - Civil Service Commission staff
 - HR Officers (HRO)
 - HR Management Officers (HRMO, HHRMD)
@@ -72,6 +74,7 @@ This policy applies to:
 - Civil service employees
 
 **Systems:**
+
 - CSMS application (https://csms.zanajira.go.tz)
 - PostgreSQL database
 - MinIO object storage
@@ -110,6 +113,7 @@ The CSMS security program aims to achieve the following objectives:
 **Objective:** Protect sensitive civil service employee information from unauthorized disclosure.
 
 **Implementation:**
+
 - Role-based access control (RBAC)
 - Data encryption in transit (HTTPS/TLS)
 - Secure authentication mechanisms
@@ -118,6 +122,7 @@ The CSMS security program aims to achieve the following objectives:
 - Need-to-know access principles
 
 **Protected Information:**
+
 - Personal Identifiable Information (PII):
   - ZanID numbers
   - Payroll numbers
@@ -138,6 +143,7 @@ The CSMS security program aims to achieve the following objectives:
 **Objective:** Ensure accuracy and completeness of data throughout its lifecycle.
 
 **Implementation:**
+
 - Input validation on all forms
 - Database constraints and foreign keys
 - Audit trails for all modifications
@@ -147,6 +153,7 @@ The CSMS security program aims to achieve the following objectives:
 - Backup and recovery procedures
 
 **Protected Processes:**
+
 - Employee status changes
 - Request approvals and rejections
 - Cadre updates
@@ -159,6 +166,7 @@ The CSMS security program aims to achieve the following objectives:
 **Objective:** Ensure CSMS is available to authorized users when needed.
 
 **Implementation:**
+
 - 99.5% uptime target
 - Regular system maintenance
 - Backup and disaster recovery plans
@@ -168,6 +176,7 @@ The CSMS security program aims to achieve the following objectives:
 - DDoS protection
 
 **Service Levels:**
+
 - System availability: 24/7/365
 - Support hours: Monday-Friday, 8:00-17:00 EAT
 - Emergency support: 24/7
@@ -182,6 +191,7 @@ The CSMS security program aims to achieve the following objectives:
 **Objective:** Ensure all actions can be attributed to specific users.
 
 **Implementation:**
+
 - Unique user accounts (no shared accounts)
 - Comprehensive audit logging
 - Non-repudiation mechanisms
@@ -193,6 +203,7 @@ The CSMS security program aims to achieve the following objectives:
 **Objective:** Protect individual privacy rights in accordance with Zanzibar data protection laws.
 
 **Implementation:**
+
 - Privacy by design principles
 - Data minimization
 - Purpose limitation
@@ -205,6 +216,7 @@ The CSMS security program aims to achieve the following objectives:
 **Objective:** Ensure compliance with legal, regulatory, and policy requirements.
 
 **Implementation:**
+
 - Regular compliance audits
 - Policy adherence monitoring
 - Documentation of compliance activities
@@ -215,16 +227,16 @@ The CSMS security program aims to achieve the following objectives:
 
 **Key Performance Indicators (KPIs):**
 
-| Metric | Target | Measurement Frequency |
-|--------|--------|---------------------|
-| System Availability | 99.5% | Monthly |
-| Unauthorized Access Attempts | < 10/month | Monthly |
-| Security Incidents | 0 critical/month | Monthly |
-| Password Policy Compliance | 100% | Quarterly |
-| Security Training Completion | 100% annually | Annually |
-| Vulnerability Remediation | < 30 days | Continuous |
-| Backup Success Rate | 100% | Daily |
-| Audit Log Retention | 90 days minimum | Continuous |
+| Metric                       | Target           | Measurement Frequency |
+| ---------------------------- | ---------------- | --------------------- |
+| System Availability          | 99.5%            | Monthly               |
+| Unauthorized Access Attempts | < 10/month       | Monthly               |
+| Security Incidents           | 0 critical/month | Monthly               |
+| Password Policy Compliance   | 100%             | Quarterly             |
+| Security Training Completion | 100% annually    | Annually              |
+| Vulnerability Remediation    | < 30 days        | Continuous            |
+| Backup Success Rate          | 100%             | Daily                 |
+| Audit Log Retention          | 90 days minimum  | Continuous            |
 
 ---
 
@@ -237,17 +249,20 @@ CSMS security implementation adheres to the following international and national
 #### 3.1.1 International Standards
 
 **ISO/IEC 27001:2013 - Information Security Management**
+
 - Information security management system (ISMS)
 - Risk assessment and treatment
 - Security controls implementation
 - Continuous improvement
 
 **ISO/IEC 27002:2013 - Code of Practice for Information Security Controls**
+
 - Security control guidelines
 - Implementation guidance
 - Best practices
 
 **NIST Cybersecurity Framework**
+
 - Identify
 - Protect
 - Detect
@@ -255,6 +270,7 @@ CSMS security implementation adheres to the following international and national
 - Recover
 
 **OWASP Top 10 - Web Application Security**
+
 - Protection against:
   - Injection attacks
   - Broken authentication
@@ -270,12 +286,14 @@ CSMS security implementation adheres to the following international and national
 #### 3.1.2 National Standards
 
 **Tanzania/Zanzibar Data Protection Regulations**
+
 - Personal data protection requirements
 - Data subject rights
 - Data controller obligations
 - Cross-border data transfer restrictions
 
 **Zanzibar e-Government Standards**
+
 - Government system security requirements
 - Interoperability standards
 - Service delivery standards
@@ -285,6 +303,7 @@ CSMS security implementation adheres to the following international and national
 #### 3.2.1 Encryption Standards
 
 **Data in Transit:**
+
 - **Protocol**: TLS 1.2 or higher
 - **Cipher Suites**: AES-256-GCM or stronger
 - **Certificate Authority**: Trusted CA certificates only
@@ -293,6 +312,7 @@ CSMS security implementation adheres to the following international and national
 - **Perfect Forward Secrecy**: Required
 
 **Data at Rest:**
+
 - **Database Encryption**: AES-256 encryption (implementation pending)
 - **File Storage**: MinIO with encryption enabled
 - **Backup Encryption**: AES-256 encryption
@@ -300,12 +320,14 @@ CSMS security implementation adheres to the following international and national
 #### 3.2.2 Authentication Standards
 
 **Password Hashing:**
+
 - **Algorithm**: bcrypt
 - **Work Factor**: 10 rounds minimum
 - **Salt**: Unique per password
 - **Storage**: Hashed passwords only, never plaintext
 
 **Session Management:**
+
 - **Session Timeout**: 24 hours of inactivity
 - **Session Storage**: Secure, HTTP-only cookies
 - **Session Regeneration**: On authentication and privilege escalation
@@ -314,6 +336,7 @@ CSMS security implementation adheres to the following international and national
 #### 3.2.3 Application Security Standards
 
 **Input Validation:**
+
 - Server-side validation required
 - Client-side validation for UX only
 - Whitelist validation preferred
@@ -321,6 +344,7 @@ CSMS security implementation adheres to the following international and national
 - Type checking required
 
 **Output Encoding:**
+
 - Context-appropriate encoding
 - HTML entity encoding
 - JavaScript encoding
@@ -328,6 +352,7 @@ CSMS security implementation adheres to the following international and national
 - SQL parameterization
 
 **Error Handling:**
+
 - Generic error messages to users
 - Detailed logging server-side
 - No sensitive information in errors
@@ -338,18 +363,21 @@ CSMS security implementation adheres to the following international and national
 #### 3.3.1 Layered Security (Defense in Depth)
 
 **Layer 1: Perimeter Security**
+
 - Firewall rules
 - DDoS protection
 - Intrusion detection/prevention
 - Network segmentation
 
 **Layer 2: Network Security**
+
 - HTTPS/TLS for all communications
 - VPN for administrative access
 - Network monitoring
 - Port restrictions
 
 **Layer 3: Application Security**
+
 - Authentication and authorization
 - Input validation
 - Session management
@@ -357,6 +385,7 @@ CSMS security implementation adheres to the following international and national
 - XSS prevention
 
 **Layer 4: Data Security**
+
 - Encryption at rest
 - Encryption in transit
 - Data classification
@@ -364,6 +393,7 @@ CSMS security implementation adheres to the following international and national
 - Backup encryption
 
 **Layer 5: Physical Security**
+
 - Data center access controls
 - Environmental controls
 - Video surveillance
@@ -372,6 +402,7 @@ CSMS security implementation adheres to the following international and national
 #### 3.3.2 Principle of Least Privilege
 
 **Implementation:**
+
 - Users granted minimum necessary permissions
 - Role-based access control (RBAC)
 - Separation of duties
@@ -379,6 +410,7 @@ CSMS security implementation adheres to the following international and national
 - Time-limited elevated privileges
 
 **Examples:**
+
 - HRO can only access own institution data
 - HRMO cannot access complaints/terminations
 - DO cannot access other HR requests
@@ -390,6 +422,7 @@ CSMS security implementation adheres to the following international and national
 #### 3.4.1 Secure Development Lifecycle (SDLC)
 
 **Phases:**
+
 1. **Requirements**: Security requirements definition
 2. **Design**: Threat modeling, security architecture
 3. **Development**: Secure coding practices, code reviews
@@ -398,6 +431,7 @@ CSMS security implementation adheres to the following international and national
 6. **Maintenance**: Patch management, monitoring
 
 **Secure Coding Practices:**
+
 - OWASP Secure Coding Guidelines
 - Input validation
 - Output encoding
@@ -409,6 +443,7 @@ CSMS security implementation adheres to the following international and national
 #### 3.4.2 Change Management
 
 **Requirements:**
+
 - All changes documented
 - Security review for changes
 - Testing in staging environment
@@ -431,6 +466,7 @@ This Acceptable Use Policy (AUP) defines authorized and prohibited uses of the C
 CSMS may be used for:
 
 **✓ Legitimate Business Purposes:**
+
 - Submitting HR requests for civil service employees
 - Reviewing and approving HR requests
 - Viewing employee profiles within authorization scope
@@ -441,6 +477,7 @@ CSMS may be used for:
 - Responding to complaints (HHRMD, DO)
 
 **✓ Within Role Authorization:**
+
 - HRO: Submit requests for own institution
 - HHRMD: Approve all request types
 - HRMO: Approve HR requests (not complaints/terminations)
@@ -454,6 +491,7 @@ CSMS may be used for:
 #### 4.2.2 Data Access
 
 **Authorized Data Access:**
+
 - Access only to data necessary for job function
 - Institution-based roles: Own institution only
 - CSC roles: All institutions as required
@@ -465,6 +503,7 @@ CSMS may be used for:
 #### 4.3.1 Strictly Prohibited Activities
 
 **❌ Account Misuse:**
+
 - Sharing login credentials with others
 - Using another person's account
 - Attempting to access accounts without authorization
@@ -472,6 +511,7 @@ CSMS may be used for:
 - Circumventing authentication mechanisms
 
 **❌ Data Misuse:**
+
 - Accessing data without legitimate business need
 - Disclosing confidential information to unauthorized persons
 - Copying or downloading data for personal use
@@ -480,6 +520,7 @@ CSMS may be used for:
 - Exporting data to unauthorized systems
 
 **❌ System Misuse:**
+
 - Attempting to gain unauthorized access to system resources
 - Exploiting security vulnerabilities
 - Installing unauthorized software or tools
@@ -489,6 +530,7 @@ CSMS may be used for:
 - Bypassing security controls
 
 **❌ Malicious Activities:**
+
 - Hacking, cracking, or penetration testing without authorization
 - Denial of service attacks
 - Social engineering attacks
@@ -496,6 +538,7 @@ CSMS may be used for:
 - Credential stuffing or brute force attacks
 
 **❌ Inappropriate Content:**
+
 - Uploading offensive, obscene, or inappropriate content
 - Submitting false or fraudulent information
 - Creating fake or misleading requests
@@ -505,6 +548,7 @@ CSMS may be used for:
 #### 4.3.2 Prohibited Data Practices
 
 **❌ Data Handling Violations:**
+
 - Storing CSMS data on personal devices without authorization
 - Transmitting CSMS data via personal email accounts
 - Posting CSMS data on social media or public forums
@@ -513,6 +557,7 @@ CSMS may be used for:
 - Discussing confidential information in public areas
 
 **❌ External Sharing:**
+
 - Sharing employee personal information with external parties without authorization
 - Publishing CSMS data on external websites
 - Providing CSMS access to unauthorized third parties
@@ -521,6 +566,7 @@ CSMS may be used for:
 ### 4.4 Personal Use
 
 **Limited Personal Use:**
+
 - Incidental personal use permitted if:
   - Does not interfere with work duties
   - Does not violate any policy provisions
@@ -529,10 +575,12 @@ CSMS may be used for:
   - Does not involve confidential data
 
 **Examples of Acceptable Limited Personal Use:**
+
 - Checking personal email during break (not using CSMS)
 - Brief personal phone calls during break
 
 **Examples of Unacceptable Personal Use:**
+
 - Using CSMS to manage personal business
 - Storing personal files in CSMS
 - Using CSMS infrastructure for personal projects
@@ -543,6 +591,7 @@ CSMS may be used for:
 
 **Notice:**
 Users acknowledge and consent that:
+
 - All CSMS activities may be monitored
 - System logs are maintained
 - Access patterns are analyzed
@@ -550,6 +599,7 @@ Users acknowledge and consent that:
 - No expectation of privacy when using CSMS
 
 **Monitoring Purposes:**
+
 - Security incident detection
 - Performance optimization
 - Compliance verification
@@ -560,6 +610,7 @@ Users acknowledge and consent that:
 #### 4.5.2 Audit Logging
 
 **Logged Activities:**
+
 - Login attempts (successful and failed)
 - Logout events
 - Request submissions
@@ -572,6 +623,7 @@ Users acknowledge and consent that:
 - Administrative actions
 
 **Log Retention:**
+
 - Standard logs: 90 days minimum
 - Security-related logs: 1 year
 - Compliance logs: 7 years
@@ -582,6 +634,7 @@ Users acknowledge and consent that:
 #### 4.6.1 Obligation to Report
 
 **All users must report:**
+
 - Suspected security breaches
 - Policy violations
 - Unauthorized access attempts
@@ -591,6 +644,7 @@ Users acknowledge and consent that:
 - System vulnerabilities
 
 **Reporting Channels:**
+
 - Immediate supervisor
 - System Administrator: admin@csms.zanajira.go.tz
 - Security Officer: security@csms.zanajira.go.tz
@@ -607,11 +661,13 @@ Users who report security incidents or policy violations in good faith will not 
 Violations may result in:
 
 **First Offense (Minor):**
+
 - Warning and counseling
 - Mandatory security training
 - Temporary access restriction
 
 **Repeat or Serious Offense:**
+
 - Access suspension
 - Formal disciplinary action
 - Termination of employment
@@ -619,6 +675,7 @@ Violations may result in:
 - Legal prosecution (criminal violations)
 
 **Immediate Termination Offenses:**
+
 - Deliberate data theft
 - System sabotage
 - Fraud or embezzlement
@@ -639,18 +696,21 @@ This Password Policy establishes requirements for password creation, management,
 #### 5.2.1 Password Complexity
 
 **Current Requirements:**
+
 - **Minimum length**: 6 characters
 - **Character types**: No specific requirements (to be enhanced)
 
 **Recommended Enhanced Requirements (To Be Implemented):**
+
 - **Minimum length**: 12 characters
 - **Character types**: Must include at least three of:
   - Uppercase letters (A-Z)
   - Lowercase letters (a-z)
   - Numbers (0-9)
-  - Special characters (!@#$%^&*()_+-=[]{}|;:,.<>?)
+  - Special characters (!@#$%^&\*()\_+-=[]{}|;:,.<>?)
 
 **Prohibited Passwords:**
+
 - Dictionary words
 - Personal information (name, birth date, ZanID, etc.)
 - Common passwords (password, 123456, admin, etc.)
@@ -663,12 +723,14 @@ This Password Policy establishes requirements for password creation, management,
 **Password Examples:**
 
 ❌ **Weak Passwords:**
+
 - `password` (dictionary word)
 - `123456` (sequential)
 - `admin2024` (predictable)
 - `johndoe` (personal info)
 
 ✅ **Strong Passwords:**
+
 - `Zi@nz1b@r2024!HR` (12+ chars, mixed types)
 - `MyC$MS#P@ssw0rd` (12+ chars, mixed types)
 - `Civ!lS3rv1c3#2024` (12+ chars, mixed types)
@@ -676,6 +738,7 @@ This Password Policy establishes requirements for password creation, management,
 #### 5.2.2 Password Creation
 
 **Process:**
+
 1. **Initial Password Assignment**:
    - Administrator assigns temporary password
    - Temporary password must be changed on first login
@@ -700,6 +763,7 @@ This Password Policy establishes requirements for password creation, management,
 **User Responsibilities:**
 
 **MUST:**
+
 - ✓ Keep passwords confidential
 - ✓ Memorize passwords (do not write down)
 - ✓ Use password manager if needed (approved tools only)
@@ -709,6 +773,7 @@ This Password Policy establishes requirements for password creation, management,
 - ✓ Report lost/stolen credentials immediately
 
 **MUST NOT:**
+
 - ✗ Share password with anyone
 - ✗ Write password on paper
 - ✗ Store password in plain text file
@@ -720,6 +785,7 @@ This Password Policy establishes requirements for password creation, management,
 #### 5.3.2 Password Storage
 
 **System Requirements:**
+
 - Passwords hashed using bcrypt
 - Salt rounds: 10 minimum
 - Unique salt per password
@@ -728,6 +794,7 @@ This Password Policy establishes requirements for password creation, management,
 - Hashes not logged or displayed
 
 **Administrator Obligations:**
+
 - Cannot view user passwords
 - Can only reset passwords
 - Must follow same password rules
@@ -736,9 +803,11 @@ This Password Policy establishes requirements for password creation, management,
 #### 5.3.3 Password Expiration
 
 **Current Policy:**
+
 - No automatic expiration (to be enhanced)
 
 **Recommended Policy (To Be Implemented):**
+
 - **Standard Users**: 90 days
 - **Administrators**: 60 days
 - **Service Accounts**: 180 days
@@ -746,6 +815,7 @@ This Password Policy establishes requirements for password creation, management,
 - Warning notifications: 14, 7, 3, 1 days before expiration
 
 **Exceptions:**
+
 - Emergency password reset: No expiration delay
 - System-generated passwords: Must change on first login
 
@@ -754,6 +824,7 @@ This Password Policy establishes requirements for password creation, management,
 #### 5.4.1 Standard Password Reset Process
 
 **User-Initiated Reset:**
+
 1. User contacts system administrator
 2. Administrator verifies identity:
    - Full name
@@ -766,6 +837,7 @@ This Password Policy establishes requirements for password creation, management,
 6. Password reset logged
 
 **Security Considerations:**
+
 - Identity verification required
 - No password reset via email/phone without verification
 - Temporary password valid 7 days
@@ -774,6 +846,7 @@ This Password Policy establishes requirements for password creation, management,
 #### 5.4.2 Emergency Reset
 
 **For Compromised Accounts:**
+
 1. Immediate password invalidation
 2. Active sessions terminated
 3. Account locked temporarily
@@ -785,6 +858,7 @@ This Password Policy establishes requirements for password creation, management,
 #### 5.4.3 Administrator Password Reset
 
 **Special Procedures:**
+
 - Requires two administrators
 - Approval from supervisor required
 - Enhanced identity verification
@@ -794,14 +868,17 @@ This Password Policy establishes requirements for password creation, management,
 ### 5.5 Multi-Factor Authentication (MFA)
 
 **Current Status:**
+
 - Not implemented (planned for future)
 
 **Recommended Implementation:**
+
 - **Phase 1**: MFA for administrators and HHRMD
 - **Phase 2**: MFA for all CSC roles (HRMO, DO, CSCS)
 - **Phase 3**: MFA for all users
 
 **MFA Methods:**
+
 - SMS one-time password (OTP)
 - Email OTP
 - Authenticator app (Google Authenticator, Microsoft Authenticator)
@@ -810,6 +887,7 @@ This Password Policy establishes requirements for password creation, management,
 ### 5.6 Service Account Passwords
 
 **Requirements:**
+
 - Complex passwords (20+ characters)
 - No human-readable patterns
 - Stored in secure password vault
@@ -818,6 +896,7 @@ This Password Policy establishes requirements for password creation, management,
 - Used only for automated processes
 
 **Examples:**
+
 - Database connection passwords
 - HRIMS API keys
 - MinIO access keys
@@ -828,6 +907,7 @@ This Password Policy establishes requirements for password creation, management,
 #### 5.7.1 Monitoring
 
 **Compliance Checks:**
+
 - Password age monitoring
 - Failed login attempt tracking
 - Password complexity validation
@@ -837,6 +917,7 @@ This Password Policy establishes requirements for password creation, management,
 #### 5.7.2 Enforcement
 
 **Automated Enforcement:**
+
 - Password complexity validation at creation
 - Password history check (prevent reuse)
 - Account lockout after failed attempts (5 attempts)
@@ -844,6 +925,7 @@ This Password Policy establishes requirements for password creation, management,
 - Forced password change for expired passwords
 
 **Manual Enforcement:**
+
 - Quarterly password compliance audits
 - User security awareness training
 - Policy violation investigations
@@ -854,6 +936,7 @@ This Password Policy establishes requirements for password creation, management,
 #### 5.8.1 Lockout Triggers
 
 **Account Locked After:**
+
 - 5 consecutive failed login attempts
 - Password expired and grace period exceeded
 - Administrator-initiated lock
@@ -863,10 +946,12 @@ This Password Policy establishes requirements for password creation, management,
 #### 5.8.2 Lockout Duration
 
 **Standard Lockout:**
+
 - Duration: 30 minutes automatic unlock
 - Manual unlock: Administrator can unlock immediately after verification
 
 **Security Lockout:**
+
 - Requires administrator unlock
 - Identity verification required
 - Incident review may be required
@@ -897,6 +982,7 @@ This Access Control Policy defines how access to CSMS resources is granted, mana
 Users are granted the minimum level of access required to perform their job functions.
 
 **Implementation:**
+
 - Role-based access control (RBAC)
 - Default deny approach
 - Granular permissions
@@ -904,6 +990,7 @@ Users are granted the minimum level of access required to perform their job func
 - Regular access reviews
 
 **Examples:**
+
 - HRO can only submit requests, not approve
 - HRMO cannot access complaints module
 - Planning Officer has read-only access
@@ -915,12 +1002,14 @@ Users are granted the minimum level of access required to perform their job func
 Critical functions require multiple people to prevent fraud or error.
 
 **Implementation:**
+
 - Requestor and approver are different users
 - HRO cannot approve own institution's requests
 - User creation and approval separate
 - Sensitive operations require dual authorization
 
 **Examples:**
+
 - HRO submits confirmation → HHRMD/HRMO approves (different users)
 - Administrator creates user → Supervisor approves (if implemented)
 - Financial transactions require dual approval (if applicable)
@@ -931,12 +1020,14 @@ Critical functions require multiple people to prevent fraud or error.
 Access granted only to data necessary for legitimate business purpose.
 
 **Implementation:**
+
 - Institution-based data isolation
 - Role-based data visibility
 - Contextual access restrictions
 - Query result filtering
 
 **Examples:**
+
 - HRO sees only own institution employees
 - Employee sees only own profile and complaints
 - HRRP sees only own institution data
@@ -948,6 +1039,7 @@ Access granted only to data necessary for legitimate business purpose.
 Multiple layers of security controls.
 
 **Implementation:**
+
 - Network perimeter security
 - Application-level authentication
 - Database access controls
@@ -989,6 +1081,7 @@ Multiple layers of security controls.
    - User trained on role functions
 
 **Access Request Documentation:**
+
 - Request form completed
 - Approvals documented
 - Account creation logged
@@ -1021,6 +1114,7 @@ Multiple layers of security controls.
    - User re-trained if needed
 
 **Temporary Elevated Access:**
+
 - Maximum duration: 24 hours
 - Justification required
 - Approval required
@@ -1032,12 +1126,14 @@ Multiple layers of security controls.
 **User Departure:**
 
 **Immediate Revocation (Day of Departure):**
+
 - Account disabled
 - Active sessions terminated
 - Access tokens invalidated
 - Physical access removed
 
 **Post-Departure:**
+
 - Email forwarding (if applicable)
 - Data ownership transfer
 - Account archived (not deleted)
@@ -1045,6 +1141,7 @@ Multiple layers of security controls.
 - Exit interview
 
 **Termination for Cause:**
+
 - Immediate account disablement
 - No advance notice
 - Enhanced monitoring before termination (if suspected)
@@ -1052,6 +1149,7 @@ Multiple layers of security controls.
 - Security incident review
 
 **Temporary Leave:**
+
 - Account disabled during leave
 - Re-enabled upon return
 - Password reset required
@@ -1062,6 +1160,7 @@ Multiple layers of security controls.
 **Quarterly Access Reviews:**
 
 **Process:**
+
 1. Generate user access report
 2. Department heads review staff access
 3. Verify access still appropriate
@@ -1070,6 +1169,7 @@ Multiple layers of security controls.
 6. Remediate issues within 30 days
 
 **Review Criteria:**
+
 - User still employed?
 - Role still current?
 - Institution correct?
@@ -1078,6 +1178,7 @@ Multiple layers of security controls.
 - Any suspicious activity?
 
 **Annual Comprehensive Review:**
+
 - All user accounts reviewed
 - All permissions validated
 - Inactive accounts identified
@@ -1090,44 +1191,45 @@ Multiple layers of security controls.
 
 **Role Definitions:**
 
-| Role | Code | Access Scope | Primary Functions | Permissions |
-|------|------|--------------|------------------|-------------|
-| **Administrator** | ADMIN | System-wide | System administration | - User CRUD<br>- Institution CRUD<br>- HRIMS sync<br>- System config |
-| **HR Officer** | HRO | Institution only | Submit HR requests | - Submit requests<br>- View own institution<br>- Track requests |
-| **Head of HR & Disciplinary** | HHRMD | All institutions | Approve all requests | - Approve all types<br>- View all institutions<br>- Handle complaints |
-| **HR Management Officer** | HRMO | All institutions | Approve HR requests | - Approve HR requests<br>- Cannot approve complaints/terminations<br>- View all institutions |
-| **Disciplinary Officer** | DO | All institutions | Handle disciplinary matters | - Approve complaints<br>- Approve terminations<br>- View all institutions |
-| **Planning Officer** | PO | All institutions (read-only) | Reports and analytics | - View reports only<br>- Cannot approve/submit<br>- All institutions |
-| **CSC Secretary** | CSCS | All institutions (executive) | Executive oversight | - View all activities<br>- Cannot approve<br>- System-wide visibility |
-| **HR Responsible Personnel** | HRRP | Institution only | Institutional supervision | - View own institution<br>- Cannot approve<br>- Monitor activities |
-| **Employee** | EMPLOYEE | Own data only | Self-service | - View own profile<br>- Submit complaints<br>- View own requests |
+| Role                          | Code     | Access Scope                 | Primary Functions           | Permissions                                                                                  |
+| ----------------------------- | -------- | ---------------------------- | --------------------------- | -------------------------------------------------------------------------------------------- |
+| **Administrator**             | ADMIN    | System-wide                  | System administration       | - User CRUD<br>- Institution CRUD<br>- HRIMS sync<br>- System config                         |
+| **HR Officer**                | HRO      | Institution only             | Submit HR requests          | - Submit requests<br>- View own institution<br>- Track requests                              |
+| **Head of HR & Disciplinary** | HHRMD    | All institutions             | Approve all requests        | - Approve all types<br>- View all institutions<br>- Handle complaints                        |
+| **HR Management Officer**     | HRMO     | All institutions             | Approve HR requests         | - Approve HR requests<br>- Cannot approve complaints/terminations<br>- View all institutions |
+| **Disciplinary Officer**      | DO       | All institutions             | Handle disciplinary matters | - Approve complaints<br>- Approve terminations<br>- View all institutions                    |
+| **Planning Officer**          | PO       | All institutions (read-only) | Reports and analytics       | - View reports only<br>- Cannot approve/submit<br>- All institutions                         |
+| **CSC Secretary**             | CSCS     | All institutions (executive) | Executive oversight         | - View all activities<br>- Cannot approve<br>- System-wide visibility                        |
+| **HR Responsible Personnel**  | HRRP     | Institution only             | Institutional supervision   | - View own institution<br>- Cannot approve<br>- Monitor activities                           |
+| **Employee**                  | EMPLOYEE | Own data only                | Self-service                | - View own profile<br>- Submit complaints<br>- View own requests                             |
 
 #### 6.4.2 Permission Matrix
 
 **Module Access:**
 
-| Module | ADMIN | HRO | HHRMD | HRMO | DO | PO | CSCS | HRRP | EMPLOYEE |
-|--------|-------|-----|-------|------|----|----|------|------|----------|
-| **Dashboard** | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ | ✗ |
-| **Employees** | ✓ | ✓* | ✓ | ✓ | ✓ | ✓ (R) | ✓ (R) | ✓* (R) | ✓** |
-| **Confirmations** | ✗ | ✓ (S) | ✓ (A) | ✓ (A) | ✗ | ✓ (R) | ✓ (R) | ✓* (R) | ✗ |
-| **Promotions** | ✗ | ✓ (S) | ✓ (A) | ✓ (A) | ✗ | ✓ (R) | ✓ (R) | ✓* (R) | ✗ |
-| **LWOP** | ✗ | ✓ (S) | ✓ (A) | ✓ (A) | ✗ | ✓ (R) | ✓ (R) | ✓* (R) | ✗ |
-| **Cadre Change** | ✗ | ✓ (S) | ✓ (A) | ✓ (A) | ✗ | ✓ (R) | ✓ (R) | ✓* (R) | ✗ |
-| **Retirement** | ✗ | ✓ (S) | ✓ (A) | ✓ (A) | ✗ | ✓ (R) | ✓ (R) | ✓* (R) | ✗ |
-| **Resignation** | ✗ | ✓ (S) | ✓ (A) | ✓ (A) | ✗ | ✓ (R) | ✓ (R) | ✓* (R) | ✗ |
-| **Service Extension** | ✗ | ✓ (S) | ✓ (A) | ✓ (A) | ✗ | ✓ (R) | ✓ (R) | ✓* (R) | ✗ |
-| **Termination** | ✗ | ✓ (S) | ✓ (A) | ✗ | ✓ (A) | ✓ (R) | ✓ (R) | ✓* (R) | ✗ |
-| **Complaints** | ✗ | ✗ | ✓ (A) | ✗ | ✓ (A) | ✓ (R) | ✓ (R) | ✗ | ✓ (S) |
-| **Reports** | ✓ | ✓* | ✓ | ✓ | ✓ | ✓ | ✓ | ✓* | ✗ |
-| **User Management** | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
-| **Institutions** | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
-| **HRIMS Integration** | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
+| Module                | ADMIN | HRO   | HHRMD | HRMO  | DO    | PO    | CSCS  | HRRP    | EMPLOYEE |
+| --------------------- | ----- | ----- | ----- | ----- | ----- | ----- | ----- | ------- | -------- |
+| **Dashboard**         | ✓     | ✓     | ✓     | ✓     | ✓     | ✗     | ✓     | ✓       | ✗        |
+| **Employees**         | ✓     | ✓\*   | ✓     | ✓     | ✓     | ✓ (R) | ✓ (R) | ✓\* (R) | ✓\*\*    |
+| **Confirmations**     | ✗     | ✓ (S) | ✓ (A) | ✓ (A) | ✗     | ✓ (R) | ✓ (R) | ✓\* (R) | ✗        |
+| **Promotions**        | ✗     | ✓ (S) | ✓ (A) | ✓ (A) | ✗     | ✓ (R) | ✓ (R) | ✓\* (R) | ✗        |
+| **LWOP**              | ✗     | ✓ (S) | ✓ (A) | ✓ (A) | ✗     | ✓ (R) | ✓ (R) | ✓\* (R) | ✗        |
+| **Cadre Change**      | ✗     | ✓ (S) | ✓ (A) | ✓ (A) | ✗     | ✓ (R) | ✓ (R) | ✓\* (R) | ✗        |
+| **Retirement**        | ✗     | ✓ (S) | ✓ (A) | ✓ (A) | ✗     | ✓ (R) | ✓ (R) | ✓\* (R) | ✗        |
+| **Resignation**       | ✗     | ✓ (S) | ✓ (A) | ✓ (A) | ✗     | ✓ (R) | ✓ (R) | ✓\* (R) | ✗        |
+| **Service Extension** | ✗     | ✓ (S) | ✓ (A) | ✓ (A) | ✗     | ✓ (R) | ✓ (R) | ✓\* (R) | ✗        |
+| **Termination**       | ✗     | ✓ (S) | ✓ (A) | ✗     | ✓ (A) | ✓ (R) | ✓ (R) | ✓\* (R) | ✗        |
+| **Complaints**        | ✗     | ✗     | ✓ (A) | ✗     | ✓ (A) | ✓ (R) | ✓ (R) | ✗       | ✓ (S)    |
+| **Reports**           | ✓     | ✓\*   | ✓     | ✓     | ✓     | ✓     | ✓     | ✓\*     | ✗        |
+| **User Management**   | ✓     | ✗     | ✗     | ✗     | ✗     | ✗     | ✗     | ✗       | ✗        |
+| **Institutions**      | ✓     | ✗     | ✗     | ✗     | ✗     | ✗     | ✗     | ✗       | ✗        |
+| **HRIMS Integration** | ✓     | ✗     | ✗     | ✗     | ✗     | ✗     | ✗     | ✗       | ✗        |
 
 **Legend:**
+
 - ✓ = Full access
-- ✓* = Institution-filtered access
-- ✓** = Own data only
+- ✓\* = Institution-filtered access
+- ✓\*\* = Own data only
 - (S) = Submit only
 - (A) = Approve/Review
 - (R) = Read only
@@ -1138,31 +1240,38 @@ Multiple layers of security controls.
 **Institution-Based Filtering:**
 
 **HRO, HRRP (Institution-Based Roles):**
+
 ```sql
 WHERE institutionId = user.institutionId
 ```
+
 - See only employees from own institution
 - See only requests from own institution
 - Cannot access other institutions
 
 **CSC Roles (HHRMD, HRMO, DO, PO, CSCS):**
+
 ```sql
 -- No filter, can see all institutions
 ```
+
 - System-wide visibility
 - All institutions accessible
 - Optional institution filter for convenience
 
 **Employee:**
+
 ```sql
 WHERE employeeId = user.employeeId
 -- OR
 WHERE complainantId = user.id
 ```
+
 - See only own employee profile
 - See only own complaints
 
 **Administrator:**
+
 - Full access to all data for administration purposes
 - Access must be for legitimate administrative functions
 - All access logged and audited
@@ -1172,18 +1281,21 @@ WHERE complainantId = user.id
 #### 6.5.1 Authentication Methods
 
 **Standard Login (Staff Users):**
+
 - Username or email + password
 - Session-based authentication
 - No JWT tokens (simplified approach)
 - HTTP-only secure cookies
 
 **Employee Login:**
+
 - ZanID + Payroll Number + ZSSF Number
 - Three-factor credential verification
 - Read-only session
 - Limited functionality
 
 **API Authentication (Future):**
+
 - API keys for service accounts
 - OAuth 2.0 for integrations
 - JWT tokens for stateless APIs
@@ -1201,27 +1313,28 @@ WHERE complainantId = user.id
 7. **Access Granted/Denied**: Return result
 
 **Implementation:**
+
 ```typescript
 // Pseudo-code for authorization check
 function authorize(user, action, resource) {
   // 1. Check if user is authenticated
   if (!user.authenticated) {
-    return deny("Not authenticated");
+    return deny('Not authenticated');
   }
 
   // 2. Check if user is active
   if (!user.active) {
-    return deny("Account inactive");
+    return deny('Account inactive');
   }
 
   // 3. Check role-based permission
   if (!hasPermission(user.role, action)) {
-    return deny("Insufficient permissions");
+    return deny('Insufficient permissions');
   }
 
   // 4. Check data scope
   if (!canAccessResource(user, resource)) {
-    return deny("Cannot access this resource");
+    return deny('Cannot access this resource');
   }
 
   // 5. Log access
@@ -1235,6 +1348,7 @@ function authorize(user, action, resource) {
 #### 6.5.3 Session Management
 
 **Session Security:**
+
 - Unique session ID per login
 - Session stored server-side
 - HTTP-only cookies (not accessible to JavaScript)
@@ -1245,11 +1359,13 @@ function authorize(user, action, resource) {
 - Session regeneration on privilege change
 
 **Concurrent Sessions:**
+
 - Limited to 3 concurrent sessions per user (recommended)
 - Oldest session terminated when limit exceeded
 - User notified of concurrent logins (if suspicious)
 
 **Session Termination:**
+
 - Explicit logout
 - Inactivity timeout
 - Password change
@@ -1260,11 +1376,13 @@ function authorize(user, action, resource) {
 ### 6.6 Remote Access
 
 **Current Status:**
+
 - Web-based access only
 - HTTPS required
 - No VPN requirement for users
 
 **Future Considerations:**
+
 - VPN for administrative access
 - IP whitelisting for sensitive roles
 - Geographic restrictions (Zanzibar/Tanzania only)
@@ -1275,6 +1393,7 @@ function authorize(user, action, resource) {
 #### 6.7.1 External System Integration
 
 **HRIMS Integration:**
+
 - API key authentication
 - Read-only access to employee data
 - Rate limiting applied
@@ -1282,6 +1401,7 @@ function authorize(user, action, resource) {
 - Periodic access review
 
 **Future Integrations:**
+
 - Formal security review required
 - Data sharing agreement
 - Limited access scope
@@ -1291,6 +1411,7 @@ function authorize(user, action, resource) {
 #### 6.7.2 Vendor/Contractor Access
 
 **Requirements:**
+
 - Non-disclosure agreement (NDA)
 - Background check
 - Time-limited access
@@ -1312,6 +1433,7 @@ This Data Protection Policy ensures the confidentiality, integrity, and availabi
 #### 7.2.1 Classification Levels
 
 **LEVEL 1: PUBLIC**
+
 - **Definition**: Information intended for public distribution
 - **Examples**:
   - Public job postings
@@ -1320,6 +1442,7 @@ This Data Protection Policy ensures the confidentiality, integrity, and availabi
 - **Handling**: No special restrictions
 
 **LEVEL 2: INTERNAL USE**
+
 - **Definition**: Information for internal government use
 - **Examples**:
   - Institutional statistics
@@ -1331,6 +1454,7 @@ This Data Protection Policy ensures the confidentiality, integrity, and availabi
   - Basic access controls
 
 **LEVEL 3: CONFIDENTIAL**
+
 - **Definition**: Sensitive information requiring protection
 - **Examples**:
   - Employee personal information
@@ -1344,6 +1468,7 @@ This Data Protection Policy ensures the confidentiality, integrity, and availabi
   - Secure disposal
 
 **LEVEL 4: RESTRICTED**
+
 - **Definition**: Highly sensitive information
 - **Examples**:
   - Disciplinary records
@@ -1360,20 +1485,20 @@ This Data Protection Policy ensures the confidentiality, integrity, and availabi
 
 #### 7.2.2 Data Classification Matrix
 
-| Data Type | Classification | Access | Encryption | Retention |
-|-----------|---------------|--------|------------|-----------|
-| Employee Name, Institution | Confidential | Role-based | Transit | 7 years after separation |
-| ZanID, Payroll, ZSSF | Restricted | Strict | Rest + Transit | 7 years after separation |
-| Contact Info (Phone, Address) | Confidential | Role-based | Transit | 7 years after separation |
-| Salary, Cadre | Confidential | Role-based | Transit | 7 years after separation |
-| Performance Evaluations | Confidential | Role-based | Transit | 7 years |
-| Disciplinary Records | Restricted | Strict | Rest + Transit | 10 years |
-| Complaints | Restricted | HHRMD/DO only | Rest + Transit | 10 years |
-| HR Request Details | Confidential | Role-based | Transit | 7 years |
-| Medical Information | Restricted | Minimal | Rest + Transit | 10 years |
-| User Credentials | Restricted | Admin only | Hashed | Account lifetime |
-| System Logs | Internal | Admin/Security | Transit | 90 days-7 years |
-| Reports | Confidential | Role-based | Transit | As per content |
+| Data Type                     | Classification | Access         | Encryption     | Retention                |
+| ----------------------------- | -------------- | -------------- | -------------- | ------------------------ |
+| Employee Name, Institution    | Confidential   | Role-based     | Transit        | 7 years after separation |
+| ZanID, Payroll, ZSSF          | Restricted     | Strict         | Rest + Transit | 7 years after separation |
+| Contact Info (Phone, Address) | Confidential   | Role-based     | Transit        | 7 years after separation |
+| Salary, Cadre                 | Confidential   | Role-based     | Transit        | 7 years after separation |
+| Performance Evaluations       | Confidential   | Role-based     | Transit        | 7 years                  |
+| Disciplinary Records          | Restricted     | Strict         | Rest + Transit | 10 years                 |
+| Complaints                    | Restricted     | HHRMD/DO only  | Rest + Transit | 10 years                 |
+| HR Request Details            | Confidential   | Role-based     | Transit        | 7 years                  |
+| Medical Information           | Restricted     | Minimal        | Rest + Transit | 10 years                 |
+| User Credentials              | Restricted     | Admin only     | Hashed         | Account lifetime         |
+| System Logs                   | Internal       | Admin/Security | Transit        | 90 days-7 years          |
+| Reports                       | Confidential   | Role-based     | Transit        | As per content           |
 
 ### 7.3 Data Collection and Processing
 
@@ -1383,6 +1508,7 @@ This Data Protection Policy ensures the confidentiality, integrity, and availabi
 Collect only data necessary for specified purpose.
 
 **Implementation:**
+
 - Required fields only in forms
 - Optional fields clearly marked
 - Regular review of data collected
@@ -1390,6 +1516,7 @@ Collect only data necessary for specified purpose.
 - Purpose limitation
 
 **Examples:**
+
 - Employee profile: Collect only fields needed for HR management
 - Complaints: Collect only information needed for resolution
 - Reports: Include only necessary data points
@@ -1400,6 +1527,7 @@ Collect only data necessary for specified purpose.
 Data used only for specified, explicit, legitimate purposes.
 
 **Purposes:**
+
 - **Primary**: Civil service HR management
 - **Secondary**:
   - Reporting and analytics
@@ -1408,6 +1536,7 @@ Data used only for specified, explicit, legitimate purposes.
   - Legal requirements
 
 **Prohibited Uses:**
+
 - Marketing or commercial purposes
 - Political purposes
 - Discrimination
@@ -1416,6 +1545,7 @@ Data used only for specified, explicit, legitimate purposes.
 #### 7.3.3 Data Accuracy
 
 **Requirements:**
+
 - Data validated at entry
 - Regular data quality checks
 - Correction mechanisms
@@ -1423,6 +1553,7 @@ Data used only for specified, explicit, legitimate purposes.
 - Audit trails for changes
 
 **Processes:**
+
 - HRIMS sync for authoritative data
 - Employee self-service for updates
 - Regular data quality audits
@@ -1433,12 +1564,14 @@ Data used only for specified, explicit, legitimate purposes.
 #### 7.4.1 Right to Access
 
 **Employees' Rights:**
+
 - Access own personal data
 - Request copy of data held
 - Understand how data is processed
 - View data processing history
 
 **Process:**
+
 - Employee submits request
 - Identity verification
 - Data compiled and provided
@@ -1447,10 +1580,12 @@ Data used only for specified, explicit, legitimate purposes.
 #### 7.4.2 Right to Rectification
 
 **Rights:**
+
 - Correct inaccurate data
 - Complete incomplete data
 
 **Process:**
+
 - Employee requests correction
 - Supporting evidence provided
 - Review and verification
@@ -1460,11 +1595,13 @@ Data used only for specified, explicit, legitimate purposes.
 #### 7.4.3 Right to Erasure ("Right to be Forgotten")
 
 **Limitations:**
+
 - Cannot delete if legal retention requirement exists
 - HR records retained per retention policy
 - Audit trails must be maintained
 
 **Applicable Scenarios:**
+
 - Employee withdrawal of consent (where consent is basis)
 - Data no longer necessary for purpose
 - Unlawfully processed data
@@ -1472,10 +1609,12 @@ Data used only for specified, explicit, legitimate purposes.
 #### 7.4.4 Right to Object
 
 **Rights:**
+
 - Object to certain processing activities
 - Opt-out of non-essential processing
 
 **Process:**
+
 - Request submitted
 - Review of objection
 - Processing stopped if valid
@@ -1485,24 +1624,25 @@ Data used only for specified, explicit, legitimate purposes.
 
 #### 7.5.1 Retention Periods
 
-| Data Type | Retention Period | Basis |
-|-----------|------------------|-------|
-| Active Employee Records | Employment duration + 7 years | Legal requirement |
-| Separated Employee Records | 7 years after separation | Legal requirement |
-| Disciplinary Records | 10 years | Legal requirement |
-| Complaints | 10 years after resolution | Legal requirement |
-| HR Requests | 7 years after decision | Business need |
-| Performance Evaluations | 7 years | Business need |
-| Payroll Records | 7 years | Legal requirement |
-| User Accounts (Staff) | Account lifetime + 1 year | Business need |
-| Audit Logs (Security) | 1 year | Security requirement |
-| Audit Logs (Compliance) | 7 years | Legal requirement |
-| Backups | 90 days (rotating) | Business continuity |
-| System Logs | 90 days | Operational |
+| Data Type                  | Retention Period              | Basis                |
+| -------------------------- | ----------------------------- | -------------------- |
+| Active Employee Records    | Employment duration + 7 years | Legal requirement    |
+| Separated Employee Records | 7 years after separation      | Legal requirement    |
+| Disciplinary Records       | 10 years                      | Legal requirement    |
+| Complaints                 | 10 years after resolution     | Legal requirement    |
+| HR Requests                | 7 years after decision        | Business need        |
+| Performance Evaluations    | 7 years                       | Business need        |
+| Payroll Records            | 7 years                       | Legal requirement    |
+| User Accounts (Staff)      | Account lifetime + 1 year     | Business need        |
+| Audit Logs (Security)      | 1 year                        | Security requirement |
+| Audit Logs (Compliance)    | 7 years                       | Legal requirement    |
+| Backups                    | 90 days (rotating)            | Business continuity  |
+| System Logs                | 90 days                       | Operational          |
 
 #### 7.5.2 Secure Disposal
 
 **Digital Data:**
+
 - Secure deletion (overwriting)
 - Database record purging
 - Backup removal
@@ -1510,12 +1650,14 @@ Data used only for specified, explicit, legitimate purposes.
 - Disposal verification
 
 **Physical Documents:**
+
 - Shredding (cross-cut)
 - Secure disposal service
 - Certificate of destruction
 - Disposal logging
 
 **Process:**
+
 1. Data identified for disposal
 2. Retention period verified expired
 3. Legal hold checked (none)
@@ -1529,12 +1671,14 @@ Data used only for specified, explicit, legitimate purposes.
 #### 7.6.1 Internal Sharing
 
 **Permitted:**
+
 - Within CSMS based on role and need
 - To supervisors for management purposes
 - To auditors for compliance purposes
 - To IT for technical support
 
 **Requirements:**
+
 - Legitimate business purpose
 - Access controls in place
 - Need-to-know basis
@@ -1543,12 +1687,14 @@ Data used only for specified, explicit, legitimate purposes.
 #### 7.6.2 External Sharing
 
 **Permitted Recipients:**
+
 - Government agencies (with legal basis)
 - Law enforcement (with legal order)
 - Auditors (with NDA)
 - Courts (with subpoena/court order)
 
 **Requirements:**
+
 - Legal basis established
 - Data sharing agreement
 - Minimum necessary data
@@ -1557,6 +1703,7 @@ Data used only for specified, explicit, legitimate purposes.
 - Disclosure logged
 
 **Prohibited:**
+
 - Commercial entities (without consent)
 - Foreign governments (without treaty)
 - Unauthorized third parties
@@ -1565,10 +1712,12 @@ Data used only for specified, explicit, legitimate purposes.
 #### 7.6.3 Cross-Border Data Transfer
 
 **Current Policy:**
+
 - Data hosted in Zanzibar/Tanzania only
 - No routine cross-border transfers
 
 **If Required:**
+
 - Adequacy decision or safeguards required
 - Data subject notification
 - Legal review
@@ -1583,6 +1732,7 @@ Data used only for specified, explicit, legitimate purposes.
 Breach of security leading to accidental or unlawful destruction, loss, alteration, unauthorized disclosure of, or access to, personal data.
 
 **Examples:**
+
 - Unauthorized access to employee records
 - Accidental disclosure of confidential data
 - Lost or stolen device with data
@@ -1593,35 +1743,41 @@ Breach of security leading to accidental or unlawful destruction, loss, alterati
 #### 7.7.2 Breach Response Process
 
 **1. Detection and Reporting (0-1 hour):**
+
 - Breach detected
 - Incident response team notified
 - Initial assessment
 
 **2. Containment (1-4 hours):**
+
 - Stop the breach
 - Isolate affected systems
 - Preserve evidence
 - Prevent further damage
 
 **3. Assessment (4-24 hours):**
+
 - Determine scope
 - Identify affected data
 - Assess impact
 - Classify severity
 
 **4. Notification (24-72 hours):**
+
 - **Supervisory Authority**: Within 72 hours if high risk
 - **Data Subjects**: Without undue delay if high risk
 - **Management**: Immediate
 - **Law Enforcement**: If criminal
 
 **5. Remediation (Ongoing):**
+
 - Fix vulnerabilities
 - Restore systems
 - Implement controls
 - Monitor for recurrence
 
 **6. Post-Incident Review (Within 30 days):**
+
 - Root cause analysis
 - Lessons learned
 - Process improvements
@@ -1630,6 +1786,7 @@ Breach of security leading to accidental or unlawful destruction, loss, alterati
 #### 7.7.3 Breach Notification
 
 **To Supervisory Authority:**
+
 - Description of breach
 - Data categories affected
 - Number of data subjects
@@ -1638,6 +1795,7 @@ Breach of security leading to accidental or unlawful destruction, loss, alterati
 - Contact point for information
 
 **To Data Subjects:**
+
 - Description in clear language
 - Contact point for information
 - Likely consequences
@@ -1647,6 +1805,7 @@ Breach of security leading to accidental or unlawful destruction, loss, alterati
 ### 7.8 Data Protection Officer (DPO)
 
 **Responsibilities:**
+
 - Monitor compliance with data protection laws
 - Advise on data protection impact assessments
 - Cooperate with supervisory authority
@@ -1654,6 +1813,7 @@ Breach of security leading to accidental or unlawful destruction, loss, alterati
 - Conduct training and awareness
 
 **Contact:**
+
 - Email: dpo@csms.zanajira.go.tz
 - Phone: (to be assigned)
 
@@ -1666,6 +1826,7 @@ Breach of security leading to accidental or unlawful destruction, loss, alterati
 #### 8.1.1 Network Segmentation
 
 **Zones:**
+
 1. **Public Zone**: Web server, reverse proxy
 2. **Application Zone**: CSMS application servers
 3. **Database Zone**: PostgreSQL database
@@ -1673,6 +1834,7 @@ Breach of security leading to accidental or unlawful destruction, loss, alterati
 5. **Management Zone**: Administrative access
 
 **Segmentation Benefits:**
+
 - Limit blast radius of breaches
 - Granular access control
 - Traffic monitoring
@@ -1681,10 +1843,12 @@ Breach of security leading to accidental or unlawful destruction, loss, alterati
 #### 8.1.2 Firewall Rules
 
 **Default Policy:**
+
 - Default deny all
 - Explicit allow required
 
 **Allowed Traffic:**
+
 - HTTPS (443) from Internet to Web Server
 - Application to Database (5432)
 - Application to MinIO (9000)
@@ -1692,6 +1856,7 @@ Breach of security leading to accidental or unlawful destruction, loss, alterati
 - HRIMS API calls (outbound HTTPS)
 
 **Denied Traffic:**
+
 - Direct Internet to Database
 - Direct Internet to MinIO
 - Lateral movement between zones (except authorized)
@@ -1701,6 +1866,7 @@ Breach of security leading to accidental or unlawful destruction, loss, alterati
 #### 8.2.1 Data in Transit
 
 **Requirements:**
+
 - **TLS Version**: 1.2 minimum, 1.3 preferred
 - **Cipher Suites**: Strong ciphers only (AES-256-GCM)
 - **Certificate**: Valid from trusted CA
@@ -1708,6 +1874,7 @@ Breach of security leading to accidental or unlawful destruction, loss, alterati
 - **Perfect Forward Secrecy**: Required
 
 **Application:**
+
 - All web traffic (HTTPS)
 - Database connections (SSL/TLS)
 - MinIO API calls (HTTPS)
@@ -1716,10 +1883,12 @@ Breach of security leading to accidental or unlawful destruction, loss, alterati
 #### 8.2.2 Data at Rest
 
 **Current:**
+
 - MinIO with encryption enabled
 - Database encryption (to be implemented)
 
 **Recommended:**
+
 - Full database encryption
 - Encrypted backups
 - Encrypted file system
@@ -1729,12 +1898,14 @@ Breach of security leading to accidental or unlawful destruction, loss, alterati
 #### 8.3.1 Intrusion Detection/Prevention
 
 **IDS/IPS Deployment:**
+
 - Network-based IDS (NIDS)
 - Signature-based detection
 - Anomaly detection
 - Automated response (blocking)
 
 **Monitored Activities:**
+
 - Port scanning
 - Brute force attacks
 - SQL injection attempts
@@ -1745,6 +1916,7 @@ Breach of security leading to accidental or unlawful destruction, loss, alterati
 #### 8.3.2 Log Collection
 
 **Network Logs:**
+
 - Firewall logs
 - Proxy logs
 - VPN logs (if applicable)
@@ -1752,6 +1924,7 @@ Breach of security leading to accidental or unlawful destruction, loss, alterati
 - Load balancer logs
 
 **Retention:**
+
 - Real-time monitoring
 - 90 days retention
 - Long-term archival for incidents
@@ -1759,6 +1932,7 @@ Breach of security leading to accidental or unlawful destruction, loss, alterati
 ### 8.4 Wireless Security
 
 **If Wireless Used:**
+
 - WPA3 encryption
 - Strong passphrase
 - Hidden SSID
@@ -1769,6 +1943,7 @@ Breach of security leading to accidental or unlawful destruction, loss, alterati
 ### 8.5 DDoS Protection
 
 **Mitigation:**
+
 - Rate limiting
 - Traffic filtering
 - Cloud-based DDoS protection
@@ -1784,6 +1959,7 @@ Breach of security leading to accidental or unlawful destruction, loss, alterati
 #### 9.1.1 Access Control
 
 **Physical Access:**
+
 - Badge-controlled entry
 - Biometric authentication (fingerprint/retina)
 - Visitor log and escort requirement
@@ -1791,6 +1967,7 @@ Breach of security leading to accidental or unlawful destruction, loss, alterati
 - Video surveillance 24/7
 
 **Access Authorization:**
+
 - Administrator access with approval
 - Visitor access with sponsor and purpose
 - Contractor access with background check
@@ -1800,6 +1977,7 @@ Breach of security leading to accidental or unlawful destruction, loss, alterati
 #### 9.1.2 Environmental Controls
 
 **Requirements:**
+
 - Temperature control (18-27°C)
 - Humidity control (40-60%)
 - Fire suppression system
@@ -1812,6 +1990,7 @@ Breach of security leading to accidental or unlawful destruction, loss, alterati
 #### 9.2.1 Server Security
 
 **Physical Security:**
+
 - Locked server racks
 - Tamper-evident seals
 - Asset tagging and inventory
@@ -1820,6 +1999,7 @@ Breach of security leading to accidental or unlawful destruction, loss, alterati
 #### 9.2.2 Workstation Security
 
 **Requirements:**
+
 - Screen lock after 5 minutes inactivity
 - Complex password for system login
 - Full disk encryption (recommended)
@@ -1830,11 +2010,13 @@ Breach of security leading to accidental or unlawful destruction, loss, alterati
 ### 9.3 Media Handling
 
 **Removable Media:**
+
 - USB drives: Prohibited for CSMS data
 - External hard drives: Encrypted, authorized only
 - CD/DVD: Controlled use, secure disposal
 
 **Backup Media:**
+
 - Encrypted backups
 - Secure storage (offsite)
 - Access log
@@ -1848,6 +2030,7 @@ Breach of security leading to accidental or unlawful destruction, loss, alterati
 ### 10.1 Incident Types
 
 **Security Incidents:**
+
 - Unauthorized access
 - Malware infection
 - Data breach
@@ -1860,6 +2043,7 @@ Breach of security leading to accidental or unlawful destruction, loss, alterati
 ### 10.2 Incident Response Team
 
 **Team Members:**
+
 - **Incident Response Manager**: Coordinates response
 - **Technical Lead**: Technical investigation and remediation
 - **Security Officer**: Security analysis and containment
@@ -1870,33 +2054,39 @@ Breach of security leading to accidental or unlawful destruction, loss, alterati
 ### 10.3 Incident Response Process
 
 **1. Preparation:**
+
 - Incident response plan documented
 - Team trained
 - Tools and resources ready
 - Contact lists updated
 
 **2. Identification:**
+
 - Incident detected
 - Initial assessment
 - Severity classification
 - Incident declared
 
 **3. Containment:**
+
 - **Short-term**: Isolate affected systems
 - **Long-term**: Temporary fixes, backups
 
 **4. Eradication:**
+
 - Remove threat
 - Patch vulnerabilities
 - Verify removal
 
 **5. Recovery:**
+
 - Restore systems
 - Verify functionality
 - Resume operations
 - Enhanced monitoring
 
 **6. Lessons Learned:**
+
 - Post-incident review
 - Document findings
 - Update procedures
@@ -1904,21 +2094,23 @@ Breach of security leading to accidental or unlawful destruction, loss, alterati
 
 ### 10.4 Incident Severity Classification
 
-| Severity | Definition | Response Time | Examples |
-|----------|------------|---------------|----------|
-| **Critical** | Immediate threat to data or operations | 15 minutes | Active breach, ransomware, system down |
-| **High** | Significant risk | 1 hour | Malware detected, unauthorized access attempt |
-| **Medium** | Moderate risk | 4 hours | Policy violation, suspicious activity |
-| **Low** | Minimal risk | Next business day | Failed login attempts, minor policy violation |
+| Severity     | Definition                             | Response Time     | Examples                                      |
+| ------------ | -------------------------------------- | ----------------- | --------------------------------------------- |
+| **Critical** | Immediate threat to data or operations | 15 minutes        | Active breach, ransomware, system down        |
+| **High**     | Significant risk                       | 1 hour            | Malware detected, unauthorized access attempt |
+| **Medium**   | Moderate risk                          | 4 hours           | Policy violation, suspicious activity         |
+| **Low**      | Minimal risk                           | Next business day | Failed login attempts, minor policy violation |
 
 ### 10.5 Reporting
 
 **Internal Reporting:**
+
 - Immediate: Supervisor, IT, Security
 - 24 hours: Management, incident report
 - Post-incident: Lessons learned report
 
 **External Reporting:**
+
 - Data Protection Authority: Within 72 hours (breach)
 - Law Enforcement: If criminal
 - Data Subjects: Without undue delay (high risk breach)
@@ -1930,12 +2122,14 @@ Breach of security leading to accidental or unlawful destruction, loss, alterati
 ### 11.1 Compliance Requirements
 
 **Legal Compliance:**
+
 - Tanzania/Zanzibar Data Protection Act
 - Employment regulations
 - Records retention laws
 - Freedom of information (where applicable)
 
 **Standards Compliance:**
+
 - ISO/IEC 27001
 - NIST Cybersecurity Framework
 - OWASP Top 10
@@ -1945,12 +2139,14 @@ Breach of security leading to accidental or unlawful destruction, loss, alterati
 #### 11.2.1 Internal Audits
 
 **Frequency:**
+
 - Security audits: Quarterly
 - Access reviews: Quarterly
 - Compliance checks: Annually
 - Technical audits: Semi-annually
 
 **Scope:**
+
 - User access appropriateness
 - Policy compliance
 - Security control effectiveness
@@ -1960,11 +2156,13 @@ Breach of security leading to accidental or unlawful destruction, loss, alterati
 #### 11.2.2 External Audits
 
 **Independent Security Assessment:**
+
 - Penetration testing: Annually
 - Vulnerability assessment: Quarterly
 - Security architecture review: Annually
 
 **Compliance Audits:**
+
 - Data protection compliance
 - Regulatory compliance
 - Industry standards compliance
@@ -1972,6 +2170,7 @@ Breach of security leading to accidental or unlawful destruction, loss, alterati
 ### 11.3 Audit Logging
 
 **Logged Events:**
+
 - Authentication events
 - Authorization failures
 - Data access and modifications
@@ -1980,6 +2179,7 @@ Breach of security leading to accidental or unlawful destruction, loss, alterati
 - System changes
 
 **Log Protection:**
+
 - Tamper-evident
 - Encrypted storage
 - Restricted access
@@ -1993,24 +2193,28 @@ Breach of security leading to accidental or unlawful destruction, loss, alterati
 ### 12.1 Roles and Responsibilities
 
 **Chief Information Security Officer (CISO):**
+
 - Overall security program ownership
 - Policy development and maintenance
 - Security strategy
 - Compliance oversight
 
 **System Administrators:**
+
 - Policy implementation
 - Technical controls
 - User account management
 - Security monitoring
 
 **Supervisors/Managers:**
+
 - User compliance enforcement
 - Access request approval
 - Security awareness
 - Incident reporting
 
 **All Users:**
+
 - Policy compliance
 - Security awareness
 - Incident reporting
@@ -2019,12 +2223,14 @@ Breach of security leading to accidental or unlawful destruction, loss, alterati
 ### 12.2 Training and Awareness
 
 **Mandatory Training:**
+
 - New user orientation: Before access granted
 - Annual security awareness: All users
 - Role-specific training: Within 30 days of role assignment
 - Incident response training: Response team members
 
 **Training Topics:**
+
 - Security policies and procedures
 - Password security
 - Phishing awareness
@@ -2035,12 +2241,14 @@ Breach of security leading to accidental or unlawful destruction, loss, alterati
 ### 12.3 Compliance Monitoring
 
 **Automated Monitoring:**
+
 - Failed login attempts
 - Unauthorized access attempts
 - Policy violations (file uploads, etc.)
 - Unusual activity patterns
 
 **Manual Reviews:**
+
 - Access reviews (quarterly)
 - Log reviews (weekly)
 - Compliance audits (annually)
@@ -2049,12 +2257,14 @@ Breach of security leading to accidental or unlawful destruction, loss, alterati
 ### 12.4 Non-Compliance Consequences
 
 **Progressive Discipline:**
+
 1. **First Offense (Minor)**: Warning, counseling
 2. **Second Offense**: Written warning, mandatory training
 3. **Serious/Repeat**: Suspension, access revocation
 4. **Critical**: Termination, legal action
 
 **Immediate Action Offenses:**
+
 - Deliberate data theft
 - System sabotage
 - Malicious activity
@@ -2066,31 +2276,32 @@ Breach of security leading to accidental or unlawful destruction, loss, alterati
 
 ### Appendix A: Definitions
 
-| Term | Definition |
-|------|------------|
-| **Authentication** | Process of verifying identity |
-| **Authorization** | Process of granting access rights |
+| Term                | Definition                                                    |
+| ------------------- | ------------------------------------------------------------- |
+| **Authentication**  | Process of verifying identity                                 |
+| **Authorization**   | Process of granting access rights                             |
 | **Confidentiality** | Ensuring information is not disclosed to unauthorized parties |
-| **Encryption** | Converting data to unreadable format |
-| **Integrity** | Ensuring data accuracy and completeness |
-| **Personal Data** | Information relating to identified or identifiable individual |
-| **Vulnerability** | Weakness that can be exploited |
-| **Threat** | Potential cause of unwanted incident |
-| **Risk** | Likelihood and impact of threat exploiting vulnerability |
+| **Encryption**      | Converting data to unreadable format                          |
+| **Integrity**       | Ensuring data accuracy and completeness                       |
+| **Personal Data**   | Information relating to identified or identifiable individual |
+| **Vulnerability**   | Weakness that can be exploited                                |
+| **Threat**          | Potential cause of unwanted incident                          |
+| **Risk**            | Likelihood and impact of threat exploiting vulnerability      |
 
 ### Appendix B: Contact Information
 
-| Role | Contact | Email | Phone |
-|------|---------|-------|-------|
-| **CISO** | (Name) | ciso@csms.zanajira.go.tz | +255 XX XXX XXXX |
-| **System Administrator** | (Name) | admin@csms.zanajira.go.tz | +255 XX XXX XXXX |
-| **Security Officer** | (Name) | security@csms.zanajira.go.tz | +255 XX XXX XXXX |
-| **Data Protection Officer** | (Name) | dpo@csms.zanajira.go.tz | +255 XX XXX XXXX |
-| **Incident Response** | (24/7) | incident@csms.zanajira.go.tz | +255 XX XXX XXXX |
+| Role                        | Contact | Email                        | Phone            |
+| --------------------------- | ------- | ---------------------------- | ---------------- |
+| **CISO**                    | (Name)  | ciso@csms.zanajira.go.tz     | +255 XX XXX XXXX |
+| **System Administrator**    | (Name)  | admin@csms.zanajira.go.tz    | +255 XX XXX XXXX |
+| **Security Officer**        | (Name)  | security@csms.zanajira.go.tz | +255 XX XXX XXXX |
+| **Data Protection Officer** | (Name)  | dpo@csms.zanajira.go.tz      | +255 XX XXX XXXX |
+| **Incident Response**       | (24/7)  | incident@csms.zanajira.go.tz | +255 XX XXX XXXX |
 
 ### Appendix C: Security Incident Report Form
 
 **Incident Details:**
+
 - Date/Time of incident:
 - Reported by:
 - Incident type:
@@ -2099,16 +2310,19 @@ Breach of security leading to accidental or unlawful destruction, loss, alterati
 - Description:
 
 **Initial Response:**
+
 - Actions taken:
 - Systems isolated:
 - Evidence preserved:
 
 **Impact Assessment:**
+
 - Data affected:
 - Number of users impacted:
 - Estimated damage:
 
 **Resolution:**
+
 - Remediation steps:
 - Verification completed:
 - Lessons learned:
@@ -2118,43 +2332,46 @@ Breach of security leading to accidental or unlawful destruction, loss, alterati
 I acknowledge that I have read, understood, and agree to comply with the CSMS Security Policy Document.
 
 I understand that:
+
 - Non-compliance may result in disciplinary action
 - All system activity is monitored and logged
 - I am responsible for protecting my credentials
 - I must report security incidents immediately
 
 **User Information:**
-- Name: ________________
-- Role: ________________
-- Institution: ________________
-- Employee ID: ________________
 
-**Signature:** ________________
-**Date:** ________________
+- Name: **\*\***\_\_\_\_**\*\***
+- Role: **\*\***\_\_\_\_**\*\***
+- Institution: **\*\***\_\_\_\_**\*\***
+- Employee ID: **\*\***\_\_\_\_**\*\***
+
+**Signature:** **\*\***\_\_\_\_**\*\***
+**Date:** **\*\***\_\_\_\_**\*\***
 
 **Supervisor Approval:**
-- Supervisor Name: ________________
-- Signature: ________________
-- Date: ________________
+
+- Supervisor Name: **\*\***\_\_\_\_**\*\***
+- Signature: **\*\***\_\_\_\_**\*\***
+- Date: **\*\***\_\_\_\_**\*\***
 
 ---
 
 ## Document Approval
 
-| Role | Name | Signature | Date |
-|------|------|-----------|------|
-| **Prepared By** | Chief Information Security Officer | ________________ | ________________ |
-| **Reviewed By** | IT Manager | ________________ | ________________ |
-| **Reviewed By** | Legal Department | ________________ | ________________ |
-| **Approved By** | Civil Service Commission | ________________ | ________________ |
+| Role            | Name                               | Signature                | Date                     |
+| --------------- | ---------------------------------- | ------------------------ | ------------------------ |
+| **Prepared By** | Chief Information Security Officer | **\*\***\_\_\_\_**\*\*** | **\*\***\_\_\_\_**\*\*** |
+| **Reviewed By** | IT Manager                         | **\*\***\_\_\_\_**\*\*** | **\*\***\_\_\_\_**\*\*** |
+| **Reviewed By** | Legal Department                   | **\*\***\_\_\_\_**\*\*** | **\*\***\_\_\_\_**\*\*** |
+| **Approved By** | Civil Service Commission           | **\*\***\_\_\_\_**\*\*** | **\*\***\_\_\_\_**\*\*** |
 
 ---
 
 ## Revision History
 
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 1.0 | 2025-12-26 | CISO | Initial release |
+| Version | Date       | Author | Changes         |
+| ------- | ---------- | ------ | --------------- |
+| 1.0     | 2025-12-26 | CISO   | Initial release |
 
 ---
 

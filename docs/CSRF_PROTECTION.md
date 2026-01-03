@@ -25,6 +25,7 @@ The CSMS application implements **comprehensive CSRF (Cross-Site Request Forgery
 ### What is CSRF?
 
 CSRF is an attack that tricks a user's browser into making unwanted requests to a web application where the user is authenticated. Without CSRF protection, an attacker could potentially:
+
 - Submit forms on behalf of authenticated users
 - Perform state-changing operations (create, update, delete)
 - Access sensitive endpoints
@@ -154,7 +155,7 @@ const {
   generateCSRFToken,
   signCSRFToken,
   getCSRFCookieOptions,
-  CSRF_COOKIE_NAME
+  CSRF_COOKIE_NAME,
 } = await import('@/lib/csrf-utils');
 
 const csrfToken = generateCSRFToken(); // 32 bytes of random data
@@ -166,7 +167,7 @@ const response = NextResponse.json({
   success: true,
   data: authData,
   csrfToken: signedCSRFToken, // Include in response
-  message: 'Login successful'
+  message: 'Login successful',
 });
 
 // Set CSRF token cookie
@@ -174,6 +175,7 @@ response.cookies.set(CSRF_COOKIE_NAME, signedCSRFToken, csrfCookieOptions);
 ```
 
 **Cookie Options:**
+
 ```typescript
 {
   httpOnly: false,      // JavaScript needs to read this
@@ -278,6 +280,7 @@ export async function validateCSRF(request: NextRequest | Request): Promise<{
 ```
 
 **Token Validation Logic:**
+
 ```typescript
 export function validateCSRFTokens(
   cookieToken: string | undefined,
@@ -325,7 +328,9 @@ export async function POST(req: Request) {
 
   return NextResponse.json({
     success: true,
-    data: { /* ... */ },
+    data: {
+      /* ... */
+    },
   });
 }
 ```
@@ -342,7 +347,9 @@ export const POST = withCSRF(async (req: Request) => {
 
   return NextResponse.json({
     success: true,
-    data: { /* ... */ },
+    data: {
+      /* ... */
+    },
   });
 });
 ```
@@ -365,6 +372,7 @@ const response = await apiClient.post('/api/users', {
 ### Exempt Routes (No CSRF Required)
 
 The following routes **do not** require CSRF tokens:
+
 - `/api/auth/login` - Login endpoint (generates token)
 - `/api/auth/employee-login` - Employee login
 - All **GET**, **HEAD**, **OPTIONS** requests (safe methods)
@@ -440,14 +448,14 @@ curl -X GET http://localhost:9002/api/test/csrf -v
 
 **Test Endpoint:** `/api/test/csrf`
 
-| Method | CSRF Token | Expected Result |
-|--------|------------|----------------|
-| GET | Not required | 200 OK |
-| POST | Valid token | 200 OK |
-| POST | Missing token | 403 Forbidden |
-| POST | Invalid token | 403 Forbidden |
-| PUT | Valid token | 200 OK |
-| DELETE | Valid token | 200 OK |
+| Method | CSRF Token    | Expected Result |
+| ------ | ------------- | --------------- |
+| GET    | Not required  | 200 OK          |
+| POST   | Valid token   | 200 OK          |
+| POST   | Missing token | 403 Forbidden   |
+| POST   | Invalid token | 403 Forbidden   |
+| PUT    | Valid token   | 200 OK          |
+| DELETE | Valid token   | 200 OK          |
 
 ### Browser Testing
 
@@ -491,12 +499,12 @@ curl -X GET http://localhost:9002/api/test/csrf -v
 
 ### Limitations & Mitigations
 
-| Limitation | Risk Level | Mitigation |
-|------------|-----------|------------|
-| **Cookie Accessible by JavaScript** | Low | SameSite=Strict, HTTPS only, token signing |
-| **XSS Can Steal Token** | Medium | React auto-escaping, CSP (planned), input validation |
-| **Subdomain Attack** | Low | SameSite=Strict, no vulnerable subdomains |
-| **Token Reuse Within 7 Days** | Low | Session expiry (24h), logout clears token |
+| Limitation                          | Risk Level | Mitigation                                           |
+| ----------------------------------- | ---------- | ---------------------------------------------------- |
+| **Cookie Accessible by JavaScript** | Low        | SameSite=Strict, HTTPS only, token signing           |
+| **XSS Can Steal Token**             | Medium     | React auto-escaping, CSP (planned), input validation |
+| **Subdomain Attack**                | Low        | SameSite=Strict, no vulnerable subdomains            |
+| **Token Reuse Within 7 Days**       | Low        | Session expiry (24h), logout clears token            |
 
 ### Best Practices
 
@@ -506,6 +514,7 @@ curl -X GET http://localhost:9002/api/test/csrf -v
    - Enables `Secure` cookie attribute
 
 2. **✅ Change CSRF_SECRET in Production**
+
    ```bash
    # Generate strong secret
    openssl rand -base64 32
@@ -535,16 +544,19 @@ curl -X GET http://localhost:9002/api/test/csrf -v
 ### Issue: "CSRF token validation failed"
 
 **Symptoms:**
+
 - 403 Forbidden error
 - Error message: "CSRF token validation failed"
 
 **Possible Causes:**
+
 1. User logged in before CSRF implementation deployed
 2. Cookie expired or deleted
 3. Request from different origin (CORS issue)
 4. Token signature verification failed
 
 **Solutions:**
+
 1. **Logout and login again** to get fresh CSRF token
 2. **Check cookies** in browser DevTools → Application → Cookies
 3. **Verify CSRF_SECRET** is set correctly in `.env`
@@ -555,15 +567,18 @@ curl -X GET http://localhost:9002/api/test/csrf -v
 ### Issue: CSRF token not being sent in requests
 
 **Symptoms:**
+
 - Requests failing with CSRF error
 - `x-csrf-token` header missing in Network tab
 
 **Possible Causes:**
+
 1. API client not updated with CSRF logic
 2. Request not using API client (direct fetch)
 3. Cookie not being set on login
 
 **Solutions:**
+
 1. **Use API client** for all API requests
 2. **Check login response** includes `csrfToken` field
 3. **Verify cookie** is set after login
@@ -574,14 +589,17 @@ curl -X GET http://localhost:9002/api/test/csrf -v
 ### Issue: Safe methods (GET) being blocked
 
 **Symptoms:**
+
 - GET requests returning 403
 - Should not require CSRF token
 
 **Possible Causes:**
+
 1. Middleware applied to all methods
 2. Incorrect method detection
 
 **Solutions:**
+
 1. **Verify middleware logic** skips safe methods
 2. **Check `requiresCSRFProtection`** function
 3. **Ensure GET requests** don't trigger CSRF validation
@@ -591,15 +609,18 @@ curl -X GET http://localhost:9002/api/test/csrf -v
 ### Issue: CSRF violations not appearing in audit log
 
 **Symptoms:**
+
 - CSRF validation failing
 - No entries in `/dashboard/admin/audit-trail`
 
 **Possible Causes:**
+
 1. Audit logging not enabled
 2. Database connection issue
 3. Error in `logCSRFViolation` function
 
 **Solutions:**
+
 1. **Check server logs** for errors
 2. **Verify database connection** is healthy
 3. **Test audit logging** with other events (login, etc.)
@@ -638,12 +659,12 @@ python -c "import os, base64; print(base64.b64encode(os.urandom(32)).decode())"
 
 ### Alignment with Standards
 
-| Standard | Requirement | Implementation | Status |
-|----------|-------------|----------------|--------|
-| **OWASP Top 10 (2021)** | A01: Broken Access Control | CSRF protection prevents unauthorized state changes | ✅ Met |
-| **OWASP CSRF Prevention** | Double-Submit Cookie Pattern | Implemented with signed tokens | ✅ Met |
-| **Security Assessment v2** | VULN-NEW-001: CSRF Protection | Tokens + SameSite cookies | ✅ Resolved |
-| **ISO 27001** | A.13.1.3 Protecting application services | CSRF protection for all state-changing endpoints | ✅ Met |
+| Standard                   | Requirement                              | Implementation                                      | Status      |
+| -------------------------- | ---------------------------------------- | --------------------------------------------------- | ----------- |
+| **OWASP Top 10 (2021)**    | A01: Broken Access Control               | CSRF protection prevents unauthorized state changes | ✅ Met      |
+| **OWASP CSRF Prevention**  | Double-Submit Cookie Pattern             | Implemented with signed tokens                      | ✅ Met      |
+| **Security Assessment v2** | VULN-NEW-001: CSRF Protection            | Tokens + SameSite cookies                           | ✅ Resolved |
+| **ISO 27001**              | A.13.1.3 Protecting application services | CSRF protection for all state-changing endpoints    | ✅ Met      |
 
 ### Compliance Checklist
 
@@ -701,11 +722,11 @@ python -c "import os, base64; print(base64.b64encode(os.urandom(32)).decode())"
 
 For questions or security concerns regarding CSRF protection:
 
-| Role | Contact | Responsibility |
-|------|---------|----------------|
-| **Security Lead** | security@zanzibar.go.tz | CSRF security policy |
-| **Development Lead** | dev-lead@zanzibar.go.tz | CSRF implementation |
-| **CISO** | ciso@zanzibar.go.tz | Overall security compliance |
+| Role                 | Contact                 | Responsibility              |
+| -------------------- | ----------------------- | --------------------------- |
+| **Security Lead**    | security@zanzibar.go.tz | CSRF security policy        |
+| **Development Lead** | dev-lead@zanzibar.go.tz | CSRF implementation         |
+| **CISO**             | ciso@zanzibar.go.tz     | Overall security compliance |
 
 ---
 

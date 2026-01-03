@@ -1,13 +1,14 @@
 # Security Assessment Report
+
 ## Civil Service Management System (CSMS)
 
 ---
 
 ## Document Control
 
-| Version | Date | Author | Classification |
-|---------|------|--------|----------------|
-| 1.0 | 2024-12-25 | Security Assessment Team | **CONFIDENTIAL** |
+| Version | Date       | Author                   | Classification   |
+| ------- | ---------- | ------------------------ | ---------------- |
+| 1.0     | 2024-12-25 | Security Assessment Team | **CONFIDENTIAL** |
 
 **Assessment Period:** December 2024
 **Application Version:** 1.0
@@ -26,13 +27,13 @@ The application demonstrates **CRITICAL security vulnerabilities** that require 
 
 ### Critical Findings Summary
 
-| Severity | Count | Status |
-|----------|-------|--------|
-| **CRITICAL** | 3 | 🔴 Requires Immediate Action |
-| **HIGH** | 4 | 🟠 Requires Urgent Action |
-| **MEDIUM** | 6 | 🟡 Should Be Addressed |
-| **LOW** | 4 | 🟢 Recommended |
-| **Total** | 17 | - |
+| Severity     | Count | Status                       |
+| ------------ | ----- | ---------------------------- |
+| **CRITICAL** | 3     | 🔴 Requires Immediate Action |
+| **HIGH**     | 4     | 🟠 Requires Urgent Action    |
+| **MEDIUM**   | 6     | 🟡 Should Be Addressed       |
+| **LOW**      | 4     | 🟢 Recommended               |
+| **Total**    | 17    | -                            |
 
 ### Key Recommendations
 
@@ -62,17 +63,18 @@ The application demonstrates **CRITICAL security vulnerabilities** that require 
 
 ### 1.1 Application Details
 
-| Component | Details |
-|-----------|---------|
-| **Application Name** | Civil Service Management System (CSMS) |
-| **Technology Stack** | Next.js 16, React 19, TypeScript 5, PostgreSQL 15, Prisma 6, MinIO |
-| **Deployment Environment** | Ubuntu Server 24.04 LTS, Nginx, PM2 |
-| **Assessment Date** | December 2024 |
-| **Lines of Code** | ~15,000+ LOC |
+| Component                  | Details                                                            |
+| -------------------------- | ------------------------------------------------------------------ |
+| **Application Name**       | Civil Service Management System (CSMS)                             |
+| **Technology Stack**       | Next.js 16, React 19, TypeScript 5, PostgreSQL 15, Prisma 6, MinIO |
+| **Deployment Environment** | Ubuntu Server 24.04 LTS, Nginx, PM2                                |
+| **Assessment Date**        | December 2024                                                      |
+| **Lines of Code**          | ~15,000+ LOC                                                       |
 
 ### 1.2 Scope Coverage
 
 **In Scope:**
+
 - ✅ Authentication and session management
 - ✅ Authorization and access control
 - ✅ API security (69 endpoints)
@@ -87,6 +89,7 @@ The application demonstrates **CRITICAL security vulnerabilities** that require 
 - ✅ Compliance requirements (GDPR, data protection)
 
 **Out of Scope:**
+
 - ❌ Physical security
 - ❌ Network infrastructure security
 - ❌ Operating system hardening
@@ -96,15 +99,15 @@ The application demonstrates **CRITICAL security vulnerabilities** that require 
 
 ### 1.3 Test Environment
 
-| Component | Version/Configuration |
-|-----------|----------------------|
-| Node.js | 18.18 LTS |
-| Next.js | 16.0 |
-| PostgreSQL | 15.x |
-| MinIO | 8.0.1 |
-| Operating System | Ubuntu 24.04 LTS |
-| Web Server | Nginx (reverse proxy) |
-| Process Manager | PM2 |
+| Component        | Version/Configuration |
+| ---------------- | --------------------- |
+| Node.js          | 18.18 LTS             |
+| Next.js          | 16.0                  |
+| PostgreSQL       | 15.x                  |
+| MinIO            | 8.0.1                 |
+| Operating System | Ubuntu 24.04 LTS      |
+| Web Server       | Nginx (reverse proxy) |
+| Process Manager  | PM2                   |
 
 ---
 
@@ -146,23 +149,23 @@ The security assessment followed a multi-phased approach:
 
 ### 2.2 Testing Tools
 
-| Tool | Purpose | Version |
-|------|---------|---------|
-| **Burp Suite** | Web application security testing | Professional 2024 |
-| **OWASP ZAP** | Automated vulnerability scanning | 2.14.0 |
-| **npm audit** | Dependency vulnerability scanning | Built-in |
-| **ESLint Security** | Static code analysis | 3.0.1 |
-| **TypeScript** | Type safety analysis | 5.3.3 |
-| **Manual Review** | Code review and logic analysis | N/A |
+| Tool                | Purpose                           | Version           |
+| ------------------- | --------------------------------- | ----------------- |
+| **Burp Suite**      | Web application security testing  | Professional 2024 |
+| **OWASP ZAP**       | Automated vulnerability scanning  | 2.14.0            |
+| **npm audit**       | Dependency vulnerability scanning | Built-in          |
+| **ESLint Security** | Static code analysis              | 3.0.1             |
+| **TypeScript**      | Type safety analysis              | 5.3.3             |
+| **Manual Review**   | Code review and logic analysis    | N/A               |
 
 ### 2.3 Severity Classification
 
-| Severity | Description | CVSS Score |
-|----------|-------------|------------|
+| Severity     | Description                                                                                                  | CVSS Score |
+| ------------ | ------------------------------------------------------------------------------------------------------------ | ---------- |
 | **CRITICAL** | Vulnerabilities that can be exploited remotely with no authentication, leading to complete system compromise | 9.0 - 10.0 |
-| **HIGH** | Vulnerabilities that can lead to significant data breach or system compromise with minimal prerequisites | 7.0 - 8.9 |
-| **MEDIUM** | Vulnerabilities that require specific conditions or have limited impact | 4.0 - 6.9 |
-| **LOW** | Vulnerabilities with minimal security impact or requiring significant prerequisites | 0.1 - 3.9 |
+| **HIGH**     | Vulnerabilities that can lead to significant data breach or system compromise with minimal prerequisites     | 7.0 - 8.9  |
+| **MEDIUM**   | Vulnerabilities that require specific conditions or have limited impact                                      | 4.0 - 6.9  |
+| **LOW**      | Vulnerabilities with minimal security impact or requiring significant prerequisites                          | 0.1 - 3.9  |
 
 ---
 
@@ -208,11 +211,13 @@ export async function GET(req: Request) {
 ```
 
 **Impact:**
+
 - Complete authentication bypass
 - Any unauthenticated user can access protected resources
 - Session management is non-functional
 
 **Exploitation:**
+
 - No credentials required
 - No special tools needed
 - 100% success rate
@@ -253,6 +258,7 @@ curl -X GET http://localhost:9002/api/users
 ```
 
 **Affected Endpoints:** (69 total)
+
 - `/api/users` - User management
 - `/api/employees` - Employee data
 - `/api/promotions` - Promotion requests
@@ -261,6 +267,7 @@ curl -X GET http://localhost:9002/api/users
 - All other request management endpoints
 
 **Impact:**
+
 - Complete data breach possible
 - Unauthorized data modification
 - Privacy violations (GDPR non-compliance)
@@ -287,6 +294,7 @@ const hashedPassword = await bcrypt.hash(password, salt);
 ```
 
 **Strength:**
+
 - ✅ Industry-standard bcrypt algorithm
 - ✅ Adequate salt rounds (10)
 - ✅ Passwords excluded from GET responses
@@ -337,12 +345,14 @@ if (shouldApplyInstitutionFilter(userRole, userInstitutionId)) {
 ```
 
 **Impact:**
+
 - Complete horizontal privilege escalation
 - Unauthorized access to other institutions' data
 - Data breach across all institutions
 - RBAC completely bypassed
 
 **Affected Endpoints:**
+
 - `/api/employees`
 - `/api/dashboard/metrics`
 - `/api/promotions`
@@ -372,6 +382,7 @@ const user = await db.User.findFirst({
 ```
 
 **Strength:**
+
 - ✅ Prisma ORM prevents SQL injection
 - ✅ No raw SQL queries found
 - ✅ Type-safe database operations
@@ -385,6 +396,7 @@ const user = await db.User.findFirst({
 **Finding:** React's automatic escaping provides baseline XSS protection, but dangerouslySetInnerHTML is not audited.
 
 **Recommendation:**
+
 - Implement Content Security Policy (CSP)
 - Audit all user-generated content rendering
 - Add XSS protection headers
@@ -413,6 +425,7 @@ const changePasswordSchema = z.object({
 ```
 
 **Strength:**
+
 - ✅ Zod validation on all endpoints
 - ✅ Strong password requirements
 - ✅ Email validation
@@ -442,6 +455,7 @@ const authData = {
 ```
 
 **Impact:**
+
 - No session timeout
 - No session invalidation on logout
 - Sessions never expire
@@ -469,10 +483,13 @@ const authData = {
   <input type="hidden" name="role" value="ADMIN" />
   <input type="hidden" name="password" value="Hack123!" />
 </form>
-<script>document.forms[0].submit();</script>
+<script>
+  document.forms[0].submit();
+</script>
 ```
 
 **Impact:**
+
 - Unauthorized actions on behalf of authenticated users
 - Account creation/modification
 - Data manipulation
@@ -492,6 +509,7 @@ const authData = {
 **Findings:**
 
 **Strengths:**
+
 - ✅ File type validation (PDF only)
 - ✅ File size limit (2MB)
 - ✅ MinIO object storage (not web-accessible directory)
@@ -519,6 +537,7 @@ if (file.size > maxSize) {
 ```
 
 **Recommendations:**
+
 - 🟡 Add magic number validation (verify actual file content, not just MIME type)
 - 🟡 Implement virus scanning for uploaded files
 - 🟡 Add filename sanitization
@@ -546,11 +565,13 @@ console.log('Password change attempt for user ID:', userId);
 ```
 
 **Impact:**
+
 - Username enumeration via server logs
 - Failed login attempts visible in logs
 - User IDs exposed
 
 **Recommendation:**
+
 - Remove debug console.log statements in production
 - Implement proper logging framework with log levels
 - Sanitize logs of PII
@@ -584,6 +605,7 @@ console.log('Password change attempt for user ID:', userId);
 **Algorithm:** bcrypt with 10 rounds
 
 **Strength Analysis:**
+
 - ✅ Cryptographically secure
 - ✅ Resistant to rainbow table attacks
 - ✅ Adaptive work factor (can be increased)
@@ -609,6 +631,7 @@ env: {
 ```
 
 **Recommendation:**
+
 - ✅ Enforce HTTPS in production
 - ✅ Implement HSTS headers
 - ✅ Use TLS 1.2 or higher
@@ -632,10 +655,12 @@ env: {
 ```
 
 **Strengths:**
+
 - ✅ API key authentication
 - ✅ Environment variable storage
 
 **Recommendations:**
+
 - 🟡 Implement API key rotation policy
 - 🟡 Add request signing for integrity
 - 🟡 Implement timeout and retry logic
@@ -650,6 +675,7 @@ env: {
 **Finding:** MinIO integration properly configured with access credentials stored in environment variables.
 
 **Strengths:**
+
 - ✅ Access key/secret key authentication
 - ✅ Bucket access controls
 - ✅ Pre-signed URLs for temporary access
@@ -662,12 +688,12 @@ env: {
 
 ### 4.1 Critical Vulnerabilities
 
-| ID | Title | CVSS | Location | Status |
-|----|-------|------|----------|--------|
-| **VULN-001** | Broken Authentication - Session Endpoint Always Returns True | 10.0 | `/api/auth/session/route.ts` | 🔴 Open |
-| **VULN-002** | Missing Authentication Middleware on All API Routes | 9.8 | `/api/**/*.ts` | 🔴 Open |
-| **VULN-003** | Broken Access Control - Client-Controlled Authorization | 9.1 | `/api/employees/route.ts` + others | 🔴 Open |
-| **VULN-004** | No Session Management Implementation | 9.3 | Authentication system | 🔴 Open |
+| ID           | Title                                                        | CVSS | Location                           | Status  |
+| ------------ | ------------------------------------------------------------ | ---- | ---------------------------------- | ------- |
+| **VULN-001** | Broken Authentication - Session Endpoint Always Returns True | 10.0 | `/api/auth/session/route.ts`       | 🔴 Open |
+| **VULN-002** | Missing Authentication Middleware on All API Routes          | 9.8  | `/api/**/*.ts`                     | 🔴 Open |
+| **VULN-003** | Broken Access Control - Client-Controlled Authorization      | 9.1  | `/api/employees/route.ts` + others | 🔴 Open |
+| **VULN-004** | No Session Management Implementation                         | 9.3  | Authentication system              | 🔴 Open |
 
 **Total Critical:** 4 vulnerabilities
 
@@ -675,12 +701,12 @@ env: {
 
 ### 4.2 High Vulnerabilities
 
-| ID | Title | CVSS | Location | Status |
-|----|-------|------|----------|--------|
-| **VULN-005** | No CSRF Protection on State-Changing Operations | 8.1 | All POST/PATCH/DELETE endpoints | 🟠 Open |
-| **VULN-006** | No Rate Limiting on Authentication Endpoints | 7.5 | `/api/auth/login` | 🟠 Open |
-| **VULN-007** | Missing Security Headers (CSP, X-Frame-Options, etc.) | 7.0 | Application-wide | 🟠 Open |
-| **VULN-008** | TypeScript Build Errors Ignored | 7.2 | `next.config.ts` | 🟠 Open |
+| ID           | Title                                                 | CVSS | Location                        | Status  |
+| ------------ | ----------------------------------------------------- | ---- | ------------------------------- | ------- |
+| **VULN-005** | No CSRF Protection on State-Changing Operations       | 8.1  | All POST/PATCH/DELETE endpoints | 🟠 Open |
+| **VULN-006** | No Rate Limiting on Authentication Endpoints          | 7.5  | `/api/auth/login`               | 🟠 Open |
+| **VULN-007** | Missing Security Headers (CSP, X-Frame-Options, etc.) | 7.0  | Application-wide                | 🟠 Open |
+| **VULN-008** | TypeScript Build Errors Ignored                       | 7.2  | `next.config.ts`                | 🟠 Open |
 
 **Total High:** 4 vulnerabilities
 
@@ -688,14 +714,14 @@ env: {
 
 ### 4.3 Medium Vulnerabilities
 
-| ID | Title | CVSS | Location | Status |
-|----|-------|------|----------|--------|
-| **VULN-009** | Verbose Console Logging in Production | 5.3 | Multiple files | 🟡 Open |
-| **VULN-010** | HTTP Used in Development (Must Enforce HTTPS in Prod) | 5.9 | Configuration | 🟡 Open |
-| **VULN-011** | No Content Security Policy | 6.1 | Response headers | 🟡 Open |
-| **VULN-012** | File Upload Missing Magic Number Validation | 5.5 | `/api/files/upload` | 🟡 Open |
-| **VULN-013** | No Explicit CORS Configuration | 5.0 | Application-wide | 🟡 Open |
-| **VULN-014** | Weak Password Requirements (6 chars for users) | 6.5 | `/api/users/route.ts` | 🟡 Open |
+| ID           | Title                                                 | CVSS | Location              | Status  |
+| ------------ | ----------------------------------------------------- | ---- | --------------------- | ------- |
+| **VULN-009** | Verbose Console Logging in Production                 | 5.3  | Multiple files        | 🟡 Open |
+| **VULN-010** | HTTP Used in Development (Must Enforce HTTPS in Prod) | 5.9  | Configuration         | 🟡 Open |
+| **VULN-011** | No Content Security Policy                            | 6.1  | Response headers      | 🟡 Open |
+| **VULN-012** | File Upload Missing Magic Number Validation           | 5.5  | `/api/files/upload`   | 🟡 Open |
+| **VULN-013** | No Explicit CORS Configuration                        | 5.0  | Application-wide      | 🟡 Open |
+| **VULN-014** | Weak Password Requirements (6 chars for users)        | 6.5  | `/api/users/route.ts` | 🟡 Open |
 
 **Total Medium:** 6 vulnerabilities
 
@@ -703,12 +729,12 @@ env: {
 
 ### 4.4 Low Vulnerabilities
 
-| ID | Title | CVSS | Location | Status |
-|----|-------|------|----------|--------|
-| **VULN-015** | No Audit Logging for Authentication Events | 3.7 | Authentication system | 🟢 Open |
-| **VULN-016** | No Account Lockout After Failed Login Attempts | 3.9 | `/api/auth/login` | 🟢 Open |
-| **VULN-017** | Missing Security.txt File | 1.0 | Public root | 🟢 Open |
-| **VULN-018** | No Automated Security Scanning in CI/CD | 2.0 | Build pipeline | 🟢 Open |
+| ID           | Title                                          | CVSS | Location              | Status  |
+| ------------ | ---------------------------------------------- | ---- | --------------------- | ------- |
+| **VULN-015** | No Audit Logging for Authentication Events     | 3.7  | Authentication system | 🟢 Open |
+| **VULN-016** | No Account Lockout After Failed Login Attempts | 3.9  | `/api/auth/login`     | 🟢 Open |
+| **VULN-017** | Missing Security.txt File                      | 1.0  | Public root           | 🟢 Open |
+| **VULN-018** | No Automated Security Scanning in CI/CD        | 2.0  | Build pipeline        | 🟢 Open |
 
 **Total Low:** 4 vulnerabilities
 
@@ -753,7 +779,7 @@ export function middleware(request: NextRequest) {
   // Public routes that don't require authentication
   const publicPaths = ['/api/auth/login', '/api/auth/employee-login'];
 
-  if (publicPaths.some(path => request.nextUrl.pathname.startsWith(path))) {
+  if (publicPaths.some((path) => request.nextUrl.pathname.startsWith(path))) {
     return NextResponse.next();
   }
 
@@ -779,6 +805,7 @@ export const config = {
 ```
 
 **Implementation Steps:**
+
 1. Create `src/middleware.ts`
 2. Implement session validation logic
 3. Add session token to all authenticated requests
@@ -801,7 +828,7 @@ export const config = {
 export async function GET(req: Request) {
   return NextResponse.json({
     success: true,
-    data: { isAuthenticated: true } // ALWAYS TRUE!
+    data: { isAuthenticated: true }, // ALWAYS TRUE!
   });
 }
 ```
@@ -818,22 +845,28 @@ export async function GET(req: Request) {
     const sessionToken = cookieStore.get('session-token');
 
     if (!sessionToken) {
-      return NextResponse.json({
-        success: false,
-        data: { isAuthenticated: false },
-        message: 'No session token found'
-      }, { status: 401 });
+      return NextResponse.json(
+        {
+          success: false,
+          data: { isAuthenticated: false },
+          message: 'No session token found',
+        },
+        { status: 401 }
+      );
     }
 
     // Verify the session token (JWT or session store lookup)
     const session = await verifySessionToken(sessionToken.value);
 
     if (!session || !session.userId) {
-      return NextResponse.json({
-        success: false,
-        data: { isAuthenticated: false },
-        message: 'Invalid or expired session'
-      }, { status: 401 });
+      return NextResponse.json(
+        {
+          success: false,
+          data: { isAuthenticated: false },
+          message: 'Invalid or expired session',
+        },
+        { status: 401 }
+      );
     }
 
     // Fetch user data
@@ -841,16 +874,19 @@ export async function GET(req: Request) {
       where: { id: session.userId },
       include: {
         Institution: true,
-        Employee: true
-      }
+        Employee: true,
+      },
     });
 
     if (!user || !user.active) {
-      return NextResponse.json({
-        success: false,
-        data: { isAuthenticated: false },
-        message: 'User not found or inactive'
-      }, { status: 401 });
+      return NextResponse.json(
+        {
+          success: false,
+          data: { isAuthenticated: false },
+          message: 'User not found or inactive',
+        },
+        { status: 401 }
+      );
     }
 
     return NextResponse.json({
@@ -861,17 +897,20 @@ export async function GET(req: Request) {
           id: user.id,
           name: user.name,
           role: user.role,
-          institutionId: user.institutionId
-        }
-      }
+          institutionId: user.institutionId,
+        },
+      },
     });
   } catch (error) {
-    console.error("[SESSION_GET]", error);
-    return NextResponse.json({
-      success: false,
-      data: { isAuthenticated: false },
-      message: 'Session verification failed'
-    }, { status: 500 });
+    console.error('[SESSION_GET]', error);
+    return NextResponse.json(
+      {
+        success: false,
+        data: { isAuthenticated: false },
+        message: 'Session verification failed',
+      },
+      { status: 500 }
+    );
   }
 }
 ```
@@ -902,7 +941,7 @@ export async function getAuthContext(request: Request): Promise<AuthContext> {
   const session = await verifySessionToken(sessionToken.value);
   const user = await db.User.findUnique({
     where: { id: session.userId },
-    include: { Institution: true }
+    include: { Institution: true },
   });
 
   if (!user) {
@@ -913,7 +952,7 @@ export async function getAuthContext(request: Request): Promise<AuthContext> {
     userId: user.id,
     role: user.role,
     institutionId: user.institutionId,
-    permissions: getPermissionsForRole(user.role)
+    permissions: getPermissionsForRole(user.role),
   };
 }
 ```
@@ -940,6 +979,7 @@ export async function GET(req: Request) {
 ```
 
 **Apply to ALL Endpoints:**
+
 - `/api/employees`
 - `/api/promotions`
 - `/api/confirmations`
@@ -964,14 +1004,14 @@ response.cookies.set('session-token', token, {
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
   sameSite: 'strict',
-  maxAge: 3600 * 24 * 7 // 7 days
+  maxAge: 3600 * 24 * 7, // 7 days
 });
 
 // For additional protection, implement CSRF tokens
 response.cookies.set('csrf-token', generateCSRFToken(), {
   httpOnly: false, // Accessible to JavaScript
   secure: process.env.NODE_ENV === 'production',
-  sameSite: 'strict'
+  sameSite: 'strict',
 });
 ```
 
@@ -1051,7 +1091,10 @@ export async function POST(req: Request) {
     await limiter.check(5, `login_${ip}`); // 5 attempts per 15 minutes
   } catch {
     return NextResponse.json(
-      { success: false, message: 'Too many login attempts. Please try again later.' },
+      {
+        success: false,
+        message: 'Too many login attempts. Please try again later.',
+      },
       { status: 429 }
     );
   }
@@ -1061,6 +1104,7 @@ export async function POST(req: Request) {
 ```
 
 **Rate Limits:**
+
 - `/api/auth/login`: 5 attempts per 15 minutes per IP
 - `/api/auth/change-password`: 3 attempts per hour per user
 - `/api/files/upload`: 10 uploads per minute per user
@@ -1086,31 +1130,31 @@ const nextConfig = {
         headers: [
           {
             key: 'X-DNS-Prefetch-Control',
-            value: 'on'
+            value: 'on',
           },
           {
             key: 'Strict-Transport-Security',
-            value: 'max-age=63072000; includeSubDomains; preload'
+            value: 'max-age=63072000; includeSubDomains; preload',
           },
           {
             key: 'X-Frame-Options',
-            value: 'SAMEORIGIN'
+            value: 'SAMEORIGIN',
           },
           {
             key: 'X-Content-Type-Options',
-            value: 'nosniff'
+            value: 'nosniff',
           },
           {
             key: 'X-XSS-Protection',
-            value: '1; mode=block'
+            value: '1; mode=block',
           },
           {
             key: 'Referrer-Policy',
-            value: 'strict-origin-when-cross-origin'
+            value: 'strict-origin-when-cross-origin',
           },
           {
             key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=()'
+            value: 'camera=(), microphone=(), geolocation=()',
           },
           {
             key: 'Content-Security-Policy',
@@ -1121,13 +1165,13 @@ const nextConfig = {
               "img-src 'self' data: https:",
               "font-src 'self' data:",
               "connect-src 'self' https://hrims.zanzibar.go.tz",
-              "frame-ancestors 'self'"
-            ].join('; ')
-          }
-        ]
-      }
+              "frame-ancestors 'self'",
+            ].join('; '),
+          },
+        ],
+      },
     ];
-  }
+  },
 };
 ```
 
@@ -1158,6 +1202,7 @@ typescript: {
 ```
 
 **Action Items:**
+
 1. Remove `ignoreBuildErrors: true`
 2. Fix all TypeScript compilation errors
 3. Add strict mode: `"strict": true` in `tsconfig.json`
@@ -1188,7 +1233,7 @@ export const logger = {
   },
   error: (message: string, ...args: any[]) => {
     console.error(`[ERROR] ${message}`, ...args);
-  }
+  },
 };
 
 // Replace all console.log with logger
@@ -1247,7 +1292,7 @@ const objectKey = generateObjectKey(folder, safeName);
 
 ```typescript
 // Current (weak)
-password: z.string().min(6, "Password must be at least 6 characters.")
+password: z.string().min(6, 'Password must be at least 6 characters.');
 ```
 
 **Recommended Fix:**
@@ -1255,12 +1300,12 @@ password: z.string().min(6, "Password must be at least 6 characters.")
 ```typescript
 // Stronger requirements
 password: z.string()
-  .min(12, "Password must be at least 12 characters")
-  .regex(/^(?=.*[a-z])/, "Must contain lowercase letter")
-  .regex(/^(?=.*[A-Z])/, "Must contain uppercase letter")
-  .regex(/^(?=.*\d)/, "Must contain number")
-  .regex(/^(?=.*[@$!%*?&#])/, "Must contain special character")
-  .max(128, "Password too long")
+  .min(12, 'Password must be at least 12 characters')
+  .regex(/^(?=.*[a-z])/, 'Must contain lowercase letter')
+  .regex(/^(?=.*[A-Z])/, 'Must contain uppercase letter')
+  .regex(/^(?=.*\d)/, 'Must contain number')
+  .regex(/^(?=.*[@$!%*?&#])/, 'Must contain special character')
+  .max(128, 'Password too long');
 ```
 
 **Estimated Effort:** 4 hours
@@ -1315,6 +1360,7 @@ async headers() {
 **Priority:** 🟢 **LOW - Implement Within 1 Month**
 
 **Recommended Events to Log:**
+
 - Successful logins
 - Failed login attempts
 - Password changes
@@ -1337,8 +1383,8 @@ export async function logAuditEvent(event: AuditEvent) {
       ipAddress: event.ipAddress,
       userAgent: event.userAgent,
       timestamp: new Date(),
-      metadata: event.metadata
-    }
+      metadata: event.metadata,
+    },
   });
 }
 ```
@@ -1352,6 +1398,7 @@ export async function logAuditEvent(event: AuditEvent) {
 **Priority:** 🟢 **LOW - Implement Within 1 Month**
 
 **Recommended Policy:**
+
 - Lock account after 5 failed login attempts
 - Lockout duration: 30 minutes
 - Notify user via email about account lockout
@@ -1365,14 +1412,18 @@ const failedAttempts = await db.FailedLogin.count({
   where: {
     username: username,
     createdAt: {
-      gte: new Date(Date.now() - 30 * 60 * 1000) // Last 30 minutes
-    }
-  }
+      gte: new Date(Date.now() - 30 * 60 * 1000), // Last 30 minutes
+    },
+  },
 });
 
 if (failedAttempts >= 5) {
   return NextResponse.json(
-    { success: false, message: 'Account locked due to multiple failed login attempts. Try again in 30 minutes.' },
+    {
+      success: false,
+      message:
+        'Account locked due to multiple failed login attempts. Try again in 30 minutes.',
+    },
     { status: 423 }
   );
 }
@@ -1407,32 +1458,33 @@ Policy: https://csms.zanzibar.go.tz/security-policy
 
 #### 6.1.1 Data Protection Principles
 
-| Principle | Status | Evidence | Recommendation |
-|-----------|--------|----------|----------------|
-| **Lawfulness, Fairness, Transparency** | ⚠️ Partial | No privacy policy visible | Create privacy policy and terms of use |
-| **Purpose Limitation** | ✅ Compliant | Data collected for HR management purposes | Maintain current practice |
-| **Data Minimization** | ✅ Compliant | Only necessary employee data collected | Maintain current practice |
-| **Accuracy** | ✅ Compliant | HRIMS integration ensures data accuracy | Maintain current practice |
-| **Storage Limitation** | ⚠️ Partial | No data retention policy | Implement data retention and deletion policy |
-| **Integrity and Confidentiality** | 🔴 Non-Compliant | Critical security vulnerabilities | **FIX CRITICAL VULNERABILITIES** |
+| Principle                              | Status           | Evidence                                  | Recommendation                               |
+| -------------------------------------- | ---------------- | ----------------------------------------- | -------------------------------------------- |
+| **Lawfulness, Fairness, Transparency** | ⚠️ Partial       | No privacy policy visible                 | Create privacy policy and terms of use       |
+| **Purpose Limitation**                 | ✅ Compliant     | Data collected for HR management purposes | Maintain current practice                    |
+| **Data Minimization**                  | ✅ Compliant     | Only necessary employee data collected    | Maintain current practice                    |
+| **Accuracy**                           | ✅ Compliant     | HRIMS integration ensures data accuracy   | Maintain current practice                    |
+| **Storage Limitation**                 | ⚠️ Partial       | No data retention policy                  | Implement data retention and deletion policy |
+| **Integrity and Confidentiality**      | 🔴 Non-Compliant | Critical security vulnerabilities         | **FIX CRITICAL VULNERABILITIES**             |
 
 ---
 
 #### 6.1.2 Individual Rights
 
-| Right | Status | Implementation |
-|-------|--------|----------------|
-| **Right to Access** | ✅ Implemented | Employees can view their profiles |
-| **Right to Rectification** | ✅ Implemented | Profile data can be updated |
-| **Right to Erasure** | ❌ Not Implemented | No deletion mechanism |
-| **Right to Restrict Processing** | ❌ Not Implemented | No restriction capability |
-| **Right to Data Portability** | ⚠️ Partial | Export functionality needed |
-| **Right to Object** | ❌ Not Implemented | No objection mechanism |
-| **Rights Related to Automated Decision Making** | ✅ N/A | No automated decision making |
+| Right                                           | Status             | Implementation                    |
+| ----------------------------------------------- | ------------------ | --------------------------------- |
+| **Right to Access**                             | ✅ Implemented     | Employees can view their profiles |
+| **Right to Rectification**                      | ✅ Implemented     | Profile data can be updated       |
+| **Right to Erasure**                            | ❌ Not Implemented | No deletion mechanism             |
+| **Right to Restrict Processing**                | ❌ Not Implemented | No restriction capability         |
+| **Right to Data Portability**                   | ⚠️ Partial         | Export functionality needed       |
+| **Right to Object**                             | ❌ Not Implemented | No objection mechanism            |
+| **Rights Related to Automated Decision Making** | ✅ N/A             | No automated decision making      |
 
 **GDPR Compliance Score:** **48%** (Non-Compliant)
 
 **Critical Issues:**
+
 1. 🔴 Data confidentiality not ensured (security vulnerabilities)
 2. 🟡 No privacy policy or consent mechanism
 3. 🟡 Missing data retention policy
@@ -1440,6 +1492,7 @@ Policy: https://csms.zanzibar.go.tz/security-policy
 5. 🟡 No data portability feature
 
 **Recommendations:**
+
 1. **IMMEDIATE**: Fix security vulnerabilities to ensure data confidentiality
 2. **HIGH**: Create and display privacy policy
 3. **MEDIUM**: Implement data retention and deletion policies
@@ -1452,22 +1505,23 @@ Policy: https://csms.zanzibar.go.tz/security-policy
 
 **Information Security Controls Assessment:**
 
-| Control Domain | Implementation Level | Score |
-|----------------|---------------------|-------|
-| **Access Control (A.9)** | 🔴 Critical Gaps | 30% |
-| **Cryptography (A.10)** | ✅ Adequate | 80% |
-| **Physical Security (A.11)** | N/A (Out of Scope) | - |
-| **Operations Security (A.12)** | 🟡 Partial | 50% |
-| **Communications Security (A.13)** | 🟡 Partial | 60% |
-| **System Acquisition (A.14)** | ✅ Adequate | 75% |
-| **Supplier Relationships (A.15)** | 🟡 Partial | 55% |
-| **Incident Management (A.16)** | 🔴 Missing | 20% |
-| **Business Continuity (A.17)** | N/A (Out of Scope) | - |
-| **Compliance (A.18)** | 🟡 Partial | 50% |
+| Control Domain                     | Implementation Level | Score |
+| ---------------------------------- | -------------------- | ----- |
+| **Access Control (A.9)**           | 🔴 Critical Gaps     | 30%   |
+| **Cryptography (A.10)**            | ✅ Adequate          | 80%   |
+| **Physical Security (A.11)**       | N/A (Out of Scope)   | -     |
+| **Operations Security (A.12)**     | 🟡 Partial           | 50%   |
+| **Communications Security (A.13)** | 🟡 Partial           | 60%   |
+| **System Acquisition (A.14)**      | ✅ Adequate          | 75%   |
+| **Supplier Relationships (A.15)**  | 🟡 Partial           | 55%   |
+| **Incident Management (A.16)**     | 🔴 Missing           | 20%   |
+| **Business Continuity (A.17)**     | N/A (Out of Scope)   | -     |
+| **Compliance (A.18)**              | 🟡 Partial           | 50%   |
 
 **Overall ISO 27001 Alignment:** **52%** (Needs Improvement)
 
 **Critical Gaps:**
+
 1. Access control mechanisms insufficient
 2. No incident response plan
 3. Limited logging and monitoring
@@ -1477,18 +1531,18 @@ Policy: https://csms.zanzibar.go.tz/security-policy
 
 ### 6.3 OWASP Top 10 (2021) Compliance
 
-| Risk | Status | Findings |
-|------|--------|----------|
-| **A01:2021 – Broken Access Control** | 🔴 Vulnerable | Missing authentication, client-side authorization |
-| **A02:2021 – Cryptographic Failures** | ✅ Secure | Proper password hashing, data encrypted in transit (prod) |
-| **A03:2021 – Injection** | ✅ Secure | Prisma ORM prevents SQL injection |
-| **A04:2021 – Insecure Design** | 🔴 Vulnerable | Fundamental authentication architecture flawed |
-| **A05:2021 – Security Misconfiguration** | 🟡 Partial | TypeScript errors ignored, missing security headers |
-| **A06:2021 – Vulnerable Components** | ✅ Secure | All dependencies up-to-date |
-| **A07:2021 – Identity/Authentication Failures** | 🔴 Vulnerable | Session management broken, no rate limiting |
-| **A08:2021 – Software/Data Integrity Failures** | 🟡 Partial | No CSRF protection |
-| **A09:2021 – Security Logging/Monitoring Failures** | 🟡 Partial | Limited audit logging |
-| **A10:2021 – Server-Side Request Forgery** | ✅ Secure | No SSRF vectors identified |
+| Risk                                                | Status        | Findings                                                  |
+| --------------------------------------------------- | ------------- | --------------------------------------------------------- |
+| **A01:2021 – Broken Access Control**                | 🔴 Vulnerable | Missing authentication, client-side authorization         |
+| **A02:2021 – Cryptographic Failures**               | ✅ Secure     | Proper password hashing, data encrypted in transit (prod) |
+| **A03:2021 – Injection**                            | ✅ Secure     | Prisma ORM prevents SQL injection                         |
+| **A04:2021 – Insecure Design**                      | 🔴 Vulnerable | Fundamental authentication architecture flawed            |
+| **A05:2021 – Security Misconfiguration**            | 🟡 Partial    | TypeScript errors ignored, missing security headers       |
+| **A06:2021 – Vulnerable Components**                | ✅ Secure     | All dependencies up-to-date                               |
+| **A07:2021 – Identity/Authentication Failures**     | 🔴 Vulnerable | Session management broken, no rate limiting               |
+| **A08:2021 – Software/Data Integrity Failures**     | 🟡 Partial    | No CSRF protection                                        |
+| **A09:2021 – Security Logging/Monitoring Failures** | 🟡 Partial    | Limited audit logging                                     |
+| **A10:2021 – Server-Side Request Forgery**          | ✅ Secure     | No SSRF vectors identified                                |
 
 **OWASP Top 10 Compliance:** **50%** (Failing)
 
@@ -1498,14 +1552,14 @@ Policy: https://csms.zanzibar.go.tz/security-policy
 
 **Zanzibar Electronic and Postal Communications Act Compliance:**
 
-| Requirement | Status | Evidence |
-|-------------|--------|----------|
-| **Data Confidentiality** | 🔴 Non-Compliant | Critical vulnerabilities allow unauthorized access |
-| **Data Integrity** | ✅ Compliant | Database transactions ensure integrity |
-| **Data Availability** | ⚠️ Unknown | Need disaster recovery plan |
-| **User Consent** | ⚠️ Partial | Implied consent, no explicit mechanism |
-| **Data Breach Notification** | ❌ Not Implemented | No breach notification procedure |
-| **Cross-Border Data Transfer** | ✅ Compliant | All data stored locally in Zanzibar |
+| Requirement                    | Status             | Evidence                                           |
+| ------------------------------ | ------------------ | -------------------------------------------------- |
+| **Data Confidentiality**       | 🔴 Non-Compliant   | Critical vulnerabilities allow unauthorized access |
+| **Data Integrity**             | ✅ Compliant       | Database transactions ensure integrity             |
+| **Data Availability**          | ⚠️ Unknown         | Need disaster recovery plan                        |
+| **User Consent**               | ⚠️ Partial         | Implied consent, no explicit mechanism             |
+| **Data Breach Notification**   | ❌ Not Implemented | No breach notification procedure                   |
+| **Cross-Border Data Transfer** | ✅ Compliant       | All data stored locally in Zanzibar                |
 
 **Compliance Score:** **42%** (Non-Compliant)
 
@@ -1515,26 +1569,26 @@ Policy: https://csms.zanzibar.go.tz/security-policy
 
 ### 7.1 Risk Matrix
 
-| Vulnerability | Likelihood | Impact | Risk Level | Priority |
-|---------------|------------|--------|------------|----------|
-| **VULN-001: Session Endpoint Returns True** | Very High | Critical | **CRITICAL** | P0 |
-| **VULN-002: No Authentication Middleware** | Very High | Critical | **CRITICAL** | P0 |
-| **VULN-003: Client-Side Authorization** | Very High | Critical | **CRITICAL** | P0 |
-| **VULN-004: No Session Management** | Very High | Critical | **CRITICAL** | P0 |
-| **VULN-005: No CSRF Protection** | High | High | **HIGH** | P1 |
-| **VULN-006: No Rate Limiting** | High | High | **HIGH** | P1 |
-| **VULN-007: Missing Security Headers** | High | Medium | **HIGH** | P1 |
-| **VULN-008: TypeScript Errors Ignored** | Medium | High | **HIGH** | P1 |
-| **VULN-009: Verbose Console Logging** | Medium | Medium | **MEDIUM** | P2 |
-| **VULN-010: HTTP in Development** | Low | High | **MEDIUM** | P2 |
-| **VULN-011: No CSP** | Medium | Medium | **MEDIUM** | P2 |
-| **VULN-012: File Upload Validation** | Medium | Low | **MEDIUM** | P2 |
-| **VULN-013: No CORS Configuration** | Medium | Medium | **MEDIUM** | P2 |
-| **VULN-014: Weak Password (6 chars)** | Medium | Medium | **MEDIUM** | P2 |
-| **VULN-015: No Audit Logging** | Low | Medium | **LOW** | P3 |
-| **VULN-016: No Account Lockout** | Low | Low | **LOW** | P3 |
-| **VULN-017: No Security.txt** | Very Low | Very Low | **LOW** | P3 |
-| **VULN-018: No Security Scanning** | Low | Medium | **LOW** | P3 |
+| Vulnerability                               | Likelihood | Impact   | Risk Level   | Priority |
+| ------------------------------------------- | ---------- | -------- | ------------ | -------- |
+| **VULN-001: Session Endpoint Returns True** | Very High  | Critical | **CRITICAL** | P0       |
+| **VULN-002: No Authentication Middleware**  | Very High  | Critical | **CRITICAL** | P0       |
+| **VULN-003: Client-Side Authorization**     | Very High  | Critical | **CRITICAL** | P0       |
+| **VULN-004: No Session Management**         | Very High  | Critical | **CRITICAL** | P0       |
+| **VULN-005: No CSRF Protection**            | High       | High     | **HIGH**     | P1       |
+| **VULN-006: No Rate Limiting**              | High       | High     | **HIGH**     | P1       |
+| **VULN-007: Missing Security Headers**      | High       | Medium   | **HIGH**     | P1       |
+| **VULN-008: TypeScript Errors Ignored**     | Medium     | High     | **HIGH**     | P1       |
+| **VULN-009: Verbose Console Logging**       | Medium     | Medium   | **MEDIUM**   | P2       |
+| **VULN-010: HTTP in Development**           | Low        | High     | **MEDIUM**   | P2       |
+| **VULN-011: No CSP**                        | Medium     | Medium   | **MEDIUM**   | P2       |
+| **VULN-012: File Upload Validation**        | Medium     | Low      | **MEDIUM**   | P2       |
+| **VULN-013: No CORS Configuration**         | Medium     | Medium   | **MEDIUM**   | P2       |
+| **VULN-014: Weak Password (6 chars)**       | Medium     | Medium   | **MEDIUM**   | P2       |
+| **VULN-015: No Audit Logging**              | Low        | Medium   | **LOW**      | P3       |
+| **VULN-016: No Account Lockout**            | Low        | Low      | **LOW**      | P3       |
+| **VULN-017: No Security.txt**               | Very Low   | Very Low | **LOW**      | P3       |
+| **VULN-018: No Security Scanning**          | Low        | Medium   | **LOW**      | P3       |
 
 ### 7.2 Business Impact Analysis
 
@@ -1543,6 +1597,7 @@ Policy: https://csms.zanzibar.go.tz/security-policy
 **Attack Vector:** Exploit VULN-002 (No Authentication) + VULN-003 (Client Authorization)
 
 **Steps:**
+
 1. Attacker accesses `/api/employees?userRole=ADMIN&userInstitutionId=any`
 2. Retrieves complete employee database (all institutions)
 3. Accesses `/api/users` to retrieve all user accounts
@@ -1550,14 +1605,14 @@ Policy: https://csms.zanzibar.go.tz/security-policy
 
 **Potential Impact:**
 
-| Impact Category | Severity | Description |
-|----------------|----------|-------------|
+| Impact Category          | Severity | Description                                         |
+| ------------------------ | -------- | --------------------------------------------------- |
 | **Data Confidentiality** | Critical | Complete database breach (10,000+ employee records) |
-| **Financial** | High | GDPR fines up to €20M or 4% of annual revenue |
-| **Reputation** | Critical | Loss of public trust in government systems |
-| **Operational** | High | System shutdown for remediation (1-2 weeks) |
-| **Legal** | High | Lawsuits from affected employees |
-| **Regulatory** | Critical | Non-compliance with data protection laws |
+| **Financial**            | High     | GDPR fines up to €20M or 4% of annual revenue       |
+| **Reputation**           | Critical | Loss of public trust in government systems          |
+| **Operational**          | High     | System shutdown for remediation (1-2 weeks)         |
+| **Legal**                | High     | Lawsuits from affected employees                    |
+| **Regulatory**           | Critical | Non-compliance with data protection laws            |
 
 **Estimated Total Cost:** $500,000 - $2,000,000 USD
 
@@ -1572,6 +1627,7 @@ Policy: https://csms.zanzibar.go.tz/security-policy
 **Attack Vector:** Exploit VULN-002 + VULN-005 (No CSRF)
 
 **Steps:**
+
 1. Attacker sends phishing email with malicious form
 2. Authenticated user clicks link
 3. CSRF attack modifies user data (promotions, confirmations, etc.)
@@ -1579,13 +1635,13 @@ Policy: https://csms.zanzibar.go.tz/security-policy
 
 **Potential Impact:**
 
-| Impact Category | Severity | Description |
-|----------------|----------|-------------|
-| **Data Integrity** | High | Fraudulent promotions, incorrect employee records |
-| **Financial** | Medium | Incorrect salary calculations, fraud |
-| **Operational** | High | Manual data cleanup required |
-| **Legal** | Medium | Employment disputes, incorrect benefits |
-| **Trust** | High | Internal user confidence damaged |
+| Impact Category    | Severity | Description                                       |
+| ------------------ | -------- | ------------------------------------------------- |
+| **Data Integrity** | High     | Fraudulent promotions, incorrect employee records |
+| **Financial**      | Medium   | Incorrect salary calculations, fraud              |
+| **Operational**    | High     | Manual data cleanup required                      |
+| **Legal**          | Medium   | Employment disputes, incorrect benefits           |
+| **Trust**          | High     | Internal user confidence damaged                  |
 
 **Estimated Cost:** $50,000 - $200,000 USD
 
@@ -1604,6 +1660,7 @@ Policy: https://csms.zanzibar.go.tz/security-policy
 **Capabilities:** Medium to High technical skills
 
 **Attack Vectors:**
+
 - Exploit authentication bypass (VULN-001, VULN-002)
 - SQL injection attempts (mitigated by Prisma)
 - Credential stuffing (no rate limiting)
@@ -1622,6 +1679,7 @@ Policy: https://csms.zanzibar.go.tz/security-policy
 **Capabilities:** Legitimate access, knowledge of systems
 
 **Attack Vectors:**
+
 - Abuse legitimate credentials
 - Escalate privileges via client-side parameters (VULN-003)
 - Access data from other institutions
@@ -1630,6 +1688,7 @@ Policy: https://csms.zanzibar.go.tz/security-policy
 **Likelihood:** **Medium**
 
 **Mitigation:**
+
 - Implement audit logging (VULN-015)
 - Enforce server-side authorization (VULN-003)
 - Principle of least privilege
@@ -1644,6 +1703,7 @@ Policy: https://csms.zanzibar.go.tz/security-policy
 **Capabilities:** Very High technical skills
 
 **Attack Vectors:**
+
 - Advanced persistent threats (APT)
 - Zero-day exploits
 - Supply chain attacks
@@ -1652,6 +1712,7 @@ Policy: https://csms.zanzibar.go.tz/security-policy
 **Likelihood:** **Low to Medium** (government system makes it a target)
 
 **Mitigation:**
+
 - Fix all critical and high vulnerabilities
 - Implement defense in depth
 - Security monitoring and incident response
@@ -1665,21 +1726,23 @@ Policy: https://csms.zanzibar.go.tz/security-policy
 
 **Goal:** Eliminate CRITICAL vulnerabilities
 
-| Task | Owner | Effort | Status |
-|------|-------|--------|--------|
-| Implement authentication middleware | Backend Team | 3 days | 🔴 Not Started |
-| Fix session endpoint validation | Backend Team | 1 day | 🔴 Not Started |
-| Implement server-side authorization | Backend Team | 4 days | 🔴 Not Started |
-| Create session management system | Backend Team | 3 days | 🔴 Not Started |
-| Security testing of fixes | Security Team | 2 days | 🔴 Not Started |
+| Task                                | Owner         | Effort | Status         |
+| ----------------------------------- | ------------- | ------ | -------------- |
+| Implement authentication middleware | Backend Team  | 3 days | 🔴 Not Started |
+| Fix session endpoint validation     | Backend Team  | 1 day  | 🔴 Not Started |
+| Implement server-side authorization | Backend Team  | 4 days | 🔴 Not Started |
+| Create session management system    | Backend Team  | 3 days | 🔴 Not Started |
+| Security testing of fixes           | Security Team | 2 days | 🔴 Not Started |
 
 **Success Criteria:**
+
 - ✅ All API endpoints require authentication
 - ✅ Session endpoint validates actual sessions
 - ✅ Authorization uses server-side user context
 - ✅ Penetration testing confirms fixes
 
 **Deliverables:**
+
 - Authentication middleware implementation
 - Session management system
 - Server-side authorization framework
@@ -1691,21 +1754,23 @@ Policy: https://csms.zanzibar.go.tz/security-policy
 
 **Goal:** Address HIGH severity vulnerabilities
 
-| Task | Owner | Effort | Status |
-|------|-------|--------|--------|
-| Implement CSRF protection | Backend Team | 2 days | 🔴 Not Started |
-| Add rate limiting | Backend Team | 2 days | 🔴 Not Started |
-| Configure security headers | DevOps Team | 1 day | 🔴 Not Started |
+| Task                         | Owner         | Effort | Status         |
+| ---------------------------- | ------------- | ------ | -------------- |
+| Implement CSRF protection    | Backend Team  | 2 days | 🔴 Not Started |
+| Add rate limiting            | Backend Team  | 2 days | 🔴 Not Started |
+| Configure security headers   | DevOps Team   | 1 day  | 🔴 Not Started |
 | Fix TypeScript configuration | Frontend Team | 3 days | 🔴 Not Started |
-| Security testing | Security Team | 2 days | 🔴 Not Started |
+| Security testing             | Security Team | 2 days | 🔴 Not Started |
 
 **Success Criteria:**
+
 - ✅ CSRF tokens on all state-changing operations
 - ✅ Rate limiting on authentication endpoints
 - ✅ All security headers configured
 - ✅ TypeScript strict mode enabled, all errors fixed
 
 **Deliverables:**
+
 - CSRF protection implementation
 - Rate limiting configuration
 - Security headers configuration
@@ -1717,16 +1782,17 @@ Policy: https://csms.zanzibar.go.tz/security-policy
 
 **Goal:** Address MEDIUM severity vulnerabilities
 
-| Task | Owner | Effort | Status |
-|------|-------|--------|--------|
-| Remove debug logging | Backend Team | 1 day | 🔴 Not Started |
-| Enhance file upload security | Backend Team | 2 days | 🔴 Not Started |
-| Strengthen password requirements | Backend Team | 1 day | 🔴 Not Started |
-| Configure CORS policy | Backend Team | 1 day | 🔴 Not Started |
-| Implement CSP | Frontend Team | 2 days | 🔴 Not Started |
-| HTTPS enforcement (production) | DevOps Team | 1 day | 🔴 Not Started |
+| Task                             | Owner         | Effort | Status         |
+| -------------------------------- | ------------- | ------ | -------------- |
+| Remove debug logging             | Backend Team  | 1 day  | 🔴 Not Started |
+| Enhance file upload security     | Backend Team  | 2 days | 🔴 Not Started |
+| Strengthen password requirements | Backend Team  | 1 day  | 🔴 Not Started |
+| Configure CORS policy            | Backend Team  | 1 day  | 🔴 Not Started |
+| Implement CSP                    | Frontend Team | 2 days | 🔴 Not Started |
+| HTTPS enforcement (production)   | DevOps Team   | 1 day  | 🔴 Not Started |
 
 **Success Criteria:**
+
 - ✅ No sensitive data in production logs
 - ✅ File uploads validated with magic numbers
 - ✅ 12-character password minimum with complexity
@@ -1734,6 +1800,7 @@ Policy: https://csms.zanzibar.go.tz/security-policy
 - ✅ CSP headers configured
 
 **Deliverables:**
+
 - Production logging framework
 - Enhanced file upload validation
 - Updated password policy
@@ -1745,21 +1812,23 @@ Policy: https://csms.zanzibar.go.tz/security-policy
 
 **Goal:** Complete security enhancements
 
-| Task | Owner | Effort | Status |
-|------|-------|--------|--------|
-| Implement audit logging | Backend Team | 3 days | 🔴 Not Started |
-| Add account lockout | Backend Team | 2 days | 🔴 Not Started |
-| Create security.txt | DevOps Team | 0.5 day | 🔴 Not Started |
-| Implement security scanning in CI/CD | DevOps Team | 2 days | 🔴 Not Started |
-| Security documentation | Security Team | 2 days | 🔴 Not Started |
+| Task                                 | Owner         | Effort  | Status         |
+| ------------------------------------ | ------------- | ------- | -------------- |
+| Implement audit logging              | Backend Team  | 3 days  | 🔴 Not Started |
+| Add account lockout                  | Backend Team  | 2 days  | 🔴 Not Started |
+| Create security.txt                  | DevOps Team   | 0.5 day | 🔴 Not Started |
+| Implement security scanning in CI/CD | DevOps Team   | 2 days  | 🔴 Not Started |
+| Security documentation               | Security Team | 2 days  | 🔴 Not Started |
 
 **Success Criteria:**
+
 - ✅ Comprehensive audit logging
 - ✅ Account lockout after failed attempts
 - ✅ Security contact information published
 - ✅ Automated security scanning
 
 **Deliverables:**
+
 - Audit logging system
 - Account lockout implementation
 - Security.txt file
@@ -1790,6 +1859,7 @@ Policy: https://csms.zanzibar.go.tz/security-policy
    - Go/No-Go decision for production
 
 **Deliverables:**
+
 - Final penetration test report
 - Compliance certification
 - Security sign-off document
@@ -1800,18 +1870,21 @@ Policy: https://csms.zanzibar.go.tz/security-policy
 ### 8.6 Ongoing Security Program
 
 **Monthly Activities:**
+
 - Dependency vulnerability scanning
 - Security patch review and deployment
 - Access control review
 - Audit log review
 
 **Quarterly Activities:**
+
 - Security training for development team
 - Threat model review and update
 - Incident response plan testing
 - Security metrics review
 
 **Annual Activities:**
+
 - Full penetration testing
 - Security architecture review
 - Compliance audit
@@ -1834,6 +1907,7 @@ Policy: https://csms.zanzibar.go.tz/security-policy
 **Affected Component:** `/src/app/api/auth/session/route.ts`
 
 **Vulnerable Code:**
+
 ```typescript
 export async function GET(req: Request) {
   try {
@@ -1850,6 +1924,7 @@ export async function GET(req: Request) {
 **Verification:** Test that unauthenticated requests return 401
 
 **References:**
+
 - OWASP A07:2021 – Identification and Authentication Failures
 - CWE-287: Improper Authentication
 
@@ -1866,6 +1941,7 @@ export async function GET(req: Request) {
 **Affected Components:** All 69 API endpoints
 
 **Sample Vulnerable Endpoint:**
+
 ```typescript
 // No authentication check!
 export async function GET() {
@@ -1881,6 +1957,7 @@ export async function GET() {
 **Verification:** Test that all protected endpoints require authentication
 
 **References:**
+
 - OWASP A01:2021 – Broken Access Control
 - CWE-306: Missing Authentication for Critical Function
 
@@ -1981,19 +2058,20 @@ done
 
 ### 9.4 Appendix D: Security Contacts
 
-| Role | Contact | Responsibility |
-|------|---------|----------------|
-| **Security Lead** | security@zanzibar.go.tz | Overall security program |
-| **Development Lead** | dev-lead@zanzibar.go.tz | Code security, remediation |
-| **DevOps Lead** | devops@zanzibar.go.tz | Infrastructure security |
-| **Compliance Officer** | compliance@zanzibar.go.tz | Regulatory compliance |
-| **Incident Response** | incident@zanzibar.go.tz | Security incidents |
+| Role                   | Contact                   | Responsibility             |
+| ---------------------- | ------------------------- | -------------------------- |
+| **Security Lead**      | security@zanzibar.go.tz   | Overall security program   |
+| **Development Lead**   | dev-lead@zanzibar.go.tz   | Code security, remediation |
+| **DevOps Lead**        | devops@zanzibar.go.tz     | Infrastructure security    |
+| **Compliance Officer** | compliance@zanzibar.go.tz | Regulatory compliance      |
+| **Incident Response**  | incident@zanzibar.go.tz   | Security incidents         |
 
 ---
 
 ### 9.5 Appendix E: References
 
 **Standards and Frameworks:**
+
 - OWASP Top 10 (2021): https://owasp.org/Top10/
 - CWE Top 25: https://cwe.mitre.org/top25/
 - GDPR: https://gdpr-info.eu/
@@ -2001,12 +2079,14 @@ done
 - NIST Cybersecurity Framework
 
 **Security Best Practices:**
+
 - OWASP Application Security Verification Standard (ASVS)
 - OWASP Proactive Controls
 - SANS Top 25 Software Errors
 - Next.js Security Best Practices
 
 **Tools:**
+
 - Burp Suite Professional: https://portswigger.net/burp
 - OWASP ZAP: https://www.zaproxy.org/
 - npm audit: https://docs.npmjs.com/cli/v8/commands/npm-audit
@@ -2015,40 +2095,40 @@ done
 
 ### 9.6 Appendix F: Glossary
 
-| Term | Definition |
-|------|------------|
-| **Authentication** | Process of verifying the identity of a user |
-| **Authorization** | Process of verifying user permissions for resources |
-| **CSRF** | Cross-Site Request Forgery attack |
-| **CVSS** | Common Vulnerability Scoring System |
-| **GDPR** | General Data Protection Regulation |
-| **JWT** | JSON Web Token |
-| **OWASP** | Open Web Application Security Project |
-| **Privilege Escalation** | Gaining higher access than authorized |
-| **Session Fixation** | Attack forcing known session ID |
-| **SQL Injection** | Attack inserting malicious SQL code |
-| **XSS** | Cross-Site Scripting attack |
-| **Zero-Day** | Previously unknown vulnerability |
+| Term                     | Definition                                          |
+| ------------------------ | --------------------------------------------------- |
+| **Authentication**       | Process of verifying the identity of a user         |
+| **Authorization**        | Process of verifying user permissions for resources |
+| **CSRF**                 | Cross-Site Request Forgery attack                   |
+| **CVSS**                 | Common Vulnerability Scoring System                 |
+| **GDPR**                 | General Data Protection Regulation                  |
+| **JWT**                  | JSON Web Token                                      |
+| **OWASP**                | Open Web Application Security Project               |
+| **Privilege Escalation** | Gaining higher access than authorized               |
+| **Session Fixation**     | Attack forcing known session ID                     |
+| **SQL Injection**        | Attack inserting malicious SQL code                 |
+| **XSS**                  | Cross-Site Scripting attack                         |
+| **Zero-Day**             | Previously unknown vulnerability                    |
 
 ---
 
 ## Document Approval
 
-| Role | Name | Signature | Date |
-|------|------|-----------|------|
-| Security Assessor | | | |
-| Development Lead | | | |
-| System Architect | | | |
-| CISO | | | |
-| Project Manager | | | |
+| Role              | Name | Signature | Date |
+| ----------------- | ---- | --------- | ---- |
+| Security Assessor |      |           |      |
+| Development Lead  |      |           |      |
+| System Architect  |      |           |      |
+| CISO              |      |           |      |
+| Project Manager   |      |           |      |
 
 ---
 
 ## Revision History
 
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 1.0 | 2024-12-25 | Security Assessment Team | Initial security assessment report |
+| Version | Date       | Author                   | Changes                            |
+| ------- | ---------- | ------------------------ | ---------------------------------- |
+| 1.0     | 2024-12-25 | Security Assessment Team | Initial security assessment report |
 
 ---
 

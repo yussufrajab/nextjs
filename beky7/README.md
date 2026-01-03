@@ -22,6 +22,7 @@ The backup includes all data from the CSMS system:
 - **Backup Date:** December 5, 2025
 
 ### Key Tables Included:
+
 - Users (system accounts)
 - Employees (all 6,541 employee records)
 - Institutions (government organizations)
@@ -56,6 +57,7 @@ chmod +x restore-database.sh
 ```
 
 The script will:
+
 - ✓ Test database connection
 - ✓ Create the database if it doesn't exist
 - ✓ Restore all data from backup
@@ -151,14 +153,17 @@ SELECT COUNT(*) FROM "Employee" WHERE "firstName" IS NOT NULL;
 ### Issue: "Database already exists" error
 
 **Solution:** Drop the existing database first:
+
 ```bash
 psql -h localhost -U postgres -c "DROP DATABASE nody;"
 ```
+
 Then re-run the restore script.
 
 ### Issue: Permission denied errors
 
 **Solution:** Ensure you're using a PostgreSQL user with superuser privileges:
+
 ```bash
 # Grant superuser (if needed)
 psql -U postgres -c "ALTER USER postgres WITH SUPERUSER;"
@@ -167,6 +172,7 @@ psql -U postgres -c "ALTER USER postgres WITH SUPERUSER;"
 ### Issue: Connection refused
 
 **Solution:** Check PostgreSQL is running:
+
 ```bash
 # Check PostgreSQL status
 sudo systemctl status postgresql
@@ -178,6 +184,7 @@ sudo systemctl start postgresql
 ### Issue: Encoding errors
 
 **Solution:** Ensure database is created with UTF8 encoding:
+
 ```bash
 psql -U postgres -c "CREATE DATABASE nody WITH ENCODING='UTF8' LC_COLLATE='en_US.UTF-8' LC_CTYPE='en_US.UTF-8' TEMPLATE=template0;"
 ```
@@ -210,11 +217,13 @@ For issues or questions:
 The database follows a comprehensive HR management structure:
 
 ### Core Entities
+
 - **Employee** - Full employee records with personal and professional data
 - **User** - System authentication and authorization
 - **Institution** - Government organizations and departments
 
 ### Request Types
+
 - **PromotionRequest** - Employee promotion workflows
 - **ConfirmationRequest** - Position confirmations
 - **LwopRequest** - Leave without pay requests
@@ -223,6 +232,7 @@ The database follows a comprehensive HR management structure:
 - **Complaint** - Employee complaints and grievances
 
 ### Supporting Tables
+
 - **Notification** - System notifications
 - **AuditLog** - Activity tracking
 - **Document** - File attachments and references

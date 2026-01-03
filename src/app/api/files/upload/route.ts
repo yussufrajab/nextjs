@@ -5,11 +5,11 @@ export async function POST(request: NextRequest) {
   try {
     // Get the multipart form data
     const formData = await request.formData();
-    
+
     // Get the file from form data
     const file = formData.get('file') as File;
-    const folder = formData.get('folder') as string || 'documents';
-    
+    const folder = (formData.get('folder') as string) || 'documents';
+
     if (!file) {
       return NextResponse.json(
         { success: false, message: 'No file provided' },
@@ -36,11 +36,11 @@ export async function POST(request: NextRequest) {
 
     // Generate unique object key
     const objectKey = generateObjectKey(folder, file.name);
-    
+
     // Convert file to buffer
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-    
+
     // Upload to MinIO
     const uploadResult = await uploadFile(
       buffer,
@@ -58,9 +58,8 @@ export async function POST(request: NextRequest) {
         contentType: file.type,
         etag: uploadResult.etag,
         bucketName: uploadResult.bucketName,
-      }
+      },
     });
-
   } catch (error) {
     console.error('File upload error:', error);
     return NextResponse.json(

@@ -35,7 +35,7 @@ interface FetchStats {
 
 // Utility functions
 function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function formatDuration(ms: number): string {
@@ -71,7 +71,7 @@ async function fetchInstitutionData(
     id: string;
     name: string;
     voteNumber: string | null;
-    tinNumber: string | null
+    tinNumber: string | null;
   },
   retryCount = 0
 ): Promise<FetchResult> {
@@ -100,7 +100,8 @@ async function fetchInstitutionData(
     };
   }
 
-  const retryText = retryCount > 0 ? ` (Retry ${retryCount}/${CONFIG.MAX_RETRIES})` : '';
+  const retryText =
+    retryCount > 0 ? ` (Retry ${retryCount}/${CONFIG.MAX_RETRIES})` : '';
   logInfo(`Fetching: ${institution.name}${retryText}`);
   logInfo(`  Using ${identifierType}: ${identifier}`);
 
@@ -126,7 +127,9 @@ async function fetchInstitutionData(
 
     if (response.status === 200 && response.data.success) {
       const employeeCount = response.data.data?.employeeCount || 0;
-      logSuccess(`${institution.name}: Fetched ${employeeCount} employees (${formatDuration(Date.now() - startTime)})`);
+      logSuccess(
+        `${institution.name}: Fetched ${employeeCount} employees (${formatDuration(Date.now() - startTime)})`
+      );
 
       return {
         institutionId: institution.id,
@@ -161,7 +164,9 @@ async function fetchInstitutionData(
       if (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT') {
         errorMessage = `Timeout after ${CONFIG.TIMEOUT / 60000} minutes`;
       } else if (error.response) {
-        errorMessage = error.response.data?.message || `HTTP ${error.response.status}: ${error.response.statusText}`;
+        errorMessage =
+          error.response.data?.message ||
+          `HTTP ${error.response.status}: ${error.response.statusText}`;
       } else if (error.request) {
         errorMessage = 'No response from server';
       } else {
@@ -279,7 +284,9 @@ async function main() {
   console.log(`❌ Failed: ${stats.failed}`);
   console.log(`⏭️  Skipped (no identifier): ${stats.skipped}`);
   console.log(`👥 Total employees fetched: ${stats.totalEmployees}`);
-  console.log(`⏱️  Average fetch time: ${formatDuration((stats.totalDuration / Math.max(stats.successful + stats.failed, 1)) * 1000)}`);
+  console.log(
+    `⏱️  Average fetch time: ${formatDuration((stats.totalDuration / Math.max(stats.successful + stats.failed, 1)) * 1000)}`
+  );
   console.log('='.repeat(80));
 
   // Print successful fetches
@@ -287,14 +294,14 @@ async function main() {
     console.log('\n✅ Successful Fetches:');
     console.log('-'.repeat(80));
     results
-      .filter(r => r.success)
+      .filter((r) => r.success)
       .sort((a, b) => (b.employeeCount || 0) - (a.employeeCount || 0))
       .forEach((r, i) => {
         console.log(
           `${String(i + 1).padStart(3)}. ${r.institutionName.padEnd(50)} ` +
-          `${String(r.employeeCount).padStart(6)} employees ` +
-          `(${r.identifierType}: ${r.identifier}) ` +
-          `[${formatDuration((r.duration || 0) * 1000)}]`
+            `${String(r.employeeCount).padStart(6)} employees ` +
+            `(${r.identifierType}: ${r.identifier}) ` +
+            `[${formatDuration((r.duration || 0) * 1000)}]`
         );
       });
   }
@@ -304,10 +311,12 @@ async function main() {
     console.log('\n❌ Failed Fetches:');
     console.log('-'.repeat(80));
     results
-      .filter(r => !r.success)
+      .filter((r) => !r.success)
       .forEach((r, i) => {
         const retryInfo = r.retryCount ? ` (${r.retryCount} retries)` : '';
-        console.log(`${String(i + 1).padStart(3)}. ${r.institutionName} - ${r.error}${retryInfo}`);
+        console.log(
+          `${String(i + 1).padStart(3)}. ${r.institutionName} - ${r.error}${retryInfo}`
+        );
       });
   }
 

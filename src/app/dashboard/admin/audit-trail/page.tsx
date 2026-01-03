@@ -2,15 +2,45 @@
 
 import React, { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/shared/page-header';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { RouteGuard } from '@/components/auth/route-guard';
-import { Search, Download, RefreshCw, AlertTriangle, ShieldAlert, Info, XCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+  Search,
+  Download,
+  RefreshCw,
+  AlertTriangle,
+  ShieldAlert,
+  Info,
+  XCircle,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 
@@ -65,7 +95,10 @@ const getSeverityIcon = (severity: string) => {
 };
 
 const getSeverityBadge = (severity: string) => {
-  const variants: Record<string, 'destructive' | 'default' | 'secondary' | 'outline'> = {
+  const variants: Record<
+    string,
+    'destructive' | 'default' | 'secondary' | 'outline'
+  > = {
     CRITICAL: 'destructive',
     ERROR: 'destructive',
     WARNING: 'secondary',
@@ -92,7 +125,9 @@ export default function AuditTrailPage() {
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [eventTypeFilter, setEventTypeFilter] = useState<string>('all');
   const [dateRange, setDateRange] = useState<{ start: string; end: string }>({
-    start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Last 7 days
+    start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split('T')[0], // Last 7 days
     end: new Date().toISOString().split('T')[0],
   });
 
@@ -112,11 +147,19 @@ export default function AuditTrailPage() {
         offset: ((currentPage - 1) * logsPerPage).toString(),
       });
 
-      if (dateRange.start) params.append('startDate', new Date(dateRange.start).toISOString());
-      if (dateRange.end) params.append('endDate', new Date(dateRange.end + 'T23:59:59').toISOString());
-      if (severityFilter && severityFilter !== 'all') params.append('severity', severityFilter);
-      if (categoryFilter && categoryFilter !== 'all') params.append('eventCategory', categoryFilter);
-      if (eventTypeFilter && eventTypeFilter !== 'all') params.append('eventType', eventTypeFilter);
+      if (dateRange.start)
+        params.append('startDate', new Date(dateRange.start).toISOString());
+      if (dateRange.end)
+        params.append(
+          'endDate',
+          new Date(dateRange.end + 'T23:59:59').toISOString()
+        );
+      if (severityFilter && severityFilter !== 'all')
+        params.append('severity', severityFilter);
+      if (categoryFilter && categoryFilter !== 'all')
+        params.append('eventCategory', categoryFilter);
+      if (eventTypeFilter && eventTypeFilter !== 'all')
+        params.append('eventType', eventTypeFilter);
       if (searchTerm) params.append('username', searchTerm);
 
       const response = await fetch(`/api/audit/logs?${params.toString()}`);
@@ -151,8 +194,13 @@ export default function AuditTrailPage() {
         statsOnly: 'true',
       });
 
-      if (dateRange.start) params.append('startDate', new Date(dateRange.start).toISOString());
-      if (dateRange.end) params.append('endDate', new Date(dateRange.end + 'T23:59:59').toISOString());
+      if (dateRange.start)
+        params.append('startDate', new Date(dateRange.start).toISOString());
+      if (dateRange.end)
+        params.append(
+          'endDate',
+          new Date(dateRange.end + 'T23:59:59').toISOString()
+        );
 
       const response = await fetch(`/api/audit/logs?${params.toString()}`);
       const data = await response.json();
@@ -203,44 +251,63 @@ export default function AuditTrailPage() {
           <div className="grid gap-4 md:grid-cols-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Events</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Total Events
+                </CardTitle>
                 <Info className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.totalEvents.toLocaleString()}</div>
+                <div className="text-2xl font-bold">
+                  {stats.totalEvents.toLocaleString()}
+                </div>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Blocked Attempts</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Blocked Attempts
+                </CardTitle>
                 <ShieldAlert className="h-4 w-4 text-orange-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-orange-600">{stats.blockedAttempts.toLocaleString()}</div>
+                <div className="text-2xl font-bold text-orange-600">
+                  {stats.blockedAttempts.toLocaleString()}
+                </div>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Critical Events</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Critical Events
+                </CardTitle>
                 <AlertTriangle className="h-4 w-4 text-red-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-red-600">{stats.criticalEvents.toLocaleString()}</div>
+                <div className="text-2xl font-bold text-red-600">
+                  {stats.criticalEvents.toLocaleString()}
+                </div>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Success Rate</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Success Rate
+                </CardTitle>
                 <Info className="h-4 w-4 text-green-600" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-green-600">
                   {stats.totalEvents > 0
-                    ? (((stats.totalEvents - stats.blockedAttempts) / stats.totalEvents) * 100).toFixed(1)
-                    : 0}%
+                    ? (
+                        ((stats.totalEvents - stats.blockedAttempts) /
+                          stats.totalEvents) *
+                        100
+                      ).toFixed(1)
+                    : 0}
+                  %
                 </div>
               </CardContent>
             </Card>
@@ -256,7 +323,9 @@ export default function AuditTrailPage() {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
               <div className="md:col-span-2">
-                <label className="text-sm font-medium mb-1.5 block">Search Username/IP</label>
+                <label className="text-sm font-medium mb-1.5 block">
+                  Search Username/IP
+                </label>
                 <div className="flex gap-2">
                   <Input
                     placeholder="Search by username or IP..."
@@ -271,26 +340,40 @@ export default function AuditTrailPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium mb-1.5 block">Category</label>
-                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <label className="text-sm font-medium mb-1.5 block">
+                  Category
+                </label>
+                <Select
+                  value={categoryFilter}
+                  onValueChange={setCategoryFilter}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Categories</SelectItem>
                     <SelectItem value="SECURITY">Security</SelectItem>
-                    <SelectItem value="AUTHENTICATION">Authentication</SelectItem>
+                    <SelectItem value="AUTHENTICATION">
+                      Authentication
+                    </SelectItem>
                     <SelectItem value="AUTHORIZATION">Authorization</SelectItem>
                     <SelectItem value="ACCESS">Access</SelectItem>
-                    <SelectItem value="DATA_MODIFICATION">Data Modification</SelectItem>
+                    <SelectItem value="DATA_MODIFICATION">
+                      Data Modification
+                    </SelectItem>
                     <SelectItem value="SYSTEM">System</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div>
-                <label className="text-sm font-medium mb-1.5 block">Severity</label>
-                <Select value={severityFilter} onValueChange={setSeverityFilter}>
+                <label className="text-sm font-medium mb-1.5 block">
+                  Severity
+                </label>
+                <Select
+                  value={severityFilter}
+                  onValueChange={setSeverityFilter}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -305,29 +388,52 @@ export default function AuditTrailPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium mb-1.5 block">Event Type</label>
-                <Select value={eventTypeFilter} onValueChange={setEventTypeFilter}>
+                <label className="text-sm font-medium mb-1.5 block">
+                  Event Type
+                </label>
+                <Select
+                  value={eventTypeFilter}
+                  onValueChange={setEventTypeFilter}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Types</SelectItem>
-                    <SelectItem value="UNAUTHORIZED_ACCESS">Unauthorized Access</SelectItem>
+                    <SelectItem value="UNAUTHORIZED_ACCESS">
+                      Unauthorized Access
+                    </SelectItem>
                     <SelectItem value="ACCESS_DENIED">Access Denied</SelectItem>
-                    <SelectItem value="FORBIDDEN_ROUTE">Forbidden Route</SelectItem>
+                    <SelectItem value="FORBIDDEN_ROUTE">
+                      Forbidden Route
+                    </SelectItem>
                     <SelectItem value="LOGIN_FAILED">Login Failed</SelectItem>
                     <SelectItem value="LOGIN_SUCCESS">Login Success</SelectItem>
-                    <SelectItem value="REQUEST_APPROVED">Request Approved</SelectItem>
-                    <SelectItem value="REQUEST_REJECTED">Request Rejected</SelectItem>
-                    <SelectItem value="REQUEST_SUBMITTED">Request Submitted</SelectItem>
-                    <SelectItem value="REQUEST_UPDATED">Request Updated</SelectItem>
+                    <SelectItem value="REQUEST_APPROVED">
+                      Request Approved
+                    </SelectItem>
+                    <SelectItem value="REQUEST_REJECTED">
+                      Request Rejected
+                    </SelectItem>
+                    <SelectItem value="REQUEST_SUBMITTED">
+                      Request Submitted
+                    </SelectItem>
+                    <SelectItem value="REQUEST_UPDATED">
+                      Request Updated
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="flex gap-2 items-end">
-                <Button onClick={handleRefresh} variant="outline" disabled={isRefreshing}>
-                  <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+                <Button
+                  onClick={handleRefresh}
+                  variant="outline"
+                  disabled={isRefreshing}
+                >
+                  <RefreshCw
+                    className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`}
+                  />
                   Refresh
                 </Button>
                 <Button onClick={handleExport} variant="outline">
@@ -339,19 +445,27 @@ export default function AuditTrailPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium mb-1.5 block">Start Date</label>
+                <label className="text-sm font-medium mb-1.5 block">
+                  Start Date
+                </label>
                 <Input
                   type="date"
                   value={dateRange.start}
-                  onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
+                  onChange={(e) =>
+                    setDateRange({ ...dateRange, start: e.target.value })
+                  }
                 />
               </div>
               <div>
-                <label className="text-sm font-medium mb-1.5 block">End Date</label>
+                <label className="text-sm font-medium mb-1.5 block">
+                  End Date
+                </label>
                 <Input
                   type="date"
                   value={dateRange.end}
-                  onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
+                  onChange={(e) =>
+                    setDateRange({ ...dateRange, end: e.target.value })
+                  }
                 />
               </div>
             </div>
@@ -395,21 +509,34 @@ export default function AuditTrailPage() {
                     </TableHeader>
                     <TableBody>
                       {logs.map((log) => {
-                        const isRequestEvent = log.eventType === 'REQUEST_APPROVED' || log.eventType === 'REQUEST_REJECTED';
+                        const isRequestEvent =
+                          log.eventType === 'REQUEST_APPROVED' ||
+                          log.eventType === 'REQUEST_REJECTED';
 
                         return (
                           <TableRow key={log.id}>
                             <TableCell className="font-mono text-xs">
-                              {format(new Date(log.timestamp), 'yyyy-MM-dd HH:mm:ss')}
+                              {format(
+                                new Date(log.timestamp),
+                                'yyyy-MM-dd HH:mm:ss'
+                              )}
                             </TableCell>
-                            <TableCell>{getSeverityBadge(log.severity)}</TableCell>
-                            <TableCell className="font-medium">{log.eventType}</TableCell>
-                            <TableCell>{log.username || log.userId || 'Anonymous'}</TableCell>
+                            <TableCell>
+                              {getSeverityBadge(log.severity)}
+                            </TableCell>
+                            <TableCell className="font-medium">
+                              {log.eventType}
+                            </TableCell>
+                            <TableCell>
+                              {log.username || log.userId || 'Anonymous'}
+                            </TableCell>
                             <TableCell>
                               {log.userRole ? (
                                 <Badge variant="outline">{log.userRole}</Badge>
                               ) : (
-                                <span className="text-muted-foreground text-sm">-</span>
+                                <span className="text-muted-foreground text-sm">
+                                  -
+                                </span>
                               )}
                             </TableCell>
                             <TableCell className="max-w-md">
@@ -420,8 +547,10 @@ export default function AuditTrailPage() {
                                   </div>
                                   {log.additionalData.employeeName && (
                                     <div className="text-muted-foreground">
-                                      Employee: {log.additionalData.employeeName}
-                                      {log.additionalData.employeeZanId && ` (${log.additionalData.employeeZanId})`}
+                                      Employee:{' '}
+                                      {log.additionalData.employeeName}
+                                      {log.additionalData.employeeZanId &&
+                                        ` (${log.additionalData.employeeZanId})`}
                                     </div>
                                   )}
                                   {log.additionalData.reviewStage && (
@@ -429,15 +558,18 @@ export default function AuditTrailPage() {
                                       Stage: {log.additionalData.reviewStage}
                                     </div>
                                   )}
-                                  {log.eventType === 'REQUEST_REJECTED' && log.blockReason && (
-                                    <div className="text-orange-600">
-                                      Reason: {log.blockReason}
-                                    </div>
-                                  )}
+                                  {log.eventType === 'REQUEST_REJECTED' &&
+                                    log.blockReason && (
+                                      <div className="text-orange-600">
+                                        Reason: {log.blockReason}
+                                      </div>
+                                    )}
                                 </div>
                               ) : (
                                 <div className="text-xs space-y-1">
-                                  <div className="font-mono truncate">{log.attemptedRoute}</div>
+                                  <div className="font-mono truncate">
+                                    {log.attemptedRoute}
+                                  </div>
                                   {log.blockReason && (
                                     <div className="text-muted-foreground truncate">
                                       {log.blockReason}
@@ -446,10 +578,17 @@ export default function AuditTrailPage() {
                                 </div>
                               )}
                             </TableCell>
-                            <TableCell className="font-mono text-xs">{log.ipAddress || '-'}</TableCell>
+                            <TableCell className="font-mono text-xs">
+                              {log.ipAddress || '-'}
+                            </TableCell>
                             <TableCell>
                               {log.eventType === 'REQUEST_APPROVED' ? (
-                                <Badge variant="default" className="bg-green-600">Approved</Badge>
+                                <Badge
+                                  variant="default"
+                                  className="bg-green-600"
+                                >
+                                  Approved
+                                </Badge>
                               ) : log.eventType === 'REQUEST_REJECTED' ? (
                                 <Badge variant="destructive">Rejected</Badge>
                               ) : log.wasBlocked ? (
@@ -464,14 +603,14 @@ export default function AuditTrailPage() {
                     </TableBody>
                   </Table>
                 </div>
-
               </>
             )}
           </CardContent>
           {!isLoading && totalPages > 1 && (
             <CardFooter className="flex items-center justify-between border-t px-6 py-4">
               <div className="text-sm text-muted-foreground">
-                Page {currentPage} of {totalPages.toLocaleString()} • {totalLogs.toLocaleString()} total events
+                Page {currentPage} of {totalPages.toLocaleString()} •{' '}
+                {totalLogs.toLocaleString()} total events
               </div>
               <div className="flex items-center space-x-2">
                 <Button
@@ -502,7 +641,9 @@ export default function AuditTrailPage() {
                     return (
                       <Button
                         key={pageNum}
-                        variant={pageNum === currentPage ? "default" : "outline"}
+                        variant={
+                          pageNum === currentPage ? 'default' : 'outline'
+                        }
                         size="sm"
                         onClick={() => setCurrentPage(pageNum)}
                         className="h-8 w-8 p-0"
@@ -516,7 +657,9 @@ export default function AuditTrailPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  onClick={() =>
+                    setCurrentPage((p) => Math.min(totalPages, p + 1))
+                  }
                   disabled={currentPage === totalPages}
                   className="h-8 w-8 p-0"
                 >

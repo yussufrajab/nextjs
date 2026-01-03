@@ -97,7 +97,9 @@ describe('account-lockout-utils', () => {
     it('should set expiry to 30 minutes from now', () => {
       const now = new Date();
       const expiry = calculateStandardLockoutExpiry();
-      const diffMinutes = Math.floor((expiry.getTime() - now.getTime()) / 60000);
+      const diffMinutes = Math.floor(
+        (expiry.getTime() - now.getTime()) / 60000
+      );
 
       expect(diffMinutes).toBe(STANDARD_LOCKOUT_DURATION_MINUTES);
     });
@@ -264,7 +266,11 @@ describe('account-lockout-utils', () => {
         failedLoginAttempts: 3,
       });
 
-      const result = await incrementFailedLoginAttempts(userId, ipAddress, userAgent);
+      const result = await incrementFailedLoginAttempts(
+        userId,
+        ipAddress,
+        userAgent
+      );
 
       expect(result.locked).toBe(false);
       expect(result.lockoutType).toBeNull();
@@ -295,7 +301,11 @@ describe('account-lockout-utils', () => {
         active: false,
       });
 
-      const result = await incrementFailedLoginAttempts(userId, ipAddress, userAgent);
+      const result = await incrementFailedLoginAttempts(
+        userId,
+        ipAddress,
+        userAgent
+      );
 
       expect(result.locked).toBe(true);
       expect(result.lockoutType).toBe(LockoutType.STANDARD);
@@ -329,7 +339,11 @@ describe('account-lockout-utils', () => {
         active: false,
       });
 
-      const result = await incrementFailedLoginAttempts(userId, ipAddress, userAgent);
+      const result = await incrementFailedLoginAttempts(
+        userId,
+        ipAddress,
+        userAgent
+      );
 
       expect(result.locked).toBe(true);
       expect(result.lockoutType).toBe(LockoutType.SECURITY);
@@ -370,7 +384,11 @@ describe('account-lockout-utils', () => {
         failedLoginAttempts: 1,
       });
 
-      const result = await incrementFailedLoginAttempts(userId, ipAddress, userAgent);
+      const result = await incrementFailedLoginAttempts(
+        userId,
+        ipAddress,
+        userAgent
+      );
 
       expect(result.remainingAttempts).toBe(4); // 5 - 1 = 4
     });
@@ -768,7 +786,11 @@ describe('account-lockout-utils', () => {
       (db.user.findUnique as any).mockResolvedValue(mockUser);
       (db.user.update as any).mockResolvedValue({});
 
-      const result = await incrementFailedLoginAttempts('user-123', '192.168.1.1', 'Mozilla/5.0');
+      const result = await incrementFailedLoginAttempts(
+        'user-123',
+        '192.168.1.1',
+        'Mozilla/5.0'
+      );
 
       expect(result.locked).toBe(true);
       expect(result.remainingAttempts).toBe(0);
@@ -786,7 +808,11 @@ describe('account-lockout-utils', () => {
       (db.user.findUnique as any).mockResolvedValue(mockUser);
       (db.user.update as any).mockResolvedValue({});
 
-      const result = await incrementFailedLoginAttempts('user-123', '192.168.1.1', 'Mozilla/5.0');
+      const result = await incrementFailedLoginAttempts(
+        'user-123',
+        '192.168.1.1',
+        'Mozilla/5.0'
+      );
 
       expect(result.lockoutType).toBe(LockoutType.SECURITY);
     });

@@ -57,25 +57,32 @@ interface FetchResult {
 }
 
 async function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function fetchDocumentsForInstitution(institution: Institution): Promise<FetchResult> {
+async function fetchDocumentsForInstitution(
+  institution: Institution
+): Promise<FetchResult> {
   const startTime = Date.now();
 
   console.log(`\n📄 Processing: ${institution.name}`);
-  console.log(`   Vote: ${institution.voteNumber || 'N/A'} | TIN: ${institution.tinNumber || 'N/A'}`);
+  console.log(
+    `   Vote: ${institution.voteNumber || 'N/A'} | TIN: ${institution.tinNumber || 'N/A'}`
+  );
 
   try {
-    const response = await fetch(`${API_BASE_URL}/api/hrims/fetch-documents-by-institution`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        institutionId: institution.id,
-      }),
-    });
+    const response = await fetch(
+      `${API_BASE_URL}/api/hrims/fetch-documents-by-institution`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          institutionId: institution.id,
+        }),
+      }
+    );
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -113,10 +120,14 @@ async function fetchDocumentsForInstitution(institution: Institution): Promise<F
             if (data.type === 'progress') {
               latestProgress = data;
               // Show inline progress with more detail
-              const summary = data.summary || { successful: 0, partial: 0, failed: 0 };
+              const summary = data.summary || {
+                successful: 0,
+                partial: 0,
+                failed: 0,
+              };
               process.stdout.write(
                 `\r   Progress: ${data.current}/${data.total} - ${data.employee || 'Processing...'} ` +
-                `[✓${summary.successful} ⚠${summary.partial} ✗${summary.failed}]`
+                  `[✓${summary.successful} ⚠${summary.partial} ✗${summary.failed}]`
               );
             } else if (data.type === 'complete') {
               finalResult = data;
@@ -130,7 +141,9 @@ async function fetchDocumentsForInstitution(institution: Institution): Promise<F
 
       if (finalResult && finalResult.success) {
         const summary = finalResult.summary;
-        console.log(`   ✅ Complete: ${summary.successful} successful, ${summary.partial} partial, ${summary.failed} failed`);
+        console.log(
+          `   ✅ Complete: ${summary.successful} successful, ${summary.partial} partial, ${summary.failed} failed`
+        );
         console.log(`   ⏱️  Duration: ${(duration / 1000).toFixed(1)}s`);
 
         return {
@@ -150,7 +163,9 @@ async function fetchDocumentsForInstitution(institution: Institution): Promise<F
 
       if (result.success) {
         const summary = result.summary;
-        console.log(`   ✅ Complete: ${summary.successful} successful, ${summary.partial} partial, ${summary.failed} failed`);
+        console.log(
+          `   ✅ Complete: ${summary.successful} successful, ${summary.partial} partial, ${summary.failed} failed`
+        );
         console.log(`   ⏱️  Duration: ${(duration / 1000).toFixed(1)}s`);
 
         return {
@@ -166,7 +181,8 @@ async function fetchDocumentsForInstitution(institution: Institution): Promise<F
     }
   } catch (error) {
     const duration = Date.now() - startTime;
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error';
 
     console.log(`   ❌ Failed: ${errorMessage}`);
     console.log(`   ⏱️  Duration: ${(duration / 1000).toFixed(1)}s`);
@@ -184,8 +200,10 @@ async function fetchDocumentsForInstitution(institution: Institution): Promise<F
 async function main() {
   // Parse command-line arguments
   const args = process.argv.slice(2);
-  const limitArg = args.find(arg => arg.startsWith('--limit='));
-  const institutionLimit = limitArg ? parseInt(limitArg.split('=')[1]) : undefined;
+  const limitArg = args.find((arg) => arg.startsWith('--limit='));
+  const institutionLimit = limitArg
+    ? parseInt(limitArg.split('=')[1])
+    : undefined;
 
   console.log('🚀 Starting bulk document fetch for all institutions...\n');
   console.log(`API Base URL: ${API_BASE_URL}`);
@@ -193,7 +211,9 @@ async function main() {
   if (institutionLimit) {
     console.log(`⚠️  TEST MODE: Limited to ${institutionLimit} institution(s)`);
   }
-  console.log(`\n⚠️  Note: This process fetches 3 document types per employee:`);
+  console.log(
+    `\n⚠️  Note: This process fetches 3 document types per employee:`
+  );
   console.log(`   • Ardhil Hali (CV)`);
   console.log(`   • Job Contract`);
   console.log(`   • Birth Certificate`);
@@ -221,7 +241,9 @@ async function main() {
       : allInstitutions;
 
     if (institutionLimit) {
-      console.log(`📋 Processing ${institutions.length} institution(s) (limited for testing)\n`);
+      console.log(
+        `📋 Processing ${institutions.length} institution(s) (limited for testing)\n`
+      );
     } else {
       console.log(`📋 Processing all ${institutions.length} institutions\n`);
     }
@@ -238,14 +260,18 @@ async function main() {
     for (let i = 0; i < institutions.length; i++) {
       const institution = institutions[i];
 
-      console.log(`\n[${i + 1}/${institutions.length}] Institution: ${institution.name}`);
+      console.log(
+        `\n[${i + 1}/${institutions.length}] Institution: ${institution.name}`
+      );
 
       const result = await fetchDocumentsForInstitution(institution);
       results.push(result);
 
       // Add delay before next institution (except for the last one)
       if (i < institutions.length - 1) {
-        console.log(`   ⏳ Waiting ${DELAY_BETWEEN_INSTITUTIONS / 1000}s before next institution...`);
+        console.log(
+          `   ⏳ Waiting ${DELAY_BETWEEN_INSTITUTIONS / 1000}s before next institution...`
+        );
         await sleep(DELAY_BETWEEN_INSTITUTIONS);
       }
     }
@@ -256,21 +282,35 @@ async function main() {
     console.log('\n📊 FINAL SUMMARY\n');
     console.log('─'.repeat(80));
 
-    const successCount = results.filter(r => r.status === 'success').length;
-    const failedCount = results.filter(r => r.status === 'failed').length;
-    const skippedCount = results.filter(r => r.status === 'skipped').length;
+    const successCount = results.filter((r) => r.status === 'success').length;
+    const failedCount = results.filter((r) => r.status === 'failed').length;
+    const skippedCount = results.filter((r) => r.status === 'skipped').length;
 
     console.log(`Total Institutions: ${institutions.length}`);
     console.log(`  ✅ Success: ${successCount}`);
     console.log(`  ❌ Failed: ${failedCount}`);
     console.log(`  ⊘  Skipped: ${skippedCount}`);
-    console.log(`  ⏱️  Total Duration: ${(totalDuration / 1000 / 60).toFixed(1)} minutes\n`);
+    console.log(
+      `  ⏱️  Total Duration: ${(totalDuration / 1000 / 60).toFixed(1)} minutes\n`
+    );
 
     // Employee-level summary
-    const totalEmployees = results.reduce((sum, r) => sum + (r.summary?.total || 0), 0);
-    const totalSuccessful = results.reduce((sum, r) => sum + (r.summary?.successful || 0), 0);
-    const totalPartial = results.reduce((sum, r) => sum + (r.summary?.partial || 0), 0);
-    const totalFailed = results.reduce((sum, r) => sum + (r.summary?.failed || 0), 0);
+    const totalEmployees = results.reduce(
+      (sum, r) => sum + (r.summary?.total || 0),
+      0
+    );
+    const totalSuccessful = results.reduce(
+      (sum, r) => sum + (r.summary?.successful || 0),
+      0
+    );
+    const totalPartial = results.reduce(
+      (sum, r) => sum + (r.summary?.partial || 0),
+      0
+    );
+    const totalFailed = results.reduce(
+      (sum, r) => sum + (r.summary?.failed || 0),
+      0
+    );
 
     console.log('Employee Document Results:');
     console.log(`  Total Employees Processed: ${totalEmployees}`);
@@ -279,17 +319,18 @@ async function main() {
     console.log(`  ❌ Failed: ${totalFailed} (no documents fetched)\n`);
 
     // Success rate
-    const successRate = totalEmployees > 0
-      ? ((totalSuccessful / totalEmployees) * 100).toFixed(1)
-      : '0.0';
+    const successRate =
+      totalEmployees > 0
+        ? ((totalSuccessful / totalEmployees) * 100).toFixed(1)
+        : '0.0';
     console.log(`Success Rate: ${successRate}%\n`);
 
     // Failed institutions detail
     if (failedCount > 0) {
       console.log('❌ Failed Institutions:');
       results
-        .filter(r => r.status === 'failed')
-        .forEach(r => {
+        .filter((r) => r.status === 'failed')
+        .forEach((r) => {
           console.log(`   • ${r.institutionName}: ${r.error}`);
         });
       console.log('');
@@ -297,12 +338,14 @@ async function main() {
 
     // Institutions with partial success
     const partialInstitutions = results.filter(
-      r => r.status === 'success' && r.summary && r.summary.partial > 0
+      (r) => r.status === 'success' && r.summary && r.summary.partial > 0
     );
     if (partialInstitutions.length > 0) {
       console.log('⚠️  Institutions with partial results:');
-      partialInstitutions.forEach(r => {
-        console.log(`   • ${r.institutionName}: ${r.summary!.partial} employees with partial data`);
+      partialInstitutions.forEach((r) => {
+        console.log(
+          `   • ${r.institutionName}: ${r.summary!.partial} employees with partial data`
+        );
       });
       console.log('');
     }
@@ -312,10 +355,13 @@ async function main() {
 
     // Provide next steps
     console.log('📝 Next Steps:');
-    console.log('   • Review the summary above for any failed or partial results');
-    console.log('   • Check employee profiles to verify documents are accessible');
+    console.log(
+      '   • Review the summary above for any failed or partial results'
+    );
+    console.log(
+      '   • Check employee profiles to verify documents are accessible'
+    );
     console.log('   • Re-run for specific institutions if needed\n');
-
   } catch (error) {
     console.error('\n🚨 Fatal error:', error);
     process.exit(1);

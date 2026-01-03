@@ -17,6 +17,7 @@ import { cleanup } from '@testing-library/react';
 // =============================================================================
 
 // Set test environment variables
+// @ts-expect-error - Modifying read-only property for testing
 process.env.NODE_ENV = 'test';
 process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/csms_test';
 process.env.NEXTAUTH_SECRET = 'test-secret-key-for-testing-only';

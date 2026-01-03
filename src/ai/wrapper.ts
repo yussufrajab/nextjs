@@ -17,13 +17,17 @@ export async function standardizeComplaintFormatting(
 ): Promise<StandardizeComplaintFormattingOutput> {
   try {
     // Try to import the AI functionality
-    const { standardizeComplaintFormatting: originalFunction } = await import('@/ai/flows/complaint-rewriter');
+    const { standardizeComplaintFormatting: originalFunction } =
+      await import('@/ai/flows/complaint-rewriter');
     return await originalFunction(input);
   } catch (error) {
-    console.warn('AI functionality unavailable, returning original text:', error);
+    console.warn(
+      'AI functionality unavailable, returning original text:',
+      error
+    );
     // Fallback: return the original text
     return {
-      rewrittenComplaint: input.complaintText
+      rewrittenComplaint: input.complaintText,
     };
   }
 }

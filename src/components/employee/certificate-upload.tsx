@@ -8,7 +8,16 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { useFileExists } from '@/hooks/use-file-exists';
-import { Loader2, Upload, FileText, Eye, Download, MoreVertical, Trash2, Plus } from 'lucide-react';
+import {
+  Loader2,
+  Upload,
+  FileText,
+  Eye,
+  Download,
+  MoreVertical,
+  Trash2,
+  Plus,
+} from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -52,14 +61,14 @@ export function CertificateUpload({
   userRole,
   userInstitutionId,
   onUploadSuccess,
-  onDeleteSuccess
+  onDeleteSuccess,
 }: CertificateUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [certificateName, setCertificateName] = useState('');
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
-  
+
   // Check if the certificate file actually exists in storage
   const fileExists = useFileExists(currentCertificate?.url);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
@@ -71,9 +80,9 @@ export function CertificateUpload({
     // Validate file type
     if (file.type !== 'application/pdf') {
       toast({
-        title: "Invalid file type",
-        description: "Only PDF files are allowed",
-        variant: "destructive"
+        title: 'Invalid file type',
+        description: 'Only PDF files are allowed',
+        variant: 'destructive',
       });
       return;
     }
@@ -82,9 +91,9 @@ export function CertificateUpload({
     const maxSize = 5 * 1024 * 1024;
     if (file.size > maxSize) {
       toast({
-        title: "File too large",
-        description: "File size must be less than 5MB",
-        variant: "destructive"
+        title: 'File too large',
+        description: 'File size must be less than 5MB',
+        variant: 'destructive',
       });
       return;
     }
@@ -95,9 +104,9 @@ export function CertificateUpload({
   const handleUpload = async () => {
     if (!selectedFile || !certificateName.trim()) {
       toast({
-        title: "Missing information",
-        description: "Please select a file and enter a certificate name",
-        variant: "destructive"
+        title: 'Missing information',
+        description: 'Please select a file and enter a certificate name',
+        variant: 'destructive',
       });
       return;
     }
@@ -109,12 +118,16 @@ export function CertificateUpload({
       formData.append('certificateType', certificateType);
       formData.append('certificateName', certificateName.trim());
       if (userRole) formData.append('userRole', userRole);
-      if (userInstitutionId) formData.append('userInstitutionId', userInstitutionId);
+      if (userInstitutionId)
+        formData.append('userInstitutionId', userInstitutionId);
 
-      const response = await fetch(`/api/employees/${employeeId}/certificates`, {
-        method: 'POST',
-        body: formData
-      });
+      const response = await fetch(
+        `/api/employees/${employeeId}/certificates`,
+        {
+          method: 'POST',
+          body: formData,
+        }
+      );
 
       const result = await response.json();
 
@@ -123,17 +136,19 @@ export function CertificateUpload({
       }
 
       toast({
-        title: "Upload successful",
-        description: `${certificateTitle} has been uploaded successfully`
+        title: 'Upload successful',
+        description: `${certificateTitle} has been uploaded successfully`,
       });
 
       // Reset form
       setSelectedFile(null);
       setCertificateName('');
       setIsUploadDialogOpen(false);
-      
+
       // Reset file input
-      const fileInput = document.getElementById(`file-${certificateType}`) as HTMLInputElement;
+      const fileInput = document.getElementById(
+        `file-${certificateType}`
+      ) as HTMLInputElement;
       if (fileInput) {
         fileInput.value = '';
       }
@@ -144,16 +159,18 @@ export function CertificateUpload({
           id: result.data.certificateId || 'new',
           type: certificateType,
           name: result.data.certificateName,
-          url: result.data.certificateUrl
+          url: result.data.certificateUrl,
         });
       }
-
     } catch (error) {
       console.error('Upload error:', error);
       toast({
-        title: "Upload failed",
-        description: error instanceof Error ? error.message : "Failed to upload certificate",
-        variant: "destructive"
+        title: 'Upload failed',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'Failed to upload certificate',
+        variant: 'destructive',
       });
     } finally {
       setIsUploading(false);
@@ -165,21 +182,21 @@ export function CertificateUpload({
       setIsPreviewModalOpen(true);
     } else if (currentCertificate?.url && !fileExists.exists) {
       toast({
-        title: "Document not available",
-        description: "The certificate is not available at this time",
-        variant: "destructive"
+        title: 'Document not available',
+        description: 'The certificate is not available at this time',
+        variant: 'destructive',
       });
     }
   };
 
   const handleDownload = () => {
     if (!currentCertificate?.url) return;
-    
+
     if (!fileExists.exists) {
       toast({
-        title: "Document not available",
-        description: "The certificate is not available at this time",
-        variant: "destructive"
+        title: 'Document not available',
+        description: 'The certificate is not available at this time',
+        variant: 'destructive',
       });
       return;
     }
@@ -203,8 +220,8 @@ export function CertificateUpload({
     document.body.removeChild(a);
 
     toast({
-      title: "Download started",
-      description: `Downloading ${certificateTitle}...`
+      title: 'Download started',
+      description: `Downloading ${certificateTitle}...`,
     });
   };
 
@@ -216,7 +233,7 @@ export function CertificateUpload({
       const response = await fetch(
         `/api/employees/${employeeId}/certificates?certificateId=${currentCertificate.id}&userRole=${userRole}&userInstitutionId=${userInstitutionId}`,
         {
-          method: 'DELETE'
+          method: 'DELETE',
         }
       );
 
@@ -227,21 +244,23 @@ export function CertificateUpload({
       }
 
       toast({
-        title: "Delete successful",
-        description: `${certificateTitle} has been deleted successfully`
+        title: 'Delete successful',
+        description: `${certificateTitle} has been deleted successfully`,
       });
 
       // Call success callback
       if (onDeleteSuccess) {
         onDeleteSuccess(certificateType);
       }
-
     } catch (error) {
       console.error('Delete error:', error);
       toast({
-        title: "Delete failed",
-        description: error instanceof Error ? error.message : "Failed to delete certificate",
-        variant: "destructive"
+        title: 'Delete failed',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'Failed to delete certificate',
+        variant: 'destructive',
       });
     } finally {
       setIsDeleting(false);
@@ -271,48 +290,59 @@ export function CertificateUpload({
             <FileText className="h-4 w-4" />
             {certificateTitle}:
           </Label>
-          
+
           {currentCertificate ? (
             <div className="mt-1">
-              <p className="text-muted-foreground text-xs">{currentCertificate.name}</p>
+              <p className="text-muted-foreground text-xs">
+                {currentCertificate.name}
+              </p>
               <div className="flex items-center gap-2 mt-1">
                 {fileExists.loading ? (
-                  <Badge variant="outline" className="text-blue-600 border-blue-600">
+                  <Badge
+                    variant="outline"
+                    className="text-blue-600 border-blue-600"
+                  >
                     <Loader2 className="h-3 w-3 mr-1 animate-spin" />
                     Checking...
                   </Badge>
                 ) : fileExists.exists ? (
                   <>
-                    <Badge variant="outline" className="text-green-600 border-green-600">
+                    <Badge
+                      variant="outline"
+                      className="text-green-600 border-green-600"
+                    >
                       Available
                     </Badge>
                     {currentCertificate.url && (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-7 text-xs"
-                      >
-                        <MoreVertical className="h-3 w-3 mr-1" />
-                        Actions
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={handleView}>
-                        <Eye className="h-3 w-3 mr-2" />
-                        View
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={handleDownload}>
-                        <Download className="h-3 w-3 mr-2" />
-                        Download
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 text-xs"
+                          >
+                            <MoreVertical className="h-3 w-3 mr-1" />
+                            Actions
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={handleView}>
+                            <Eye className="h-3 w-3 mr-2" />
+                            View
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={handleDownload}>
+                            <Download className="h-3 w-3 mr-2" />
+                            Download
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     )}
                   </>
                 ) : (
-                  <Badge variant="outline" className="text-red-600 border-red-600">
+                  <Badge
+                    variant="outline"
+                    className="text-red-600 border-red-600"
+                  >
                     Document not available
                   </Badge>
                 )}
@@ -320,7 +350,9 @@ export function CertificateUpload({
             </div>
           ) : (
             <div className="mt-1">
-              <p className="text-muted-foreground text-xs italic">Not Available</p>
+              <p className="text-muted-foreground text-xs italic">
+                Not Available
+              </p>
               <Badge variant="outline" className="text-muted-foreground mt-1">
                 No Document
               </Badge>
@@ -330,13 +362,12 @@ export function CertificateUpload({
 
         {canUpload && (
           <div className="flex flex-col gap-2">
-            <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+            <Dialog
+              open={isUploadDialogOpen}
+              onOpenChange={setIsUploadDialogOpen}
+            >
               <DialogTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8"
-                >
+                <Button variant="outline" size="sm" className="h-8">
                   <Plus className="h-3 w-3 mr-1" />
                   {currentCertificate ? 'Replace' : 'Upload'}
                 </Button>
@@ -344,7 +375,8 @@ export function CertificateUpload({
               <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                   <DialogTitle>
-                    {currentCertificate ? 'Replace' : 'Upload'} {certificateTitle}
+                    {currentCertificate ? 'Replace' : 'Upload'}{' '}
+                    {certificateTitle}
                   </DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
@@ -358,7 +390,9 @@ export function CertificateUpload({
                     />
                   </div>
                   <div>
-                    <Label htmlFor={`file-${certificateType}`}>Select PDF File</Label>
+                    <Label htmlFor={`file-${certificateType}`}>
+                      Select PDF File
+                    </Label>
                     <Input
                       id={`file-${certificateType}`}
                       type="file"
@@ -368,7 +402,8 @@ export function CertificateUpload({
                   </div>
                   {selectedFile && (
                     <div className="text-sm text-muted-foreground">
-                      Selected: {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+                      Selected: {selectedFile.name} (
+                      {(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
                     </div>
                   )}
                   <div className="flex gap-2 justify-end">
@@ -384,7 +419,9 @@ export function CertificateUpload({
                     </Button>
                     <Button
                       onClick={handleUpload}
-                      disabled={isUploading || !selectedFile || !certificateName.trim()}
+                      disabled={
+                        isUploading || !selectedFile || !certificateName.trim()
+                      }
                     >
                       {isUploading ? (
                         <Loader2 className="h-3 w-3 mr-1 animate-spin" />

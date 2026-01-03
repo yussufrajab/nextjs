@@ -115,7 +115,9 @@ export const testUsers = {
 /**
  * Create a custom test user
  */
-export const createTestUser = (overrides: Partial<typeof testUsers.employee> = {}) => {
+export const createTestUser = (
+  overrides: Partial<typeof testUsers.employee> = {}
+) => {
   return {
     id: 'test-user-' + Math.random().toString(36).substring(7),
     username: 'test_user_' + Math.random().toString(36).substring(7),

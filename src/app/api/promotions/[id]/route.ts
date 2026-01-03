@@ -3,7 +3,11 @@ import { db } from '@/lib/db';
 import { z } from 'zod';
 import { createNotification, NotificationTemplates } from '@/lib/notifications';
 import { v4 as uuidv4 } from 'uuid';
-import { logRequestApproval, logRequestRejection, getClientIp } from '@/lib/audit-logger';
+import {
+  logRequestApproval,
+  logRequestRejection,
+  getClientIp,
+} from '@/lib/audit-logger';
 
 const updateSchema = z.object({
   status: z.string().optional(),
@@ -17,7 +21,10 @@ const updateSchema = z.object({
   studiedOutsideCountry: z.boolean().optional(),
 });
 
-async function handleUpdate(req: Request, { params }: { params: Promise<{ id: string }> }) {
+async function handleUpdate(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     const { id } = await params;
     const body = await req.json();
@@ -31,18 +38,19 @@ async function handleUpdate(req: Request, { params }: { params: Promise<{ id: st
     // Check if promotion exists
     const existingRequest = await db.promotionRequest.findUnique({
       where: { id },
-      include: { Employee: true }
+      include: { Employee: true },
     });
 
     if (!existingRequest) {
-      return new NextResponse("Promotion request not found", { status: 404 });
+      return new NextResponse('Promotion request not found', { status: 404 });
     }
 
     // Check if this is a Commission approval
-    const isCommissionApproval = validatedData.status &&
+    const isCommissionApproval =
+      validatedData.status &&
       validatedData.status.toLowerCase().includes('commission') &&
       validatedData.status.toLowerCase().includes('approved');
-    
+
     if (isCommissionApproval) {
       // Use transaction to update both promotion request and employee cadre
       const result = await db.$transaction(async (tx) => {
@@ -51,18 +59,29 @@ async function handleUpdate(req: Request, { params }: { params: Promise<{ id: st
           where: { id },
           data: validatedData,
           include: {
-            Employee: { select: { name: true, zanId: true, department: true, cadre: true }},
-            User_PromotionRequest_submittedByIdToUser: { select: { name: true, role: true } },
-            User_PromotionRequest_reviewedByIdToUser: { select: { name: true, role: true } },
-          }
+            Employee: {
+              select: {
+                name: true,
+                zanId: true,
+                department: true,
+                cadre: true,
+              },
+            },
+            User_PromotionRequest_submittedByIdToUser: {
+              select: { name: true, role: true },
+            },
+            User_PromotionRequest_reviewedByIdToUser: {
+              select: { name: true, role: true },
+            },
+          },
         });
 
         // Update the employee's cadre to the proposed cadre
         await tx.employee.update({
           where: { id: existingRequest.employeeId },
           data: {
-            cadre: existingRequest.proposedCadre
-          }
+            cadre: existingRequest.proposedCadre,
+          },
         });
 
         return updatedRequest;
@@ -71,7 +90,7 @@ async function handleUpdate(req: Request, { params }: { params: Promise<{ id: st
       // Send notification
       const userToNotify = await db.user.findUnique({
         where: { employeeId: existingRequest.employeeId },
-        select: { id: true }
+        select: { id: true },
       });
 
       if (userToNotify) {
@@ -89,7 +108,7 @@ async function handleUpdate(req: Request, { params }: { params: Promise<{ id: st
       if (validatedData.reviewedById) {
         const reviewer = await db.user.findUnique({
           where: { id: validatedData.reviewedById },
-          select: { username: true, role: true }
+          select: { username: true, role: true },
         });
 
         if (reviewer) {
@@ -120,27 +139,47 @@ async function handleUpdate(req: Request, { params }: { params: Promise<{ id: st
         where: { id },
         data: validatedData,
         include: {
-          Employee: { select: { name: true, zanId: true, department: true, cadre: true }},
-          User_PromotionRequest_submittedByIdToUser: { select: { name: true, role: true } },
-          User_PromotionRequest_reviewedByIdToUser: { select: { name: true, role: true } },
-        }
+          Employee: {
+            select: { name: true, zanId: true, department: true, cadre: true },
+          },
+          User_PromotionRequest_submittedByIdToUser: {
+            select: { name: true, role: true },
+          },
+          User_PromotionRequest_reviewedByIdToUser: {
+            select: { name: true, role: true },
+          },
+        },
       });
 
       // Create appropriate notifications based on status changes
       if (validatedData.status) {
         const userToNotify = await db.user.findUnique({
           where: { employeeId: updatedRequest.employeeId },
-          select: { id: true }
+          select: { id: true },
         });
 
         if (userToNotify) {
           let notification = null;
 
-          if (validatedData.status === "Approved" || validatedData.status === "Commission Approved") {
-            notification = NotificationTemplates.promotionApproved(updatedRequest.id);
-          } else if (validatedData.status === "Rejected" || validatedData.status === "Commission Rejected") {
-            const reason = validatedData.rejectionReason || validatedData.commissionDecisionReason || 'No reason provided';
-            notification = NotificationTemplates.promotionRejected(updatedRequest.id, reason);
+          if (
+            validatedData.status === 'Approved' ||
+            validatedData.status === 'Commission Approved'
+          ) {
+            notification = NotificationTemplates.promotionApproved(
+              updatedRequest.id
+            );
+          } else if (
+            validatedData.status === 'Rejected' ||
+            validatedData.status === 'Commission Rejected'
+          ) {
+            const reason =
+              validatedData.rejectionReason ||
+              validatedData.commissionDecisionReason ||
+              'No reason provided';
+            notification = NotificationTemplates.promotionRejected(
+              updatedRequest.id,
+              reason
+            );
           } else {
             // Generic status update notification
             notification = {
@@ -162,13 +201,15 @@ async function handleUpdate(req: Request, { params }: { params: Promise<{ id: st
         if (validatedData.reviewedById && validatedData.status) {
           const reviewer = await db.user.findUnique({
             where: { id: validatedData.reviewedById },
-            select: { username: true, role: true }
+            select: { username: true, role: true },
           });
 
           if (reviewer) {
             // Check if status contains "Approved" or "Rejected" (case-insensitive)
             const statusLower = validatedData.status.toLowerCase();
-            const isApproval = statusLower.includes('approved') && !statusLower.includes('rejected');
+            const isApproval =
+              statusLower.includes('approved') &&
+              !statusLower.includes('rejected');
             const isRejection = statusLower.includes('rejected');
 
             console.log('[AUDIT] Promotion status update:', {
@@ -207,7 +248,9 @@ async function handleUpdate(req: Request, { params }: { params: Promise<{ id: st
                 rejectedById: validatedData.reviewedById,
                 rejectedByUsername: reviewer.username,
                 rejectedByRole: reviewer.role || 'Unknown',
-                rejectionReason: validatedData.rejectionReason || validatedData.commissionDecisionReason,
+                rejectionReason:
+                  validatedData.rejectionReason ||
+                  validatedData.commissionDecisionReason,
                 reviewStage: validatedData.reviewStage,
                 ipAddress,
                 userAgent,
@@ -224,7 +267,7 @@ async function handleUpdate(req: Request, { params }: { params: Promise<{ id: st
       return NextResponse.json(updatedRequest);
     }
   } catch (error) {
-    console.error("[PROMOTION_PUT]", error);
+    console.error('[PROMOTION_PUT]', error);
     if (error instanceof z.ZodError) {
       return new NextResponse(JSON.stringify(error.errors), { status: 400 });
     }

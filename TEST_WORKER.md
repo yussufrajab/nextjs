@@ -7,18 +7,21 @@ The worker is **running and functional**, even though logs don't show startup me
 ### Evidence Worker is Working:
 
 1. **✅ Process Running**
+
    ```bash
    pm2 status
    # Shows: redis-worker | online
    ```
 
 2. **✅ Redis Connections**
+
    ```bash
    redis-cli CLIENT LIST | grep "bull:hrims-sync"
    # Shows active BullMQ connection waiting for jobs
    ```
 
 3. **✅ Queue Created**
+
    ```bash
    redis-cli KEYS "bull:hrims-sync:*"
    # Shows: bull:hrims-sync:stalled-check
@@ -91,6 +94,7 @@ pm2 logs redis-worker
 ```
 
 Output will show:
+
 ```
 🚀 Processing HRIMS Sync Job: hrims-sync-...
    Institution: Wizara ya Afya

@@ -3,6 +3,7 @@
 ## Quick Start - Manual Worker
 
 ### Start Worker (Simple)
+
 ```bash
 cd /home/latest
 npm run worker
@@ -11,6 +12,7 @@ npm run worker
 **Keep this terminal open while processing jobs!**
 
 ### Stop Worker
+
 ```bash
 # Press Ctrl+C in the worker terminal
 ```
@@ -26,22 +28,26 @@ Choose one of these methods to run the worker continuously:
 PM2 is a production process manager that keeps your worker running, auto-restarts on crashes, and manages logs.
 
 #### Install PM2
+
 ```bash
 npm install -g pm2
 ```
 
 #### Start Worker with PM2
+
 ```bash
 cd /home/latest
 pm2 start ecosystem.config.js
 ```
 
 #### Check Worker Status
+
 ```bash
 pm2 status
 ```
 
 Output:
+
 ```
 ┌─────┬──────────────┬─────────────┬─────────┬─────────┬──────────┐
 │ id  │ name         │ mode        │ ↺       │ status  │ cpu      │
@@ -51,6 +57,7 @@ Output:
 ```
 
 #### View Worker Logs
+
 ```bash
 # Live logs
 pm2 logs redis-worker
@@ -63,21 +70,25 @@ pm2 logs redis-worker --err
 ```
 
 #### Restart Worker
+
 ```bash
 pm2 restart redis-worker
 ```
 
 #### Stop Worker
+
 ```bash
 pm2 stop redis-worker
 ```
 
 #### Delete Worker
+
 ```bash
 pm2 delete redis-worker
 ```
 
 #### Auto-start on Server Reboot
+
 ```bash
 # Generate startup script
 pm2 startup
@@ -93,6 +104,7 @@ Now the worker will automatically start when the server reboots!
 ### Method 2: Using screen (Simple Alternative)
 
 #### Start Worker in Background
+
 ```bash
 # Create a screen session
 screen -S redis-worker
@@ -106,11 +118,13 @@ npm run worker
 ```
 
 #### Reattach to Check Worker
+
 ```bash
 screen -r redis-worker
 ```
 
 #### Stop Worker
+
 ```bash
 # Reattach first
 screen -r redis-worker
@@ -119,6 +133,7 @@ screen -r redis-worker
 ```
 
 #### List All Screen Sessions
+
 ```bash
 screen -ls
 ```
@@ -134,6 +149,7 @@ sudo nano /etc/systemd/system/redis-worker.service
 ```
 
 Add this content:
+
 ```ini
 [Unit]
 Description=Redis Background Worker for HRIMS Sync
@@ -153,6 +169,7 @@ WantedBy=multi-user.target
 ```
 
 Enable and start:
+
 ```bash
 sudo systemctl daemon-reload
 sudo systemctl enable redis-worker
@@ -161,6 +178,7 @@ sudo systemctl status redis-worker
 ```
 
 View logs:
+
 ```bash
 sudo journalctl -u redis-worker -f
 ```
@@ -170,6 +188,7 @@ sudo journalctl -u redis-worker -f
 ## Complete Production Workflow
 
 ### 1. Ensure Redis is Running
+
 ```bash
 redis-cli ping
 # Should return: PONG
@@ -181,12 +200,14 @@ redis-cli ping
 ### 2. Start Worker (Choose one method)
 
 **Option A: PM2 (Recommended)**
+
 ```bash
 pm2 start ecosystem.config.js
 pm2 save
 ```
 
 **Option B: screen**
+
 ```bash
 screen -S redis-worker
 npm run worker
@@ -194,6 +215,7 @@ npm run worker
 ```
 
 **Option C: Manual (for testing)**
+
 ```bash
 npm run worker
 ```
@@ -201,12 +223,14 @@ npm run worker
 ### 3. Verify Worker is Running
 
 **For PM2:**
+
 ```bash
 pm2 status
 pm2 logs redis-worker --lines 20
 ```
 
 **For screen:**
+
 ```bash
 screen -ls
 screen -r redis-worker
@@ -214,6 +238,7 @@ screen -r redis-worker
 ```
 
 **For manual:**
+
 ```bash
 ps aux | grep start-worker
 ```
@@ -230,6 +255,7 @@ Go to: https://test.zanajira.go.tz/dashboard/admin/fetch-data
 ### 5. Monitor Worker
 
 **Check if processing jobs:**
+
 ```bash
 # PM2
 pm2 logs redis-worker
@@ -249,6 +275,7 @@ redis-cli
 ### Worker not processing jobs?
 
 1. **Check if worker is running:**
+
    ```bash
    pm2 status
    # or
@@ -256,11 +283,13 @@ redis-cli
    ```
 
 2. **Check Redis connection:**
+
    ```bash
    redis-cli ping
    ```
 
 3. **Check worker logs:**
+
    ```bash
    pm2 logs redis-worker
    ```
@@ -319,6 +348,7 @@ redis-cli ping
 ```
 
 Now the worker will:
+
 - ✅ Run continuously in background
 - ✅ Auto-restart if it crashes
 - ✅ Auto-start when server reboots
@@ -329,13 +359,13 @@ Now the worker will:
 
 ## Quick Commands Reference
 
-| Action | PM2 | screen | Manual |
-|--------|-----|--------|--------|
-| Start | `pm2 start ecosystem.config.js` | `screen -S redis-worker` → `npm run worker` | `npm run worker` |
-| Stop | `pm2 stop redis-worker` | `screen -r redis-worker` → Ctrl+C | Ctrl+C |
-| Restart | `pm2 restart redis-worker` | Stop → Start | Stop → Start |
-| Logs | `pm2 logs redis-worker` | `screen -r redis-worker` | Terminal output |
-| Status | `pm2 status` | `screen -ls` | `ps aux \| grep worker` |
+| Action  | PM2                             | screen                                      | Manual                  |
+| ------- | ------------------------------- | ------------------------------------------- | ----------------------- |
+| Start   | `pm2 start ecosystem.config.js` | `screen -S redis-worker` → `npm run worker` | `npm run worker`        |
+| Stop    | `pm2 stop redis-worker`         | `screen -r redis-worker` → Ctrl+C           | Ctrl+C                  |
+| Restart | `pm2 restart redis-worker`      | Stop → Start                                | Stop → Start            |
+| Logs    | `pm2 logs redis-worker`         | `screen -r redis-worker`                    | Terminal output         |
+| Status  | `pm2 status`                    | `screen -ls`                                | `ps aux \| grep worker` |
 
 ---
 

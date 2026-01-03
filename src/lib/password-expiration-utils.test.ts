@@ -97,7 +97,10 @@ describe('password-expiration-utils', () => {
   describe('calculatePasswordExpirationDate', () => {
     it('should calculate expiration date 60 days ahead for Admin', () => {
       const startDate = new Date('2024-01-01');
-      const expirationDate = calculatePasswordExpirationDate(startDate, 'Admin');
+      const expirationDate = calculatePasswordExpirationDate(
+        startDate,
+        'Admin'
+      );
       const expectedDate = new Date('2024-03-01'); // 60 days from Jan 1, 2024
 
       expect(expirationDate.toDateString()).toBe(expectedDate.toDateString());
@@ -113,7 +116,10 @@ describe('password-expiration-utils', () => {
 
     it('should handle leap year correctly', () => {
       const startDate = new Date('2024-02-01'); // 2024 is a leap year
-      const expirationDate = calculatePasswordExpirationDate(startDate, 'Admin');
+      const expirationDate = calculatePasswordExpirationDate(
+        startDate,
+        'Admin'
+      );
       const daysDiff = Math.floor(
         (expirationDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
       );
@@ -123,7 +129,10 @@ describe('password-expiration-utils', () => {
 
     it('should return a Date object', () => {
       const startDate = new Date('2024-01-01');
-      const expirationDate = calculatePasswordExpirationDate(startDate, 'Admin');
+      const expirationDate = calculatePasswordExpirationDate(
+        startDate,
+        'Admin'
+      );
 
       expect(expirationDate).toBeInstanceOf(Date);
     });
@@ -472,7 +481,9 @@ describe('password-expiration-utils', () => {
       const call = (db.user.update as any).mock.calls[0][0];
       const expiresAt = call.data.passwordExpiresAt;
       const now = new Date();
-      const diffDays = Math.floor((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      const diffDays = Math.floor(
+        (expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+      );
 
       expect(diffDays).toBeGreaterThanOrEqual(59);
       expect(diffDays).toBeLessThanOrEqual(60);
@@ -486,7 +497,9 @@ describe('password-expiration-utils', () => {
       const call = (db.user.update as any).mock.calls[0][0];
       const expiresAt = call.data.passwordExpiresAt;
       const now = new Date();
-      const diffDays = Math.floor((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      const diffDays = Math.floor(
+        (expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+      );
 
       expect(diffDays).toBeGreaterThanOrEqual(89);
       expect(diffDays).toBeLessThanOrEqual(90);

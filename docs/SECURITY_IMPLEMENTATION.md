@@ -26,6 +26,7 @@ The middleware runs on **every request** before the page is rendered. It:
 - ✅ Redirects to dashboard with error if not authorized
 
 **Example:**
+
 ```typescript
 // A DO user trying to access /dashboard/admin/users
 // Middleware intercepts → Checks role → Denies access → Redirects to /dashboard?error=unauthorized
@@ -52,6 +53,7 @@ const ROUTE_PERMISSIONS = [
 ```
 
 **Key Functions:**
+
 - `canAccessRoute(pathname, role)` - Check if a role can access a route
 - `getAllowedRolesForRoute(pathname)` - Get all allowed roles for a route
 
@@ -66,6 +68,7 @@ The auth store has been enhanced to:
 - ✅ Sync cookie on auth state initialization
 
 **Cookie Structure:**
+
 ```json
 {
   "state": {
@@ -77,6 +80,7 @@ The auth store has been enhanced to:
 ```
 
 **Cookie Properties:**
+
 - Expires: 7 days
 - Path: `/`
 - SameSite: `Strict`
@@ -118,23 +122,24 @@ export default function AdminPage() {
 ```
 
 **Features:**
+
 - Shows loading skeleton while checking access
 - Displays professional error UI if access denied
 - Provides "Return to Dashboard" button
 
 ## Role-Based Access Control Matrix
 
-| Route Pattern | Allowed Roles |
-|--------------|---------------|
-| `/dashboard/admin/*` | Admin |
-| `/dashboard/confirmation` | HRO, HHRMD, HRMO |
-| `/dashboard/lwop` | HRO, HHRMD, HRMO |
-| `/dashboard/promotion` | HRO, HHRMD, HRMO |
-| `/dashboard/termination` | HRO, DO, HHRMD |
-| `/dashboard/complaints` | EMPLOYEE, DO, HHRMD |
+| Route Pattern             | Allowed Roles         |
+| ------------------------- | --------------------- |
+| `/dashboard/admin/*`      | Admin                 |
+| `/dashboard/confirmation` | HRO, HHRMD, HRMO      |
+| `/dashboard/lwop`         | HRO, HHRMD, HRMO      |
+| `/dashboard/promotion`    | HRO, HHRMD, HRMO      |
+| `/dashboard/termination`  | HRO, DO, HHRMD        |
+| `/dashboard/complaints`   | EMPLOYEE, DO, HHRMD   |
 | `/dashboard/institutions` | HHRMD, CSCS, DO, HRMO |
-| `/dashboard/profile` | All authenticated |
-| `/dashboard` | All authenticated |
+| `/dashboard/profile`      | All authenticated     |
+| `/dashboard`              | All authenticated     |
 
 ## How It Works: Attack Prevention
 
@@ -143,6 +148,7 @@ export default function AdminPage() {
 **Attack:** A DO user tries to access `/dashboard/admin/institutions` by typing the URL
 
 **Defense:**
+
 1. ✅ **Middleware** intercepts the request
 2. ✅ Reads `auth-storage` cookie
 3. ✅ Extracts role: "DO"
@@ -155,6 +161,7 @@ export default function AdminPage() {
 **Attack:** User modifies the `auth-storage` cookie to change their role
 
 **Defense:**
+
 1. ✅ Middleware reads the cookie
 2. ❌ **Backend API routes still validate** - The backend has the authoritative user data
 3. ✅ Any API call will fail with 401/403 if role doesn't match
@@ -165,6 +172,7 @@ export default function AdminPage() {
 **Attack:** User disables JavaScript or manipulates React state
 
 **Defense:**
+
 1. ✅ **Server-side middleware runs FIRST**, before any client-side code
 2. ✅ No JavaScript? Middleware still protects routes
 3. ✅ Page never renders if access is denied
@@ -183,11 +191,7 @@ If your route is already in `ROUTE_PERMISSIONS`, you don't need to do anything! 
 import { RouteGuard } from '@/components/auth/route-guard';
 
 export default function MyProtectedPage() {
-  return (
-    <RouteGuard>
-      {/* Your page content */}
-    </RouteGuard>
-  );
+  return <RouteGuard>{/* Your page content */}</RouteGuard>;
 }
 ```
 
@@ -276,6 +280,7 @@ function Navigation() {
 ### Issue: User can still access protected routes
 
 **Check:**
+
 1. Is the route listed in `ROUTE_PERMISSIONS`?
 2. Is the middleware configured with the correct matcher?
 3. Is the cookie being set properly? (Check browser DevTools → Application → Cookies)
@@ -284,6 +289,7 @@ function Navigation() {
 ### Issue: Cookie not being set
 
 **Check:**
+
 1. Login is calling `setAuthCookie()`
 2. Browser is not blocking cookies
 3. Cookie expiry is not in the past
@@ -292,6 +298,7 @@ function Navigation() {
 ### Issue: Middleware not running
 
 **Check:**
+
 1. `middleware.ts` is at the root of the project (not in `/src`)
 2. The `matcher` config includes your route
 3. Clear Next.js cache: `rm -rf .next`

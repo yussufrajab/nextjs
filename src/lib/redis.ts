@@ -13,7 +13,7 @@ const REDIS_CONFIG = {
   port: parseInt(process.env.REDIS_PORT || '6379'),
   password: process.env.REDIS_PASSWORD || undefined, // Optional password for cloud Redis
   maxRetriesPerRequest: null, // Required for BullMQ
-  enableReadyCheck: false,    // Required for BullMQ
+  enableReadyCheck: false, // Required for BullMQ
   retryStrategy(times: number) {
     const delay = Math.min(times * 50, 2000);
     return delay;

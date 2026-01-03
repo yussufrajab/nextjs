@@ -210,12 +210,18 @@ describe('password-utils', () => {
       const hash1 = await hashPassword('OldPassword123!');
       const hash2 = await hashPassword('AnotherOldPass123!');
 
-      const matches = await checkPasswordHistory('NewPassword123!', [hash1, hash2]);
+      const matches = await checkPasswordHistory('NewPassword123!', [
+        hash1,
+        hash2,
+      ]);
       expect(matches).toBe(false);
     });
 
     it('should handle null history', async () => {
-      const matches = await checkPasswordHistory('NewPassword123!', null as any);
+      const matches = await checkPasswordHistory(
+        'NewPassword123!',
+        null as any
+      );
       expect(matches).toBe(false);
     });
   });
@@ -274,7 +280,12 @@ describe('password-utils', () => {
       const hasSpecial = /[@$!%*?&#]/.test(password);
 
       // Should have multiple character types
-      const typesCount = [hasUppercase, hasLowercase, hasNumber, hasSpecial].filter(Boolean).length;
+      const typesCount = [
+        hasUppercase,
+        hasLowercase,
+        hasNumber,
+        hasSpecial,
+      ].filter(Boolean).length;
       expect(typesCount).toBeGreaterThanOrEqual(2);
     });
   });
@@ -294,7 +305,9 @@ describe('password-utils', () => {
     it('should set expiry exactly N days from now', () => {
       const expiry = calculateTemporaryPasswordExpiry();
       const now = new Date();
-      const diffDays = Math.floor((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      const diffDays = Math.floor(
+        (expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+      );
 
       expect(diffDays).toBe(TEMPORARY_PASSWORD_VALIDITY_DAYS);
     });
@@ -311,7 +324,9 @@ describe('password-utils', () => {
     it('should set lockout for correct duration', () => {
       const lockoutExpiry = calculateLockoutExpiry();
       const now = new Date();
-      const diffMinutes = Math.floor((lockoutExpiry.getTime() - now.getTime()) / (1000 * 60));
+      const diffMinutes = Math.floor(
+        (lockoutExpiry.getTime() - now.getTime()) / (1000 * 60)
+      );
 
       expect(diffMinutes).toBe(PASSWORD_LOCKOUT_DURATION_MINUTES);
     });

@@ -12,7 +12,7 @@ const VALID_CERTIFICATE_TYPES = [
   'Advanced Diploma',
   'Bachelor Degree',
   'Master Degree',
-  'PHd'
+  'PHd',
 ] as const;
 
 export async function POST(
@@ -41,7 +41,7 @@ export async function POST(
 
     // Verify employee exists
     const employee = await prisma.employee.findUnique({
-      where: { id: employeeId }
+      where: { id: employeeId },
     });
 
     if (!employee) {
@@ -55,7 +55,11 @@ export async function POST(
     if (userRole === 'HRO') {
       if (employee.institutionId !== userInstitutionId) {
         return NextResponse.json(
-          { success: false, message: 'Can only upload certificates for employees in your institution' },
+          {
+            success: false,
+            message:
+              'Can only upload certificates for employees in your institution',
+          },
           { status: 403 }
         );
       }
@@ -110,18 +114,14 @@ export async function POST(
     const buffer = Buffer.from(arrayBuffer);
 
     // Upload to MinIO
-    const uploadResult = await uploadFile(
-      buffer,
-      objectKey,
-      file.type
-    );
+    const uploadResult = await uploadFile(buffer, objectKey, file.type);
 
     // Check if certificate of this type already exists
     const existingCertificate = await prisma.employeeCertificate.findFirst({
       where: {
         employeeId: employeeId,
-        type: certificateType
-      }
+        type: certificateType,
+      },
     });
 
     const certificateUrl = `/api/files/download/${objectKey}`;
@@ -132,8 +132,8 @@ export async function POST(
         where: { id: existingCertificate.id },
         data: {
           name: certificateName.trim(),
-          url: certificateUrl
-        }
+          url: certificateUrl,
+        },
       });
     } else {
       // Create new certificate
@@ -143,8 +143,8 @@ export async function POST(
           type: certificateType,
           name: certificateName.trim(),
           url: certificateUrl,
-          employeeId: employeeId
-        }
+          employeeId: employeeId,
+        },
       });
     }
 
@@ -157,10 +157,9 @@ export async function POST(
         certificateUrl,
         objectKey: uploadResult.objectKey,
         originalName: file.name,
-        size: file.size
-      }
+        size: file.size,
+      },
     });
-
   } catch (error) {
     console.error('Employee certificate upload error:', error);
     return NextResponse.json(
@@ -194,10 +193,10 @@ export async function GET(
             id: true,
             type: true,
             name: true,
-            url: true
-          }
-        }
-      }
+            url: true,
+          },
+        },
+      },
     });
 
     if (!employee) {
@@ -222,10 +221,9 @@ export async function GET(
       data: {
         employeeId: employee.id,
         employeeName: employee.name,
-        certificates: employee.EmployeeCertificate
-      }
+        certificates: employee.EmployeeCertificate,
+      },
     });
-
   } catch (error) {
     console.error('Employee certificates fetch error:', error);
     return NextResponse.json(
@@ -268,15 +266,15 @@ export async function DELETE(
     const certificate = await prisma.employeeCertificate.findFirst({
       where: {
         id: certificateId,
-        employeeId: employeeId
+        employeeId: employeeId,
       },
       include: {
         Employee: {
           select: {
-            institutionId: true
-          }
-        }
-      }
+            institutionId: true,
+          },
+        },
+      },
     });
 
     if (!certificate) {
@@ -290,7 +288,11 @@ export async function DELETE(
     if (userRole === 'HRO') {
       if (certificate.Employee.institutionId !== userInstitutionId) {
         return NextResponse.json(
-          { success: false, message: 'Can only delete certificates for employees in your institution' },
+          {
+            success: false,
+            message:
+              'Can only delete certificates for employees in your institution',
+          },
           { status: 403 }
         );
       }
@@ -298,14 +300,13 @@ export async function DELETE(
 
     // Delete the certificate record
     await prisma.employeeCertificate.delete({
-      where: { id: certificateId }
+      where: { id: certificateId },
     });
 
     return NextResponse.json({
       success: true,
-      message: 'Certificate deleted successfully'
+      message: 'Certificate deleted successfully',
     });
-
   } catch (error) {
     console.error('Employee certificate delete error:', error);
     return NextResponse.json(

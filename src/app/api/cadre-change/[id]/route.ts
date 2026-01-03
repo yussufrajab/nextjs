@@ -2,7 +2,11 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
-import { logRequestApproval, logRequestRejection, getClientIp } from '@/lib/audit-logger';
+import {
+  logRequestApproval,
+  logRequestRejection,
+  getClientIp,
+} from '@/lib/audit-logger';
 
 const updateSchema = z.object({
   status: z.string().optional(),
@@ -15,7 +19,10 @@ const updateSchema = z.object({
   documents: z.array(z.string()).optional(),
 });
 
-async function handleUpdate(req: Request, { params }: { params: Promise<{ id: string }> }) {
+async function handleUpdate(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     const { id } = await params;
     const body = await req.json();
@@ -43,19 +50,23 @@ async function handleUpdate(req: Request, { params }: { params: Promise<{ id: st
             dateOfBirth: true,
             payrollNumber: true,
             zssfNumber: true,
-            Institution: { select: { id: true, name: true } }
-          }
+            Institution: { select: { id: true, name: true } },
+          },
         },
-        User_CadreChangeRequest_submittedByIdToUser: { select: { id: true, name: true, username: true, role: true } },
-        User_CadreChangeRequest_reviewedByIdToUser: { select: { id: true, name: true, username: true, role: true } },
-      }
+        User_CadreChangeRequest_submittedByIdToUser: {
+          select: { id: true, name: true, username: true, role: true },
+        },
+        User_CadreChangeRequest_reviewedByIdToUser: {
+          select: { id: true, name: true, username: true, role: true },
+        },
+      },
     });
 
     // If status is updated, create a notification for the employee
     if (validatedData.status) {
       const userToNotify = await db.user.findUnique({
         where: { employeeId: updatedRequest.employeeId },
-        select: { id: true }
+        select: { id: true },
       });
 
       if (userToNotify) {
@@ -73,13 +84,15 @@ async function handleUpdate(req: Request, { params }: { params: Promise<{ id: st
       if (validatedData.reviewedById && validatedData.status) {
         const reviewer = await db.user.findUnique({
           where: { id: validatedData.reviewedById },
-          select: { username: true, role: true }
+          select: { username: true, role: true },
         });
 
         if (reviewer) {
           // Check if status contains "Approved" or "Rejected" (case-insensitive)
           const statusLower = validatedData.status.toLowerCase();
-          const isApproval = statusLower.includes('approved') && !statusLower.includes('rejected');
+          const isApproval =
+            statusLower.includes('approved') &&
+            !statusLower.includes('rejected');
           const isRejection = statusLower.includes('rejected');
 
           console.log('[AUDIT] CadreChange status update:', {
@@ -133,22 +146,28 @@ async function handleUpdate(req: Request, { params }: { params: Promise<{ id: st
     }
 
     // If cadre change request is approved by Commission, update employee cadre
-    if (validatedData.status &&
-        validatedData.status.toLowerCase().includes('commission') &&
-        validatedData.status.toLowerCase().includes('approved') &&
-        updatedRequest.Employee) {
+    if (
+      validatedData.status &&
+      validatedData.status.toLowerCase().includes('commission') &&
+      validatedData.status.toLowerCase().includes('approved') &&
+      updatedRequest.Employee
+    ) {
       await db.employee.update({
         where: { id: updatedRequest.Employee.id },
-        data: { cadre: updatedRequest.newCadre }
+        data: { cadre: updatedRequest.newCadre },
       });
-      console.log(`Employee ${updatedRequest.Employee.name} cadre updated to "${updatedRequest.newCadre}" after cadre change approval`);
+      console.log(
+        `Employee ${updatedRequest.Employee.name} cadre updated to "${updatedRequest.newCadre}" after cadre change approval`
+      );
     }
 
-    console.log('Cadre change request updated successfully:', updatedRequest.id);
+    console.log(
+      'Cadre change request updated successfully:',
+      updatedRequest.id
+    );
     return NextResponse.json(updatedRequest);
-    
   } catch (error) {
-    console.error("[CADRE_CHANGE_PUT]", error);
+    console.error('[CADRE_CHANGE_PUT]', error);
     if (error instanceof z.ZodError) {
       return new NextResponse(JSON.stringify(error.errors), { status: 400 });
     }
@@ -160,38 +179,47 @@ async function handleUpdate(req: Request, { params }: { params: Promise<{ id: st
 export const PUT = handleUpdate;
 export const PATCH = handleUpdate;
 
-export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     const { id } = await params;
     const request = await db.cadreChangeRequest.findUnique({
       where: { id },
       include: {
-        Employee: { 
-          select: { 
+        Employee: {
+          select: {
             id: true,
-            name: true, 
-            zanId: true, 
-            department: true, 
-            cadre: true, 
-            employmentDate: true, 
-            dateOfBirth: true, 
-            payrollNumber: true, 
+            name: true,
+            zanId: true,
+            department: true,
+            cadre: true,
+            employmentDate: true,
+            dateOfBirth: true,
+            payrollNumber: true,
             zssfNumber: true,
-            Institution: { select: { id: true, name: true } } 
-          }
+            Institution: { select: { id: true, name: true } },
+          },
         },
-        User_CadreChangeRequest_submittedByIdToUser: { select: { id: true, name: true, username: true, role: true } },
-        User_CadreChangeRequest_reviewedByIdToUser: { select: { id: true, name: true, username: true, role: true } },
-      }
+        User_CadreChangeRequest_submittedByIdToUser: {
+          select: { id: true, name: true, username: true, role: true },
+        },
+        User_CadreChangeRequest_reviewedByIdToUser: {
+          select: { id: true, name: true, username: true, role: true },
+        },
+      },
     });
 
     if (!request) {
-      return new NextResponse('Cadre change request not found', { status: 404 });
+      return new NextResponse('Cadre change request not found', {
+        status: 404,
+      });
     }
 
     return NextResponse.json(request);
   } catch (error) {
-    console.error("[CADRE_CHANGE_GET_BY_ID]", error);
+    console.error('[CADRE_CHANGE_GET_BY_ID]', error);
     return new NextResponse('Internal Server Error', { status: 500 });
   }
 }

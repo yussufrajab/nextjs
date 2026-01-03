@@ -1,13 +1,14 @@
 # Risk Management Plan
+
 ## Civil Service Management System (CSMS)
 
 ---
 
 ### Document Control
 
-| **Version** | **Date** | **Author** | **Changes** |
-|-------------|----------|------------|-------------|
-| 1.0 | 2025-01-15 | CSMS Risk Management Team | Initial risk management plan |
+| **Version** | **Date**   | **Author**                | **Changes**                  |
+| ----------- | ---------- | ------------------------- | ---------------------------- |
+| 1.0         | 2025-01-15 | CSMS Risk Management Team | Initial risk management plan |
 
 **Document Classification**: CONFIDENTIAL
 **Distribution**: Executive Leadership, Project Management, Risk Management Team
@@ -30,10 +31,13 @@
 ## 1. Introduction
 
 ### 1.1 Purpose
+
 This Risk Management Plan establishes the framework for identifying, analyzing, responding to, and monitoring risks throughout the lifecycle of the Civil Service Management System (CSMS).
 
 ### 1.2 Scope
+
 This plan covers:
+
 - Risk identification methodologies
 - Risk analysis and assessment techniques
 - Risk response strategy development
@@ -41,6 +45,7 @@ This plan covers:
 - Roles and responsibilities for risk management
 
 ### 1.3 Objectives
+
 - Proactively identify and assess potential risks
 - Minimize the probability and impact of threats
 - Maximize the probability and impact of opportunities
@@ -50,6 +55,7 @@ This plan covers:
 ### 1.4 Risk Management Approach
 
 The CSMS project adopts a proactive, systematic approach to risk management based on:
+
 - **ISO 31000**: Risk Management - Guidelines
 - **NIST SP 800-30**: Guide for Conducting Risk Assessments
 - **PMBOK**: Project Management Body of Knowledge
@@ -120,6 +126,7 @@ The CSMS project adopts a proactive, systematic approach to risk management base
 ### 2.2 Risk Categories
 
 **Technology Risks**:
+
 - Infrastructure failures
 - Software defects
 - Integration issues
@@ -127,6 +134,7 @@ The CSMS project adopts a proactive, systematic approach to risk management base
 - Technology obsolescence
 
 **Security Risks**:
+
 - Unauthorized access
 - Data breaches
 - Cyber attacks
@@ -134,6 +142,7 @@ The CSMS project adopts a proactive, systematic approach to risk management base
 - Weak authentication
 
 **Operational Risks**:
+
 - Process failures
 - Human error
 - Inadequate resources
@@ -141,12 +150,14 @@ The CSMS project adopts a proactive, systematic approach to risk management base
 - Business continuity
 
 **Compliance Risks**:
+
 - Regulatory non-compliance
 - Data protection violations
 - Audit failures
 - Policy violations
 
 **Project Risks**:
+
 - Scope creep
 - Schedule delays
 - Budget overruns
@@ -154,6 +165,7 @@ The CSMS project adopts a proactive, systematic approach to risk management base
 - Stakeholder conflicts
 
 **Business Risks**:
+
 - User adoption challenges
 - Change resistance
 - Organizational impact
@@ -163,6 +175,7 @@ The CSMS project adopts a proactive, systematic approach to risk management base
 
 **Risk Appetite Statement**:
 The CSMS project has a **LOW to MODERATE** risk appetite, prioritizing:
+
 - Data security and privacy
 - System availability and reliability
 - Regulatory compliance
@@ -187,6 +200,7 @@ The CSMS project has a **LOW to MODERATE** risk appetite, prioritizing:
 **Frequency**: Monthly during project phase, Quarterly post-deployment
 
 **Participants**:
+
 - Project Manager
 - Technical Lead
 - Security Lead
@@ -194,6 +208,7 @@ The CSMS project has a **LOW to MODERATE** risk appetite, prioritizing:
 - Subject Matter Experts
 
 **Process**:
+
 1. Review project status and upcoming activities
 2. Identify potential risks in each category
 3. Document risks in Risk Register
@@ -201,6 +216,7 @@ The CSMS project has a **LOW to MODERATE** risk appetite, prioritizing:
 5. Assign risk owners
 
 **Sample Questions**:
+
 - What could go wrong?
 - What are we dependent on?
 - What assumptions have we made?
@@ -210,6 +226,7 @@ The CSMS project has a **LOW to MODERATE** risk appetite, prioritizing:
 #### 3.1.2 Risk Checklists
 
 **Technology Risk Checklist**:
+
 - [ ] Is the technology proven and stable?
 - [ ] Do we have expertise in this technology?
 - [ ] Are there vendor dependencies?
@@ -219,6 +236,7 @@ The CSMS project has a **LOW to MODERATE** risk appetite, prioritizing:
 - [ ] Are backups and redundancy in place?
 
 **Security Risk Checklist**:
+
 - [ ] Are authentication mechanisms strong?
 - [ ] Is data encrypted at rest and in transit?
 - [ ] Are access controls properly configured?
@@ -228,6 +246,7 @@ The CSMS project has a **LOW to MODERATE** risk appetite, prioritizing:
 - [ ] Are security logs monitored?
 
 **Operational Risk Checklist**:
+
 - [ ] Are processes well-documented?
 - [ ] Is staff adequately trained?
 - [ ] Are there backup personnel?
@@ -237,6 +256,7 @@ The CSMS project has a **LOW to MODERATE** risk appetite, prioritizing:
 - [ ] Is monitoring comprehensive?
 
 **Compliance Risk Checklist**:
+
 - [ ] Are regulatory requirements understood?
 - [ ] Is data protection compliant?
 - [ ] Are audit trails maintained?
@@ -247,24 +267,28 @@ The CSMS project has a **LOW to MODERATE** risk appetite, prioritizing:
 #### 3.1.3 SWOT Analysis
 
 **Strengths** (Build on these):
+
 - Experienced technical team
 - Executive support
 - Modern technology stack
 - Comprehensive documentation
 
 **Weaknesses** (Address these risks):
+
 - Limited in-house expertise in some areas
 - Dependency on external HRIMS API
 - First deployment of this scale
 - Limited disaster recovery testing
 
 **Opportunities** (Leverage these):
+
 - Government digital transformation initiative
 - User demand for automation
 - Potential for system expansion
 - Knowledge transfer and capacity building
 
 **Threats** (Mitigate these risks):
+
 - Cyber security threats
 - Budget constraints
 - User resistance to change
@@ -273,18 +297,21 @@ The CSMS project has a **LOW to MODERATE** risk appetite, prioritizing:
 #### 3.1.4 Expert Interviews
 
 **Interview Technical Experts**:
+
 - Database administrators
 - Security specialists
 - Network engineers
 - Application developers
 
 **Interview Business Experts**:
+
 - HR Directors
 - Department Heads
 - Civil Service Commission representatives
 - End users
 
 **Interview External Experts**:
+
 - Consultants
 - Auditors
 - Regulatory bodies
@@ -293,12 +320,14 @@ The CSMS project has a **LOW to MODERATE** risk appetite, prioritizing:
 #### 3.1.5 Historical Data Review
 
 **Review Past Projects**:
+
 - Similar government IT projects
 - HR system implementations
 - Previous incidents and failures
 - Lessons learned documentation
 
 **Analyze Trends**:
+
 - Common failure points
 - Recurring issues
 - Success factors
@@ -307,12 +336,14 @@ The CSMS project has a **LOW to MODERATE** risk appetite, prioritizing:
 ### 3.2 Risk Categories and Sources
 
 **Internal Risks**:
+
 - Technical capabilities
 - Resource availability
 - Process maturity
 - Organizational readiness
 
 **External Risks**:
+
 - Vendor reliability
 - Regulatory changes
 - Economic factors
@@ -320,6 +351,7 @@ The CSMS project has a **LOW to MODERATE** risk appetite, prioritizing:
 - Natural disasters
 
 **Project-Specific Risks**:
+
 - Next.js 14 framework complexity
 - PostgreSQL database performance
 - MinIO storage reliability
@@ -331,6 +363,7 @@ The CSMS project has a **LOW to MODERATE** risk appetite, prioritizing:
 ### 3.3 Risk Identification Tools
 
 **Risk Breakdown Structure (RBS)**:
+
 ```
 CSMS Risks
 │
@@ -388,6 +421,7 @@ CSMS Risks
 | **1 - Very Low** | Rare | Very unlikely to occur | 0-20% |
 
 **Probability Assessment Criteria**:
+
 - **Historical Data**: Has this occurred before?
 - **Expert Judgment**: What do experts think?
 - **Statistical Analysis**: What do the numbers say?
@@ -405,6 +439,7 @@ CSMS Risks
 | **1 - Very Low** | Negligible | Minimal impact, no downtime | < $5,000 / < 1 day delay |
 
 **Impact Dimensions**:
+
 - **Schedule**: Project timeline impact
 - **Cost**: Budget impact
 - **Quality**: System functionality/performance impact
@@ -416,15 +451,16 @@ CSMS Risks
 
 **Risk Score = Probability × Impact**
 
-| Probability ↓ / Impact → | 1 (Very Low) | 2 (Low) | 3 (Medium) | 4 (High) | 5 (Critical) |
-|--------------------------|--------------|---------|------------|----------|--------------|
-| **5 (Very High)** | 5 (Medium) | 10 (Medium) | 15 (High) | 20 (Critical) | 25 (Critical) |
-| **4 (High)** | 4 (Low) | 8 (Medium) | 12 (Medium) | 16 (High) | 20 (Critical) |
-| **3 (Medium)** | 3 (Low) | 6 (Medium) | 9 (Medium) | 12 (Medium) | 15 (High) |
-| **2 (Low)** | 2 (Low) | 4 (Low) | 6 (Medium) | 8 (Medium) | 10 (Medium) |
-| **1 (Very Low)** | 1 (Low) | 2 (Low) | 3 (Low) | 4 (Low) | 5 (Medium) |
+| Probability ↓ / Impact → | 1 (Very Low) | 2 (Low)     | 3 (Medium)  | 4 (High)      | 5 (Critical)  |
+| ------------------------ | ------------ | ----------- | ----------- | ------------- | ------------- |
+| **5 (Very High)**        | 5 (Medium)   | 10 (Medium) | 15 (High)   | 20 (Critical) | 25 (Critical) |
+| **4 (High)**             | 4 (Low)      | 8 (Medium)  | 12 (Medium) | 16 (High)     | 20 (Critical) |
+| **3 (Medium)**           | 3 (Low)      | 6 (Medium)  | 9 (Medium)  | 12 (Medium)   | 15 (High)     |
+| **2 (Low)**              | 2 (Low)      | 4 (Low)     | 6 (Medium)  | 8 (Medium)    | 10 (Medium)   |
+| **1 (Very Low)**         | 1 (Low)      | 2 (Low)     | 3 (Low)     | 4 (Low)       | 5 (Medium)    |
 
 **Risk Level Classification**:
+
 - **Critical (Red)**: Score 20-25
 - **High (Orange)**: Score 15-19
 - **Medium (Yellow)**: Score 10-14
@@ -437,6 +473,7 @@ CSMS Risks
 **Formula**: EMV = Probability (%) × Impact ($)
 
 **Example**:
+
 - Risk: Database server failure
 - Probability: 20%
 - Impact: $25,000 (downtime cost + recovery cost)
@@ -447,6 +484,7 @@ CSMS Risks
 #### 4.2.2 Monte Carlo Simulation
 
 **For Complex Projects**:
+
 - Simulate thousands of scenarios
 - Calculate probability distributions
 - Determine confidence intervals
@@ -457,6 +495,7 @@ CSMS Risks
 #### 4.2.3 Decision Tree Analysis
 
 **For Decision-Making Under Uncertainty**:
+
 ```
                         ┌─ Success (80%) → +$100,000
     Implement CSMS ────┤
@@ -476,6 +515,7 @@ CSMS Risks
 ### 4.3 Risk Prioritization
 
 **Prioritization Criteria**:
+
 1. **Risk Score** (P × I)
 2. **Strategic Impact**
 3. **Urgency**
@@ -501,11 +541,13 @@ CSMS Risks
 **Strategy**: Change the plan to eliminate the risk
 
 **When to Use**:
+
 - Risk is unacceptable
 - Alternative approach available
 - Cost of avoidance < cost of risk
 
 **Examples**:
+
 - **Risk**: New, unproven technology
 - **Avoidance**: Use established, proven technology
 - **Implementation**: Select PostgreSQL instead of experimental database
@@ -515,11 +557,13 @@ CSMS Risks
 **Strategy**: Reduce probability and/or impact
 
 **When to Use**:
+
 - Risk cannot be avoided
 - Mitigation is cost-effective
 - Reduces risk to acceptable level
 
 **Examples**:
+
 - **Risk**: Data breach
 - **Mitigation**: Implement encryption, access controls, monitoring
 - **Implementation**:
@@ -533,11 +577,13 @@ CSMS Risks
 **Strategy**: Shift risk to third party
 
 **When to Use**:
+
 - Specialized expertise needed
 - Cost-effective to transfer
 - Third party better positioned
 
 **Examples**:
+
 - **Risk**: Infrastructure failure
 - **Transfer**: Use cloud hosting with SLA
 - **Implementation**:
@@ -550,11 +596,13 @@ CSMS Risks
 **Strategy**: Acknowledge risk and prepare contingency
 
 **When to Use**:
+
 - Risk is low
 - Mitigation cost > risk impact
 - No other options available
 
 **Examples**:
+
 - **Risk**: Minor UI inconsistencies
 - **Acceptance**: Accept and document
 - **Contingency**: Fix in future release
@@ -562,6 +610,7 @@ CSMS Risks
 ### 5.2 Risk Response Planning
 
 **Response Plan Components**:
+
 1. **Risk Description**: What is the risk?
 2. **Response Strategy**: Avoid/Mitigate/Transfer/Accept
 3. **Response Actions**: Specific steps to execute
@@ -573,21 +622,23 @@ CSMS Risks
 
 ### 5.3 Response Strategy Selection Matrix
 
-| Risk Level | Primary Strategy | Secondary Strategy | Approval Required |
-|------------|------------------|-------------------|-------------------|
-| **Critical** | Avoid or Mitigate | Transfer | Executive Leadership |
-| **High** | Mitigate | Transfer or Avoid | Project Steering Committee |
-| **Medium** | Mitigate or Accept | Transfer | Project Manager |
-| **Low** | Accept | Monitor | Risk Owner |
+| Risk Level   | Primary Strategy   | Secondary Strategy | Approval Required          |
+| ------------ | ------------------ | ------------------ | -------------------------- |
+| **Critical** | Avoid or Mitigate  | Transfer           | Executive Leadership       |
+| **High**     | Mitigate           | Transfer or Avoid  | Project Steering Committee |
+| **Medium**   | Mitigate or Accept | Transfer           | Project Manager            |
+| **Low**      | Accept             | Monitor            | Risk Owner                 |
 
 ### 5.4 Contingency Planning
 
 **Contingency Reserve**:
+
 - **Budget**: 10% of project budget for risk contingency
 - **Schedule**: 15% schedule buffer for high-priority activities
 - **Resources**: On-call technical support
 
 **Fallback Plans**:
+
 - **Application Failure**: Rollback to previous version
 - **Database Corruption**: Restore from backup
 - **HRIMS Integration Failure**: Enable mock mode, manual data entry
@@ -596,12 +647,14 @@ CSMS Risks
 ### 5.5 Opportunity Management
 
 **Positive Risks (Opportunities)**:
+
 - **Enhance**: Increase probability of positive outcome
 - **Exploit**: Ensure opportunity is realized
 - **Share**: Partner with others to maximize benefit
 - **Accept**: Acknowledge but don't actively pursue
 
 **Examples**:
+
 - **Opportunity**: Users request additional features
 - **Strategy**: Enhance - prioritize high-value features
 - **Action**: Capture requirements, plan for future releases
@@ -613,6 +666,7 @@ CSMS Risks
 ### 6.1 Risk Monitoring Process
 
 **Continuous Activities**:
+
 1. **Track Identified Risks**: Monitor known risks
 2. **Identify New Risks**: Discover emerging risks
 3. **Reassess Existing Risks**: Re-evaluate probability/impact
@@ -634,6 +688,7 @@ CSMS Risks
 | User Adoption Issues | Training attendance declining |
 
 **Lagging Indicators** (Risk has materialized):
+
 - System downtime occurred
 - Data breach detected
 - Budget exceeded
@@ -647,6 +702,7 @@ CSMS Risks
 **Updated**: Weekly during project, Monthly post-deployment
 
 **Contains**:
+
 - All identified risks
 - Current probability and impact
 - Risk score and level
@@ -657,6 +713,7 @@ CSMS Risks
 #### 6.3.2 Risk Dashboard
 
 **Key Metrics**:
+
 - Total risks by level (Critical/High/Medium/Low)
 - New risks identified this period
 - Risks closed this period
@@ -665,6 +722,7 @@ CSMS Risks
 - Risk response implementation status
 
 **Visualization**:
+
 ```
 Risk Summary Dashboard
 
@@ -683,6 +741,7 @@ Trend: ↓ Improving
 #### 6.3.3 Risk Burn-Down Chart
 
 **Track Risk Reduction Over Time**:
+
 ```
 Risk Score
 │
@@ -707,6 +766,7 @@ Target: Reduce total risk score by 50% over 6 months
 **Participants**: Project Team
 
 **Agenda**:
+
 1. Review new risks identified
 2. Update status of existing risks
 3. Review risk triggers and indicators
@@ -720,6 +780,7 @@ Target: Reduce total risk score by 50% over 6 months
 **Participants**: Project Steering Committee
 
 **Agenda**:
+
 1. Risk summary and trends
 2. Critical and high risks review
 3. Response effectiveness review
@@ -734,6 +795,7 @@ Target: Reduce total risk score by 50% over 6 months
 **Participants**: Executive Leadership, External Auditors
 
 **Agenda**:
+
 1. Comprehensive risk review
 2. Audit of risk management process
 3. Compliance verification
@@ -745,6 +807,7 @@ Target: Reduce total risk score by 50% over 6 months
 ### 6.5 Risk Reporting
 
 **Weekly Status Report**:
+
 - New risks identified
 - Risks closed
 - Top 5 risks
@@ -752,6 +815,7 @@ Target: Reduce total risk score by 50% over 6 months
 - Issues requiring escalation
 
 **Monthly Risk Report**:
+
 - Executive summary
 - Risk statistics and trends
 - Critical and high risks detail
@@ -760,6 +824,7 @@ Target: Reduce total risk score by 50% over 6 months
 - Recommendations
 
 **Quarterly Risk Assessment Report**:
+
 - Comprehensive risk analysis
 - Risk management effectiveness
 - Lessons learned
@@ -769,6 +834,7 @@ Target: Reduce total risk score by 50% over 6 months
 ### 6.6 Risk Escalation
 
 **Escalation Criteria**:
+
 - New critical risk identified
 - Existing risk increased to critical
 - Risk response not effective
@@ -776,11 +842,13 @@ Target: Reduce total risk score by 50% over 6 months
 - Risk impacting project objectives
 
 **Escalation Path**:
+
 1. **Risk Owner** → **Project Manager** (all risks)
 2. **Project Manager** → **Project Steering Committee** (high/critical risks)
 3. **Project Steering Committee** → **Executive Leadership** (critical risks)
 
 **Escalation Timeframe**:
+
 - **Critical Risks**: Immediate (within 4 hours)
 - **High Risks**: Within 24 hours
 - **Medium Risks**: Within 1 week
@@ -791,27 +859,27 @@ Target: Reduce total risk score by 50% over 6 months
 
 ### 7.1 Risk Management Roles
 
-| Role | Responsibilities |
-|------|------------------|
-| **Executive Sponsor** | - Provide strategic direction<br>- Approve critical risk responses<br>- Allocate contingency resources<br>- Review quarterly risk reports |
-| **Project Manager** | - Overall risk management accountability<br>- Facilitate risk identification<br>- Coordinate risk responses<br>- Update Risk Register<br>- Report to stakeholders |
-| **Risk Manager** | - Develop risk management plan<br>- Conduct risk assessments<br>- Maintain Risk Register<br>- Monitor risk trends<br>- Provide risk expertise |
-| **Technical Lead** | - Identify technical risks<br>- Assess technical risk impact<br>- Develop technical risk responses<br>- Implement technical mitigations |
-| **Security Lead** | - Identify security risks<br>- Conduct security assessments<br>- Develop security risk responses<br>- Monitor security threats |
-| **Risk Owners** | - Monitor assigned risks<br>- Implement response actions<br>- Report risk status<br>- Escalate issues<br>- Update Risk Register |
-| **Project Team** | - Identify risks in their areas<br>- Support risk assessments<br>- Implement response actions<br>- Report new risks and changes |
+| Role                  | Responsibilities                                                                                                                                                  |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Executive Sponsor** | - Provide strategic direction<br>- Approve critical risk responses<br>- Allocate contingency resources<br>- Review quarterly risk reports                         |
+| **Project Manager**   | - Overall risk management accountability<br>- Facilitate risk identification<br>- Coordinate risk responses<br>- Update Risk Register<br>- Report to stakeholders |
+| **Risk Manager**      | - Develop risk management plan<br>- Conduct risk assessments<br>- Maintain Risk Register<br>- Monitor risk trends<br>- Provide risk expertise                     |
+| **Technical Lead**    | - Identify technical risks<br>- Assess technical risk impact<br>- Develop technical risk responses<br>- Implement technical mitigations                           |
+| **Security Lead**     | - Identify security risks<br>- Conduct security assessments<br>- Develop security risk responses<br>- Monitor security threats                                    |
+| **Risk Owners**       | - Monitor assigned risks<br>- Implement response actions<br>- Report risk status<br>- Escalate issues<br>- Update Risk Register                                   |
+| **Project Team**      | - Identify risks in their areas<br>- Support risk assessments<br>- Implement response actions<br>- Report new risks and changes                                   |
 
 ### 7.2 RACI Matrix
 
-| Activity | Executive Sponsor | Project Manager | Risk Manager | Technical Lead | Risk Owner | Team |
-|----------|------------------|-----------------|--------------|----------------|------------|------|
-| **Risk Management Plan** | A | R | C | C | I | I |
-| **Risk Identification** | I | A | R | C | C | C |
-| **Risk Analysis** | I | A | R | C | C | I |
-| **Risk Response Planning** | A (Critical) | A | R | C | R | C |
-| **Risk Monitoring** | I | A | R | C | R | C |
-| **Risk Register Updates** | I | A | R | C | R | I |
-| **Risk Reporting** | I | A | R | I | C | I |
+| Activity                   | Executive Sponsor | Project Manager | Risk Manager | Technical Lead | Risk Owner | Team |
+| -------------------------- | ----------------- | --------------- | ------------ | -------------- | ---------- | ---- |
+| **Risk Management Plan**   | A                 | R               | C            | C              | I          | I    |
+| **Risk Identification**    | I                 | A               | R            | C              | C          | C    |
+| **Risk Analysis**          | I                 | A               | R            | C              | C          | I    |
+| **Risk Response Planning** | A (Critical)      | A               | R            | C              | R          | C    |
+| **Risk Monitoring**        | I                 | A               | R            | C              | R          | C    |
+| **Risk Register Updates**  | I                 | A               | R            | C              | R          | I    |
+| **Risk Reporting**         | I                 | A               | R            | I              | C          | I    |
 
 **Legend**: R = Responsible, A = Accountable, C = Consulted, I = Informed
 
@@ -836,12 +904,14 @@ PLAN → IDENTIFY → ANALYZE → RESPOND → MONITOR → REPORT
 ### 8.2 Process Steps
 
 **Step 1: Plan** (Annual)
+
 - Develop/update Risk Management Plan
 - Define risk categories and thresholds
 - Assign roles and responsibilities
 - Establish risk review schedule
 
 **Step 2: Identify** (Ongoing)
+
 - Conduct brainstorming sessions
 - Use risk checklists
 - Interview experts
@@ -849,12 +919,14 @@ PLAN → IDENTIFY → ANALYZE → RESPOND → MONITOR → REPORT
 - Document in Risk Register
 
 **Step 3: Analyze** (Weekly)
+
 - Assess probability and impact
 - Calculate risk score
 - Prioritize risks
 - Evaluate risk trends
 
 **Step 4: Respond** (As needed)
+
 - Select response strategy
 - Develop response plan
 - Assign risk owner
@@ -862,6 +934,7 @@ PLAN → IDENTIFY → ANALYZE → RESPOND → MONITOR → REPORT
 - Implement response
 
 **Step 5: Monitor** (Ongoing)
+
 - Track risk indicators
 - Review risk status
 - Assess response effectiveness
@@ -869,6 +942,7 @@ PLAN → IDENTIFY → ANALYZE → RESPOND → MONITOR → REPORT
 - Update Risk Register
 
 **Step 6: Report** (Weekly/Monthly/Quarterly)
+
 - Prepare risk reports
 - Present to stakeholders
 - Document decisions
@@ -877,6 +951,7 @@ PLAN → IDENTIFY → ANALYZE → RESPOND → MONITOR → REPORT
 ### 8.3 Process Metrics
 
 **Risk Management Effectiveness Metrics**:
+
 - % of risks with response plans
 - % of risks on schedule
 - % of risks within budget
@@ -886,6 +961,7 @@ PLAN → IDENTIFY → ANALYZE → RESPOND → MONITOR → REPORT
 - Stakeholder satisfaction with risk management
 
 **Target KPIs**:
+
 - 100% of critical/high risks have response plans
 - 90% of response actions completed on time
 - 0 critical risks open > 30 days
@@ -894,6 +970,7 @@ PLAN → IDENTIFY → ANALYZE → RESPOND → MONITOR → REPORT
 ### 8.4 Integration with Project Management
 
 **Risk Management Integration Points**:
+
 - **Scope Management**: Risk of scope creep
 - **Schedule Management**: Risk of delays
 - **Cost Management**: Risk of budget overrun
@@ -986,13 +1063,13 @@ Risk Owner: __________ Date: ______
 
 ### Appendix D: Contact List
 
-| Role | Name | Email | Phone |
-|------|------|-------|-------|
+| Role              | Name   | Email   | Phone   |
+| ----------------- | ------ | ------- | ------- |
 | Executive Sponsor | [NAME] | [EMAIL] | [PHONE] |
-| Project Manager | [NAME] | [EMAIL] | [PHONE] |
-| Risk Manager | [NAME] | [EMAIL] | [PHONE] |
-| Technical Lead | [NAME] | [EMAIL] | [PHONE] |
-| Security Lead | [NAME] | [EMAIL] | [PHONE] |
+| Project Manager   | [NAME] | [EMAIL] | [PHONE] |
+| Risk Manager      | [NAME] | [EMAIL] | [PHONE] |
+| Technical Lead    | [NAME] | [EMAIL] | [PHONE] |
+| Security Lead     | [NAME] | [EMAIL] | [PHONE] |
 
 ---
 

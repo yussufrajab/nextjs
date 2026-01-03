@@ -75,7 +75,11 @@ export async function POST(req: Request) {
 
       if (!session) {
         return NextResponse.json(
-          { success: false, message: 'Invalid or expired session', isValid: false },
+          {
+            success: false,
+            message: 'Invalid or expired session',
+            isValid: false,
+          },
           { status: 401 }
         );
       }

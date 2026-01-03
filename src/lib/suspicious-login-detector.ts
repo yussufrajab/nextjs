@@ -159,7 +159,9 @@ export function getLoginSummary(context: LoginContext): {
   location: string;
   time: string;
 } {
-  const device = context.userAgent ? parseDeviceType(context.userAgent) : 'Unknown Device';
+  const device = context.userAgent
+    ? parseDeviceType(context.userAgent)
+    : 'Unknown Device';
   const location = context.ipAddress || 'Unknown Location';
   const time = new Date().toLocaleString('en-US', {
     dateStyle: 'medium',

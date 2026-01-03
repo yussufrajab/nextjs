@@ -18,13 +18,23 @@ export async function GET(req: Request) {
     const limit = parseInt(searchParams.get('limit') || '50');
     const skip = (page - 1) * limit;
 
-    console.log('Urgent actions API called with:', { userRole, userInstitutionId, countOnly, page, limit });
+    console.log('Urgent actions API called with:', {
+      userRole,
+      userInstitutionId,
+      countOnly,
+      page,
+      limit,
+    });
 
     // Get employees that need urgent actions
     const today = new Date();
     const threeMonthsFromNow = new Date();
     threeMonthsFromNow.setMonth(threeMonthsFromNow.getMonth() + 3);
-    const threeYearsAgo = new Date(today.getFullYear() - 3, today.getMonth(), today.getDate());
+    const threeYearsAgo = new Date(
+      today.getFullYear() - 3,
+      today.getMonth(),
+      today.getDate()
+    );
 
     // Calculate cutoff date for retirement: 59.5 years ago
     // 59.5 years = 59 years + 6 months
@@ -43,42 +53,52 @@ export async function GET(req: Request) {
       console.log('Fetching counts only (optimized)...');
 
       // Parallel count queries for better performance
-      const [nearingRetirementCount, probationOverdueCount] = await Promise.all([
-        // Count employees approaching retirement (59.5 years or older)
-        db.employee.count({
-          where: {
-            ...baseWhere,
-            dateOfBirth: {
-              not: null,
-              lte: retirementAgeCutoff
+      const [nearingRetirementCount, probationOverdueCount] = await Promise.all(
+        [
+          // Count employees approaching retirement (59.5 years or older)
+          db.employee.count({
+            where: {
+              ...baseWhere,
+              dateOfBirth: {
+                not: null,
+                lte: retirementAgeCutoff,
+              },
+              status: {
+                in: ['On Probation', 'Confirmed'],
+              },
             },
-            status: {
-              in: ['On Probation', 'Confirmed']
-            }
-          }
-        }),
-        // Count employees with overdue probation
-        db.employee.count({
-          where: {
-            ...baseWhere,
-            status: { not: 'Confirmed' },
-            employmentDate: { lte: threeYearsAgo }
-          }
-        })
-      ]);
+          }),
+          // Count employees with overdue probation
+          db.employee.count({
+            where: {
+              ...baseWhere,
+              status: { not: 'Confirmed' },
+              employmentDate: { lte: threeYearsAgo },
+            },
+          }),
+        ]
+      );
 
-      console.log(`Urgent counts: ${nearingRetirementCount} aged 59.5+ years, ${probationOverdueCount} probation - completed in ${Date.now() - startTime}ms`);
+      console.log(
+        `Urgent counts: ${nearingRetirementCount} aged 59.5+ years, ${probationOverdueCount} probation - completed in ${Date.now() - startTime}ms`
+      );
 
       const headers = new Headers();
-      headers.set('Cache-Control', `public, s-maxage=${CACHE_TTL}, stale-while-revalidate=${CACHE_TTL * 2}`);
+      headers.set(
+        'Cache-Control',
+        `public, s-maxage=${CACHE_TTL}, stale-while-revalidate=${CACHE_TTL * 2}`
+      );
 
-      return NextResponse.json({
-        success: true,
-        data: {
-          probationOverdue: Array(probationOverdueCount).fill(null),
-          nearingRetirement: Array(nearingRetirementCount).fill(null)
-        }
-      }, { headers });
+      return NextResponse.json(
+        {
+          success: true,
+          data: {
+            probationOverdue: Array(probationOverdueCount).fill(null),
+            nearingRetirement: Array(nearingRetirementCount).fill(null),
+          },
+        },
+        { headers }
+      );
     }
 
     // ===== Full data fetch with server-side pagination =====
@@ -88,22 +108,27 @@ export async function GET(req: Request) {
     const probationWhere: any = {
       ...baseWhere,
       status: { not: 'Confirmed' },
-      employmentDate: { lte: threeYearsAgo }
+      employmentDate: { lte: threeYearsAgo },
     };
 
     const retirementWhere: any = {
       ...baseWhere,
       dateOfBirth: {
         not: null,
-        lte: retirementAgeCutoff
+        lte: retirementAgeCutoff,
       },
       status: {
-        in: ['On Probation', 'Confirmed']
-      }
+        in: ['On Probation', 'Confirmed'],
+      },
     };
 
     // Fetch counts and data in parallel
-    const [probationCount, retirementCount, probationEmployees, retirementEmployees] = await Promise.all([
+    const [
+      probationCount,
+      retirementCount,
+      probationEmployees,
+      retirementEmployees,
+    ] = await Promise.all([
       db.employee.count({ where: probationWhere }),
       db.employee.count({ where: retirementWhere }),
       db.employee.findMany({
@@ -120,13 +145,13 @@ export async function GET(req: Request) {
           Institution: {
             select: {
               id: true,
-              name: true
-            }
-          }
+              name: true,
+            },
+          },
         },
         orderBy: { name: 'asc' },
         skip,
-        take: limit
+        take: limit,
       }),
       db.employee.findMany({
         where: retirementWhere,
@@ -142,43 +167,53 @@ export async function GET(req: Request) {
           Institution: {
             select: {
               id: true,
-              name: true
-            }
-          }
+              name: true,
+            },
+          },
         },
         orderBy: { name: 'asc' },
         skip,
-        take: limit
-      })
+        take: limit,
+      }),
     ]);
 
-    console.log(`Fetched page ${page} - Probation: ${probationEmployees.length}/${probationCount}, Retirement: ${retirementEmployees.length}/${retirementCount} in ${Date.now() - startTime}ms`);
+    console.log(
+      `Fetched page ${page} - Probation: ${probationEmployees.length}/${probationCount}, Retirement: ${retirementEmployees.length}/${retirementCount} in ${Date.now() - startTime}ms`
+    );
 
     const headers = new Headers();
-    headers.set('Cache-Control', `public, s-maxage=${CACHE_TTL}, stale-while-revalidate=${CACHE_TTL * 2}`);
+    headers.set(
+      'Cache-Control',
+      `public, s-maxage=${CACHE_TTL}, stale-while-revalidate=${CACHE_TTL * 2}`
+    );
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        probationOverdue: probationEmployees,
-        nearingRetirement: retirementEmployees,
-        pagination: {
-          page,
-          limit,
-          totalProbation: probationCount,
-          totalRetirement: retirementCount,
-          totalPagesProbation: Math.ceil(probationCount / limit),
-          totalPagesRetirement: Math.ceil(retirementCount / limit)
-        }
-      }
-    }, { headers });
-
+    return NextResponse.json(
+      {
+        success: true,
+        data: {
+          probationOverdue: probationEmployees,
+          nearingRetirement: retirementEmployees,
+          pagination: {
+            page,
+            limit,
+            totalProbation: probationCount,
+            totalRetirement: retirementCount,
+            totalPagesProbation: Math.ceil(probationCount / limit),
+            totalPagesRetirement: Math.ceil(retirementCount / limit),
+          },
+        },
+      },
+      { headers }
+    );
   } catch (error) {
-    console.error("[URGENT_ACTIONS_GET]", error);
-    return NextResponse.json({
-      success: false,
-      message: 'Internal Server Error',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+    console.error('[URGENT_ACTIONS_GET]', error);
+    return NextResponse.json(
+      {
+        success: false,
+        message: 'Internal Server Error',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
   }
 }

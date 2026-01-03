@@ -1,4 +1,5 @@
 # SYSTEM DESIGN DOCUMENT (SDD)
+
 ## CIVIL SERVICE MANAGEMENT SYSTEM (CSMS)
 
 **Version 1.0 | December 25, 2025**
@@ -10,6 +11,7 @@
 This System Design Document provides comprehensive technical specifications for implementing the Civil Service Management System (CSMS). The document translates requirements from the SRS into actionable technical designs covering architecture, database, APIs, security, UI, and deployment.
 
 **Key Technologies:**
+
 - Next.js 16 (Full-stack framework)
 - TypeScript (Type safety)
 - PostgreSQL 15 (Database)
@@ -92,6 +94,7 @@ The system follows a layered monolithic architecture:
 **Total Tables:** ~25 tables
 
 **Core Table Groups:**
+
 1. Users & Auth (2 tables)
 2. Organization (1 table)
 3. Employees (3 tables)
@@ -115,6 +118,7 @@ User (1:M) → Audit Logs
 ### 2.3 Critical Tables (Simplified Schema)
 
 **users:**
+
 - id (UUID, PK)
 - username (unique)
 - passwordHash
@@ -124,6 +128,7 @@ User (1:M) → Audit Logs
 - status (enum)
 
 **employees:**
+
 - id (UUID, PK)
 - payrollNumber (unique)
 - zanId (unique)
@@ -135,6 +140,7 @@ User (1:M) → Audit Logs
 - confirmationDate
 
 **confirmation_requests:**
+
 - id (UUID, PK)
 - employeeId (FK)
 - probationEndDate
@@ -145,6 +151,7 @@ User (1:M) → Audit Logs
 - approvalDate
 
 **complaints:**
+
 - id (UUID, PK)
 - complaintNumber (unique)
 - employeeId (FK)
@@ -155,6 +162,7 @@ User (1:M) → Audit Logs
 - resolvedBy (FK)
 
 **audit_logs:**
+
 - id (UUID, PK)
 - timestamp
 - userId (FK)
@@ -167,22 +175,26 @@ User (1:M) → Audit Logs
 ### 2.4 Indexing Strategy
 
 **Primary Indexes:**
+
 - All `id` fields (auto-indexed)
 
 **Unique Indexes:**
+
 - username, email
 - payrollNumber, zanId, zssfNumber
 - complaintNumber
 
 **Performance Indexes:**
+
 - Foreign keys (institutionId, employeeId, etc.)
 - Status fields
 - Date fields (submissionDate, employmentDate)
 - Composite indexes for common queries
 
 **Example Composite Index:**
+
 ```sql
-CREATE INDEX idx_requests_status_date 
+CREATE INDEX idx_requests_status_date
 ON confirmation_requests(status, submission_date DESC);
 ```
 
@@ -195,6 +207,7 @@ ON confirmation_requests(status, submission_date DESC);
 **Base URL:** `/api/`
 
 **HTTP Methods:**
+
 - GET: Retrieve resources
 - POST: Create resources
 - PUT: Update resources
@@ -203,6 +216,7 @@ ON confirmation_requests(status, submission_date DESC);
 ### 3.2 Core Endpoints
 
 **Authentication:**
+
 ```
 POST /api/auth/login
 POST /api/auth/employee-login
@@ -213,6 +227,7 @@ GET  /api/auth/me
 ```
 
 **Employees:**
+
 ```
 GET    /api/employees
 GET    /api/employees/{id}
@@ -223,6 +238,7 @@ POST   /api/employees/{id}/documents
 ```
 
 **Requests (Pattern applies to all 9 types):**
+
 ```
 GET  /api/requests/confirmation
 POST /api/requests/confirmation
@@ -233,6 +249,7 @@ POST /api/requests/confirmation/{id}/send-back
 ```
 
 **Complaints:**
+
 ```
 GET  /api/complaints
 POST /api/complaints
@@ -243,6 +260,7 @@ POST /api/complaints/{id}/escalate
 ```
 
 **Reports:**
+
 ```
 POST /api/reports/generate
 POST /api/reports/custom
@@ -250,6 +268,7 @@ POST /api/reports/schedule
 ```
 
 **Files:**
+
 ```
 POST /api/files/upload
 GET  /api/files/download/{id}
@@ -258,14 +277,18 @@ GET  /api/files/download/{id}
 ### 3.3 Response Formats
 
 **Success:**
+
 ```json
 {
   "success": true,
-  "data": { /* response data */ }
+  "data": {
+    /* response data */
+  }
 }
 ```
 
 **Error:**
+
 ```json
 {
   "success": false,
@@ -278,6 +301,7 @@ GET  /api/files/download/{id}
 ```
 
 **Paginated:**
+
 ```json
 {
   "success": true,
@@ -300,6 +324,7 @@ GET  /api/files/download/{id}
 ### 4.1 Authentication System
 
 **JWT Token Structure:**
+
 ```json
 {
   "userId": "uuid",
@@ -312,6 +337,7 @@ GET  /api/files/download/{id}
 ```
 
 **Token Lifecycle:**
+
 1. Generate on login
 2. Store in httpOnly cookie
 3. Validate on each request
@@ -319,6 +345,7 @@ GET  /api/files/download/{id}
 5. Invalidate on logout
 
 **Password Security:**
+
 - Bcrypt hashing (cost factor 10)
 - Minimum 8 characters
 - Complexity requirements enforced
@@ -330,10 +357,12 @@ GET  /api/files/download/{id}
 **Role Hierarchy:**
 
 **Institution-Level:**
+
 - HRO: Submit requests (own institution)
 - HRRP: View requests (own institution)
 
 **CSC-Wide:**
+
 - HHRMD: Approve all requests
 - HRMO: Approve HR requests only
 - DO: Approve disciplinary requests only
@@ -341,15 +370,17 @@ GET  /api/files/download/{id}
 - CSCS: Executive oversight
 
 **System-Wide:**
+
 - ADMIN: User management, system config
 
 **Authorization Middleware:**
+
 ```typescript
 function checkRole(allowedRoles: UserRole[]) {
   return (req, res, next) => {
     const user = req.user; // from JWT
     if (!allowedRoles.includes(user.role)) {
-      return res.status(403).json({ error: "Access denied" });
+      return res.status(403).json({ error: 'Access denied' });
     }
     next();
   };
@@ -359,12 +390,14 @@ function checkRole(allowedRoles: UserRole[]) {
 ### 4.3 Data Security
 
 **Encryption:**
+
 - Data in transit: TLS 1.2+
 - Data at rest: AES-256 (MinIO)
 - Passwords: Bcrypt
 - Sensitive fields: Application-level encryption
 
 **File Upload Security:**
+
 - Type validation (PDF, JPEG, PNG only)
 - Size limits (2MB standard, 1MB complaints)
 - Virus scanning
@@ -372,11 +405,13 @@ function checkRole(allowedRoles: UserRole[]) {
 - Filename sanitization
 
 **SQL Injection Prevention:**
+
 - Prisma ORM (parameterized queries)
 - No raw SQL (except admin reports)
 - Input validation on all endpoints
 
 **XSS Prevention:**
+
 - React auto-escaping
 - Content Security Policy headers
 - Sanitize user input
@@ -385,6 +420,7 @@ function checkRole(allowedRoles: UserRole[]) {
 ### 4.4 Rate Limiting
 
 **Limits:**
+
 - Authentication: 10 attempts/min per IP
 - API calls: 100 requests/min per user
 - File uploads: 20 uploads/hour per user
@@ -399,6 +435,7 @@ function checkRole(allowedRoles: UserRole[]) {
 **Framework:** Tailwind CSS + Radix UI
 
 **Color Palette:**
+
 - Primary: Blue (#2563eb)
 - Success: Green (#10b981)
 - Warning: Yellow (#f59e0b)
@@ -406,12 +443,14 @@ function checkRole(allowedRoles: UserRole[]) {
 - Neutral: Gray (#6b7280)
 
 **Typography:**
+
 - Font: Inter (sans-serif)
 - Headings: 24-32px (bold)
 - Body: 14-16px (regular)
 - Small: 12px (labels, captions)
 
 **Spacing:**
+
 - Base unit: 4px (Tailwind scale)
 - Padding: 4px, 8px, 12px, 16px, 24px
 - Margins: 8px, 16px, 24px, 32px
@@ -419,6 +458,7 @@ function checkRole(allowedRoles: UserRole[]) {
 ### 5.2 Component Library
 
 **Reusable Components:**
+
 - Button (Primary, Secondary, Danger, Ghost)
 - Input (Text, Email, Tel, Date, Select)
 - Table (Sortable, Paginated, Filterable)
@@ -433,6 +473,7 @@ function checkRole(allowedRoles: UserRole[]) {
 ### 5.3 Layout Structure
 
 **Dashboard Layout:**
+
 ```
 ┌────────────────────────────────────────┐
 │  Header (Logo, Nav, User, Notifications)│
@@ -451,6 +492,7 @@ function checkRole(allowedRoles: UserRole[]) {
 ```
 
 **Responsive Breakpoints:**
+
 - Desktop: ≥1024px (full layout)
 - Tablet: 768-1023px (adapted layout)
 - Mobile: <768px (not supported, redirect notice)
@@ -458,6 +500,7 @@ function checkRole(allowedRoles: UserRole[]) {
 ### 5.4 Navigation
 
 **Primary Navigation:**
+
 - Dashboard
 - Employees
 - Requests (with submenu)
@@ -469,6 +512,7 @@ function checkRole(allowedRoles: UserRole[]) {
 Dashboard > Employees > John Doe > Edit
 
 **User Menu:**
+
 - Profile
 - Settings
 - Change Password
@@ -481,6 +525,7 @@ Dashboard > Employees > John Doe > Edit
 ### 6.1 MinIO Architecture
 
 **Bucket Structure:**
+
 ```
 csms-bucket/
 ├── employee-documents/
@@ -539,6 +584,7 @@ csms-bucket/
 **Operating System:** Ubuntu Server 24.04 LTS
 
 **Server Software:**
+
 - **Web Server:** Nginx (reverse proxy)
 - **Application:** Next.js (Node.js runtime)
 - **Database:** PostgreSQL 15
@@ -588,6 +634,7 @@ server {
 **Installation Path:** `/www/wwwroot/nextjs`
 
 **Environment Variables (.env):**
+
 ```
 # Database
 DATABASE_URL="postgresql://user:pass@localhost:5432/csms"
@@ -615,27 +662,31 @@ PORT="9002"
 ```
 
 **PM2 Configuration:**
+
 ```javascript
 // ecosystem.config.js
 module.exports = {
-  apps: [{
-    name: 'csms',
-    script: 'node_modules/next/dist/bin/next',
-    args: 'start -p 9002',
-    cwd: '/www/wwwroot/nextjs',
-    instances: 2,
-    exec_mode: 'cluster',
-    watch: false,
-    max_memory_restart: '1G',
-    env: {
-      NODE_ENV: 'production',
-      PORT: 9002
-    }
-  }]
+  apps: [
+    {
+      name: 'csms',
+      script: 'node_modules/next/dist/bin/next',
+      args: 'start -p 9002',
+      cwd: '/www/wwwroot/nextjs',
+      instances: 2,
+      exec_mode: 'cluster',
+      watch: false,
+      max_memory_restart: '1G',
+      env: {
+        NODE_ENV: 'production',
+        PORT: 9002,
+      },
+    },
+  ],
 };
 ```
 
 **Deployment Steps:**
+
 ```bash
 # 1. Pull latest code
 cd /www/wwwroot/nextjs
@@ -661,6 +712,7 @@ pm2 logs csms
 ### 7.4 Database Configuration
 
 **PostgreSQL Setup:**
+
 ```sql
 -- Create database
 CREATE DATABASE csms;
@@ -676,11 +728,13 @@ ALTER DATABASE csms SET timezone TO 'Africa/Dar_es_Salaam';
 ```
 
 **Connection Pooling:**
+
 - Max connections: 20
 - Idle timeout: 30 seconds
 - Connection timeout: 5 seconds
 
 **Backup Strategy:**
+
 ```bash
 # Daily automated backup (cron)
 0 2 * * * pg_dump csms > /backups/csms_$(date +\%Y\%m\%d).sql
@@ -711,6 +765,7 @@ mc version enable local/csms-bucket
 ### 8.1 Database Optimization
 
 **Query Optimization:**
+
 - Use indexes for frequently queried fields
 - Avoid N+1 queries (use Prisma include/select)
 - Implement pagination (limit/offset or cursor-based)
@@ -718,34 +773,38 @@ mc version enable local/csms-bucket
 - Connection pooling
 
 **Example Optimized Query:**
+
 ```typescript
 // Bad: N+1 query
 const employees = await prisma.employee.findMany();
 for (const emp of employees) {
   emp.institution = await prisma.institution.findUnique({
-    where: { id: emp.institutionId }
+    where: { id: emp.institutionId },
   });
 }
 
 // Good: Single query with join
 const employees = await prisma.employee.findMany({
-  include: { institution: true }
+  include: { institution: true },
 });
 ```
 
 ### 8.2 Application Optimization
 
 **Server-Side Rendering (SSR):**
+
 - Use React Server Components for static content
 - Client Components only for interactivity
 - Reduces JavaScript bundle size
 
 **Code Splitting:**
+
 - Lazy load routes
 - Dynamic imports for heavy components
 - Separate vendor bundles
 
 **Caching:**
+
 - Static asset caching (Nginx)
 - API response caching (future: Redis)
 - Browser caching (Cache-Control headers)
@@ -753,11 +812,13 @@ const employees = await prisma.employee.findMany({
 ### 8.3 File Optimization
 
 **Image Optimization:**
+
 - Compress profile images on upload
 - Serve WebP format when supported
 - Lazy loading for images
 
 **Document Handling:**
+
 - Stream large files instead of loading into memory
 - Implement file chunking for uploads >5MB
 - Compress documents before storage
@@ -769,6 +830,7 @@ const employees = await prisma.employee.findMany({
 ### 9.1 Error Handling
 
 **Error Types:**
+
 ```typescript
 class ValidationError extends Error {
   statusCode = 400;
@@ -792,31 +854,34 @@ class InternalError extends Error {
 ```
 
 **Global Error Handler:**
+
 ```typescript
 export function errorHandler(error: Error) {
   if (error instanceof ValidationError) {
     return { status: 400, message: error.message };
   }
   if (error instanceof AuthenticationError) {
-    return { status: 401, message: "Authentication failed" };
+    return { status: 401, message: 'Authentication failed' };
   }
   // ... other error types
-  
+
   // Log unexpected errors
-  console.error("Unexpected error:", error);
-  return { status: 500, message: "Internal server error" };
+  console.error('Unexpected error:', error);
+  return { status: 500, message: 'Internal server error' };
 }
 ```
 
 ### 9.2 Logging
 
 **Log Levels:**
+
 - ERROR: Application errors
 - WARN: Warnings
 - INFO: General information
 - DEBUG: Debugging information
 
 **Log Format:**
+
 ```json
 {
   "timestamp": "2025-12-25T10:30:45Z",
@@ -829,6 +894,7 @@ export function errorHandler(error: Error) {
 ```
 
 **Log Storage:**
+
 - Development: Console
 - Production: File (`/www/wwwroot/nextjs/logs/app.log`)
 - Rotation: Daily, keep 30 days
@@ -840,18 +906,21 @@ export function errorHandler(error: Error) {
 ### 10.1 Test Types
 
 **Unit Tests:**
+
 - Test individual functions
 - Service layer logic
 - Utility functions
 - Framework: Jest
 
 **Integration Tests:**
+
 - Test API endpoints
 - Database operations
 - File uploads
 - Framework: Jest + Supertest
 
 **End-to-End Tests:**
+
 - Test user workflows
 - Complete request submission and approval
 - Framework: Playwright or Cypress
@@ -861,6 +930,7 @@ export function errorHandler(error: Error) {
 **Target:** 80% code coverage
 
 **Priority Testing Areas:**
+
 - Authentication flows
 - Request approval workflows
 - RBAC authorization
@@ -871,6 +941,7 @@ export function errorHandler(error: Error) {
 ### 10.3 Example Tests
 
 **Unit Test:**
+
 ```typescript
 describe('PasswordService', () => {
   it('should hash password correctly', async () => {
@@ -879,7 +950,7 @@ describe('PasswordService', () => {
     expect(hash).not.toBe(password);
     expect(await PasswordService.verify(password, hash)).toBe(true);
   });
-  
+
   it('should validate password strength', () => {
     expect(PasswordService.isStrong('Test@123')).toBe(true);
     expect(PasswordService.isStrong('weak')).toBe(false);
@@ -888,23 +959,24 @@ describe('PasswordService', () => {
 ```
 
 **Integration Test:**
+
 ```typescript
 describe('POST /api/auth/login', () => {
   it('should login with valid credentials', async () => {
     const response = await request(app)
       .post('/api/auth/login')
       .send({ username: 'admin', password: 'Admin@123' });
-    
+
     expect(response.status).toBe(200);
     expect(response.body.success).toBe(true);
     expect(response.body.data.token).toBeDefined();
   });
-  
+
   it('should fail with invalid credentials', async () => {
     const response = await request(app)
       .post('/api/auth/login')
       .send({ username: 'admin', password: 'wrong' });
-    
+
     expect(response.status).toBe(401);
     expect(response.body.success).toBe(false);
   });
@@ -930,14 +1002,16 @@ describe('POST /api/auth/login', () => {
 ### B. Third-Party Libraries
 
 **Core:**
+
 - next: 16.x
 - react: 18.x
 - typescript: 5.x
 - @prisma/client: 5.x
 - tailwindcss: 3.x
-- @radix-ui/react-*: Latest
+- @radix-ui/react-\*: Latest
 
 **Utilities:**
+
 - bcrypt: Password hashing
 - jsonwebtoken: JWT tokens
 - nodemailer: Email sending
@@ -946,6 +1020,7 @@ describe('POST /api/auth/login', () => {
 - lucide-react: Icons
 
 **Development:**
+
 - jest: Testing
 - eslint: Linting
 - prettier: Code formatting
@@ -954,6 +1029,7 @@ describe('POST /api/auth/login', () => {
 ### C. Environment Setup
 
 **Development:**
+
 ```bash
 # Install dependencies
 npm install
@@ -969,6 +1045,7 @@ npm run dev
 ```
 
 **Production:**
+
 ```bash
 # Build application
 npm run build
@@ -983,6 +1060,7 @@ pm2 start ecosystem.config.js
 ### D. Monitoring & Maintenance
 
 **Health Checks:**
+
 - Database connectivity
 - MinIO availability
 - Disk space usage
@@ -990,12 +1068,14 @@ pm2 start ecosystem.config.js
 - CPU usage
 
 **Alerts:**
+
 - System errors (500 errors)
 - Failed logins (>10/min)
 - Disk space <10%
 - Database connection failures
 
 **Maintenance Tasks:**
+
 - Database backup (daily)
 - Log rotation (daily)
 - Index rebuild (weekly)
@@ -1006,26 +1086,26 @@ pm2 start ecosystem.config.js
 
 ## Document Approval
 
-| Role | Name | Signature | Date |
-|------|------|-----------|------|
-| **Lead Architect** | | | |
-| **Lead Developer** | | | |
-| **Database Administrator** | | | |
-| **Security Officer** | | | |
-| **Project Manager** | | | |
+| Role                       | Name | Signature | Date |
+| -------------------------- | ---- | --------- | ---- |
+| **Lead Architect**         |      |           |      |
+| **Lead Developer**         |      |           |      |
+| **Database Administrator** |      |           |      |
+| **Security Officer**       |      |           |      |
+| **Project Manager**        |      |           |      |
 
 ---
 
 ## Revision History
 
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 0.1 | Dec 20, 2025 | Architecture Team | Initial draft |
-| 0.5 | Dec 23, 2025 | Architecture Team | Added detailed designs |
-| 1.0 | Dec 25, 2025 | Architecture Team | Final version for approval |
+| Version | Date         | Author            | Changes                    |
+| ------- | ------------ | ----------------- | -------------------------- |
+| 0.1     | Dec 20, 2025 | Architecture Team | Initial draft              |
+| 0.5     | Dec 23, 2025 | Architecture Team | Added detailed designs     |
+| 1.0     | Dec 25, 2025 | Architecture Team | Final version for approval |
 
 ---
 
 **END OF SYSTEM DESIGN DOCUMENT**
 
-*This document is confidential and proprietary to the Civil Service Commission of Zanzibar.*
+_This document is confidential and proprietary to the Civil Service Commission of Zanzibar._

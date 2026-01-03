@@ -31,14 +31,16 @@ export async function loadPdfExporter() {
     // Load jsPDF and autotable plugin in parallel
     const [jsPDFModule, autoTableModule] = await Promise.all([
       import('jspdf'),
-      import('jspdf-autotable')
+      import('jspdf-autotable'),
     ]);
 
     // jsPDF default export is the constructor
     return jsPDFModule.default;
   } catch (error) {
     console.error('Failed to load PDF exporter:', error);
-    throw new Error('PDF export functionality is currently unavailable. Please try again.');
+    throw new Error(
+      'PDF export functionality is currently unavailable. Please try again.'
+    );
   }
 }
 
@@ -55,7 +57,9 @@ export async function loadExcelExporter() {
     return XLSXModule;
   } catch (error) {
     console.error('Failed to load Excel exporter:', error);
-    throw new Error('Excel export functionality is currently unavailable. Please try again.');
+    throw new Error(
+      'Excel export functionality is currently unavailable. Please try again.'
+    );
   }
 }
 

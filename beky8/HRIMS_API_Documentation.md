@@ -3,12 +3,15 @@
 This document describes the API endpoints for integrating with the external HRIMS (Human Resource Information Management System) to fetch and sync employee data using an optimized three-endpoint architecture for maximum performance and user experience.
 
 ## Base URL
+
 ```
 https://csms.zanajira.go.tz/api/hrims
 ```
 
 ## Architecture Overview
+
 The integration uses an optimized three-endpoint approach for fast data reception:
+
 1. **Employee Data Sync API**: Fast retrieval and storage of core employee information (immediate profile availability)
 2. **Documents Sync API**: Background loading and processing of employee documents
 3. **Certificates Sync API**: Background loading and processing of employee certificates
@@ -17,6 +20,7 @@ The integration uses an optimized three-endpoint approach for fast data receptio
 This approach ensures users get immediate access to employee profiles while documents and certificates load in the background for enhanced performance.
 
 ## Authentication
+
 All API endpoints require proper authentication. Include your API key in the request headers.
 
 ## API Endpoints
@@ -28,18 +32,20 @@ All API endpoints require proper authentication. Include your API key in the req
 **Description:** Fetches employee data from external HRIMS system and stores/updates it in the local database. This endpoint only syncs core employee information for fast response.
 
 #### Request Body
+
 ```json
 {
-  "zanId": "Z123456789",           // Optional (either zanId or payrollNumber required)
-  "payrollNumber": "PAY001234",   // Optional (either zanId or payrollNumber required)
+  "zanId": "Z123456789", // Optional (either zanId or payrollNumber required)
+  "payrollNumber": "PAY001234", // Optional (either zanId or payrollNumber required)
   "institutionVoteNumber": "H01", // Required - Institution vote number
-  "syncDocuments": false,         // Optional - Default: false (documents synced separately)
+  "syncDocuments": false, // Optional - Default: false (documents synced separately)
   "hrimsApiUrl": "https://hrims-api.example.com", // Optional - Override default HRIMS URL
-  "hrimsApiKey": "your-api-key"   // Optional - Override default HRIMS API key
+  "hrimsApiKey": "your-api-key" // Optional - Override default HRIMS API key
 }
 ```
 
 #### Request Validation Rules
+
 - Either `zanId` OR `payrollNumber` must be provided (at least one is required)
 - `institutionVoteNumber` is mandatory
 - `syncDocuments` defaults to false for faster employee data sync
@@ -47,6 +53,7 @@ All API endpoints require proper authentication. Include your API key in the req
 - `hrimsApiKey` is optional for authentication override
 
 #### Response (Success - 200)
+
 ```json
 {
   "success": true,
@@ -65,6 +72,7 @@ All API endpoints require proper authentication. Include your API key in the req
 ```
 
 #### Response (Error - 404)
+
 ```json
 {
   "success": false,
@@ -73,6 +81,7 @@ All API endpoints require proper authentication. Include your API key in the req
 ```
 
 #### Response (Error - 400)
+
 ```json
 {
   "success": false,
@@ -95,19 +104,21 @@ All API endpoints require proper authentication. Include your API key in the req
 **Description:** Fetches employee documents from external HRIMS system and stores/updates them in the local database. This endpoint is called separately for background processing of documents.
 
 #### Request Body
+
 ```json
 {
-  "zanId": "Z123456789",           // Optional (either zanId or payrollNumber required)
-  "payrollNumber": "PAY001234",   // Optional (either zanId or payrollNumber required)
+  "zanId": "Z123456789", // Optional (either zanId or payrollNumber required)
+  "payrollNumber": "PAY001234", // Optional (either zanId or payrollNumber required)
   "institutionVoteNumber": "H01", // Required - Institution vote number
-  "page": 1,                      // Optional - Page number (default: 1)
-  "limit": 10,                    // Optional - Items per page (default: 10, max: 20)
+  "page": 1, // Optional - Page number (default: 1)
+  "limit": 10, // Optional - Items per page (default: 10, max: 20)
   "hrimsApiUrl": "https://hrims-api.example.com", // Optional - Override default HRIMS URL
-  "hrimsApiKey": "your-api-key"   // Optional - Override default HRIMS API key
+  "hrimsApiKey": "your-api-key" // Optional - Override default HRIMS API key
 }
 ```
 
 #### Response (Success - 200)
+
 ```json
 {
   "success": true,
@@ -136,19 +147,21 @@ All API endpoints require proper authentication. Include your API key in the req
 **Description:** Fetches employee certificates from external HRIMS system and stores/updates them in the local database. This endpoint is called separately for background processing of certificates.
 
 #### Request Body
+
 ```json
 {
-  "zanId": "Z123456789",           // Optional (either zanId or payrollNumber required)
-  "payrollNumber": "PAY001234",   // Optional (either zanId or payrollNumber required)
+  "zanId": "Z123456789", // Optional (either zanId or payrollNumber required)
+  "payrollNumber": "PAY001234", // Optional (either zanId or payrollNumber required)
   "institutionVoteNumber": "H01", // Required - Institution vote number
-  "page": 1,                      // Optional - Page number (default: 1)
-  "limit": 10,                    // Optional - Items per page (default: 10, max: 20)
+  "page": 1, // Optional - Page number (default: 1)
+  "limit": 10, // Optional - Items per page (default: 10, max: 20)
   "hrimsApiUrl": "https://hrims-api.example.com", // Optional - Override default HRIMS URL
-  "hrimsApiKey": "your-api-key"   // Optional - Override default HRIMS API key
+  "hrimsApiKey": "your-api-key" // Optional - Override default HRIMS API key
 }
 ```
 
 #### Response (Success - 200)
+
 ```json
 {
   "success": true,
@@ -177,22 +190,25 @@ All API endpoints require proper authentication. Include your API key in the req
 **Description:** Searches for an employee in the local database using zanId/payrollNumber and institution vote number.
 
 #### GET Request Parameters
+
 ```
 GET /api/hrims/search-employee?zanId=Z123456789&institutionVoteNumber=H01&includeDocuments=true&includeCertificates=true
 ```
 
 #### POST Request Body
+
 ```json
 {
-  "zanId": "Z123456789",           // Optional (either zanId or payrollNumber required)
-  "payrollNumber": "PAY001234",   // Optional (either zanId or payrollNumber required)
+  "zanId": "Z123456789", // Optional (either zanId or payrollNumber required)
+  "payrollNumber": "PAY001234", // Optional (either zanId or payrollNumber required)
   "institutionVoteNumber": "H01", // Required - Institution vote number
-  "includeDocuments": true,       // Optional - Default: true
-  "includeCertificates": true     // Optional - Default: true
+  "includeDocuments": true, // Optional - Default: true
+  "includeCertificates": true // Optional - Default: true
 }
 ```
 
 #### Request Parameters
+
 - `zanId` (string, optional): Employee's Zanzibar ID
 - `payrollNumber` (string, optional): Employee's payroll number
 - `institutionVoteNumber` (string, required): Institution vote number
@@ -200,6 +216,7 @@ GET /api/hrims/search-employee?zanId=Z123456789&institutionVoteNumber=H01&includ
 - `includeCertificates` (boolean, optional): Include employee certificates in response (default: true)
 
 #### Response (Success - 200)
+
 ```json
 {
   "success": true,
@@ -320,6 +337,7 @@ GET /api/hrims/search-employee?zanId=Z123456789&institutionVoteNumber=H01&includ
 ```
 
 #### Response (Error - 404)
+
 ```json
 {
   "success": false,
@@ -334,6 +352,7 @@ GET /api/hrims/search-employee?zanId=Z123456789&institutionVoteNumber=H01&includ
 The integration now uses three separate HRIMS endpoints. Each endpoint expects a specific JSON response format:
 
 ### 1. Employee Data Endpoint Response (GET https://hrims-api.zanzibar.go.tz/api/employee/search)
+
 ```json
 {
   "success": true,
@@ -346,7 +365,7 @@ The integration now uses three separate HRIMS endpoints. Each endpoint expects a
       "gender": "Male",
       "dateOfBirth": "1990-05-15",
       "placeOfBirth": "Stone Town",
-      "region": "Zanzibar Urban", 
+      "region": "Zanzibar Urban",
       "countryOfBirth": "Tanzania",
       "phoneNumber": "+255777123456",
       "contactAddress": "P.O. Box 123, Stone Town, Zanzibar",
@@ -380,6 +399,7 @@ The integration now uses three separate HRIMS endpoints. Each endpoint expects a
 ```
 
 ### 2. Documents Endpoint Response (GET https://hrims-api.zanzibar.go.tz/api/employee/documents)
+
 ```json
 {
   "success": true,
@@ -418,6 +438,7 @@ The integration now uses three separate HRIMS endpoints. Each endpoint expects a
 ```
 
 ### 3. Certificates Endpoint Response (GET https://hrims-api.zanzibar.go.tz/api/employee/certificates)
+
 ```json
 {
   "success": true,
@@ -460,12 +481,14 @@ The integration now uses three separate HRIMS endpoints. Each endpoint expects a
 ```
 
 ### Document Types
+
 - `ardhilHali`: Ardhil Hali Certificate
 - `confirmationLetter`: Confirmation Letter
 - `jobContract`: Employment Contract
 - `birthCertificate`: Birth Certificate
 
 ### Certificate Types
+
 - `Certificate of primary education`: Primary education certificate (Standard VII)
 - `Certificate of Secondary education (Form IV)`: Secondary education certificate (Form IV)
 - `Advanced Certificate of Secondary education (Form VII)`: Advanced secondary education (Form VI)
@@ -477,6 +500,7 @@ The integration now uses three separate HRIMS endpoints. Each endpoint expects a
 - `PHd`: Doctorate degrees (PhD, DPhil, etc.)
 
 ### Employee Image
+
 - `photo.content`: Employee profile photo as base64 encoded string
 - `photo.contentType`: Must be image/jpeg or image/png
 - Maximum file size: 2MB before encoding
@@ -496,6 +520,7 @@ HRIMS_MOCK_MODE=true  # Set to false in production
 ```
 
 ### Environment Variables
+
 - `HRIMS_API_URL`: Base URL for the external HRIMS API
 - `HRIMS_API_KEY`: API key for authenticating with HRIMS
 - `HRIMS_MOCK_MODE`: When true, uses mock data instead of calling external API (useful for development)
@@ -505,6 +530,7 @@ HRIMS_MOCK_MODE=true  # Set to false in production
 ## Usage Examples
 
 ### Example 1: Sync Employee from HRIMS using zanId
+
 ```bash
 curl -X POST https://csms.zanajira.go.tz/api/hrims/sync-employee \
   -H "Content-Type: application/json" \
@@ -516,6 +542,7 @@ curl -X POST https://csms.zanajira.go.tz/api/hrims/sync-employee \
 ```
 
 ### Example 2: Sync Employee from HRIMS using payrollNumber
+
 ```bash
 curl -X POST https://csms.zanajira.go.tz/api/hrims/sync-employee \
   -H "Content-Type: application/json" \
@@ -527,12 +554,14 @@ curl -X POST https://csms.zanajira.go.tz/api/hrims/sync-employee \
 ```
 
 ### Example 3: Search Employee (GET)
+
 ```bash
 curl "https://csms.zanajira.go.tz/api/hrims/search-employee?zanId=Z123456789&institutionVoteNumber=H01" \
   -H "Authorization: Bearer YOUR_API_TOKEN"
 ```
 
 ### Example 4: Search Employee (POST)
+
 ```bash
 curl -X POST https://csms.zanajira.go.tz/api/hrims/search-employee \
   -H "Content-Type: application/json" \
@@ -552,19 +581,23 @@ curl -X POST https://csms.zanajira.go.tz/api/hrims/search-employee \
 ### Common Error Responses
 
 #### 400 - Bad Request
+
 - Invalid or missing required parameters
 - Validation errors
 
 #### 404 - Not Found
+
 - Institution with specified vote number not found
 - Employee not found in HRIMS or local database
 
 #### 500 - Internal Server Error
+
 - Database connection issues
 - External HRIMS API unavailable
 - Unexpected server errors
 
 ### Error Response Format
+
 ```json
 {
   "success": false,
@@ -580,28 +613,19 @@ curl -X POST https://csms.zanajira.go.tz/api/hrims/search-employee \
 ### Optimized Three-Phase Integration Process
 
 **Phase 1: Immediate Employee Data Sync**
+
 1. **External System → CSMS**: Call `/api/hrims/sync-employee` to fetch core employee data
 2. **CSMS → HRIMS**: System calls HRIMS employee data endpoint (`/api/employee/search`)
 3. **Database Storage**: Employee core data is stored/updated in local database
 4. **Immediate Response**: Employee profile becomes available with core data (photos, basic info, employment details)
 5. **User Access**: Employee can immediately view and use their basic profile information
 
-**Phase 2: Background Documents Processing**
-6. **CSMS Background Process**: Automatically triggers `/api/hrims/sync-documents` in background
-7. **CSMS → HRIMS**: System calls HRIMS documents endpoint (`/api/employee/documents`) with pagination
-8. **Background Storage**: Documents are processed and stored asynchronously
-9. **Status Updates**: Document sync status is updated in real-time
+**Phase 2: Background Documents Processing** 6. **CSMS Background Process**: Automatically triggers `/api/hrims/sync-documents` in background 7. **CSMS → HRIMS**: System calls HRIMS documents endpoint (`/api/employee/documents`) with pagination 8. **Background Storage**: Documents are processed and stored asynchronously 9. **Status Updates**: Document sync status is updated in real-time
 
-**Phase 3: Background Certificates Processing**
-10. **CSMS Background Process**: Automatically triggers `/api/hrims/sync-certificates` in background
-11. **CSMS → HRIMS**: System calls HRIMS certificates endpoint (`/api/employee/certificates`) with pagination
-12. **Background Storage**: Certificates are processed and stored asynchronously  
+**Phase 3: Background Certificates Processing** 10. **CSMS Background Process**: Automatically triggers `/api/hrims/sync-certificates` in background 11. **CSMS → HRIMS**: System calls HRIMS certificates endpoint (`/api/employee/certificates`) with pagination 12. **Background Storage**: Certificates are processed and stored asynchronously  
 13. **Status Updates**: Certificate sync status is updated in real-time
 
-**Phase 4: Complete Profile Access**
-14. **Profile Enhancement**: Documents and certificates are seamlessly added to employee profile when ready
-15. **Search Access**: Complete employee data with all documents is available via `/api/hrims/search-employee`
-16. **Real-time Updates**: Profile shows sync progress and completeness status
+**Phase 4: Complete Profile Access** 14. **Profile Enhancement**: Documents and certificates are seamlessly added to employee profile when ready 15. **Search Access**: Complete employee data with all documents is available via `/api/hrims/search-employee` 16. **Real-time Updates**: Profile shows sync progress and completeness status
 
 ---
 

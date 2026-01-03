@@ -34,7 +34,8 @@ export function AppSidebar() {
 
   const navItems = React.useMemo(() => getNavItemsForRole(role), [role]);
 
-  const isActive = (href: string) => pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
+  const isActive = (href: string) =>
+    pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
 
   return (
     <ShadSidebar collapsible="icon" className="border-r">
@@ -49,59 +50,78 @@ export function AppSidebar() {
 
       <SidebarContent className="flex-grow p-0">
         <ScrollArea className="h-full">
-        <SidebarMenu className="px-2">
-          {navItems.map((item) =>
-            item.children ? (
-              <SidebarGroup key={item.title}>
-                <SidebarGroupLabel className="flex items-center">
-                  <item.icon className="mr-2 h-4 w-4" />
-                  {item.title}
-                </SidebarGroupLabel>
-                <SidebarMenuSub>
-                  {item.children.map((child) => (
-                    <SidebarMenuSubItem key={child.title}>
-                      <Link href={child.href} legacyBehavior passHref>
-                        <SidebarMenuSubButton
-                          isActive={isActive(child.href)}
-                          className="w-full justify-start"
-                        >
-                          {child.title}
-                          {child.label && (
-                            <span className="ml-auto text-xs text-muted-foreground">{child.label}</span>
-                          )}
-                        </SidebarMenuSubButton>
-                      </Link>
-                    </SidebarMenuSubItem>
-                  ))}
-                </SidebarMenuSub>
-              </SidebarGroup>
-            ) : (
-              <SidebarMenuItem key={item.title}>
-                <Link href={item.href} legacyBehavior passHref>
-                  <SidebarMenuButton
-                    isActive={isActive(item.href)}
-                    disabled={item.disabled}
-                    className="w-full justify-start"
-                    tooltip={sidebarState === 'collapsed' ? item.title : undefined}
-                  >
-                    <item.icon className={cn("transition-all", sidebarState === 'collapsed' ? 'mx-auto' : 'mr-2')} />
-                    {sidebarState === 'expanded' && item.title}
-                    {sidebarState === 'expanded' && item.label && (
-                       <span className="ml-auto text-xs text-muted-foreground">{item.label}</span>
-                    )}
-                  </SidebarMenuButton>
-                </Link>
-              </SidebarMenuItem>
-            )
-          )}
-        </SidebarMenu>
+          <SidebarMenu className="px-2">
+            {navItems.map((item) =>
+              item.children ? (
+                <SidebarGroup key={item.title}>
+                  <SidebarGroupLabel className="flex items-center">
+                    <item.icon className="mr-2 h-4 w-4" />
+                    {item.title}
+                  </SidebarGroupLabel>
+                  <SidebarMenuSub>
+                    {item.children.map((child) => (
+                      <SidebarMenuSubItem key={child.title}>
+                        <Link href={child.href} legacyBehavior passHref>
+                          <SidebarMenuSubButton
+                            isActive={isActive(child.href)}
+                            className="w-full justify-start"
+                          >
+                            {child.title}
+                            {child.label && (
+                              <span className="ml-auto text-xs text-muted-foreground">
+                                {child.label}
+                              </span>
+                            )}
+                          </SidebarMenuSubButton>
+                        </Link>
+                      </SidebarMenuSubItem>
+                    ))}
+                  </SidebarMenuSub>
+                </SidebarGroup>
+              ) : (
+                <SidebarMenuItem key={item.title}>
+                  <Link href={item.href} legacyBehavior passHref>
+                    <SidebarMenuButton
+                      isActive={isActive(item.href)}
+                      disabled={item.disabled}
+                      className="w-full justify-start"
+                      tooltip={
+                        sidebarState === 'collapsed' ? item.title : undefined
+                      }
+                    >
+                      <item.icon
+                        className={cn(
+                          'transition-all',
+                          sidebarState === 'collapsed' ? 'mx-auto' : 'mr-2'
+                        )}
+                      />
+                      {sidebarState === 'expanded' && item.title}
+                      {sidebarState === 'expanded' && item.label && (
+                        <span className="ml-auto text-xs text-muted-foreground">
+                          {item.label}
+                        </span>
+                      )}
+                    </SidebarMenuButton>
+                  </Link>
+                </SidebarMenuItem>
+              )
+            )}
+          </SidebarMenu>
         </ScrollArea>
       </SidebarContent>
 
       <SidebarFooter className="p-2 border-t">
-        <Button variant="ghost" className="w-full justify-start" onClick={logout}
+        <Button
+          variant="ghost"
+          className="w-full justify-start"
+          onClick={logout}
         >
-          <LogOut className={cn("transition-all", sidebarState === 'collapsed' ? 'mx-auto' : 'mr-2 h-4 w-4')} />
+          <LogOut
+            className={cn(
+              'transition-all',
+              sidebarState === 'collapsed' ? 'mx-auto' : 'mr-2 h-4 w-4'
+            )}
+          />
           {sidebarState === 'expanded' && 'Logout'}
         </Button>
       </SidebarFooter>

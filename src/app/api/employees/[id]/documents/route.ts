@@ -7,7 +7,7 @@ const DOCUMENT_FIELD_MAPPING = {
   'ardhil-hali': 'ardhilHaliUrl',
   'confirmation-letter': 'confirmationLetterUrl',
   'job-contract': 'jobContractUrl',
-  'birth-certificate': 'birthCertificateUrl'
+  'birth-certificate': 'birthCertificateUrl',
 } as const;
 
 export async function POST(
@@ -35,7 +35,7 @@ export async function POST(
 
     // Verify employee exists
     const employee = await prisma.employee.findUnique({
-      where: { id: employeeId }
+      where: { id: employeeId },
     });
 
     if (!employee) {
@@ -49,7 +49,11 @@ export async function POST(
     if (userRole === 'HRO') {
       if (employee.institutionId !== userInstitutionId) {
         return NextResponse.json(
-          { success: false, message: 'Can only upload documents for employees in your institution' },
+          {
+            success: false,
+            message:
+              'Can only upload documents for employees in your institution',
+          },
           { status: 403 }
         );
       }
@@ -97,21 +101,20 @@ export async function POST(
     const buffer = Buffer.from(arrayBuffer);
 
     // Upload to MinIO
-    const uploadResult = await uploadFile(
-      buffer,
-      objectKey,
-      file.type
-    );
+    const uploadResult = await uploadFile(buffer, objectKey, file.type);
 
     // Update employee record with document URL
-    const fieldName = DOCUMENT_FIELD_MAPPING[documentType as keyof typeof DOCUMENT_FIELD_MAPPING];
+    const fieldName =
+      DOCUMENT_FIELD_MAPPING[
+        documentType as keyof typeof DOCUMENT_FIELD_MAPPING
+      ];
     const documentUrl = `/api/files/download/${objectKey}`;
 
     await prisma.employee.update({
       where: { id: employeeId },
       data: {
-        [fieldName]: documentUrl
-      }
+        [fieldName]: documentUrl,
+      },
     });
 
     return NextResponse.json({
@@ -122,10 +125,9 @@ export async function POST(
         documentUrl,
         objectKey: uploadResult.objectKey,
         originalName: file.name,
-        size: file.size
-      }
+        size: file.size,
+      },
     });
-
   } catch (error) {
     console.error('Employee document upload error:', error);
     return NextResponse.json(
@@ -157,8 +159,8 @@ export async function GET(
         confirmationLetterUrl: true,
         jobContractUrl: true,
         birthCertificateUrl: true,
-        institutionId: true
-      }
+        institutionId: true,
+      },
     });
 
     if (!employee) {
@@ -182,7 +184,7 @@ export async function GET(
       'ardhil-hali': employee.ardhilHaliUrl,
       'confirmation-letter': employee.confirmationLetterUrl,
       'job-contract': employee.jobContractUrl,
-      'birth-certificate': employee.birthCertificateUrl
+      'birth-certificate': employee.birthCertificateUrl,
     };
 
     return NextResponse.json({
@@ -190,10 +192,9 @@ export async function GET(
       data: {
         employeeId: employee.id,
         employeeName: employee.name,
-        documents
-      }
+        documents,
+      },
     });
-
   } catch (error) {
     console.error('Employee documents fetch error:', error);
     return NextResponse.json(

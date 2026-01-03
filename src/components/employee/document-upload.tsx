@@ -8,7 +8,15 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { useFileExists } from '@/hooks/use-file-exists';
-import { Loader2, Upload, FileText, Eye, ExternalLink, Download, MoreVertical } from 'lucide-react';
+import {
+  Loader2,
+  Upload,
+  FileText,
+  Eye,
+  ExternalLink,
+  Download,
+  MoreVertical,
+} from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,7 +27,11 @@ import { FilePreviewModal } from '@/components/ui/file-preview-modal';
 
 interface DocumentUploadProps {
   employeeId: string;
-  documentType: 'ardhil-hali' | 'confirmation-letter' | 'job-contract' | 'birth-certificate';
+  documentType:
+    | 'ardhil-hali'
+    | 'confirmation-letter'
+    | 'job-contract'
+    | 'birth-certificate';
   documentTitle: string;
   currentUrl?: string;
   canUpload: boolean;
@@ -36,12 +48,12 @@ export function DocumentUpload({
   canUpload,
   userRole,
   userInstitutionId,
-  onUploadSuccess
+  onUploadSuccess,
 }: DocumentUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
-  
+
   // Check if the file actually exists in storage
   const fileExists = useFileExists(currentUrl);
 
@@ -52,9 +64,9 @@ export function DocumentUpload({
     // Validate file type
     if (file.type !== 'application/pdf') {
       toast({
-        title: "Invalid file type",
-        description: "Only PDF files are allowed",
-        variant: "destructive"
+        title: 'Invalid file type',
+        description: 'Only PDF files are allowed',
+        variant: 'destructive',
       });
       return;
     }
@@ -63,9 +75,9 @@ export function DocumentUpload({
     const maxSize = 5 * 1024 * 1024;
     if (file.size > maxSize) {
       toast({
-        title: "File too large",
-        description: "File size must be less than 5MB",
-        variant: "destructive"
+        title: 'File too large',
+        description: 'File size must be less than 5MB',
+        variant: 'destructive',
       });
       return;
     }
@@ -82,11 +94,12 @@ export function DocumentUpload({
       formData.append('file', selectedFile);
       formData.append('documentType', documentType);
       if (userRole) formData.append('userRole', userRole);
-      if (userInstitutionId) formData.append('userInstitutionId', userInstitutionId);
+      if (userInstitutionId)
+        formData.append('userInstitutionId', userInstitutionId);
 
       const response = await fetch(`/api/employees/${employeeId}/documents`, {
         method: 'POST',
-        body: formData
+        body: formData,
       });
 
       const result = await response.json();
@@ -96,14 +109,16 @@ export function DocumentUpload({
       }
 
       toast({
-        title: "Upload successful",
-        description: `${documentTitle} has been uploaded successfully`
+        title: 'Upload successful',
+        description: `${documentTitle} has been uploaded successfully`,
       });
 
       setSelectedFile(null);
-      
+
       // Reset file input
-      const fileInput = document.getElementById(`file-${documentType}`) as HTMLInputElement;
+      const fileInput = document.getElementById(
+        `file-${documentType}`
+      ) as HTMLInputElement;
       if (fileInput) {
         fileInput.value = '';
       }
@@ -112,13 +127,13 @@ export function DocumentUpload({
       if (onUploadSuccess) {
         onUploadSuccess(result.data.documentUrl);
       }
-
     } catch (error) {
       console.error('Upload error:', error);
       toast({
-        title: "Upload failed",
-        description: error instanceof Error ? error.message : "Failed to upload document",
-        variant: "destructive"
+        title: 'Upload failed',
+        description:
+          error instanceof Error ? error.message : 'Failed to upload document',
+        variant: 'destructive',
       });
     } finally {
       setIsUploading(false);
@@ -130,9 +145,9 @@ export function DocumentUpload({
       setIsPreviewModalOpen(true);
     } else if (currentUrl && !fileExists.exists) {
       toast({
-        title: "Document not available",
-        description: "The document is not available at this time",
-        variant: "destructive"
+        title: 'Document not available',
+        description: 'The document is not available at this time',
+        variant: 'destructive',
       });
     }
   };
@@ -142,9 +157,9 @@ export function DocumentUpload({
 
     if (!fileExists.exists) {
       toast({
-        title: "Document not available",
-        description: "The document is not available at this time",
-        variant: "destructive"
+        title: 'Document not available',
+        description: 'The document is not available at this time',
+        variant: 'destructive',
       });
       return;
     }
@@ -168,8 +183,8 @@ export function DocumentUpload({
     document.body.removeChild(a);
 
     toast({
-      title: "Download started",
-      description: `Downloading ${documentTitle}...`
+      title: 'Download started',
+      description: `Downloading ${documentTitle}...`,
     });
   };
 
@@ -196,17 +211,23 @@ export function DocumentUpload({
             <FileText className="h-4 w-4" />
             {documentTitle}:
           </Label>
-          
+
           {currentUrl ? (
             <div className="flex items-center gap-2 mt-1">
               {fileExists.loading ? (
-                <Badge variant="outline" className="text-blue-600 border-blue-600">
+                <Badge
+                  variant="outline"
+                  className="text-blue-600 border-blue-600"
+                >
                   <Loader2 className="h-3 w-3 mr-1 animate-spin" />
                   Checking...
                 </Badge>
               ) : fileExists.exists ? (
                 <>
-                  <Badge variant="outline" className="text-green-600 border-green-600">
+                  <Badge
+                    variant="outline"
+                    className="text-green-600 border-green-600"
+                  >
                     Available
                   </Badge>
                   <DropdownMenu>
@@ -233,7 +254,10 @@ export function DocumentUpload({
                   </DropdownMenu>
                 </>
               ) : (
-                <Badge variant="outline" className="text-red-600 border-red-600">
+                <Badge
+                  variant="outline"
+                  className="text-red-600 border-red-600"
+                >
                   Document not available
                 </Badge>
               )}
@@ -261,7 +285,9 @@ export function DocumentUpload({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => document.getElementById(`file-${documentType}`)?.click()}
+                  onClick={() =>
+                    document.getElementById(`file-${documentType}`)?.click()
+                  }
                   className="h-8"
                 >
                   <Upload className="h-3 w-3 mr-1" />
@@ -270,7 +296,10 @@ export function DocumentUpload({
               </div>
             ) : (
               <div className="flex flex-col gap-1">
-                <div className="text-xs text-muted-foreground truncate max-w-32" title={selectedFile.name}>
+                <div
+                  className="text-xs text-muted-foreground truncate max-w-32"
+                  title={selectedFile.name}
+                >
                   {selectedFile.name}
                 </div>
                 <div className="flex gap-1">

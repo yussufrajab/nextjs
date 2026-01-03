@@ -19,20 +19,29 @@ export async function createNotification(data: NotificationData) {
         isRead: false,
       },
     });
-    console.log('Notification created:', data.message, 'for user:', data.userId);
+    console.log(
+      'Notification created:',
+      data.message,
+      'for user:',
+      data.userId
+    );
   } catch (error) {
     console.error('Failed to create notification:', error);
   }
 }
 
-export async function createNotificationForRole(role: string, message: string, link?: string) {
+export async function createNotificationForRole(
+  role: string,
+  message: string,
+  link?: string
+) {
   try {
     const users = await db.user.findMany({
       where: { role: role, active: true },
       select: { id: true },
     });
 
-    const notifications = users.map(user => ({
+    const notifications = users.map((user) => ({
       id: uuidv4(),
       message,
       link,
@@ -44,7 +53,9 @@ export async function createNotificationForRole(role: string, message: string, l
       await db.notification.createMany({
         data: notifications,
       });
-      console.log(`Created ${notifications.length} notifications for role: ${role}`);
+      console.log(
+        `Created ${notifications.length} notifications for role: ${role}`
+      );
     }
   } catch (error) {
     console.error('Failed to create notifications for role:', error);
@@ -70,7 +81,11 @@ export const NotificationTemplates = {
   }),
 
   // Complaint Notifications
-  complaintSubmitted: (employeeName: string, complaintId: string, subject: string) => ({
+  complaintSubmitted: (
+    employeeName: string,
+    complaintId: string,
+    subject: string
+  ) => ({
     message: `Lalamiko jipya limewasilishwa na ${employeeName} (${complaintId}): "${subject}". Inahitaji ukaguzi wako.`,
     link: `/dashboard/complaints`,
   }),

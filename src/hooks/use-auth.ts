@@ -19,30 +19,32 @@ export const useAuth = (): AuthHookState => {
   useEffect(() => {
     // Initialize auth state from localStorage only once
     useAuthStore.getState().initializeAuth();
-    
-    const unsubscribe = useAuthStore.subscribe(
-      (state) => {
-        console.log('Auth store state changed:', { user: !!state.user, role: state.role, isAuthenticated: state.isAuthenticated });
-        if (state.user !== undefined) { 
-          setIsLoading(false);
-        }
+
+    const unsubscribe = useAuthStore.subscribe((state) => {
+      console.log('Auth store state changed:', {
+        user: !!state.user,
+        role: state.role,
+        isAuthenticated: state.isAuthenticated,
+      });
+      if (state.user !== undefined) {
+        setIsLoading(false);
       }
-    );
+    });
     if (useAuthStore.getState().user !== undefined) {
       setIsLoading(false);
     }
     return () => unsubscribe();
   }, []); // Remove initializeAuth from dependencies to prevent infinite loop
-  
-  if (isLoading && typeof window !== 'undefined') { 
-     const hydratedState = useAuthStore.getState();
-     return { 
-        user: hydratedState.user, 
-        role: hydratedState.role, 
-        isAuthenticated: hydratedState.isAuthenticated, 
-        login, 
-        logout, 
-        isLoading: true 
+
+  if (isLoading && typeof window !== 'undefined') {
+    const hydratedState = useAuthStore.getState();
+    return {
+      user: hydratedState.user,
+      role: hydratedState.role,
+      isAuthenticated: hydratedState.isAuthenticated,
+      login,
+      logout,
+      isLoading: true,
     };
   }
 

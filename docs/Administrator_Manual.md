@@ -1,19 +1,20 @@
 # ADMINISTRATOR MANUAL
+
 ## CIVIL SERVICE MANAGEMENT SYSTEM (CSMS)
 
 ---
 
 ## Document Control
 
-| Item | Details |
-|------|---------|
-| **Document Title** | Administrator Manual - Civil Service Management System |
-| **Project Name** | Civil Service Management System (CSMS) |
-| **Version** | 1.0 |
-| **Date Prepared** | December 26, 2025 |
-| **System URL** | https://csms.zanajira.go.tz |
-| **Prepared For** | System Administrators |
-| **Document Status** | Final |
+| Item                | Details                                                |
+| ------------------- | ------------------------------------------------------ |
+| **Document Title**  | Administrator Manual - Civil Service Management System |
+| **Project Name**    | Civil Service Management System (CSMS)                 |
+| **Version**         | 1.0                                                    |
+| **Date Prepared**   | December 26, 2025                                      |
+| **System URL**      | https://csms.zanajira.go.tz                            |
+| **Prepared For**    | System Administrators                                  |
+| **Document Status** | Final                                                  |
 
 ---
 
@@ -42,6 +43,7 @@ This Administrator Manual provides comprehensive guidance for system administrat
 ### 1.2 Scope
 
 This manual is intended for:
+
 - **System Administrators**: Full system access and configuration
 - **Technical Support Staff**: Troubleshooting and maintenance
 - **IT Management**: System oversight and planning
@@ -59,6 +61,7 @@ CSMS is a Next.js 14 full-stack application that manages the entire lifecycle of
 - Comprehensive reporting and analytics
 
 **Key Components:**
+
 - **Frontend/Backend**: Next.js 14 application (port 9002)
 - **Database**: PostgreSQL with Prisma ORM (database: "nody")
 - **Storage**: MinIO S3-compatible object storage
@@ -80,6 +83,7 @@ DATABASE_URL="postgresql://username:password@host:port/nody?schema=public"
 ```
 
 **Configuration Steps:**
+
 1. Ensure PostgreSQL server is running
 2. Create database: `createdb nody`
 3. Update `DATABASE_URL` with correct credentials
@@ -99,6 +103,7 @@ MINIO_BUCKET_NAME=csms-documents
 ```
 
 **MinIO Setup:**
+
 1. Install MinIO server
 2. Create access credentials
 3. Create bucket: `csms-documents`
@@ -107,6 +112,7 @@ MINIO_BUCKET_NAME=csms-documents
 6. Test connection via CSMS
 
 **MinIO Access:**
+
 - Console URL: `http://your-minio-endpoint:9001`
 - API Endpoint: `http://your-minio-endpoint:9000`
 
@@ -120,6 +126,7 @@ HRIMS_MOCK_MODE=false
 ```
 
 **HRIMS Configuration:**
+
 1. Obtain API key from HRIMS administrator
 2. Update `HRIMS_API_URL` with production endpoint
 3. Set `HRIMS_MOCK_MODE=false` for production
@@ -159,12 +166,14 @@ The system configuration is defined in `next.config.ts`:
 The database uses Prisma ORM with PostgreSQL. Key models:
 
 **Core Entities:**
+
 - `User`: System users with roles and authentication
 - `Employee`: Civil service employees
 - `Institution`: Government institutions/ministries
 - `Notification`: User notifications
 
 **Request Types:**
+
 - `ConfirmationRequest`: Employee confirmation after probation
 - `PromotionRequest`: Promotions (experience/education-based)
 - `LwopRequest`: Leave Without Pay
@@ -175,12 +184,14 @@ The database uses Prisma ORM with PostgreSQL. Key models:
 - `SeparationRequest`: Terminations and dismissals
 
 **Supporting Entities:**
+
 - `Complaint`: Employee grievances
 - `EmployeeCertificate`: Educational certificates
 
 ### 2.4 System Requirements
 
 **Server Requirements:**
+
 - **OS**: Linux (Debian/Ubuntu recommended)
 - **CPU**: 2+ cores
 - **RAM**: 4GB minimum, 8GB recommended
@@ -190,6 +201,7 @@ The database uses Prisma ORM with PostgreSQL. Key models:
 - **MinIO**: Latest stable version
 
 **Network Requirements:**
+
 - **Port 9002**: Application (HTTP/HTTPS)
 - **Port 5432**: PostgreSQL database
 - **Port 9000**: MinIO API
@@ -267,6 +279,7 @@ WantedBy=multi-user.target
 ```
 
 Enable and start:
+
 ```bash
 sudo systemctl enable csms
 sudo systemctl start csms
@@ -314,6 +327,7 @@ server {
 ### 3.1 Administrator Access
 
 **Default Administrator Credentials:**
+
 - **Username**: akassim
 - **Password**: password123
 - **Role**: ADMIN
@@ -324,17 +338,17 @@ server {
 
 CSMS supports 9 user roles with different permissions:
 
-| Role | Code | Access Level | Description |
-|------|------|--------------|-------------|
-| **Administrator** | ADMIN | System-wide | Full system access, user management, HRIMS integration |
-| **HR Officer** | HRO | Institution only | Submit requests for own institution |
-| **Head of HR & Disciplinary** | HHRMD | All institutions | Approve all HR and disciplinary requests |
-| **HR Management Officer** | HRMO | All institutions | Approve HR requests (not complaints/terminations) |
-| **Disciplinary Officer** | DO | All institutions | Handle complaints and terminations |
-| **Planning Officer** | PO | All institutions (read-only) | View reports only, no approvals |
-| **CSC Secretary** | CSCS | All institutions (executive) | View all actions and statuses |
-| **HR Responsible Personnel** | HRRP | Institution only | Institutional supervisor, view institution data |
-| **Employee** | EMPLOYEE | Own data only | View profile, submit complaints |
+| Role                          | Code     | Access Level                 | Description                                            |
+| ----------------------------- | -------- | ---------------------------- | ------------------------------------------------------ |
+| **Administrator**             | ADMIN    | System-wide                  | Full system access, user management, HRIMS integration |
+| **HR Officer**                | HRO      | Institution only             | Submit requests for own institution                    |
+| **Head of HR & Disciplinary** | HHRMD    | All institutions             | Approve all HR and disciplinary requests               |
+| **HR Management Officer**     | HRMO     | All institutions             | Approve HR requests (not complaints/terminations)      |
+| **Disciplinary Officer**      | DO       | All institutions             | Handle complaints and terminations                     |
+| **Planning Officer**          | PO       | All institutions (read-only) | View reports only, no approvals                        |
+| **CSC Secretary**             | CSCS     | All institutions (executive) | View all actions and statuses                          |
+| **HR Responsible Personnel**  | HRRP     | Institution only             | Institutional supervisor, view institution data        |
+| **Employee**                  | EMPLOYEE | Own data only                | View profile, submit complaints                        |
 
 ### 3.3 Creating Users
 
@@ -354,6 +368,7 @@ CSMS supports 9 user roles with different permissions:
 5. Click **Submit**
 
 **Field Validations:**
+
 - Name: Minimum 2 characters
 - Username: Minimum 3 characters, must be unique
 - Email: Valid email format, must be unique
@@ -367,6 +382,7 @@ CSMS supports 9 user roles with different permissions:
 **Endpoint**: `POST /api/users`
 
 **Request Body:**
+
 ```json
 {
   "name": "John Doe",
@@ -380,6 +396,7 @@ CSMS supports 9 user roles with different permissions:
 ```
 
 **Response (Success):**
+
 ```json
 {
   "id": "user-uuid",
@@ -394,6 +411,7 @@ CSMS supports 9 user roles with different permissions:
 ```
 
 **Error Responses:**
+
 - `400`: Validation error (missing/invalid fields)
 - `409`: Username or email already exists
 - `500`: Internal server error
@@ -419,6 +437,7 @@ CSMS supports 9 user roles with different permissions:
 **Endpoint**: `PUT /api/users/{id}`
 
 **Request Body:**
+
 ```json
 {
   "name": "John Doe Updated",
@@ -440,12 +459,14 @@ When a user should no longer have access:
 4. Confirm action
 
 **Effects:**
+
 - User account set to `active = false`
 - User cannot login
 - Data remains in database
 - Can be reactivated later
 
 **Login Attempt by Deactivated User:**
+
 - Error message: "Account is inactive"
 - HTTP Status: 401 Unauthorized
 
@@ -470,6 +491,7 @@ When a user should no longer have access:
 5. Confirm
 
 **Password Security:**
+
 - All passwords hashed with bcrypt (salt rounds: 10)
 - Never stored in plain text
 - No password recovery (admin reset only)
@@ -489,6 +511,7 @@ When a user should no longer have access:
 **API Endpoint**: `POST /api/auth/change-password`
 
 **Request Body:**
+
 ```json
 {
   "currentPassword": "OldPassword123",
@@ -499,6 +522,7 @@ When a user should no longer have access:
 ### 3.7 Searching and Filtering Users
 
 **Search Options:**
+
 - By name (partial match, case-insensitive)
 - By ZanID (if linked to employee)
 - By institution
@@ -514,6 +538,7 @@ Returns all users with institution names (passwords excluded).
 #### 3.8.1 Viewing User Details
 
 **User Information Displayed:**
+
 - Basic info: Name, username, email, phone
 - Role and institution
 - Active status
@@ -527,6 +552,7 @@ Returns all users with institution names (passwords excluded).
 **API Endpoint**: `DELETE /api/users/{id}`
 
 **Considerations:**
+
 - Associated data (requests, notifications) may have foreign key constraints
 - Consider deactivating instead of deleting
 - Ensure no active workflows depend on the user
@@ -540,6 +566,7 @@ Returns all users with institution names (passwords excluded).
 Institutions represent government ministries, departments, and agencies. Each institution has assigned HR Officers and employees.
 
 **Institution Data:**
+
 - Name (unique, required)
 - Email (optional)
 - Phone number (optional)
@@ -566,6 +593,7 @@ Institutions represent government ministries, departments, and agencies. Each in
 **Endpoint**: `POST /api/institutions`
 
 **Request Body:**
+
 ```json
 {
   "name": "Ministry of Education",
@@ -577,11 +605,13 @@ Institutions represent government ministries, departments, and agencies. Each in
 ```
 
 **Validation:**
+
 - Name must be unique (case-insensitive)
 - TIN number must be unique (if provided)
 - Name is required, other fields optional
 
 **Error Responses:**
+
 - `409`: Institution name or TIN already exists
 - `400`: Invalid data format
 
@@ -600,6 +630,7 @@ Institutions represent government ministries, departments, and agencies. Each in
 **Endpoint**: `PUT /api/institutions/{id}`
 
 **Request Body:**
+
 ```json
 {
   "email": "newemail@moe.go.tz",
@@ -611,6 +642,7 @@ Institutions represent government ministries, departments, and agencies. Each in
 ### 4.4 Viewing Institution Details
 
 **Institution Detail View Shows:**
+
 - Basic information
 - List of employees from institution
 - Assigned HR Officers (HRO, HRRP)
@@ -634,6 +666,7 @@ Returns all institutions ordered by name.
 5. HRO can now submit requests for that institution
 
 **Data Isolation:**
+
 - HRO/HRRP can only see own institution data
 - CSC roles (HHRMD, HRMO, DO, CSCS, PO) see all institutions
 - ADMIN sees all institutions
@@ -647,12 +680,14 @@ Returns all institutions ordered by name.
 #### 5.1.1 Authentication Methods
 
 **Standard Login:**
+
 - Username/email + password
 - Bcrypt password hashing (10 salt rounds)
 - Session-based authentication
 - No JWT tokens (simplified approach)
 
 **Employee Login:**
+
 - ZanID + Payroll Number + ZSSF Number
 - Three-factor verification against employee database
 - Read-only access to own data
@@ -660,32 +695,38 @@ Returns all institutions ordered by name.
 #### 5.1.2 Login Endpoints
 
 **Standard Login:**
+
 - **Endpoint**: `POST /api/auth/login`
 - **Request**: `{ username, password }`
 - **Response**: User data with role and institution
 
 **Employee Login:**
+
 - **Endpoint**: `POST /api/auth/employee-login`
 - **Request**: `{ zanId, payrollNumber, zssfNumber }`
 - **Response**: Employee profile data
 
 **Session Check:**
+
 - **Endpoint**: `GET /api/auth/session`
 - **Purpose**: Verify active session
 
 **Logout:**
+
 - **Endpoint**: `POST /api/auth/logout`
 - **Purpose**: Clear session
 
 ### 5.2 Password Policies
 
 **Current Policy:**
+
 - Minimum 6 characters
 - No complexity requirements (can be enhanced)
 - Bcrypt hashing with 10 salt rounds
 - No password expiration (can be implemented)
 
 **Recommended Enhancements:**
+
 ```javascript
 // Example enhanced validation (to be implemented):
 - Minimum 8 characters
@@ -702,43 +743,39 @@ Returns all institutions ordered by name.
 
 #### 5.3.1 Permission Matrix
 
-| Role | User Mgmt | Institution Mgmt | HRIMS | Submit Requests | Approve HR | Approve Disciplinary | Reports | Dashboard |
-|------|-----------|------------------|-------|-----------------|------------|---------------------|---------|-----------|
-| ADMIN | ✓ | ✓ | ✓ | ✗ | ✗ | ✗ | ✓ | ✓ |
-| HRO | ✗ | ✗ | ✗ | ✓ (own inst.) | ✗ | ✗ | Limited | ✓ |
-| HHRMD | ✗ | ✗ | ✗ | ✗ | ✓ | ✓ | ✓ | ✓ |
-| HRMO | ✗ | ✗ | ✗ | ✗ | ✓ | ✗ | ✓ | ✓ |
-| DO | ✗ | ✗ | ✗ | ✗ | ✗ | ✓ | ✓ | ✓ |
-| PO | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✓ | ✗ |
-| CSCS | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✓ | ✓ |
-| HRRP | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | Limited | ✓ |
-| EMPLOYEE | ✗ | ✗ | ✗ | Complaints only | ✗ | ✗ | ✗ | ✗ |
+| Role     | User Mgmt | Institution Mgmt | HRIMS | Submit Requests | Approve HR | Approve Disciplinary | Reports | Dashboard |
+| -------- | --------- | ---------------- | ----- | --------------- | ---------- | -------------------- | ------- | --------- |
+| ADMIN    | ✓         | ✓                | ✓     | ✗               | ✗          | ✗                    | ✓       | ✓         |
+| HRO      | ✗         | ✗                | ✗     | ✓ (own inst.)   | ✗          | ✗                    | Limited | ✓         |
+| HHRMD    | ✗         | ✗                | ✗     | ✗               | ✓          | ✓                    | ✓       | ✓         |
+| HRMO     | ✗         | ✗                | ✗     | ✗               | ✓          | ✗                    | ✓       | ✓         |
+| DO       | ✗         | ✗                | ✗     | ✗               | ✗          | ✓                    | ✓       | ✓         |
+| PO       | ✗         | ✗                | ✗     | ✗               | ✗          | ✗                    | ✓       | ✗         |
+| CSCS     | ✗         | ✗                | ✗     | ✗               | ✗          | ✗                    | ✓       | ✓         |
+| HRRP     | ✗         | ✗                | ✗     | ✗               | ✗          | ✗                    | Limited | ✓         |
+| EMPLOYEE | ✗         | ✗                | ✗     | Complaints only | ✗          | ✗                    | ✗       | ✗         |
 
 #### 5.3.2 Access Control Implementation
 
 **Middleware Checks:**
+
 - Every API route should verify user role
 - Implement route guards for unauthorized access
 - Log access attempts for audit trail
 
 **Example Access Control:**
+
 ```typescript
 // Check if user is ADMIN
 if (user.role !== 'ADMIN') {
-  return NextResponse.json(
-    { message: 'Unauthorized' },
-    { status: 403 }
-  );
+  return NextResponse.json({ message: 'Unauthorized' }, { status: 403 });
 }
 
 // Check if user can access institution data
 if (!['HHRMD', 'HRMO', 'DO', 'PO', 'CSCS', 'ADMIN'].includes(user.role)) {
   // Institution-based role - filter by institution
   if (data.institutionId !== user.institutionId) {
-    return NextResponse.json(
-      { message: 'Access denied' },
-      { status: 403 }
-    );
+    return NextResponse.json({ message: 'Access denied' }, { status: 403 });
   }
 }
 ```
@@ -748,34 +785,38 @@ if (!['HHRMD', 'HRMO', 'DO', 'PO', 'CSCS', 'ADMIN'].includes(user.role)) {
 #### 5.4.1 File Type Restrictions
 
 **Allowed File Types:**
+
 - PDF only (application/pdf)
 - No executable files
 - No scripts
 
 **File Size Limits:**
+
 - Maximum: 2MB per file
 - Enforced at client and server level
 
 #### 5.4.2 MinIO Security
 
 **Bucket Configuration:**
+
 - Private buckets (no public access)
 - Access via signed URLs
 - Time-limited access tokens
 - Separate buckets for different document types (optional)
 
 **Access Control:**
+
 ```json
 {
   "Version": "2012-10-17",
   "Statement": [
     {
       "Effect": "Allow",
-      "Principal": {"AWS": ["*"]},
+      "Principal": { "AWS": ["*"] },
       "Action": ["s3:GetObject"],
       "Resource": ["arn:aws:s3:::csms-documents/*"],
       "Condition": {
-        "IpAddress": {"aws:SourceIp": ["allowed-ip-range"]}
+        "IpAddress": { "aws:SourceIp": ["allowed-ip-range"] }
       }
     }
   ]
@@ -787,11 +828,13 @@ if (!['HHRMD', 'HRMO', 'DO', 'PO', 'CSCS', 'ADMIN'].includes(user.role)) {
 #### 5.5.1 Sensitive Data Handling
 
 **Password Storage:**
+
 - All passwords hashed with bcrypt
 - Salt rounds: 10
 - Never logged or displayed
 
 **Personal Data:**
+
 - ZanID, payroll numbers encrypted in transit (HTTPS)
 - Database access restricted to application only
 - No direct database access for users
@@ -799,6 +842,7 @@ if (!['HHRMD', 'HRMO', 'DO', 'PO', 'CSCS', 'ADMIN'].includes(user.role)) {
 #### 5.5.2 Session Management
 
 **Session Security:**
+
 - HTTP-only cookies (recommended)
 - Secure flag enabled (HTTPS only)
 - SameSite attribute set
@@ -807,6 +851,7 @@ if (!['HHRMD', 'HRMO', 'DO', 'PO', 'CSCS', 'ADMIN'].includes(user.role)) {
 ### 5.6 Audit and Logging
 
 **Security Events to Log:**
+
 - Login attempts (success and failure)
 - Password changes
 - User creation/modification/deletion
@@ -815,6 +860,7 @@ if (!['HHRMD', 'HRMO', 'DO', 'PO', 'CSCS', 'ADMIN'].includes(user.role)) {
 - Critical operations (approvals, rejections)
 
 **Log Storage:**
+
 - Application logs in `/logs` directory
 - Structured logging (JSON format recommended)
 - Log rotation (daily or by size)
@@ -829,6 +875,7 @@ if (!['HHRMD', 'HRMO', 'DO', 'PO', 'CSCS', 'ADMIN'].includes(user.role)) {
 #### 6.1.1 Daily Tasks
 
 **Database Maintenance:**
+
 ```bash
 # Check database connections
 psql -U username -d nody -c "SELECT count(*) FROM pg_stat_activity;"
@@ -838,6 +885,7 @@ psql -U username -d nody -c "SELECT pg_size_pretty(pg_database_size('nody'));"
 ```
 
 **Application Health:**
+
 ```bash
 # Check if application is running
 pm2 status csms
@@ -850,6 +898,7 @@ pm2 logs csms --lines 100
 ```
 
 **MinIO Health:**
+
 ```bash
 # Check MinIO service
 systemctl status minio
@@ -861,6 +910,7 @@ mc admin info local
 #### 6.1.2 Weekly Tasks
 
 **Database Cleanup:**
+
 ```sql
 -- Vacuum database
 VACUUM ANALYZE;
@@ -874,17 +924,20 @@ ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC;
 ```
 
 **Log Review:**
+
 - Review error logs for anomalies
 - Check for failed login attempts
 - Monitor API error rates
 
 **Backup Verification:**
+
 - Verify backup completion
 - Test backup restore (quarterly)
 
 #### 6.1.3 Monthly Tasks
 
 **Security Updates:**
+
 ```bash
 # Update npm packages
 npm outdated
@@ -900,11 +953,13 @@ npx prisma generate
 ```
 
 **Performance Review:**
+
 - Review slow queries
 - Check application response times
 - Monitor disk usage trends
 
 **User Audit:**
+
 - Review inactive user accounts
 - Verify role assignments
 - Check for unused accounts
@@ -937,11 +992,13 @@ echo "$(date): Backup completed - $BACKUP_FILE" >> /var/log/csms-backup.log
 ```
 
 Make executable:
+
 ```bash
 chmod +x /usr/local/bin/csms-backup.sh
 ```
 
 Add to crontab (daily at 2 AM):
+
 ```bash
 0 2 * * * /usr/local/bin/csms-backup.sh
 ```
@@ -1157,6 +1214,7 @@ SELECT pg_terminate_backend(pid);  -- Forceful termination
 HRIMS (Human Resource Information Management System) is an external system containing employee master data. CSMS integrates with HRIMS to sync employee information, photos, documents, and certificates.
 
 **Integration Capabilities:**
+
 - Test HRIMS connection
 - Fetch single employee by ZanID or payroll number
 - Bulk fetch employees by institution
@@ -1250,6 +1308,7 @@ curl -X POST https://csms.zanajira.go.tz/api/hrims/sync-employee \
 6. View summary upon completion
 
 **Bulk Fetch Process:**
+
 - Fetches employees in pages (configurable size)
 - Shows real-time progress
 - Creates or updates employee records
@@ -1274,6 +1333,7 @@ curl -X POST https://csms.zanajira.go.tz/api/hrims/bulk-fetch \
 #### 7.5.1 Single Photo Sync
 
 **Process:**
+
 1. Fetch photo from HRIMS (base64 format)
 2. Convert to binary
 3. Upload to MinIO
@@ -1297,6 +1357,7 @@ curl -X POST https://csms.zanajira.go.tz/api/hrims/bulk-fetch \
 4. View summary (success/failure count)
 
 **Implementation Notes:**
+
 - Split requests to prevent timeout
 - Handles missing photos gracefully
 - Stores in MinIO bucket: `csms-documents/photos/`
@@ -1307,6 +1368,7 @@ curl -X POST https://csms.zanajira.go.tz/api/hrims/bulk-fetch \
 #### 7.6.1 Document Types
 
 HRIMS provides 4 document types:
+
 1. **Ardhil Hali**: Employee conduct certificate
 2. **Birth Certificate**: Birth certificate
 3. **Confirmation Letter**: Confirmation letter
@@ -1324,6 +1386,7 @@ HRIMS provides 4 document types:
 6. Click **Save to MinIO**
 
 **Storage in Employee Record:**
+
 - `ardhilHaliUrl`
 - `birthCertificateUrl`
 - `confirmationLetterUrl`
@@ -1332,6 +1395,7 @@ HRIMS provides 4 document types:
 #### 7.6.3 Bulk Document Sync
 
 **Process:**
+
 - Fetches documents for all employees in institution
 - Split by document type to prevent timeout
 - Stores PDFs in MinIO
@@ -1356,6 +1420,7 @@ HRIMS provides 4 document types:
 3. Certificates saved to `EmployeeCertificate` table
 
 **Certificate Data:**
+
 - Type (e.g., "Degree", "Diploma")
 - Name (qualification name)
 - Institution (where studied)
@@ -1367,26 +1432,31 @@ HRIMS provides 4 document types:
 #### Common Issues
 
 **1. Connection Timeout:**
+
 - Check network connectivity
 - Verify HRIMS API URL
 - Ensure firewall allows outbound HTTPS
 
 **2. Authentication Failed:**
+
 - Verify `HRIMS_API_KEY` is correct
 - Check if API key expired
 - Contact HRIMS administrator
 
 **3. Employee Not Found:**
+
 - Verify identifier (ZanID/payroll number)
 - Check if employee exists in HRIMS
 - Ensure correct format (ZanID: XX-XXXXX-XXXXX-XX)
 
 **4. Bulk Fetch Timeout:**
+
 - Reduce page size (try 25 or 10)
 - Fetch in smaller batches
 - Check HRIMS server load
 
 **5. Photo/Document Upload Failed:**
+
 - Check MinIO service status
 - Verify MinIO credentials
 - Ensure sufficient storage space
@@ -1394,13 +1464,13 @@ HRIMS provides 4 document types:
 
 #### Error Codes
 
-| Error Code | Description | Solution |
-|------------|-------------|----------|
-| HRIMS_001 | Connection timeout | Check network, increase timeout |
-| HRIMS_002 | Authentication failed | Verify API key |
-| HRIMS_003 | Employee not found | Check identifier |
-| HRIMS_004 | Invalid data format | Check API version compatibility |
-| HRIMS_005 | Rate limit exceeded | Wait and retry |
+| Error Code | Description           | Solution                        |
+| ---------- | --------------------- | ------------------------------- |
+| HRIMS_001  | Connection timeout    | Check network, increase timeout |
+| HRIMS_002  | Authentication failed | Verify API key                  |
+| HRIMS_003  | Employee not found    | Check identifier                |
+| HRIMS_004  | Invalid data format   | Check API version compatibility |
+| HRIMS_005  | Rate limit exceeded   | Wait and retry                  |
 
 ---
 
@@ -1549,6 +1619,7 @@ echo "MinIO restore completed"
 **Target RTO: 4 hours**
 
 Recovery sequence:
+
 1. Infrastructure setup (if needed): 1 hour
 2. Database restore: 30 minutes
 3. Application restore: 30 minutes
@@ -1688,13 +1759,16 @@ export async function GET() {
       status: 'healthy',
       timestamp: new Date(),
       database: 'connected',
-      version: process.env.npm_package_version
+      version: process.env.npm_package_version,
     });
   } catch (error) {
-    return NextResponse.json({
-      status: 'unhealthy',
-      error: error.message
-    }, { status: 503 });
+    return NextResponse.json(
+      {
+        status: 'unhealthy',
+        error: error.message,
+      },
+      { status: 503 }
+    );
   }
 }
 ```
@@ -1702,6 +1776,7 @@ export async function GET() {
 **Automated Health Checks:**
 
 Add to crontab:
+
 ```bash
 */5 * * * * curl -f http://localhost:9002/api/health || echo "CSMS health check failed" | mail -s "CSMS Alert" admin@example.com
 ```
@@ -1858,12 +1933,12 @@ const logger = winston.createLogger({
   transports: [
     new winston.transports.File({
       filename: '/var/log/csms/error.log',
-      level: 'error'
+      level: 'error',
     }),
     new winston.transports.File({
-      filename: '/var/log/csms/application.log'
-    })
-  ]
+      filename: '/var/log/csms/application.log',
+    }),
+  ],
 });
 
 // Usage
@@ -1880,16 +1955,16 @@ logger.error('Database connection failed', { error: error.message });
 logger.info('Login attempt', {
   event: 'LOGIN_ATTEMPT',
   username: username,
-  success: true/false,
+  success: true / false,
   ip: req.ip,
-  userAgent: req.headers['user-agent']
+  userAgent: req.headers['user-agent'],
 });
 
 // Password changes
 logger.info('Password changed', {
   event: 'PASSWORD_CHANGE',
   userId: user.id,
-  changedBy: adminUser.id
+  changedBy: adminUser.id,
 });
 
 // Role changes
@@ -1898,7 +1973,7 @@ logger.warn('User role changed', {
   userId: user.id,
   oldRole: oldRole,
   newRole: newRole,
-  changedBy: adminUser.id
+  changedBy: adminUser.id,
 });
 
 // Access denied
@@ -1906,7 +1981,7 @@ logger.warn('Access denied', {
   event: 'ACCESS_DENIED',
   userId: user.id,
   resource: resource,
-  action: action
+  action: action,
 });
 ```
 
@@ -1917,6 +1992,7 @@ logger.warn('Access denied', {
 **Setup Email Notifications:**
 
 Install nodemailer:
+
 ```bash
 npm install nodemailer
 ```
@@ -1933,15 +2009,15 @@ const sendAlert = async (subject: string, message: string) => {
     secure: false,
     auth: {
       user: 'alerts@example.com',
-      pass: 'password'
-    }
+      pass: 'password',
+    },
   });
 
   await transporter.sendMail({
     from: 'CSMS Alerts <alerts@example.com>',
     to: 'admin@example.com',
     subject: subject,
-    text: message
+    text: message,
   });
 };
 
@@ -1959,6 +2035,7 @@ try {
 #### 9.5.2 Alert Conditions
 
 **Critical Alerts:**
+
 - Application crashes
 - Database connection failures
 - Disk space < 10%
@@ -1966,6 +2043,7 @@ try {
 - Multiple failed login attempts (potential attack)
 
 **Warning Alerts:**
+
 - High memory usage (> 80%)
 - Slow database queries (> 5 seconds)
 - HRIMS connection failures
@@ -1980,6 +2058,7 @@ try {
 #### 10.1.1 Application Won't Start
 
 **Symptoms:**
+
 - Application fails to start
 - PM2 shows error state
 - Port 9002 not responding
@@ -1987,6 +2066,7 @@ try {
 **Troubleshooting Steps:**
 
 1. **Check if port is in use:**
+
 ```bash
 sudo lsof -i :9002
 # If another process is using port, kill it:
@@ -1994,6 +2074,7 @@ sudo kill -9 <PID>
 ```
 
 2. **Check environment variables:**
+
 ```bash
 cd /path/to/csms
 cat .env.local
@@ -2001,17 +2082,20 @@ cat .env.local
 ```
 
 3. **Check database connection:**
+
 ```bash
 psql -U postgres -d nody -c "SELECT 1;"
 ```
 
 4. **Check application logs:**
+
 ```bash
 pm2 logs csms --lines 100
 # Look for error messages
 ```
 
 5. **Try manual start:**
+
 ```bash
 cd /path/to/csms
 npm run build
@@ -2020,6 +2104,7 @@ npm start
 ```
 
 **Common Fixes:**
+
 - Missing environment variables: Add to `.env.local`
 - Database not running: `sudo systemctl start postgresql`
 - Build errors: `rm -rf .next && npm run build`
@@ -2028,6 +2113,7 @@ npm start
 #### 10.1.2 Database Connection Errors
 
 **Symptoms:**
+
 - "Can't reach database server"
 - "Connection refused"
 - Prisma client errors
@@ -2035,32 +2121,38 @@ npm start
 **Troubleshooting Steps:**
 
 1. **Check PostgreSQL status:**
+
 ```bash
 sudo systemctl status postgresql
 ```
 
 2. **Verify database exists:**
+
 ```bash
 psql -U postgres -c "\l" | grep nody
 ```
 
 3. **Test connection:**
+
 ```bash
 psql -U postgres -d nody
 ```
 
 4. **Check connection string:**
+
 ```bash
 echo $DATABASE_URL
 # Should be: postgresql://user:pass@host:5432/nody
 ```
 
 5. **Check PostgreSQL logs:**
+
 ```bash
 sudo tail -f /var/log/postgresql/postgresql-*.log
 ```
 
 **Common Fixes:**
+
 - PostgreSQL not running: `sudo systemctl start postgresql`
 - Wrong credentials: Update `DATABASE_URL`
 - Database doesn't exist: `createdb nody`
@@ -2069,6 +2161,7 @@ sudo tail -f /var/log/postgresql/postgresql-*.log
 #### 10.1.3 MinIO Connection Errors
 
 **Symptoms:**
+
 - File uploads fail
 - "MinIO connection error"
 - Images/documents not loading
@@ -2076,27 +2169,32 @@ sudo tail -f /var/log/postgresql/postgresql-*.log
 **Troubleshooting Steps:**
 
 1. **Check MinIO status:**
+
 ```bash
 sudo systemctl status minio
 ```
 
 2. **Test MinIO connection:**
+
 ```bash
 mc alias set test-minio http://your-endpoint:9000 access-key secret-key
 mc ls test-minio
 ```
 
 3. **Check MinIO logs:**
+
 ```bash
 sudo journalctl -u minio -n 100
 ```
 
 4. **Verify bucket exists:**
+
 ```bash
 mc ls csms-minio/csms-documents
 ```
 
 **Common Fixes:**
+
 - MinIO not running: `sudo systemctl start minio`
 - Wrong credentials: Update `.env.local`
 - Bucket doesn't exist: `mc mb csms-minio/csms-documents`
@@ -2105,6 +2203,7 @@ mc ls csms-minio/csms-documents
 #### 10.1.4 Login Issues
 
 **Symptoms:**
+
 - "Invalid credentials" with correct password
 - Login hangs or times out
 - Session not persisting
@@ -2112,11 +2211,13 @@ mc ls csms-minio/csms-documents
 **Troubleshooting Steps:**
 
 1. **Verify user exists and is active:**
+
 ```sql
 SELECT id, username, active FROM "User" WHERE username = 'username';
 ```
 
 2. **Test password hash:**
+
 ```bash
 # In Node.js console
 const bcrypt = require('bcryptjs');
@@ -2125,17 +2226,20 @@ console.log(isValid);
 ```
 
 3. **Check session storage:**
+
 ```bash
 # If using file-based sessions
 ls -la /tmp/sessions
 ```
 
 4. **Check browser cookies:**
+
 - Open browser DevTools
 - Application > Cookies
 - Verify session cookie exists
 
 **Common Fixes:**
+
 - User inactive: Update `active = true`
 - Password hash mismatch: Reset password via admin
 - Session issues: Clear browser cookies
@@ -2144,6 +2248,7 @@ ls -la /tmp/sessions
 #### 10.1.5 HRIMS Integration Errors
 
 **Symptoms:**
+
 - "HRIMS connection failed"
 - Employee data not syncing
 - Timeout errors
@@ -2151,17 +2256,20 @@ ls -la /tmp/sessions
 **Troubleshooting Steps:**
 
 1. **Test HRIMS connection:**
+
 ```bash
 curl -H "X-API-Key: your-api-key" https://hrims-api.zanzibar.go.tz/api/health
 ```
 
 2. **Check environment variables:**
+
 ```bash
 echo $HRIMS_API_URL
 echo $HRIMS_API_KEY
 ```
 
 3. **Test with mock mode:**
+
 ```bash
 # Set in .env.local
 HRIMS_MOCK_MODE=true
@@ -2170,11 +2278,13 @@ pm2 restart csms
 ```
 
 4. **Check HRIMS logs:**
+
 ```bash
 pm2 logs csms | grep HRIMS
 ```
 
 **Common Fixes:**
+
 - Network issues: Check firewall, VPN
 - Invalid API key: Contact HRIMS admin
 - API endpoint changed: Update `HRIMS_API_URL`
@@ -2183,6 +2293,7 @@ pm2 logs csms | grep HRIMS
 #### 10.1.6 File Upload Issues
 
 **Symptoms:**
+
 - "File upload failed"
 - "File size too large"
 - "Invalid file type"
@@ -2190,29 +2301,34 @@ pm2 logs csms | grep HRIMS
 **Troubleshooting Steps:**
 
 1. **Check file size:**
+
 ```bash
 # Max size is 2MB
 ls -lh file.pdf
 ```
 
 2. **Verify file type:**
+
 ```bash
 file -b --mime-type file.pdf
 # Should be: application/pdf
 ```
 
 3. **Check MinIO storage space:**
+
 ```bash
 mc du csms-minio/csms-documents
 df -h  # Check disk space
 ```
 
 4. **Test manual upload to MinIO:**
+
 ```bash
 mc cp test.pdf csms-minio/csms-documents/test.pdf
 ```
 
 **Common Fixes:**
+
 - File too large: Compress or split file (max 2MB)
 - Wrong file type: Convert to PDF
 - MinIO storage full: Clear old files or expand storage
@@ -2221,6 +2337,7 @@ mc cp test.pdf csms-minio/csms-documents/test.pdf
 #### 10.1.7 Performance Issues
 
 **Symptoms:**
+
 - Slow page loads
 - API timeouts
 - High server load
@@ -2228,6 +2345,7 @@ mc cp test.pdf csms-minio/csms-documents/test.pdf
 **Troubleshooting Steps:**
 
 1. **Check server resources:**
+
 ```bash
 top
 htop
@@ -2236,11 +2354,13 @@ df -h
 ```
 
 2. **Check database performance:**
+
 ```sql
 SELECT * FROM pg_stat_activity WHERE state = 'active';
 ```
 
 3. **Check slow queries:**
+
 ```sql
 SELECT query, mean_time, calls
 FROM pg_stat_statements
@@ -2249,12 +2369,14 @@ LIMIT 10;
 ```
 
 4. **Check application metrics:**
+
 ```bash
 pm2 info csms
 pm2 monit
 ```
 
 **Common Fixes:**
+
 - High CPU: Optimize queries, add indexes
 - High memory: Restart application, check for memory leaks
 - Slow queries: Add database indexes, optimize queries
@@ -2264,36 +2386,36 @@ pm2 monit
 
 #### 10.2.1 Database Errors
 
-| Error | Description | Solution |
-|-------|-------------|----------|
+| Error | Description                 | Solution                                        |
+| ----- | --------------------------- | ----------------------------------------------- |
 | P2002 | Unique constraint violation | Check for duplicate data (username, email, TIN) |
-| P2025 | Record not found | Verify record ID exists in database |
-| P1001 | Can't reach database | Check PostgreSQL status, verify DATABASE_URL |
-| P1003 | Database does not exist | Create database: `createdb nody` |
-| P2003 | Foreign key constraint | Ensure referenced record exists |
-| P1002 | Database timeout | Check database performance, increase timeout |
+| P2025 | Record not found            | Verify record ID exists in database             |
+| P1001 | Can't reach database        | Check PostgreSQL status, verify DATABASE_URL    |
+| P1003 | Database does not exist     | Create database: `createdb nody`                |
+| P2003 | Foreign key constraint      | Ensure referenced record exists                 |
+| P1002 | Database timeout            | Check database performance, increase timeout    |
 
 #### 10.2.2 API Errors
 
-| Status Code | Error | Description | Solution |
-|-------------|-------|-------------|----------|
-| 400 | Bad Request | Invalid input data | Check request body format |
-| 401 | Unauthorized | Invalid credentials or inactive account | Verify credentials, check user active status |
-| 403 | Forbidden | Insufficient permissions | Verify user role and permissions |
-| 404 | Not Found | Resource doesn't exist | Check resource ID |
-| 409 | Conflict | Duplicate data | Check for existing records |
-| 500 | Internal Server Error | Server-side error | Check logs for details |
-| 503 | Service Unavailable | Service down | Check database, MinIO, HRIMS status |
+| Status Code | Error                 | Description                             | Solution                                     |
+| ----------- | --------------------- | --------------------------------------- | -------------------------------------------- |
+| 400         | Bad Request           | Invalid input data                      | Check request body format                    |
+| 401         | Unauthorized          | Invalid credentials or inactive account | Verify credentials, check user active status |
+| 403         | Forbidden             | Insufficient permissions                | Verify user role and permissions             |
+| 404         | Not Found             | Resource doesn't exist                  | Check resource ID                            |
+| 409         | Conflict              | Duplicate data                          | Check for existing records                   |
+| 500         | Internal Server Error | Server-side error                       | Check logs for details                       |
+| 503         | Service Unavailable   | Service down                            | Check database, MinIO, HRIMS status          |
 
 #### 10.2.3 MinIO Errors
 
-| Error | Description | Solution |
-|-------|-------------|----------|
-| Access Denied | Invalid credentials | Verify MINIO_ACCESS_KEY and MINIO_SECRET_KEY |
-| Bucket not found | Bucket doesn't exist | Create bucket: `mc mb csms-minio/csms-documents` |
-| Connection refused | MinIO not accessible | Check MinIO service status |
-| No such key | File doesn't exist | Verify file path in MinIO |
-| Request timeout | MinIO slow or overloaded | Check MinIO performance, increase timeout |
+| Error              | Description              | Solution                                         |
+| ------------------ | ------------------------ | ------------------------------------------------ |
+| Access Denied      | Invalid credentials      | Verify MINIO_ACCESS_KEY and MINIO_SECRET_KEY     |
+| Bucket not found   | Bucket doesn't exist     | Create bucket: `mc mb csms-minio/csms-documents` |
+| Connection refused | MinIO not accessible     | Check MinIO service status                       |
+| No such key        | File doesn't exist       | Verify file path in MinIO                        |
+| Request timeout    | MinIO slow or overloaded | Check MinIO performance, increase timeout        |
 
 ### 10.3 Diagnostic Commands
 
@@ -2400,12 +2522,12 @@ pm2 start csms
 
 **Escalation Path:**
 
-| Issue Severity | Contact | Response Time |
-|----------------|---------|---------------|
-| Critical (System down) | System Administrator | Immediate |
-| High (Major functionality broken) | Technical Lead | 1 hour |
-| Medium (Performance degraded) | Support Team | 4 hours |
-| Low (Minor issues) | Help Desk | Next business day |
+| Issue Severity                    | Contact              | Response Time     |
+| --------------------------------- | -------------------- | ----------------- |
+| Critical (System down)            | System Administrator | Immediate         |
+| High (Major functionality broken) | Technical Lead       | 1 hour            |
+| Medium (Performance degraded)     | Support Team         | 4 hours           |
+| Low (Minor issues)                | Help Desk            | Next business day |
 
 ---
 
@@ -2413,48 +2535,50 @@ pm2 start csms
 
 ### 11.1 Environment Variables Reference
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| DATABASE_URL | Yes | - | PostgreSQL connection string |
-| MINIO_ENDPOINT | Yes | - | MinIO server endpoint |
-| MINIO_PORT | Yes | 9000 | MinIO port |
-| MINIO_USE_SSL | No | false | Use SSL for MinIO |
-| MINIO_ACCESS_KEY | Yes | - | MinIO access key |
-| MINIO_SECRET_KEY | Yes | - | MinIO secret key |
-| MINIO_BUCKET_NAME | Yes | csms-documents | MinIO bucket name |
-| HRIMS_API_URL | Yes | - | HRIMS API endpoint |
-| HRIMS_API_KEY | Yes | - | HRIMS API key |
-| HRIMS_MOCK_MODE | No | false | Use mock HRIMS (testing) |
-| NEXT_PUBLIC_API_URL | No | http://localhost:9002/api | Public API URL |
-| NEXT_PUBLIC_BACKEND_URL | No | http://localhost:9002 | Public backend URL |
-| NODE_ENV | No | development | Node environment |
-| PORT | No | 9002 | Application port |
-| GOOGLE_AI_API_KEY | No | - | Google AI API key (optional) |
+| Variable                | Required | Default                   | Description                  |
+| ----------------------- | -------- | ------------------------- | ---------------------------- |
+| DATABASE_URL            | Yes      | -                         | PostgreSQL connection string |
+| MINIO_ENDPOINT          | Yes      | -                         | MinIO server endpoint        |
+| MINIO_PORT              | Yes      | 9000                      | MinIO port                   |
+| MINIO_USE_SSL           | No       | false                     | Use SSL for MinIO            |
+| MINIO_ACCESS_KEY        | Yes      | -                         | MinIO access key             |
+| MINIO_SECRET_KEY        | Yes      | -                         | MinIO secret key             |
+| MINIO_BUCKET_NAME       | Yes      | csms-documents            | MinIO bucket name            |
+| HRIMS_API_URL           | Yes      | -                         | HRIMS API endpoint           |
+| HRIMS_API_KEY           | Yes      | -                         | HRIMS API key                |
+| HRIMS_MOCK_MODE         | No       | false                     | Use mock HRIMS (testing)     |
+| NEXT_PUBLIC_API_URL     | No       | http://localhost:9002/api | Public API URL               |
+| NEXT_PUBLIC_BACKEND_URL | No       | http://localhost:9002     | Public backend URL           |
+| NODE_ENV                | No       | development               | Node environment             |
+| PORT                    | No       | 9002                      | Application port             |
+| GOOGLE_AI_API_KEY       | No       | -                         | Google AI API key (optional) |
 
 ### 11.2 Default User Accounts
 
 **Production Accounts (Change passwords immediately!):**
 
-| Role | Username | Default Password | Description |
-|------|----------|-----------------|-------------|
-| ADMIN | akassim | password123 | System administrator |
-| HRO | kmnyonge | password123 | HR Officer |
-| HHRMD | skhamis | password123 | Head of HR |
-| HRMO | fiddi | password123 | HR Management Officer |
-| DO | mussi | password123 | Disciplinary Officer |
-| PO | mishak | password123 | Planning Officer |
-| CSCS | zhaji | password123 | CSC Secretary |
-| HRRP | kmhaji | password123 | HR Responsible Personnel |
+| Role  | Username | Default Password | Description              |
+| ----- | -------- | ---------------- | ------------------------ |
+| ADMIN | akassim  | password123      | System administrator     |
+| HRO   | kmnyonge | password123      | HR Officer               |
+| HHRMD | skhamis  | password123      | Head of HR               |
+| HRMO  | fiddi    | password123      | HR Management Officer    |
+| DO    | mussi    | password123      | Disciplinary Officer     |
+| PO    | mishak   | password123      | Planning Officer         |
+| CSCS  | zhaji    | password123      | CSC Secretary            |
+| HRRP  | kmhaji   | password123      | HR Responsible Personnel |
 
 ### 11.3 Database Schema Overview
 
 **Core Tables:**
+
 - User (system users)
 - Employee (civil service employees)
 - Institution (government institutions)
 - Notification (user notifications)
 
 **Request Tables:**
+
 - ConfirmationRequest
 - PromotionRequest
 - LwopRequest
@@ -2465,12 +2589,14 @@ pm2 start csms
 - SeparationRequest (terminations/dismissals)
 
 **Other Tables:**
+
 - Complaint (employee grievances)
 - EmployeeCertificate (educational qualifications)
 
 ### 11.4 API Endpoints Reference
 
 **Authentication:**
+
 - `POST /api/auth/login` - Standard login
 - `POST /api/auth/employee-login` - Employee login
 - `GET /api/auth/session` - Check session
@@ -2478,17 +2604,20 @@ pm2 start csms
 - `POST /api/auth/change-password` - Change password
 
 **User Management:**
+
 - `GET /api/users` - List all users
 - `POST /api/users` - Create user
 - `PUT /api/users/{id}` - Update user
 - `DELETE /api/users/{id}` - Delete user
 
 **Institution Management:**
+
 - `GET /api/institutions` - List all institutions
 - `POST /api/institutions` - Create institution
 - `PUT /api/institutions/{id}` - Update institution
 
 **HRIMS Integration:**
+
 - `GET /api/hrims/test` - Test connection
 - `POST /api/hrims/fetch-employee` - Fetch single employee
 - `POST /api/hrims/sync-employee` - Sync employee to CSMS
@@ -2500,6 +2629,7 @@ pm2 start csms
 ### 11.5 System Commands Reference
 
 **Application Management:**
+
 ```bash
 npm run dev              # Start development server
 npm run build            # Build for production
@@ -2510,6 +2640,7 @@ npm run genkit:dev       # Start Genkit dev server
 ```
 
 **Database Management:**
+
 ```bash
 npx prisma migrate dev       # Run migrations (dev)
 npx prisma migrate deploy    # Run migrations (prod)
@@ -2519,6 +2650,7 @@ npx prisma db push           # Push schema changes
 ```
 
 **PM2 Management:**
+
 ```bash
 pm2 start npm --name csms -- start    # Start app
 pm2 stop csms                          # Stop app
@@ -2533,6 +2665,7 @@ pm2 save                               # Save process list
 ### 11.6 Useful SQL Queries
 
 **User Statistics:**
+
 ```sql
 SELECT role, count(*) as count,
        sum(CASE WHEN active THEN 1 ELSE 0 END) as active_count
@@ -2541,6 +2674,7 @@ GROUP BY role;
 ```
 
 **Employee Statistics:**
+
 ```sql
 SELECT status, count(*) as count
 FROM "Employee"
@@ -2548,6 +2682,7 @@ GROUP BY status;
 ```
 
 **Request Statistics:**
+
 ```sql
 SELECT 'Confirmation' as request_type, status, count(*) FROM "ConfirmationRequest" GROUP BY status
 UNION ALL
@@ -2557,6 +2692,7 @@ SELECT 'LWOP', status, count(*) FROM "LwopRequest" GROUP BY status;
 ```
 
 **Institution Overview:**
+
 ```sql
 SELECT i.name,
        count(DISTINCT e.id) as employee_count,
@@ -2569,18 +2705,20 @@ GROUP BY i.id, i.name;
 
 ### 11.7 Changelog
 
-| Version | Date | Changes |
-|---------|------|---------|
-| 1.0 | 2025-12-26 | Initial release |
+| Version | Date       | Changes         |
+| ------- | ---------- | --------------- |
+| 1.0     | 2025-12-26 | Initial release |
 
 ### 11.8 Support and Contacts
 
 **Technical Support:**
+
 - Email: support@csms.zanajira.go.tz
 - Phone: +255 XX XXX XXXX
 - Hours: Monday-Friday, 8:00 AM - 5:00 PM EAT
 
 **Emergency Contact:**
+
 - 24/7 Hotline: +255 XX XXX XXXX
 - Email: emergency@csms.zanajira.go.tz
 
@@ -2596,6 +2734,6 @@ GROUP BY i.id, i.name;
 
 I have read and understood this Administrator Manual and am familiar with the procedures and responsibilities outlined herein.
 
-Administrator Name: ________________
-Signature: ________________
-Date: ________________
+Administrator Name: **\*\***\_\_\_\_**\*\***
+Signature: **\*\***\_\_\_\_**\*\***
+Date: **\*\***\_\_\_\_**\*\***

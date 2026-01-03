@@ -16,28 +16,37 @@ export async function GET(req: Request) {
         email: true,
         phoneNumber: true,
         voteNumber: true,
-        tinNumber: true
+        tinNumber: true,
       },
-      orderBy: { name: 'asc' }
+      orderBy: { name: 'asc' },
     });
 
     console.log(`Found ${institutions.length} institutions`);
 
     // Set cache headers for institutions (changes infrequently)
     const headers = new Headers();
-    headers.set('Cache-Control', `public, s-maxage=${CACHE_TTL}, stale-while-revalidate=${CACHE_TTL * 2}`);
+    headers.set(
+      'Cache-Control',
+      `public, s-maxage=${CACHE_TTL}, stale-while-revalidate=${CACHE_TTL * 2}`
+    );
 
-    return NextResponse.json({
-      success: true,
-      data: institutions
-    }, { headers });
+    return NextResponse.json(
+      {
+        success: true,
+        data: institutions,
+      },
+      { headers }
+    );
   } catch (error) {
-    console.error("[INSTITUTIONS_GET]", error);
-    return NextResponse.json({ 
-      success: false, 
-      message: 'Internal Server Error',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+    console.error('[INSTITUTIONS_GET]', error);
+    return NextResponse.json(
+      {
+        success: false,
+        message: 'Internal Server Error',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
   }
 }
 
@@ -47,10 +56,14 @@ export async function POST(req: Request) {
     const { name, email, phoneNumber, voteNumber, tinNumber } = body;
 
     if (!name || typeof name !== 'string' || name.trim().length === 0) {
-      return NextResponse.json({
-        success: false,
-        message: 'Institution name is required and must be a non-empty string'
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            'Institution name is required and must be a non-empty string',
+        },
+        { status: 400 }
+      );
     }
 
     // Check if institution with the same name already exists
@@ -58,31 +71,37 @@ export async function POST(req: Request) {
       where: {
         name: {
           equals: name.trim(),
-          mode: 'insensitive'
-        }
-      }
+          mode: 'insensitive',
+        },
+      },
     });
 
     if (existingInstitution) {
-      return NextResponse.json({
-        success: false,
-        message: 'An institution with this name already exists'
-      }, { status: 409 });
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'An institution with this name already exists',
+        },
+        { status: 409 }
+      );
     }
 
     // Check if institution with the same tin number already exists (only if tin number is provided)
     if (tinNumber && tinNumber.trim().length > 0) {
       const existingTinNumber = await db.institution.findFirst({
         where: {
-          tinNumber: tinNumber.trim()
-        }
+          tinNumber: tinNumber.trim(),
+        },
       });
 
       if (existingTinNumber) {
-        return NextResponse.json({
-          success: false,
-          message: 'An institution with this Tin Number already exists'
-        }, { status: 409 });
+        return NextResponse.json(
+          {
+            success: false,
+            message: 'An institution with this Tin Number already exists',
+          },
+          { status: 409 }
+        );
       }
     }
 
@@ -93,42 +112,53 @@ export async function POST(req: Request) {
         email: email?.trim() || null,
         phoneNumber: phoneNumber?.trim() || null,
         voteNumber: voteNumber?.trim() || null,
-        tinNumber: tinNumber?.trim() || null
-      }
+        tinNumber: tinNumber?.trim() || null,
+      },
     });
 
     console.log('Created new Institution:', newInstitution);
 
-    return NextResponse.json({
-      success: true,
-      data: newInstitution,
-      message: 'Institution created successfully'
-    }, { status: 201 });
-
+    return NextResponse.json(
+      {
+        success: true,
+        data: newInstitution,
+        message: 'Institution created successfully',
+      },
+      { status: 201 }
+    );
   } catch (error) {
-    console.error("[INSTITUTIONS_POST]", error);
+    console.error('[INSTITUTIONS_POST]', error);
 
     // Handle unique constraint violations from Prisma
     if ((error as any).code === 'P2002') {
       const target = (error as any).meta?.target;
       if (target && target.includes('tinNumber')) {
-        return NextResponse.json({
-          success: false,
-          message: 'An institution with this Tin Number already exists'
-        }, { status: 409 });
+        return NextResponse.json(
+          {
+            success: false,
+            message: 'An institution with this Tin Number already exists',
+          },
+          { status: 409 }
+        );
       }
       if (target && target.includes('name')) {
-        return NextResponse.json({
-          success: false,
-          message: 'An institution with this name already exists'
-        }, { status: 409 });
+        return NextResponse.json(
+          {
+            success: false,
+            message: 'An institution with this name already exists',
+          },
+          { status: 409 }
+        );
       }
     }
 
-    return NextResponse.json({
-      success: false,
-      message: 'Internal Server Error',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        success: false,
+        message: 'Internal Server Error',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
   }
 }

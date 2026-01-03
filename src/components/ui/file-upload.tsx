@@ -44,10 +44,10 @@ export function FileUpload({
   onPreview,
   disabled = false,
   required = false,
-  className
+  className,
 }: FileUploadProps) {
   const [uploading, setUploading] = useState(false);
-  
+
   // Get auth state
   const { accessToken, user } = useAuthStore();
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -60,189 +60,234 @@ export function FileUpload({
     return keys.filter(Boolean);
   }, [value]);
 
-  const handleFileSelect = useCallback(async (files: FileList) => {
-    if (disabled || uploading) return;
+  const handleFileSelect = useCallback(
+    async (files: FileList) => {
+      if (disabled || uploading) return;
 
-    const fileArray = Array.from(files);
+      const fileArray = Array.from(files);
 
-    // Validate files
-    for (const file of fileArray) {
-      // Check file size
-      if (file.size > maxSize * 1024 * 1024) {
+      // Validate files
+      for (const file of fileArray) {
+        // Check file size
+        if (file.size > maxSize * 1024 * 1024) {
+          toast({
+            title: 'File Size Error',
+            description: `File ${file.name} is larger than ${maxSize}MB`,
+            variant: 'destructive',
+          });
+          return;
+        }
+
+        // Check file type if accept is specified for PDF only
+        if (accept === '.pdf' && file.type !== 'application/pdf') {
+          toast({
+            title: 'File Type Error',
+            description: `File ${file.name} is not a PDF file. Please select only PDF files.`,
+            variant: 'destructive',
+          });
+          return;
+        }
+      }
+
+      if (!multiple && fileArray.length > 1) {
         toast({
-          title: 'File Size Error',
-          description: `File ${file.name} is larger than ${maxSize}MB`,
-          variant: 'destructive'
+          title: 'Error',
+          description: 'You can only upload one file',
+          variant: 'destructive',
         });
         return;
       }
 
-      // Check file type if accept is specified for PDF only
-      if (accept === '.pdf' && file.type !== 'application/pdf') {
-        toast({
-          title: 'File Type Error',
-          description: `File ${file.name} is not a PDF file. Please select only PDF files.`,
-          variant: 'destructive'
-        });
-        return;
-      }
-    }
+      try {
+        setUploading(true);
+        setUploadProgress(0);
 
-    if (!multiple && fileArray.length > 1) {
-      toast({
-        title: 'Error',
-        description: 'You can only upload one file',
-        variant: 'destructive'
-      });
-      return;
-    }
+        const uploadedKeys: string[] = [];
+        const failedFiles: string[] = [];
 
-    try {
-      setUploading(true);
-      setUploadProgress(0);
+        // Calculate total size for weighted progress
+        const totalSize = fileArray.reduce((sum, file) => sum + file.size, 0);
+        const fileProgress: { [key: number]: number } = {};
 
-      const uploadedKeys: string[] = [];
-      const failedFiles: string[] = [];
+        // Upload files with real progress tracking using XMLHttpRequest
+        const uploadFile = async (file: File, index: number) => {
+          return new Promise<{
+            success: boolean;
+            objectKey?: string;
+            fileName: string;
+            error?: string;
+          }>((resolve) => {
+            try {
+              const formData = new FormData();
+              formData.append('file', file);
+              formData.append('folder', folder);
 
-      // Calculate total size for weighted progress
-      const totalSize = fileArray.reduce((sum, file) => sum + file.size, 0);
-      const fileProgress: { [key: number]: number } = {};
+              const xhr = new XMLHttpRequest();
 
-      // Upload files with real progress tracking using XMLHttpRequest
-      const uploadFile = async (file: File, index: number) => {
-        return new Promise<{ success: boolean; objectKey?: string; fileName: string; error?: string }>((resolve) => {
-          try {
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('folder', folder);
+              // Track upload progress for this specific file
+              xhr.upload.addEventListener('progress', (e) => {
+                if (e.lengthComputable) {
+                  // Store progress for this file (0-100)
+                  fileProgress[index] = (e.loaded / e.total) * 100;
 
-            const xhr = new XMLHttpRequest();
+                  // Calculate weighted average progress across all files
+                  let totalProgress = 0;
+                  fileArray.forEach((f, i) => {
+                    const progress = fileProgress[i] || 0;
+                    const weight = f.size / totalSize;
+                    totalProgress += progress * weight;
+                  });
 
-            // Track upload progress for this specific file
-            xhr.upload.addEventListener('progress', (e) => {
-              if (e.lengthComputable) {
-                // Store progress for this file (0-100)
-                fileProgress[index] = (e.loaded / e.total) * 100;
+                  setUploadProgress(totalProgress);
+                }
+              });
 
-                // Calculate weighted average progress across all files
-                let totalProgress = 0;
-                fileArray.forEach((f, i) => {
-                  const progress = fileProgress[i] || 0;
-                  const weight = f.size / totalSize;
-                  totalProgress += progress * weight;
-                });
-
-                setUploadProgress(totalProgress);
-              }
-            });
-
-            xhr.addEventListener('load', async () => {
-              if (xhr.status >= 200 && xhr.status < 300) {
-                try {
-                  const result = JSON.parse(xhr.responseText);
-                  if (result.success) {
-                    resolve({ success: true, objectKey: result.data.objectKey, fileName: file.name });
-                  } else {
-                    resolve({ success: false, error: result.message || 'Upload failed', fileName: file.name });
+              xhr.addEventListener('load', async () => {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                  try {
+                    const result = JSON.parse(xhr.responseText);
+                    if (result.success) {
+                      resolve({
+                        success: true,
+                        objectKey: result.data.objectKey,
+                        fileName: file.name,
+                      });
+                    } else {
+                      resolve({
+                        success: false,
+                        error: result.message || 'Upload failed',
+                        fileName: file.name,
+                      });
+                    }
+                  } catch (error: any) {
+                    resolve({
+                      success: false,
+                      error: 'Invalid server response',
+                      fileName: file.name,
+                    });
                   }
-                } catch (error: any) {
-                  resolve({ success: false, error: 'Invalid server response', fileName: file.name });
+                } else {
+                  try {
+                    const errorData = JSON.parse(xhr.responseText);
+                    resolve({
+                      success: false,
+                      error: errorData.message || 'Upload failed',
+                      fileName: file.name,
+                    });
+                  } catch {
+                    resolve({
+                      success: false,
+                      error: `Upload failed with status ${xhr.status}`,
+                      fileName: file.name,
+                    });
+                  }
                 }
-              } else {
-                try {
-                  const errorData = JSON.parse(xhr.responseText);
-                  resolve({ success: false, error: errorData.message || 'Upload failed', fileName: file.name });
-                } catch {
-                  resolve({ success: false, error: `Upload failed with status ${xhr.status}`, fileName: file.name });
-                }
-              }
-            });
+              });
 
-            xhr.addEventListener('error', () => {
-              resolve({ success: false, error: 'Network error occurred', fileName: file.name });
-            });
+              xhr.addEventListener('error', () => {
+                resolve({
+                  success: false,
+                  error: 'Network error occurred',
+                  fileName: file.name,
+                });
+              });
 
-            xhr.addEventListener('abort', () => {
-              resolve({ success: false, error: 'Upload was cancelled', fileName: file.name });
-            });
+              xhr.addEventListener('abort', () => {
+                resolve({
+                  success: false,
+                  error: 'Upload was cancelled',
+                  fileName: file.name,
+                });
+              });
 
-            xhr.open('POST', '/api/files/upload');
-            xhr.withCredentials = true; // Include cookies for session-based auth
-            xhr.send(formData);
+              xhr.open('POST', '/api/files/upload');
+              xhr.withCredentials = true; // Include cookies for session-based auth
+              xhr.send(formData);
+            } catch (error: any) {
+              console.error(`Upload error for ${file.name}:`, error);
+              resolve({
+                success: false,
+                error: error.message,
+                fileName: file.name,
+              });
+            }
+          });
+        };
 
-          } catch (error: any) {
-            console.error(`Upload error for ${file.name}:`, error);
-            resolve({ success: false, error: error.message, fileName: file.name });
+        // Upload all files in parallel
+        const uploadPromises = fileArray.map((file, index) =>
+          uploadFile(file, index)
+        );
+        const results = await Promise.all(uploadPromises);
+
+        // Process results
+        results.forEach((result) => {
+          if (result.success && result.objectKey) {
+            uploadedKeys.push(result.objectKey);
+          } else {
+            failedFiles.push(result.fileName);
           }
         });
-      };
 
-      // Upload all files in parallel
-      const uploadPromises = fileArray.map((file, index) => uploadFile(file, index));
-      const results = await Promise.all(uploadPromises);
-
-      // Process results
-      results.forEach(result => {
-        if (result.success && result.objectKey) {
-          uploadedKeys.push(result.objectKey);
-        } else {
-          failedFiles.push(result.fileName);
+        // Update value with successfully uploaded files
+        if (uploadedKeys.length > 0) {
+          if (multiple) {
+            const currentKeys = Array.isArray(value) ? value : [];
+            onChange?.([...currentKeys, ...uploadedKeys]);
+          } else {
+            onChange?.(uploadedKeys[0]);
+          }
         }
-      });
 
-      // Update value with successfully uploaded files
-      if (uploadedKeys.length > 0) {
-        if (multiple) {
-          const currentKeys = Array.isArray(value) ? value : [];
-          onChange?.([ ...currentKeys, ...uploadedKeys]);
+        // Show appropriate toast based on results
+        if (uploadedKeys.length > 0 && failedFiles.length === 0) {
+          // All uploads successful
+          toast({
+            title: 'Success',
+            description: `${uploadedKeys.length} file${uploadedKeys.length === 1 ? '' : 's'} uploaded successfully`,
+          });
+        } else if (uploadedKeys.length > 0 && failedFiles.length > 0) {
+          // Partial success
+          toast({
+            title: 'Partial Upload',
+            description: `${uploadedKeys.length} file(s) uploaded. ${failedFiles.length} file(s) failed: ${failedFiles.join(', ')}`,
+            variant: 'default',
+          });
         } else {
-          onChange?.(uploadedKeys[0]);
+          // All uploads failed
+          throw new Error(
+            `All uploads failed. Files: ${failedFiles.join(', ')}`
+          );
+        }
+      } catch (error: any) {
+        console.error('Upload error:', error);
+        toast({
+          title: 'Upload Error',
+          description: error.message || 'Failed to upload file',
+          variant: 'destructive',
+        });
+      } finally {
+        setUploading(false);
+        setUploadProgress(0);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
         }
       }
+    },
+    [disabled, uploading, maxSize, multiple, folder, value, onChange, user]
+  );
 
-      // Show appropriate toast based on results
-      if (uploadedKeys.length > 0 && failedFiles.length === 0) {
-        // All uploads successful
-        toast({
-          title: 'Success',
-          description: `${uploadedKeys.length} file${uploadedKeys.length === 1 ? '' : 's'} uploaded successfully`,
-        });
-      } else if (uploadedKeys.length > 0 && failedFiles.length > 0) {
-        // Partial success
-        toast({
-          title: 'Partial Upload',
-          description: `${uploadedKeys.length} file(s) uploaded. ${failedFiles.length} file(s) failed: ${failedFiles.join(', ')}`,
-          variant: 'default',
-        });
-      } else {
-        // All uploads failed
-        throw new Error(`All uploads failed. Files: ${failedFiles.join(', ')}`);
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setDragOver(false);
+
+      if (e.dataTransfer.files?.length) {
+        handleFileSelect(e.dataTransfer.files);
       }
-
-    } catch (error: any) {
-      console.error('Upload error:', error);
-      toast({
-        title: 'Upload Error',
-        description: error.message || 'Failed to upload file',
-        variant: 'destructive'
-      });
-    } finally {
-      setUploading(false);
-      setUploadProgress(0);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    }
-  }, [disabled, uploading, maxSize, multiple, folder, value, onChange, user]);
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setDragOver(false);
-    
-    if (e.dataTransfer.files?.length) {
-      handleFileSelect(e.dataTransfer.files);
-    }
-  }, [handleFileSelect]);
+    },
+    [handleFileSelect]
+  );
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -254,31 +299,44 @@ export function FileUpload({
     setDragOver(false);
   }, []);
 
-  const handleRemoveFile = useCallback((indexOrKey: number | string) => {
-    if (disabled) return;
+  const handleRemoveFile = useCallback(
+    (indexOrKey: number | string) => {
+      if (disabled) return;
 
-    if (multiple) {
-      const currentKeys = Array.isArray(value) ? value : [];
-      const newKeys = typeof indexOrKey === 'number' 
-        ? currentKeys.filter((_, i) => i !== indexOrKey)
-        : currentKeys.filter(key => key !== indexOrKey);
-      onChange?.(newKeys);
-    } else {
-      onChange?.('');
-    }
-  }, [disabled, multiple, value, onChange]);
+      if (multiple) {
+        const currentKeys = Array.isArray(value) ? value : [];
+        const newKeys =
+          typeof indexOrKey === 'number'
+            ? currentKeys.filter((_, i) => i !== indexOrKey)
+            : currentKeys.filter((key) => key !== indexOrKey);
+        onChange?.(newKeys);
+      } else {
+        onChange?.('');
+      }
+    },
+    [disabled, multiple, value, onChange]
+  );
 
-  const handlePreview = useCallback((objectKey: string) => {
-    if (onPreview) {
-      onPreview(objectKey);
-    } else {
-      // Default preview behavior - open in new tab
-      window.open(`/api/files/preview/${encodeURIComponent(objectKey)}`, '_blank');
-    }
-  }, [onPreview]);
+  const handlePreview = useCallback(
+    (objectKey: string) => {
+      if (onPreview) {
+        onPreview(objectKey);
+      } else {
+        // Default preview behavior - open in new tab
+        window.open(
+          `/api/files/preview/${encodeURIComponent(objectKey)}`,
+          '_blank'
+        );
+      }
+    },
+    [onPreview]
+  );
 
   const handleDownload = useCallback((objectKey: string) => {
-    window.open(`/api/files/download/${encodeURIComponent(objectKey)}`, '_blank');
+    window.open(
+      `/api/files/download/${encodeURIComponent(objectKey)}`,
+      '_blank'
+    );
   }, []);
 
   const getFileIcon = (objectKey: string) => {
@@ -299,7 +357,7 @@ export function FileUpload({
           {required && <span className="text-red-500 ml-1">*</span>}
         </Label>
       )}
-      
+
       {description && (
         <p className="text-sm text-muted-foreground">{description}</p>
       )}
@@ -309,7 +367,9 @@ export function FileUpload({
         className={cn(
           'border-2 border-dashed rounded-lg p-6 text-center transition-colors',
           dragOver ? 'border-primary bg-primary/5' : 'border-border',
-          disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-primary/50'
+          disabled
+            ? 'opacity-50 cursor-not-allowed'
+            : 'cursor-pointer hover:border-primary/50'
         )}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
@@ -323,7 +383,7 @@ export function FileUpload({
         <p className="text-xs text-muted-foreground">
           Max size: {maxSize}MB | Allowed types: PDF only
         </p>
-        
+
         <Input
           ref={fileInputRef}
           type="file"
@@ -358,11 +418,14 @@ export function FileUpload({
               >
                 <div className="flex items-center space-x-2 flex-1 min-w-0">
                   {getFileIcon(objectKey)}
-                  <span className="text-sm truncate" title={getFileName(objectKey)}>
+                  <span
+                    className="text-sm truncate"
+                    title={getFileName(objectKey)}
+                  >
                     {getFileName(objectKey)}
                   </span>
                 </div>
-                
+
                 <div className="flex items-center space-x-1">
                   <Button
                     type="button"
@@ -374,7 +437,7 @@ export function FileUpload({
                   >
                     <Eye className="h-3 w-3" />
                   </Button>
-                  
+
                   <Button
                     type="button"
                     variant="ghost"
@@ -385,13 +448,15 @@ export function FileUpload({
                   >
                     <Download className="h-3 w-3" />
                   </Button>
-                  
+
                   {!disabled && (
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleRemoveFile(multiple ? index : objectKey)}
+                      onClick={() =>
+                        handleRemoveFile(multiple ? index : objectKey)
+                      }
                       className="h-8 w-8 p-0 text-destructive hover:text-destructive"
                       title="Remove"
                     >

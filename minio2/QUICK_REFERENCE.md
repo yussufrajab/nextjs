@@ -3,42 +3,50 @@
 ## Essential Commands for New Server
 
 ### 1️⃣ Start MinIO Service
+
 ```bash
 sudo systemctl start minio
 sudo systemctl status minio
 ```
 
 ### 2️⃣ Stop MinIO Service
+
 ```bash
 sudo systemctl stop minio
 ```
 
 ### 3️⃣ Restart MinIO Service
+
 ```bash
 sudo systemctl restart minio
 ```
 
 ### 4️⃣ View MinIO Logs
+
 ```bash
 sudo journalctl -u minio -f
 ```
 
 ### 5️⃣ Check MinIO Health
+
 ```bash
 curl http://localhost:9000/minio/health/live
 ```
 
 ### 6️⃣ List All Buckets
+
 ```bash
 mc ls local
 ```
 
 ### 7️⃣ Check Bucket Policy
+
 ```bash
 mc anonymous get local/<bucket-name>
 ```
 
 ### 8️⃣ Set Bucket Policy
+
 ```bash
 # Public read access
 mc anonymous set download local/<bucket-name>
@@ -48,11 +56,13 @@ mc anonymous set private local/<bucket-name>
 ```
 
 ### 9️⃣ Create New Bucket
+
 ```bash
 mc mb local/<bucket-name>
 ```
 
 ### 🔟 Remove Bucket
+
 ```bash
 mc rb local/<bucket-name>
 ```
@@ -62,6 +72,7 @@ mc rb local/<bucket-name>
 **URL**: http://SERVER_IP:9001
 
 **Login Credentials**:
+
 - Username: `csmsadmin`
 - Password: `Mamlaka2020MinIO`
 
@@ -111,6 +122,7 @@ MINIO_BUCKET_NAME=documents
 ## Troubleshooting Quick Checks
 
 ### MinIO won't start
+
 ```bash
 # Check if port is in use
 sudo netstat -tlnp | grep -E '9000|9001'
@@ -123,6 +135,7 @@ ls -la /minio/data
 ```
 
 ### Cannot connect to MinIO
+
 ```bash
 # Check if service is running
 systemctl status minio
@@ -135,6 +148,7 @@ curl http://localhost:9000/minio/health/live
 ```
 
 ### Bucket policies not working
+
 ```bash
 # Re-apply policy
 mc anonymous set download local/<bucket-name>
@@ -146,11 +160,13 @@ mc anonymous get local/<bucket-name>
 ## Data Migration Commands
 
 ### Using rsync
+
 ```bash
 rsync -avz --progress root@OLD_IP:/minio/data/ /minio/data/
 ```
 
 ### Using tar + scp
+
 ```bash
 # On old server
 tar czf minio-backup.tar.gz /minio/data
@@ -175,6 +191,7 @@ sudo ufw reload
 ## Backup Commands
 
 ### Manual Backup
+
 ```bash
 # Backup data directory
 tar czf minio-backup-$(date +%Y%m%d).tar.gz /minio/data
@@ -184,6 +201,7 @@ mc mirror local/documents /backup/documents-$(date +%Y%m%d)
 ```
 
 ### Restore from Backup
+
 ```bash
 # Stop MinIO
 sudo systemctl stop minio
@@ -198,6 +216,7 @@ sudo systemctl start minio
 ## Verification Checklist
 
 After migration:
+
 - [ ] `systemctl status minio` shows active (running)
 - [ ] `mc ls local` shows all 5 buckets
 - [ ] MinIO Console accessible at port 9001

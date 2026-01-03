@@ -1,13 +1,14 @@
 # Installation Guide
+
 ## Civil Service Management System (CSMS)
 
 ---
 
 ### Document Control
 
-| **Version** | **Date** | **Author** | **Changes** |
-|-------------|----------|------------|-------------|
-| 1.0 | 2025-01-15 | CSMS Technical Team | Initial installation guide |
+| **Version** | **Date**   | **Author**          | **Changes**                |
+| ----------- | ---------- | ------------------- | -------------------------- |
+| 1.0         | 2025-01-15 | CSMS Technical Team | Initial installation guide |
 
 **Document Classification**: RESTRICTED
 **Distribution**: System Administrators, Technical Team
@@ -34,10 +35,13 @@
 ## 1. Introduction
 
 ### 1.1 Purpose
+
 This guide provides step-by-step instructions for installing the Civil Service Management System (CSMS) on a production or development server.
 
 ### 1.2 Scope
+
 The installation covers:
+
 - Server preparation and dependencies
 - PostgreSQL database setup
 - MinIO object storage configuration
@@ -47,7 +51,9 @@ The installation covers:
 - Process management with PM2
 
 ### 1.3 Audience
+
 This guide is intended for:
+
 - System Administrators
 - DevOps Engineers
 - IT Technical Staff
@@ -133,32 +139,36 @@ This guide is intended for:
 ### 2.1 Hardware Requirements
 
 #### 2.1.1 Minimum Requirements (Development/Testing)
-| **Component** | **Specification** |
-|---------------|-------------------|
-| CPU | 2 cores (2.0 GHz+) |
-| RAM | 8 GB |
-| Storage | 100 GB SSD |
-| Network | 100 Mbps |
+
+| **Component** | **Specification**  |
+| ------------- | ------------------ |
+| CPU           | 2 cores (2.0 GHz+) |
+| RAM           | 8 GB               |
+| Storage       | 100 GB SSD         |
+| Network       | 100 Mbps           |
 
 #### 2.1.2 Recommended Requirements (Production)
-| **Component** | **Specification** |
-|---------------|-------------------|
-| CPU | 4 cores (2.5 GHz+) |
-| RAM | 16 GB |
-| Storage | 200 GB SSD (OS + Application) + 500 GB SSD (Database) + 1 TB HDD (MinIO) |
-| Network | 1 Gbps |
+
+| **Component** | **Specification**                                                        |
+| ------------- | ------------------------------------------------------------------------ |
+| CPU           | 4 cores (2.5 GHz+)                                                       |
+| RAM           | 16 GB                                                                    |
+| Storage       | 200 GB SSD (OS + Application) + 500 GB SSD (Database) + 1 TB HDD (MinIO) |
+| Network       | 1 Gbps                                                                   |
 
 #### 2.1.3 High-Availability Setup (Enterprise)
-| **Component** | **Specification** |
-|---------------|-------------------|
-| Application Servers | 2+ servers (4 CPU, 16 GB RAM each) |
-| Database Server | 1 primary + 1 replica (4 CPU, 32 GB RAM each) |
-| MinIO Servers | 4+ servers (2 CPU, 8 GB RAM, 1 TB each) |
-| Load Balancer | 2 servers (2 CPU, 4 GB RAM each) |
+
+| **Component**       | **Specification**                             |
+| ------------------- | --------------------------------------------- |
+| Application Servers | 2+ servers (4 CPU, 16 GB RAM each)            |
+| Database Server     | 1 primary + 1 replica (4 CPU, 32 GB RAM each) |
+| MinIO Servers       | 4+ servers (2 CPU, 8 GB RAM, 1 TB each)       |
+| Load Balancer       | 2 servers (2 CPU, 4 GB RAM each)              |
 
 ### 2.2 Software Requirements
 
 #### 2.2.1 Operating System
+
 - **Ubuntu 22.04 LTS** (Recommended)
 - **Ubuntu 20.04 LTS** (Supported)
 - **Debian 11+** (Supported)
@@ -168,41 +178,42 @@ This guide is intended for:
 
 #### 2.2.2 Required Software
 
-| **Software** | **Version** | **Purpose** |
-|--------------|-------------|-------------|
-| Node.js | 18.x LTS or 20.x LTS | Application runtime |
-| npm | 9.x+ | Package management |
-| PostgreSQL | 14.x, 15.x, or 16.x | Database server |
-| MinIO | Latest stable | Object storage |
-| Nginx | 1.18+ | Reverse proxy & web server |
-| PM2 | 5.x+ | Process management |
-| Git | 2.x+ | Version control |
-| Certbot | Latest | SSL/TLS certificates (Let's Encrypt) |
+| **Software** | **Version**          | **Purpose**                          |
+| ------------ | -------------------- | ------------------------------------ |
+| Node.js      | 18.x LTS or 20.x LTS | Application runtime                  |
+| npm          | 9.x+                 | Package management                   |
+| PostgreSQL   | 14.x, 15.x, or 16.x  | Database server                      |
+| MinIO        | Latest stable        | Object storage                       |
+| Nginx        | 1.18+                | Reverse proxy & web server           |
+| PM2          | 5.x+                 | Process management                   |
+| Git          | 2.x+                 | Version control                      |
+| Certbot      | Latest               | SSL/TLS certificates (Let's Encrypt) |
 
 #### 2.2.3 Optional Software
 
-| **Software** | **Version** | **Purpose** |
-|--------------|-------------|-------------|
-| Redis | 6.x+ | Session storage (future enhancement) |
-| Prometheus | Latest | Monitoring |
-| Grafana | Latest | Metrics visualization |
-| ELK Stack | Latest | Log aggregation |
+| **Software** | **Version** | **Purpose**                          |
+| ------------ | ----------- | ------------------------------------ |
+| Redis        | 6.x+        | Session storage (future enhancement) |
+| Prometheus   | Latest      | Monitoring                           |
+| Grafana      | Latest      | Metrics visualization                |
+| ELK Stack    | Latest      | Log aggregation                      |
 
 ### 2.3 Network Requirements
 
 #### 2.3.1 Firewall Ports
 
-| **Port** | **Protocol** | **Service** | **Access** |
-|----------|--------------|-------------|------------|
-| 22 | TCP | SSH | Restricted (admin only) |
-| 80 | TCP | HTTP | Public (redirects to HTTPS) |
-| 443 | TCP | HTTPS | Public |
-| 5432 | TCP | PostgreSQL | Localhost / Internal network only |
-| 9000 | TCP | MinIO API | Localhost / Internal network only |
-| 9001 | TCP | MinIO Console | Restricted (admin only) |
-| 9002 | TCP | Next.js App | Localhost only (behind Nginx) |
+| **Port** | **Protocol** | **Service**   | **Access**                        |
+| -------- | ------------ | ------------- | --------------------------------- |
+| 22       | TCP          | SSH           | Restricted (admin only)           |
+| 80       | TCP          | HTTP          | Public (redirects to HTTPS)       |
+| 443      | TCP          | HTTPS         | Public                            |
+| 5432     | TCP          | PostgreSQL    | Localhost / Internal network only |
+| 9000     | TCP          | MinIO API     | Localhost / Internal network only |
+| 9001     | TCP          | MinIO Console | Restricted (admin only)           |
+| 9002     | TCP          | Next.js App   | Localhost only (behind Nginx)     |
 
 #### 2.3.2 External Connectivity
+
 - **Internet Access**: Required for:
   - Package installation (apt, npm)
   - HRIMS API integration
@@ -413,6 +424,7 @@ sudo nano /etc/default/minio
 ```
 
 **Add the following content to `/etc/default/minio`**:
+
 ```bash
 # MinIO configuration
 MINIO_VOLUMES="/mnt/minio-data"
@@ -422,11 +434,13 @@ MINIO_ROOT_PASSWORD=YourSecurePasswordHere123!
 ```
 
 **Create MinIO systemd service**:
+
 ```bash
 sudo nano /etc/systemd/system/minio.service
 ```
 
 **Add the following content**:
+
 ```ini
 [Unit]
 Description=MinIO
@@ -463,6 +477,7 @@ WantedBy=multi-user.target
 ```
 
 **Start MinIO service**:
+
 ```bash
 # Reload systemd
 sudo systemctl daemon-reload
@@ -543,6 +558,7 @@ sudo nano /etc/postgresql/14/main/postgresql.conf
 ```
 
 **Recommended production settings** (adjust based on your RAM):
+
 ```conf
 # Memory Settings (for 16GB RAM server)
 shared_buffers = 4GB
@@ -577,11 +593,13 @@ log_timezone = 'UTC'
 ```
 
 **Configure PostgreSQL authentication**:
+
 ```bash
 sudo nano /etc/postgresql/14/main/pg_hba.conf
 ```
 
 **Add/modify the following lines**:
+
 ```conf
 # TYPE  DATABASE        USER            ADDRESS                 METHOD
 
@@ -598,6 +616,7 @@ host    nody            csms_user       ::1/128                 md5
 ```
 
 **Restart PostgreSQL**:
+
 ```bash
 sudo systemctl restart postgresql
 ```
@@ -688,6 +707,7 @@ sudo nano /etc/nginx/sites-available/csms
 ```
 
 **Add the following configuration**:
+
 ```nginx
 # Redirect HTTP to HTTPS
 server {
@@ -777,6 +797,7 @@ server {
 ```
 
 **Enable the site**:
+
 ```bash
 # Create symbolic link
 sudo ln -s /etc/nginx/sites-available/csms /etc/nginx/sites-enabled/
@@ -838,6 +859,7 @@ nano .env.local
 ```
 
 **Add the following configuration** (update with your actual values):
+
 ```bash
 # Database Configuration
 DATABASE_URL="postgresql://csms_user:YourSecurePassword123!@localhost:5432/nody?schema=public"
@@ -875,6 +897,7 @@ GOOGLE_GENAI_API_KEY=your-google-ai-api-key-here
 ```
 
 **Generate secure random strings**:
+
 ```bash
 # Generate SESSION_SECRET
 openssl rand -base64 32
@@ -884,6 +907,7 @@ openssl rand -hex 32
 ```
 
 **Set proper permissions**:
+
 ```bash
 # Restrict access to .env.local
 chmod 600 .env.local
@@ -919,6 +943,7 @@ npx prisma validate
 ### 6.7 Seed Database (Optional)
 
 If you have a seed script:
+
 ```bash
 # Seed initial data (system admin, institutions, etc.)
 npx prisma db seed
@@ -1026,41 +1051,45 @@ ls -la .next/server/
 ### 8.2 Configure PM2
 
 Create PM2 ecosystem file:
+
 ```bash
 nano ecosystem.config.js
 ```
 
 **Add the following configuration**:
+
 ```javascript
 module.exports = {
-  apps: [{
-    name: 'csms-production',
-    script: 'npm',
-    args: 'start',
-    cwd: '/var/www/csms',
-    instances: 4, // Adjust based on CPU cores
-    exec_mode: 'cluster',
-    env: {
-      NODE_ENV: 'production',
-      PORT: 9002
+  apps: [
+    {
+      name: 'csms-production',
+      script: 'npm',
+      args: 'start',
+      cwd: '/var/www/csms',
+      instances: 4, // Adjust based on CPU cores
+      exec_mode: 'cluster',
+      env: {
+        NODE_ENV: 'production',
+        PORT: 9002,
+      },
+      error_file: '/var/log/csms/error.log',
+      out_file: '/var/log/csms/out.log',
+      log_file: '/var/log/csms/combined.log',
+      time: true,
+      max_memory_restart: '1G',
+      autorestart: true,
+      max_restarts: 10,
+      min_uptime: '10s',
+      listen_timeout: 5000,
+      kill_timeout: 5000,
+      wait_ready: true,
+      shutdown_with_message: true,
+      watch: false,
+      ignore_watch: ['node_modules', 'logs', '.next/cache'],
+      merge_logs: true,
+      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
     },
-    error_file: '/var/log/csms/error.log',
-    out_file: '/var/log/csms/out.log',
-    log_file: '/var/log/csms/combined.log',
-    time: true,
-    max_memory_restart: '1G',
-    autorestart: true,
-    max_restarts: 10,
-    min_uptime: '10s',
-    listen_timeout: 5000,
-    kill_timeout: 5000,
-    wait_ready: true,
-    shutdown_with_message: true,
-    watch: false,
-    ignore_watch: ['node_modules', 'logs', '.next/cache'],
-    merge_logs: true,
-    log_date_format: 'YYYY-MM-DD HH:mm:ss Z'
-  }]
+  ],
 };
 ```
 
@@ -1211,6 +1240,7 @@ ip addr show | grep inet
 2. Navigate to a form that allows file upload
 3. Upload a test PDF file (< 2MB)
 4. Verify file appears in MinIO:
+
 ```bash
 mc ls csms-local/csms-documents
 ```
@@ -1332,12 +1362,14 @@ curl -I https://csms.zanajira.go.tz
 #### 10.2.1 Database Backup Script
 
 Create backup script:
+
 ```bash
 sudo mkdir -p /usr/local/bin
 sudo nano /usr/local/bin/backup-csms-db.sh
 ```
 
 **Add the following content**:
+
 ```bash
 #!/bin/bash
 
@@ -1363,6 +1395,7 @@ echo "$(date): Database backup completed: ${DB_NAME}_${DATE}.sql.gz" >> $BACKUP_
 ```
 
 **Make executable**:
+
 ```bash
 sudo chmod +x /usr/local/bin/backup-csms-db.sh
 ```
@@ -1393,6 +1426,7 @@ sudo nano /usr/local/bin/backup-csms-minio.sh
 ```
 
 **Add the following content**:
+
 ```bash
 #!/bin/bash
 
@@ -1416,6 +1450,7 @@ echo "$(date): MinIO backup completed: csms-documents-${DATE}.tar.gz" >> $BACKUP
 ```
 
 **Make executable and schedule**:
+
 ```bash
 sudo chmod +x /usr/local/bin/backup-csms-minio.sh
 
@@ -1445,11 +1480,13 @@ pm2 monit
 #### 10.3.2 System Resource Monitoring
 
 Create monitoring script:
+
 ```bash
 sudo nano /usr/local/bin/monitor-csms.sh
 ```
 
 **Add the following content**:
+
 ```bash
 #!/bin/bash
 
@@ -1482,6 +1519,7 @@ echo "" >> $LOG_FILE
 ```
 
 **Make executable and schedule**:
+
 ```bash
 sudo chmod +x /usr/local/bin/monitor-csms.sh
 
@@ -1504,6 +1542,7 @@ sudo nano /etc/fail2ban/jail.d/csms.conf
 ```
 
 **Add the following content**:
+
 ```ini
 [csms-auth]
 enabled = true
@@ -1516,11 +1555,13 @@ findtime = 600
 ```
 
 **Create filter**:
+
 ```bash
 sudo nano /etc/fail2ban/filter.d/csms-auth.conf
 ```
 
 **Add the following content**:
+
 ```ini
 [Definition]
 failregex = ^<HOST> .* "POST /api/auth/login HTTP.*" 401
@@ -1528,6 +1569,7 @@ ignoreregex =
 ```
 
 **Restart Fail2Ban**:
+
 ```bash
 sudo systemctl restart fail2ban
 sudo fail2ban-client status csms-auth
@@ -1560,6 +1602,7 @@ sudo dpkg-reconfigure -plow unattended-upgrades
 **Symptoms**: PM2 shows app as "errored" or constantly restarting
 
 **Diagnosis**:
+
 ```bash
 # Check PM2 logs
 pm2 logs csms-production --lines 100
@@ -1573,6 +1616,7 @@ cat /var/www/csms/.env.local
 ```
 
 **Solutions**:
+
 ```bash
 # If port is in use, kill the process
 sudo kill -9 $(sudo lsof -t -i:9002)
@@ -1599,6 +1643,7 @@ pm2 restart csms-production
 **Symptoms**: "Can't reach database server" or "Connection refused"
 
 **Diagnosis**:
+
 ```bash
 # Check PostgreSQL status
 sudo systemctl status postgresql
@@ -1614,6 +1659,7 @@ sudo tail -f /var/log/postgresql/postgresql-14-main.log
 ```
 
 **Solutions**:
+
 ```bash
 # If PostgreSQL is not running
 sudo systemctl start postgresql
@@ -1643,6 +1689,7 @@ pm2 restart csms-production
 **Symptoms**: "Unable to connect to MinIO" or "Access Denied"
 
 **Diagnosis**:
+
 ```bash
 # Check MinIO status
 sudo systemctl status minio
@@ -1658,6 +1705,7 @@ mc ls csms-local
 ```
 
 **Solutions**:
+
 ```bash
 # If MinIO is not running
 sudo systemctl start minio
@@ -1683,6 +1731,7 @@ pm2 restart csms-production
 **Symptoms**: Browser shows "502 Bad Gateway" error
 
 **Diagnosis**:
+
 ```bash
 # Check if application is running
 pm2 status
@@ -1698,6 +1747,7 @@ sudo nginx -t
 ```
 
 **Solutions**:
+
 ```bash
 # If application is not running
 pm2 start ecosystem.config.js
@@ -1722,6 +1772,7 @@ sudo systemctl reload nginx
 **Symptoms**: "Your connection is not private" or certificate warnings
 
 **Diagnosis**:
+
 ```bash
 # Check certificate
 sudo certbot certificates
@@ -1734,6 +1785,7 @@ echo | openssl s_client -connect csms.zanajira.go.tz:443 2>/dev/null | openssl x
 ```
 
 **Solutions**:
+
 ```bash
 # Renew certificate
 sudo certbot renew --force-renewal
@@ -1754,6 +1806,7 @@ sudo systemctl reload nginx
 **Symptoms**: File upload returns error or times out
 
 **Diagnosis**:
+
 ```bash
 # Check Nginx client_max_body_size
 grep client_max_body_size /etc/nginx/sites-available/csms
@@ -1769,6 +1822,7 @@ df -h
 ```
 
 **Solutions**:
+
 ```bash
 # Increase Nginx upload limit
 sudo nano /etc/nginx/sites-available/csms
@@ -1794,6 +1848,7 @@ sudo systemctl restart minio
 **Symptoms**: Server slow, out of memory errors
 
 **Diagnosis**:
+
 ```bash
 # Check memory usage
 free -h
@@ -1807,6 +1862,7 @@ swapon --show
 ```
 
 **Solutions**:
+
 ```bash
 # Reduce PM2 instances
 pm2 scale csms-production 2
@@ -1832,6 +1888,7 @@ pm2 restart csms-production
 **Symptoms**: Cannot fetch employee data from HRIMS
 
 **Diagnosis**:
+
 ```bash
 # Check HRIMS configuration
 grep HRIMS /var/www/csms/.env.local
@@ -1844,6 +1901,7 @@ pm2 logs csms-production | grep -i hrims
 ```
 
 **Solutions**:
+
 ```bash
 # Enable mock mode temporarily
 nano /var/www/csms/.env.local
@@ -1915,6 +1973,7 @@ If you cannot resolve the issue:
    - Quick Start Guide: `/home/latest/docs/Quick_Start_Guide.md`
 
 2. **Collect Information**:
+
    ```bash
    # Create diagnostic report
    mkdir -p ~/csms-diagnostic
@@ -1940,11 +1999,13 @@ If you cannot resolve the issue:
 ### 12.1 Regular Maintenance Tasks
 
 #### 12.1.1 Daily Tasks
+
 - [ ] Check application status: `pm2 status`
 - [ ] Review error logs: `pm2 logs csms-production --lines 50 | grep -i error`
 - [ ] Monitor disk usage: `df -h`
 
 #### 12.1.2 Weekly Tasks
+
 - [ ] Review all logs for errors
 - [ ] Check backup completion
 - [ ] Monitor database size
@@ -1952,6 +2013,7 @@ If you cannot resolve the issue:
 - [ ] Check SSL certificate expiration
 
 #### 12.1.3 Monthly Tasks
+
 - [ ] Update system packages: `sudo apt update && sudo apt upgrade`
 - [ ] Review and archive old logs
 - [ ] Database maintenance: `VACUUM` and `ANALYZE`
@@ -2074,6 +2136,7 @@ sudo logrotate -d /etc/logrotate.d/csms
 ### Appendix A: Quick Reference
 
 #### Essential Commands
+
 ```bash
 # Start services
 sudo systemctl start postgresql minio nginx
@@ -2104,29 +2167,29 @@ psql -U csms_user -d nody -h localhost -c "SELECT 1;"
 
 ### Appendix B: Port Reference
 
-| Port | Service | Access | Description |
-|------|---------|--------|-------------|
-| 22 | SSH | Restricted | Remote administration |
-| 80 | HTTP | Public | Redirects to HTTPS |
-| 443 | HTTPS | Public | Web application |
-| 5432 | PostgreSQL | Localhost | Database server |
-| 9000 | MinIO API | Localhost | Object storage |
+| Port | Service       | Access     | Description           |
+| ---- | ------------- | ---------- | --------------------- |
+| 22   | SSH           | Restricted | Remote administration |
+| 80   | HTTP          | Public     | Redirects to HTTPS    |
+| 443  | HTTPS         | Public     | Web application       |
+| 5432 | PostgreSQL    | Localhost  | Database server       |
+| 9000 | MinIO API     | Localhost  | Object storage        |
 | 9001 | MinIO Console | Restricted | MinIO admin interface |
-| 9002 | Next.js | Localhost | Application server |
+| 9002 | Next.js       | Localhost  | Application server    |
 
 ### Appendix C: File Locations
 
-| Component | Location |
-|-----------|----------|
-| Application | `/var/www/csms` |
-| Configuration | `/var/www/csms/.env.local` |
-| Nginx Config | `/etc/nginx/sites-available/csms` |
-| PostgreSQL Data | `/var/lib/postgresql/14/main` |
-| MinIO Data | `/mnt/minio-data` |
-| Application Logs | `/var/log/csms/` |
-| Nginx Logs | `/var/log/nginx/` |
-| PostgreSQL Logs | `/var/log/postgresql/` |
-| Backups | `/var/backups/csms/` |
+| Component        | Location                                     |
+| ---------------- | -------------------------------------------- |
+| Application      | `/var/www/csms`                              |
+| Configuration    | `/var/www/csms/.env.local`                   |
+| Nginx Config     | `/etc/nginx/sites-available/csms`            |
+| PostgreSQL Data  | `/var/lib/postgresql/14/main`                |
+| MinIO Data       | `/mnt/minio-data`                            |
+| Application Logs | `/var/log/csms/`                             |
+| Nginx Logs       | `/var/log/nginx/`                            |
+| PostgreSQL Logs  | `/var/log/postgresql/`                       |
+| Backups          | `/var/backups/csms/`                         |
 | SSL Certificates | `/etc/letsencrypt/live/csms.zanajira.go.tz/` |
 
 ### Appendix D: Environment Variables Reference

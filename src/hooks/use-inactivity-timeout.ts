@@ -30,7 +30,9 @@ interface UseInactivityTimeoutOptions {
   onTimeout?: () => void;
 }
 
-export function useInactivityTimeout(options: UseInactivityTimeoutOptions = {}) {
+export function useInactivityTimeout(
+  options: UseInactivityTimeoutOptions = {}
+) {
   const { enabled = true, onWarning, onTimeout } = options;
 
   const router = useRouter();
@@ -190,7 +192,10 @@ export function useInactivityTimeout(options: UseInactivityTimeoutOptions = {}) 
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     // Start timeout checking interval
-    timeoutCheckIntervalRef.current = setInterval(checkTimeout, CHECK_INTERVAL_MS);
+    timeoutCheckIntervalRef.current = setInterval(
+      checkTimeout,
+      CHECK_INTERVAL_MS
+    );
 
     // Start server activity update interval
     activityUpdateIntervalRef.current = setInterval(
@@ -215,7 +220,14 @@ export function useInactivityTimeout(options: UseInactivityTimeoutOptions = {}) 
         clearInterval(activityUpdateIntervalRef.current);
       }
     };
-  }, [enabled, user, handleActivity, checkTimeout, updateServerActivity, handleTimeout]);
+  }, [
+    enabled,
+    user,
+    handleActivity,
+    checkTimeout,
+    updateServerActivity,
+    handleTimeout,
+  ]);
 
   return {
     isActive,

@@ -304,14 +304,17 @@ describe('csrf-utils', () => {
     it('should default to process.env.NODE_ENV', () => {
       const originalEnv = process.env.NODE_ENV;
 
+      // @ts-expect-error - Modifying read-only property for testing
       process.env.NODE_ENV = 'production';
       const prodOptions = getCSRFCookieOptions();
       expect(prodOptions.secure).toBe(true);
 
+      // @ts-expect-error - Modifying read-only property for testing
       process.env.NODE_ENV = 'development';
       const devOptions = getCSRFCookieOptions();
       expect(devOptions.secure).toBe(false);
 
+      // @ts-expect-error - Modifying read-only property for testing
       process.env.NODE_ENV = originalEnv;
     });
 
@@ -344,21 +347,25 @@ describe('csrf-utils', () => {
 
     it('should include details in development', () => {
       const originalEnv = process.env.NODE_ENV;
+      // @ts-expect-error - Modifying read-only property for testing
       process.env.NODE_ENV = 'development';
 
       const error = createCSRFError('missing token');
       expect(error.details).toBe('missing token');
 
+      // @ts-expect-error - Modifying read-only property for testing
       process.env.NODE_ENV = originalEnv;
     });
 
     it('should hide details in production', () => {
       const originalEnv = process.env.NODE_ENV;
+      // @ts-expect-error - Modifying read-only property for testing
       process.env.NODE_ENV = 'production';
 
       const error = createCSRFError('missing token');
       expect(error.details).toBeUndefined();
 
+      // @ts-expect-error - Modifying read-only property for testing
       process.env.NODE_ENV = originalEnv;
     });
 
@@ -429,7 +436,8 @@ describe('csrf-utils', () => {
     });
 
     it('should log CSRF violation to audit system', async () => {
-      const { logAuditEvent, AuditEventCategory, AuditSeverity } = await import('@/lib/audit-logger');
+      const { logAuditEvent, AuditEventCategory, AuditSeverity } =
+        await import('@/lib/audit-logger');
 
       await logCSRFViolation(
         'user-123',
@@ -505,7 +513,9 @@ describe('csrf-utils', () => {
 
     it('should handle errors gracefully', async () => {
       const { logAuditEvent } = await import('@/lib/audit-logger');
-      (logAuditEvent as any).mockRejectedValueOnce(new Error('Audit system error'));
+      (logAuditEvent as any).mockRejectedValueOnce(
+        new Error('Audit system error')
+      );
 
       // Should not throw
       await expect(

@@ -17,7 +17,9 @@ export const SESSION_WARNING_BEFORE_MS = 60 * 1000; // Warn 1 minute before time
  * @param lastActivity - The user's last activity timestamp
  * @returns true if session has timed out, false otherwise
  */
-export function isSessionTimedOut(lastActivity: Date | null | undefined): boolean {
+export function isSessionTimedOut(
+  lastActivity: Date | null | undefined
+): boolean {
   if (!lastActivity) {
     // No activity recorded, consider it timed out
     return true;
@@ -35,7 +37,9 @@ export function isSessionTimedOut(lastActivity: Date | null | undefined): boolea
  * @param lastActivity - The user's last activity timestamp
  * @returns Remaining time in milliseconds, or 0 if already timed out
  */
-export function getRemainingSessionTime(lastActivity: Date | null | undefined): number {
+export function getRemainingSessionTime(
+  lastActivity: Date | null | undefined
+): number {
   if (!lastActivity) {
     return 0;
   }
@@ -53,7 +57,9 @@ export function getRemainingSessionTime(lastActivity: Date | null | undefined): 
  * @param lastActivity - The user's last activity timestamp
  * @returns true if within warning period, false otherwise
  */
-export function isSessionWarning(lastActivity: Date | null | undefined): boolean {
+export function isSessionWarning(
+  lastActivity: Date | null | undefined
+): boolean {
   const remainingTime = getRemainingSessionTime(lastActivity);
   return remainingTime > 0 && remainingTime <= SESSION_WARNING_BEFORE_MS;
 }

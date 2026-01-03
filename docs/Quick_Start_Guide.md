@@ -1,19 +1,20 @@
 # QUICK START GUIDE
+
 ## CIVIL SERVICE MANAGEMENT SYSTEM (CSMS)
 
 ---
 
 ## Document Control
 
-| Item | Details |
-|------|---------|
-| **Document Title** | Quick Start Guide - Civil Service Management System |
-| **Project Name** | Civil Service Management System (CSMS) |
-| **Version** | 1.0 |
-| **Date Prepared** | December 26, 2025 |
-| **System URL** | https://csms.zanajira.go.tz |
-| **Audience** | All CSMS Users |
-| **Document Status** | Final |
+| Item                | Details                                             |
+| ------------------- | --------------------------------------------------- |
+| **Document Title**  | Quick Start Guide - Civil Service Management System |
+| **Project Name**    | Civil Service Management System (CSMS)              |
+| **Version**         | 1.0                                                 |
+| **Date Prepared**   | December 26, 2025                                   |
+| **System URL**      | https://csms.zanajira.go.tz                         |
+| **Audience**        | All CSMS Users                                      |
+| **Document Status** | Final                                               |
 
 ---
 
@@ -49,17 +50,17 @@ The **Civil Service Management System (CSMS)** is Zanzibar's comprehensive platf
 
 CSMS serves **9 different user roles**:
 
-| Role | Who You Are | What You Do |
-|------|-------------|-------------|
-| **HRO** | HR Officer | Submit HR requests for your institution |
-| **HHRMD** | Head of HR & Disciplinary | Approve all HR and disciplinary matters |
-| **HRMO** | HR Management Officer | Approve HR requests (confirmations, promotions, etc.) |
-| **DO** | Disciplinary Officer | Handle complaints and terminations |
-| **PO** | Planning Officer | View reports and analytics |
-| **CSCS** | CSC Secretary | Executive oversight of all activities |
-| **HRRP** | HR Responsible Personnel | Institutional HR supervisor |
-| **ADMIN** | Administrator | Manage users, institutions, and system |
-| **EMPLOYEE** | Civil Service Employee | View profile and submit complaints |
+| Role         | Who You Are               | What You Do                                           |
+| ------------ | ------------------------- | ----------------------------------------------------- |
+| **HRO**      | HR Officer                | Submit HR requests for your institution               |
+| **HHRMD**    | Head of HR & Disciplinary | Approve all HR and disciplinary matters               |
+| **HRMO**     | HR Management Officer     | Approve HR requests (confirmations, promotions, etc.) |
+| **DO**       | Disciplinary Officer      | Handle complaints and terminations                    |
+| **PO**       | Planning Officer          | View reports and analytics                            |
+| **CSCS**     | CSC Secretary             | Executive oversight of all activities                 |
+| **HRRP**     | HR Responsible Personnel  | Institutional HR supervisor                           |
+| **ADMIN**    | Administrator             | Manage users, institutions, and system                |
+| **EMPLOYEE** | Civil Service Employee    | View profile and submit complaints                    |
 
 ### 1.3 System Access
 
@@ -75,21 +76,25 @@ CSMS serves **9 different user roles**:
 #### For Staff Users (HRO, HHRMD, HRMO, DO, PO, CSCS, HRRP, ADMIN)
 
 **Step 1: Navigate to CSMS**
+
 1. Open your web browser
 2. Go to: **https://csms.zanajira.go.tz**
 3. You'll see the login page
 
 **Step 2: Enter Your Credentials**
+
 1. **Username or Email**: Enter your assigned username
 2. **Password**: Enter your password
 3. Click **Login**
 
 **Step 3: First Login Welcome**
+
 - You'll see a welcome notification
 - You'll be redirected to your dashboard
 - Take a moment to familiarize yourself with the layout
 
 **Important:** If this is your first login with a default password, change it immediately:
+
 1. Click on your profile icon
 2. Select **Change Password**
 3. Enter current password
@@ -100,15 +105,18 @@ CSMS serves **9 different user roles**:
 #### For Employees
 
 **Step 1: Navigate to Employee Portal**
+
 1. Go to: **https://csms.zanajira.go.tz/employee-login**
 
 **Step 2: Enter Your Information**
 You need three pieces of information:
+
 1. **ZanID**: Your Zanzibar ID number (format: XX-XXXXX-XXXXX-XX)
 2. **Payroll Number**: Your payroll number
 3. **ZSSF Number**: Your Social Security number
 
 **Step 3: Access Your Profile**
+
 - Click **Submit**
 - You'll see your employee profile
 - You can view your information and submit complaints
@@ -118,6 +126,7 @@ You need three pieces of information:
 #### Dashboard Layout
 
 **Top Navigation Bar:**
+
 - **Home**: Return to dashboard
 - **Notifications**: Bell icon showing unread notifications
 - **Profile**: Your name and role (click for profile/settings)
@@ -125,22 +134,26 @@ You need three pieces of information:
 **Main Dashboard Sections:**
 
 **For HRO (HR Officer):**
+
 - **Quick Stats**: Total employees, pending requests
 - **Pending Approvals**: Requests awaiting review
 - **Recent Activities**: Latest system activities
 - **Quick Actions**: Buttons to submit new requests
 
 **For Approvers (HHRMD, HRMO, DO):**
+
 - **Pending Approvals**: Requests requiring your action
 - **System Metrics**: Overall system statistics
 - **Recent Decisions**: Your recent approvals/rejections
 - **Dashboard by Request Type**: Organized view of all request categories
 
 **For Planning Officer (PO):**
+
 - Direct access to **Reports** module
 - No dashboard view (reports-focused role)
 
 **For CSC Secretary (CSCS):**
+
 - **Executive Dashboard**: High-level overview
 - **Task Status by Officer**: HHRMD, HRMO, DO activities
 - **System-wide Metrics**: All institutions
@@ -150,6 +163,7 @@ You need three pieces of information:
 **Left Sidebar Menu** (varies by role):
 
 **Common Modules:**
+
 - 🏠 **Dashboard**: Overview and quick stats
 - 👥 **Employees**: View employee profiles
 - 📊 **Reports**: Generate reports
@@ -157,6 +171,7 @@ You need three pieces of information:
 - ⚙️ **Settings**: User preferences
 
 **Request Modules** (for HRO):
+
 - ✅ **Confirmations**: Employee confirmations
 - 📈 **Promotions**: Promotion requests
 - 🏖️ **LWOP**: Leave Without Pay
@@ -167,9 +182,11 @@ You need three pieces of information:
 - ⚠️ **Terminations**: Termination requests
 
 **Approval Modules** (for HHRMD, HRMO, DO):
+
 - Same modules as above, but for reviewing/approving
 
 **Admin Modules** (for ADMIN):
+
 - 👤 **User Management**: Create/manage users
 - 🏢 **Institution Management**: Create/manage institutions
 - 🔗 **HRIMS Integration**: Sync employee data
@@ -179,16 +196,19 @@ You need three pieces of information:
 #### If You're an HR Officer (HRO)
 
 **✓ Familiarize Yourself with Your Institution's Employees**
+
 1. Click **Employees** in the sidebar
 2. Browse the list (you'll only see your institution)
 3. Click on an employee to view their profile
 
 **✓ Check for Pending Tasks**
+
 1. View your dashboard
 2. Look for any pending requests
 3. Check notifications
 
 **✓ Try Submitting a Test Request** (if applicable)
+
 1. Navigate to any request module
 2. Explore the "New Request" form
 3. Understand the required fields
@@ -196,16 +216,19 @@ You need three pieces of information:
 #### If You're an Approver (HHRMD, HRMO, DO)
 
 **✓ Review Pending Approvals**
+
 1. Go to your dashboard
 2. Click on "Pending Approvals"
 3. Review each request type
 
 **✓ Understand Your Authority**
+
 - **HHRMD**: Can approve ALL request types
 - **HRMO**: Can approve HR requests (NOT complaints/terminations)
 - **DO**: Can approve complaints and terminations only
 
 **✓ Check Recent Activities**
+
 1. View the recent activities feed
 2. Understand what actions have been taken
 3. See who submitted/approved what
@@ -213,6 +236,7 @@ You need three pieces of information:
 #### If You're a Planning Officer (PO)
 
 **✓ Explore Reports**
+
 1. Navigate to **Reports**
 2. See all 10 available report types
 3. Try generating a sample report
@@ -221,11 +245,13 @@ You need three pieces of information:
 #### If You're an Administrator (ADMIN)
 
 **✓ Review System Setup**
+
 1. Check **User Management**: Verify all users are created
 2. Check **Institution Management**: Ensure all institutions exist
 3. Test **HRIMS Integration**: Verify connection
 
 **✓ Monitor System Health**
+
 1. Check recent activities
 2. Review user accounts
 3. Monitor system logs
@@ -233,11 +259,13 @@ You need three pieces of information:
 #### If You're an Employee
 
 **✓ Review Your Profile**
+
 1. Check your personal information
 2. View your employment details
 3. Check your status (On Probation, Confirmed, etc.)
 
 **✓ Understand How to Submit Complaints**
+
 1. Navigate to **Complaints**
 2. Understand the complaint form
 3. Know what information is required
@@ -253,6 +281,7 @@ You need three pieces of information:
 **When:** Employee has completed probation period (typically 1 year)
 
 **Steps:**
+
 1. Navigate to **Confirmations** module
 2. Click **New Confirmation Request**
 3. **Select Employee**:
@@ -268,6 +297,7 @@ You need three pieces of information:
 8. **Notification**: HHRMD and DO are automatically notified
 
 **What Happens Next:**
+
 - Request status: "Pending"
 - HHRMD or HRMO will review and approve/reject
 - You'll receive a notification when decision is made
@@ -276,10 +306,12 @@ You need three pieces of information:
 #### Task 2: Submit a Promotion Request
 
 **Types of Promotions:**
+
 1. **Experience-based**: Requires 3 years of performance appraisals
 2. **Education-based**: Requires educational certificates
 
 **Steps:**
+
 1. Navigate to **Promotions** module
 2. Click **New Promotion Request**
 3. **Select Employee** (must be "Confirmed" status)
@@ -305,6 +337,7 @@ You need three pieces of information:
 8. Click **Submit**
 
 **What Happens Next:**
+
 - HHRMD or HRMO reviews
 - If approved: Employee cadre updated to proposed cadre
 - You receive notification of decision
@@ -314,6 +347,7 @@ You need three pieces of information:
 **When:** Employee needs unpaid leave
 
 **Steps:**
+
 1. Navigate to **LWOP** module
 2. Click **New LWOP Request**
 3. **Select Employee** (cannot be already on LWOP)
@@ -325,16 +359,19 @@ You need three pieces of information:
 9. Click **Submit**
 
 **Important:**
+
 - End date must be after start date
 - Employee cannot be already "On LWOP"
 
 **What Happens Next:**
+
 - HHRMD or HRMO reviews
 - If approved: Employee status changes to "On LWOP"
 
 #### Task 4: Track Request Status
 
 **Steps:**
+
 1. Navigate to **Track Status** module
 2. **View All Requests**: See all your submitted requests
 3. **Filter**:
@@ -350,6 +387,7 @@ You need three pieces of information:
 #### Task 1: Review and Approve Confirmation Request
 
 **Steps:**
+
 1. Go to **Dashboard** → **Pending Approvals**
 2. Click on **Confirmations**
 3. **Select a Request** to review
@@ -380,6 +418,7 @@ You need three pieces of information:
    - HRO notified with reason
 
 **What Happens Next:**
+
 - HRO receives notification
 - Request appears in history
 - If approved: Employee can now be promoted, etc.
@@ -387,6 +426,7 @@ You need three pieces of information:
 #### Task 2: Review Promotion Request
 
 **Steps:**
+
 1. Navigate to **Promotions** module
 2. Click on pending request
 3. **Review Details**:
@@ -413,6 +453,7 @@ You need three pieces of information:
 #### Task 3: Handle Complaint
 
 **Steps:**
+
 1. Navigate to **Complaints** module
 2. **View Complaint Details**:
    - Case ID (unique identifier)
@@ -440,6 +481,7 @@ You need three pieces of information:
    - Employee can respond
 
 **Complaint Status:**
+
 - Pending → Under Review → Resolved
 - OR
 - Pending → More Info Requested → Under Review → Resolved
@@ -449,6 +491,7 @@ You need three pieces of information:
 #### Your Authority
 
 **You CAN Approve:**
+
 - ✅ Confirmations
 - ✅ Promotions
 - ✅ LWOP
@@ -458,6 +501,7 @@ You need three pieces of information:
 - ✅ Service Extensions
 
 **You CANNOT Approve:**
+
 - ❌ Complaints (HHRMD and DO only)
 - ❌ Terminations/Dismissals (HHRMD and DO only)
 
@@ -466,6 +510,7 @@ You need three pieces of information:
 **Process:** Same as HHRMD for allowed request types
 
 **Quick Approval Workflow:**
+
 1. Dashboard → Pending Approvals
 2. Select request type
 3. Click on specific request
@@ -476,6 +521,7 @@ You need three pieces of information:
 #### Task 2: Generate Reports
 
 **Steps:**
+
 1. Navigate to **Reports**
 2. Select report type
 3. Set filters (date range, institution)
@@ -487,16 +533,19 @@ You need three pieces of information:
 #### Your Authority
 
 **You CAN Approve:**
+
 - ✅ Complaints
 - ✅ Terminations
 - ✅ Dismissals
 
 **You CANNOT Approve:**
+
 - ❌ Other HR requests (HHRMD and HRMO handle these)
 
 #### Task 1: Review Complaint
 
 **Steps:**
+
 1. Navigate to **Complaints**
 2. Review pending complaints
 3. Assess severity and type
@@ -507,10 +556,12 @@ You need three pieces of information:
 #### Task 2: Review Termination Request
 
 **Types:**
+
 - **TERMINATION**: Normal separation
 - **DISMISSAL**: Disciplinary action
 
 **Steps:**
+
 1. Navigate to **Terminations** module
 2. Click on pending request
 3. **Review Details**:
@@ -534,11 +585,13 @@ You need three pieces of information:
 #### Your Role
 
 **You CAN:**
+
 - ✅ View all reports from all modules
 - ✅ Access data from all institutions
 - ✅ Export reports to PDF/Excel
 
 **You CANNOT:**
+
 - ❌ Approve or submit requests
 - ❌ Access dashboard
 - ❌ Modify data
@@ -546,6 +599,7 @@ You need three pieces of information:
 #### Task 1: Generate Comprehensive Reports
 
 **Available Report Types:**
+
 1. **Confirmation Report**: All confirmation requests
 2. **Promotion Report**: All promotions with types
 3. **LWOP Report**: Leave without pay requests
@@ -558,6 +612,7 @@ You need three pieces of information:
 10. **All Requests Report**: Combined view of all requests
 
 **Steps:**
+
 1. Navigate to **Reports**
 2. **Select Report Type**
 3. **Set Filters**:
@@ -576,6 +631,7 @@ You need three pieces of information:
 #### Task 2: Analyze Trends
 
 **Best Practices:**
+
 1. Run monthly reports for all request types
 2. Compare month-over-month trends
 3. Identify institutions with high activity
@@ -587,6 +643,7 @@ You need three pieces of information:
 #### Your Role
 
 **Executive Oversight:**
+
 - View all actions by HHRMD, HRMO, DO
 - Access all employee profiles
 - Download all reports
@@ -594,11 +651,13 @@ You need three pieces of information:
 - System-wide visibility
 
 **You CANNOT:**
+
 - Approve or reject requests (oversight only)
 
 #### Task 1: Monitor Task Statuses
 
 **Steps:**
+
 1. View **Executive Dashboard**
 2. **Review Navigation Menu** showing:
    - Tasks pending with HHRMD
@@ -616,6 +675,7 @@ You need three pieces of information:
 #### Task 2: Review System Activities
 
 **Steps:**
+
 1. Navigate to **Recent Activities**
 2. **Filter by**:
    - Date range
@@ -633,6 +693,7 @@ You need three pieces of information:
 #### Your Role
 
 **Institutional Supervisor:**
+
 - View own institution's data only
 - Dashboard shows institutional HR activities
 - Access employee profiles in institution
@@ -642,6 +703,7 @@ You need three pieces of information:
 #### Task 1: Monitor Institutional HR Activities
 
 **Steps:**
+
 1. View **Institutional Dashboard**
 2. **Review Metrics**:
    - Total employees in institution
@@ -656,6 +718,7 @@ You need three pieces of information:
 #### Task 2: Review Employee Profiles
 
 **Steps:**
+
 1. Navigate to **Employees**
 2. **View List**: Only your institution's employees
 3. **Click on Employee**: View full profile
@@ -671,6 +734,7 @@ You need three pieces of information:
 #### Task 1: Create New User
 
 **Steps:**
+
 1. Navigate to **User Management**
 2. Click **Create User**
 3. **Fill in Details**:
@@ -685,6 +749,7 @@ You need three pieces of information:
 5. **Confirmation**: User created successfully
 
 **Validation Errors:**
+
 - Username already exists → Choose different username
 - Email already exists → Use different email
 - Invalid phone → Must be 10 digits
@@ -692,6 +757,7 @@ You need three pieces of information:
 #### Task 2: Create New Institution
 
 **Steps:**
+
 1. Navigate to **Institution Management**
 2. Click **Create Institution**
 3. **Fill in Details**:
@@ -703,6 +769,7 @@ You need three pieces of information:
 4. Click **Submit**
 
 **After Creation:**
+
 - Institution appears in list
 - Can now create HRO for this institution
 - Institution available in dropdowns
@@ -710,6 +777,7 @@ You need three pieces of information:
 #### Task 3: Reset User Password
 
 **Steps:**
+
 1. Navigate to **User Management**
 2. Search/select user
 3. Click **Reset Password**
@@ -721,6 +789,7 @@ You need three pieces of information:
 #### Task 4: Sync Employee Data from HRIMS
 
 **Single Employee Sync:**
+
 1. Navigate to **HRIMS Integration**
 2. Click **Fetch Employee**
 3. Enter ZanID or Payroll Number
@@ -729,6 +798,7 @@ You need three pieces of information:
 6. Click **Sync to CSMS**
 
 **Bulk Employee Sync:**
+
 1. Navigate to **HRIMS Integration** → **Bulk Fetch**
 2. Select institution
 3. Set page size (default: 50)
@@ -737,6 +807,7 @@ You need three pieces of information:
 6. Review summary
 
 **Sync Photos:**
+
 1. **HRIMS Integration** → **Fetch Photos**
 2. Select institution
 3. Click **Fetch All Photos**
@@ -744,6 +815,7 @@ You need three pieces of information:
 5. Photos stored in MinIO
 
 **Sync Documents:**
+
 1. **HRIMS Integration** → **Fetch Documents**
 2. Select institution
 3. Select document types (Ardhil Hali, Birth Certificate, etc.)
@@ -755,6 +827,7 @@ You need three pieces of information:
 #### Task 1: View Your Profile
 
 **Steps:**
+
 1. Go to **https://csms.zanajira.go.tz/employee-login**
 2. Enter:
    - ZanID
@@ -774,6 +847,7 @@ You need three pieces of information:
 #### Task 2: Submit a Complaint
 
 **Steps:**
+
 1. Navigate to **Complaints**
 2. Click **Submit Complaint**
 3. **Fill in Form**:
@@ -789,6 +863,7 @@ You need three pieces of information:
    - Notification sent to HHRMD and DO (in Swahili)
 
 **After Submission:**
+
 - You'll receive updates via notifications
 - Can view complaint status
 - Can respond if more info requested
@@ -796,6 +871,7 @@ You need three pieces of information:
 #### Task 3: Track Your Complaints
 
 **Steps:**
+
 1. Navigate to **My Complaints**
 2. **View List**: All your submitted complaints
 3. **Check Status**:
@@ -818,6 +894,7 @@ You need three pieces of information:
 **Timeline:** 2-5 business days
 
 **Participants:**
+
 - **HRO** (HR Officer): Submits request
 - **HHRMD or HRMO**: Approves/rejects
 - **Employee**: Benefits from confirmation
@@ -831,6 +908,7 @@ You need three pieces of information:
 **Detailed Steps:**
 
 **Day 1 - HRO Submits Request:**
+
 1. HRO logs in
 2. Goes to Confirmations module
 3. Clicks "New Confirmation Request"
@@ -844,6 +922,7 @@ You need three pieces of information:
    - Notification sent to HHRMD and DO
 
 **Day 2-3 - HHRMD/HRMO Reviews:**
+
 1. HHRMD/HRMO receives notification
 2. Logs in and views pending approvals
 3. Clicks on confirmation request
@@ -856,6 +935,7 @@ You need three pieces of information:
 **Day 4 - Decision Made:**
 
 **If Approved:**
+
 - HHRMD/HRMO clicks "Approve"
 - Adds comments (optional)
 - Confirms approval
@@ -867,6 +947,7 @@ You need three pieces of information:
   - Employee record updated
 
 **If Rejected:**
+
 - HHRMD/HRMO clicks "Reject"
 - Enters rejection reason (required)
 - Confirms rejection
@@ -877,6 +958,7 @@ You need three pieces of information:
   - Can resubmit after addressing issues
 
 **Day 5 - Follow-up:**
+
 - HRO checks notification
 - Reviews decision
 - If rejected: Addresses issues and resubmits
@@ -889,6 +971,7 @@ You need three pieces of information:
 **Timeline:** 5-10 business days
 
 **Participants:**
+
 - **HRO**: Submits request
 - **HHRMD or HRMO**: Approves/rejects
 - **Employee**: Receives promotion
@@ -902,6 +985,7 @@ You need three pieces of information:
 **Detailed Steps:**
 
 **Week 1 - Day 1: HRO Prepares**
+
 1. Collect required documents:
    - Performance appraisal Year 1 (PDF)
    - Performance appraisal Year 2 (PDF)
@@ -912,6 +996,7 @@ You need three pieces of information:
 3. Verify employee is "Confirmed" status (not On Probation, LWOP, or separated)
 
 **Week 1 - Day 2: HRO Submits**
+
 1. Navigate to Promotions module
 2. Click "New Promotion Request"
 3. Select employee
@@ -922,6 +1007,7 @@ You need three pieces of information:
 8. **Result**: Notification sent to HHRMD and DO
 
 **Week 1 - Day 3-5: HHRMD/HRMO Reviews**
+
 1. Receives notification
 2. Views promotion request
 3. Reviews:
@@ -938,6 +1024,7 @@ You need three pieces of information:
 **Week 2 - Day 8: Decision**
 
 **If Approved:**
+
 - Click "Approve"
 - Add comments
 - **System Actions**:
@@ -947,6 +1034,7 @@ You need three pieces of information:
   - Employee record reflects new cadre
 
 **If Rejected:**
+
 - Click "Reject"
 - Enter detailed reason
 - **System Actions**:
@@ -955,6 +1043,7 @@ You need three pieces of information:
   - HRO notified with reason
 
 **Week 2 - Day 10: Verification**
+
 - HRO verifies employee record
 - Confirms cadre updated
 - Documents filed
@@ -974,6 +1063,7 @@ You need three pieces of information:
 **Phase 1: LWOP Request (Days 1-5)**
 
 **Day 1 - HRO Submits:**
+
 1. Navigate to LWOP module
 2. Create new LWOP request
 3. Select employee (must not be already on LWOP)
@@ -986,18 +1076,21 @@ You need three pieces of information:
 6. Submit
 
 **Day 3 - HHRMD/HRMO Reviews:**
+
 1. Reviews request
 2. Verifies dates (end date after start date)
 3. Reviews reason
 4. Makes decision
 
 **Day 5 - Approval:**
+
 - If approved:
   - Employee status → "On LWOP"
   - Start date recorded
   - HRO notified
 
 **Phase 2: LWOP Period (6 months)**
+
 - Employee on leave without pay
 - Status in system: "On LWOP"
 - Cannot submit other requests while on LWOP
@@ -1006,6 +1099,7 @@ You need three pieces of information:
 **Phase 3: Return to Work**
 
 **End of 6 Months:**
+
 1. HRO submits "Return from LWOP" request or administrative action
 2. HHRMD/HRMO approves return
 3. **System Actions**:
@@ -1020,6 +1114,7 @@ You need three pieces of information:
 **Timeline:** 10-30 business days (depending on complexity)
 
 **Participants:**
+
 - **Employee**: Submits complaint
 - **HHRMD or DO**: Reviews and resolves
 - **Assigned Officer**: May be assigned to handle
@@ -1033,6 +1128,7 @@ You need three pieces of information:
 **Detailed Steps:**
 
 **Day 1 - Employee Submits Complaint:**
+
 1. Employee logs in via employee portal
 2. Navigates to Complaints
 3. Clicks "Submit Complaint"
@@ -1050,6 +1146,7 @@ You need three pieces of information:
    - Notification sent to HHRMD and DO (in Swahili)
 
 **Day 2 - HHRMD/DO Acknowledges:**
+
 1. Receives notification
 2. Views complaint
 3. Reviews:
@@ -1060,12 +1157,14 @@ You need three pieces of information:
 4. Assesses severity and type
 
 **Day 3 - Assignment (if needed):**
+
 1. HHRMD/DO decides to assign
 2. Selects officer role to handle
 3. Adds internal notes
 4. Officer receives notification
 
 **Day 5-15 - Investigation:**
+
 1. Assigned officer investigates
 2. May request more information:
    - Clicks "Request More Info"
@@ -1077,6 +1176,7 @@ You need three pieces of information:
 5. Adds internal notes (not visible to employee)
 
 **Day 20 - Resolution:**
+
 1. Officer/HHRMD/DO makes determination
 2. Adds resolution notes
 3. Marks as "Resolved"
@@ -1087,6 +1187,7 @@ You need three pieces of information:
    - Case closed
 
 **Day 21 - Follow-up:**
+
 - Employee views resolution
 - Can see officer comments
 - Case history maintained
@@ -1106,6 +1207,7 @@ You need three pieces of information:
 **Detailed Steps:**
 
 **Week 1 - Day 1: HRO Prepares**
+
 1. Verifies employee retirement date approaching
 2. Checks employee age (retirement age: typically 60)
 3. Collects required documents:
@@ -1114,6 +1216,7 @@ You need three pieces of information:
    - Final performance appraisal
 
 **Week 1 - Day 2: HRO Submits**
+
 1. Navigates to Retirements module
 2. Creates new retirement request
 3. Selects employee
@@ -1124,6 +1227,7 @@ You need three pieces of information:
 8. **Result**: Notification sent to HHRMD and DO
 
 **Week 2 - Day 5-8: HHRMD/HRMO Reviews**
+
 1. Reviews retirement request
 2. Verifies:
    - Employee age and retirement date
@@ -1132,6 +1236,7 @@ You need three pieces of information:
 3. Checks for any pending requests or issues
 
 **Week 2 - Day 10: Approval**
+
 1. HHRMD/HRMO approves
 2. Adds comments (optional)
 3. **System Actions**:
@@ -1141,6 +1246,7 @@ You need three pieces of information:
    - HRO notified
 
 **Week 3 - Day 15: Final Processing**
+
 - HRO verifies employee status
 - Retirement effective on proposed date
 - Employee record updated
@@ -1155,12 +1261,14 @@ You need three pieces of information:
 #### ✓ Use Notifications Wisely
 
 **Stay Updated:**
+
 - Check notifications bell icon regularly
 - Click on notification to go directly to relevant item
 - Mark notifications as read after action
 - Enable browser notifications for urgent items
 
 **Notification Types:**
+
 - 🟢 **Green**: Approvals, confirmations
 - 🟡 **Yellow**: Pending actions requiring your attention
 - 🔴 **Red**: Rejections, urgent matters
@@ -1168,6 +1276,7 @@ You need three pieces of information:
 #### ✓ Organize Your Work
 
 **Daily Routine:**
+
 1. **Start of Day**:
    - Check notifications
    - Review dashboard
@@ -1183,6 +1292,7 @@ You need three pieces of information:
 #### ✓ Document Management
 
 **File Best Practices:**
+
 - **Always use PDF format** (only format accepted)
 - **Keep files under 2MB**:
   - Compress large PDFs before upload
@@ -1195,12 +1305,14 @@ You need three pieces of information:
 #### ✓ Search and Filter Effectively
 
 **Quick Search:**
+
 - Use employee name search for quick access
 - Filter by status to see pending vs. completed
 - Use date range filters for reports
 - Combine filters for precise results
 
 **Example Searches:**
+
 - "Show me all pending confirmations from last month"
 - "Find rejected promotion requests"
 - "View all employees on LWOP"
@@ -1210,23 +1322,27 @@ You need three pieces of information:
 #### For HRO (HR Officers)
 
 **✓ Prepare Documents in Advance**
+
 - Keep template letters ready
 - Maintain checklist for each request type
 - Create folder structure for easy retrieval
 - Scan documents as you receive them
 
 **✓ Track Deadlines**
+
 - Mark probation end dates on calendar
 - Set reminders for upcoming retirements
 - Track promotion eligibility dates
 - Monitor LWOP return dates
 
 **✓ Batch Similar Requests**
+
 - Submit multiple confirmations at once
 - Group promotion requests by type
 - Process requests by institution department
 
 **✓ Maintain Good Records**
+
 - Keep spreadsheet of submitted requests
 - Note request IDs and dates
 - Track approval/rejection patterns
@@ -1235,24 +1351,28 @@ You need three pieces of information:
 #### For Approvers (HHRMD, HRMO, DO)
 
 **✓ Set Review Schedule**
+
 - Dedicate specific times for approvals
 - Process oldest requests first
 - Batch review similar requests
 - Avoid letting requests pile up
 
 **✓ Provide Clear Feedback**
+
 - When rejecting, be specific about issues
 - Suggest what needs correction
 - Reference policy or guidelines
 - Be professional and constructive
 
 **✓ Prioritize Effectively**
+
 - Handle urgent requests first (retirements, terminations)
 - Group by type for efficiency
 - Check document completeness before deep review
 - Use internal notes for complex cases
 
 **✓ Quality Over Speed**
+
 - Verify all documents thoroughly
 - Cross-reference employee records
 - Check for policy compliance
@@ -1261,24 +1381,28 @@ You need three pieces of information:
 #### For Planning Officer (PO)
 
 **✓ Schedule Regular Reports**
+
 - Run monthly reports on 1st of month
 - Generate quarterly summaries
 - Create annual reports
 - Save report configurations for reuse
 
 **✓ Export and Archive**
+
 - Download reports to Excel for analysis
 - Save PDF copies for records
 - Create comparison spreadsheets
 - Archive by date and type
 
 **✓ Identify Trends**
+
 - Compare month-over-month changes
 - Track institutional differences
 - Monitor approval rates
 - Note seasonal patterns
 
 **✓ Share Insights**
+
 - Prepare summary presentations
 - Highlight key findings
 - Suggest process improvements
@@ -1287,24 +1411,28 @@ You need three pieces of information:
 #### For Administrators
 
 **✓ User Management Best Practices**
+
 - Create naming convention for usernames
 - Use institutional email addresses
 - Document password resets
 - Regular audit of user accounts
 
 **✓ Security Maintenance**
+
 - Deactivate users who leave
 - Review user permissions quarterly
 - Monitor login activities
 - Keep admin credentials secure
 
 **✓ HRIMS Sync Schedule**
+
 - Weekly sync for new employees
 - Monthly sync for updates
 - Quarterly full sync
 - After major HRIMS changes
 
 **✓ Backup Verification**
+
 - Test restores monthly
 - Verify backup completion daily
 - Keep offsite copies
@@ -1313,12 +1441,14 @@ You need three pieces of information:
 #### For Employees
 
 **✓ Keep Information Updated**
+
 - Verify your profile regularly
 - Report discrepancies immediately
 - Update contact information
 - Check document accuracy
 
 **✓ Complaint Submission Best Practices**
+
 - Be specific and factual
 - Provide evidence (documents, dates)
 - Include all relevant details
@@ -1326,6 +1456,7 @@ You need three pieces of information:
 - Follow up if no response in 2 weeks
 
 **✓ Document Everything**
+
 - Save copies of submitted complaints
 - Note case IDs
 - Keep communication records
@@ -1343,18 +1474,21 @@ You need three pieces of information:
 #### ✓ Browser Tips
 
 **Recommended Browsers:**
+
 - Chrome (recommended)
 - Firefox
 - Edge
 - Safari
 
 **Browser Settings:**
+
 - Enable JavaScript
 - Allow cookies from csms.zanajira.go.tz
 - Don't use "Private/Incognito" mode (sessions won't persist)
 - Clear cache if experiencing issues
 
 **Bookmark Important Pages:**
+
 - Dashboard
 - Most-used module (Confirmations, Promotions, etc.)
 - Reports page
@@ -1363,6 +1497,7 @@ You need three pieces of information:
 #### ✓ Mobile Access
 
 **Access CSMS on Mobile:**
+
 - System is responsive and mobile-friendly
 - Use mobile browser (Chrome, Safari)
 - Vertical scrolling for tables
@@ -1370,6 +1505,7 @@ You need three pieces of information:
 - Same functionality as desktop
 
 **Mobile Best Practices:**
+
 - Use WiFi for file uploads
 - Portrait mode for forms
 - Landscape mode for tables/reports
@@ -1380,18 +1516,22 @@ You need three pieces of information:
 #### Quick Actions by Role
 
 **HRO Quick Menu:**
+
 - Dashboard → "New Request" button → Select type → Quick submission
 - Employees → Search → View profile → One-click access to employee requests
 
 **Approver Quick Menu:**
+
 - Dashboard → Pending count badge → Click → Direct to pending list
 - Notification → Click → Direct to request requiring action
 
 **PO Quick Menu:**
+
 - Reports → Recent reports dropdown → Re-generate last report
 - Export → Last used format (PDF/Excel) remembered
 
 **Admin Quick Menu:**
+
 - User Management → "Quick Add User" → Simplified form
 - HRIMS → "Recent Syncs" → View last sync status
 
@@ -1400,6 +1540,7 @@ You need three pieces of information:
 #### "Upload Failed" Error
 
 **Quick Fix:**
+
 1. Check file is PDF format
 2. Verify file size < 2MB
 3. Refresh page
@@ -1409,6 +1550,7 @@ You need three pieces of information:
 #### "Session Expired" Message
 
 **Quick Fix:**
+
 1. Click "Login" again
 2. Enter credentials
 3. You'll return to where you were
@@ -1417,6 +1559,7 @@ You need three pieces of information:
 #### "Access Denied" Error
 
 **Quick Fix:**
+
 1. Verify you have correct role for this action
 2. Check you're accessing own institution (if HRO/HRRP)
 3. Contact administrator if issue persists
@@ -1425,6 +1568,7 @@ You need three pieces of information:
 #### Page Loading Slowly
 
 **Quick Fix:**
+
 1. Check internet connection
 2. Close unused browser tabs
 3. Clear browser cache
@@ -1434,6 +1578,7 @@ You need three pieces of information:
 #### Can't Find Employee
 
 **Quick Fix:**
+
 1. Check spelling of name
 2. Try ZanID search instead
 3. Verify employee is in your institution (HRO/HRRP)
@@ -1446,95 +1591,96 @@ You need three pieces of information:
 
 ### 6.1 Request Type Matrix
 
-| Request Type | Who Submits | Who Approves | Employee Status Required | Documents Required |
-|--------------|-------------|--------------|-------------------------|-------------------|
-| **Confirmation** | HRO | HHRMD, HRMO | On Probation | Performance eval, Recommendation |
-| **Promotion (Experience)** | HRO | HHRMD, HRMO | Confirmed | 3 years appraisals, CSC form, Letter |
-| **Promotion (Education)** | HRO | HHRMD, HRMO | Confirmed | Certificate, TCU (if applicable), Letter |
-| **LWOP** | HRO | HHRMD, HRMO | Not already on LWOP | Supporting documents |
-| **Cadre Change** | HRO | HHRMD, HRMO | Confirmed | Supporting documents, Justification |
-| **Retirement (Voluntary)** | HRO | HHRMD, HRMO | Confirmed | Request letter, Supporting docs |
-| **Retirement (Compulsory)** | HRO | HHRMD, HRMO | Confirmed, At retirement age | Birth certificate, Service record |
-| **Retirement (Illness)** | HRO | HHRMD, HRMO | Confirmed | Medical documents, Doctor's report |
-| **Resignation** | HRO | HHRMD, HRMO | Any | Resignation letter |
-| **Service Extension** | HRO | HHRMD, HRMO | Near retirement | Justification, Supporting docs |
-| **Termination** | HRO | HHRMD, DO | Any | Reason, Supporting evidence |
-| **Dismissal** | HRO | HHRMD, DO | Any | Disciplinary evidence |
-| **Complaint** | Employee | HHRMD, DO | Any | Evidence (optional) |
+| Request Type                | Who Submits | Who Approves | Employee Status Required     | Documents Required                       |
+| --------------------------- | ----------- | ------------ | ---------------------------- | ---------------------------------------- |
+| **Confirmation**            | HRO         | HHRMD, HRMO  | On Probation                 | Performance eval, Recommendation         |
+| **Promotion (Experience)**  | HRO         | HHRMD, HRMO  | Confirmed                    | 3 years appraisals, CSC form, Letter     |
+| **Promotion (Education)**   | HRO         | HHRMD, HRMO  | Confirmed                    | Certificate, TCU (if applicable), Letter |
+| **LWOP**                    | HRO         | HHRMD, HRMO  | Not already on LWOP          | Supporting documents                     |
+| **Cadre Change**            | HRO         | HHRMD, HRMO  | Confirmed                    | Supporting documents, Justification      |
+| **Retirement (Voluntary)**  | HRO         | HHRMD, HRMO  | Confirmed                    | Request letter, Supporting docs          |
+| **Retirement (Compulsory)** | HRO         | HHRMD, HRMO  | Confirmed, At retirement age | Birth certificate, Service record        |
+| **Retirement (Illness)**    | HRO         | HHRMD, HRMO  | Confirmed                    | Medical documents, Doctor's report       |
+| **Resignation**             | HRO         | HHRMD, HRMO  | Any                          | Resignation letter                       |
+| **Service Extension**       | HRO         | HHRMD, HRMO  | Near retirement              | Justification, Supporting docs           |
+| **Termination**             | HRO         | HHRMD, DO    | Any                          | Reason, Supporting evidence              |
+| **Dismissal**               | HRO         | HHRMD, DO    | Any                          | Disciplinary evidence                    |
+| **Complaint**               | Employee    | HHRMD, DO    | Any                          | Evidence (optional)                      |
 
 ### 6.2 Status Meanings
 
 #### Request Status
 
-| Status | Meaning | Next Action |
-|--------|---------|-------------|
-| **Pending** | Awaiting review | Approver will review |
-| **Under Review** | Being reviewed | Approver investigating |
-| **Approved by Commission** | Approved | Employee record updated |
-| **Rejected** | Not approved | Review rejection reason, resubmit if needed |
-| **More Info Requested** | Additional information needed | Submit requested information |
+| Status                     | Meaning                       | Next Action                                 |
+| -------------------------- | ----------------------------- | ------------------------------------------- |
+| **Pending**                | Awaiting review               | Approver will review                        |
+| **Under Review**           | Being reviewed                | Approver investigating                      |
+| **Approved by Commission** | Approved                      | Employee record updated                     |
+| **Rejected**               | Not approved                  | Review rejection reason, resubmit if needed |
+| **More Info Requested**    | Additional information needed | Submit requested information                |
 
 #### Employee Status
 
-| Status | Meaning | Eligible For |
-|--------|---------|--------------|
-| **On Probation** | Probationary period | Confirmation only |
-| **Confirmed** | Confirmed employee | Promotions, LWOP, Cadre change, etc. |
-| **On LWOP** | Leave without pay | Nothing (must return first) |
-| **Retired** | Retired from service | Nothing (service ended) |
-| **Resigned** | Resigned voluntarily | Nothing (service ended) |
-| **Terminated** | Terminated from service | Nothing (service ended) |
-| **Dismissed** | Dismissed (disciplinary) | Nothing (service ended) |
+| Status           | Meaning                  | Eligible For                         |
+| ---------------- | ------------------------ | ------------------------------------ |
+| **On Probation** | Probationary period      | Confirmation only                    |
+| **Confirmed**    | Confirmed employee       | Promotions, LWOP, Cadre change, etc. |
+| **On LWOP**      | Leave without pay        | Nothing (must return first)          |
+| **Retired**      | Retired from service     | Nothing (service ended)              |
+| **Resigned**     | Resigned voluntarily     | Nothing (service ended)              |
+| **Terminated**   | Terminated from service  | Nothing (service ended)              |
+| **Dismissed**    | Dismissed (disciplinary) | Nothing (service ended)              |
 
 ### 6.3 File Upload Requirements
 
-| Document Type | Format | Max Size | Required For |
-|--------------|--------|----------|-------------|
-| All Documents | PDF only | 2MB | All requests |
-| Performance Appraisal | PDF | 2MB | Promotions (experience), Confirmations |
-| Educational Certificate | PDF | 2MB | Promotions (education) |
-| Medical Documents | PDF | 2MB | Retirement (illness) |
-| Supporting Documents | PDF | 2MB | All requests (as needed) |
-| Complaint Attachments | PDF | 2MB | Complaints (optional) |
+| Document Type           | Format   | Max Size | Required For                           |
+| ----------------------- | -------- | -------- | -------------------------------------- |
+| All Documents           | PDF only | 2MB      | All requests                           |
+| Performance Appraisal   | PDF      | 2MB      | Promotions (experience), Confirmations |
+| Educational Certificate | PDF      | 2MB      | Promotions (education)                 |
+| Medical Documents       | PDF      | 2MB      | Retirement (illness)                   |
+| Supporting Documents    | PDF      | 2MB      | All requests (as needed)               |
+| Complaint Attachments   | PDF      | 2MB      | Complaints (optional)                  |
 
 ### 6.4 Notification Language
 
-| User Role | Notification Language |
-|-----------|---------------------|
-| Staff (HRO, HHRMD, etc.) | English |
-| Employee | Swahili |
+| User Role                | Notification Language |
+| ------------------------ | --------------------- |
+| Staff (HRO, HHRMD, etc.) | English               |
+| Employee                 | Swahili               |
 
 **Example Employee Notifications (Swahili):**
+
 - "Malalamiko yako yamepokelewa. Namba ya Kesi: CMP-2025-00123"
 - "Ombi lako la uthibitisho limepokelewa"
 - "Malalamiko yako yamesuluhishwa"
 
 ### 6.5 Contact Information
 
-| Need Help With | Contact | Method |
-|----------------|---------|--------|
-| Technical Issues | IT Support | helpdesk@csms.zanajira.go.tz |
-| Login Problems | System Admin | admin@csms.zanajira.go.tz |
-| User Account Issues | Administrator | Your institution's admin |
-| HRIMS Sync Issues | System Admin | admin@csms.zanajira.go.tz |
-| General Questions | Help Desk | +255 XX XXX XXXX |
+| Need Help With      | Contact       | Method                       |
+| ------------------- | ------------- | ---------------------------- |
+| Technical Issues    | IT Support    | helpdesk@csms.zanajira.go.tz |
+| Login Problems      | System Admin  | admin@csms.zanajira.go.tz    |
+| User Account Issues | Administrator | Your institution's admin     |
+| HRIMS Sync Issues   | System Admin  | admin@csms.zanajira.go.tz    |
+| General Questions   | Help Desk     | +255 XX XXX XXXX             |
 
 ### 6.6 Important URLs
 
-| Purpose | URL |
-|---------|-----|
-| Main Portal | https://csms.zanajira.go.tz |
-| Employee Login | https://csms.zanajira.go.tz/employee-login |
-| Help Documentation | https://csms.zanajira.go.tz/help |
+| Purpose            | URL                                        |
+| ------------------ | ------------------------------------------ |
+| Main Portal        | https://csms.zanajira.go.tz                |
+| Employee Login     | https://csms.zanajira.go.tz/employee-login |
+| Help Documentation | https://csms.zanajira.go.tz/help           |
 
 ### 6.7 Working Hours and Support
 
-| Service | Hours | Response Time |
-|---------|-------|---------------|
-| System Availability | 24/7 | - |
-| Help Desk | Mon-Fri, 8:00-17:00 | Same day |
-| Technical Support | Mon-Fri, 8:00-17:00 | Within 4 hours |
-| Emergency Support | 24/7 | Within 1 hour |
+| Service             | Hours               | Response Time  |
+| ------------------- | ------------------- | -------------- |
+| System Availability | 24/7                | -              |
+| Help Desk           | Mon-Fri, 8:00-17:00 | Same day       |
+| Technical Support   | Mon-Fri, 8:00-17:00 | Within 4 hours |
+| Emergency Support   | 24/7                | Within 1 hour  |
 
 ---
 
@@ -1545,16 +1691,19 @@ You need three pieces of information:
 #### In-System Help
 
 **1. Tooltips and Hints**
+
 - Hover over field labels for guidance
 - Look for 🛈 information icons
 - Read placeholder text in forms
 
 **2. Error Messages**
+
 - Read error messages carefully
 - Follow suggested corrections
 - Contact support if unclear
 
 **3. Help Section**
+
 - Navigate to Help in main menu
 - Search for specific topics
 - View video tutorials (if available)
@@ -1563,6 +1712,7 @@ You need three pieces of information:
 #### Documentation
 
 **Available Documents:**
+
 - **User Manual**: Comprehensive guide for all users
 - **Administrator Manual**: For system administrators
 - **Training Manual**: Step-by-step training guide
@@ -1602,6 +1752,7 @@ You need three pieces of information:
 #### Q: Why is the status in Swahili?
 
 **A:** CSMS is bilingual. Reports and some statuses show in Swahili to support all users. Common statuses:
+
 - **Imekamilika** = Approved/Completed
 - **Inasubiri** = Pending
 - **Imekataliwa** = Rejected
@@ -1619,6 +1770,7 @@ You need three pieces of information:
 #### Self-Service First
 
 **Before Contacting Support:**
+
 1. ✓ Read the error message carefully
 2. ✓ Check this Quick Start Guide
 3. ✓ Try logging out and back in
@@ -1628,6 +1780,7 @@ You need three pieces of information:
 #### When to Contact Support
 
 **Contact Help Desk For:**
+
 - Cannot login
 - Forgot password
 - Error messages you don't understand
@@ -1635,6 +1788,7 @@ You need three pieces of information:
 - Missing features or modules
 
 **Contact System Administrator For:**
+
 - Need new user account
 - Need password reset
 - Need role change
@@ -1642,6 +1796,7 @@ You need three pieces of information:
 - HRIMS sync issues
 
 **Contact IT Support For:**
+
 - Technical errors
 - Performance issues
 - Connection problems
@@ -1650,6 +1805,7 @@ You need three pieces of information:
 #### How to Report an Issue
 
 **Provide This Information:**
+
 1. **Your Details**:
    - Name
    - Role
@@ -1668,6 +1824,7 @@ You need three pieces of information:
    - Operating system (Windows, Mac, Android, iOS)
 
 **Example Good Report:**
+
 ```
 Name: John Doe
 Role: HRO
@@ -1682,6 +1839,7 @@ Device: Windows PC
 ### 7.4 Training and Workshops
 
 **Available Training:**
+
 - **New User Orientation**: For all new users
 - **Role-Specific Training**: Focused on your role
 - **Refresher Courses**: Quarterly updates
@@ -1695,6 +1853,7 @@ Device: Windows PC
 **We Want Your Feedback!**
 
 Help us improve CSMS by sharing:
+
 - Features you'd like to see
 - Process improvements
 - Usability suggestions
@@ -1702,6 +1861,7 @@ Help us improve CSMS by sharing:
 - Success stories
 
 **Submit Feedback:**
+
 - Email: feedback@csms.zanajira.go.tz
 - In-app feedback form (if available)
 - Through your institution's administrator
@@ -1712,43 +1872,43 @@ Help us improve CSMS by sharing:
 
 ### Common Terms
 
-| Term | Definition |
-|------|------------|
-| **Cadre** | Employee's professional category or rank |
-| **Confirmation** | Transition from probation to permanent status |
-| **CSC** | Civil Service Commission |
-| **HRIMS** | Human Resource Information Management System (external system) |
-| **HRO** | HR Officer - submits requests for institution |
-| **LWOP** | Leave Without Pay |
-| **Probation** | Initial trial period for new employees (typically 1 year) |
-| **ZanID** | Zanzibar ID number |
-| **ZSSF** | Zanzibar Social Security Fund number |
-| **Institution** | Government ministry, department, or agency |
-| **Payroll Number** | Employee's payroll identification number |
-| **Vote Number** | Budget code for institution |
-| **TIN** | Tax Identification Number |
+| Term               | Definition                                                     |
+| ------------------ | -------------------------------------------------------------- |
+| **Cadre**          | Employee's professional category or rank                       |
+| **Confirmation**   | Transition from probation to permanent status                  |
+| **CSC**            | Civil Service Commission                                       |
+| **HRIMS**          | Human Resource Information Management System (external system) |
+| **HRO**            | HR Officer - submits requests for institution                  |
+| **LWOP**           | Leave Without Pay                                              |
+| **Probation**      | Initial trial period for new employees (typically 1 year)      |
+| **ZanID**          | Zanzibar ID number                                             |
+| **ZSSF**           | Zanzibar Social Security Fund number                           |
+| **Institution**    | Government ministry, department, or agency                     |
+| **Payroll Number** | Employee's payroll identification number                       |
+| **Vote Number**    | Budget code for institution                                    |
+| **TIN**            | Tax Identification Number                                      |
 
 ### System Terms
 
-| Term | Definition |
-|------|------------|
-| **Dashboard** | Main overview page showing key metrics |
-| **Notification** | System alert about actions or updates |
-| **Request** | Formal submission for HR action |
-| **Approval** | Positive decision on a request |
-| **Rejection** | Negative decision on a request (with reason) |
-| **Status** | Current state of request or employee |
-| **Review Stage** | Current step in approval workflow |
-| **Case ID** | Unique identifier for complaints |
+| Term             | Definition                                   |
+| ---------------- | -------------------------------------------- |
+| **Dashboard**    | Main overview page showing key metrics       |
+| **Notification** | System alert about actions or updates        |
+| **Request**      | Formal submission for HR action              |
+| **Approval**     | Positive decision on a request               |
+| **Rejection**    | Negative decision on a request (with reason) |
+| **Status**       | Current state of request or employee         |
+| **Review Stage** | Current step in approval workflow            |
+| **Case ID**      | Unique identifier for complaints             |
 
 ### Swahili Status Terms
 
-| Swahili | English |
-|---------|---------|
+| Swahili         | English              |
+| --------------- | -------------------- |
 | **Imekamilika** | Approved / Completed |
-| **Inasubiri** | Pending |
-| **Imekataliwa** | Rejected |
-| **Inaendelea** | In Progress |
+| **Inasubiri**   | Pending              |
+| **Imekataliwa** | Rejected             |
+| **Inaendelea**  | In Progress          |
 
 ---
 
@@ -1792,6 +1952,7 @@ Help us improve CSMS by sharing:
 Congratulations! You now have the essential knowledge to use CSMS effectively.
 
 **Remember:**
+
 - **Start simple**: Master basic tasks before advanced features
 - **Use resources**: Refer to this guide, tooltips, and help section
 - **Ask for help**: Contact support when needed

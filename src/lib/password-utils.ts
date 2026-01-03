@@ -94,7 +94,9 @@ export function getPasswordFeedback(password: string): PasswordStrengthResult {
       warning: result.feedback.warning || '',
       suggestions: result.feedback.suggestions || [],
     },
-    crackTimeDisplay: String(result.crack_times_display.offline_slow_hashing_1e4_per_second),
+    crackTimeDisplay: String(
+      result.crack_times_display.offline_slow_hashing_1e4_per_second
+    ),
   };
 }
 

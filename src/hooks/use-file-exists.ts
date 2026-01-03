@@ -11,11 +11,13 @@ interface FileExistsResult {
   };
 }
 
-export function useFileExists(url: string | null | undefined): FileExistsResult {
+export function useFileExists(
+  url: string | null | undefined
+): FileExistsResult {
   const [result, setResult] = useState<FileExistsResult>({
     exists: false,
     loading: false,
-    error: null
+    error: null,
   });
 
   useEffect(() => {
@@ -51,41 +53,44 @@ export function useFileExists(url: string | null | undefined): FileExistsResult 
     }
 
     let isMounted = true;
-    
+
     const checkFileExists = async () => {
-      setResult(prev => ({ ...prev, loading: true, error: null }));
+      setResult((prev) => ({ ...prev, loading: true, error: null }));
 
       try {
-        const response = await fetch(`/api/files/exists/${encodeURIComponent(objectKey)}`, {
-          method: 'GET',
-          credentials: 'include'
-        });
+        const response = await fetch(
+          `/api/files/exists/${encodeURIComponent(objectKey)}`,
+          {
+            method: 'GET',
+            credentials: 'include',
+          }
+        );
 
         if (!isMounted) return;
 
         const data = await response.json();
-        
+
         if (data.success) {
           setResult({
             exists: data.exists,
             loading: false,
             error: null,
-            metadata: data.metadata
+            metadata: data.metadata,
           });
         } else {
           setResult({
             exists: false,
             loading: false,
-            error: data.error || 'Failed to check file existence'
+            error: data.error || 'Failed to check file existence',
           });
         }
       } catch (error) {
         if (!isMounted) return;
-        
+
         setResult({
           exists: false,
           loading: false,
-          error: error instanceof Error ? error.message : 'Network error'
+          error: error instanceof Error ? error.message : 'Network error',
         });
       }
     };

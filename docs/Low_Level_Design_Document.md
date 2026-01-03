@@ -1,4 +1,5 @@
 # LOW-LEVEL DESIGN DOCUMENT
+
 ## CIVIL SERVICE MANAGEMENT SYSTEM (CSMS)
 
 **Version 1.0 | December 25, 2025**
@@ -7,16 +8,16 @@
 
 ## Document Control
 
-| Item | Details |
-|------|---------|
-| **Document Title** | Low-Level Design Document |
-| **Project Name** | Civil Service Management System (CSMS) |
-| **Version** | 1.0 |
-| **Date Prepared** | December 25, 2025 |
-| **Prepared By** | Development Team |
-| **Reviewed By** | Lead Developer, System Architect |
-| **Approved By** | IT Department Head |
-| **Status** | Final |
+| Item               | Details                                |
+| ------------------ | -------------------------------------- |
+| **Document Title** | Low-Level Design Document              |
+| **Project Name**   | Civil Service Management System (CSMS) |
+| **Version**        | 1.0                                    |
+| **Date Prepared**  | December 25, 2025                      |
+| **Prepared By**    | Development Team                       |
+| **Reviewed By**    | Lead Developer, System Architect       |
+| **Approved By**    | IT Department Head                     |
+| **Status**         | Final                                  |
 
 ---
 
@@ -25,6 +26,7 @@
 This Low-Level Design (LLD) document provides detailed technical specifications for the Civil Service Management System (CSMS). It covers module specifications, class diagrams, sequence diagrams, algorithm designs, and code structure to guide developers in implementing and maintaining the system.
 
 **Key Coverage:**
+
 - Detailed module and class specifications
 - Sequence diagrams for critical workflows
 - Algorithm designs for core functionalities
@@ -61,23 +63,24 @@ This Low-Level Design (LLD) document provides detailed technical specifications 
 ```typescript
 class AuthStore {
   // State
-  user: User | null
-  role: Role | null
-  isAuthenticated: boolean
-  accessToken: string | null
-  refreshToken: string | null
+  user: User | null;
+  role: Role | null;
+  isAuthenticated: boolean;
+  accessToken: string | null;
+  refreshToken: string | null;
 
   // Methods
-  login(username: string, password: string): Promise<User | null>
-  logout(): Promise<void>
-  refreshAuthToken(): Promise<boolean>
-  initializeAuth(): void
-  updateTokenFromApiClient(newAccessToken: string): void
-  setUserManually(user: User): void
+  login(username: string, password: string): Promise<User | null>;
+  logout(): Promise<void>;
+  refreshAuthToken(): Promise<boolean>;
+  initializeAuth(): void;
+  updateTokenFromApiClient(newAccessToken: string): void;
+  setUserManually(user: User): void;
 }
 ```
 
 **Responsibilities:**
+
 - User credential validation
 - JWT token management (access + refresh)
 - Session persistence using Zustand + localStorage
@@ -87,6 +90,7 @@ class AuthStore {
 **Key Algorithms:**
 
 1. **Login Flow:**
+
    ```
    1. Validate credentials (username, password)
    2. Call API /auth/login
@@ -98,6 +102,7 @@ class AuthStore {
    ```
 
 2. **Token Refresh Algorithm:**
+
    ```
    1. Check if refreshToken exists
    2. If not, logout and return false
@@ -124,6 +129,7 @@ class AuthStore {
    ```
 
 **Dependencies:**
+
 - `zustand` - State management
 - `apiClient` - API communication
 - `localStorage` - Persistence
@@ -141,57 +147,71 @@ class AuthStore {
 ```typescript
 class ApiClient {
   // Properties
-  private baseURL: string
-  private token: string | null
+  private baseURL: string;
+  private token: string | null;
 
   // Core Methods
   private request<T>(
     endpoint: string,
     options?: RequestInit,
     retryCount?: number
-  ): Promise<ApiResponse<T>>
+  ): Promise<ApiResponse<T>>;
 
-  setToken(token: string): void
-  clearToken(): void
+  setToken(token: string): void;
+  clearToken(): void;
 
   // Authentication APIs
-  login(username: string, password: string): Promise<ApiResponse<any>>
-  logout(): Promise<ApiResponse<void>>
-  refreshToken(refreshToken: string): Promise<ApiResponse<any>>
+  login(username: string, password: string): Promise<ApiResponse<any>>;
+  logout(): Promise<ApiResponse<void>>;
+  refreshToken(refreshToken: string): Promise<ApiResponse<any>>;
 
   // Employee APIs
-  getEmployees(params?: object): Promise<ApiResponse<Employee[]>>
-  getEmployee(id: string): Promise<ApiResponse<Employee>>
-  createEmployee(employee: Partial<Employee>): Promise<ApiResponse<Employee>>
-  updateEmployee(id: string, employee: Partial<Employee>): Promise<ApiResponse<Employee>>
-  deleteEmployee(id: string): Promise<ApiResponse<void>>
+  getEmployees(params?: object): Promise<ApiResponse<Employee[]>>;
+  getEmployee(id: string): Promise<ApiResponse<Employee>>;
+  createEmployee(employee: Partial<Employee>): Promise<ApiResponse<Employee>>;
+  updateEmployee(
+    id: string,
+    employee: Partial<Employee>
+  ): Promise<ApiResponse<Employee>>;
+  deleteEmployee(id: string): Promise<ApiResponse<void>>;
 
   // Request APIs (Promotion, Confirmation, LWOP, etc.)
-  getPromotionRequests(): Promise<ApiResponse<PromotionRequest[]>>
-  createPromotionRequest(data: Partial<PromotionRequest>): Promise<ApiResponse<PromotionRequest>>
+  getPromotionRequests(): Promise<ApiResponse<PromotionRequest[]>>;
+  createPromotionRequest(
+    data: Partial<PromotionRequest>
+  ): Promise<ApiResponse<PromotionRequest>>;
   // ... similar methods for other request types
 
   // Complaint APIs
-  getComplaints(): Promise<ApiResponse<Complaint[]>>
-  createComplaint(data: Partial<Complaint>): Promise<ApiResponse<Complaint>>
-  updateComplaint(id: string, data: Partial<Complaint>): Promise<ApiResponse<Complaint>>
+  getComplaints(): Promise<ApiResponse<Complaint[]>>;
+  createComplaint(data: Partial<Complaint>): Promise<ApiResponse<Complaint>>;
+  updateComplaint(
+    id: string,
+    data: Partial<Complaint>
+  ): Promise<ApiResponse<Complaint>>;
 
   // Institution & User APIs
-  getInstitutions(): Promise<ApiResponse<Institution[]>>
-  getUsers(): Promise<ApiResponse<User[]>>
+  getInstitutions(): Promise<ApiResponse<Institution[]>>;
+  getUsers(): Promise<ApiResponse<User[]>>;
 
   // File Upload
-  uploadFile(file: File, endpoint?: string): Promise<ApiResponse<{url: string}>>
+  uploadFile(
+    file: File,
+    endpoint?: string
+  ): Promise<ApiResponse<{ url: string }>>;
 
   // Notifications
-  getNotifications(userId: string): Promise<ApiResponse<Notification[]>>
-  markNotificationsAsRead(notificationIds: string[]): Promise<ApiResponse<void>>
+  getNotifications(userId: string): Promise<ApiResponse<Notification[]>>;
+  markNotificationsAsRead(
+    notificationIds: string[]
+  ): Promise<ApiResponse<void>>;
 }
 ```
 
 **Key Algorithms:**
 
 1. **Request Method with Auto-Retry:**
+
    ```
    function request<T>(endpoint, options, retryCount = 0):
      1. Build full URL = baseURL + endpoint
@@ -228,11 +248,13 @@ class ApiClient {
    ```
 
 **Error Handling:**
+
 - Network errors → Return `{ success: false, message: 'Network error' }`
 - HTTP errors → Return `{ success: false, message, errors }`
 - 401 errors → Automatic token refresh + retry
 
 **Dependencies:**
+
 - Native `fetch` API
 - `auth-store` (for logout on auth failure)
 
@@ -248,19 +270,20 @@ class ApiClient {
 
 ```typescript
 // Constants
-const CSC_ROLES = ['HHRMD', 'HRMO', 'DO', 'PO', 'CSCS']
+const CSC_ROLES = ['HHRMD', 'HRMO', 'DO', 'PO', 'CSCS'];
 
 // Functions
-function isCSCRole(userRole: string | null): boolean
+function isCSCRole(userRole: string | null): boolean;
 function shouldApplyInstitutionFilter(
   userRole: string | null,
   userInstitutionId: string | null
-): boolean
+): boolean;
 ```
 
 **Key Algorithms:**
 
 1. **isCSCRole:**
+
    ```
    function isCSCRole(userRole):
      if userRole is null:
@@ -277,12 +300,13 @@ function shouldApplyInstitutionFilter(
    ```
 
 **Usage:**
+
 ```typescript
 // In API routes
 if (shouldApplyInstitutionFilter(userRole, userInstitutionId)) {
   whereClause.Employee = {
-    institutionId: userInstitutionId
-  }
+    institutionId: userInstitutionId,
+  };
 }
 ```
 
@@ -322,6 +346,7 @@ const NotificationTemplates = {
 **Key Algorithms:**
 
 1. **createNotificationForRole:**
+
    ```
    async function createNotificationForRole(role, message, link):
      1. Query all active users with role = role
@@ -346,13 +371,18 @@ const NotificationTemplates = {
    ```
 
 **Usage in Workflow:**
+
 ```typescript
 // After creating promotion request
 const notification = NotificationTemplates.promotionSubmitted(
   employee.name,
   request.id
-)
-await createNotificationForRole('HHRMD', notification.message, notification.link)
+);
+await createNotificationForRole(
+  'HHRMD',
+  notification.message,
+  notification.link
+);
 ```
 
 ---
@@ -367,44 +397,42 @@ await createNotificationForRole('HHRMD', notification.message, notification.link
 
 ```typescript
 // Configuration
-const minioClient: MinioClient
-const DEFAULT_BUCKET: string
+const minioClient: MinioClient;
+const DEFAULT_BUCKET: string;
 
 // Functions
-async function ensureBucketExists(bucketName?: string): Promise<void>
-function generateObjectKey(folder: string, originalName: string): string
+async function ensureBucketExists(bucketName?: string): Promise<void>;
+function generateObjectKey(folder: string, originalName: string): string;
 async function uploadFile(
   file: Buffer | string,
   objectKey: string,
   contentType: string,
   bucketName?: string
-): Promise<UploadResult>
+): Promise<UploadResult>;
 async function downloadFile(
   objectKey: string,
   bucketName?: string
-): Promise<Stream>
+): Promise<Stream>;
 async function getFileMetadata(
   objectKey: string,
   bucketName?: string
-): Promise<FileMetadata>
+): Promise<FileMetadata>;
 async function generatePresignedUrl(
   objectKey: string,
   expiry?: number,
   bucketName?: string
-): Promise<string>
+): Promise<string>;
 async function deleteFile(
   objectKey: string,
   bucketName?: string
-): Promise<{success: boolean}>
-async function listFiles(
-  prefix?: string,
-  bucketName?: string
-): Promise<any[]>
+): Promise<{ success: boolean }>;
+async function listFiles(prefix?: string, bucketName?: string): Promise<any[]>;
 ```
 
 **Key Algorithms:**
 
 1. **generateObjectKey:**
+
    ```
    function generateObjectKey(folder, originalName):
      1. Get current timestamp
@@ -414,6 +442,7 @@ async function listFiles(
    ```
 
 2. **uploadFile:**
+
    ```
    async function uploadFile(file, objectKey, contentType, bucketName):
      1. Ensure bucket exists
@@ -433,13 +462,14 @@ async function listFiles(
    ```
 
 **Usage Example:**
+
 ```typescript
 // Upload file
-const objectKey = generateObjectKey('documents', file.name)
-const result = await uploadFile(fileBuffer, objectKey, 'application/pdf')
+const objectKey = generateObjectKey('documents', file.name);
+const result = await uploadFile(fileBuffer, objectKey, 'application/pdf');
 
 // Get presigned URL for download
-const url = await generatePresignedUrl(objectKey)
+const url = await generatePresignedUrl(objectKey);
 ```
 
 ---
@@ -454,45 +484,50 @@ const url = await generatePresignedUrl(objectKey)
 
 ```typescript
 interface StandardizeComplaintFormattingInput {
-  complaintText: string
+  complaintText: string;
 }
 
 interface StandardizeComplaintFormattingOutput {
-  rewrittenComplaint: string
+  rewrittenComplaint: string;
 }
 
 async function standardizeComplaintFormatting(
   input: StandardizeComplaintFormattingInput
-): Promise<StandardizeComplaintFormattingOutput>
+): Promise<StandardizeComplaintFormattingOutput>;
 ```
 
 **Key Components:**
 
 1. **Prompt Definition:**
+
    ```typescript
    const prompt = ai.definePrompt({
      name: 'standardizeComplaintFormattingPrompt',
      input: { schema: StandardizeComplaintFormattingInputSchema },
      output: { schema: StandardizeComplaintFormattingOutputSchema },
      prompt: `You are an expert in standardizing employee complaints...
-
-       Original Complaint: {{{complaintText}}}`
-   })
+   
+       Original Complaint: {{{complaintText}}}`,
+   });
    ```
 
 2. **Flow Definition:**
    ```typescript
-   const standardizeComplaintFormattingFlow = ai.defineFlow({
-     name: 'standardizeComplaintFormattingFlow',
-     inputSchema: StandardizeComplaintFormattingInputSchema,
-     outputSchema: StandardizeComplaintFormattingOutputSchema
-   }, async (input) => {
-     const { output } = await prompt(input)
-     return output!
-   })
+   const standardizeComplaintFormattingFlow = ai.defineFlow(
+     {
+       name: 'standardizeComplaintFormattingFlow',
+       inputSchema: StandardizeComplaintFormattingInputSchema,
+       outputSchema: StandardizeComplaintFormattingOutputSchema,
+     },
+     async (input) => {
+       const { output } = await prompt(input);
+       return output!;
+     }
+   );
    ```
 
 **Algorithm:**
+
 ```
 async function standardizeComplaintFormatting(input):
   1. Receive original complaint text
@@ -507,11 +542,12 @@ async function standardizeComplaintFormatting(input):
 ```
 
 **Usage:**
+
 ```typescript
 const result = await standardizeComplaintFormatting({
-  complaintText: "Original complaint text here..."
-})
-console.log(result.rewrittenComplaint)
+  complaintText: 'Original complaint text here...',
+});
+console.log(result.rewrittenComplaint);
 ```
 
 ---
@@ -922,8 +958,13 @@ User      ComplaintForm   Component   Genkit     Google AI    API
 ```typescript
 function validateEmployeeStatusForRequest(
   employeeStatus: string | null | undefined,
-  requestType: 'promotion' | 'confirmation' | 'lwop' | 'cadre-change' | 'retirement'
-): { isValid: boolean, message: string }
+  requestType:
+    | 'promotion'
+    | 'confirmation'
+    | 'lwop'
+    | 'cadre-change'
+    | 'retirement'
+): { isValid: boolean; message: string };
 ```
 
 **Algorithm:**
@@ -961,10 +1002,14 @@ function validateEmployeeStatusForRequest(employeeStatus, requestType):
 ```
 
 **Usage Example:**
+
 ```typescript
-const validation = validateEmployeeStatusForRequest(employee.status, 'promotion')
+const validation = validateEmployeeStatusForRequest(
+  employee.status,
+  'promotion'
+);
 if (!validation.isValid) {
-  return error(validation.message)
+  return error(validation.message);
 }
 ```
 
@@ -1006,6 +1051,7 @@ function getFilteredRequests(userRole, userInstitutionId):
 ```
 
 **CSC Role Check:**
+
 ```
 const CSC_ROLES = ['HHRMD', 'HRMO', 'DO', 'PO', 'CSCS']
 
@@ -1169,6 +1215,7 @@ function generateObjectKey(folder, originalFileName):
 ```
 
 **Collision Probability:** Extremely low due to:
+
 - Timestamp (millisecond precision)
 - Random 6-character suffix (36^6 = 2.1 billion combinations)
 - Original filename preservation
@@ -1183,9 +1230,11 @@ function generateObjectKey(folder, originalFileName):
 
 ```typescript
 // Anti-pattern (fetch all fields, N+1 queries)
-const requests = await db.promotionRequest.findMany()
+const requests = await db.promotionRequest.findMany();
 for (const request of requests) {
-  const employee = await db.employee.findUnique({ where: { id: request.employeeId } })
+  const employee = await db.employee.findUnique({
+    where: { id: request.employeeId },
+  });
 }
 
 // Optimized pattern (selective fields, single query with joins)
@@ -1201,24 +1250,25 @@ const requests = await db.promotionRequest.findMany({
         Institution: {
           select: {
             id: true,
-            name: true
-          }
-        }
-      }
+            name: true,
+          },
+        },
+      },
     },
     User_PromotionRequest_submittedByIdToUser: {
       select: {
         id: true,
         name: true,
-        username: true
-      }
-    }
+        username: true,
+      },
+    },
   },
-  orderBy: { createdAt: 'desc' }
-})
+  orderBy: { createdAt: 'desc' },
+});
 ```
 
 **Benefits:**
+
 - Single database query (no N+1)
 - Reduced data transfer (only necessary fields)
 - Better performance
@@ -1414,32 +1464,32 @@ const requests = await db.promotionRequest.findMany({
 
 #### 5.2.1 File Naming
 
-| Type | Convention | Example |
-|------|-----------|---------|
-| **React Components** | PascalCase | `EmployeeSearch.tsx` |
-| **Pages (Next.js)** | lowercase | `page.tsx`, `layout.tsx` |
-| **API Routes** | lowercase | `route.ts` |
-| **Libraries** | kebab-case | `api-client.ts`, `role-utils.ts` |
-| **Types** | lowercase | `types.ts` |
-| **Constants** | lowercase | `constants.ts` |
+| Type                 | Convention | Example                          |
+| -------------------- | ---------- | -------------------------------- |
+| **React Components** | PascalCase | `EmployeeSearch.tsx`             |
+| **Pages (Next.js)**  | lowercase  | `page.tsx`, `layout.tsx`         |
+| **API Routes**       | lowercase  | `route.ts`                       |
+| **Libraries**        | kebab-case | `api-client.ts`, `role-utils.ts` |
+| **Types**            | lowercase  | `types.ts`                       |
+| **Constants**        | lowercase  | `constants.ts`                   |
 
 #### 5.2.2 Variable Naming
 
-| Type | Convention | Example |
-|------|-----------|---------|
-| **Variables** | camelCase | `employeeId`, `userName` |
-| **Constants** | SCREAMING_SNAKE_CASE | `CSC_ROLES`, `DEFAULT_BUCKET` |
-| **Types/Interfaces** | PascalCase | `Employee`, `ApiResponse<T>` |
-| **Functions** | camelCase | `getUserById()`, `createNotification()` |
-| **Components** | PascalCase | `EmployeeSearch`, `LoginForm` |
-| **Hooks** | camelCase with `use` prefix | `useAuth()`, `useEmployee()` |
+| Type                 | Convention                  | Example                                 |
+| -------------------- | --------------------------- | --------------------------------------- |
+| **Variables**        | camelCase                   | `employeeId`, `userName`                |
+| **Constants**        | SCREAMING_SNAKE_CASE        | `CSC_ROLES`, `DEFAULT_BUCKET`           |
+| **Types/Interfaces** | PascalCase                  | `Employee`, `ApiResponse<T>`            |
+| **Functions**        | camelCase                   | `getUserById()`, `createNotification()` |
+| **Components**       | PascalCase                  | `EmployeeSearch`, `LoginForm`           |
+| **Hooks**            | camelCase with `use` prefix | `useAuth()`, `useEmployee()`            |
 
 #### 5.2.3 Database Naming
 
-| Type | Convention | Example |
-|------|-----------|---------|
-| **Tables** | PascalCase | `Employee`, `PromotionRequest` |
-| **Columns** | camelCase | `employeeId`, `createdAt` |
+| Type          | Convention            | Example                                     |
+| ------------- | --------------------- | ------------------------------------------- |
+| **Tables**    | PascalCase            | `Employee`, `PromotionRequest`              |
+| **Columns**   | camelCase             | `employeeId`, `createdAt`                   |
 | **Relations** | descriptive camelCase | `User_PromotionRequest_submittedByIdToUser` |
 
 ---
@@ -1454,7 +1504,10 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { shouldApplyInstitutionFilter } from '@/lib/role-utils';
 import { validateEmployeeStatusForRequest } from '@/lib/employee-status-validation';
-import { createNotificationForRole, NotificationTemplates } from '@/lib/notifications';
+import {
+  createNotificationForRole,
+  NotificationTemplates,
+} from '@/lib/notifications';
 import { v4 as uuidv4 } from 'uuid';
 
 // GET handler
@@ -1475,12 +1528,14 @@ export async function GET(req: Request) {
     // 3. Query database
     const data = await db.resource.findMany({
       where: whereClause,
-      include: { /* relations */ },
-      orderBy: { createdAt: 'desc' }
+      include: {
+        /* relations */
+      },
+      orderBy: { createdAt: 'desc' },
     });
 
     // 4. Transform data if needed
-    const transformed = data.map(item => ({
+    const transformed = data.map((item) => ({
       ...item,
       // transformations
     }));
@@ -1488,16 +1543,18 @@ export async function GET(req: Request) {
     // 5. Return success response
     return NextResponse.json({
       success: true,
-      data: transformed
+      data: transformed,
     });
-
   } catch (error) {
-    console.error("[API_ERROR]", error);
-    return NextResponse.json({
-      success: false,
-      message: 'Internal Server Error',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+    console.error('[API_ERROR]', error);
+    return NextResponse.json(
+      {
+        success: false,
+        message: 'Internal Server Error',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
   }
 }
 
@@ -1509,10 +1566,13 @@ export async function POST(req: Request) {
 
     // 2. Validate required fields
     if (!body.requiredField) {
-      return NextResponse.json({
-        success: false,
-        message: 'Missing required field'
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Missing required field',
+        },
+        { status: 400 }
+      );
     }
 
     // 3. Validate business rules (e.g., employee status)
@@ -1521,10 +1581,13 @@ export async function POST(req: Request) {
       'requestType'
     );
     if (!validation.isValid) {
-      return NextResponse.json({
-        success: false,
-        message: validation.message
-      }, { status: 403 });
+      return NextResponse.json(
+        {
+          success: false,
+          message: validation.message,
+        },
+        { status: 403 }
+      );
     }
 
     // 4. Create resource
@@ -1534,9 +1597,11 @@ export async function POST(req: Request) {
         ...body,
         status: 'Pending',
         reviewStage: 'initial',
-        updatedAt: new Date()
+        updatedAt: new Date(),
       },
-      include: { /* relations */ }
+      include: {
+        /* relations */
+      },
     });
 
     // 5. Send notifications
@@ -1544,21 +1609,27 @@ export async function POST(req: Request) {
       resource.name,
       resource.id
     );
-    await createNotificationForRole('HHRMD', notification.message, notification.link);
+    await createNotificationForRole(
+      'HHRMD',
+      notification.message,
+      notification.link
+    );
 
     // 6. Return success
     return NextResponse.json({
       success: true,
-      data: resource
+      data: resource,
     });
-
   } catch (error) {
-    console.error("[API_ERROR]", error);
-    return NextResponse.json({
-      success: false,
-      message: 'Internal Server Error',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+    console.error('[API_ERROR]', error);
+    return NextResponse.json(
+      {
+        success: false,
+        message: 'Internal Server Error',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
   }
 }
 ```
@@ -1638,14 +1709,16 @@ export function ComponentName({ /* props */ }: ComponentProps) {
 **Endpoint:** `POST /api/auth/login`
 
 **Request:**
+
 ```typescript
 {
-  username: string
-  password: string
+  username: string;
+  password: string;
 }
 ```
 
 **Response:**
+
 ```typescript
 {
   success: boolean
@@ -1671,6 +1744,7 @@ export function ComponentName({ /* props */ }: ComponentProps) {
 ```
 
 **Status Codes:**
+
 - `200`: Success
 - `401`: Invalid credentials
 - `403`: Account locked
@@ -1685,6 +1759,7 @@ export function ComponentName({ /* props */ }: ComponentProps) {
 **Request:** None (uses cookies/token)
 
 **Response:**
+
 ```typescript
 {
   success: boolean
@@ -1701,6 +1776,7 @@ export function ComponentName({ /* props */ }: ComponentProps) {
 **Request:** `refreshToken` as plain text
 
 **Response:**
+
 ```typescript
 {
   success: boolean
@@ -1721,6 +1797,7 @@ export function ComponentName({ /* props */ }: ComponentProps) {
 **Endpoint:** `GET /api/employees`
 
 **Query Parameters:**
+
 ```typescript
 {
   userRole?: string
@@ -1732,6 +1809,7 @@ export function ComponentName({ /* props */ }: ComponentProps) {
 ```
 
 **Response:**
+
 ```typescript
 {
   success: boolean
@@ -1747,6 +1825,7 @@ export function ComponentName({ /* props */ }: ComponentProps) {
 **Endpoint:** `GET /api/employees/:id`
 
 **Response:**
+
 ```typescript
 {
   success: boolean
@@ -1764,6 +1843,7 @@ export function ComponentName({ /* props */ }: ComponentProps) {
 **Endpoint:** `GET /api/promotions`
 
 **Query Parameters:**
+
 ```typescript
 {
   userId?: string
@@ -1773,6 +1853,7 @@ export function ComponentName({ /* props */ }: ComponentProps) {
 ```
 
 **Response:**
+
 ```typescript
 {
   success: boolean
@@ -1787,6 +1868,7 @@ export function ComponentName({ /* props */ }: ComponentProps) {
 **Endpoint:** `POST /api/promotions`
 
 **Request:**
+
 ```typescript
 {
   employeeId: string
@@ -1799,6 +1881,7 @@ export function ComponentName({ /* props */ }: ComponentProps) {
 ```
 
 **Response:**
+
 ```typescript
 {
   success: boolean
@@ -1808,6 +1891,7 @@ export function ComponentName({ /* props */ }: ComponentProps) {
 ```
 
 **Status Codes:**
+
 - `200`: Success
 - `400`: Missing required fields
 - `403`: Employee status invalid for promotion
@@ -1821,6 +1905,7 @@ export function ComponentName({ /* props */ }: ComponentProps) {
 **Endpoint:** `PATCH /api/promotions/:id`
 
 **Request:**
+
 ```typescript
 {
   status?: string
@@ -1832,6 +1917,7 @@ export function ComponentName({ /* props */ }: ComponentProps) {
 ```
 
 **Response:**
+
 ```typescript
 {
   success: boolean
@@ -1840,6 +1926,7 @@ export function ComponentName({ /* props */ }: ComponentProps) {
 ```
 
 **Side Effects:**
+
 - If `status === 'Approved by Commission'`, updates employee cadre
 
 ---
@@ -1851,13 +1938,15 @@ export function ComponentName({ /* props */ }: ComponentProps) {
 **Endpoint:** `POST /api/files/upload`
 
 **Request:** `multipart/form-data`
+
 ```typescript
 {
-  file: File
+  file: File;
 }
 ```
 
 **Response:**
+
 ```typescript
 {
   success: boolean
@@ -1878,6 +1967,7 @@ export function ComponentName({ /* props */ }: ComponentProps) {
 **Endpoint:** `GET /api/files/download/[...objectKey]`
 
 **Response:** File stream with headers:
+
 ```
 Content-Type: <file-content-type>
 Content-Disposition: attachment; filename="<filename>"
@@ -1892,6 +1982,7 @@ Content-Disposition: attachment; filename="<filename>"
 **Endpoint:** `POST /api/hrims/sync-employee`
 
 **Request:**
+
 ```typescript
 {
   zanId?: string
@@ -1904,6 +1995,7 @@ Content-Disposition: attachment; filename="<filename>"
 ```
 
 **Response:**
+
 ```typescript
 {
   success: boolean
@@ -1922,6 +2014,7 @@ Content-Disposition: attachment; filename="<filename>"
 ```
 
 **Flow:**
+
 1. Fetch employee from HRIMS API
 2. Upsert employee in database
 3. Trigger background sync for documents
@@ -2065,10 +2158,10 @@ model PromotionRequest {
 
 ```typescript
 interface ApiResponse<T = any> {
-  success: boolean
-  data?: T
-  message?: string
-  errors?: string[]
+  success: boolean;
+  data?: T;
+  message?: string;
+  errors?: string[];
 }
 ```
 
@@ -2076,15 +2169,15 @@ interface ApiResponse<T = any> {
 
 ```typescript
 type Role =
-  | 'HRO'      // HR Officer (institution-level)
-  | 'HHRMD'    // Head of HR Management Division
-  | 'HRMO'     // HR Management Officer
-  | 'DO'       // Director's Office
-  | 'CSCS'     // Commission Secretary
-  | 'EMP'      // Employee (self-service)
-  | 'PO'       // Personnel Officer
-  | 'HRRP'     // HR Research & Planning
-  | 'ADMIN'    // System Administrator
+  | 'HRO' // HR Officer (institution-level)
+  | 'HHRMD' // Head of HR Management Division
+  | 'HRMO' // HR Management Officer
+  | 'DO' // Director's Office
+  | 'CSCS' // Commission Secretary
+  | 'EMP' // Employee (self-service)
+  | 'PO' // Personnel Officer
+  | 'HRRP' // HR Research & Planning
+  | 'ADMIN'; // System Administrator
 ```
 
 ---
@@ -2106,14 +2199,14 @@ type Role =
 
 #### 8.1.2 HTTP Status Codes
 
-| Code | Meaning | Usage |
-|------|---------|-------|
-| **200** | OK | Successful request |
-| **400** | Bad Request | Missing/invalid parameters |
-| **401** | Unauthorized | Authentication failed |
-| **403** | Forbidden | Insufficient permissions |
-| **404** | Not Found | Resource doesn't exist |
-| **500** | Internal Server Error | Server error |
+| Code    | Meaning               | Usage                      |
+| ------- | --------------------- | -------------------------- |
+| **200** | OK                    | Successful request         |
+| **400** | Bad Request           | Missing/invalid parameters |
+| **401** | Unauthorized          | Authentication failed      |
+| **403** | Forbidden             | Insufficient permissions   |
+| **404** | Not Found             | Resource doesn't exist     |
+| **500** | Internal Server Error | Server error               |
 
 #### 8.1.3 Error Handling Pattern in API Routes
 
@@ -2124,43 +2217,54 @@ export async function POST(req: Request) {
 
     // Validation errors (400)
     if (!body.requiredField) {
-      return NextResponse.json({
-        success: false,
-        message: 'Missing required field: requiredField'
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Missing required field: requiredField',
+        },
+        { status: 400 }
+      );
     }
 
     // Not found errors (404)
     const resource = await db.resource.findUnique({ where: { id } });
     if (!resource) {
-      return NextResponse.json({
-        success: false,
-        message: 'Resource not found'
-      }, { status: 404 });
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Resource not found',
+        },
+        { status: 404 }
+      );
     }
 
     // Business logic errors (403)
     if (!canPerformAction(user, resource)) {
-      return NextResponse.json({
-        success: false,
-        message: 'Insufficient permissions'
-      }, { status: 403 });
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Insufficient permissions',
+        },
+        { status: 403 }
+      );
     }
 
     // Success (200)
     return NextResponse.json({
       success: true,
-      data: result
+      data: result,
     });
-
   } catch (error) {
     // Server errors (500)
-    console.error("[API_ERROR]", error);
-    return NextResponse.json({
-      success: false,
-      message: 'Internal Server Error',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+    console.error('[API_ERROR]', error);
+    return NextResponse.json(
+      {
+        success: false,
+        message: 'Internal Server Error',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
   }
 }
 ```
@@ -2185,7 +2289,6 @@ const handleSubmit = async () => {
     // Success - update UI
     setData(response.data);
     toast.success('Operation successful');
-
   } catch (error) {
     // Network error or unexpected error
     setError('An unexpected error occurred');
@@ -2201,27 +2304,29 @@ const handleSubmit = async () => {
 ```typescript
 import { z } from 'zod';
 
-const requestSchema = z.object({
-  employeeId: z.string().uuid(),
-  promotionType: z.enum(['Experience', 'Education']),
-  proposedCadre: z.string().min(1).optional(),
-}).refine(
-  (data) => data.promotionType === 'Education' || data.proposedCadre,
-  {
-    message: "Proposed cadre is required for experience-based promotions",
-    path: ["proposedCadre"],
-  }
-);
+const requestSchema = z
+  .object({
+    employeeId: z.string().uuid(),
+    promotionType: z.enum(['Experience', 'Education']),
+    proposedCadre: z.string().min(1).optional(),
+  })
+  .refine((data) => data.promotionType === 'Education' || data.proposedCadre, {
+    message: 'Proposed cadre is required for experience-based promotions',
+    path: ['proposedCadre'],
+  });
 
 try {
   const validatedData = requestSchema.parse(body);
 } catch (error) {
   if (error instanceof z.ZodError) {
-    return NextResponse.json({
-      success: false,
-      message: 'Validation failed',
-      errors: error.errors.map(e => `${e.path.join('.')}: ${e.message}`)
-    }, { status: 400 });
+    return NextResponse.json(
+      {
+        success: false,
+        message: 'Validation failed',
+        errors: error.errors.map((e) => `${e.path.join('.')}: ${e.message}`),
+      },
+      { status: 400 }
+    );
   }
 }
 ```
@@ -2249,124 +2354,124 @@ export type Role =
   | 'ADMIN';
 
 export interface User {
-  id: string
-  name: string
-  username: string
-  password: string
-  role: Role
-  active: boolean
-  employeeId?: string
-  institutionId: string
-  institution?: Institution
-  createdAt: Date
-  updatedAt: Date
-  phoneNumber?: string
-  email?: string
+  id: string;
+  name: string;
+  username: string;
+  password: string;
+  role: Role;
+  active: boolean;
+  employeeId?: string;
+  institutionId: string;
+  institution?: Institution;
+  createdAt: Date;
+  updatedAt: Date;
+  phoneNumber?: string;
+  email?: string;
 }
 
 export interface Employee {
-  id: string
-  employeeEntityId?: string
-  name: string
-  gender: string
-  profileImageUrl?: string
-  dateOfBirth?: Date
-  placeOfBirth?: string
-  region?: string
-  countryOfBirth?: string
-  zanId: string
-  phoneNumber?: string
-  contactAddress?: string
-  zssfNumber?: string
-  payrollNumber?: string
-  cadre?: string
-  salaryScale?: string
-  ministry?: string
-  department?: string
-  appointmentType?: string
-  contractType?: string
-  recentTitleDate?: Date
-  currentReportingOffice?: string
-  currentWorkplace?: string
-  employmentDate?: Date
-  confirmationDate?: Date
-  retirementDate?: Date
-  status?: string
-  institutionId: string
-  institution?: Institution
+  id: string;
+  employeeEntityId?: string;
+  name: string;
+  gender: string;
+  profileImageUrl?: string;
+  dateOfBirth?: Date;
+  placeOfBirth?: string;
+  region?: string;
+  countryOfBirth?: string;
+  zanId: string;
+  phoneNumber?: string;
+  contactAddress?: string;
+  zssfNumber?: string;
+  payrollNumber?: string;
+  cadre?: string;
+  salaryScale?: string;
+  ministry?: string;
+  department?: string;
+  appointmentType?: string;
+  contractType?: string;
+  recentTitleDate?: Date;
+  currentReportingOffice?: string;
+  currentWorkplace?: string;
+  employmentDate?: Date;
+  confirmationDate?: Date;
+  retirementDate?: Date;
+  status?: string;
+  institutionId: string;
+  institution?: Institution;
 }
 
 export interface Institution {
-  id: string
-  name: string
-  email?: string
-  phoneNumber?: string
-  voteNumber?: string
-  tinNumber?: string
+  id: string;
+  name: string;
+  email?: string;
+  phoneNumber?: string;
+  voteNumber?: string;
+  tinNumber?: string;
 }
 
 export interface Request {
-  id: string
-  status: string
-  reviewStage: string
-  documents: string[]
-  rejectionReason?: string
-  employeeId: string
-  submittedById: string
-  reviewedById?: string
-  createdAt: Date
-  updatedAt: Date
-  employee?: Employee
-  submittedBy?: User
-  reviewedBy?: User
+  id: string;
+  status: string;
+  reviewStage: string;
+  documents: string[];
+  rejectionReason?: string;
+  employeeId: string;
+  submittedById: string;
+  reviewedById?: string;
+  createdAt: Date;
+  updatedAt: Date;
+  employee?: Employee;
+  submittedBy?: User;
+  reviewedBy?: User;
 }
 
 export interface PromotionRequest extends Request {
-  proposedCadre: string
-  promotionType: 'Experience' | 'Education'
-  studiedOutsideCountry?: boolean
-  commissionDecisionReason?: string
+  proposedCadre: string;
+  promotionType: 'Experience' | 'Education';
+  studiedOutsideCountry?: boolean;
+  commissionDecisionReason?: string;
 }
 
 export interface ConfirmationRequest extends Request {
-  decisionDate?: Date
-  commissionDecisionDate?: Date
+  decisionDate?: Date;
+  commissionDecisionDate?: Date;
 }
 
 export interface LwopRequest extends Request {
-  duration: string
-  reason: string
-  startDate?: Date
-  endDate?: Date
+  duration: string;
+  reason: string;
+  startDate?: Date;
+  endDate?: Date;
 }
 
 export interface Notification {
-  id: string
-  message: string
-  link?: string
-  isRead: boolean
-  userId: string
-  createdAt: Date
+  id: string;
+  message: string;
+  link?: string;
+  isRead: boolean;
+  userId: string;
+  createdAt: Date;
 }
 
 export interface Complaint {
-  id: string
-  complaintType: string
-  subject: string
-  details: string
-  complainantPhoneNumber: string
-  nextOfKinPhoneNumber: string
-  attachments: string[]
-  status: string
-  reviewStage: string
-  officerComments?: string
-  internalNotes?: string
-  rejectionReason?: string
-  complainantId: string
-  assignedOfficerRole: string
-  reviewedById?: string
-  createdAt: Date
-  updatedAt: Date
+  id: string;
+  complaintType: string;
+  subject: string;
+  details: string;
+  complainantPhoneNumber: string;
+  nextOfKinPhoneNumber: string;
+  attachments: string[];
+  status: string;
+  reviewStage: string;
+  officerComments?: string;
+  internalNotes?: string;
+  rejectionReason?: string;
+  complainantId: string;
+  assignedOfficerRole: string;
+  reviewedById?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 ```
 
@@ -2412,11 +2517,7 @@ export const FILE_UPLOAD_LIMITS = {
     'image/png',
     'image/jpg',
   ],
-  ALLOWED_IMAGE_TYPES: [
-    'image/jpeg',
-    'image/png',
-    'image/jpg',
-  ],
+  ALLOWED_IMAGE_TYPES: ['image/jpeg', 'image/png', 'image/jpg'],
 } as const;
 ```
 
@@ -2496,39 +2597,42 @@ GOOGLE_API_KEY=your-google-api-key
 ## Document Approval
 
 **Prepared By:**
-- Name: _______________________
+
+- Name: \***\*\*\*\*\***\_\_\_\***\*\*\*\*\***
 - Title: Lead Developer
-- Signature: _______________________
-- Date: _______________________
+- Signature: \***\*\*\*\*\***\_\_\_\***\*\*\*\*\***
+- Date: \***\*\*\*\*\***\_\_\_\***\*\*\*\*\***
 
 **Reviewed By:**
-- Name: _______________________
+
+- Name: \***\*\*\*\*\***\_\_\_\***\*\*\*\*\***
 - Title: System Architect
-- Signature: _______________________
-- Date: _______________________
+- Signature: \***\*\*\*\*\***\_\_\_\***\*\*\*\*\***
+- Date: \***\*\*\*\*\***\_\_\_\***\*\*\*\*\***
 
 **Approved By:**
-- Name: _______________________
+
+- Name: \***\*\*\*\*\***\_\_\_\***\*\*\*\*\***
 - Title: IT Department Head
-- Signature: _______________________
-- Date: _______________________
+- Signature: \***\*\*\*\*\***\_\_\_\***\*\*\*\*\***
+- Date: \***\*\*\*\*\***\_\_\_\***\*\*\*\*\***
 
 ---
 
 ## Revision History
 
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 0.1 | Dec 15, 2025 | Dev Team | Initial draft |
-| 0.5 | Dec 20, 2025 | Dev Team | Added sequence diagrams |
-| 1.0 | Dec 25, 2025 | Dev Team | Final version - comprehensive LLD |
+| Version | Date         | Author   | Changes                           |
+| ------- | ------------ | -------- | --------------------------------- |
+| 0.1     | Dec 15, 2025 | Dev Team | Initial draft                     |
+| 0.5     | Dec 20, 2025 | Dev Team | Added sequence diagrams           |
+| 1.0     | Dec 25, 2025 | Dev Team | Final version - comprehensive LLD |
 
 ---
 
 **END OF LOW-LEVEL DESIGN DOCUMENT**
 
-*This document is confidential and proprietary to the Civil Service Commission of Zanzibar.*
+_This document is confidential and proprietary to the Civil Service Commission of Zanzibar._
 
-*For technical questions, contact: dev-team@csms.go.tz*
+_For technical questions, contact: dev-team@csms.go.tz_
 
-*Version 1.0 | December 25, 2025*
+_Version 1.0 | December 25, 2025_

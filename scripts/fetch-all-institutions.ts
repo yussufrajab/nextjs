@@ -13,11 +13,16 @@ interface FetchResult {
 }
 
 async function sleep(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 async function fetchInstitutionData(
-  institution: { id: string; name: string; voteNumber: string | null; tinNumber: string | null },
+  institution: {
+    id: string;
+    name: string;
+    voteNumber: string | null;
+    tinNumber: string | null;
+  },
   retryCount = 0,
   maxRetries = 2
 ): Promise<FetchResult> {
@@ -38,30 +43,35 @@ async function fetchInstitutionData(
       identifier: 'N/A',
       identifierType: 'votecode',
       success: false,
-      error: 'No vote number or TIN number available'
+      error: 'No vote number or TIN number available',
     };
   }
 
   try {
-    console.log(`\nFetching ${institution.name}...${retryCount > 0 ? ` (Retry ${retryCount}/${maxRetries})` : ''}`);
+    console.log(
+      `\nFetching ${institution.name}...${retryCount > 0 ? ` (Retry ${retryCount}/${maxRetries})` : ''}`
+    );
     console.log(`Using ${identifierType}: ${identifier}`);
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 1800000); // 30 minutes
 
-    const response = await fetch('http://localhost:9002/api/hrims/fetch-by-institution', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        identifierType,
-        voteNumber: institution.voteNumber,
-        tinNumber: institution.tinNumber,
-        institutionId: institution.id,
-      }),
-      signal: controller.signal,
-    });
+    const response = await fetch(
+      'http://localhost:9002/api/hrims/fetch-by-institution',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          identifierType,
+          voteNumber: institution.voteNumber,
+          tinNumber: institution.tinNumber,
+          institutionId: institution.id,
+        }),
+        signal: controller.signal,
+      }
+    );
 
     clearTimeout(timeoutId);
 
@@ -89,11 +99,16 @@ async function fetchInstitutionData(
       };
     }
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error';
     console.log(`❌ Error: ${errorMessage}`);
 
     // Retry on fetch failures (timeouts, network errors)
-    if (retryCount < maxRetries && (errorMessage.includes('fetch failed') || errorMessage.includes('timeout'))) {
+    if (
+      retryCount < maxRetries &&
+      (errorMessage.includes('fetch failed') ||
+        errorMessage.includes('timeout'))
+    ) {
       console.log(`⏳ Waiting 10 seconds before retry...`);
       await sleep(10000); // 10 second wait before retry
       return fetchInstitutionData(institution, retryCount + 1, maxRetries);
@@ -128,7 +143,9 @@ async function main() {
 
   for (let i = 0; i < institutions.length; i++) {
     const institution = institutions[i];
-    console.log(`\n[${i + 1}/${institutions.length}] Processing: ${institution.name}`);
+    console.log(
+      `\n[${i + 1}/${institutions.length}] Processing: ${institution.name}`
+    );
 
     // Check if institution has any identifier
     if (!institution.voteNumber && !institution.tinNumber) {
@@ -140,7 +157,7 @@ async function main() {
         identifier: 'N/A',
         identifierType: 'votecode',
         success: false,
-        error: 'No identifier available'
+        error: 'No identifier available',
       });
       continue;
     }
@@ -176,20 +193,25 @@ async function main() {
   console.log('='.repeat(80));
 
   console.log('\n✅ Successful fetches:');
-  results.filter(r => r.success).forEach((r, i) => {
-    console.log(`${i + 1}. ${r.institutionName} (${r.identifierType}: ${r.identifier}) - ${r.employeeCount} employees`);
-  });
+  results
+    .filter((r) => r.success)
+    .forEach((r, i) => {
+      console.log(
+        `${i + 1}. ${r.institutionName} (${r.identifierType}: ${r.identifier}) - ${r.employeeCount} employees`
+      );
+    });
 
   console.log('\n❌ Failed fetches:');
-  results.filter(r => !r.success).forEach((r, i) => {
-    console.log(`${i + 1}. ${r.institutionName} - ${r.error}`);
-  });
+  results
+    .filter((r) => !r.success)
+    .forEach((r, i) => {
+      console.log(`${i + 1}. ${r.institutionName} - ${r.error}`);
+    });
 
   await prisma.$disconnect();
 }
 
-main()
-  .catch((error) => {
-    console.error('Fatal error:', error);
-    process.exit(1);
-  });
+main().catch((error) => {
+  console.error('Fatal error:', error);
+  process.exit(1);
+});

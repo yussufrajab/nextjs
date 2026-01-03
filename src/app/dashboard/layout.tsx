@@ -25,7 +25,11 @@ export default function DashboardLayout({
   });
 
   React.useEffect(() => {
-    DebugLogger.log('DASHBOARD_LAYOUT_AUTH_STATE', { isLoading, isAuthenticated, role });
+    DebugLogger.log('DASHBOARD_LAYOUT_AUTH_STATE', {
+      isLoading,
+      isAuthenticated,
+      role,
+    });
 
     // Check authentication first
     if (!isLoading && !isAuthenticated) {
@@ -36,7 +40,8 @@ export default function DashboardLayout({
 
     // Check if password change is required (middleware check to catch bypasses)
     if (!isLoading && isAuthenticated && user) {
-      const needsPasswordChange = user.mustChangePassword || user.isTemporaryPassword;
+      const needsPasswordChange =
+        user.mustChangePassword || user.isTemporaryPassword;
 
       if (needsPasswordChange) {
         DebugLogger.log('DASHBOARD_LAYOUT_PASSWORD_CHANGE_REQUIRED', {

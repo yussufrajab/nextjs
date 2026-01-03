@@ -1,13 +1,14 @@
 # UI/UX Design Document
+
 ## Civil Service Management System (CSMS)
 
 ---
 
 ## Document Control
 
-| Version | Date | Author | Description |
-|---------|------|--------|-------------|
-| 1.0 | 2024-12-25 | System Architect | Initial UI/UX Design Document |
+| Version | Date       | Author           | Description                   |
+| ------- | ---------- | ---------------- | ----------------------------- |
+| 1.0     | 2024-12-25 | System Architect | Initial UI/UX Design Document |
 
 **Document Status:** Final
 **Classification:** Internal
@@ -40,36 +41,42 @@ The CSMS employs a modern, professional design system built on industry-standard
 ### 1.1 Core Principles
 
 #### 1.1.1 Clarity and Simplicity
+
 - **Clear Visual Hierarchy**: Important information is prominently displayed
 - **Minimal Cognitive Load**: Complex processes broken into simple, sequential steps
 - **Clean Interface**: Ample white space, uncluttered layouts
 - **Consistent Patterns**: Repeatable UI patterns across all modules
 
 #### 1.1.2 Efficiency and Productivity
+
 - **Quick Access**: Common actions accessible with minimal clicks
 - **Keyboard Shortcuts**: Support for keyboard navigation (Cmd/Ctrl+B for sidebar toggle)
 - **Bulk Operations**: Support for handling multiple items simultaneously
 - **Smart Defaults**: Pre-filled forms based on context
 
 #### 1.1.3 Professional and Trustworthy
+
 - **Government Standards**: Adheres to official government UI patterns
 - **Professional Color Palette**: Conservative, professional blue/gray scheme
 - **Formal Typography**: Clear, readable sans-serif fonts
 - **Polished Components**: High-quality, well-tested UI components
 
 #### 1.1.4 Accessibility First
+
 - **WCAG 2.1 AA Compliance**: Meets international accessibility standards
 - **Screen Reader Support**: Full ARIA support for assistive technologies
 - **Keyboard Navigation**: Complete keyboard accessibility
 - **Color Contrast**: Sufficient contrast ratios for readability
 
 #### 1.1.5 Mobile Responsive
+
 - **Progressive Enhancement**: Works on all device sizes
 - **Touch-Friendly**: Appropriate touch targets on mobile
 - **Adaptive Layouts**: Optimized layouts for different screen sizes
 - **Mobile-First Forms**: Simplified mobile form experiences
 
 #### 1.1.6 Performance Optimized
+
 - **Fast Loading**: Optimized assets and lazy loading
 - **Smooth Animations**: 200ms transition durations
 - **Progressive Loading**: Skeleton screens during data fetch
@@ -84,61 +91,60 @@ The CSMS employs a modern, professional design system built on industry-standard
 #### 2.1.1 Primary Color Palette
 
 **Light Mode:**
+
 ```css
---primary: hsl(217, 71%, 53%)           /* Strong professional blue #3B82F6 */
---primary-foreground: hsl(0, 0%, 100%)  /* White text on primary */
---background: hsl(220, 60%, 97%)        /* Very light cool blue/gray */
---foreground: hsl(215, 25%, 20%)        /* Dark desaturated blue/gray */
+--primary: hsl(217, 71%, 53%) /* Strong professional blue #3B82F6 */
+  --primary-foreground: hsl(0, 0%, 100%) /* White text on primary */
+  --background: hsl(220, 60%, 97%) /* Very light cool blue/gray */
+  --foreground: hsl(215, 25%, 20%) /* Dark desaturated blue/gray */;
 ```
 
 **Dark Mode:**
+
 ```css
---primary: hsl(217, 71%, 60%)           /* Slightly brighter blue */
---primary-foreground: hsl(0, 0%, 100%)  /* White on primary */
---background: hsl(210, 13%, 10%)        /* Darker background */
---foreground: hsl(210, 25%, 96%)        /* Light gray foreground */
+--primary: hsl(217, 71%, 60%) /* Slightly brighter blue */
+  --primary-foreground: hsl(0, 0%, 100%) /* White on primary */
+  --background: hsl(210, 13%, 10%) /* Darker background */
+  --foreground: hsl(210, 25%, 96%) /* Light gray foreground */;
 ```
 
 #### 2.1.2 Semantic Colors
 
-| Color | Light Mode | Dark Mode | Usage |
-|-------|-----------|-----------|--------|
-| Card | `hsl(0, 0%, 100%)` | `hsl(210, 13%, 12%)` | Card backgrounds |
-| Popover | `hsl(0, 0%, 100%)` | `hsl(210, 13%, 12%)` | Dropdown backgrounds |
-| Secondary | `hsl(220, 15%, 90%)` | `hsl(210, 13%, 18%)` | Secondary elements |
-| Muted | `hsl(220, 15%, 85%)` | `hsl(210, 13%, 22%)` | Muted backgrounds |
-| Accent | `hsl(217, 90%, 95%)` | `hsl(217, 50%, 30%)` | Hover states |
-| Destructive | `hsl(0, 84.2%, 60.2%)` | `hsl(0, 70%, 50%)` | Error/delete actions |
-| Border | `hsl(220, 20%, 88%)` | `hsl(210, 13%, 20%)` | Borders |
-| Input | `hsl(220, 20%, 88%)` | `hsl(210, 13%, 20%)` | Input borders |
-| Ring | `hsl(217, 71%, 60%)` | `hsl(217, 71%, 65%)` | Focus rings |
+| Color       | Light Mode             | Dark Mode            | Usage                |
+| ----------- | ---------------------- | -------------------- | -------------------- |
+| Card        | `hsl(0, 0%, 100%)`     | `hsl(210, 13%, 12%)` | Card backgrounds     |
+| Popover     | `hsl(0, 0%, 100%)`     | `hsl(210, 13%, 12%)` | Dropdown backgrounds |
+| Secondary   | `hsl(220, 15%, 90%)`   | `hsl(210, 13%, 18%)` | Secondary elements   |
+| Muted       | `hsl(220, 15%, 85%)`   | `hsl(210, 13%, 22%)` | Muted backgrounds    |
+| Accent      | `hsl(217, 90%, 95%)`   | `hsl(217, 50%, 30%)` | Hover states         |
+| Destructive | `hsl(0, 84.2%, 60.2%)` | `hsl(0, 70%, 50%)`   | Error/delete actions |
+| Border      | `hsl(220, 20%, 88%)`   | `hsl(210, 13%, 20%)` | Borders              |
+| Input       | `hsl(220, 20%, 88%)`   | `hsl(210, 13%, 20%)` | Input borders        |
+| Ring        | `hsl(217, 71%, 60%)`   | `hsl(217, 71%, 65%)` | Focus rings          |
 
 #### 2.1.3 Chart Colors
 
 ```css
---chart-1: hsl(217, 71%, 53%)  /* Primary blue */
---chart-2: hsl(190, 60%, 50%)  /* Cyan */
---chart-3: hsl(28, 80%, 60%)   /* Orange */
---chart-4: hsl(160, 50%, 55%)  /* Green */
---chart-5: hsl(310, 60%, 65%)  /* Purple */
+--chart-1: hsl(217, 71%, 53%) /* Primary blue */ --chart-2: hsl(190, 60%, 50%)
+  /* Cyan */ --chart-3: hsl(28, 80%, 60%) /* Orange */
+  --chart-4: hsl(160, 50%, 55%) /* Green */ --chart-5: hsl(310, 60%, 65%)
+  /* Purple */;
 ```
 
 #### 2.1.4 Sidebar Colors
 
 ```css
 /* Light Mode */
---sidebar-background: hsl(220, 30%, 94%)      /* Rich light cool gray/blue */
---sidebar-foreground: hsl(215, 25%, 25%)      /* Darker text */
---sidebar-accent: hsl(217, 70%, 88%)          /* Light blue hover */
---sidebar-accent-foreground: hsl(217, 71%, 50%) /* Primary blue text */
---sidebar-border: hsl(220, 20%, 85%)          /* Darker border */
-
-/* Dark Mode */
---sidebar-background: hsl(210, 13%, 15%)      /* Darker sidebar */
---sidebar-foreground: hsl(210, 25%, 90%)      /* Lighter text */
---sidebar-accent: hsl(217, 60%, 35%)          /* Saturated blue hover */
---sidebar-accent-foreground: hsl(210, 25%, 95%) /* Very light text */
---sidebar-border: hsl(210, 13%, 22%)          /* Dark border */
+--sidebar-background: hsl(220, 30%, 94%) /* Rich light cool gray/blue */
+  --sidebar-foreground: hsl(215, 25%, 25%) /* Darker text */
+  --sidebar-accent: hsl(217, 70%, 88%) /* Light blue hover */
+  --sidebar-accent-foreground: hsl(217, 71%, 50%) /* Primary blue text */
+  --sidebar-border: hsl(220, 20%, 85%) /* Darker border */ /* Dark Mode */
+  --sidebar-background: hsl(210, 13%, 15%) /* Darker sidebar */
+  --sidebar-foreground: hsl(210, 25%, 90%) /* Lighter text */
+  --sidebar-accent: hsl(217, 60%, 35%) /* Saturated blue hover */
+  --sidebar-accent-foreground: hsl(210, 25%, 95%) /* Very light text */
+  --sidebar-border: hsl(210, 13%, 22%) /* Dark border */;
 ```
 
 ### 2.2 Typography
@@ -153,6 +159,7 @@ font-family-code: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
 ```
 
 **Inter Font Features:**
+
 - Professional sans-serif optimized for screens
 - Excellent readability at all sizes
 - Comprehensive character set support
@@ -160,17 +167,17 @@ font-family-code: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
 
 #### 2.2.2 Type Scale
 
-| Element | Size | Weight | Line Height | Usage |
-|---------|------|--------|-------------|-------|
-| H1 | 2.25rem (36px) | 700 | 1.2 | Page titles |
-| H2 | 1.875rem (30px) | 600 | 1.3 | Section headers |
-| H3 | 1.5rem (24px) | 600 | 1.4 | Subsection headers |
-| H4 | 1.25rem (20px) | 600 | 1.5 | Card titles |
-| Body Large | 1rem (16px) | 400 | 1.5 | Main content |
-| Body | 0.875rem (14px) | 400 | 1.5 | Default text |
-| Body Small | 0.75rem (12px) | 400 | 1.4 | Supporting text |
-| Caption | 0.625rem (10px) | 400 | 1.3 | Labels, metadata |
-| Button | 0.875rem (14px) | 500 | 1 | Button text |
+| Element    | Size            | Weight | Line Height | Usage              |
+| ---------- | --------------- | ------ | ----------- | ------------------ |
+| H1         | 2.25rem (36px)  | 700    | 1.2         | Page titles        |
+| H2         | 1.875rem (30px) | 600    | 1.3         | Section headers    |
+| H3         | 1.5rem (24px)   | 600    | 1.4         | Subsection headers |
+| H4         | 1.25rem (20px)  | 600    | 1.5         | Card titles        |
+| Body Large | 1rem (16px)     | 400    | 1.5         | Main content       |
+| Body       | 0.875rem (14px) | 400    | 1.5         | Default text       |
+| Body Small | 0.75rem (12px)  | 400    | 1.4         | Supporting text    |
+| Caption    | 0.625rem (10px) | 400    | 1.3         | Labels, metadata   |
+| Button     | 0.875rem (14px) | 500    | 1           | Button text        |
 
 #### 2.2.3 Font Weights
 
@@ -200,6 +207,7 @@ spacing-24: 6rem (96px)
 ```
 
 **Usage Guidelines:**
+
 - Card padding: `p-6` (24px)
 - Section gaps: `gap-4` (16px) or `gap-8` (32px)
 - Form field spacing: `space-y-2` (8px vertical)
@@ -208,13 +216,13 @@ spacing-24: 6rem (96px)
 ### 2.4 Border Radius
 
 ```css
---radius: 0.5rem (8px)           /* Base radius */
---radius-lg: var(--radius)       /* 8px */
---radius-md: calc(var(--radius) - 2px)  /* 6px */
---radius-sm: calc(var(--radius) - 4px)  /* 4px */
+--radius: 0.5rem (8px) /* Base radius */ --radius-lg: var(--radius) /* 8px */
+  --radius-md: calc(var(--radius) - 2px) /* 6px */
+  --radius-sm: calc(var(--radius) - 4px) /* 4px */;
 ```
 
 **Usage:**
+
 - Cards: `rounded-lg` (8px)
 - Buttons: `rounded-md` (6px)
 - Inputs: `rounded-md` (6px)
@@ -231,6 +239,7 @@ shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)
 ```
 
 **Usage:**
+
 - Cards: `shadow-sm`
 - Modals: `shadow-lg`
 - Dropdowns: `shadow-md`
@@ -256,21 +265,31 @@ ease-linear: linear                       /* Progress bars */
 #### 2.6.3 Standard Animations
 
 **Accordion:**
+
 ```css
 @keyframes accordion-down {
-  from { height: 0 }
-  to { height: var(--radix-accordion-content-height) }
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+  }
 }
-animation: accordion-down 0.2s ease-out
+animation: accordion-down 0.2s ease-out;
 ```
 
 **Accordion Up:**
+
 ```css
 @keyframes accordion-up {
-  from { height: var(--radix-accordion-content-height) }
-  to { height: 0 }
+  from {
+    height: var(--radix-accordion-content-height);
+  }
+  to {
+    height: 0;
+  }
 }
-animation: accordion-up 0.2s ease-out
+animation: accordion-up 0.2s ease-out;
 ```
 
 ---
@@ -283,99 +302,99 @@ The CSMS uses **shadcn/ui**, a collection of 35+ re-usable components built on R
 
 #### 3.1.1 Layout Components
 
-| Component | Purpose | Props | Usage |
-|-----------|---------|-------|-------|
-| **Card** | Container for grouped content | `className` | Dashboard widgets, content sections |
-| **CardHeader** | Card header section | `className` | Card titles and descriptions |
-| **CardTitle** | Card title text | `className` | Main card heading |
-| **CardDescription** | Card subtitle | `className` | Supporting description |
-| **CardContent** | Card body content | `className` | Main card content |
-| **CardFooter** | Card footer section | `className` | Actions, metadata |
-| **Separator** | Visual divider | `orientation` | Section dividers |
-| **ScrollArea** | Scrollable container | `className` | Long content areas |
-| **Sheet** | Slide-out panel | `open`, `onOpenChange` | Mobile menus, side panels |
+| Component           | Purpose                       | Props                  | Usage                               |
+| ------------------- | ----------------------------- | ---------------------- | ----------------------------------- |
+| **Card**            | Container for grouped content | `className`            | Dashboard widgets, content sections |
+| **CardHeader**      | Card header section           | `className`            | Card titles and descriptions        |
+| **CardTitle**       | Card title text               | `className`            | Main card heading                   |
+| **CardDescription** | Card subtitle                 | `className`            | Supporting description              |
+| **CardContent**     | Card body content             | `className`            | Main card content                   |
+| **CardFooter**      | Card footer section           | `className`            | Actions, metadata                   |
+| **Separator**       | Visual divider                | `orientation`          | Section dividers                    |
+| **ScrollArea**      | Scrollable container          | `className`            | Long content areas                  |
+| **Sheet**           | Slide-out panel               | `open`, `onOpenChange` | Mobile menus, side panels           |
 
 #### 3.1.2 Navigation Components
 
-| Component | Purpose | Props | Usage |
-|-----------|---------|-------|-------|
-| **Sidebar** | Main navigation sidebar | `side`, `variant`, `collapsible` | App navigation |
-| **SidebarProvider** | Sidebar context provider | `defaultOpen`, `open` | Wraps sidebar layout |
-| **SidebarHeader** | Sidebar header area | `className` | Logo, branding |
-| **SidebarContent** | Sidebar main content | `className` | Navigation items |
-| **SidebarFooter** | Sidebar footer | `className` | User menu, logout |
-| **SidebarMenu** | Menu container | `className` | Navigation menu |
-| **SidebarMenuItem** | Single menu item | `className` | Navigation link |
-| **SidebarMenuButton** | Menu button | `isActive`, `tooltip`, `variant`, `size` | Clickable nav item |
-| **SidebarMenuSub** | Submenu container | `className` | Nested navigation |
-| **SidebarMenuSubButton** | Submenu button | `isActive`, `size` | Nested nav item |
-| **Tabs** | Tabbed interface | `value`, `onValueChange` | Content organization |
-| **TabsList** | Tab list container | `className` | Tab buttons container |
-| **TabsTrigger** | Tab button | `value` | Individual tab button |
-| **TabsContent** | Tab panel | `value` | Tab content panel |
+| Component                | Purpose                  | Props                                    | Usage                 |
+| ------------------------ | ------------------------ | ---------------------------------------- | --------------------- |
+| **Sidebar**              | Main navigation sidebar  | `side`, `variant`, `collapsible`         | App navigation        |
+| **SidebarProvider**      | Sidebar context provider | `defaultOpen`, `open`                    | Wraps sidebar layout  |
+| **SidebarHeader**        | Sidebar header area      | `className`                              | Logo, branding        |
+| **SidebarContent**       | Sidebar main content     | `className`                              | Navigation items      |
+| **SidebarFooter**        | Sidebar footer           | `className`                              | User menu, logout     |
+| **SidebarMenu**          | Menu container           | `className`                              | Navigation menu       |
+| **SidebarMenuItem**      | Single menu item         | `className`                              | Navigation link       |
+| **SidebarMenuButton**    | Menu button              | `isActive`, `tooltip`, `variant`, `size` | Clickable nav item    |
+| **SidebarMenuSub**       | Submenu container        | `className`                              | Nested navigation     |
+| **SidebarMenuSubButton** | Submenu button           | `isActive`, `size`                       | Nested nav item       |
+| **Tabs**                 | Tabbed interface         | `value`, `onValueChange`                 | Content organization  |
+| **TabsList**             | Tab list container       | `className`                              | Tab buttons container |
+| **TabsTrigger**          | Tab button               | `value`                                  | Individual tab button |
+| **TabsContent**          | Tab panel                | `value`                                  | Tab content panel     |
 
 #### 3.1.3 Form Components
 
-| Component | Purpose | Props | Usage |
-|-----------|---------|-------|-------|
-| **Form** | Form wrapper (react-hook-form) | `...methods` | Form container |
-| **FormField** | Controlled form field | `control`, `name`, `render` | Individual field |
-| **FormItem** | Form field container | `className` | Field wrapper |
-| **FormLabel** | Field label | `className` | Input labels |
-| **FormControl** | Input wrapper | `className` | Input container |
-| **FormDescription** | Helper text | `className` | Field descriptions |
-| **FormMessage** | Error message | `className` | Validation errors |
-| **Input** | Text input | `type`, `placeholder`, `disabled` | Text entry |
-| **Textarea** | Multi-line text | `placeholder`, `rows` | Long text entry |
-| **Select** | Dropdown select | `value`, `onValueChange` | Single selection |
-| **Checkbox** | Checkbox input | `checked`, `onCheckedChange` | Boolean input |
-| **RadioGroup** | Radio button group | `value`, `onValueChange` | Single choice |
-| **Switch** | Toggle switch | `checked`, `onCheckedChange` | Boolean toggle |
-| **Calendar** | Date picker | `selected`, `onSelect` | Date selection |
-| **Slider** | Range slider | `value`, `onValueChange`, `min`, `max` | Numeric range |
+| Component           | Purpose                        | Props                                  | Usage              |
+| ------------------- | ------------------------------ | -------------------------------------- | ------------------ |
+| **Form**            | Form wrapper (react-hook-form) | `...methods`                           | Form container     |
+| **FormField**       | Controlled form field          | `control`, `name`, `render`            | Individual field   |
+| **FormItem**        | Form field container           | `className`                            | Field wrapper      |
+| **FormLabel**       | Field label                    | `className`                            | Input labels       |
+| **FormControl**     | Input wrapper                  | `className`                            | Input container    |
+| **FormDescription** | Helper text                    | `className`                            | Field descriptions |
+| **FormMessage**     | Error message                  | `className`                            | Validation errors  |
+| **Input**           | Text input                     | `type`, `placeholder`, `disabled`      | Text entry         |
+| **Textarea**        | Multi-line text                | `placeholder`, `rows`                  | Long text entry    |
+| **Select**          | Dropdown select                | `value`, `onValueChange`               | Single selection   |
+| **Checkbox**        | Checkbox input                 | `checked`, `onCheckedChange`           | Boolean input      |
+| **RadioGroup**      | Radio button group             | `value`, `onValueChange`               | Single choice      |
+| **Switch**          | Toggle switch                  | `checked`, `onCheckedChange`           | Boolean toggle     |
+| **Calendar**        | Date picker                    | `selected`, `onSelect`                 | Date selection     |
+| **Slider**          | Range slider                   | `value`, `onValueChange`, `min`, `max` | Numeric range      |
 
 #### 3.1.4 Feedback Components
 
-| Component | Purpose | Props | Usage |
-|-----------|---------|-------|-------|
-| **Alert** | Status message | `variant` | Important messages |
-| **AlertDialog** | Confirmation dialog | `open`, `onOpenChange` | Destructive actions |
-| **Toast** | Temporary notification | `title`, `description`, `variant` | Action feedback |
-| **Toaster** | Toast container | N/A | Toast renderer |
-| **Progress** | Progress indicator | `value` | Loading progress |
-| **Skeleton** | Loading placeholder | `className` | Content loading |
-| **Badge** | Status indicator | `variant` | Labels, status tags |
+| Component       | Purpose                | Props                             | Usage               |
+| --------------- | ---------------------- | --------------------------------- | ------------------- |
+| **Alert**       | Status message         | `variant`                         | Important messages  |
+| **AlertDialog** | Confirmation dialog    | `open`, `onOpenChange`            | Destructive actions |
+| **Toast**       | Temporary notification | `title`, `description`, `variant` | Action feedback     |
+| **Toaster**     | Toast container        | N/A                               | Toast renderer      |
+| **Progress**    | Progress indicator     | `value`                           | Loading progress    |
+| **Skeleton**    | Loading placeholder    | `className`                       | Content loading     |
+| **Badge**       | Status indicator       | `variant`                         | Labels, status tags |
 
 #### 3.1.5 Overlay Components
 
-| Component | Purpose | Props | Usage |
-|-----------|---------|-------|-------|
-| **Dialog** | Modal dialog | `open`, `onOpenChange` | Forms, confirmations |
-| **Popover** | Floating content | `open`, `onOpenChange` | Contextual info |
-| **Tooltip** | Hover information | `content`, `side` | Helper text |
-| **DropdownMenu** | Contextual menu | `open`, `onOpenChange` | Actions menu |
-| **Menubar** | Menu bar | N/A | Top-level menus |
+| Component        | Purpose           | Props                  | Usage                |
+| ---------------- | ----------------- | ---------------------- | -------------------- |
+| **Dialog**       | Modal dialog      | `open`, `onOpenChange` | Forms, confirmations |
+| **Popover**      | Floating content  | `open`, `onOpenChange` | Contextual info      |
+| **Tooltip**      | Hover information | `content`, `side`      | Helper text          |
+| **DropdownMenu** | Contextual menu   | `open`, `onOpenChange` | Actions menu         |
+| **Menubar**      | Menu bar          | N/A                    | Top-level menus      |
 
 #### 3.1.6 Data Display Components
 
-| Component | Purpose | Props | Usage |
-|-----------|---------|-------|-------|
-| **Table** | Data table | `className` | Tabular data |
-| **TableHeader** | Table header | `className` | Column headers |
-| **TableBody** | Table body | `className` | Data rows |
-| **TableRow** | Table row | `className` | Single row |
-| **TableHead** | Header cell | `className` | Column header cell |
-| **TableCell** | Data cell | `className` | Data cell |
-| **Avatar** | User avatar | `src`, `alt`, `fallback` | User images |
-| **Chart** | Data visualization | `config`, `data` | Charts and graphs |
-| **Accordion** | Collapsible content | `type`, `value` | Expandable sections |
+| Component       | Purpose             | Props                    | Usage               |
+| --------------- | ------------------- | ------------------------ | ------------------- |
+| **Table**       | Data table          | `className`              | Tabular data        |
+| **TableHeader** | Table header        | `className`              | Column headers      |
+| **TableBody**   | Table body          | `className`              | Data rows           |
+| **TableRow**    | Table row           | `className`              | Single row          |
+| **TableHead**   | Header cell         | `className`              | Column header cell  |
+| **TableCell**   | Data cell           | `className`              | Data cell           |
+| **Avatar**      | User avatar         | `src`, `alt`, `fallback` | User images         |
+| **Chart**       | Data visualization  | `config`, `data`         | Charts and graphs   |
+| **Accordion**   | Collapsible content | `type`, `value`          | Expandable sections |
 
 #### 3.1.7 Custom Components
 
-| Component | Purpose | Props | Usage |
-|-----------|---------|-------|-------|
-| **FileUpload** | File upload widget | `accept`, `maxSize`, `multiple`, `folder` | Document uploads |
-| **FilePreviewModal** | File preview | `fileUrl`, `fileName`, `onClose` | PDF/image preview |
+| Component            | Purpose            | Props                                     | Usage             |
+| -------------------- | ------------------ | ----------------------------------------- | ----------------- |
+| **FileUpload**       | File upload widget | `accept`, `maxSize`, `multiple`, `folder` | Document uploads  |
+| **FilePreviewModal** | File preview       | `fileUrl`, `fileName`, `onClose`          | PDF/image preview |
 
 ### 3.2 Button Variants
 
@@ -419,24 +438,28 @@ The CSMS uses **shadcn/ui**, a collection of 35+ re-usable components built on R
 ### 3.4 Component Usage Guidelines
 
 #### 3.4.1 Cards
+
 - Use for grouping related content
 - Always include CardHeader with CardTitle
 - Maintain consistent padding (p-6)
 - Add hover effects for clickable cards
 
 #### 3.4.2 Forms
+
 - Use react-hook-form with Zod validation
 - Always provide FormLabel and FormDescription
 - Display FormMessage for validation errors
 - Group related fields with visual spacing
 
 #### 3.4.3 Tables
+
 - Use TableHeader for column headers
 - Implement sorting and filtering for large datasets
 - Include loading skeletons during data fetch
 - Add "No data" states
 
 #### 3.4.4 File Upload
+
 - Restrict to PDF files only (accept=".pdf")
 - 2MB max file size default
 - Show upload progress with Progress component
@@ -463,6 +486,7 @@ The CSMS uses **shadcn/ui**, a collection of 35+ re-usable components built on R
 ```
 
 **Steps:**
+
 1. User enters username and password
 2. Form validation (Zod schema)
 3. API call to `/api/auth/login`
@@ -493,6 +517,7 @@ The CSMS uses **shadcn/ui**, a collection of 35+ re-usable components built on R
 ```
 
 **Navigation Paths:**
+
 - Click stat card → Navigate to filtered view
 - Click activity row → Navigate to request detail
 - Use sidebar navigation → Direct page access
@@ -524,18 +549,21 @@ User Journey: Submitting a Promotion Request
 **Detailed Steps:**
 
 **Step 1: List View**
+
 - Table showing all promotion requests
 - Filters: Status, Review Stage, Date Range
 - Search by employee name or ID
 - "New Request" button (HRO only)
 
 **Step 2: Form Dialog**
+
 - Modal dialog with form
 - All fields clearly labeled
-- Required fields marked with asterisk (*)
+- Required fields marked with asterisk (\*)
 - Real-time validation feedback
 
 **Step 3: File Upload**
+
 - Drag-and-drop area
 - Click to browse files
 - PDF only, max 2MB
@@ -544,12 +572,14 @@ User Journey: Submitting a Promotion Request
 - Remove file option
 
 **Step 4: Submission**
+
 - Loading state on button
 - Optimistic UI update
 - Success toast notification
 - Auto-redirect to list view
 
 **Step 5: Review Process**
+
 - Request appears in reviewer's queue
 - Email notification sent
 - Status badge updated
@@ -749,6 +779,7 @@ Generate Report
 ```
 
 **Elements:**
+
 - Centered layout with max-width card
 - Logo and system name at top
 - Two input fields (username, password)
@@ -789,6 +820,7 @@ Generate Report
 ```
 
 **Layout Structure:**
+
 - **Header (Fixed)**: Logo, notifications, user menu
 - **Sidebar (Collapsible)**: Navigation menu (16rem width, 3rem collapsed)
 - **Main Content**: Page header + content area
@@ -825,6 +857,7 @@ Generate Report
 ```
 
 **Features:**
+
 - Search bar for filtering
 - Filter dropdown (status, stage, date)
 - Data table with key columns
@@ -881,6 +914,7 @@ Generate Report
 ```
 
 **Sections:**
+
 1. **Action Bar**: Back button, primary actions
 2. **Request Header**: ID, status, dates
 3. **Employee Information**: Read-only employee data
@@ -926,7 +960,8 @@ Generate Report
 ```
 
 **Form Elements:**
-- Required fields marked with (*)
+
+- Required fields marked with (\*)
 - Select dropdowns for enums
 - File upload with drag-drop
 - Checkbox for boolean fields
@@ -973,6 +1008,7 @@ Generate Report
 ```
 
 **Tab Structure:**
+
 - **Overview**: Personal and employment summary
 - **Employment**: Detailed employment history
 - **Requests**: All requests for this employee
@@ -1013,6 +1049,7 @@ Generate Report
 ```
 
 **Mobile Adaptations:**
+
 - Hamburger menu (☰) for navigation
 - Single column layout
 - Stacked stat cards
@@ -1028,17 +1065,20 @@ Generate Report
 #### 6.1.1 Perceivable
 
 **1.1 Text Alternatives**
+
 - All images have `alt` attributes
 - Icons are accompanied by text labels or `aria-label`
 - Decorative icons use `aria-hidden="true"`
 
 **1.3 Adaptable**
+
 - Semantic HTML (headings, lists, tables)
 - Proper heading hierarchy (H1 → H2 → H3)
 - Form labels associated with inputs
 - ARIA landmarks (navigation, main, complementary)
 
 **1.4 Distinguishable**
+
 - Color contrast ratio ≥ 4.5:1 for normal text
 - Color contrast ratio ≥ 3:1 for large text (18pt+)
 - Information not conveyed by color alone
@@ -1047,6 +1087,7 @@ Generate Report
 #### 6.1.2 Operable
 
 **2.1 Keyboard Accessible**
+
 - All interactive elements keyboard accessible
 - Logical tab order
 - No keyboard traps
@@ -1059,15 +1100,18 @@ Generate Report
   - `Enter/Space`: Activate buttons
 
 **2.2 Enough Time**
+
 - Session timeout with warning
 - Auto-refresh can be paused
 - Form autosave to prevent data loss
 
 **2.3 Seizures and Physical Reactions**
+
 - No flashing content
 - No content flashing more than 3 times per second
 
 **2.4 Navigable**
+
 - Page titles describe topic/purpose
 - Focus order follows visual order
 - Link text describes destination
@@ -1077,26 +1121,30 @@ Generate Report
 #### 6.1.3 Understandable
 
 **3.1 Readable**
+
 - Language specified: `<html lang="en">`
 - Clear, concise text
 - Avoid jargon, explain technical terms
 
 **3.2 Predictable**
+
 - Consistent navigation across pages
 - Consistent component behavior
 - Context changes announced
 - No unexpected context changes on focus
 
 **3.3 Input Assistance**
+
 - Clear error messages
 - Form validation with helpful messages
 - Error prevention for critical actions
 - Confirmation dialogs for destructive actions
-- Required fields marked with (*)
+- Required fields marked with (\*)
 
 #### 6.1.4 Robust
 
 **4.1 Compatible**
+
 - Valid HTML5
 - Proper ARIA usage
 - Screen reader tested (NVDA, JAWS, VoiceOver)
@@ -1268,19 +1316,19 @@ Dialogs and modals trap focus:
 
 All color combinations meet WCAG AA standards:
 
-| Combination | Ratio | Pass |
-|-------------|-------|------|
+| Combination           | Ratio  | Pass          |
+| --------------------- | ------ | ------------- |
 | Primary text on white | 12.6:1 | ✓ AA (>4.5:1) |
-| Muted text on white | 4.8:1 | ✓ AA (>4.5:1) |
-| Primary button | 4.5:1 | ✓ AA (>3:1) |
-| Border on white | 3.2:1 | ✓ AA (>3:1) |
+| Muted text on white   | 4.8:1  | ✓ AA (>4.5:1) |
+| Primary button        | 4.5:1  | ✓ AA (>3:1)   |
+| Border on white       | 3.2:1  | ✓ AA (>3:1)   |
 
 #### 6.6.2 Non-Color Indicators
 
 Information never relies on color alone:
 
 - Status indicated by badge text + color
-- Required fields marked with (*) + label
+- Required fields marked with (\*) + label
 - Errors shown with icon + text + color
 - Links underlined + different color
 
@@ -1488,22 +1536,22 @@ const PromotionForm = lazy(() => import('@/components/forms/promotion-form'))
 
 Commonly used icons:
 
-| Icon | Component | Usage |
-|------|-----------|-------|
-| Users | `<Users />` | Employee management |
-| UserCheck | `<UserCheck />` | Confirmations |
-| TrendingUp | `<TrendingUp />` | Promotions |
-| CalendarOff | `<CalendarOff />` | LWOP |
-| FileText | `<FileText />` | Documents |
-| Bell | `<Bell />` | Notifications |
-| Settings | `<Settings />` | Settings |
-| LogOut | `<LogOut />` | Logout |
-| Upload | `<Upload />` | File upload |
-| Download | `<Download />` | Download |
-| Eye | `<Eye />` | Preview |
-| Trash2 | `<Trash2 />` | Delete |
-| Edit | `<Edit />` | Edit |
-| X | `<X />` | Close |
+| Icon        | Component         | Usage               |
+| ----------- | ----------------- | ------------------- |
+| Users       | `<Users />`       | Employee management |
+| UserCheck   | `<UserCheck />`   | Confirmations       |
+| TrendingUp  | `<TrendingUp />`  | Promotions          |
+| CalendarOff | `<CalendarOff />` | LWOP                |
+| FileText    | `<FileText />`    | Documents           |
+| Bell        | `<Bell />`        | Notifications       |
+| Settings    | `<Settings />`    | Settings            |
+| LogOut      | `<LogOut />`      | Logout              |
+| Upload      | `<Upload />`      | File upload         |
+| Download    | `<Download />`    | Download            |
+| Eye         | `<Eye />`         | Preview             |
+| Trash2      | `<Trash2 />`      | Delete              |
+| Edit        | `<Edit />`        | Edit                |
+| X           | `<X />`           | Close               |
 
 ### 8.2 Design Tokens Reference
 
@@ -1514,7 +1562,7 @@ const colors = {
   background: 'hsl(220, 60%, 97%)',
   foreground: 'hsl(215, 25%, 20%)',
   // ... (see Section 2.1)
-}
+};
 
 // Spacing (rem)
 const spacing = {
@@ -1525,14 +1573,14 @@ const spacing = {
   6: '1.5rem',
   8: '2rem',
   // ... (see Section 2.3)
-}
+};
 
 // Border Radius
 const borderRadius = {
   sm: '0.25rem',
   md: '0.375rem',
   lg: '0.5rem',
-}
+};
 
 // Typography
 const fontSize = {
@@ -1543,7 +1591,7 @@ const fontSize = {
   xl: '1.25rem',
   '2xl': '1.5rem',
   '3xl': '1.875rem',
-}
+};
 ```
 
 ### 8.3 CSS Utilities Reference
@@ -1590,25 +1638,25 @@ const fontSize = {
 
 ```typescript
 // Email validation
-email: z.string().email('Invalid email address')
+email: z.string().email('Invalid email address');
 
 // Required text
-name: z.string().min(1, 'Name is required')
+name: z.string().min(1, 'Name is required');
 
 // Optional text
-notes: z.string().optional()
+notes: z.string().optional();
 
 // Date in future
-effectiveDate: z.date().min(new Date(), 'Date must be in future')
+effectiveDate: z.date().min(new Date(), 'Date must be in future');
 
 // File array
-documents: z.array(z.string()).min(1, 'At least one document required')
+documents: z.array(z.string()).min(1, 'At least one document required');
 
 // Boolean
-studiedOutside: z.boolean().optional()
+studiedOutside: z.boolean().optional();
 
 // Enum
-promotionType: z.enum(['REGULAR', 'ACCELERATED', 'SPECIAL'])
+promotionType: z.enum(['REGULAR', 'ACCELERATED', 'SPECIAL']);
 ```
 
 ### 8.5 Animation Examples
@@ -1616,8 +1664,12 @@ promotionType: z.enum(['REGULAR', 'ACCELERATED', 'SPECIAL'])
 ```css
 /* Fade in */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 .animate-fadeIn {
   animation: fadeIn 200ms ease-out;
@@ -1625,8 +1677,12 @@ promotionType: z.enum(['REGULAR', 'ACCELERATED', 'SPECIAL'])
 
 /* Slide in from right */
 @keyframes slideInRight {
-  from { transform: translateX(100%); }
-  to { transform: translateX(0); }
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
 }
 .animate-slideInRight {
   animation: slideInRight 300ms ease-out;
@@ -1634,8 +1690,14 @@ promotionType: z.enum(['REGULAR', 'ACCELERATED', 'SPECIAL'])
 
 /* Scale in */
 @keyframes scaleIn {
-  from { transform: scale(0.95); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 .animate-scaleIn {
   animation: scaleIn 200ms ease-out;
@@ -1644,14 +1706,14 @@ promotionType: z.enum(['REGULAR', 'ACCELERATED', 'SPECIAL'])
 
 ### 8.6 Browser Support
 
-| Browser | Version | Support |
-|---------|---------|---------|
-| Chrome | Latest 2 versions | ✓ Full |
-| Firefox | Latest 2 versions | ✓ Full |
-| Safari | Latest 2 versions | ✓ Full |
-| Edge | Latest 2 versions | ✓ Full |
-| Mobile Safari | iOS 13+ | ✓ Full |
-| Chrome Mobile | Android 8+ | ✓ Full |
+| Browser       | Version           | Support |
+| ------------- | ----------------- | ------- |
+| Chrome        | Latest 2 versions | ✓ Full  |
+| Firefox       | Latest 2 versions | ✓ Full  |
+| Safari        | Latest 2 versions | ✓ Full  |
+| Edge          | Latest 2 versions | ✓ Full  |
+| Mobile Safari | iOS 13+           | ✓ Full  |
+| Chrome Mobile | Android 8+        | ✓ Full  |
 
 ### 8.7 Design Resources
 
@@ -1679,20 +1741,20 @@ promotionType: z.enum(['REGULAR', 'ACCELERATED', 'SPECIAL'])
 
 ## Document Approval
 
-| Role | Name | Signature | Date |
-|------|------|-----------|------|
-| UI/UX Designer | | | |
-| Frontend Lead | | | |
-| Product Manager | | | |
-| Accessibility Specialist | | | |
+| Role                     | Name | Signature | Date |
+| ------------------------ | ---- | --------- | ---- |
+| UI/UX Designer           |      |           |      |
+| Frontend Lead            |      |           |      |
+| Product Manager          |      |           |      |
+| Accessibility Specialist |      |           |      |
 
 ---
 
 ## Revision History
 
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 1.0 | 2024-12-25 | System Architect | Initial document creation |
+| Version | Date       | Author           | Changes                   |
+| ------- | ---------- | ---------------- | ------------------------- |
+| 1.0     | 2024-12-25 | System Architect | Initial document creation |
 
 ---
 

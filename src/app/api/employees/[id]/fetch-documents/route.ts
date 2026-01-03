@@ -4,9 +4,10 @@ import { uploadFile } from '@/lib/minio';
 
 // HRIMS API Configuration
 const HRIMS_CONFIG = {
-  BASE_URL: "http://10.0.217.11:8135/api",
-  API_KEY: "0ea1e3f5-ea57-410b-a199-246fa288b851",
-  TOKEN: "CfDJ8M6SKjORsSdBliudb_vdU_DEea8FKIcQckiBxdvt4EJgtcP0ba_3REOpGvWYeOF46fvqw8heVnqFnXTwOmD5Wg5Qg3yNJlwyGDHVhqbgyKxB31Bjh2pI6C2qAYnLMovU4XLlQFVu7cTpIqtgItNZpM4"
+  BASE_URL: 'http://10.0.217.11:8135/api',
+  API_KEY: '0ea1e3f5-ea57-410b-a199-246fa288b851',
+  TOKEN:
+    'CfDJ8M6SKjORsSdBliudb_vdU_DEea8FKIcQckiBxdvt4EJgtcP0ba_3REOpGvWYeOF46fvqw8heVnqFnXTwOmD5Wg5Qg3yNJlwyGDHVhqbgyKxB31Bjh2pI6C2qAYnLMovU4XLlQFVu7cTpIqtgItNZpM4',
 };
 
 // Valid educational certificate types (excluding primary education)
@@ -18,20 +19,40 @@ const VALID_CERTIFICATE_TYPES = [
   'Advanced Diploma',
   'Bachelor Degree',
   'Master Degree',
-  'PHd'
+  'PHd',
 ] as const;
 
 // Document types for HRIMS RequestId 206
 const DOCUMENT_TYPES = [
-  { code: '2', name: 'Ardhilihal', dbField: 'ardhilHaliUrl', dbKey: 'ardhilHali' },
-  { code: '3', name: 'Employment Contract', dbField: 'jobContractUrl', dbKey: 'jobContract' },
-  { code: '4', name: 'Birth Certificate', dbField: 'birthCertificateUrl', dbKey: 'birthCertificate' },
-  { code: '23', name: 'Confirmation Letter', dbField: 'confirmationLetterUrl', dbKey: 'confirmationLetter' },
-  { code: '8', name: 'Educational Certificate', dbField: null, dbKey: null } // Stored as certificate, not core document
+  {
+    code: '2',
+    name: 'Ardhilihal',
+    dbField: 'ardhilHaliUrl',
+    dbKey: 'ardhilHali',
+  },
+  {
+    code: '3',
+    name: 'Employment Contract',
+    dbField: 'jobContractUrl',
+    dbKey: 'jobContract',
+  },
+  {
+    code: '4',
+    name: 'Birth Certificate',
+    dbField: 'birthCertificateUrl',
+    dbKey: 'birthCertificate',
+  },
+  {
+    code: '23',
+    name: 'Confirmation Letter',
+    dbField: 'confirmationLetterUrl',
+    dbKey: 'confirmationLetter',
+  },
+  { code: '8', name: 'Educational Certificate', dbField: null, dbKey: null }, // Stored as certificate, not core document
 ] as const;
 
 // Helper function for delays between requests
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
  * Maps HRIMS certificate names to our standardized certificate types
@@ -47,7 +68,10 @@ function mapCertificateType(hrimsAttachmentType: string): string | null {
     normalized.includes('o-level') ||
     normalized.includes('o level') ||
     normalized.includes('csee') ||
-    (normalized.includes('secondary') && (normalized.includes('certificate') || normalized.includes('education')) && !normalized.includes('advanced'))
+    (normalized.includes('secondary') &&
+      (normalized.includes('certificate') ||
+        normalized.includes('education')) &&
+      !normalized.includes('advanced'))
   ) {
     return 'Certificate of Secondary education (Form IV)';
   }
@@ -96,7 +120,9 @@ function mapCertificateType(hrimsAttachmentType: string): string | null {
     normalized.includes('beng') ||
     normalized.includes('b.sc') ||
     normalized.includes('b.a') ||
-    normalized.includes('degree') && !normalized.includes('master') && !normalized.includes('advanced')
+    (normalized.includes('degree') &&
+      !normalized.includes('master') &&
+      !normalized.includes('advanced'))
   ) {
     return 'Bachelor Degree';
   }
@@ -123,8 +149,8 @@ function mapCertificateType(hrimsAttachmentType: string): string | null {
   // Certificate (general, not secondary education)
   if (
     (normalized.includes('certificate') &&
-     !normalized.includes('secondary') &&
-     !normalized.includes('form')) ||
+      !normalized.includes('secondary') &&
+      !normalized.includes('form')) ||
     normalized.includes('cert.')
   ) {
     return 'Certificate';
@@ -166,7 +192,7 @@ async function storeDocumentInMinIO(
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Upload failed'
+      error: error instanceof Error ? error.message : 'Upload failed',
     };
   }
 }
@@ -189,7 +215,7 @@ export async function POST(
         confirmationLetterUrl: true,
         jobContractUrl: true,
         birthCertificateUrl: true,
-      }
+      },
     });
 
     if (!employee) {
@@ -206,8 +232,12 @@ export async function POST(
       );
     }
 
-    console.log(`📄 Fetching documents for employee ${employee.name} (Payroll: ${employee.payrollNumber})`);
-    console.log(`⚠️ Making ${DOCUMENT_TYPES.length} separate HRIMS API calls (one per document type)`);
+    console.log(
+      `📄 Fetching documents for employee ${employee.name} (Payroll: ${employee.payrollNumber})`
+    );
+    console.log(
+      `⚠️ Making ${DOCUMENT_TYPES.length} separate HRIMS API calls (one per document type)`
+    );
 
     const allAttachments: any[] = [];
 
@@ -216,36 +246,48 @@ export async function POST(
       const docType = DOCUMENT_TYPES[i];
 
       // Skip if document already exists in MinIO
-      const currentUrl = employee[docType.dbField as keyof typeof employee] as string | null;
-      if (currentUrl && currentUrl.startsWith('/api/files/employee-documents/')) {
+      const currentUrl = employee[docType.dbField as keyof typeof employee] as
+        | string
+        | null;
+      if (
+        currentUrl &&
+        currentUrl.startsWith('/api/files/employee-documents/')
+      ) {
         console.log(`⏭️ Skipping ${docType.name} - already stored in MinIO`);
         continue;
       }
 
-      console.log(`\n📄 Fetching document type: ${docType.name} (RequestBody: ${docType.code})...`);
+      console.log(
+        `\n📄 Fetching document type: ${docType.name} (RequestBody: ${docType.code})...`
+      );
 
       const documentsPayload = {
-        RequestId: "206",
+        RequestId: '206',
         SearchCriteria: employee.payrollNumber,
         RequestPayloadData: {
-          RequestBody: docType.code
-        }
+          RequestBody: docType.code,
+        },
       };
 
       try {
-        const hrimsResponse = await fetch(`${HRIMS_CONFIG.BASE_URL}/Employees`, {
-          method: 'POST',
-          headers: {
-            'ApiKey': HRIMS_CONFIG.API_KEY,
-            'Token': HRIMS_CONFIG.TOKEN,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(documentsPayload),
-          signal: AbortSignal.timeout(120000) // 120 second timeout
-        });
+        const hrimsResponse = await fetch(
+          `${HRIMS_CONFIG.BASE_URL}/Employees`,
+          {
+            method: 'POST',
+            headers: {
+              ApiKey: HRIMS_CONFIG.API_KEY,
+              Token: HRIMS_CONFIG.TOKEN,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(documentsPayload),
+            signal: AbortSignal.timeout(120000), // 120 second timeout
+          }
+        );
 
         if (!hrimsResponse.ok) {
-          console.error(`❌ HRIMS API error for ${docType.name}: ${hrimsResponse.status} ${hrimsResponse.statusText}`);
+          console.error(
+            `❌ HRIMS API error for ${docType.name}: ${hrimsResponse.status} ${hrimsResponse.statusText}`
+          );
           continue; // Skip to next document type
         }
 
@@ -253,7 +295,10 @@ export async function POST(
 
         // Check for HRIMS internal errors
         if (hrimsData.code === 500 || hrimsData.status === 'Failure') {
-          console.error(`❌ HRIMS internal error for ${docType.name}:`, hrimsData.message);
+          console.error(
+            `❌ HRIMS internal error for ${docType.name}:`,
+            hrimsData.message
+          );
           continue; // Skip to next document type
         }
 
@@ -262,7 +307,9 @@ export async function POST(
         // Extract attachments and add to allAttachments array
         const attachments = Array.isArray(hrimsData.data) ? hrimsData.data : [];
         if (attachments.length > 0) {
-          console.log(`📦 Found ${attachments.length} attachment(s) for ${docType.name}`);
+          console.log(
+            `📦 Found ${attachments.length} attachment(s) for ${docType.name}`
+          );
           allAttachments.push(...attachments);
         } else {
           console.log(`⚠️ No attachments found for ${docType.name}`);
@@ -273,32 +320,68 @@ export async function POST(
           console.log('⏳ Waiting 2 seconds before next request...');
           await delay(2000);
         }
-
       } catch (error) {
-        console.error(`🚨 Error fetching ${docType.name}:`, error instanceof Error ? error.message : 'Unknown error');
+        console.error(
+          `🚨 Error fetching ${docType.name}:`,
+          error instanceof Error ? error.message : 'Unknown error'
+        );
         continue; // Skip to next document type
       }
     }
 
     if (allAttachments.length === 0) {
       console.log('⚠️ No documents found across all HRIMS requests');
-      return NextResponse.json({
-        success: false,
-        message: 'No documents found in HRIMS',
-      }, { status: 404 });
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'No documents found in HRIMS',
+        },
+        { status: 404 }
+      );
     }
 
     console.log(`📦 Total attachments collected: ${allAttachments.length}`);
 
     // Document type mapping: HRIMS attachmentType -> Database field
-    const documentTypeMapping: Record<string, { field: string; dbKey: string; label: string }> = {
-      'ardhilhali': { field: 'ardhilHaliUrl', dbKey: 'ardhilHali', label: 'Ardhil Hali' },
-      'ardhilhaliurl': { field: 'ardhilHaliUrl', dbKey: 'ardhilHali', label: 'Ardhil Hali' },
-      'comfirmationletter': { field: 'confirmationLetterUrl', dbKey: 'confirmationLetter', label: 'Confirmation Letter' },
-      'confirmationletter': { field: 'confirmationLetterUrl', dbKey: 'confirmationLetter', label: 'Confirmation Letter' },
-      'employmentcontract': { field: 'jobContractUrl', dbKey: 'jobContract', label: 'Job Contract' },
-      'jobcontract': { field: 'jobContractUrl', dbKey: 'jobContract', label: 'Job Contract' },
-      'birthcertificate': { field: 'birthCertificateUrl', dbKey: 'birthCertificate', label: 'Birth Certificate' },
+    const documentTypeMapping: Record<
+      string,
+      { field: string; dbKey: string; label: string }
+    > = {
+      ardhilhali: {
+        field: 'ardhilHaliUrl',
+        dbKey: 'ardhilHali',
+        label: 'Ardhil Hali',
+      },
+      ardhilhaliurl: {
+        field: 'ardhilHaliUrl',
+        dbKey: 'ardhilHali',
+        label: 'Ardhil Hali',
+      },
+      comfirmationletter: {
+        field: 'confirmationLetterUrl',
+        dbKey: 'confirmationLetter',
+        label: 'Confirmation Letter',
+      },
+      confirmationletter: {
+        field: 'confirmationLetterUrl',
+        dbKey: 'confirmationLetter',
+        label: 'Confirmation Letter',
+      },
+      employmentcontract: {
+        field: 'jobContractUrl',
+        dbKey: 'jobContract',
+        label: 'Job Contract',
+      },
+      jobcontract: {
+        field: 'jobContractUrl',
+        dbKey: 'jobContract',
+        label: 'Job Contract',
+      },
+      birthcertificate: {
+        field: 'birthCertificateUrl',
+        dbKey: 'birthCertificate',
+        label: 'Birth Certificate',
+      },
     };
 
     const updateData: any = {};
@@ -317,16 +400,25 @@ export async function POST(
       }
 
       // Normalize attachment type for matching
-      const normalizedType = attachmentType.toLowerCase().replace(/[\s_-]/g, '');
+      const normalizedType = attachmentType
+        .toLowerCase()
+        .replace(/[\s_-]/g, '');
 
       // Check if it's a core document type
       const docMapping = documentTypeMapping[normalizedType];
 
       if (docMapping) {
         // Check if already stored in MinIO
-        const currentUrl = employee[docMapping.field as keyof typeof employee] as string | null;
-        if (currentUrl && currentUrl.startsWith('/api/files/employee-documents/')) {
-          console.log(`⏭️ Skipping ${docMapping.label} - already stored in MinIO`);
+        const currentUrl = employee[
+          docMapping.field as keyof typeof employee
+        ] as string | null;
+        if (
+          currentUrl &&
+          currentUrl.startsWith('/api/files/employee-documents/')
+        ) {
+          console.log(
+            `⏭️ Skipping ${docMapping.label} - already stored in MinIO`
+          );
           documentsStored[docMapping.dbKey] = currentUrl;
           continue;
         }
@@ -342,13 +434,20 @@ export async function POST(
           documentsStored[docMapping.dbKey] = storeResult.url;
           updateData[docMapping.field] = storeResult.url;
           documentsProcessed++;
-          console.log(`✅ Stored ${docMapping.label} (${attachment.contentSize} bytes)`);
+          console.log(
+            `✅ Stored ${docMapping.label} (${attachment.contentSize} bytes)`
+          );
         } else {
-          console.error(`❌ Failed to store ${docMapping.label}:`, storeResult.error);
+          console.error(
+            `❌ Failed to store ${docMapping.label}:`,
+            storeResult.error
+          );
         }
-      } else if (attachmentType.toLowerCase().includes('educational') ||
-                 attachmentType.toLowerCase().includes('certification') ||
-                 attachmentType.toLowerCase().includes('certificate')) {
+      } else if (
+        attachmentType.toLowerCase().includes('educational') ||
+        attachmentType.toLowerCase().includes('certification') ||
+        attachmentType.toLowerCase().includes('certificate')
+      ) {
         // It's an educational certificate - check if already exists in database
         const certificateType = attachmentType; // Use original HRIMS certificate name
 
@@ -360,8 +459,14 @@ export async function POST(
           },
         });
 
-        if (existingCert && existingCert.url && existingCert.url.startsWith('/api/files/')) {
-          console.log(`⏭️ Skipping certificate "${certificateType}" - already stored in MinIO`);
+        if (
+          existingCert &&
+          existingCert.url &&
+          existingCert.url.startsWith('/api/files/')
+        ) {
+          console.log(
+            `⏭️ Skipping certificate "${certificateType}" - already stored in MinIO`
+          );
           certificatesStored.push({
             type: certificateType,
             fileUrl: existingCert.url,
@@ -370,15 +475,21 @@ export async function POST(
         }
 
         // Check if we've already processed a certificate with this exact name in this batch
-        const duplicateCount = certificatesStored.filter(c => c.type.startsWith(certificateType)).length;
+        const duplicateCount = certificatesStored.filter((c) =>
+          c.type.startsWith(certificateType)
+        ).length;
 
         // Add numeric suffix if there are duplicates in this batch
         let finalCertificateType = certificateType;
         if (duplicateCount > 0) {
           finalCertificateType = `${certificateType} ${duplicateCount + 1}`;
-          console.log(`📜 Found duplicate certificate name in batch, adding suffix: "${finalCertificateType}"`);
+          console.log(
+            `📜 Found duplicate certificate name in batch, adding suffix: "${finalCertificateType}"`
+          );
         } else {
-          console.log(`📜 Saving certificate with original HRIMS name: "${finalCertificateType}"`);
+          console.log(
+            `📜 Saving certificate with original HRIMS name: "${finalCertificateType}"`
+          );
         }
 
         const storeResult = await storeDocumentInMinIO(
@@ -393,11 +504,15 @@ export async function POST(
             fileUrl: storeResult.url,
           });
           documentsProcessed++;
-          console.log(`✅ Stored certificate: ${finalCertificateType} (${attachment.contentSize} bytes)`);
+          console.log(
+            `✅ Stored certificate: ${finalCertificateType} (${attachment.contentSize} bytes)`
+          );
         }
       } else {
         // Other document type - store but log it
-        console.log(`📄 Found other document type: ${attachmentType} (${attachment.contentSize} bytes)`);
+        console.log(
+          `📄 Found other document type: ${attachmentType} (${attachment.contentSize} bytes)`
+        );
 
         const storeResult = await storeDocumentInMinIO(
           employee.id,
@@ -416,13 +531,18 @@ export async function POST(
     if (Object.keys(updateData).length > 0) {
       await prisma.employee.update({
         where: { id: employee.id },
-        data: updateData
+        data: updateData,
       });
       console.log(`✅ Updated database for ${employee.name}`);
     }
 
     // Save certificates to database if any and collect the saved certificate records
-    const savedCertificates: Array<{ id: string; type: string; name: string; url: string }> = [];
+    const savedCertificates: Array<{
+      id: string;
+      type: string;
+      name: string;
+      url: string;
+    }> = [];
 
     if (certificatesStored.length > 0) {
       for (const cert of certificatesStored) {
@@ -439,7 +559,9 @@ export async function POST(
           // If URL matches, it was already stored - just use existing record
           if (existing.url === cert.fileUrl) {
             savedCert = existing;
-            console.log(`ℹ️ Certificate "${cert.type}" already exists in database`);
+            console.log(
+              `ℹ️ Certificate "${cert.type}" already exists in database`
+            );
           } else {
             // Update existing certificate with new URL
             savedCert = await prisma.employeeCertificate.update({
@@ -470,21 +592,28 @@ export async function POST(
           id: savedCert.id,
           type: savedCert.type,
           name: savedCert.name,
-          url: savedCert.url ?? ''
+          url: savedCert.url ?? '',
         });
       }
-      console.log(`✅ Processed ${certificatesStored.length} certificates for ${employee.name}`);
+      console.log(
+        `✅ Processed ${certificatesStored.length} certificates for ${employee.name}`
+      );
     }
 
     if (documentsProcessed === 0) {
       console.log('⚠️ No documents found in HRIMS response');
-      return NextResponse.json({
-        success: false,
-        message: 'No documents found in HRIMS response'
-      }, { status: 404 });
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'No documents found in HRIMS response',
+        },
+        { status: 404 }
+      );
     }
 
-    console.log(`✅ Successfully processed ${documentsProcessed} document(s) for ${employee.name}`);
+    console.log(
+      `✅ Successfully processed ${documentsProcessed} document(s) for ${employee.name}`
+    );
 
     return NextResponse.json({
       success: true,
@@ -494,17 +623,16 @@ export async function POST(
         employeeName: employee.name,
         documentsStored,
         certificatesStored: savedCertificates, // Return properly formatted certificates with IDs
-        totalProcessed: documentsProcessed
-      }
+        totalProcessed: documentsProcessed,
+      },
     });
-
   } catch (error) {
     console.error('🚨 Error fetching documents from HRIMS:', error);
     return NextResponse.json(
       {
         success: false,
         message: 'Failed to fetch documents from HRIMS',
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );
