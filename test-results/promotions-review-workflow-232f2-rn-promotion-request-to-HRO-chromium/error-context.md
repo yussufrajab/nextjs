@@ -1,0 +1,220 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e6] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=e7]:
+      - img [ref=e8]
+    - generic [ref=e11]:
+      - button "Open issues overlay" [ref=e12]:
+        - generic [ref=e13]:
+          - generic [ref=e14]: "0"
+          - generic [ref=e15]: "1"
+        - generic [ref=e16]: Issue
+      - button "Collapse issues badge" [ref=e17]:
+        - img [ref=e18]
+  - alert [ref=e20]
+  - generic [ref=e21]:
+    - generic [ref=e25]:
+      - link "Zanzibar Coat of Arms Civil Servant Management System" [ref=e27] [cursor=pointer]:
+        - /url: /dashboard
+        - img "Zanzibar Coat of Arms" [ref=e28]
+        - heading "Civil Servant Management System" [level=1] [ref=e29]
+      - list [ref=e34]:
+        - listitem [ref=e35]:
+          - button "Dashboard" [ref=e36] [cursor=pointer]:
+            - img [ref=e37]
+            - text: Dashboard
+        - listitem [ref=e42]:
+          - button "Institutions" [ref=e43] [cursor=pointer]:
+            - img [ref=e44]
+            - text: Institutions
+        - listitem [ref=e47]:
+          - button "Employee Profiles" [ref=e48] [cursor=pointer]:
+            - img [ref=e49]
+            - text: Employee Profiles
+        - listitem [ref=e61]:
+          - button "Employee Confirmation" [ref=e62] [cursor=pointer]:
+            - img [ref=e63]
+            - text: Employee Confirmation
+        - listitem [ref=e67]:
+          - button "Leave Without Pay (LWOP)" [ref=e68] [cursor=pointer]:
+            - img [ref=e69]
+            - text: Leave Without Pay (LWOP)
+        - listitem [ref=e73]:
+          - button "Promotion" [ref=e74] [cursor=pointer]:
+            - img [ref=e75]
+            - text: Promotion
+        - listitem [ref=e78]:
+          - button "Change of Cadre" [ref=e79] [cursor=pointer]:
+            - img [ref=e80]
+            - text: Change of Cadre
+        - listitem [ref=e88]:
+          - button "Retirement" [ref=e89] [cursor=pointer]:
+            - img [ref=e90]
+            - text: Retirement
+        - listitem [ref=e93]:
+          - button "Resignation" [ref=e94] [cursor=pointer]:
+            - img [ref=e95]
+            - text: Resignation
+        - listitem [ref=e100]:
+          - button "Service Extension" [ref=e101] [cursor=pointer]:
+            - img [ref=e102]
+            - text: Service Extension
+        - listitem [ref=e104]:
+          - button "Track Status" [ref=e105] [cursor=pointer]:
+            - img [ref=e106]
+            - text: Track Status
+        - listitem [ref=e109]:
+          - button "Recent Activities" [ref=e110] [cursor=pointer]:
+            - img [ref=e111]
+            - text: Recent Activities
+        - listitem [ref=e113]:
+          - button "Reports & Analytics" [ref=e114] [cursor=pointer]:
+            - img [ref=e115]
+            - text: Reports & Analytics
+      - button "Logout" [ref=e118] [cursor=pointer]:
+        - img
+        - text: Logout
+    - main [ref=e119]:
+      - navigation [ref=e123]:
+        - button "1 Toggle notifications" [ref=e124] [cursor=pointer]:
+          - img
+          - generic [ref=e125]: "1"
+          - generic [ref=e126]: Toggle notifications
+        - button "TH" [ref=e127] [cursor=pointer]:
+          - generic [ref=e129]: TH
+      - main [ref=e130]:
+        - generic [ref=e131]:
+          - generic [ref=e134]:
+            - heading "Dashboard" [level=1] [ref=e135]
+            - paragraph [ref=e136]: Manage all your HR processes in one place.
+          - generic [ref=e137]:
+            - link "Total Employees 4 Updated just now" [ref=e138] [cursor=pointer]:
+              - /url: /dashboard/profile
+              - generic [ref=e139]:
+                - generic [ref=e140]:
+                  - generic [ref=e141]: Total Employees
+                  - img [ref=e142]
+                - generic [ref=e147]:
+                  - generic [ref=e148]: "4"
+                  - paragraph [ref=e149]: Updated just now
+            - link "Pending Confirmations 0 Updated just now" [ref=e150] [cursor=pointer]:
+              - /url: /dashboard/confirmation
+              - generic [ref=e151]:
+                - generic [ref=e152]:
+                  - generic [ref=e153]: Pending Confirmations
+                  - img [ref=e154]
+                - generic [ref=e158]:
+                  - generic [ref=e159]: "0"
+                  - paragraph [ref=e160]: Updated just now
+            - link "Pending Promotions 2 Updated just now" [ref=e161] [cursor=pointer]:
+              - /url: /dashboard/promotion
+              - generic [ref=e162]:
+                - generic [ref=e163]:
+                  - generic [ref=e164]: Pending Promotions
+                  - img [ref=e165]
+                - generic [ref=e168]:
+                  - generic [ref=e169]: "2"
+                  - paragraph [ref=e170]: Updated just now
+            - link "Employees on LWOP 0 Updated just now" [ref=e171] [cursor=pointer]:
+              - /url: /dashboard/lwop
+              - generic [ref=e172]:
+                - generic [ref=e173]:
+                  - generic [ref=e174]: Employees on LWOP
+                  - img [ref=e175]
+                - generic [ref=e179]:
+                  - generic [ref=e180]: "0"
+                  - paragraph [ref=e181]: Updated just now
+            - link "Pending Terminations 0 Updated just now" [ref=e182] [cursor=pointer]:
+              - /url: /dashboard/termination
+              - generic [ref=e183]:
+                - generic [ref=e184]:
+                  - generic [ref=e185]: Pending Terminations
+                  - img [ref=e186]
+                - generic [ref=e188]:
+                  - generic [ref=e189]: "0"
+                  - paragraph [ref=e190]: Updated just now
+            - link "Pending Cadre Changes 0 Updated just now" [ref=e191] [cursor=pointer]:
+              - /url: /dashboard/cadre-change
+              - generic [ref=e192]:
+                - generic [ref=e193]:
+                  - generic [ref=e194]: Pending Cadre Changes
+                  - img [ref=e195]
+                - generic [ref=e203]:
+                  - generic [ref=e204]: "0"
+                  - paragraph [ref=e205]: Updated just now
+            - link "Pending Retirements 0 Updated just now" [ref=e206] [cursor=pointer]:
+              - /url: /dashboard/retirement
+              - generic [ref=e207]:
+                - generic [ref=e208]:
+                  - generic [ref=e209]: Pending Retirements
+                  - img [ref=e210]
+                - generic [ref=e213]:
+                  - generic [ref=e214]: "0"
+                  - paragraph [ref=e215]: Updated just now
+            - link "Pending Resignations 0 Updated just now" [ref=e216] [cursor=pointer]:
+              - /url: /dashboard/resignation
+              - generic [ref=e217]:
+                - generic [ref=e218]:
+                  - generic [ref=e219]: Pending Resignations
+                  - img [ref=e220]
+                - generic [ref=e225]:
+                  - generic [ref=e226]: "0"
+                  - paragraph [ref=e227]: Updated just now
+            - link "Pending Service Extensions 0 Updated just now" [ref=e228] [cursor=pointer]:
+              - /url: /dashboard/service-extension
+              - generic [ref=e229]:
+                - generic [ref=e230]:
+                  - generic [ref=e231]: Pending Service Extensions
+                  - img [ref=e232]
+                - generic [ref=e234]:
+                  - generic [ref=e235]: "0"
+                  - paragraph [ref=e236]: Updated just now
+            - link "Open Complaints 0 Updated just now" [ref=e237] [cursor=pointer]:
+              - /url: /dashboard/complaints
+              - generic [ref=e238]:
+                - generic [ref=e239]:
+                  - generic [ref=e240]: Open Complaints
+                  - img [ref=e241]
+                - generic [ref=e243]:
+                  - generic [ref=e244]: "0"
+                  - paragraph [ref=e245]: Updated just now
+          - generic [ref=e247]:
+            - generic [ref=e248]:
+              - generic [ref=e249]: Recent Activities
+              - generic [ref=e250]: An overview of the latest requests and their statuses.
+            - table [ref=e253]:
+              - rowgroup [ref=e254]:
+                - row "Request ID Type Employee Status" [ref=e255]:
+                  - columnheader "Request ID" [ref=e256]
+                  - columnheader "Type" [ref=e257]
+                  - columnheader "Employee" [ref=e258]
+                  - columnheader "Status" [ref=e259]
+              - rowgroup [ref=e260]:
+                - row "test-promo-request-2 Promotion Eligible Employee 2 Pending HRMO/HHRMD Review" [ref=e261]:
+                  - cell "test-promo-request-2" [ref=e262]:
+                    - link "test-promo-request-2" [ref=e263] [cursor=pointer]:
+                      - /url: /dashboard/promotion
+                  - cell "Promotion" [ref=e264]
+                  - cell "Eligible Employee 2" [ref=e265]
+                  - cell "Pending HRMO/HHRMD Review" [ref=e266]:
+                    - generic [ref=e267]: Pending HRMO/HHRMD Review
+                - row "test-promo-request-1 Promotion Eligible Employee 1 Pending HRMO/HHRMD Review" [ref=e268]:
+                  - cell "test-promo-request-1" [ref=e269]:
+                    - link "test-promo-request-1" [ref=e270] [cursor=pointer]:
+                      - /url: /dashboard/promotion
+                  - cell "Promotion" [ref=e271]
+                  - cell "Eligible Employee 1" [ref=e272]
+                  - cell "Pending HRMO/HHRMD Review" [ref=e273]:
+                    - generic [ref=e274]: Pending HRMO/HHRMD Review
+  - region "Notifications (F8)":
+    - list [ref=e276]:
+      - status [ref=e277]:
+        - generic [ref=e278]:
+          - generic [ref=e279]: Login Successful
+          - generic [ref=e280]: Welcome back, Test HRMO!
+        - button [ref=e281] [cursor=pointer]:
+          - img [ref=e282]
+  - status [ref=e286]: Notification Login SuccessfulWelcome back, Test HRMO!
+```

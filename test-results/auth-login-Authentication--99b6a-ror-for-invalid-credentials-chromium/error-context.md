@@ -1,0 +1,48 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e6] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=e7]:
+      - img [ref=e8]
+    - generic [ref=e11]:
+      - button "Open issues overlay" [ref=e12]:
+        - generic [ref=e13]:
+          - generic [ref=e14]: "0"
+          - generic [ref=e15]: "1"
+        - generic [ref=e16]: Issue
+      - button "Collapse issues badge" [ref=e17]:
+        - img [ref=e18]
+  - alert [ref=e20]
+  - generic [ref=e21]:
+    - generic [ref=e22]:
+      - generic [ref=e23]:
+        - img "Zanzibar Coat of Arms" [ref=e25]
+        - generic [ref=e26]: Civil Servant Management System
+        - generic [ref=e27]: Staff Portal - Sign in to manage employee lifecycle processes.
+      - generic [ref=e28]:
+        - generic [ref=e29]:
+          - generic [ref=e30]:
+            - text: Username or Email
+            - textbox "Username or Email" [ref=e31]:
+              - /placeholder: Enter your username or email
+              - text: invalid_user
+          - generic [ref=e32]:
+            - text: Password
+            - textbox "Password" [ref=e33]:
+              - /placeholder: Enter your password
+              - text: wrong_password
+          - button "Login" [ref=e34] [cursor=pointer]
+        - link "Employee Login" [ref=e36] [cursor=pointer]:
+          - /url: /employee-login
+          - button "Employee Login" [ref=e37]
+    - contentinfo [ref=e38]: © 2026 Civil Service Commission. All rights reserved.
+  - region "Notifications (F8)":
+    - list [ref=e40]:
+      - status [ref=e41]:
+        - generic [ref=e42]:
+          - generic [ref=e43]: Login Failed
+          - generic [ref=e44]: Invalid username/email or password.
+        - button [ref=e45] [cursor=pointer]:
+          - img [ref=e46]
+```

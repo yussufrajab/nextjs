@@ -1,0 +1,353 @@
+<testsuites id="" name="" tests="11" failures="9" skipped="0" errors="0" time="123.64749499999999">
+<testsuite name="auth/login.spec.ts" timestamp="2026-01-04T12:48:57.188Z" hostname="chromium" tests="5" failures="3" skipped="0" time="57.381" errors="0">
+<testcase name="Authentication Flow › should login successfully with valid credentials" classname="auth/login.spec.ts" time="4.439">
+</testcase>
+<testcase name="Authentication Flow › should show error for invalid credentials" classname="auth/login.spec.ts" time="6.23">
+<failure message="login.spec.ts:17:7 should show error for invalid credentials" type="FAILURE">
+<![CDATA[  [chromium] › auth/login.spec.ts:17:7 › Authentication Flow › should show error for invalid credentials 
+
+    TimeoutError: locator.waitFor: Timeout 5000ms exceeded.
+    Call log:
+      - waiting for locator('[data-sonner-toast]').first() to be visible
+
+
+       at ../pages/base.page.ts:29
+
+      27 |   async waitForToast(expectedText?: string, timeout = 5000) {
+      28 |     const toast = this.page.locator('[data-sonner-toast]').first();
+    > 29 |     await toast.waitFor({ state: 'visible', timeout });
+         |                 ^
+      30 |
+      31 |     if (expectedText) {
+      32 |       const text = await toast.textContent();
+        at LoginPage.waitForToast (/home/latest/e2e/pages/base.page.ts:29:17)
+        at LoginPage.expectLoginError (/home/latest/e2e/pages/login.page.ts:27:16)
+        at /home/latest/e2e/tests/auth/login.spec.ts:24:21
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/auth-login-Authentication--99b6a-ror-for-invalid-credentials-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/auth-login-Authentication--99b6a-ror-for-invalid-credentials-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|auth-login-Authentication--99b6a-ror-for-invalid-credentials-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|auth-login-Authentication--99b6a-ror-for-invalid-credentials-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Authentication Flow › should lock account after 5 failed attempts" classname="auth/login.spec.ts" time="12.809">
+<failure message="login.spec.ts:27:7 should lock account after 5 failed attempts" type="FAILURE">
+<![CDATA[  [chromium] › auth/login.spec.ts:27:7 › Authentication Flow › should lock account after 5 failed attempts 
+
+    TimeoutError: locator.waitFor: Timeout 5000ms exceeded.
+    Call log:
+      - waiting for locator('[data-sonner-toast]').first() to be visible
+
+
+       at ../pages/base.page.ts:29
+
+      27 |   async waitForToast(expectedText?: string, timeout = 5000) {
+      28 |     const toast = this.page.locator('[data-sonner-toast]').first();
+    > 29 |     await toast.waitFor({ state: 'visible', timeout });
+         |                 ^
+      30 |
+      31 |     if (expectedText) {
+      32 |       const text = await toast.textContent();
+        at LoginPage.waitForToast (/home/latest/e2e/pages/base.page.ts:29:17)
+        at LoginPage.expectLoginError (/home/latest/e2e/pages/login.page.ts:27:16)
+        at /home/latest/e2e/tests/auth/login.spec.ts:40:21
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/auth-login-Authentication--f6294-unt-after-5-failed-attempts-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/auth-login-Authentication--f6294-unt-after-5-failed-attempts-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|auth-login-Authentication--f6294-unt-after-5-failed-attempts-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|auth-login-Authentication--f6294-unt-after-5-failed-attempts-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Authentication Flow › should redirect EMPLOYEE role to /dashboard/profile" classname="auth/login.spec.ts" time="2.727">
+</testcase>
+<testcase name="Authentication Flow › should redirect HRO role to /dashboard" classname="auth/login.spec.ts" time="31.176">
+<failure message="login.spec.ts:58:7 should redirect HRO role to /dashboard" type="FAILURE">
+<![CDATA[  [chromium] › auth/login.spec.ts:58:7 › Authentication Flow › should redirect HRO role to /dashboard 
+
+    TimeoutError: page.waitForURL: Timeout 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+      62 |     await loginPage.login(TEST_USERS.HRO.username, TEST_USERS.HRO.password);
+      63 |
+    > 64 |     await page.waitForURL((url) => url.pathname === '/dashboard');
+         |                ^
+      65 |     expect(page.url()).toMatch(/\/dashboard$/);
+      66 |   });
+      67 | });
+        at /home/latest/e2e/tests/auth/login.spec.ts:64:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/auth-login-Authentication--bdc76-irect-HRO-role-to-dashboard-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/auth-login-Authentication--bdc76-irect-HRO-role-to-dashboard-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|auth-login-Authentication--bdc76-irect-HRO-role-to-dashboard-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|auth-login-Authentication--bdc76-irect-HRO-role-to-dashboard-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="dashboard/navigation.spec.ts" timestamp="2026-01-04T12:48:57.188Z" hostname="chromium" tests="2" failures="2" skipped="0" time="22.683" errors="0">
+<testcase name="Dashboard Navigation › HRO should see promotion menu item" classname="dashboard/navigation.spec.ts" time="11.218">
+<failure message="navigation.spec.ts:6:7 HRO should see promotion menu item" type="FAILURE">
+<![CDATA[  [chromium] › dashboard/navigation.spec.ts:6:7 › Dashboard Navigation › HRO should see promotion menu item 
+
+    TimeoutError: page.waitForURL: Timeout 10000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+       at ../utils/auth-helpers.ts:56
+
+      54 |
+      55 |   // Wait for navigation after successful login
+    > 56 |   await page.waitForURL((url) => url.pathname.includes('/dashboard'), {
+         |              ^
+      57 |     timeout: 10000,
+      58 |   });
+      59 |
+        at loginAs (/home/latest/e2e/utils/auth-helpers.ts:56:14)
+        at /home/latest/e2e/tests/dashboard/navigation.spec.ts:7:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/dashboard-navigation-Dashb-a728d-uld-see-promotion-menu-item-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/dashboard-navigation-Dashb-a728d-uld-see-promotion-menu-item-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|dashboard-navigation-Dashb-a728d-uld-see-promotion-menu-item-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|dashboard-navigation-Dashb-a728d-uld-see-promotion-menu-item-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Dashboard Navigation › should navigate to promotion page from dashboard" classname="dashboard/navigation.spec.ts" time="11.465">
+<failure message="navigation.spec.ts:16:7 should navigate to promotion page from dashboard" type="FAILURE">
+<![CDATA[  [chromium] › dashboard/navigation.spec.ts:16:7 › Dashboard Navigation › should navigate to promotion page from dashboard 
+
+    TimeoutError: page.waitForURL: Timeout 10000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+       at ../utils/auth-helpers.ts:56
+
+      54 |
+      55 |   // Wait for navigation after successful login
+    > 56 |   await page.waitForURL((url) => url.pathname.includes('/dashboard'), {
+         |              ^
+      57 |     timeout: 10000,
+      58 |   });
+      59 |
+        at loginAs (/home/latest/e2e/utils/auth-helpers.ts:56:14)
+        at /home/latest/e2e/tests/dashboard/navigation.spec.ts:19:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/dashboard-navigation-Dashb-71143-omotion-page-from-dashboard-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/dashboard-navigation-Dashb-71143-omotion-page-from-dashboard-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|dashboard-navigation-Dashb-71143-omotion-page-from-dashboard-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|dashboard-navigation-Dashb-71143-omotion-page-from-dashboard-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="promotions/review-workflow.spec.ts" timestamp="2026-01-04T12:48:57.188Z" hostname="chromium" tests="2" failures="2" skipped="0" time="4.317" errors="0">
+<testcase name="Promotion Request Review Workflow › HRMO should approve and forward promotion request" classname="promotions/review-workflow.spec.ts" time="2.164">
+<failure message="review-workflow.spec.ts:7:7 HRMO should approve and forward promotion request" type="FAILURE">
+<![CDATA[  [chromium] › promotions/review-workflow.spec.ts:7:7 › Promotion Request Review Workflow › HRMO should approve and forward promotion request 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText('Test HRMO')
+    Expected: visible
+    Error: strict mode violation: getByText('Test HRMO') resolved to 2 elements:
+        1) <div class="text-sm opacity-90">Welcome back, Test HRMO!</div> aka getByText('Welcome back, Test HRMO!', { exact: true })
+        2) <span role="status" aria-atomic="true" aria-live="assertive">Notification Login SuccessfulWelcome back, Test H…</span> aka getByText('Notification Login')
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for getByText('Test HRMO')
+
+
+       at ../utils/auth-helpers.ts:61
+
+      59 |
+      60 |   // Verify login success by checking for user name or dashboard content
+    > 61 |   await expect(page.getByText(user.name)).toBeVisible({ timeout: 5000 });
+         |                                           ^
+      62 | }
+      63 |
+      64 | /**
+        at loginAs (/home/latest/e2e/utils/auth-helpers.ts:61:43)
+        at /home/latest/e2e/tests/promotions/review-workflow.spec.ts:28:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/promotions-review-workflow-95db7-d-forward-promotion-request-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/promotions-review-workflow-95db7-d-forward-promotion-request-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|promotions-review-workflow-95db7-d-forward-promotion-request-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|promotions-review-workflow-95db7-d-forward-promotion-request-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Promotion Request Review Workflow › HRMO should reject and return promotion request to HRO" classname="promotions/review-workflow.spec.ts" time="2.153">
+<failure message="review-workflow.spec.ts:53:7 HRMO should reject and return promotion request to HRO" type="FAILURE">
+<![CDATA[  [chromium] › promotions/review-workflow.spec.ts:53:7 › Promotion Request Review Workflow › HRMO should reject and return promotion request to HRO 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText('Test HRMO')
+    Expected: visible
+    Error: strict mode violation: getByText('Test HRMO') resolved to 2 elements:
+        1) <div class="text-sm opacity-90">Welcome back, Test HRMO!</div> aka getByText('Welcome back, Test HRMO!', { exact: true })
+        2) <span role="status" aria-atomic="true" aria-live="assertive">Notification Login SuccessfulWelcome back, Test H…</span> aka getByText('Notification Login')
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for getByText('Test HRMO')
+
+
+       at ../utils/auth-helpers.ts:61
+
+      59 |
+      60 |   // Verify login success by checking for user name or dashboard content
+    > 61 |   await expect(page.getByText(user.name)).toBeVisible({ timeout: 5000 });
+         |                                           ^
+      62 | }
+      63 |
+      64 | /**
+        at loginAs (/home/latest/e2e/utils/auth-helpers.ts:61:43)
+        at /home/latest/e2e/tests/promotions/review-workflow.spec.ts:73:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/promotions-review-workflow-232f2-rn-promotion-request-to-HRO-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/promotions-review-workflow-232f2-rn-promotion-request-to-HRO-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|promotions-review-workflow-232f2-rn-promotion-request-to-HRO-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|promotions-review-workflow-232f2-rn-promotion-request-to-HRO-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="promotions/submit-promotion.spec.ts" timestamp="2026-01-04T12:48:57.188Z" hostname="chromium" tests="2" failures="2" skipped="0" time="22.433" errors="0">
+<testcase name="Promotion Request Submission (HRO) › should submit experience-based promotion request successfully" classname="promotions/submit-promotion.spec.ts" time="11.221">
+<failure message="submit-promotion.spec.ts:7:7 should submit experience-based promotion request successfully" type="FAILURE">
+<![CDATA[  [chromium] › promotions/submit-promotion.spec.ts:7:7 › Promotion Request Submission (HRO) › should submit experience-based promotion request successfully 
+
+    TimeoutError: page.waitForURL: Timeout 10000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+       at ../utils/auth-helpers.ts:56
+
+      54 |
+      55 |   // Wait for navigation after successful login
+    > 56 |   await page.waitForURL((url) => url.pathname.includes('/dashboard'), {
+         |              ^
+      57 |     timeout: 10000,
+      58 |   });
+      59 |
+        at loginAs (/home/latest/e2e/utils/auth-helpers.ts:56:14)
+        at /home/latest/e2e/tests/promotions/submit-promotion.spec.ts:10:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/promotions-submit-promotio-0e7fe-motion-request-successfully-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/promotions-submit-promotio-0e7fe-motion-request-successfully-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|promotions-submit-promotio-0e7fe-motion-request-successfully-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|promotions-submit-promotio-0e7fe-motion-request-successfully-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Promotion Request Submission (HRO) › should show validation error for ineligible employee (On Probation)" classname="promotions/submit-promotion.spec.ts" time="11.212">
+<failure message="submit-promotion.spec.ts:51:7 should show validation error for ineligible employee (On Probation)" type="FAILURE">
+<![CDATA[  [chromium] › promotions/submit-promotion.spec.ts:51:7 › Promotion Request Submission (HRO) › should show validation error for ineligible employee (On Probation) 
+
+    TimeoutError: page.waitForURL: Timeout 10000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+       at ../utils/auth-helpers.ts:56
+
+      54 |
+      55 |   // Wait for navigation after successful login
+    > 56 |   await page.waitForURL((url) => url.pathname.includes('/dashboard'), {
+         |              ^
+      57 |     timeout: 10000,
+      58 |   });
+      59 |
+        at loginAs (/home/latest/e2e/utils/auth-helpers.ts:56:14)
+        at /home/latest/e2e/tests/promotions/submit-promotion.spec.ts:54:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/promotions-submit-promotio-fb573-ible-employee-On-Probation--chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/promotions-submit-promotio-fb573-ible-employee-On-Probation--chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|promotions-submit-promotio-fb573-ible-employee-On-Probation--chromium/test-failed-1.png]]
+
+[[ATTACHMENT|promotions-submit-promotio-fb573-ible-employee-On-Probation--chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+</testsuites>

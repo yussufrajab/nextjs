@@ -1,0 +1,104 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e6] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=e7]:
+      - img [ref=e8]
+    - generic [ref=e11]:
+      - button "Open issues overlay" [ref=e12]:
+        - generic [ref=e13]:
+          - generic [ref=e14]: "0"
+          - generic [ref=e15]: "1"
+        - generic [ref=e16]: Issue
+      - button "Collapse issues badge" [ref=e17]:
+        - img [ref=e18]
+  - alert [ref=e20]
+  - generic [ref=e21]:
+    - generic [ref=e25]:
+      - link "Zanzibar Coat of Arms Civil Servant Management System" [ref=e27] [cursor=pointer]:
+        - /url: /dashboard
+        - img "Zanzibar Coat of Arms" [ref=e28]
+        - heading "Civil Servant Management System" [level=1] [ref=e29]
+      - list [ref=e34]:
+        - listitem [ref=e35]:
+          - button "Dashboard" [ref=e36] [cursor=pointer]:
+            - img [ref=e37]
+            - text: Dashboard
+        - listitem [ref=e42]:
+          - button "Institutions" [ref=e43] [cursor=pointer]:
+            - img [ref=e44]
+            - text: Institutions
+        - listitem [ref=e47]:
+          - button "Employee Profiles" [ref=e48] [cursor=pointer]:
+            - img [ref=e49]
+            - text: Employee Profiles
+        - listitem [ref=e61]:
+          - button "Employee Confirmation" [ref=e62] [cursor=pointer]:
+            - img [ref=e63]
+            - text: Employee Confirmation
+        - listitem [ref=e67]:
+          - button "Leave Without Pay (LWOP)" [ref=e68] [cursor=pointer]:
+            - img [ref=e69]
+            - text: Leave Without Pay (LWOP)
+        - listitem [ref=e73]:
+          - button "Promotion" [ref=e74] [cursor=pointer]:
+            - img [ref=e75]
+            - text: Promotion
+        - listitem [ref=e78]:
+          - button "Change of Cadre" [ref=e79] [cursor=pointer]:
+            - img [ref=e80]
+            - text: Change of Cadre
+        - listitem [ref=e88]:
+          - button "Retirement" [ref=e89] [cursor=pointer]:
+            - img [ref=e90]
+            - text: Retirement
+        - listitem [ref=e93]:
+          - button "Resignation" [ref=e94] [cursor=pointer]:
+            - img [ref=e95]
+            - text: Resignation
+        - listitem [ref=e100]:
+          - button "Service Extension" [ref=e101] [cursor=pointer]:
+            - img [ref=e102]
+            - text: Service Extension
+        - listitem [ref=e104]:
+          - button "Track Status" [ref=e105] [cursor=pointer]:
+            - img [ref=e106]
+            - text: Track Status
+        - listitem [ref=e109]:
+          - button "Recent Activities" [ref=e110] [cursor=pointer]:
+            - img [ref=e111]
+            - text: Recent Activities
+        - listitem [ref=e113]:
+          - button "Reports & Analytics" [ref=e114] [cursor=pointer]:
+            - img [ref=e115]
+            - text: Reports & Analytics
+      - button "Logout" [ref=e118] [cursor=pointer]:
+        - img
+        - text: Logout
+    - main [ref=e119]:
+      - navigation [ref=e123]:
+        - button "1 Toggle notifications" [ref=e124] [cursor=pointer]:
+          - img
+          - generic [ref=e125]: "1"
+          - generic [ref=e126]: Toggle notifications
+        - button "TH" [ref=e127] [cursor=pointer]:
+          - generic [ref=e129]: TH
+      - main [ref=e130]:
+        - generic [ref=e131]:
+          - generic [ref=e134]:
+            - heading "Dashboard" [level=1] [ref=e135]
+            - paragraph [ref=e136]: Manage all your HR processes in one place.
+          - generic [ref=e199]:
+            - generic [ref=e200]: Recent Activities
+            - generic [ref=e201]: An overview of the latest requests and their statuses.
+  - region "Notifications (F8)":
+    - list [ref=e255]:
+      - status [ref=e256]:
+        - generic [ref=e257]:
+          - generic [ref=e258]: Login Successful
+          - generic [ref=e259]: Welcome back, Test HRMO!
+        - button [ref=e260] [cursor=pointer]:
+          - img [ref=e261]
+  - status [ref=e265]: Notification Login SuccessfulWelcome back, Test HRMO!
+```
