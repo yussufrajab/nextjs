@@ -193,7 +193,7 @@ export default function UserManagementPage() {
       // Transform the data to include institution name
       const transformedUsers = data.map((user: any) => ({
         ...user,
-        institution: user.institution || 'N/A', // Backend returns Institution (capital I) as string
+        institution: user.Institution || 'N/A', // Backend returns Institution (capital I) as string
       }));
       setUsers(transformedUsers);
     } catch (error) {

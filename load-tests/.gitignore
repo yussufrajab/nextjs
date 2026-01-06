@@ -1,0 +1,11 @@
+# Load test reports and results
+reports/*.json
+reports/*.html
+reports/*.txt
+
+# Keep the reports directory but ignore its contents
+!reports/.gitkeep
+
+# Temporary files
+*.tmp
+*.log

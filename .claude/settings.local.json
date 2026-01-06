@@ -144,7 +144,10 @@
       "Bash(sudo systemctl start:*)",
       "Bash(npm test:*)",
       "Bash(npm run lint:*)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(jq:*)",
+      "Bash(npm run test:e2e:*)",
+      "Bash(DATABASE_URL=\"postgresql://postgres:Mamlaka2020@localhost:5432/csms_test?schema=public\" npx prisma db push:*)"
     ],
     "deny": []
   }

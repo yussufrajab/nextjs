@@ -106,6 +106,14 @@ export async function POST(req: Request) {
       const lockoutStatus = getAccountLockoutStatus(currentUser);
       console.log('Account locked for user:', username);
 
+      // Still increment failed attempts to track persistent attack attempts
+      // This allows upgrading from STANDARD to SECURITY lockout after 11 total attempts
+      const lockoutResult = await incrementFailedLoginAttempts(
+        currentUser.id,
+        ipAddress,
+        userAgent
+      );
+
       await logLoginAttempt({
         success: false,
         username: user.username,
@@ -173,7 +181,7 @@ export async function POST(req: Request) {
         failureReason: 'Invalid password',
       });
 
-      let message = 'Invalid username/email or password';
+      let message = 'Invalid username or password';
       if (lockoutResult.locked) {
         message =
           'Too many failed login attempts. Your account has been locked. ';
@@ -183,7 +191,10 @@ export async function POST(req: Request) {
           message += 'Please contact an administrator to unlock your account.';
         }
       } else if (lockoutResult.remainingAttempts > 0) {
-        message += `. ${lockoutResult.remainingAttempts} attempt(s) remaining before account lockout.`;
+        const attemptsText = lockoutResult.remainingAttempts === 1
+          ? '1 attempt remaining'
+          : `${lockoutResult.remainingAttempts} attempts remaining`;
+        message = `Invalid username or password, ${attemptsText}`;
       }
 
       return NextResponse.json({ success: false, message }, { status: 401 });

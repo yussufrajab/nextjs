@@ -37,9 +37,22 @@ export async function PUT(
       validatedData.password = await bcrypt.hash(validatedData.password, salt);
     }
 
+    // If activating a user, clear all lockout fields
+    const updateData: any = { ...validatedData };
+    if (validatedData.active === true) {
+      updateData.isManuallyLocked = false;
+      updateData.lockedBy = null;
+      updateData.lockedAt = null;
+      updateData.loginLockedUntil = null;
+      updateData.loginLockoutReason = null;
+      updateData.loginLockoutType = null;
+      updateData.lockoutNotes = null;
+      updateData.failedLoginAttempts = 0;
+    }
+
     const updatedUser = await db.user.update({
       where: { id },
-      data: validatedData,
+      data: updateData,
       select: {
         id: true,
         name: true,

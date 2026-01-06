@@ -497,7 +497,7 @@ export default function PromotionPage() {
     setPendingRequests(optimisticUpdate);
 
     // Show immediate success feedback
-    if (actionDescription && request) {
+    if (actionDescription && request && request.Employee) {
       toast({
         title: 'Status Updated',
         description: `${actionDescription} for ${request.Employee.name}. Status: ${payload.status}`,
@@ -663,13 +663,21 @@ export default function PromotionPage() {
         reviewStage: 'completed',
         commissionDecisionReason: reason,
       };
-      const actionDescription = `Promotion approved by Commission. Employee ${request?.Employee.name} rank updated to "${request?.proposedCadre}".`;
+      const actionDescription = `Promotion approved by Commission. Employee ${request?.Employee?.name || 'Unknown'} rank updated to "${request?.proposedCadre}".`;
 
       await handleUpdateRequest(requestId, payload, actionDescription);
     }
   };
 
   const handleCorrection = (request: PromotionRequest) => {
+    if (!request.Employee) {
+      toast({
+        title: 'Error',
+        description: 'Employee data is missing for this request.',
+        variant: 'destructive',
+      });
+      return;
+    }
     setRequestToCorrect(request);
     setEmployeeDetails(request.Employee as Employee);
     // Properly map the promotionType from the database values to our form values
@@ -773,7 +781,7 @@ export default function PromotionPage() {
     // Show immediate success feedback
     toast({
       title: 'Request Corrected & Resubmitted',
-      description: `Promotion request for ${request.Employee.name} has been corrected and resubmitted. Status: Pending HRMO/HHRMD Review`,
+      description: `Promotion request for ${request.Employee?.name || 'employee'} has been corrected and resubmitted. Status: Pending HRMO/HHRMD Review`,
       duration: 4000,
     });
 
@@ -1258,7 +1266,14 @@ export default function PromotionPage() {
               <Loader2 className="h-8 w-8 animate-spin" />
             </div>
           ) : paginatedRequests.length > 0 ? (
-            paginatedRequests.map((request) => (
+            paginatedRequests.map((request) => {
+              // Skip requests with missing employee data
+              if (!request.Employee) {
+                console.error('Promotion request missing employee data:', request.id);
+                return null;
+              }
+
+              return (
               <div
                 key={request.id}
                 className="mb-4 border p-4 rounded-md space-y-2 shadow-sm bg-background hover:shadow-md transition-shadow"
@@ -1466,7 +1481,8 @@ export default function PromotionPage() {
                     )}
                 </div>
               </div>
-            ))
+              );
+            })
           ) : (
             <p className="text-muted-foreground">
               No promotion requests found.
@@ -1482,7 +1498,7 @@ export default function PromotionPage() {
         </CardContent>
       </Card>
 
-      {selectedRequest && (
+      {selectedRequest && selectedRequest.Employee && (
         <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
           <DialogContent className="sm:max-w-3xl">
             <DialogHeader>
@@ -1745,7 +1761,7 @@ export default function PromotionPage() {
         </Dialog>
       )}
 
-      {currentRequestToAction && (
+      {currentRequestToAction && currentRequestToAction.Employee && (
         <Dialog
           open={isRejectionModalOpen}
           onOpenChange={(open) => {
@@ -1813,7 +1829,7 @@ export default function PromotionPage() {
         </Dialog>
       )}
 
-      {requestToCorrect && (
+      {requestToCorrect && requestToCorrect.Employee && (
         <Dialog
           open={isCorrectionModalOpen}
           onOpenChange={setIsCorrectionModalOpen}

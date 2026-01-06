@@ -82,7 +82,8 @@ export const useAuthStore = create<AuthState>()(
 
           if (!response.success || !response.data) {
             console.error('Login failed:', response.message);
-            return null;
+            // Throw error with the server's message so the form can display it
+            throw new Error(response.message || 'Login failed');
           }
 
           console.log('Full login response:', response);
@@ -304,7 +305,8 @@ export const useAuthStore = create<AuthState>()(
           return user;
         } catch (error) {
           console.error('Login error:', error);
-          return null;
+          // Re-throw the error so the login form can display it
+          throw error;
         }
       },
 

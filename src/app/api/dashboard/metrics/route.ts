@@ -559,69 +559,91 @@ export async function GET(req: Request) {
     });
 
     const allActivities = [
-      ...confirmations.map((r) => ({
-        id: r.id,
-        type: 'Confirmation',
-        employee: r.Employee.name,
-        status: r.status,
-        updatedAt: r.updatedAt,
-      })),
-      ...promotions.map((r) => ({
-        id: r.id,
-        type: 'Promotion',
-        employee: r.Employee.name,
-        status: r.status,
-        updatedAt: r.updatedAt,
-      })),
-      ...lwops.map((r) => ({
-        id: r.id,
-        type: 'LWOP',
-        employee: r.Employee.name,
-        status: r.status,
-        updatedAt: r.updatedAt,
-      })),
-      ...complaints.map((r) => ({
-        id: r.id,
-        type: 'Complaint',
-        employee: r.User_Complaint_complainantIdToUser.name,
-        status: r.status,
-        updatedAt: r.updatedAt,
-      })),
-      ...separations.map((r) => ({
-        id: r.id,
-        type: r.type === 'TERMINATION' ? 'Termination' : 'Dismissal',
-        employee: r.Employee.name,
-        status: r.status,
-        updatedAt: r.updatedAt,
-      })),
-      ...cadreChanges.map((r) => ({
-        id: r.id,
-        type: 'Change of Cadre',
-        employee: r.Employee.name,
-        status: r.status,
-        updatedAt: r.updatedAt,
-      })),
-      ...retirements.map((r) => ({
-        id: r.id,
-        type: 'Retirement',
-        employee: r.Employee.name,
-        status: r.status,
-        updatedAt: r.updatedAt,
-      })),
-      ...resignations.map((r) => ({
-        id: r.id,
-        type: 'Resignation',
-        employee: r.Employee.name,
-        status: r.status,
-        updatedAt: r.updatedAt,
-      })),
-      ...serviceExtensions.map((r) => ({
-        id: r.id,
-        type: 'Service Extension',
-        employee: r.Employee.name,
-        status: r.status,
-        updatedAt: r.updatedAt,
-      })),
+      ...confirmations
+        .filter((r) => r.Employee && r.Employee.name)
+        .map((r) => ({
+          id: r.id,
+          type: 'Confirmation',
+          employee: r.Employee.name,
+          status: r.status,
+          updatedAt: r.updatedAt,
+        })),
+      ...promotions
+        .filter((r) => r.Employee && r.Employee.name)
+        .map((r) => ({
+          id: r.id,
+          type: 'Promotion',
+          employee: r.Employee.name,
+          status: r.status,
+          updatedAt: r.updatedAt,
+        })),
+      ...lwops
+        .filter((r) => r.Employee && r.Employee.name)
+        .map((r) => ({
+          id: r.id,
+          type: 'LWOP',
+          employee: r.Employee.name,
+          status: r.status,
+          updatedAt: r.updatedAt,
+        })),
+      ...complaints
+        .filter(
+          (r) =>
+            r.User_Complaint_complainantIdToUser &&
+            r.User_Complaint_complainantIdToUser.name
+        )
+        .map((r) => ({
+          id: r.id,
+          type: 'Complaint',
+          employee: r.User_Complaint_complainantIdToUser.name,
+          status: r.status,
+          updatedAt: r.updatedAt,
+        })),
+      ...separations
+        .filter((r) => r.Employee && r.Employee.name)
+        .map((r) => ({
+          id: r.id,
+          type: r.type === 'TERMINATION' ? 'Termination' : 'Dismissal',
+          employee: r.Employee.name,
+          status: r.status,
+          updatedAt: r.updatedAt,
+        })),
+      ...cadreChanges
+        .filter((r) => r.Employee && r.Employee.name)
+        .map((r) => ({
+          id: r.id,
+          type: 'Change of Cadre',
+          employee: r.Employee.name,
+          status: r.status,
+          updatedAt: r.updatedAt,
+        })),
+      ...retirements
+        .filter((r) => r.Employee && r.Employee.name)
+        .map((r) => ({
+          id: r.id,
+          type: 'Retirement',
+          employee: r.Employee.name,
+          status: r.status,
+          updatedAt: r.updatedAt,
+        })),
+      ...resignations
+        .filter((r) => r.Employee && r.Employee.name)
+        .map((r) => ({
+          id: r.id,
+          type: 'Resignation',
+          employee: r.Employee.name,
+          status: r.status,
+          updatedAt: r.updatedAt,
+        })),
+      ...serviceExtensions
+        .filter((r) => r.Employee && r.Employee.name)
+        .map((r) => ({
+          id: r.id,
+          type: 'Service Extension',
+          employee: r.Employee.name,
+          status: r.status,
+          updatedAt: r.updatedAt,
+        })),
     ];
 
     // Sort all activities by date

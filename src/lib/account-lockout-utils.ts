@@ -104,6 +104,7 @@ export async function incrementFailedLoginAttempts(
       username: true,
       failedLoginAttempts: true,
       loginLockedUntil: true,
+      loginLockoutType: true,
       isManuallyLocked: true,
     },
   });
@@ -115,13 +116,18 @@ export async function incrementFailedLoginAttempts(
   const newAttemptCount = user.failedLoginAttempts + 1;
   const remainingAttempts = MAX_FAILED_LOGIN_ATTEMPTS - newAttemptCount;
 
-  // Lock account if threshold reached
+  // Lock account if threshold reached or upgrade lockout if already locked
   if (newAttemptCount >= MAX_FAILED_LOGIN_ATTEMPTS) {
     const lockoutType = determineLockoutType(newAttemptCount);
     const lockedUntil =
       lockoutType === LockoutType.STANDARD
         ? calculateStandardLockoutExpiry()
         : null; // Security lockout has no auto-unlock
+
+    // Check if we're upgrading from STANDARD to SECURITY lockout
+    const isUpgrading =
+      user.loginLockoutType === LockoutType.STANDARD &&
+      lockoutType === LockoutType.SECURITY;
 
     await db.user.update({
       where: { id: userId },
@@ -139,7 +145,7 @@ export async function incrementFailedLoginAttempts(
     const { logAuditEvent, AuditEventCategory, AuditSeverity } =
       await import('@/lib/audit-logger');
     await logAuditEvent({
-      eventType: 'ACCOUNT_LOCKED',
+      eventType: isUpgrading ? 'ACCOUNT_LOCKOUT_UPGRADED' : 'ACCOUNT_LOCKED',
       eventCategory: AuditEventCategory.SECURITY,
       severity:
         lockoutType === LockoutType.SECURITY
@@ -154,12 +160,15 @@ export async function incrementFailedLoginAttempts(
       requestMethod: 'POST',
       isAuthenticated: false,
       wasBlocked: true,
-      blockReason: `Account locked after ${newAttemptCount} failed login attempts`,
+      blockReason: isUpgrading
+        ? `Account lockout upgraded to SECURITY after ${newAttemptCount} failed login attempts`
+        : `Account locked after ${newAttemptCount} failed login attempts`,
       additionalData: {
         failedAttempts: newAttemptCount,
         lockoutType,
         lockedUntil,
         reason: LockoutReason.FAILED_ATTEMPTS,
+        isUpgrade: isUpgrading,
       },
     });
 

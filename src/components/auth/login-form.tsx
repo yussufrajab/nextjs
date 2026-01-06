@@ -55,37 +55,42 @@ export function LoginForm() {
       'Password length:',
       data.password?.length
     );
-    const user = await login(data.username, data.password);
-    console.log('LoginForm onSubmit - returned user:', user);
 
-    if (user) {
-      // Check if password change is required
-      if (user.mustChangePassword || user.isTemporaryPassword) {
-        console.log('Password change required for user:', user.id);
+    try {
+      const user = await login(data.username, data.password);
+      console.log('LoginForm onSubmit - returned user:', user);
+
+      if (user) {
+        // Check if password change is required
+        if (user.mustChangePassword || user.isTemporaryPassword) {
+          console.log('Password change required for user:', user.id);
+          toast({
+            title: 'Password Change Required',
+            description: 'You must change your password to continue.',
+            variant: 'default',
+          });
+          // Redirect to password change page
+          router.push('/change-password-required');
+          setIsLoading(false);
+          return;
+        }
+
         toast({
-          title: 'Password Change Required',
-          description: 'You must change your password to continue.',
-          variant: 'default',
+          title: 'Login Successful',
+          description: `Welcome back, ${user.name}!`,
         });
-        // Redirect to password change page
-        router.push('/change-password-required');
-        setIsLoading(false);
-        return;
+        if (user.role === ROLES.EMPLOYEE || user.role === ROLES.PO) {
+          router.push('/dashboard/profile');
+        } else {
+          router.push('/dashboard');
+        }
       }
-
-      toast({
-        title: 'Login Successful',
-        description: `Welcome back, ${user.name}!`,
-      });
-      if (user.role === ROLES.EMPLOYEE || user.role === ROLES.PO) {
-        router.push('/dashboard/profile');
-      } else {
-        router.push('/dashboard');
-      }
-    } else {
+    } catch (error) {
+      // Display the actual error message from the backend
+      const errorMessage = error instanceof Error ? error.message : 'Invalid username/email or password.';
       toast({
         title: 'Login Failed',
-        description: 'Invalid username/email or password.',
+        description: errorMessage,
         variant: 'destructive',
       });
       setIsLoading(false);

@@ -64,7 +64,11 @@ import { EmployeeSearch } from '@/components/shared/employee-search';
 
 interface RetirementRequest {
   id: string;
-  employee: Partial<Employee & User & { institution: { name: string } }>;
+  Employee?: Partial<
+    Employee &
+      User & { institution: { name: string }; Institution: { name: string } }
+  >; // API returns this (capital E)
+  employee?: Partial<Employee & User & { institution: { name: string } }>; // Keep for compatibility
   submittedBy: Partial<User>;
   reviewedBy?: Partial<User> | null;
   status: string;
@@ -152,6 +156,11 @@ export default function RetirementPage() {
   // Employee status validation
   const isEmployeeRetired = employeeDetails?.status === 'Retired';
   const cannotSubmitRetirement = isEmployeeRetired;
+
+  // Helper function to get employee from request (handles both Employee and employee)
+  const getEmployeeFromRequest = (request: RetirementRequest) => {
+    return request.Employee || request.employee;
+  };
 
   // Handle file preview
   const handlePreviewFile = (objectKey: string) => {
@@ -369,16 +378,15 @@ export default function RetirementPage() {
 
   // Auto-fill corrected retirement date for compulsory retirement in correction modal
   useEffect(() => {
-    if (
-      correctedRetirementType === 'compulsory' &&
-      requestToCorrect &&
-      requestToCorrect.employee.dateOfBirth
-    ) {
+    if (correctedRetirementType === 'compulsory' && requestToCorrect) {
+      const employeeData = getEmployeeFromRequest(requestToCorrect);
+      if (!employeeData?.dateOfBirth) return;
+
       // Parse date manually to avoid timezone issues
       const birthDateValue =
-        typeof requestToCorrect.employee.dateOfBirth === 'string'
-          ? requestToCorrect.employee.dateOfBirth
-          : requestToCorrect.employee.dateOfBirth.toISOString();
+        typeof employeeData.dateOfBirth === 'string'
+          ? employeeData.dateOfBirth
+          : employeeData.dateOfBirth.toISOString();
       const birthDateStr = birthDateValue.split('T')[0]; // Get only YYYY-MM-DD part
       const [year, month, day] = birthDateStr.split('-').map(Number);
 
@@ -408,17 +416,15 @@ export default function RetirementPage() {
     setCorrectedAgeEligibilityError(null);
     setShowCorrectedDelayFields(false);
 
-    if (
-      requestToCorrect &&
-      requestToCorrect.employee.dateOfBirth &&
-      correctedRetirementType &&
-      correctedRetirementDate
-    ) {
+    if (requestToCorrect && correctedRetirementType && correctedRetirementDate) {
+      const employeeData = getEmployeeFromRequest(requestToCorrect);
+      if (!employeeData?.dateOfBirth) return;
+
       // Parse date strings manually to avoid timezone issues
       const birthDateValue =
-        typeof requestToCorrect.employee.dateOfBirth === 'string'
-          ? requestToCorrect.employee.dateOfBirth
-          : requestToCorrect.employee.dateOfBirth.toISOString();
+        typeof employeeData.dateOfBirth === 'string'
+          ? employeeData.dateOfBirth
+          : employeeData.dateOfBirth.toISOString();
       const birthDateStr = birthDateValue.split('T')[0]; // Get only YYYY-MM-DD part
       const retirementDateStr = correctedRetirementDate;
 
@@ -486,10 +492,10 @@ export default function RetirementPage() {
       'Request Received – Awaiting Commission Decision',
     ];
 
-    const hasPending = pendingRequests.some(
-      (req) =>
-        req.employee.id === employee.id && pendingStatuses.includes(req.status)
-    );
+    const hasPending = pendingRequests.some((req) => {
+      const employeeData = getEmployeeFromRequest(req);
+      return employeeData?.id === employee.id && pendingStatuses.includes(req.status);
+    });
 
     if (hasPending) {
       setHasPendingRetirement(true);
@@ -623,6 +629,43 @@ export default function RetirementPage() {
     console.log('[RETIREMENT] Submission payload:', payload);
     console.log('[RETIREMENT] Document keys:', documentObjectKeys);
 
+    // Create optimistic new request to show immediately
+    const optimisticRequest: RetirementRequest = {
+      id: `temp-${Date.now()}`, // Temporary ID until server responds
+      employee: {
+        ...employeeDetails,
+        phoneNumber: employeeDetails.phoneNumber ?? undefined,
+        institution: {
+          name:
+            typeof employeeDetails.institution === 'object'
+              ? employeeDetails.institution.name
+              : employeeDetails.institution || 'N/A',
+        },
+      },
+      submittedBy: { name: user.name },
+      status: 'Pending HRMO/HHRMD Review',
+      reviewStage: 'initial',
+      retirementType,
+      proposedDate: retirementDate
+        ? new Date(retirementDate).toISOString()
+        : null,
+      illnessDescription:
+        retirementType === 'illness' ? illnessDescription : undefined,
+      delayReason: showDelayFields ? delayReason : undefined,
+      documents: documentObjectKeys,
+      createdAt: new Date().toISOString(),
+    };
+
+    // Immediately add optimistic request to show instant status
+    setPendingRequests((prev) => [optimisticRequest, ...prev]);
+
+    // Show immediate success feedback
+    toast({
+      title: 'Retirement Request Submitted',
+      description: `Request for ${employeeDetails.name} submitted successfully. Status: Pending HRMO/HHRMD Review`,
+      duration: 4000,
+    });
+
     try {
       const response = await fetch('/api/retirement', {
         method: 'POST',
@@ -638,14 +681,27 @@ export default function RetirementPage() {
         throw new Error(errorMessage);
       }
 
-      await fetchRequests(); // Refresh list
-      toast({
-        title: 'Retirement Request Submitted',
-        description: `Request for ${employeeDetails.name} submitted successfully.`,
-      });
+      // Replace optimistic request with real server response
+      if (result.success && result.data) {
+        setPendingRequests((prev) =>
+          prev.map((req) =>
+            req.id === optimisticRequest.id ? result.data : req
+          )
+        );
+      }
+
+      // Force refresh to ensure data consistency
+      setTimeout(async () => {
+        await fetchRequests();
+      }, 1000);
+
       setEmployeeDetails(null);
       resetFormFields();
     } catch (error) {
+      // Remove optimistic request on error
+      setPendingRequests((prev) =>
+        prev.filter((req) => req.id !== optimisticRequest.id)
+      );
       const errorMessage =
         error instanceof Error
           ? error.message
@@ -696,7 +752,7 @@ export default function RetirementPage() {
     if (actionDescription && request) {
       toast({
         title: 'Status Updated',
-        description: `${actionDescription} for ${request.employee.name}. Status: ${payload.status}`,
+        description: `${actionDescription} for ${request.employee?.name || 'Unknown Employee'}. Status: ${payload.status}`,
         duration: 3000,
       });
     }
@@ -791,8 +847,8 @@ export default function RetirementPage() {
     const payload = { status: finalStatus, reviewStage: 'completed' };
     const actionDescription =
       decision === 'approved'
-        ? `Retirement request approved by Commission for ${request.employee.name}`
-        : `Retirement request rejected by Commission for ${request.employee.name}`;
+        ? `Retirement request approved by Commission for ${request.employee?.name || 'Unknown Employee'}`
+        : `Retirement request rejected by Commission for ${request.employee?.name || 'Unknown Employee'}`;
 
     await handleUpdateRequest(requestId, payload, actionDescription);
   };
@@ -1327,15 +1383,18 @@ export default function RetirementPage() {
             </div>
           </CardHeader>
           <CardContent>
-            {paginatedRequests.map((request) => (
+            {paginatedRequests.map((request) => {
+              const employeeData = getEmployeeFromRequest(request);
+              if (!employeeData) return null;
+              return (
               <div
                 key={request.id}
                 className="mb-4 border p-4 rounded-md space-y-2 shadow-sm bg-background hover:shadow-md transition-shadow"
               >
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-semibold text-base flex items-center gap-2">
-                    Retirement Request for: {request.employee.name} (ZanID:{' '}
-                    {request.employee.zanId})
+                    Retirement Request for: {employeeData.name || 'Unknown Employee'} (ZanID:{' '}
+                    {employeeData.zanId || 'N/A'})
                     {(request.status.includes('Approved by Commission') ||
                       request.status.includes('Rejected by Commission')) && (
                       <span
@@ -1488,7 +1547,8 @@ export default function RetirementPage() {
                     )}
                 </div>
               </div>
-            ))}
+              );
+            })}
             <Pagination
               currentPage={currentPage}
               totalPages={totalPages}
@@ -1530,15 +1590,18 @@ export default function RetirementPage() {
                 <Loader2 className="h-8 w-8 animate-spin" />
               </div>
             ) : paginatedRequests.length > 0 ? (
-              paginatedRequests.map((request) => (
+              paginatedRequests.map((request) => {
+                const employeeData = getEmployeeFromRequest(request);
+                if (!employeeData) return null;
+                return (
                 <div
                   key={request.id}
                   className="mb-4 border p-4 rounded-md space-y-2 shadow-sm bg-background hover:shadow-md transition-shadow"
                 >
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="font-semibold text-base flex items-center gap-2">
-                      Retirement Request for: {request.employee.name} (ZanID:{' '}
-                      {request.employee.zanId})
+                      Retirement Request for: {employeeData.name || 'Unknown Employee'} (ZanID:{' '}
+                      {employeeData.zanId || 'N/A'})
                       {(request.status.includes('Approved by Commission') ||
                         request.status.includes('Rejected by Commission')) && (
                         <span
@@ -1731,7 +1794,8 @@ export default function RetirementPage() {
                       )}
                   </div>
                 </div>
-              ))
+                );
+              })
             ) : (
               <p className="text-muted-foreground">
                 No retirement requests pending your review.
@@ -1748,15 +1812,18 @@ export default function RetirementPage() {
         </Card>
       )}
 
-      {selectedRequest && (
+      {selectedRequest &&
+        (() => {
+          const selectedEmployeeData = getEmployeeFromRequest(selectedRequest);
+          return (
         <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
           <DialogContent className="sm:max-w-3xl">
             <DialogHeader>
               <DialogTitle>Request Details: {selectedRequest.id}</DialogTitle>
               <DialogDescription>
                 Retirement request for{' '}
-                <strong>{selectedRequest.employee.name}</strong> (ZanID:{' '}
-                {selectedRequest.employee.zanId}).
+                <strong>{selectedEmployeeData?.name || 'Unknown Employee'}</strong> (ZanID:{' '}
+                {selectedEmployeeData?.zanId || 'N/A'}).
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4 text-sm max-h-[70vh] overflow-y-auto">
@@ -1769,7 +1836,7 @@ export default function RetirementPage() {
                     Full Name:
                   </Label>
                   <p className="col-span-2 font-medium text-foreground">
-                    {selectedRequest.employee.name}
+                    {selectedEmployeeData?.name || 'N/A'}
                   </p>
                 </div>
                 <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
@@ -1777,7 +1844,7 @@ export default function RetirementPage() {
                     ZanID:
                   </Label>
                   <p className="col-span-2 font-medium text-foreground">
-                    {selectedRequest.employee.zanId}
+                    {selectedEmployeeData?.zanId || 'N/A'}
                   </p>
                 </div>
                 <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
@@ -1785,7 +1852,7 @@ export default function RetirementPage() {
                     Payroll #:
                   </Label>
                   <p className="col-span-2 font-medium text-foreground">
-                    {selectedRequest.employee.payrollNumber || 'N/A'}
+                    {selectedEmployeeData?.payrollNumber || 'N/A'}
                   </p>
                 </div>
                 <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
@@ -1793,7 +1860,7 @@ export default function RetirementPage() {
                     ZSSF #:
                   </Label>
                   <p className="col-span-2 font-medium text-foreground">
-                    {selectedRequest.employee.zssfNumber || 'N/A'}
+                    {selectedEmployeeData?.zssfNumber || 'N/A'}
                   </p>
                 </div>
                 <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
@@ -1801,7 +1868,7 @@ export default function RetirementPage() {
                     Department:
                   </Label>
                   <p className="col-span-2 font-medium text-foreground">
-                    {selectedRequest.employee.department}
+                    {selectedEmployeeData?.department || 'N/A'}
                   </p>
                 </div>
                 <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
@@ -1809,7 +1876,7 @@ export default function RetirementPage() {
                     Cadre/Position:
                   </Label>
                   <p className="col-span-2 font-medium text-foreground">
-                    {selectedRequest.employee.cadre}
+                    {selectedEmployeeData?.cadre || 'N/A'}
                   </p>
                 </div>
                 <div className="grid grid-cols-3 items-center gap-x-4 gap-y-1">
@@ -1817,12 +1884,12 @@ export default function RetirementPage() {
                     Employment Date:
                   </Label>
                   <p className="col-span-2 font-medium text-foreground">
-                    {selectedRequest.employee.employmentDate
+                    {selectedEmployeeData?.employmentDate
                       ? format(
-                          typeof selectedRequest.employee.employmentDate ===
+                          typeof selectedEmployeeData.employmentDate ===
                             'string'
-                            ? parseISO(selectedRequest.employee.employmentDate)
-                            : selectedRequest.employee.employmentDate,
+                            ? parseISO(selectedEmployeeData.employmentDate)
+                            : selectedEmployeeData.employmentDate,
                           'PPP'
                         )
                       : 'N/A'}
@@ -1833,12 +1900,12 @@ export default function RetirementPage() {
                     Date of Birth:
                   </Label>
                   <p className="col-span-2 font-medium text-foreground">
-                    {selectedRequest.employee.dateOfBirth
+                    {selectedEmployeeData?.dateOfBirth
                       ? format(
-                          typeof selectedRequest.employee.dateOfBirth ===
+                          typeof selectedEmployeeData.dateOfBirth ===
                             'string'
-                            ? parseISO(selectedRequest.employee.dateOfBirth)
-                            : selectedRequest.employee.dateOfBirth,
+                            ? parseISO(selectedEmployeeData.dateOfBirth)
+                            : selectedEmployeeData.dateOfBirth,
                           'PPP'
                         )
                       : 'N/A'}
@@ -1849,7 +1916,7 @@ export default function RetirementPage() {
                     Institution:
                   </Label>
                   <p className="col-span-2 font-medium text-foreground">
-                    {selectedRequest.employee.institution?.name || 'N/A'}
+                    {selectedEmployeeData?.institution?.name || 'N/A'}
                   </p>
                 </div>
               </div>
@@ -2021,9 +2088,13 @@ export default function RetirementPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      )}
+          );
+        })()}
 
-      {currentRequestToAction && (
+      {currentRequestToAction &&
+        (() => {
+          const currentEmployeeData = getEmployeeFromRequest(currentRequestToAction);
+          return (
         <Dialog
           open={isRejectionModalOpen}
           onOpenChange={setIsRejectionModalOpen}
@@ -2035,7 +2106,7 @@ export default function RetirementPage() {
               </DialogTitle>
               <DialogDescription>
                 Please provide the reason for rejecting the retirement request
-                for <strong>{currentRequestToAction.employee.name}</strong>.
+                for <strong>{currentEmployeeData?.name || 'Unknown Employee'}</strong>.
                 This reason will be visible to the HRO.
               </DialogDescription>
             </DialogHeader>
@@ -2067,9 +2138,13 @@ export default function RetirementPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      )}
+          );
+        })()}
 
-      {requestToCorrect && (
+      {requestToCorrect &&
+        (() => {
+          const correctEmployeeData = getEmployeeFromRequest(requestToCorrect);
+          return (
         <Dialog
           open={isCorrectionModalOpen}
           onOpenChange={setIsCorrectionModalOpen}
@@ -2079,8 +2154,8 @@ export default function RetirementPage() {
               <DialogTitle>Correct & Resubmit Retirement Request</DialogTitle>
               <DialogDescription>
                 Please update the details and upload corrected documents for{' '}
-                <strong>{requestToCorrect.employee.name}</strong> (ZanID:{' '}
-                {requestToCorrect.employee.zanId}).
+                <strong>{correctEmployeeData?.name || 'Unknown Employee'}</strong> (ZanID:{' '}
+                {correctEmployeeData?.zanId || 'N/A'}).
               </DialogDescription>
             </DialogHeader>
             <div className="py-4 space-y-4">
@@ -2280,7 +2355,8 @@ export default function RetirementPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      )}
+          );
+        })()}
 
       {/* File Preview Modal */}
       <FilePreviewModal

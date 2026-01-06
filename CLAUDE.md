@@ -17,6 +17,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run genkit:dev` - Start Genkit development server
 - `npm run genkit:watch` - Start Genkit with file watching
 
+### Testing Commands
+
+- `npm test` - Run unit tests with Vitest
+- `npm run test:ui` - Run unit tests with Vitest UI
+- `npm run test:coverage` - Generate test coverage report
+- `npm run test:e2e` - Run end-to-end tests with Playwright
+- `npm run test:e2e:ui` - Run E2E tests with Playwright UI
+- `npm run loadtest` - Run stress load tests (requires k6)
+- `npm run loadtest:smoke` - Run quick smoke test
+- `npm run loadtest:auth` - Run authentication load tests
+- `npm run loadtest:hr` - Run HR workflows load tests
+- `npm run loadtest:files` - Run file operations load tests
+- `npm run loadtest:all` - Run all load test scenarios
+
 ## Architecture Overview
 
 This is a Next.js 14 full-stack application for a Civil Service Management System (CSMS):
@@ -67,12 +81,64 @@ The application is now completely self-contained with all API endpoints implemen
 - Google Genkit integration for AI-powered features
 - Complaint rewriting functionality
 
+#### Testing & Quality Assurance
+
+- Unit tests with Vitest
+- End-to-end tests with Playwright
+- Load testing with k6 (see `load-tests/` directory)
+- ESLint and Prettier for code quality
+- TypeScript for type safety
+- Husky and lint-staged for pre-commit hooks
+
 ## Configuration Notes
 
 - TypeScript errors and ESLint warnings are ignored during builds
 - Path alias: `@/*` maps to `./src/*`
 - Uses PostgreSQL with specific binary targets for deployment
 - Image domains configured for external placeholders
+
+## Load Testing
+
+The project includes comprehensive load testing scenarios using k6:
+
+- **Location**: `load-tests/` directory
+- **Documentation**: See `load-tests/README.md` for detailed instructions
+- **Prerequisites**: Install k6 from https://k6.io/docs/get-started/installation/
+
+### Quick Start
+
+```bash
+# Install k6 (macOS)
+brew install k6
+
+# Run smoke test
+npm run loadtest:smoke
+
+# Run stress test to find breaking point
+npm run loadtest
+
+# Run specific scenarios
+npm run loadtest:auth        # Authentication tests
+npm run loadtest:hr          # HR workflow tests
+npm run loadtest:files       # File operations tests
+npm run loadtest:all         # All scenarios
+```
+
+### Test Scenarios
+
+1. **Authentication**: Login, logout, session management
+2. **HR Workflows**: Promotions, confirmations, employee management
+3. **File Operations**: Upload, download, metadata
+4. **Stress Test**: Combined scenarios with progressive load to find breaking point
+
+### CI/CD Integration
+
+Load tests run automatically via GitHub Actions:
+- Weekly on Sundays at 2 AM UTC
+- On releases
+- Manual trigger via GitHub Actions UI
+
+See `.github/workflows/load-test.yml` for configuration.
 
 ## Project Context
 
