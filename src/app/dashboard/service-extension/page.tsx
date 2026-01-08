@@ -500,39 +500,6 @@ export default function ServiceExtensionPage() {
       documents: documentObjectKeys,
     };
 
-    // Create optimistic new request to show immediately
-    const optimisticRequest: ServiceExtensionRequest = {
-      id: `temp-${Date.now()}`, // Temporary ID until server responds
-      Employee: {
-        ...employeeDetails,
-        phoneNumber: employeeDetails.phoneNumber ?? undefined,
-        institution: {
-          name:
-            typeof employeeDetails.institution === 'object'
-              ? employeeDetails.institution.name
-              : employeeDetails.institution || 'N/A',
-        },
-      },
-      submittedBy: { name: user.name },
-      status: 'Pending HRMO/HHRMD Review',
-      reviewStage: 'initial',
-      currentRetirementDate: new Date(currentRetirementDate).toISOString(),
-      requestedExtensionPeriod,
-      justification,
-      documents: documentObjectKeys,
-      createdAt: new Date().toISOString(),
-    };
-
-    // Immediately add optimistic request to show instant status
-    setPendingRequests((prev) => [optimisticRequest, ...prev]);
-
-    // Show immediate success feedback
-    toast({
-      title: 'Service Extension Request Submitted',
-      description: `Request for ${employeeDetails.name} submitted successfully. Status: Pending HRMO/HHRMD Review`,
-      duration: 4000,
-    });
-
     try {
       const response = await fetch('/api/service-extension', {
         method: 'POST',
@@ -541,29 +508,14 @@ export default function ServiceExtensionPage() {
       });
       if (!response.ok) throw new Error('Failed to submit request');
 
-      const result = await response.json();
-
-      // Replace optimistic request with real server response
-      if (result.success && result.data) {
-        setPendingRequests((prev) =>
-          prev.map((req) =>
-            req.id === optimisticRequest.id ? result.data : req
-          )
-        );
-      }
-
-      // Force refresh to ensure data consistency
-      setTimeout(async () => {
-        await fetchRequests(false);
-      }, 1000);
-
+      await fetchRequests(false); // Refresh list immediately
+      toast({
+        title: 'Service Extension Request Submitted',
+        description: `Request for ${employeeDetails.name} submitted successfully.`,
+      });
       setEmployeeDetails(null);
       resetFormFields();
     } catch (error) {
-      // Remove optimistic request on error
-      setPendingRequests((prev) =>
-        prev.filter((req) => req.id !== optimisticRequest.id)
-      );
       toast({
         title: 'Submission Failed',
         description: 'Could not submit the service extension request.',

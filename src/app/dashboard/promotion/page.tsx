@@ -383,47 +383,6 @@ export default function PromotionPage() {
       rejectionReason: null, // Clear rejection reason on resubmission
     };
 
-    if (!isEditingExistingRequest) {
-      // Create optimistic new request to show immediately
-      const optimisticRequest: PromotionRequest = {
-        id: `temp-${Date.now()}`, // Temporary ID until server responds
-        Employee: {
-          ...employeeDetails,
-          phoneNumber: employeeDetails.phoneNumber ?? undefined,
-          Institution: {
-            name:
-              typeof employeeDetails.institution === 'object'
-                ? employeeDetails.institution.name
-                : employeeDetails.institution || 'N/A',
-          },
-        },
-        submittedBy: { name: user.name },
-        status: 'Pending HRMO/HHRMD Review',
-        reviewStage: 'initial',
-        proposedCadre,
-        promotionType:
-          promotionRequestType === 'experience'
-            ? 'Experience'
-            : 'EducationAdvancement',
-        documents: documentsList,
-        studiedOutsideCountry:
-          promotionRequestType === 'education'
-            ? studiedOutsideCountry
-            : undefined,
-        createdAt: new Date().toISOString(),
-      };
-
-      // Immediately add optimistic request to show instant status
-      setPendingRequests((prev) => [optimisticRequest, ...prev]);
-
-      // Show immediate success feedback
-      toast({
-        title: 'Promotion Request Submitted',
-        description: `Request for ${employeeDetails.name} submitted successfully. Status: Pending HRMO/HHRMD Review`,
-        duration: 4000,
-      });
-    }
-
     try {
       const response = await fetch(url, {
         method,
@@ -439,37 +398,19 @@ export default function PromotionPage() {
         throw new Error(result.message || 'Failed to submit/update request');
       }
 
-      if (!isEditingExistingRequest) {
-        // Replace optimistic request with real server response
-        if (result.data) {
-          setPendingRequests((prev) =>
-            prev.map((req) => (req.id.startsWith('temp-') ? result.data : req))
-          );
-        }
-
-        // Force refresh to ensure data consistency
-        setTimeout(async () => {
-          await fetchRequests();
-        }, 1000);
-      } else {
-        await fetchRequests(); // Refresh list for edits
-        toast({
-          title: 'Promotion Request Updated',
-          description: `Request for ${employeeDetails.name} updated successfully.`,
-        });
-      }
+      await fetchRequests(); // Refresh list immediately
+      toast({
+        title: isEditingExistingRequest
+          ? 'Promotion Request Updated'
+          : 'Promotion Request Submitted',
+        description: `Request for ${employeeDetails.name} ${isEditingExistingRequest ? 'updated' : 'submitted'} successfully.`,
+      });
 
       setEmployeeDetails(null);
       resetFormFields();
       setIsEditingExistingRequest(false);
       setSelectedRequest(null);
     } catch (error) {
-      if (!isEditingExistingRequest) {
-        // Remove optimistic request on error
-        setPendingRequests((prev) =>
-          prev.filter((req) => !req.id.startsWith('temp-'))
-        );
-      }
       toast({
         title: 'Submission Failed',
         description: 'Could not submit/update the promotion request.',

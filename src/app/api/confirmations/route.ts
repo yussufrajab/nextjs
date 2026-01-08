@@ -79,14 +79,7 @@ export async function GET(req: Request) {
       User_ConfirmationRequest_reviewedByIdToUser: undefined,
     }));
 
-    // Set cache headers for confirmation requests
-    const headers = new Headers();
-    headers.set(
-      'Cache-Control',
-      `public, s-maxage=${CACHE_TTL}, stale-while-revalidate=${CACHE_TTL * 2}`
-    );
-
-    return NextResponse.json(transformedRequests, { headers });
+    return NextResponse.json(transformedRequests);
   } catch (error) {
     console.error('[CONFIRMATIONS_GET]', error);
     return NextResponse.json(

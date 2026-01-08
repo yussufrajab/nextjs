@@ -100,20 +100,10 @@ export async function GET(req: Request) {
       User_PromotionRequest_reviewedByIdToUser: undefined,
     }));
 
-    // Set cache headers for promotion requests (shorter TTL due to frequent updates)
-    const headers = new Headers();
-    headers.set(
-      'Cache-Control',
-      `public, s-maxage=${CACHE_TTL}, stale-while-revalidate=${CACHE_TTL * 2}`
-    );
-
-    return NextResponse.json(
-      {
-        success: true,
-        data: transformedRequests,
-      },
-      { headers }
-    );
+    return NextResponse.json({
+      success: true,
+      data: transformedRequests,
+    });
   } catch (error) {
     console.error('[PROMOTIONS_GET]', error);
     return NextResponse.json(

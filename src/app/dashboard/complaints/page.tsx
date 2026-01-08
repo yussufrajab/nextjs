@@ -312,45 +312,6 @@ export default function ComplaintsPage() {
     if (complaintLetterFile) documentObjectKeys.push(complaintLetterFile);
     if (evidenceFile) documentObjectKeys.push(evidenceFile);
 
-    // Create optimistic complaint for immediate UI feedback
-    const optimisticComplaint: SubmittedComplaint = {
-      id: `temp-${Date.now()}`,
-      employeeId: user.employeeId,
-      employeeName: user.name || 'Unknown',
-      zanId: null,
-      department: null,
-      cadre: null,
-      complaintType: data.complaintType,
-      subject: data.subject,
-      details: data.complaintText,
-      complainantPhoneNumber: data.complainantPhoneNumber,
-      nextOfKinPhoneNumber: data.nextOfKinPhoneNumber,
-      submissionDate: new Date().toISOString(),
-      status: 'Submitted',
-      attachments: documentObjectKeys,
-      officerComments: null,
-      internalNotes: null,
-      assignedOfficerRole: null,
-      reviewStage: 'initial',
-      rejectionReason: null,
-      reviewedBy: null,
-    };
-
-    // Add optimistic complaint to state for immediate feedback
-    setComplaints((prev) => [optimisticComplaint, ...prev]);
-
-    // Reset form and show immediate success feedback
-    form.reset();
-    setRewrittenComplaint(null);
-    setComplaintLetterFile('');
-    setEvidenceFile('');
-    setIsSubmitting(false);
-
-    toast({
-      title: 'Lalamiko Limewasilishwa',
-      description: 'Lalamiko lako limewasilishwa kwa mafanikio.',
-    });
-
     try {
       const response = await fetch('/api/complaints', {
         method: 'POST',
@@ -366,22 +327,25 @@ export default function ComplaintsPage() {
         throw new Error('Failed to submit complaint');
       }
 
-      const newComplaint = await response.json();
+      await fetchComplaints(); // Refresh list immediately
+      toast({
+        title: 'Lalamiko Limewasilishwa',
+        description: 'Lalamiko lako limewasilishwa kwa mafanikio.',
+      });
 
-      // Replace optimistic complaint with real server response
-      setComplaints((prev) =>
-        prev.map((c) => (c.id === optimisticComplaint.id ? newComplaint : c))
-      );
+      // Reset form after successful submission
+      form.reset();
+      setRewrittenComplaint(null);
+      setComplaintLetterFile('');
+      setEvidenceFile('');
     } catch (error) {
-      // Remove optimistic complaint on error
-      setComplaints((prev) =>
-        prev.filter((c) => c.id !== optimisticComplaint.id)
-      );
       toast({
         title: 'Kuwasilisha Kumeshindikana',
         description: 'Hitilafu imetokea wakati wa kuwasilisha lalamiko lako.',
         variant: 'destructive',
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 

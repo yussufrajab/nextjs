@@ -346,30 +346,6 @@ export default function CadreChangePage() {
     if (certificateFile) documents.push(certificateFile);
     if (studiedOutsideCountry && tcuFormFile) documents.push(tcuFormFile);
 
-    // Create optimistic request for immediate UI feedback
-    const optimisticRequest: CadreChangeRequest = {
-      id: `temp-${Date.now()}`,
-      employee: employeeDetails as any,
-      submittedBy: user as any,
-      status: 'Pending HRMO/HHRMD Review',
-      reviewStage: 'initial',
-      newCadre,
-      reason: reasonCadreChange,
-      documents,
-      studiedOutsideCountry,
-      createdAt: new Date().toISOString(),
-    };
-
-    // Add optimistic request to state for immediate feedback
-    setPendingRequests((prev) => [optimisticRequest, ...prev]);
-
-    // Show immediate success feedback
-    toast({
-      title: 'Cadre Change Request Submitted',
-      description: `Request for ${employeeDetails.name} submitted successfully. Status: Pending HRMO/HHRMD Review`,
-      duration: 4000,
-    });
-
     const payload = {
       employeeId: employeeDetails.id,
       submittedById: user.id,
@@ -388,29 +364,14 @@ export default function CadreChangePage() {
       });
       if (!response.ok) throw new Error('Failed to submit request');
 
-      const result = await response.json();
-
-      // Replace optimistic request with real server response
-      if (result.success && result.data) {
-        setPendingRequests((prev) =>
-          prev.map((req) =>
-            req.id === optimisticRequest.id ? result.data : req
-          )
-        );
-      }
-
-      // Force refresh to ensure data consistency
-      setTimeout(async () => {
-        await fetchRequests();
-      }, 1000);
-
+      await fetchRequests(); // Refresh list immediately
+      toast({
+        title: 'Cadre Change Request Submitted',
+        description: `Request for ${employeeDetails.name} submitted successfully.`,
+      });
       setEmployeeDetails(null);
       resetFormFields();
     } catch (error) {
-      // Remove optimistic request on error
-      setPendingRequests((prev) =>
-        prev.filter((req) => req.id !== optimisticRequest.id)
-      );
       toast({
         title: 'Submission Failed',
         description: 'Could not submit the cadre change request.',

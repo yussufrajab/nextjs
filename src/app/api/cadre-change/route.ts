@@ -82,20 +82,10 @@ export async function GET(req: Request) {
       User_CadreChangeRequest_reviewedByIdToUser: undefined,
     }));
 
-    // Set cache headers for cadre change requests
-    const headers = new Headers();
-    headers.set(
-      'Cache-Control',
-      `public, s-maxage=${CACHE_TTL}, stale-while-revalidate=${CACHE_TTL * 2}`
-    );
-
-    return NextResponse.json(
-      {
-        success: true,
-        data: transformedRequests,
-      },
-      { headers }
-    );
+    return NextResponse.json({
+      success: true,
+      data: transformedRequests,
+    });
   } catch (error) {
     console.error('[CADRE_CHANGE_GET]', error);
     return NextResponse.json(
