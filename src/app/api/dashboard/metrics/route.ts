@@ -117,7 +117,7 @@ export async function GET(req: Request) {
     const getConfirmationStatuses = (role: string | null) => {
       switch (role) {
         case 'HRO':
-          return ['Pending HRMO Review'];
+          return ['Pending HRMO Review', 'Pending HRMO/HHRMD Review'];
         case 'HHRMD':
           return ['Pending HRMO/HHRMD Review'];
         case 'CSCS':
@@ -135,7 +135,11 @@ export async function GET(req: Request) {
     const getPromotionStatuses = (role: string | null) => {
       switch (role) {
         case 'HRO':
-          return ['Pending HRMO Review', 'Draft - Pending Review'];
+          return [
+            'Pending HRMO Review',
+            'Pending HRMO/HHRMD Review',
+            'Draft - Pending Review',
+          ];
         case 'HHRMD':
           return ['Pending HRMO/HHRMD Review'];
         case 'CSCS':
@@ -154,7 +158,10 @@ export async function GET(req: Request) {
     const getTerminationStatuses = (role: string | null) => {
       switch (role) {
         case 'HRO':
-          return ['Rejected by HHRMD - Awaiting HRO Correction'];
+          return [
+            'Pending DO/HHRMD Review',
+            'Rejected by HHRMD - Awaiting HRO Correction',
+          ];
         case 'HHRMD':
         case 'DO':
           return ['Pending DO/HHRMD Review'];
@@ -174,6 +181,7 @@ export async function GET(req: Request) {
         case 'HRO':
           return [
             'Pending HRMO Review',
+            'Pending HRMO/HHRMD Review',
             'Rejected by HRMO - Awaiting HRO Correction',
           ];
         case 'HHRMD':
@@ -195,6 +203,7 @@ export async function GET(req: Request) {
         case 'HRO':
           return [
             'Pending HRMO Review',
+            'Pending HRMO/HHRMD Review',
             'Rejected by HHRMD - Awaiting HRO Correction',
           ];
         case 'HHRMD':
@@ -216,7 +225,10 @@ export async function GET(req: Request) {
     const getResignationStatuses = (role: string | null) => {
       switch (role) {
         case 'HRO':
-          return ['Rejected by HHRMD - Awaiting HRO Action'];
+          return [
+            'Pending HRMO/HHRMD Review',
+            'Rejected by HHRMD - Awaiting HRO Action',
+          ];
         case 'HHRMD':
           return ['Pending HRMO/HHRMD Review'];
         case 'CSCS':
@@ -233,7 +245,10 @@ export async function GET(req: Request) {
     const getServiceExtensionStatuses = (role: string | null) => {
       switch (role) {
         case 'HRO':
-          return ['Rejected by HHRMD - Awaiting HRO Correction'];
+          return [
+            'Pending HRMO/HHRMD Review',
+            'Rejected by HHRMD - Awaiting HRO Correction',
+          ];
         case 'HHRMD':
           return ['Pending HRMO/HHRMD Review'];
         case 'CSCS':
