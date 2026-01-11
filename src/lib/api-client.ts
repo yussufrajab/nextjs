@@ -376,6 +376,16 @@ class ApiClient {
     return result;
   }
 
+  async forceLogoutSession(
+    sessionId: string,
+    userId: string
+  ): Promise<ApiResponse> {
+    return this.request('/auth/sessions/force-logout', {
+      method: 'POST',
+      body: JSON.stringify({ sessionId, userId }),
+    });
+  }
+
   async logout(
     userId?: string,
     sessionToken?: string | null

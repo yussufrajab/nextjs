@@ -181,6 +181,19 @@ export async function GET(req: Request) {
       `Fetched page ${page} - Probation: ${probationEmployees.length}/${probationCount}, Retirement: ${retirementEmployees.length}/${retirementCount} in ${Date.now() - startTime}ms`
     );
 
+    // Map Institution to institution to match TypeScript interface
+    const mappedProbationEmployees = probationEmployees.map((emp) => ({
+      ...emp,
+      institution: emp.Institution,
+      Institution: undefined,
+    }));
+
+    const mappedRetirementEmployees = retirementEmployees.map((emp) => ({
+      ...emp,
+      institution: emp.Institution,
+      Institution: undefined,
+    }));
+
     const headers = new Headers();
     headers.set(
       'Cache-Control',
@@ -191,8 +204,8 @@ export async function GET(req: Request) {
       {
         success: true,
         data: {
-          probationOverdue: probationEmployees,
-          nearingRetirement: retirementEmployees,
+          probationOverdue: mappedProbationEmployees,
+          nearingRetirement: mappedRetirementEmployees,
           pagination: {
             page,
             limit,

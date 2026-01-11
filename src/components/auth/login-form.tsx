@@ -20,6 +20,7 @@ import { toast } from '@/hooks/use-toast';
 import { ROLES } from '@/lib/constants';
 import type { User } from '@/lib/types';
 import { Loader2 } from 'lucide-react';
+import { DeviceLimitDialog } from './device-limit-dialog';
 
 const loginFormSchema = z.object({
   username: z.string().min(1, { message: 'Username or email is required.' }),
@@ -32,6 +33,13 @@ export function LoginForm() {
   const router = useRouter();
   const { login, logout } = useAuthStore();
   const [isLoading, setIsLoading] = React.useState(false);
+  const [showDeviceLimitDialog, setShowDeviceLimitDialog] = React.useState(false);
+  const [activeSessions, setActiveSessions] = React.useState<any[]>([]);
+  const [pendingCredentials, setPendingCredentials] = React.useState<{
+    username: string;
+    password: string;
+    userId?: string;
+  } | null>(null);
 
   // Logout any existing user when component mounts
   React.useEffect(() => {
@@ -85,7 +93,21 @@ export function LoginForm() {
           router.push('/dashboard');
         }
       }
-    } catch (error) {
+    } catch (error: any) {
+      // Check if error is session limit reached
+      if (error.message === 'SESSION_LIMIT_REACHED') {
+        console.log('Session limit reached, showing dialog');
+        setActiveSessions(error.activeSessions || []);
+        setPendingCredentials({
+          username: data.username,
+          password: data.password,
+          userId: error.userId,
+        });
+        setShowDeviceLimitDialog(true);
+        setIsLoading(false);
+        return;
+      }
+
       // Display the actual error message from the backend
       const errorMessage = error instanceof Error ? error.message : 'Invalid username/email or password.';
       toast({
@@ -94,6 +116,56 @@ export function LoginForm() {
         variant: 'destructive',
       });
       setIsLoading(false);
+    }
+  }
+
+  const handleForceLogout = async (sessionId: string) => {
+    try {
+      console.log('Force logout for session:', sessionId);
+
+      // Call API to force logout the selected session
+      const response = await fetch('/api/auth/sessions/force-logout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          userId: pendingCredentials?.userId,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Failed to terminate session');
+      }
+
+      // Close dialog
+      setShowDeviceLimitDialog(false);
+
+      // Show success toast
+      toast({
+        title: 'Device Logged Out',
+        description: 'Retrying login...',
+      });
+
+      // Wait a moment for session cleanup
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      // Auto-retry login with stored credentials
+      if (pendingCredentials) {
+        await onSubmit({
+          username: pendingCredentials.username,
+          password: pendingCredentials.password,
+        });
+      }
+    } catch (error) {
+      console.error('Force logout error:', error);
+      toast({
+        title: 'Error',
+        description:
+          'Failed to log out the selected device. Please try again.',
+        variant: 'destructive',
+      });
     }
   }
 
@@ -135,6 +207,16 @@ export function LoginForm() {
           Login
         </Button>
       </form>
+      <DeviceLimitDialog
+        open={showDeviceLimitDialog}
+        onClose={() => {
+          setShowDeviceLimitDialog(false);
+          setPendingCredentials(null);
+          setIsLoading(false);
+        }}
+        sessions={activeSessions}
+        onForceLogout={handleForceLogout}
+      />
     </Form>
   );
 }

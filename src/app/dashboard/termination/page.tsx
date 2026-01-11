@@ -1317,7 +1317,7 @@ export default function TerminationAndDismissalPage() {
         </Card>
       )}
 
-      {(role === ROLES.DO || role === ROLES.HHRMD) && (
+      {(role === ROLES.DO || role === ROLES.HHRMD || role === ROLES.CSCS || role === ROLES.HRRP) && (
         <Card className="shadow-lg">
           <CardHeader>
             <div className="flex items-center justify-between">

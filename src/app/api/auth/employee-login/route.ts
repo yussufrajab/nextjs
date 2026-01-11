@@ -240,18 +240,39 @@ export async function POST(req: Request) {
       institutionId: employee.institutionId,
       department: employee.department,
       cadre: employee.cadre,
-      Institution: employee.Institution.name,
+      institution: employee.Institution ? { name: employee.Institution.name } : null,
       zanId: employee.zanId,
       zssfNumber: employee.zssfNumber,
       payrollNumber: employee.payrollNumber,
     };
 
-    return NextResponse.json({
+    // Generate and set CSRF token for protection against CSRF attacks
+    const {
+      generateCSRFToken,
+      signCSRFToken,
+      getCSRFCookieOptions,
+      CSRF_COOKIE_NAME,
+    } = await import('@/lib/csrf-utils');
+
+    const csrfToken = generateCSRFToken();
+    const signedCSRFToken = signCSRFToken(csrfToken);
+    const csrfCookieOptions = getCSRFCookieOptions();
+
+    console.log('[EMPLOYEE_LOGIN] Generated CSRF token for user:', user.username);
+
+    // Create response with CSRF token cookie
+    const response = NextResponse.json({
       success: true,
       message: 'Login successful',
       user: userData,
       sessionToken: session.sessionToken, // Include session token
+      csrfToken: signedCSRFToken, // Include CSRF token in response for client-side storage
     });
+
+    // Set CSRF token cookie (readable by JavaScript, but protected by SameSite)
+    response.cookies.set(CSRF_COOKIE_NAME, signedCSRFToken, csrfCookieOptions);
+
+    return response;
   } catch (error) {
     console.error('[EMPLOYEE_LOGIN]', error);
 

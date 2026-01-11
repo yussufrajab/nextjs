@@ -204,9 +204,11 @@ export default function ConfirmationPage() {
           if (
             role === ROLES.HHRMD ||
             role === ROLES.HRMO ||
-            role === ROLES.CSCS
+            role === ROLES.CSCS ||
+            role === ROLES.HRRP
           ) {
-            // Show all requests for HHRMD/HRMO/CSCS including completed ones for tracking
+            // Show all requests for HHRMD/HRMO/CSCS/HRRP including completed ones for tracking
+            // HRRP sees only their institution (filtered by backend)
             return true;
           } else if (role === ROLES.HRO) {
             return req.submittedById === user.id;
@@ -424,6 +426,7 @@ export default function ConfirmationPage() {
     const payload = {
       employeeId: employeeToConfirm.id,
       submittedById: user.id,
+      userRole: role,
       documents: documentsList,
       status: 'Pending HRMO/HHRMD Review', // Both roles can review in parallel
       reviewStage: 'initial',
@@ -488,6 +491,7 @@ export default function ConfirmationPage() {
           id: requestId,
           ...payload,
           reviewedById: user?.id,
+          userRole: role,
         }),
       });
       if (!response.ok) throw new Error('Failed to update request');
@@ -645,6 +649,7 @@ export default function ConfirmationPage() {
         },
         body: JSON.stringify({
           id: request.id,
+          userRole: role,
           status: 'Pending HRMO/HHRMD Review', // Both roles can review in parallel after correction
           reviewStage: 'initial',
           documents: [
@@ -1009,6 +1014,12 @@ export default function ConfirmationPage() {
                     Submitted: {format(parseISO(request.createdAt), 'PPP')} by{' '}
                     {request.submittedBy?.name || 'N/A'}
                   </p>
+                  {request.reviewedBy && (
+                    <p className="text-sm text-muted-foreground">
+                      Reviewed by: {request.reviewedBy.name || 'N/A'} (
+                      {request.reviewedBy.username || 'N/A'})
+                    </p>
+                  )}
                   {request.decisionDate && (
                     <p className="text-sm text-muted-foreground">
                       Initial Review Date:{' '}
@@ -1349,6 +1360,17 @@ export default function ConfirmationPage() {
                         {selectedRequest.submittedBy?.name || 'N/A'}
                       </p>
                     </div>
+                    {selectedRequest.reviewedBy && (
+                      <div className="grid grid-cols-3 items-center gap-x-4 gap-y-2">
+                        <Label className="text-right font-semibold">
+                          Reviewed By:
+                        </Label>
+                        <p className="col-span-2">
+                          {selectedRequest.reviewedBy.name || 'N/A'} (
+                          {selectedRequest.reviewedBy.username || 'N/A'})
+                        </p>
+                      </div>
+                    )}
                     {selectedRequest.decisionDate && (
                       <div className="grid grid-cols-3 items-center gap-x-4 gap-y-2">
                         <Label className="text-right font-semibold">

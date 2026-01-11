@@ -163,10 +163,12 @@ export async function GET(req: Request) {
         `After institution validation: ${filteredEmployees.length} employees from institution ${userInstitutionId}`
       );
 
-      // Map EmployeeCertificate to certificates to match TypeScript interface
+      // Map EmployeeCertificate to certificates and Institution to institution to match TypeScript interface
       const mappedEmployees = filteredEmployees.map((emp) => ({
         ...emp,
+        institution: emp.Institution,
         certificates: emp.EmployeeCertificate,
+        Institution: undefined,
         EmployeeCertificate: undefined,
       }));
 
@@ -177,10 +179,12 @@ export async function GET(req: Request) {
     }
 
     // For CSC roles with full access
-    // Map EmployeeCertificate to certificates to match TypeScript interface
+    // Map EmployeeCertificate to certificates and Institution to institution to match TypeScript interface
     const mappedEmployees = employees.map((emp) => ({
       ...emp,
+      institution: emp.Institution,
       certificates: emp.EmployeeCertificate,
+      Institution: undefined,
       EmployeeCertificate: undefined,
     }));
 

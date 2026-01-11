@@ -49,8 +49,106 @@ export function parseUserAgent(userAgent: string | null): string {
 }
 
 /**
+ * Check if user has reached the session limit
+ *
+ * @param userId - User ID
+ * @returns Session limit check result with active sessions
+ */
+export async function checkSessionLimit(userId: string): Promise<{
+  isAtLimit: boolean;
+  activeSessions: Array<{
+    id: string;
+    deviceInfo: string | null;
+    lastActivity: Date;
+    ipAddress: string | null;
+    createdAt: Date;
+    isSuspicious: boolean;
+  }>;
+  count: number;
+}> {
+  try {
+    const activeSessions = await db.session.findMany({
+      where: {
+        userId,
+        expiresAt: { gt: new Date() },
+      },
+      orderBy: { lastActivity: 'desc' },
+      select: {
+        id: true,
+        deviceInfo: true,
+        lastActivity: true,
+        ipAddress: true,
+        createdAt: true,
+        isSuspicious: true,
+      },
+    });
+
+    return {
+      isAtLimit: activeSessions.length >= MAX_CONCURRENT_SESSIONS,
+      activeSessions,
+      count: activeSessions.length,
+    };
+  } catch (error) {
+    console.error('[SESSION] Failed to check session limit:', error);
+    return {
+      isAtLimit: false,
+      activeSessions: [],
+      count: 0,
+    };
+  }
+}
+
+/**
+ * Terminate a specific session by ID
+ * Validates that the session belongs to the requesting user
+ *
+ * @param sessionId - Session ID to terminate
+ * @param requestingUserId - User ID requesting the termination
+ * @returns True if successful, false otherwise
+ */
+export async function terminateSessionById(
+  sessionId: string,
+  requestingUserId: string
+): Promise<boolean> {
+  try {
+    // Verify the session belongs to the requesting user
+    const session = await db.session.findUnique({
+      where: { id: sessionId },
+      select: { userId: true },
+    });
+
+    if (!session) {
+      console.error('[SESSION] Session not found:', sessionId);
+      return false;
+    }
+
+    if (session.userId !== requestingUserId) {
+      console.error(
+        '[SESSION] User does not own session:',
+        sessionId,
+        'Requesting user:',
+        requestingUserId
+      );
+      return false;
+    }
+
+    await db.session.delete({
+      where: { id: sessionId },
+    });
+
+    console.log(
+      `[SESSION] Terminated session by ID: ${sessionId} for user ${requestingUserId}`
+    );
+    return true;
+  } catch (error) {
+    console.error('[SESSION] Failed to terminate session by ID:', error);
+    return false;
+  }
+}
+
+/**
  * Create a new session for a user
- * If user has 3 or more sessions, terminates the oldest one
+ * Throws error if user already has MAX_CONCURRENT_SESSIONS active sessions
  *
  * @param userId - User ID
  * @param ipAddress - IP address of the login
@@ -65,31 +163,10 @@ export async function createSession(
   isSuspicious: boolean = false
 ) {
   try {
-    // Get current active sessions for the user
-    const activeSessions = await db.session.findMany({
-      where: {
-        userId,
-        expiresAt: { gt: new Date() }, // Only active sessions
-      },
-      orderBy: { createdAt: 'asc' }, // Oldest first
-    });
-
-    // If user has MAX_CONCURRENT_SESSIONS or more, delete the oldest session
-    if (activeSessions.length >= MAX_CONCURRENT_SESSIONS) {
-      const sessionsToDelete = activeSessions.slice(
-        0,
-        activeSessions.length - MAX_CONCURRENT_SESSIONS + 1
-      );
-
-      await db.session.deleteMany({
-        where: {
-          id: { in: sessionsToDelete.map((s) => s.id) },
-        },
-      });
-
-      console.log(
-        `[SESSION] Terminated ${sessionsToDelete.length} oldest session(s) for user ${userId}`
-      );
+    // Check if user has reached session limit
+    const sessionCheck = await checkSessionLimit(userId);
+    if (sessionCheck.isAtLimit) {
+      throw new Error('SESSION_LIMIT_REACHED');
     }
 
     // Generate session token

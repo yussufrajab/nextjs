@@ -734,6 +734,118 @@ export async function GET(req: Request) {
       ...institutionFilter,
     };
 
+    // Build LWOP-specific date filter (uses startDate instead of createdAt)
+    const lwopDateFilter: any = {};
+    if (fromDate && toDate) {
+      const startDate = new Date(fromDate);
+      const endDate = new Date(toDate);
+      endDate.setHours(23, 59, 59, 999);
+
+      lwopDateFilter.startDate = {
+        gte: startDate,
+        lte: endDate,
+      };
+    } else if (fromDate) {
+      lwopDateFilter.startDate = {
+        gte: new Date(fromDate),
+      };
+    } else if (toDate) {
+      const endDate = new Date(toDate);
+      endDate.setHours(23, 59, 59, 999);
+      lwopDateFilter.startDate = {
+        lte: endDate,
+      };
+    }
+
+    const lwopWhereClause = {
+      ...lwopDateFilter,
+      ...institutionFilter,
+    };
+
+    // Build Retirement-specific date filter (uses proposedDate)
+    const retirementDateFilter: any = {};
+    if (fromDate && toDate) {
+      const startDate = new Date(fromDate);
+      const endDate = new Date(toDate);
+      endDate.setHours(23, 59, 59, 999);
+
+      retirementDateFilter.proposedDate = {
+        gte: startDate,
+        lte: endDate,
+      };
+    } else if (fromDate) {
+      retirementDateFilter.proposedDate = {
+        gte: new Date(fromDate),
+      };
+    } else if (toDate) {
+      const endDate = new Date(toDate);
+      endDate.setHours(23, 59, 59, 999);
+      retirementDateFilter.proposedDate = {
+        lte: endDate,
+      };
+    }
+
+    const retirementWhereClause = {
+      ...retirementDateFilter,
+      ...institutionFilter,
+    };
+
+    // Build Resignation-specific date filter (uses effectiveDate)
+    const resignationDateFilter: any = {};
+    if (fromDate && toDate) {
+      const startDate = new Date(fromDate);
+      const endDate = new Date(toDate);
+      endDate.setHours(23, 59, 59, 999);
+
+      resignationDateFilter.effectiveDate = {
+        gte: startDate,
+        lte: endDate,
+      };
+    } else if (fromDate) {
+      resignationDateFilter.effectiveDate = {
+        gte: new Date(fromDate),
+      };
+    } else if (toDate) {
+      const endDate = new Date(toDate);
+      endDate.setHours(23, 59, 59, 999);
+      resignationDateFilter.effectiveDate = {
+        lte: endDate,
+      };
+    }
+
+    const resignationWhereClause = {
+      ...resignationDateFilter,
+      ...institutionFilter,
+    };
+
+    // Build Service Extension-specific date filter (uses currentRetirementDate)
+    const serviceExtensionDateFilter: any = {};
+    if (fromDate && toDate) {
+      const startDate = new Date(fromDate);
+      const endDate = new Date(toDate);
+      endDate.setHours(23, 59, 59, 999);
+
+      serviceExtensionDateFilter.currentRetirementDate = {
+        gte: startDate,
+        lte: endDate,
+      };
+    } else if (fromDate) {
+      serviceExtensionDateFilter.currentRetirementDate = {
+        gte: new Date(fromDate),
+      };
+    } else if (toDate) {
+      const endDate = new Date(toDate);
+      endDate.setHours(23, 59, 59, 999);
+      serviceExtensionDateFilter.currentRetirementDate = {
+        lte: endDate,
+      };
+    }
+
+    const serviceExtensionWhereClause = {
+      ...serviceExtensionDateFilter,
+      ...institutionFilter,
+    };
+
     let reportData: any[] = [];
 
     // Generate reports based on type
@@ -795,13 +907,14 @@ export async function GET(req: Request) {
         break;
 
       case 'lwop':
+        // For LWOP, filter by leave start date instead of request creation date
         console.log(
           'LWOP Query - whereClause:',
-          JSON.stringify(whereClause, null, 2)
+          JSON.stringify(lwopWhereClause, null, 2)
         );
         reportData = await db.lwopRequest
           .findMany({
-            where: whereClause,
+            where: lwopWhereClause,
             include: {
               Employee: {
                 select: {
@@ -820,7 +933,7 @@ export async function GET(req: Request) {
                 select: { id: true, name: true, username: true },
               },
             },
-            orderBy: { createdAt: 'desc' },
+            orderBy: { startDate: 'desc' },
           })
           .catch((error) => {
             console.error('LWOP Query Error:', error);
@@ -831,11 +944,12 @@ export async function GET(req: Request) {
           'LWOP Data Sample:',
           reportData.slice(0, 3).map((r) => ({
             id: r.id,
-            employeeName: r.employee?.name,
-            employeeZanId: r.employee?.zanId,
-            institutionId: r.employee?.institutionId,
-            institutionName: r.employee?.institution?.name,
-            createdAt: r.createdAt,
+            employeeName: r.Employee?.name,
+            employeeZanId: r.Employee?.zanId,
+            institutionId: r.Employee?.institutionId,
+            institutionName: r.Employee?.Institution?.name,
+            startDate: r.startDate,
+            endDate: r.endDate,
           }))
         );
         break;
@@ -872,9 +986,10 @@ export async function GET(req: Request) {
       case 'voluntaryRetirement':
       case 'compulsoryRetirement':
       case 'illnessRetirement':
+        // For Retirement, filter by proposed retirement date
         reportData = await db.retirementRequest
           .findMany({
-            where: whereClause,
+            where: retirementWhereClause,
             include: {
               Employee: {
                 select: {
@@ -893,15 +1008,16 @@ export async function GET(req: Request) {
                 select: { id: true, name: true, username: true },
               },
             },
-            orderBy: { createdAt: 'desc' },
+            orderBy: { proposedDate: 'desc' },
           })
           .catch(() => []);
         break;
 
       case 'resignation':
+        // For Resignation, filter by effective date
         reportData = await db.resignationRequest
           .findMany({
-            where: whereClause,
+            where: resignationWhereClause,
             include: {
               Employee: {
                 select: {
@@ -920,16 +1036,17 @@ export async function GET(req: Request) {
                 select: { id: true, name: true, username: true },
               },
             },
-            orderBy: { createdAt: 'desc' },
+            orderBy: { effectiveDate: 'desc' },
           })
           .catch(() => []);
         break;
 
       case 'serviceExtension':
       case 'service-extension':
+        // For Service Extension, filter by current retirement date
         reportData = await db.serviceExtensionRequest
           .findMany({
-            where: whereClause,
+            where: serviceExtensionWhereClause,
             include: {
               Employee: {
                 select: {
@@ -948,7 +1065,7 @@ export async function GET(req: Request) {
                 select: { id: true, name: true, username: true },
               },
             },
-            orderBy: { createdAt: 'desc' },
+            orderBy: { currentRetirementDate: 'desc' },
           })
           .catch(() => []);
         break;
@@ -1079,7 +1196,7 @@ export async function GET(req: Request) {
             .catch(() => []),
           db.lwopRequest
             .findMany({
-              where: whereClause,
+              where: lwopWhereClause,
               include: {
                 Employee: {
                   select: {
@@ -1098,7 +1215,7 @@ export async function GET(req: Request) {
                   select: { id: true, name: true, username: true },
                 },
               },
-              orderBy: { createdAt: 'desc' },
+              orderBy: { startDate: 'desc' },
             })
             .catch(() => []),
           db.cadreChangeRequest
@@ -1127,7 +1244,7 @@ export async function GET(req: Request) {
             .catch(() => []),
           db.retirementRequest
             .findMany({
-              where: whereClause,
+              where: retirementWhereClause,
               include: {
                 Employee: {
                   select: {
@@ -1146,12 +1263,12 @@ export async function GET(req: Request) {
                   select: { id: true, name: true, username: true },
                 },
               },
-              orderBy: { createdAt: 'desc' },
+              orderBy: { proposedDate: 'desc' },
             })
             .catch(() => []),
           db.resignationRequest
             .findMany({
-              where: whereClause,
+              where: resignationWhereClause,
               include: {
                 Employee: {
                   select: {
@@ -1170,12 +1287,12 @@ export async function GET(req: Request) {
                   select: { id: true, name: true, username: true },
                 },
               },
-              orderBy: { createdAt: 'desc' },
+              orderBy: { effectiveDate: 'desc' },
             })
             .catch(() => []),
           db.serviceExtensionRequest
             .findMany({
-              where: whereClause,
+              where: serviceExtensionWhereClause,
               include: {
                 Employee: {
                   select: {
@@ -1194,7 +1311,7 @@ export async function GET(req: Request) {
                   select: { id: true, name: true, username: true },
                 },
               },
-              orderBy: { createdAt: 'desc' },
+              orderBy: { currentRetirementDate: 'desc' },
             })
             .catch(() => []),
           db.separationRequest

@@ -194,6 +194,7 @@ model PromotionRequest {
   status                                    String
   reviewStage                               String
   proposedCadre                             String
+  finalCadre                                String?
   promotionType                             String
   studiedOutsideCountry                     Boolean?
   documents                                 String[]

@@ -969,6 +969,7 @@ export default function LwopPage() {
       {(role === ROLES.HHRMD ||
         role === ROLES.HRMO ||
         role === ROLES.CSCS ||
+        role === ROLES.HRRP ||
         role === ROLES.HRO) && (
         <Card className="shadow-lg">
           <CardHeader>

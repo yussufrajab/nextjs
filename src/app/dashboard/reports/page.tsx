@@ -145,6 +145,13 @@ export default function ReportsPage() {
     fetchInstitutions();
   }, []);
 
+  // Auto-set institution filter for HRO and HRRP roles
+  useEffect(() => {
+    if ((role === ROLES.HRO || role === ROLES.HRRP) && user?.institutionId) {
+      setInstitutionFilter(user.institutionId);
+    }
+  }, [role, user?.institutionId]);
+
   const handleGenerateReport = async () => {
     console.log('=== Starting report generation ===');
     console.log('Selected report type:', selectedReportType);
@@ -182,7 +189,7 @@ export default function ReportsPage() {
         institutionFilter !== ALL_INSTITUTIONS_FILTER_VALUE
       ) {
         params.append('institutionId', institutionFilter);
-      } else if (role === ROLES.HRO && user?.institutionId) {
+      } else if ((role === ROLES.HRO || role === ROLES.HRRP) && user?.institutionId) {
         params.append('institutionId', user.institutionId);
       }
 
@@ -269,7 +276,7 @@ export default function ReportsPage() {
           (i) => i.id === institutionFilter
         )?.name;
         doc.text(`Taasisi: ${instName}`, 14, 36);
-      } else if (role === ROLES.HRO && user?.institution) {
+      } else if ((role === ROLES.HRO || role === ROLES.HRRP) && user?.institution) {
         doc.text(
           `Taasisi: ${typeof user.institution === 'object' ? user.institution.name : user.institution}`,
           14,
@@ -648,21 +655,23 @@ export default function ReportsPage() {
               </Select>
             </div>
 
-            {isHigherLevelUser && (
+            {(isHigherLevelUser || role === ROLES.HRO || role === ROLES.HRRP) && (
               <div className="space-y-1 lg:col-span-2">
                 <Label htmlFor="institutionFilter">Taasisi / Wizara</Label>
                 <Select
-                  value={institutionFilter}
+                  value={institutionFilter || (user?.institutionId || '')}
                   onValueChange={setInstitutionFilter}
-                  disabled={isGenerating}
+                  disabled={isGenerating || role === ROLES.HRO || role === ROLES.HRRP}
                 >
                   <SelectTrigger id="institutionFilter">
                     <SelectValue placeholder="Chagua taasisi (si lazima)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={ALL_INSTITUTIONS_FILTER_VALUE}>
-                      Taasisi Zote
-                    </SelectItem>
+                    {isHigherLevelUser && (
+                      <SelectItem value={ALL_INSTITUTIONS_FILTER_VALUE}>
+                        Taasisi Zote
+                      </SelectItem>
+                    )}
                     {availableInstitutions.map((inst) => (
                       <SelectItem key={inst.id} value={inst.id}>
                         {inst.name}

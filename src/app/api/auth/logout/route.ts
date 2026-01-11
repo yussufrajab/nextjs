@@ -13,6 +13,15 @@ export async function POST(req: Request) {
     const sessionToken = body?.sessionToken;
     const logoutAll = body?.logoutAll || false; // Option to logout all sessions
 
+    console.log('[LOGOUT] Request:', {
+      userId,
+      hasSessionToken: !!sessionToken,
+      sessionTokenPreview: sessionToken
+        ? sessionToken.substring(0, 15) + '...'
+        : 'none',
+      logoutAll,
+    });
+
     // Terminate session(s)
     if (logoutAll && userId) {
       // Terminate all sessions for this user
@@ -23,11 +32,21 @@ export async function POST(req: Request) {
       );
     } else if (sessionToken) {
       // Terminate specific session
-      await terminateSession(sessionToken);
-      console.log(
-        '[LOGOUT] Terminated session for token:',
-        sessionToken.substring(0, 10) + '...'
-      );
+      const success = await terminateSession(sessionToken);
+      if (!success) {
+        console.error(
+          '[LOGOUT] Failed to terminate session:',
+          sessionToken.substring(0, 15) + '...'
+        );
+        // Still clear activity and return success since session might already be deleted
+      } else {
+        console.log(
+          '[LOGOUT] Successfully terminated session:',
+          sessionToken.substring(0, 15) + '...'
+        );
+      }
+    } else {
+      console.warn('[LOGOUT] No sessionToken or userId provided for logout');
     }
 
     // Clear user's activity timestamp
@@ -41,7 +60,7 @@ export async function POST(req: Request) {
       message: 'Logged out successfully',
     });
   } catch (error) {
-    console.error('[LOGOUT_POST]', error);
+    console.error('[LOGOUT_POST] Error:', error);
     return NextResponse.json(
       {
         success: false,

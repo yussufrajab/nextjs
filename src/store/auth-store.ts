@@ -80,6 +80,20 @@ export const useAuthStore = create<AuthState>()(
           const response = await apiClient.login(username, password);
           console.log('API login response received:', response);
 
+          // Check if it's a session limit error (can be in response.code or response.data.code)
+          const errorCode = (response as any).code || response.data?.code;
+          if (errorCode === 'SESSION_LIMIT_REACHED') {
+            const error: any = new Error('SESSION_LIMIT_REACHED');
+            error.activeSessions =
+              (response as any).data?.activeSessions ||
+              response.data?.data?.activeSessions ||
+              [];
+            error.userId =
+              (response as any).data?.userId ||
+              response.data?.data?.userId;
+            throw error;
+          }
+
           if (!response.success || !response.data) {
             console.error('Login failed:', response.message);
             // Throw error with the server's message so the form can display it
@@ -269,9 +283,19 @@ export const useAuthStore = create<AuthState>()(
             apiClient.setToken(token);
           }
 
-          // Extract session token from backend response
-          const sessionToken = backendResponse?.sessionToken || null;
+          // Extract session token from backend response (check both locations)
+          const sessionToken =
+            backendResponse?.sessionToken ||
+            backendResponse?.data?.sessionToken ||
+            (response as any).sessionToken ||
+            null;
           console.log('Session token:', sessionToken ? 'present' : 'missing');
+          if (sessionToken) {
+            console.log(
+              'Session token preview:',
+              sessionToken.substring(0, 15) + '...'
+            );
+          }
 
           // Extract CSRF token from backend response
           const csrfToken = backendResponse?.csrfToken || null;

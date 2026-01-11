@@ -1510,7 +1510,7 @@ export default function RetirementPage() {
         </Card>
       )}
 
-      {(role === ROLES.HHRMD || role === ROLES.HRMO || role === ROLES.CSCS) && (
+      {(role === ROLES.HHRMD || role === ROLES.HRMO || role === ROLES.CSCS || role === ROLES.HRRP) && (
         <Card className="shadow-lg">
           <CardHeader>
             <div className="flex items-center justify-between">

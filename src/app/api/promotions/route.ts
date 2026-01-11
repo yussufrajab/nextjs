@@ -332,12 +332,14 @@ export async function PATCH(req: Request) {
       updateData.status === 'Approved by Commission' &&
       updatedRequest.Employee
     ) {
+      // Use finalCadre if provided (education-based promotions), otherwise use proposedCadre (experience-based)
+      const newCadre = updatedRequest.finalCadre || updatedRequest.proposedCadre;
       await db.employee.update({
         where: { id: updatedRequest.Employee.id },
-        data: { cadre: updatedRequest.proposedCadre },
+        data: { cadre: newCadre },
       });
       console.log(
-        `Employee ${updatedRequest.Employee.name} cadre updated to "${updatedRequest.proposedCadre}" after promotion approval`
+        `Employee ${updatedRequest.Employee.name} cadre updated to "${newCadre}" after promotion approval (${updatedRequest.finalCadre ? 'finalCadre' : 'proposedCadre'})`
       );
     }
 
@@ -378,6 +380,8 @@ export async function PATCH(req: Request) {
             userAgent,
             additionalData: {
               proposedCadre: updatedRequest.proposedCadre,
+              finalCadre: updatedRequest.finalCadre,
+              promotionType: updatedRequest.promotionType,
               currentCadre: updatedRequest.Employee?.cadre,
             },
           });
@@ -398,6 +402,8 @@ export async function PATCH(req: Request) {
             userAgent,
             additionalData: {
               proposedCadre: updatedRequest.proposedCadre,
+              finalCadre: updatedRequest.finalCadre,
+              promotionType: updatedRequest.promotionType,
               currentCadre: updatedRequest.Employee?.cadre,
             },
           });

@@ -29,13 +29,25 @@ type EmployeeLoginValues = z.infer<typeof employeeLoginSchema>;
 
 export function EmployeeLoginForm() {
   const router = useRouter();
-  const { setUserManually, logout } = useAuthStore();
+  const { setUserManually } = useAuthStore();
   const [isLoading, setIsLoading] = React.useState(false);
 
-  // Logout any existing user when component mounts
+  // Clear any existing auth state when component mounts (without API call)
   React.useEffect(() => {
-    logout();
-  }, [logout]);
+    // Clear auth state locally without making API call
+    useAuthStore.setState({
+      user: null,
+      role: null,
+      isAuthenticated: false,
+      accessToken: null,
+      refreshToken: null,
+      sessionToken: null,
+      csrfToken: null,
+    });
+
+    // Clear auth cookie for middleware
+    document.cookie = 'auth-storage=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+  }, []);
 
   const form = useForm<EmployeeLoginValues>({
     resolver: zodResolver(employeeLoginSchema),
@@ -61,8 +73,32 @@ export function EmployeeLoginForm() {
       const result = await response.json();
 
       if (response.ok && result.success) {
-        // Use the auth store to set user data
-        setUserManually(result.user);
+        // Use the auth store to set user data with session and CSRF tokens
+        useAuthStore.setState({
+          user: result.user,
+          role: result.user.role,
+          isAuthenticated: true,
+          sessionToken: result.sessionToken || null,
+          csrfToken: result.csrfToken || null,
+          accessToken: null,
+          refreshToken: null,
+        });
+
+        // Set auth cookie for middleware (same format as auth-store)
+        const cookieValue = JSON.stringify({
+          state: {
+            user: {
+              id: result.user.id,
+              role: result.user.role,
+              username: result.user.username,
+            },
+            role: result.user.role,
+            isAuthenticated: true,
+          },
+        });
+        const expiryDate = new Date();
+        expiryDate.setDate(expiryDate.getDate() + 7);
+        document.cookie = `auth-storage=${encodeURIComponent(cookieValue)}; path=/; expires=${expiryDate.toUTCString()}; SameSite=Strict`;
 
         toast({
           title: 'Login Successful',

@@ -8,9 +8,29 @@ import {
   logRequestRejection,
   getClientIp,
 } from '@/lib/audit-logger';
+import { ROLES } from '@/lib/constants';
 
 // Cache configuration for confirmation requests
 const CACHE_TTL = 30; // 30 seconds cache (request status changes frequently)
+
+// Role-based authorization helper
+function checkRoleAuthorization(
+  userRole: string | null,
+  allowedRoles: readonly string[]
+): { authorized: boolean; message?: string } {
+  if (!userRole) {
+    return { authorized: false, message: 'User role is required' };
+  }
+
+  if (!allowedRoles.includes(userRole)) {
+    return {
+      authorized: false,
+      message: `Unauthorized: ${userRole} cannot perform this action. Allowed roles: ${allowedRoles.join(', ')}`,
+    };
+  }
+
+  return { authorized: true };
+}
 
 export async function GET(req: Request) {
   try {
@@ -93,6 +113,21 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     console.log('Creating confirmation request:', body);
+
+    // Authorization: Only HRO and HRRP can create confirmation requests
+    const authCheck = checkRoleAuthorization(body.userRole, [
+      'HRO' as const,
+      'HRRP' as const,
+    ]);
+    if (!authCheck.authorized) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: authCheck.message,
+        },
+        { status: 403 }
+      );
+    }
 
     // Basic validation
     if (!body.employeeId || !body.submittedById) {
@@ -207,6 +242,42 @@ export async function PATCH(req: Request) {
           message: 'Request ID is required',
         },
         { status: 400 }
+      );
+    }
+
+    // Authorization: Different roles can perform different update actions
+    // - HHRMD/HRMO: Can approve/reject (when reviewedById is present)
+    // - HRO/HRRP: Can resubmit corrected documents (when resetting to Pending status)
+    const isApprovalOrRejection = updateData.reviewedById !== undefined;
+    const isResubmission =
+      updateData.status === 'Pending HRMO/HHRMD Review' &&
+      !updateData.reviewedById;
+
+    let authCheck;
+    if (isApprovalOrRejection) {
+      // Approval/rejection action - only HHRMD/HRMO
+      authCheck = checkRoleAuthorization(body.userRole, [
+        'HHRMD' as const,
+        'HRMO' as const,
+      ]);
+    } else if (isResubmission) {
+      // Resubmission action - only HRO/HRRP
+      authCheck = checkRoleAuthorization(body.userRole, [
+        'HRO' as const,
+        'HRRP' as const,
+      ]);
+    } else {
+      // Unknown action type - deny by default
+      authCheck = { authorized: false, message: 'Invalid update action' };
+    }
+
+    if (!authCheck.authorized) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: authCheck.message,
+        },
+        { status: 403 }
       );
     }
 

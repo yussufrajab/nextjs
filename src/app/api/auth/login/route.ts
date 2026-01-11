@@ -353,15 +353,48 @@ export async function POST(req: Request) {
     // Detect suspicious login and create session
     const { detectSuspiciousLogin, getLoginSummary } =
       await import('@/lib/suspicious-login-detector');
-    const { createSession } = await import('@/lib/session-manager');
+    const { createSession, checkSessionLimit, cleanupExpiredSessions } = await import('@/lib/session-manager');
     const { createNotification: createSuspiciousNotification } =
       await import('@/lib/notifications');
+
+    // Clean up expired sessions before checking limit
+    await cleanupExpiredSessions();
 
     const suspiciousCheck = await detectSuspiciousLogin({
       userId: currentUser.id,
       ipAddress,
       userAgent,
     });
+
+    // Check if user has reached session limit
+    const sessionLimitCheck = await checkSessionLimit(currentUser.id);
+
+    if (sessionLimitCheck.isAtLimit) {
+      console.log(
+        `[LOGIN] Session limit reached for user: ${username} (${currentUser.id})`
+      );
+
+      // Return error with active sessions list
+      return NextResponse.json(
+        {
+          success: false,
+          code: 'SESSION_LIMIT_REACHED',
+          message: 'You are already signed in on 3 devices',
+          data: {
+            activeSessions: sessionLimitCheck.activeSessions.map((session) => ({
+              id: session.id,
+              deviceInfo: session.deviceInfo,
+              lastActivity: session.lastActivity,
+              ipAddress: session.ipAddress,
+              createdAt: session.createdAt,
+              isSuspicious: session.isSuspicious,
+            })),
+            userId: currentUser.id,
+          },
+        },
+        { status: 403 }
+      );
+    }
 
     // Create session with suspicious flag
     const session = await createSession(
@@ -402,9 +435,12 @@ export async function POST(req: Request) {
     // Create response with CSRF token cookie
     const response = NextResponse.json({
       success: true,
-      data: authData,
+      data: {
+        ...authData,
+        sessionToken: session.sessionToken, // Include session token in data
+      },
       passwordStatus,
-      sessionToken: session.sessionToken, // Include session token in response
+      sessionToken: session.sessionToken, // ALSO include at top level for backward compatibility
       csrfToken: signedCSRFToken, // Include CSRF token in response for client-side storage
       message: 'Login successful',
     });

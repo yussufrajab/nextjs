@@ -117,13 +117,13 @@ const ROUTE_PERMISSIONS: RoutePermission[] = [
   // Disciplinary actions - HHRMD and DO only, NOT HRMO
   {
     pattern: '/dashboard/termination',
-    allowedRoles: [ROLES.HRO, ROLES.DO, ROLES.HHRMD, ROLES.CSCS],
+    allowedRoles: [ROLES.HRO, ROLES.DO, ROLES.HHRMD, ROLES.CSCS, ROLES.HRRP],
   },
   {
     pattern: '/dashboard/dismissal',
-    allowedRoles: [ROLES.HRO, ROLES.DO, ROLES.HHRMD, ROLES.CSCS],
+    allowedRoles: [ROLES.HRO, ROLES.DO, ROLES.HHRMD, ROLES.CSCS, ROLES.HRRP],
   },
-  // Complaints - EMPLOYEE submits, DO/HHRMD handle, CSCS views
+  // Complaints - EMPLOYEE submits, DO/HHRMD handle, CSCS view
   {
     pattern: '/dashboard/complaints',
     allowedRoles: [ROLES.EMPLOYEE, ROLES.DO, ROLES.HHRMD, ROLES.CSCS],
@@ -131,7 +131,7 @@ const ROUTE_PERMISSIONS: RoutePermission[] = [
   // Institution management
   {
     pattern: '/dashboard/institutions',
-    allowedRoles: [ROLES.HHRMD, ROLES.CSCS, ROLES.DO, ROLES.HRMO, ROLES.HRRP],
+    allowedRoles: [ROLES.HHRMD, ROLES.CSCS, ROLES.DO, ROLES.HRMO],
   },
   // Profile access
   {
@@ -268,6 +268,7 @@ export function middleware(request: NextRequest) {
   // Allow access to public routes
   if (
     pathname.startsWith('/login') ||
+    pathname.startsWith('/employee-login') ||
     pathname.startsWith('/change-password-required') ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api/auth/login') ||

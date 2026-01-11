@@ -87,6 +87,7 @@ interface TrackedRequest {
 
 const ALL_INSTITUTIONS_FILTER_VALUE = '__ALL_INSTITUTIONS__';
 const ALL_STATUSES_FILTER_VALUE = '__ALL_STATUSES__';
+const ALL_REQUEST_TYPES_FILTER_VALUE = '__ALL_REQUEST_TYPES__';
 
 export default function TrackStatusPage() {
   const { user, role } = useAuth();
@@ -110,10 +111,14 @@ export default function TrackStatusPage() {
   const [zanIdFilter, setZanIdFilter] = useState('');
   const [institutionFilter, setInstitutionFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [requestTypeFilter, setRequestTypeFilter] = useState('');
   const [availableInstitutions, setAvailableInstitutions] = useState<string[]>(
     []
   );
   const [requestStatuses, setRequestStatuses] = useState<string[]>([]);
+  const [availableRequestTypes, setAvailableRequestTypes] = useState<string[]>(
+    []
+  );
 
   const [selectedRequestDetails, setSelectedRequestDetails] =
     useState<TrackedRequest | null>(null);
@@ -162,6 +167,10 @@ export default function TrackStatusPage() {
             )
           );
           setAvailableInstitutions(institutions.sort());
+          const requestTypes = Array.from(
+            new Set(data.map((req) => req.requestType))
+          ).sort();
+          setAvailableRequestTypes(requestTypes);
         } else {
           setFilteredRequests(data);
           if (data.length === 0 && searchAttempted) {
@@ -194,7 +203,7 @@ export default function TrackStatusPage() {
     if (isTableView) {
       const params = new URLSearchParams();
       params.set('limit', '100'); // Always get 100 latest requests
-      if (role === ROLES.HRO && user?.institution) {
+      if ((role === ROLES.HRO || role === ROLES.HRRP) && user?.institution) {
         params.append(
           'institutionName',
           typeof user.institution === 'object'
@@ -223,6 +232,21 @@ export default function TrackStatusPage() {
     setFilteredRequests([]);
   };
 
+  // Map display request type to API value
+  const mapRequestTypeToApiValue = (displayType: string): string => {
+    const mapping: Record<string, string> = {
+      'Promotion': 'promotion',
+      'Confirmation': 'confirmation',
+      'LWOP': 'lwop',
+      'Cadre Change': 'cadre-change',
+      'Retirement': 'retirement',
+      'Resignation': 'resignation',
+      'Service Extension': 'service-extension',
+      'Termination': 'termination',
+    };
+    return mapping[displayType] || displayType.toLowerCase().replace(/\s+/g, '-');
+  };
+
   const handleFilterRequests = () => {
     const params = new URLSearchParams();
     if (fromDateFilter) params.append('fromDate', fromDateFilter);
@@ -235,13 +259,20 @@ export default function TrackStatusPage() {
       params.append('institutionName', institutionFilter);
     if (statusFilter && statusFilter !== ALL_STATUSES_FILTER_VALUE)
       params.append('status', statusFilter);
+    if (
+      requestTypeFilter &&
+      requestTypeFilter !== ALL_REQUEST_TYPES_FILTER_VALUE
+    ) {
+      const apiValue = mapRequestTypeToApiValue(requestTypeFilter);
+      params.append('requestType', apiValue);
+    }
 
     // Always request 100 latest requests for table view
     if (isTableView) {
       params.set('limit', '100');
     }
 
-    if (role === ROLES.HRO && user?.institution) {
+    if ((role === ROLES.HRO || role === ROLES.HRRP) && user?.institution) {
       params.set(
         'institutionName',
         typeof user.institution === 'object'
@@ -382,7 +413,7 @@ export default function TrackStatusPage() {
             </CardTitle>
             <CardDescription>
               {isTableView
-                ? role === ROLES.HRO
+                ? role === ROLES.HRO || role === ROLES.HRRP
                   ? 'View the 100 latest requests submitted within your institution. Use filters to refine the list.'
                   : 'View and filter the 100 latest submitted requests. Click on a request to see details.'
                 : "Enter an employee's ZanID to view the status of their submitted requests."}
@@ -438,7 +469,7 @@ export default function TrackStatusPage() {
                   <Select
                     value={institutionFilter}
                     onValueChange={setInstitutionFilter}
-                    disabled={isSearching || role === ROLES.HRO}
+                    disabled={isSearching || role === ROLES.HRO || role === ROLES.HRRP}
                   >
                     <SelectTrigger id="institutionFilter">
                       <SelectValue placeholder="Filter by Institution" />
@@ -475,6 +506,31 @@ export default function TrackStatusPage() {
                       {requestStatuses.map((status) => (
                         <SelectItem key={status} value={status}>
                           {status}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="requestTypeFilter" className="flex items-center">
+                    <Filter className="mr-2 h-4 w-4 text-primary" />
+                    Request Type
+                  </Label>
+                  <Select
+                    value={requestTypeFilter}
+                    onValueChange={setRequestTypeFilter}
+                    disabled={isSearching}
+                  >
+                    <SelectTrigger id="requestTypeFilter">
+                      <SelectValue placeholder="Filter by Request Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={ALL_REQUEST_TYPES_FILTER_VALUE}>
+                        All Request Types
+                      </SelectItem>
+                      {availableRequestTypes.map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {type}
                         </SelectItem>
                       ))}
                     </SelectContent>

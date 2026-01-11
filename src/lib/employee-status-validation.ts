@@ -98,7 +98,7 @@ export function validateEmployeeStatusForRequest(
     const statusDisplayName = employeeStatus;
     const requestDisplayName = getRequestDisplayName(requestType);
 
-    // Special message for probation status and service extension
+    // Special messages for specific status and request type combinations
     if (
       employeeStatus === 'On Probation' &&
       requestType === 'service-extension'
@@ -107,6 +107,30 @@ export function validateEmployeeStatusForRequest(
         isValid: false,
         message:
           'Employees on probation are not eligible for service extension.',
+      };
+    }
+
+    // Specific messages for terminated employment statuses
+    if (
+      ['Retired', 'Resigned', 'Terminated', 'Dismissed'].includes(
+        employeeStatus
+      ) &&
+      requestType === 'promotion'
+    ) {
+      return {
+        isValid: false,
+        message: `Cannot submit promotion request. Employee status is "${statusDisplayName}". ${statusDisplayName} employees are not eligible for promotion.`,
+      };
+    }
+
+    // Specific messages for probation and LWOP statuses
+    if (
+      ['On Probation', 'On LWOP'].includes(employeeStatus) &&
+      requestType === 'promotion'
+    ) {
+      return {
+        isValid: false,
+        message: `Cannot submit promotion request. Employee is currently "${statusDisplayName}" and is not eligible for promotion.`,
       };
     }
 

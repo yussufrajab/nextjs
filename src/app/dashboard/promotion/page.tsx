@@ -39,6 +39,7 @@ import { ROLES } from '@/lib/constants';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import type { Employee, User, Role } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
+import { validateEmployeeStatusForRequest } from '@/lib/employee-status-validation';
 import {
   Loader2,
   Search,
@@ -51,6 +52,8 @@ import {
   RefreshCw,
   CheckCircle,
   XCircle,
+  Download,
+  Upload,
 } from 'lucide-react';
 import {
   Dialog,
@@ -77,6 +80,7 @@ interface PromotionRequest {
   createdAt: string;
 
   proposedCadre: string;
+  finalCadre?: string | null;
   promotionType: 'Experience' | 'EducationAdvancement';
   documents: string[];
   studiedOutsideCountry?: boolean | null;
@@ -128,10 +132,98 @@ export default function PromotionPage() {
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [previewObjectKey, setPreviewObjectKey] = useState<string | null>(null);
 
+  // Promotion form template state (for HHRMD upload)
+  const [templateFile, setTemplateFile] = useState<File | null>(null);
+  const [isUploadingTemplate, setIsUploadingTemplate] = useState(false);
+  const [isDownloadingTemplate, setIsDownloadingTemplate] = useState(false);
+
   // Handle file preview
   const handlePreviewFile = (objectKey: string) => {
     setPreviewObjectKey(objectKey);
     setIsPreviewModalOpen(true);
+  };
+
+  // Handle template file upload (HHRMD only)
+  const handleTemplateUpload = async () => {
+    if (!templateFile || !role || !user) return;
+
+    setIsUploadingTemplate(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', templateFile);
+      formData.append('userRole', role);
+
+      const response = await fetch('/api/promotion-form-template/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        toast({
+          title: 'Success',
+          description: 'Promotion form template uploaded successfully. HROs can now download it.',
+        });
+        setTemplateFile(null);
+      } else {
+        toast({
+          title: 'Upload Failed',
+          description: result.message || 'Failed to upload template',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Template upload error:', error);
+      toast({
+        title: 'Error',
+        description: 'An error occurred while uploading the template',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsUploadingTemplate(false);
+    }
+  };
+
+  // Handle template file download (HRO)
+  const handleTemplateDownload = async () => {
+    setIsDownloadingTemplate(true);
+    try {
+      const response = await fetch('/api/promotion-form-template/download');
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'Civil_Service_Commission_Promotion_Form.docx';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        toast({
+          title: 'Success',
+          description: 'Template downloaded successfully',
+        });
+      } else {
+        const result = await response.json();
+        toast({
+          title: 'Download Failed',
+          description: result.message || 'Template not available',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Template download error:', error);
+      toast({
+        title: 'Error',
+        description: 'An error occurred while downloading the template',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsDownloadingTemplate(false);
+    }
   };
 
   // Helper function to shorten document names for better display
@@ -161,6 +253,11 @@ export default function PromotionPage() {
   const [isEditingExistingRequest, setIsEditingExistingRequest] =
     useState(false);
   const [isCommissionRejection, setIsCommissionRejection] = useState(false);
+
+  // Commission approval modal states
+  const [isApprovalModalOpen, setIsApprovalModalOpen] = useState(false);
+  const [approvalReasonInput, setApprovalReasonInput] = useState('');
+  const [finalCadreInput, setFinalCadreInput] = useState('');
 
   const [eligibilityError, setEligibilityError] = useState<string | null>(null);
   const [hasPendingPromotion, setHasPendingPromotion] = useState(false);
@@ -278,11 +375,19 @@ export default function PromotionPage() {
     resetFormFields();
     setEligibilityError(null);
 
-    // Check eligibility
+    // Check eligibility using validation library
     let error = null;
-    if (employee.status === 'On Probation' || employee.status === 'On LWOP') {
-      error = `Employee is currently '${employee.status}' and is not eligible for promotion.`;
+
+    // First check employee status eligibility (blocks: On Probation, On LWOP, Retired, Resigned, Terminated, Dismissed)
+    const statusValidation = validateEmployeeStatusForRequest(
+      employee.status,
+      'promotion'
+    );
+
+    if (!statusValidation.isValid) {
+      error = statusValidation.message || 'Employee is not eligible for promotion.';
     } else if (employee.employmentDate) {
+      // Check years of service requirement
       const yearsOfService = differenceInYears(
         new Date(),
         parseISO(employee.employmentDate.toString())
@@ -587,26 +692,48 @@ export default function PromotionPage() {
       // Set a flag to indicate this is a commission rejection
       setIsCommissionRejection(true);
     } else {
-      // For approval, also ask for reason
-      const reason = prompt('Please provide the reason for approval:');
-      if (!reason || !reason.trim()) {
-        toast({
-          title: 'Reason Required',
-          description: 'Commission must provide a reason for the decision.',
-          variant: 'destructive',
-        });
-        return;
-      }
+      // Show approval modal to enter reason and final cadre (for education-based promotions)
+      setCurrentRequestToAction(request);
+      setApprovalReasonInput('');
+      setFinalCadreInput('');
+      setIsApprovalModalOpen(true);
+    }
+  };
 
-      const finalStatus = 'Approved by Commission';
-      const payload = {
-        status: finalStatus,
-        reviewStage: 'completed',
-        commissionDecisionReason: reason,
-      };
-      const actionDescription = `Promotion approved by Commission. Employee ${request?.Employee?.name || 'Unknown'} rank updated to "${request?.proposedCadre}".`;
+  const handleApprovalSubmit = async () => {
+    if (!currentRequestToAction || !approvalReasonInput.trim() || !user) return;
 
-      await handleUpdateRequest(requestId, payload, actionDescription);
+    // Final cadre is required for all promotion types
+    if (!finalCadreInput.trim()) {
+      toast({
+        title: 'Final Cadre Required',
+        description: 'You must specify the final cadre and rank for the promotion.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const finalStatus = 'Approved by Commission';
+    const payload: any = {
+      status: finalStatus,
+      reviewStage: 'completed',
+      commissionDecisionReason: approvalReasonInput,
+      finalCadre: finalCadreInput.trim(),
+    };
+
+    const actionDescription = `Promotion approved by Commission. Employee ${currentRequestToAction?.Employee?.name || 'Unknown'} rank updated to "${finalCadreInput.trim()}".`;
+
+    const success = await handleUpdateRequest(
+      currentRequestToAction.id,
+      payload,
+      actionDescription
+    );
+
+    if (success) {
+      setIsApprovalModalOpen(false);
+      setCurrentRequestToAction(null);
+      setApprovalReasonInput('');
+      setFinalCadreInput('');
     }
   };
 
@@ -781,6 +908,69 @@ export default function PromotionPage() {
         title="Promotion"
         description="Manage employee promotions based on experience or education."
       />
+
+      {/* HHRMD Template Upload Section */}
+      {role === ROLES.HHRMD && (
+        <Card className="mb-6 shadow-lg border-primary/20">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Upload className="h-5 w-5 text-primary" />
+              Upload Promotion Form Template
+            </CardTitle>
+            <CardDescription>
+              Upload the Civil Service Commission Promotion Form template
+              (Microsoft Word format, max 1MB). This form will be available for
+              HROs to download when submitting promotion requests.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="templateFile" className="mb-2 block">
+                Select Word Document (.doc or .docx)
+              </Label>
+              <Input
+                id="templateFile"
+                type="file"
+                accept=".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    // Validate file size
+                    if (file.size > 1024 * 1024) {
+                      toast({
+                        title: 'File Too Large',
+                        description: 'File size must be less than 1MB',
+                        variant: 'destructive',
+                      });
+                      e.target.value = '';
+                      return;
+                    }
+                    setTemplateFile(file);
+                  }
+                }}
+                disabled={isUploadingTemplate}
+              />
+              {templateFile && (
+                <p className="text-sm text-muted-foreground mt-2">
+                  Selected: {templateFile.name} (
+                  {(templateFile.size / 1024).toFixed(2)} KB)
+                </p>
+              )}
+            </div>
+            <Button
+              onClick={handleTemplateUpload}
+              disabled={!templateFile || isUploadingTemplate}
+              className="w-full sm:w-auto"
+            >
+              {isUploadingTemplate && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              {isUploadingTemplate ? 'Uploading...' : 'Upload Template'}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       {role === ROLES.HRO && (
         <Card className="mb-6 shadow-lg">
           <CardHeader>
@@ -791,6 +981,41 @@ export default function PromotionPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
+            {/* Download Template Alert */}
+            <Alert className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
+              <Download className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              <AlertTitle className="text-blue-900 dark:text-blue-100">
+                Download Promotion Form Template
+              </AlertTitle>
+              <AlertDescription className="text-blue-800 dark:text-blue-200">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-2">
+                  <p className="text-sm">
+                    Download the Civil Service Commission Promotion Form template
+                    to fill out and upload as part of your promotion request.
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleTemplateDownload}
+                    disabled={isDownloadingTemplate}
+                    className="shrink-0 border-blue-300 hover:bg-blue-100 dark:border-blue-700 dark:hover:bg-blue-900"
+                  >
+                    {isDownloadingTemplate ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Downloading...
+                      </>
+                    ) : (
+                      <>
+                        <Download className="mr-2 h-4 w-4" />
+                        Download Form
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </AlertDescription>
+            </Alert>
+
             <EmployeeSearch
               onEmployeeFound={handleEmployeeFound}
               onClear={handleClearEmployee}
@@ -1256,6 +1481,11 @@ export default function PromotionPage() {
                 <p className="text-sm text-muted-foreground">
                   Proposed Cadre: {request.proposedCadre}
                 </p>
+                {request.finalCadre && (
+                  <p className="text-sm font-medium text-green-700 dark:text-green-400">
+                    Final Cadre: {request.finalCadre}
+                  </p>
+                )}
                 <p className="text-sm text-muted-foreground">
                   Type: {request.promotionType}
                 </p>
@@ -1561,6 +1791,16 @@ export default function PromotionPage() {
                   </Label>
                   <p className="col-span-2">{selectedRequest.proposedCadre}</p>
                 </div>
+                {selectedRequest.finalCadre && (
+                  <div className="grid grid-cols-3 items-center gap-x-4 gap-y-2">
+                    <Label className="text-right font-semibold text-green-700 dark:text-green-400">
+                      Final Cadre & Rank:
+                    </Label>
+                    <p className="col-span-2 font-semibold text-green-700 dark:text-green-400">
+                      {selectedRequest.finalCadre}
+                    </p>
+                  </div>
+                )}
                 {selectedRequest.promotionType === 'EducationAdvancement' && (
                   <div className="grid grid-cols-3 items-center gap-x-4 gap-y-2">
                     <Label className="text-right font-semibold">
@@ -1764,6 +2004,106 @@ export default function PromotionPage() {
                 {isCommissionRejection
                   ? 'Submit Final Decision'
                   : 'Submit Rejection'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Commission Approval Modal */}
+      {currentRequestToAction && currentRequestToAction.Employee && (
+        <Dialog
+          open={isApprovalModalOpen}
+          onOpenChange={(open) => {
+            setIsApprovalModalOpen(open);
+            if (!open) {
+              setCurrentRequestToAction(null);
+              setApprovalReasonInput('');
+              setFinalCadreInput('');
+            }
+          }}
+        >
+          <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Commission Decision: Approval</DialogTitle>
+              <DialogDescription>
+                Approve the promotion request for{' '}
+                <strong>{currentRequestToAction.Employee.name}</strong> (
+                {currentRequestToAction.promotionType === 'Experience'
+                  ? 'Experience-based'
+                  : 'Education-based'}{' '}
+                promotion). This decision is final.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4 space-y-4">
+              <div>
+                <Label htmlFor="approvalReason" className="mb-2 block">
+                  Approval Reason <span className="text-destructive">*</span>
+                </Label>
+                <Textarea
+                  id="approvalReason"
+                  placeholder="Enter Commission's approval reason..."
+                  value={approvalReasonInput}
+                  onChange={(e) => setApprovalReasonInput(e.target.value)}
+                  rows={4}
+                />
+              </div>
+
+              {/* Show proposed cadre for reference (experience-based only) */}
+              {currentRequestToAction.promotionType === 'Experience' && (
+                <div>
+                  <Label className="mb-2 block">
+                    Proposed Cadre (from HRO submission)
+                  </Label>
+                  <Input
+                    value={currentRequestToAction.proposedCadre}
+                    disabled
+                    className="bg-muted"
+                  />
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Reference only. You must specify the final cadre below.
+                  </p>
+                </div>
+              )}
+
+              {/* Final Cadre input - required for all promotion types */}
+              <div>
+                <Label htmlFor="finalCadre" className="mb-2 block">
+                  Final Cadre and Rank{' '}
+                  <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="finalCadre"
+                  placeholder="e.g., Principal Officer Grade II"
+                  value={finalCadreInput}
+                  onChange={(e) => setFinalCadreInput(e.target.value)}
+                />
+                <p className="text-sm text-muted-foreground mt-2">
+                  Specify the final cadre and rank that will be assigned to the
+                  employee upon approval.
+                </p>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsApprovalModalOpen(false);
+                  setCurrentRequestToAction(null);
+                  setApprovalReasonInput('');
+                  setFinalCadreInput('');
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="bg-green-600 hover:bg-green-700"
+                onClick={handleApprovalSubmit}
+                disabled={
+                  !approvalReasonInput.trim() || !finalCadreInput.trim()
+                }
+              >
+                Approve & Submit Final Decision
               </Button>
             </DialogFooter>
           </DialogContent>

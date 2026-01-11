@@ -60,10 +60,12 @@ export async function GET(req: Request) {
         );
       }
 
-      // Map EmployeeCertificate to certificates
+      // Map EmployeeCertificate to certificates and Institution to institution
       const mappedEmployee = {
         ...employee,
+        institution: employee.Institution,
         certificates: employee.EmployeeCertificate,
+        Institution: undefined,
         EmployeeCertificate: undefined,
       };
 
@@ -173,10 +175,12 @@ export async function GET(req: Request) {
 
     console.log(`Found ${employees.length} employees out of ${total} total`);
 
-    // Map EmployeeCertificate to certificates to match TypeScript interface
+    // Map EmployeeCertificate to certificates and Institution to institution to match TypeScript interface
     const mappedEmployees = employees.map((emp) => ({
       ...emp,
+      institution: emp.Institution,
       certificates: emp.EmployeeCertificate,
+      Institution: undefined,
       EmployeeCertificate: undefined,
     }));
 
