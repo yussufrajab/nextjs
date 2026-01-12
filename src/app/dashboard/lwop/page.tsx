@@ -1335,9 +1335,7 @@ export default function LwopPage() {
                         Institution:
                       </Label>
                       <p className="col-span-2 font-medium text-foreground">
-                        {selectedEmployeeData?.institution?.name ||
-                          selectedEmployeeData?.institution?.name ||
-                          'N/A'}
+                        {selectedEmployeeData?.Institution?.name || 'N/A'}
                       </p>
                     </div>
                   </div>

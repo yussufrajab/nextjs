@@ -147,7 +147,10 @@
       "Bash(cd:*)",
       "Bash(jq:*)",
       "Bash(npm run test:e2e:*)",
-      "Bash(DATABASE_URL=\"postgresql://postgres:Mamlaka2020@localhost:5432/csms_test?schema=public\" npx prisma db push:*)"
+      "Bash(DATABASE_URL=\"postgresql://postgres:Mamlaka2020@localhost:5432/csms_test?schema=public\" npx prisma db push:*)",
+      "Bash(psql:*)",
+      "Bash(PORT=9002 npm run build:*)",
+      "Bash(jobs)"
     ],
     "deny": []
   }

@@ -104,6 +104,7 @@ export interface Employee {
   ministry?: string | null;
   institutionId?: string;
   institution?: string | { name: string };
+  Institution?: { id: string; name: string }; // API returns this (capital I)
   department?: string | null;
   appointmentType?: string | null;
   contractType?: string | null;

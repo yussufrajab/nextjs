@@ -1378,6 +1378,13 @@ export default function RetirementPage() {
                 <p className="text-sm text-muted-foreground">
                   Type: {request.retirementType}
                 </p>
+                {request.retirementType?.toLowerCase() === 'illness' &&
+                  request.illnessDescription && (
+                    <p className="text-sm text-muted-foreground">
+                      <span className="font-medium">Type of Illness:</span>{' '}
+                      {request.illnessDescription}
+                    </p>
+                  )}
                 <p className="text-sm text-muted-foreground">
                   Proposed Date:{' '}
                   {request.proposedDate
@@ -1585,6 +1592,13 @@ export default function RetirementPage() {
                   <p className="text-sm text-muted-foreground">
                     Type: {request.retirementType}
                   </p>
+                  {request.retirementType?.toLowerCase() === 'illness' &&
+                    request.illnessDescription && (
+                      <p className="text-sm text-muted-foreground">
+                        <span className="font-medium">Type of Illness:</span>{' '}
+                        {request.illnessDescription}
+                      </p>
+                    )}
                   <p className="text-sm text-muted-foreground">
                     Proposed Date:{' '}
                     {request.proposedDate
@@ -1866,7 +1880,7 @@ export default function RetirementPage() {
                     Institution:
                   </Label>
                   <p className="col-span-2 font-medium text-foreground">
-                    {selectedEmployeeData?.institution?.name || 'N/A'}
+                    {selectedEmployeeData?.Institution?.name || 'N/A'}
                   </p>
                 </div>
               </div>
@@ -1880,7 +1894,7 @@ export default function RetirementPage() {
                   </Label>
                   <p className="col-span-2">{selectedRequest.retirementType}</p>
                 </div>
-                {selectedRequest.retirementType === 'Illness' &&
+                {selectedRequest.retirementType?.toLowerCase() === 'illness' &&
                   selectedRequest.illnessDescription && (
                     <div className="grid grid-cols-3 items-start gap-x-4 gap-y-2">
                       <Label className="text-right font-semibold pt-1">

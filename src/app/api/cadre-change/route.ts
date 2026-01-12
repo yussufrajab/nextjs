@@ -112,10 +112,10 @@ export async function POST(req: Request) {
       );
     }
 
-    // Get employee details to check status
+    // Get employee details to check status and get current cadre
     const employee = await db.employee.findUnique({
       where: { id: body.employeeId },
-      select: { id: true, name: true, status: true },
+      select: { id: true, name: true, status: true, cadre: true },
     });
 
     if (!employee) {
@@ -148,6 +148,7 @@ export async function POST(req: Request) {
         id: uuidv4(),
         employeeId: body.employeeId,
         submittedById: body.submittedById,
+        originalCadre: employee.cadre, // Store original cadre before change
         newCadre: body.newCadre,
         reason: body.reason,
         studiedOutsideCountry: body.studiedOutsideCountry || false,

@@ -119,7 +119,7 @@ export function validateEmployeeStatusForRequest(
     ) {
       return {
         isValid: false,
-        message: `Cannot submit promotion request. Employee status is "${statusDisplayName}". ${statusDisplayName} employees are not eligible for promotion.`,
+        message: `Cannot submit Promotion request. Employee status is "${statusDisplayName}". ${statusDisplayName} employees are not eligible for Promotion.`,
       };
     }
 
@@ -130,7 +130,20 @@ export function validateEmployeeStatusForRequest(
     ) {
       return {
         isValid: false,
-        message: `Cannot submit promotion request. Employee is currently "${statusDisplayName}" and is not eligible for promotion.`,
+        message: `Cannot submit Promotion request. Employee is currently "${statusDisplayName}" and is not eligible for Promotion.`,
+      };
+    }
+
+    // Specific messages for terminated employment statuses and cadre change
+    if (
+      ['Retired', 'Resigned', 'Terminated', 'Dismissed'].includes(
+        employeeStatus
+      ) &&
+      requestType === 'cadre-change'
+    ) {
+      return {
+        isValid: false,
+        message: `Cannot submit Cadre Change request. Employee status is "${statusDisplayName}". ${statusDisplayName} employees are not eligible for Cadre Change.`,
       };
     }
 

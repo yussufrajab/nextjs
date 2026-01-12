@@ -12,6 +12,7 @@ model CadreChangeRequest {
   id                                          String   @id
   status                                      String
   reviewStage                                 String
+  originalCadre                               String?
   newCadre                                    String
   reason                                      String?
   studiedOutsideCountry                       Boolean?

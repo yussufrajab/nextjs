@@ -46,6 +46,7 @@ import { apiClient } from '@/lib/api-client';
 import { FilePreviewModal } from '@/components/ui/file-preview-modal';
 import { useAuthStore } from '@/store/auth-store';
 import { EmployeeSearch } from '@/components/shared/employee-search';
+import { validateEmployeeStatusForRequest } from '@/lib/employee-status-validation';
 
 interface CadreChangeRequest {
   id: string;
@@ -59,6 +60,7 @@ interface CadreChangeRequest {
   rejectionReason?: string | null;
   createdAt: string;
 
+  originalCadre?: string | null;
   newCadre: string;
   reason?: string | null;
   documents: string[];
@@ -257,9 +259,17 @@ export default function CadreChangePage() {
     setEligibilityError(null);
 
     let error = null;
-    if (employee.status === 'On Probation' || employee.status === 'On LWOP') {
-      error = `Employee is currently '${employee.status}' and is not eligible for a cadre change.`;
+
+    // Validate employee status using the validation utility
+    const statusValidation = validateEmployeeStatusForRequest(
+      employee.status,
+      'cadre-change'
+    );
+
+    if (!statusValidation.isValid) {
+      error = statusValidation.message;
     } else if (employee.employmentDate) {
+      // Check years of service requirement (only if status is valid)
       const employmentDate =
         typeof employee.employmentDate === 'string'
           ? parseISO(employee.employmentDate)
@@ -921,7 +931,12 @@ export default function CadreChangePage() {
                       )}
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      From Cadre: {employeeData?.cadre}
+                      From Cadre:{' '}
+                      {request.originalCadre ||
+                        (request.status.includes('Approved by Commission') ||
+                        request.status.includes('Rejected by Commission')
+                          ? '(Original cadre not recorded)'
+                          : employeeData?.cadre || 'N/A')}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       To Cadre: {request.newCadre}
@@ -1130,7 +1145,12 @@ export default function CadreChangePage() {
                       )}
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      From Cadre: {employeeData?.cadre}
+                      From Cadre:{' '}
+                      {request.originalCadre ||
+                        (request.status.includes('Approved by Commission') ||
+                        request.status.includes('Rejected by Commission')
+                          ? '(Original cadre not recorded)'
+                          : employeeData?.cadre || 'N/A')}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       To Cadre: {request.newCadre}
@@ -1421,10 +1441,10 @@ export default function CadreChangePage() {
                         Institution:
                       </Label>
                       <p className="col-span-2 font-medium text-foreground">
-                        {selectedEmployeeData?.institution
-                          ? typeof selectedEmployeeData.institution === 'string'
-                            ? selectedEmployeeData.institution
-                            : selectedEmployeeData.institution.name
+                        {selectedEmployeeData?.Institution
+                          ? typeof selectedEmployeeData.Institution === 'string'
+                            ? selectedEmployeeData.Institution
+                            : selectedEmployeeData.Institution.name
                           : 'N/A'}
                       </p>
                     </div>
