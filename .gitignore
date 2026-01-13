@@ -58,3 +58,15 @@ beky5/*.sql
 
 # Response data files (test data)
 src/app/dashboard/profile/*.json
+
+# Database backup files
+*.backup
+*.zip
+*.tar.gz
+beky2a/database/*.sql
+beky2a/database/*.backup
+beky3a/database/*.sql
+beky3a/database/*.backup
+
+# Log files
+logs/*.log

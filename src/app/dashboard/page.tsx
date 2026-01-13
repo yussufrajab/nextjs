@@ -15,7 +15,9 @@ import {
   UserMinus,
   UserX,
   CalendarPlus,
+  Activity,
 } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
 
 import { PageHeader } from '@/components/shared/page-header';
 import {
@@ -59,6 +61,7 @@ interface RecentActivity {
   employee: string;
   status: string;
   href: string;
+  updatedAt: string;
 }
 
 const getStatusVariant = (status: string) => {
@@ -69,6 +72,41 @@ const getStatusVariant = (status: string) => {
     return 'default';
   if (status.toLowerCase().includes('rejected')) return 'destructive';
   return 'secondary';
+};
+
+const getActivityIcon = (type: string) => {
+  switch (type) {
+    case 'Confirmation':
+      return <UserCheck className="h-4 w-4 text-muted-foreground" />;
+    case 'Promotion':
+      return <TrendingUp className="h-4 w-4 text-muted-foreground" />;
+    case 'LWOP':
+      return <CalendarOff className="h-4 w-4 text-muted-foreground" />;
+    case 'Complaint':
+      return <MessageSquareWarning className="h-4 w-4 text-muted-foreground" />;
+    case 'Termination':
+    case 'Dismissal':
+      return <ShieldAlert className="h-4 w-4 text-muted-foreground" />;
+    case 'Change of Cadre':
+      return <Replace className="h-4 w-4 text-muted-foreground" />;
+    case 'Retirement':
+      return <UserMinus className="h-4 w-4 text-muted-foreground" />;
+    case 'Resignation':
+      return <UserX className="h-4 w-4 text-muted-foreground" />;
+    case 'Service Extension':
+      return <CalendarPlus className="h-4 w-4 text-muted-foreground" />;
+    default:
+      return <Activity className="h-4 w-4 text-muted-foreground" />;
+  }
+};
+
+const formatActivityDate = (dateString: string) => {
+  try {
+    const date = new Date(dateString);
+    return formatDistanceToNow(date, { addSuffix: true });
+  } catch {
+    return 'Unknown date';
+  }
 };
 
 const DashboardSkeleton = () => (
@@ -533,35 +571,50 @@ export default function DashboardPage() {
                   <TableRow>
                     <TableHead>Request ID</TableHead>
                     <TableHead>Type</TableHead>
-                    <TableHead>Employee</TableHead>
-                    <TableHead className="text-right">Status</TableHead>
+                    <TableHead>Employee/User</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Activity Date</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {Array.isArray(recentActivities) &&
                   recentActivities.length > 0 ? (
                     recentActivities.map((activity) => (
-                      <TableRow key={activity.id}>
+                      <TableRow
+                        key={activity.id}
+                        className="cursor-pointer hover:bg-accent/50 transition-colors"
+                        onClick={() => router.push(activity.href)}
+                      >
                         <TableCell>
-                          <Link href={activity.href} passHref legacyBehavior>
-                            <a className="font-medium text-primary hover:underline">
-                              {activity.id}
-                            </a>
+                          <Link
+                            href={activity.href}
+                            className="font-medium text-primary hover:underline"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {activity.id}
                           </Link>
                         </TableCell>
-                        <TableCell>{activity.type}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {getActivityIcon(activity.type)}
+                            <span className="font-medium">{activity.type}</span>
+                          </div>
+                        </TableCell>
                         <TableCell>{activity.employee}</TableCell>
-                        <TableCell className="text-right">
+                        <TableCell>
                           <Badge variant={getStatusVariant(activity.status)}>
                             {activity.status}
                           </Badge>
+                        </TableCell>
+                        <TableCell className="text-right text-muted-foreground text-sm">
+                          {formatActivityDate(activity.updatedAt)}
                         </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
                       <TableCell
-                        colSpan={4}
+                        colSpan={5}
                         className="text-center text-muted-foreground"
                       >
                         No recent activities to display.

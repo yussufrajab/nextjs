@@ -233,7 +233,7 @@ export async function POST(req: Request) {
 export async function PATCH(req: Request) {
   try {
     const body = await req.json();
-    const { id, ...updateData } = body;
+    const { id, userRole, ...updateData } = body;
 
     if (!id) {
       return NextResponse.json(
@@ -256,13 +256,13 @@ export async function PATCH(req: Request) {
     let authCheck;
     if (isApprovalOrRejection) {
       // Approval/rejection action - only HHRMD/HRMO
-      authCheck = checkRoleAuthorization(body.userRole, [
+      authCheck = checkRoleAuthorization(userRole, [
         'HHRMD' as const,
         'HRMO' as const,
       ]);
     } else if (isResubmission) {
       // Resubmission action - only HRO/HRRP
-      authCheck = checkRoleAuthorization(body.userRole, [
+      authCheck = checkRoleAuthorization(userRole, [
         'HRO' as const,
         'HRRP' as const,
       ]);

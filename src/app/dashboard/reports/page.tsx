@@ -115,6 +115,14 @@ export default function ReportsPage() {
     [role]
   );
 
+  // Filter report types based on role - exclude complaints for HRO and HRRP
+  const availableReportTypes = useMemo(() => {
+    if (role === ROLES.HRO || role === ROLES.HRRP) {
+      return REPORT_TYPES.filter((rt) => rt.value !== 'complaints');
+    }
+    return REPORT_TYPES;
+  }, [role]);
+
   useEffect(() => {
     const fetchInstitutions = async () => {
       console.log('=== Fetching institutions ===');
@@ -184,6 +192,7 @@ export default function ReportsPage() {
       });
       if (fromDate) params.append('fromDate', fromDate);
       if (toDate) params.append('toDate', toDate);
+      if (role) params.append('userRole', role);
       if (
         institutionFilter &&
         institutionFilter !== ALL_INSTITUTIONS_FILTER_VALUE
@@ -646,7 +655,7 @@ export default function ReportsPage() {
                   <SelectValue placeholder="Chagua aina ya ripoti" />
                 </SelectTrigger>
                 <SelectContent>
-                  {REPORT_TYPES.map((rt) => (
+                  {availableReportTypes.map((rt) => (
                     <SelectItem key={rt.value} value={rt.value}>
                       {rt.label}
                     </SelectItem>

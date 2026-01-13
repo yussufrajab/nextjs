@@ -135,6 +135,7 @@ export default function ComplaintsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [hasUsedAI, setHasUsedAI] = useState(false);
 
   // File preview state
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
@@ -279,10 +280,11 @@ export default function ComplaintsPage() {
       form.setValue('complaintText', result.rewrittenComplaint, {
         shouldValidate: true,
       });
+      setHasUsedAI(true);
       toast({
         title: 'Lalamiko Limeboreshwa',
         description:
-          'AI imeandika upya maelezo ya lalamiko lako kwa uwazi na utimilifu. Yamesasishwa kwenye fomu.',
+          'AI imeandika upya maelezo ya lalamiko lako kwa uwazi na utimilifu. Yamesasishwa kwenye fomu. Sasa unaweza kuwasilisha lalamiko.',
       });
     } catch (error) {
       console.error('AI Rewrite Error:', error);
@@ -336,6 +338,7 @@ export default function ComplaintsPage() {
       // Reset form after successful submission
       form.reset();
       setRewrittenComplaint(null);
+      setHasUsedAI(false);
       setComplaintLetterFile('');
       setEvidenceFile('');
     } catch (error) {
@@ -1231,9 +1234,9 @@ export default function ComplaintsPage() {
                             rows={6}
                           />
                         </FormControl>
-                        <p className="text-sm text-muted-foreground pt-1">
-                          Unaweza kutumia zana ya AI hapo chini kusaidia
-                          kuboresha maelezo yako kwa uwazi na utimilifu.
+                        <p className="text-sm text-amber-600 dark:text-amber-500 pt-1 font-medium">
+                          Lazima utumie zana ya AI hapo chini kuboresha
+                          maelezo yako kabla ya kuwasilisha.
                         </p>
                         <FormMessage />
                       </FormItem>
@@ -1372,20 +1375,21 @@ export default function ComplaintsPage() {
                   <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 pt-2">
                     <Button
                       type="button"
-                      variant="outline"
+                      variant={hasUsedAI ? "outline" : "default"}
                       onClick={handleStandardizeComplaint}
                       disabled={isRewriting}
+                      className={!hasUsedAI ? "ring-2 ring-primary ring-offset-2" : ""}
                     >
                       {isRewriting ? (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       ) : (
                         <Edit3 className="mr-2 h-4 w-4" />
                       )}
-                      Boresha Maelezo kwa AI
+                      {hasUsedAI ? "Boresha Tena kwa AI" : "Boresha Maelezo kwa AI"}
                     </Button>
                     <Button
                       type="submit"
-                      disabled={isRewriting || isSubmitting}
+                      disabled={isRewriting || isSubmitting || !hasUsedAI}
                     >
                       {isSubmitting ? (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -1395,6 +1399,12 @@ export default function ComplaintsPage() {
                       Wasilisha Lalamiko
                     </Button>
                   </div>
+                  {!hasUsedAI && (
+                    <p className="text-sm text-amber-600 dark:text-amber-500 mt-2 flex items-center">
+                      <Info className="mr-2 h-4 w-4" />
+                      Tafadhali tumia AI kuboresha maelezo yako kabla ya kuwasilisha.
+                    </p>
+                  )}
                 </form>
               </Form>
               {rewrittenComplaint && !isRewriting && (

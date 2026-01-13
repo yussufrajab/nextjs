@@ -1,0 +1,85 @@
+================================================================================
+CSMS DATABASE BACKUP (WITHOUT EMPLOYEE DATA)
+================================================================================
+
+Backup Date:     Tue Jan 13 07:54:50 PM UTC 2026
+Database:        nody
+Server:          localhost:5432
+Backup Type:     Sanitized (No Employee Data)
+
+================================================================================
+WHAT'S INCLUDED
+================================================================================
+
+✓ Complete database schema (all table structures)
+✓ User data (47 users)
+✓ Institution data (72 institutions)
+✓ Audit logs
+✓ Notifications
+✓ Sessions
+
+================================================================================
+WHAT'S EXCLUDED
+================================================================================
+
+✗ Employee records (34413 employees excluded)
+✗ Employee certificates
+✗ HR requests (promotions, confirmations, LWOP, etc.)
+✗ Cadre change requests
+✗ Retirement requests
+✗ Resignation requests
+✗ Service extension requests
+✗ Termination requests
+✗ Separation requests
+✗ Complaints
+
+================================================================================
+PURPOSE
+================================================================================
+
+This sanitized backup is intended for:
+  - Development environments
+  - Testing environments
+  - Training environments
+  - Situations where employee PII should not be present
+
+================================================================================
+RESTORE INSTRUCTIONS
+================================================================================
+
+Using the restore script (Recommended):
+  cd /home/latest/beky2a/scripts
+  ./restore-database-no-employees.sh
+
+Manual restore:
+  # Drop existing database (if needed)
+  psql -U postgres -c "DROP DATABASE IF EXISTS nody;"
+
+  # Create fresh database
+  psql -U postgres -c "CREATE DATABASE nody;"
+
+  # Restore backup
+  psql -U postgres -d nody -f nody_no_employees_20260113_195449.sql
+
+================================================================================
+BACKUP FILES
+================================================================================
+
+Main backup file:
+  nody_no_employees_20260113_195449.sql
+
+Information file:
+  nody_no_employees_20260113_195449_info.txt
+
+================================================================================
+SECURITY NOTE
+================================================================================
+
+This backup still contains sensitive data including:
+  - User credentials (hashed passwords)
+  - Audit logs (may contain PII)
+  - Institution information
+
+Handle with appropriate security measures.
+
+================================================================================

@@ -677,12 +677,14 @@ export async function GET(req: Request) {
     const fromDate = searchParams.get('fromDate');
     const toDate = searchParams.get('toDate');
     const institutionId = searchParams.get('institutionId');
+    const userRole = searchParams.get('userRole');
 
     console.log('Reports API called with:', {
       reportType,
       fromDate,
       toDate,
       institutionId,
+      userRole,
     });
 
     if (!reportType) {
@@ -692,6 +694,17 @@ export async function GET(req: Request) {
           message: 'Report type is required',
         },
         { status: 400 }
+      );
+    }
+
+    // Block complaint reports for HRO and HRRP roles
+    if (reportType === 'complaints' && (userRole === 'HRO' || userRole === 'HRRP')) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Access denied: Complaint reports are restricted to CSC roles only.',
+        },
+        { status: 403 }
       );
     }
 

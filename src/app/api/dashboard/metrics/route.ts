@@ -3,27 +3,27 @@ import { db } from '@/lib/db';
 import { ROLES } from '@/lib/constants';
 import { shouldApplyInstitutionFilter, isCSCRole } from '@/lib/role-utils';
 
-const getRequestHref = (type: string) => {
+const getRequestHref = (type: string, id: string) => {
   switch (type) {
     case 'Confirmation':
-      return '/dashboard/confirmation';
+      return `/dashboard/confirmation?id=${id}`;
     case 'Promotion':
-      return '/dashboard/promotion';
+      return `/dashboard/promotion?id=${id}`;
     case 'LWOP':
-      return '/dashboard/lwop';
+      return `/dashboard/lwop?id=${id}`;
     case 'Complaint':
-      return '/dashboard/complaints';
+      return `/dashboard/complaints?id=${id}`;
     case 'Retirement':
-      return '/dashboard/retirement';
+      return `/dashboard/retirement?id=${id}`;
     case 'Resignation':
-      return '/dashboard/resignation';
+      return `/dashboard/resignation?id=${id}`;
     case 'Service Extension':
-      return '/dashboard/service-extension';
+      return `/dashboard/service-extension?id=${id}`;
     case 'Termination':
     case 'Dismissal':
-      return '/dashboard/termination';
+      return `/dashboard/termination?id=${id}`;
     case 'Change of Cadre':
-      return '/dashboard/cadre-change';
+      return `/dashboard/cadre-change?id=${id}`;
     default:
       return '/dashboard';
   }
@@ -117,6 +117,7 @@ export async function GET(req: Request) {
     const getConfirmationStatuses = (role: string | null) => {
       switch (role) {
         case 'HRO':
+        case 'HRRP':
           return ['Pending HRMO Review', 'Pending HRMO/HHRMD Review'];
         case 'HHRMD':
           return ['Pending HRMO/HHRMD Review'];
@@ -135,6 +136,7 @@ export async function GET(req: Request) {
     const getPromotionStatuses = (role: string | null) => {
       switch (role) {
         case 'HRO':
+        case 'HRRP':
           return [
             'Pending HRMO Review',
             'Pending HRMO/HHRMD Review',
@@ -158,6 +160,7 @@ export async function GET(req: Request) {
     const getTerminationStatuses = (role: string | null) => {
       switch (role) {
         case 'HRO':
+        case 'HRRP':
           return [
             'Pending DO/HHRMD Review',
             'Rejected by HHRMD - Awaiting HRO Correction',
@@ -179,6 +182,7 @@ export async function GET(req: Request) {
     const getCadreChangeStatuses = (role: string | null) => {
       switch (role) {
         case 'HRO':
+        case 'HRRP':
           return [
             'Pending HRMO Review',
             'Pending HRMO/HHRMD Review',
@@ -201,6 +205,7 @@ export async function GET(req: Request) {
     const getRetirementStatuses = (role: string | null) => {
       switch (role) {
         case 'HRO':
+        case 'HRRP':
           return [
             'Pending HRMO Review',
             'Pending HRMO/HHRMD Review',
@@ -225,6 +230,7 @@ export async function GET(req: Request) {
     const getResignationStatuses = (role: string | null) => {
       switch (role) {
         case 'HRO':
+        case 'HRRP':
           return [
             'Pending HRMO/HHRMD Review',
             'Rejected by HHRMD - Awaiting HRO Action',
@@ -245,6 +251,7 @@ export async function GET(req: Request) {
     const getServiceExtensionStatuses = (role: string | null) => {
       switch (role) {
         case 'HRO':
+        case 'HRRP':
           return [
             'Pending HRMO/HHRMD Review',
             'Rejected by HHRMD - Awaiting HRO Correction',
@@ -677,7 +684,7 @@ export async function GET(req: Request) {
       .slice(skip, skip + limit)
       .map((activity) => ({
         ...activity,
-        href: getRequestHref(activity.type),
+        href: getRequestHref(activity.type, activity.id),
       }));
 
     const stats = {

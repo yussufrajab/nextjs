@@ -98,6 +98,54 @@ export async function POST(req: Request) {
       password,
     } = userSchema.parse(body);
 
+    // Check for duplicate username
+    const existingUsername = await db.user.findUnique({
+      where: { username },
+    });
+    if (existingUsername) {
+      return NextResponse.json(
+        {
+          error: 'Duplicate entry',
+          message:
+            'This username is already taken. Please choose a different username.',
+          field: 'username',
+        },
+        { status: 409 }
+      );
+    }
+
+    // Check for duplicate email
+    const existingEmail = await db.user.findFirst({
+      where: { email },
+    });
+    if (existingEmail) {
+      return NextResponse.json(
+        {
+          error: 'Duplicate entry',
+          message:
+            'This email address is already registered. Please use a different email.',
+          field: 'email',
+        },
+        { status: 409 }
+      );
+    }
+
+    // Check for duplicate phone number
+    const existingPhone = await db.user.findFirst({
+      where: { phoneNumber },
+    });
+    if (existingPhone) {
+      return NextResponse.json(
+        {
+          error: 'Duplicate entry',
+          message:
+            'This phone number is already registered. Please use a different phone number.',
+          field: 'phoneNumber',
+        },
+        { status: 409 }
+      );
+    }
+
     // Hash the password (provided by admin as temporary password)
     const hashedPassword = await hashPassword(password);
 
@@ -141,12 +189,68 @@ export async function POST(req: Request) {
     return NextResponse.json(response, { status: 201 });
   } catch (error) {
     console.error('[USERS_POST]', error);
+
+    // Handle Zod validation errors with user-friendly messages
     if (error instanceof z.ZodError) {
-      return new NextResponse(JSON.stringify(error.errors), { status: 400 });
+      const validationErrors = error.errors.map((err) => {
+        const field = err.path.join('.');
+        return {
+          field,
+          message: err.message,
+        };
+      });
+
+      return NextResponse.json(
+        {
+          error: 'Validation failed',
+          message: 'Please check the following errors and try again.',
+          validationErrors,
+        },
+        { status: 400 }
+      );
     }
+
+    // Handle Prisma unique constraint violations (P2002)
     if ((error as any).code === 'P2002') {
-      return new NextResponse('Username already exists', { status: 409 });
+      const target = (error as any).meta?.target;
+      let message = 'A user with this information already exists.';
+      let field = 'unknown';
+
+      // Determine which field caused the duplicate
+      if (Array.isArray(target)) {
+        if (target.includes('username')) {
+          field = 'username';
+          message =
+            'This username is already taken. Please choose a different username.';
+        } else if (target.includes('email')) {
+          field = 'email';
+          message =
+            'This email address is already registered. Please use a different email.';
+        } else if (target.includes('phoneNumber')) {
+          field = 'phoneNumber';
+          message =
+            'This phone number is already registered. Please use a different phone number.';
+        }
+      }
+
+      return NextResponse.json(
+        {
+          error: 'Duplicate entry',
+          message,
+          field,
+        },
+        { status: 409 }
+      );
     }
-    return new NextResponse('Internal Server Error', { status: 500 });
+
+    // Handle other errors
+    return NextResponse.json(
+      {
+        error: 'Internal server error',
+        message:
+          'An unexpected error occurred while creating the user. Please try again later.',
+      },
+      { status: 500 }
+    );
   }
 }
