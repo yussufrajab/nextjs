@@ -147,9 +147,9 @@ model EmployeeCertificate {
 model Institution {
   id          String     @id
   name        String     @unique
-  email       String?
+  email       String?    @unique
   phoneNumber String?
-  voteNumber  String?
+  voteNumber  String?    @unique
   tinNumber   String?    @unique
   Employee    Employee[]
   User        User[]

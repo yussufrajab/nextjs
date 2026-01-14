@@ -87,8 +87,10 @@ export function LoginForm() {
           title: 'Login Successful',
           description: `Welcome back, ${user.name}!`,
         });
-        if (user.role === ROLES.EMPLOYEE || user.role === ROLES.PO) {
+        if (user.role === ROLES.EMPLOYEE) {
           router.push('/dashboard/profile');
+        } else if (user.role === ROLES.PO) {
+          router.push('/dashboard/reports');
         } else {
           router.push('/dashboard');
         }

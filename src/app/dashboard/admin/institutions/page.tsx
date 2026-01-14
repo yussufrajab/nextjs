@@ -19,10 +19,21 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import {
   Form,
   FormControl,
@@ -79,6 +90,10 @@ export default function InstitutionManagementPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [institutionToDelete, setInstitutionToDelete] =
+    useState<Institution | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -175,9 +190,22 @@ export default function InstitutionManagementPage() {
     setEditingInstitution(null);
   };
 
-  const handleDelete = async (id: string) => {
+  const openDeleteDialog = (institution: Institution) => {
+    setInstitutionToDelete(institution);
+    setDeleteDialogOpen(true);
+  };
+
+  const closeDeleteDialog = () => {
+    setDeleteDialogOpen(false);
+    setInstitutionToDelete(null);
+  };
+
+  const handleDelete = async () => {
+    if (!institutionToDelete) return;
+
+    setIsDeleting(true);
     try {
-      const response = await apiClient.deleteInstitution(id);
+      const response = await apiClient.deleteInstitution(institutionToDelete.id);
       if (!response.success) {
         throw new Error(response.message || 'Failed to delete institution');
       }
@@ -187,12 +215,15 @@ export default function InstitutionManagementPage() {
         variant: 'default',
       });
       await fetchInstitutions(); // Re-fetch list
+      closeDeleteDialog();
     } catch (error: any) {
       toast({
         title: 'Deletion Failed',
         description: error.message,
         variant: 'destructive',
       });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -443,7 +474,7 @@ export default function InstitutionManagementPage() {
                         <Button
                           variant="destructive"
                           size="icon"
-                          onClick={() => handleDelete(inst.id)}
+                          onClick={() => openDeleteDialog(inst)}
                         >
                           <Trash2 className="h-4 w-4" />
                           <span className="sr-only">Delete</span>
@@ -563,6 +594,39 @@ export default function InstitutionManagementPage() {
           </Form>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Institution</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete{' '}
+              <span className="font-semibold">
+                {institutionToDelete?.name}
+              </span>
+              ? This action cannot be undone. All associated data may be
+              affected.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

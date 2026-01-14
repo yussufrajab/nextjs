@@ -657,8 +657,8 @@ export default function UserManagementPage() {
         </Card>
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
+          <DialogContent className="max-h-[90vh] flex flex-col">
+            <DialogHeader className="flex-shrink-0">
               <DialogTitle>
                 {editingUser ? 'Edit User' : 'Add New User'}
               </DialogTitle>
@@ -697,11 +697,13 @@ export default function UserManagementPage() {
               )}
             </DialogHeader>
             <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-4"
-              >
-                <FormField
+              <div className="flex-1 overflow-y-auto pr-2">
+                <form
+                  id="user-form"
+                  onSubmit={form.handleSubmit(onSubmit)}
+                  className="space-y-4"
+                >
+                  <FormField
                   name="name"
                   control={form.control}
                   render={({ field }) => (
@@ -935,23 +937,24 @@ export default function UserManagementPage() {
                     );
                   }}
                 />
-                <DialogFooter>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={closeDialog}
-                    disabled={isSubmitting}
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting && (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    )}
-                    Save User
-                  </Button>
-                </DialogFooter>
-              </form>
+                </form>
+              </div>
+              <DialogFooter className="flex-shrink-0 pt-4 border-t">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={closeDialog}
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" form="user-form" disabled={isSubmitting}>
+                  {isSubmitting && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Save User
+                </Button>
+              </DialogFooter>
             </Form>
           </DialogContent>
         </Dialog>

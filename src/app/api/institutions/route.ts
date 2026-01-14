@@ -105,6 +105,47 @@ export async function POST(req: Request) {
       }
     }
 
+    // Check if institution with the same vote number already exists (only if vote number is provided)
+    if (voteNumber && voteNumber.trim().length > 0) {
+      const existingVoteNumber = await db.institution.findFirst({
+        where: {
+          voteNumber: voteNumber.trim(),
+        },
+      });
+
+      if (existingVoteNumber) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: 'An institution with this Vote Number already exists',
+          },
+          { status: 409 }
+        );
+      }
+    }
+
+    // Check if institution with the same email already exists (only if email is provided)
+    if (email && email.trim().length > 0) {
+      const existingEmail = await db.institution.findFirst({
+        where: {
+          email: {
+            equals: email.trim(),
+            mode: 'insensitive',
+          },
+        },
+      });
+
+      if (existingEmail) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: 'An institution with this Email already exists',
+          },
+          { status: 409 }
+        );
+      }
+    }
+
     const newInstitution = await db.institution.create({
       data: {
         id: uuidv4(),
@@ -137,6 +178,24 @@ export async function POST(req: Request) {
           {
             success: false,
             message: 'An institution with this Tin Number already exists',
+          },
+          { status: 409 }
+        );
+      }
+      if (target && target.includes('voteNumber')) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: 'An institution with this Vote Number already exists',
+          },
+          { status: 409 }
+        );
+      }
+      if (target && target.includes('email')) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: 'An institution with this Email already exists',
           },
           { status: 409 }
         );

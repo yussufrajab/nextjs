@@ -43,6 +43,53 @@ export async function PUT(
       }
     }
 
+    // Check if another institution has the same vote number (only if vote number is provided)
+    if (validatedData.voteNumber && validatedData.voteNumber.trim().length > 0) {
+      const existingVoteNumber = await db.institution.findFirst({
+        where: {
+          voteNumber: validatedData.voteNumber.trim(),
+          NOT: {
+            id,
+          },
+        },
+      });
+
+      if (existingVoteNumber) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: 'An institution with this Vote Number already exists',
+          },
+          { status: 409 }
+        );
+      }
+    }
+
+    // Check if another institution has the same email (only if email is provided)
+    if (validatedData.email && validatedData.email.trim().length > 0) {
+      const existingEmail = await db.institution.findFirst({
+        where: {
+          email: {
+            equals: validatedData.email.trim(),
+            mode: 'insensitive',
+          },
+          NOT: {
+            id,
+          },
+        },
+      });
+
+      if (existingEmail) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: 'An institution with this Email already exists',
+          },
+          { status: 409 }
+        );
+      }
+    }
+
     const updatedInstitution = await db.institution.update({
       where: { id },
       data: {
@@ -63,14 +110,39 @@ export async function PUT(
     if ((error as any).code === 'P2002') {
       const target = (error as any).meta?.target;
       if (target && target.includes('tinNumber')) {
-        return new NextResponse(
-          'Institution with this Tin Number already exists',
+        return NextResponse.json(
+          {
+            success: false,
+            message: 'An institution with this Tin Number already exists',
+          },
           { status: 409 }
         );
       }
-      return new NextResponse('Institution with this name already exists', {
-        status: 409,
-      });
+      if (target && target.includes('voteNumber')) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: 'An institution with this Vote Number already exists',
+          },
+          { status: 409 }
+        );
+      }
+      if (target && target.includes('email')) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: 'An institution with this Email already exists',
+          },
+          { status: 409 }
+        );
+      }
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'An institution with this name already exists',
+        },
+        { status: 409 }
+      );
     }
     if ((error as any).code === 'P2025') {
       return new NextResponse('Institution not found', { status: 404 });

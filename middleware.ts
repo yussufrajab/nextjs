@@ -144,7 +144,6 @@ const ROUTE_PERMISSIONS: RoutePermission[] = [
       ROLES.DO,
       ROLES.CSCS,
       ROLES.HRRP,
-      ROLES.PO,
     ],
   },
   // Tracking and reports - All roles can view their relevant data
@@ -157,7 +156,6 @@ const ROUTE_PERMISSIONS: RoutePermission[] = [
       ROLES.DO,
       ROLES.CSCS,
       ROLES.HRRP,
-      ROLES.PO,
       ROLES.EMPLOYEE,
     ],
   },
