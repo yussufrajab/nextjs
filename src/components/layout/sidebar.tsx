@@ -1,5 +1,7 @@
 'use client';
 
+// Navigation updated: Jan 28, 2026 - v2.0
+
 import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -31,14 +33,61 @@ export function AppSidebar() {
   const pathname = usePathname();
   const { role, logout, user } = useAuth();
   const { state: sidebarState } = useSidebar(); // 'expanded' or 'collapsed'
+  const [hasManualEntryPermission, setHasManualEntryPermission] = React.useState<boolean>(true);
 
-  const navItems = React.useMemo(() => getNavItemsForRole(role), [role]);
+  // Check if HRO user has manual entry permission for their institution
+  React.useEffect(() => {
+    const checkManualEntryPermission = async () => {
+      // Only check for HRO users with an institutionId
+      if (role !== 'HRO' || !user?.institutionId) {
+        setHasManualEntryPermission(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `/api/institutions/${user.institutionId}/manual-entry-permission?t=${Date.now()}`,
+          {
+            cache: 'no-store',
+            headers: {
+              'Cache-Control': 'no-cache',
+              'Pragma': 'no-cache',
+            },
+          }
+        );
+
+        const result = await response.json();
+        if (result.success && result.data) {
+          // Set to true only if manual entry is enabled (not checking time window here)
+          setHasManualEntryPermission(result.data.enabled === true);
+        } else {
+          setHasManualEntryPermission(false);
+        }
+      } catch (error) {
+        console.error('Error checking manual entry permission:', error);
+        setHasManualEntryPermission(false);
+      }
+    };
+
+    checkManualEntryPermission();
+  }, [role, user?.institutionId]);
+
+  const navItems = React.useMemo(() => {
+    const items = getNavItemsForRole(role);
+
+    // Filter out "Add Employee" if HRO doesn't have manual entry permission
+    if (role === 'HRO' && !hasManualEntryPermission) {
+      return items.filter((item) => item.href !== '/dashboard/add-employee?nocache=1');
+    }
+
+    return items;
+  }, [role, hasManualEntryPermission]);
 
   const isActive = (href: string) =>
     pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
 
   return (
-    <ShadSidebar collapsible="icon" className="border-r">
+    <ShadSidebar collapsible="icon" className="border-r" data-nav-version="2.0">
       <SidebarHeader className="p-4 flex items-center gap-2">
         <Link href="/dashboard" className="flex items-center gap-2">
           <Logo className="h-8 w-8 text-primary" />
