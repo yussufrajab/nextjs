@@ -30,7 +30,7 @@ export default function BulkUploadDocsPage() {
         <Button variant="outline" asChild>
           <a href="/BULK_EMPLOYEE_UPLOAD_GUIDE.pdf" download>
             <Download className="mr-2 h-4 w-4" />
-            Download Guide (PDF)
+            Download Guide as PDF
           </a>
         </Button>
         <Button variant="outline" asChild>
