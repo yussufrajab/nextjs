@@ -187,7 +187,7 @@ export function BulkUpload({ onComplete }: { onComplete?: () => void }) {
                 </a>
               </Button>
               <Button asChild variant="outline" className="flex-1">
-                <a href="/BULK_EMPLOYEE_UPLOAD_GUIDE.md" target="_blank">
+                <a href="/dashboard/docs/bulk-upload" target="_blank">
                   <FileText className="mr-2 h-4 w-4" />
                   View Full Guide
                 </a>
