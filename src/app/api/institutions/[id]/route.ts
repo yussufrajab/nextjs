@@ -10,6 +10,9 @@ const institutionSchema = z.object({
   phoneNumber: z.string().optional(),
   voteNumber: z.string().optional(),
   tinNumber: z.string().optional(),
+  manualEntryEnabled: z.boolean().optional(),
+  manualEntryStartDate: z.string().optional().or(z.literal('')).nullable(),
+  manualEntryEndDate: z.string().optional().or(z.literal('')).nullable(),
 });
 
 export async function PUT(
@@ -98,6 +101,13 @@ export async function PUT(
         phoneNumber: validatedData.phoneNumber?.trim() || null,
         voteNumber: validatedData.voteNumber?.trim() || null,
         tinNumber: validatedData.tinNumber?.trim() || null,
+        manualEntryEnabled: validatedData.manualEntryEnabled ?? false,
+        manualEntryStartDate: validatedData.manualEntryStartDate
+          ? new Date(validatedData.manualEntryStartDate)
+          : null,
+        manualEntryEndDate: validatedData.manualEntryEndDate
+          ? new Date(validatedData.manualEntryEndDate)
+          : null,
       },
     });
 

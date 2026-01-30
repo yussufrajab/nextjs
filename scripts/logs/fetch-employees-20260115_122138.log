@@ -1,0 +1,13 @@
+[2026-01-15 12:21:38] INFO: Log file: ./logs/fetch-employees-20260115_122138.log
+[2026-01-15 12:21:38] INFO: Fetching institutions list...
+[2026-01-15 12:21:38] SUCCESS: Found 72 institutions
+[2026-01-15 12:21:38] INFO: CONFIGURATION:
+[2026-01-15 12:21:38] INFO:   Page size: 100
+[2026-01-15 12:21:38] INFO:   Pause between institutions: 15s
+[2026-01-15 12:21:38] INFO:   Identifier type: votecode
+[2026-01-15 12:21:38] INFO:   Starting from: Institution #1
+[2026-01-15 12:21:38] INFO: Starting employee fetch...
+[2026-01-15 12:21:38] INFO: [1/72] INSTITUTION: AFISI YA MKURUGENZI WA MASHTAKA
+[2026-01-15 12:21:38] INFO: Using votecode: 029
+[2026-01-15 12:21:38] INFO: Page size: 100
+[2026-01-15 12:21:38] SUCCESS: AFISI YA MKURUGENZI WA MASHTAKA: Fetched 0 employees (0 pages, 0 skipped) in 0s

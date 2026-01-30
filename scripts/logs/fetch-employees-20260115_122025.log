@@ -1,0 +1,10 @@
+[2026-01-15 12:20:25] INFO: Log file: ./logs/fetch-employees-20260115_122025.log
+[2026-01-15 12:20:25] INFO: Fetching institutions list...
+[2026-01-15 12:20:25] SUCCESS: Found 72 institutions
+[2026-01-15 12:20:25] INFO: CONFIGURATION:
+[2026-01-15 12:20:25] INFO:   Page size: 100
+[2026-01-15 12:20:25] INFO:   Pause between institutions: 15s
+[2026-01-15 12:20:25] INFO:   Identifier type: auto
+[2026-01-15 12:20:25] INFO:   Starting from: Institution #1
+[2026-01-15 12:20:25] WARNING: DRY RUN MODE - No actual fetching will occur
+[2026-01-15 12:20:25] INFO: Listing all institutions:

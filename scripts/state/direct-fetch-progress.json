@@ -1,0 +1,516 @@
+{
+  "startedAt": "2026-01-22T11:22:54.421Z",
+  "lastUpdatedAt": "2026-01-22T21:05:18.833Z",
+  "totalInstitutions": 72,
+  "completedInstitutions": [
+    {
+      "institutionId": "cmd06xe4b0010e6bqt54zkblq",
+      "institutionName": "AFISI YA MKURUGENZI WA MASHTAKA",
+      "status": "completed",
+      "employeeCount": 54,
+      "completedAt": "2026-01-22T11:23:25.976Z"
+    },
+    {
+      "institutionId": "cmd06xe4e0011e6bqv8eg0b16",
+      "institutionName": "AFISI YA MWANASHERIA MKUU",
+      "status": "completed",
+      "employeeCount": 48,
+      "completedAt": "2026-01-22T11:24:06.994Z"
+    },
+    {
+      "institutionId": "cmd06xe2o000ae6bquqbkbg4z",
+      "institutionName": "AFISI YA RAISI KAZI, UCHUMI NA UWEKEZAJI",
+      "status": "completed",
+      "employeeCount": 92,
+      "completedAt": "2026-01-22T11:25:21.142Z"
+    },
+    {
+      "institutionId": "cmdca390e5b7e3c6f4ddbd4",
+      "institutionName": "Baraza la Jiji",
+      "status": "completed",
+      "employeeCount": 0,
+      "completedAt": "2026-01-22T11:25:36.661Z"
+    },
+    {
+      "institutionId": "cmd4caf3852445c2568bc7c",
+      "institutionName": "Baraza la Manispaa Magharibi A",
+      "status": "completed",
+      "employeeCount": 49,
+      "completedAt": "2026-01-22T11:26:48.923Z"
+    },
+    {
+      "institutionId": "cmdbcf753dfb9d0ae18259a",
+      "institutionName": "Baraza la Manispaa Magharibi B",
+      "status": "completed",
+      "employeeCount": 71,
+      "completedAt": "2026-01-22T11:28:28.050Z"
+    },
+    {
+      "institutionId": "cmd59d412885295792e5a6f",
+      "institutionName": "Baraza la Manispaa Mjini Unguja",
+      "status": "completed",
+      "employeeCount": 358,
+      "completedAt": "2026-01-22T11:35:32.312Z"
+    },
+    {
+      "institutionId": "cmd1545dfaf1f7a12e14814",
+      "institutionName": "Baraza la Mitihani",
+      "status": "completed",
+      "employeeCount": 0,
+      "completedAt": "2026-01-22T11:35:47.833Z"
+    },
+    {
+      "institutionId": "cmd02cee2d68e90a9e93d12",
+      "institutionName": "Baraza la Mji Chake Chake",
+      "status": "completed",
+      "employeeCount": 123,
+      "completedAt": "2026-01-22T11:37:48.046Z"
+    },
+    {
+      "institutionId": "cmd233f6362082a7199509b",
+      "institutionName": "Baraza la Mji Kaskazini A Unguja",
+      "status": "completed",
+      "employeeCount": 55,
+      "completedAt": "2026-01-22T11:38:56.812Z"
+    },
+    {
+      "institutionId": "cmdfb652b1e5f9cc9589ae4",
+      "institutionName": "Baraza la Mji Kaskazini B Unguja",
+      "status": "completed",
+      "employeeCount": 55,
+      "completedAt": "2026-01-22T11:40:15.582Z"
+    },
+    {
+      "institutionId": "cmd536a0c15bebc592f98dc",
+      "institutionName": "Baraza la Mji Kati Unguja",
+      "status": "completed",
+      "employeeCount": 0,
+      "completedAt": "2026-01-22T11:40:33.513Z"
+    },
+    {
+      "institutionId": "cmd77f48672584df7bbec35",
+      "institutionName": "Baraza la Mji Mkoani",
+      "status": "completed",
+      "employeeCount": 18,
+      "completedAt": "2026-01-22T11:40:58.272Z"
+    },
+    {
+      "institutionId": "cmde5b940e9d54567bfc3a4",
+      "institutionName": "Baraza la Mji Wete",
+      "status": "completed",
+      "employeeCount": 68,
+      "completedAt": "2026-01-22T11:42:26.746Z"
+    },
+    {
+      "institutionId": "cmdb58cb33c0f5031c1db39",
+      "institutionName": "Bodi ya Huduma za Maktaba",
+      "status": "completed",
+      "employeeCount": 0,
+      "completedAt": "2026-01-22T11:42:42.229Z"
+    },
+    {
+      "institutionId": "cmdd75324353437b4a24d98",
+      "institutionName": "Chuo cha Kiislamu",
+      "status": "skipped",
+      "error": "No identifier available",
+      "completedAt": "2026-01-22T11:42:57.239Z"
+    },
+    {
+      "institutionId": "cmdfdb6ca0e59fb2784253c",
+      "institutionName": "Halmashauri ya Wilaya ya Kusini Unguja",
+      "status": "completed",
+      "employeeCount": 0,
+      "completedAt": "2026-01-22T11:42:57.734Z"
+    },
+    {
+      "institutionId": "cmdf0c43f7013ab7f2a66fb",
+      "institutionName": "Halmashauri ya Wilaya ya Micheweni",
+      "status": "completed",
+      "employeeCount": 0,
+      "completedAt": "2026-01-22T11:43:13.242Z"
+    },
+    {
+      "institutionId": "cmd1ff26c0c4e3e30140a6e",
+      "institutionName": "Hospitali ya Mnazi Mmoja",
+      "status": "completed",
+      "employeeCount": 1822,
+      "completedAt": "2026-01-22T12:15:46.462Z"
+    },
+    {
+      "institutionId": "cmd6d9165d0597ad7596c4c",
+      "institutionName": "JKU",
+      "status": "skipped",
+      "error": "No identifier available",
+      "completedAt": "2026-01-22T12:16:01.466Z"
+    },
+    {
+      "institutionId": "cmd06xe2h0007e6bqta680e3b",
+      "institutionName": "KAMISHENI YA ARDHI ZANZIBAR",
+      "status": "completed",
+      "employeeCount": 103,
+      "completedAt": "2026-01-22T12:17:42.878Z"
+    },
+    {
+      "institutionId": "cmd2be7aa7f5b3c47595cc4",
+      "institutionName": "Kamisheni ya Kazi",
+      "status": "completed",
+      "employeeCount": 2,
+      "completedAt": "2026-01-22T12:18:00.385Z"
+    },
+    {
+      "institutionId": "cmd06xe2y000ee6bqel875c2s",
+      "institutionName": "KAMISHENI YA KUKABILIANA NA MAAFA ZANZIBAR",
+      "status": "completed",
+      "employeeCount": 0,
+      "completedAt": "2026-01-22T12:18:15.892Z"
+    },
+    {
+      "institutionId": "cmd06xe2r000be6bqrqhwhbq1",
+      "institutionName": "KAMISHENI YA UTALII ZANZIBAR",
+      "status": "skipped",
+      "error": "No identifier available",
+      "completedAt": "2026-01-22T12:18:30.903Z"
+    },
+    {
+      "institutionId": "cmd06xe2a0004e6bqwbtjm4x9",
+      "institutionName": "KAMISHENI YA UTUMISHI WA UMMA",
+      "status": "completed",
+      "employeeCount": 0,
+      "completedAt": "2026-01-22T12:18:31.408Z"
+    },
+    {
+      "institutionId": "cmdb53ddd6c0a56b44ed006",
+      "institutionName": "Magereza",
+      "status": "skipped",
+      "error": "No identifier available",
+      "completedAt": "2026-01-22T12:18:46.419Z"
+    },
+    {
+      "institutionId": "cmd06xe45000xe6bqb6qc19ys",
+      "institutionName": "MAMLAKA YA KUDHIBITI NA KUPAMBANA NA DAWA ZA KULEVYA ZANZIBAR",
+      "status": "completed",
+      "employeeCount": 0,
+      "completedAt": "2026-01-22T12:18:46.913Z"
+    },
+    {
+      "institutionId": "cmd06xe3w000te6bqc44b0xpr",
+      "institutionName": "MAMLAKA YA KUZUIA RUSHWA NA UHUJUMU WA UCHUMI ZANZIBAR",
+      "status": "completed",
+      "employeeCount": 113,
+      "completedAt": "2026-01-22T12:20:46.509Z"
+    },
+    {
+      "institutionId": "cmd240bed02bab1eccc8039",
+      "institutionName": "Mamlaka ya Serikali Mtandao (eGAZ)",
+      "status": "completed",
+      "employeeCount": 3,
+      "completedAt": "2026-01-22T12:21:04.884Z"
+    },
+    {
+      "institutionId": "cmd4c5ec2ff8bee042f8320",
+      "institutionName": "Mamlaka ya Uwezeshaji Wananchi Kiuchumi (ZEA)",
+      "status": "completed",
+      "employeeCount": 22,
+      "completedAt": "2026-01-22T12:21:40.196Z"
+    },
+    {
+      "institutionId": "cmd25a57d5fa38437bac519",
+      "institutionName": "Ofisi ya Hatimiliki (COSOZA)",
+      "status": "completed",
+      "employeeCount": 0,
+      "completedAt": "2026-01-22T12:21:55.666Z"
+    },
+    {
+      "institutionId": "cmd06xe39000je6bqeouszvrd",
+      "institutionName": "OFISI YA MAKAMO WA KWANZA WA RAISI",
+      "status": "completed",
+      "employeeCount": 146,
+      "completedAt": "2026-01-22T12:24:27.794Z"
+    },
+    {
+      "institutionId": "cmd06xe3p000qe6bqwqcuyke1",
+      "institutionName": "OFISI YA MAKAMO WA PILI WA RAISI",
+      "status": "completed",
+      "employeeCount": 264,
+      "completedAt": "2026-01-22T12:28:59.469Z"
+    },
+    {
+      "institutionId": "cmd06xe2j0008e6bqqpmbs9bv",
+      "institutionName": "Ofisi ya Mhasibu Mkuu wa Serikali",
+      "status": "completed",
+      "employeeCount": 356,
+      "completedAt": "2026-01-22T12:35:41.670Z"
+    },
+    {
+      "institutionId": "cmd06xe2e0006e6bqvjfhq32c",
+      "institutionName": "OFISI YA MKAGUZI MKUU WA NDANI WA SERIKALI",
+      "status": "completed",
+      "employeeCount": 54,
+      "completedAt": "2026-01-22T12:36:48.517Z"
+    },
+    {
+      "institutionId": "cmdc44d2a81af54539661a3",
+      "institutionName": "Ofisi ya Mkaguzi wa Elimu",
+      "status": "completed",
+      "employeeCount": 11,
+      "completedAt": "2026-01-22T12:37:14.521Z"
+    },
+    {
+      "institutionId": "cmd5f2656be26e643588334",
+      "institutionName": "Ofisi ya Mkuu wa Mkoa wa Kaskazini Pemba",
+      "status": "completed",
+      "employeeCount": 0,
+      "completedAt": "2026-01-22T12:37:30.025Z"
+    },
+    {
+      "institutionId": "cmd6c89e74df51ddc217c8c",
+      "institutionName": "Ofisi ya Mkuu wa Mkoa wa Kaskazini Unguja",
+      "status": "completed",
+      "employeeCount": 0,
+      "completedAt": "2026-01-22T12:37:45.528Z"
+    },
+    {
+      "institutionId": "cmd91d823ed52820fc6020f",
+      "institutionName": "Ofisi ya Mkuu wa Mkoa wa Kusini Pemba",
+      "status": "completed",
+      "employeeCount": 0,
+      "completedAt": "2026-01-22T12:38:01.042Z"
+    },
+    {
+      "institutionId": "cmd06xe220001e6bqj26tnlsj",
+      "institutionName": "Ofisi ya Mkuu wa Mkoa wa Kusini Unguja",
+      "status": "completed",
+      "employeeCount": 0,
+      "completedAt": "2026-01-22T12:38:16.551Z"
+    },
+    {
+      "institutionId": "cmddc37c28c068eb077e082",
+      "institutionName": "Ofisi ya Mkuu wa Mkoa wa Mjini Magharibi Unguja",
+      "status": "completed",
+      "employeeCount": 0,
+      "completedAt": "2026-01-22T12:38:32.041Z"
+    },
+    {
+      "institutionId": "cmd06xe1x0000e6bqalx28nja",
+      "institutionName": "Ofisi ya Msajili wa Hazina",
+      "status": "completed",
+      "employeeCount": 0,
+      "completedAt": "2026-01-22T12:38:47.561Z"
+    },
+    {
+      "institutionId": "cmd06xe3t000se6bqknluakbq",
+      "institutionName": "OFISI YA MUFTI MKUU WA ZANZIBAR",
+      "status": "skipped",
+      "error": "No identifier available",
+      "completedAt": "2026-01-22T12:39:02.572Z"
+    },
+    {
+      "institutionId": "cmd06xe43000we6bqegt3ofa0",
+      "institutionName": "OFISI YA RAIS - IKULU",
+      "status": "completed",
+      "employeeCount": 449,
+      "completedAt": "2026-01-22T12:45:51.117Z"
+    },
+    {
+      "institutionId": "cmd06xe3i000ne6bq2q3y9g2z",
+      "institutionName": "OFISI YA RAIS - KATIBA SHERIA UTUMISHI NA UTAWALA BORA",
+      "status": "completed",
+      "employeeCount": 188,
+      "completedAt": "2026-01-22T12:48:49.618Z"
+    },
+    {
+      "institutionId": "cmd06nn7n0001e67w2h5rf86x",
+      "institutionName": "OFISI YA RAIS, FEDHA NA MIPANGO",
+      "status": "completed",
+      "employeeCount": 449,
+      "completedAt": "2026-01-22T12:53:28.612Z"
+    },
+    {
+      "institutionId": "cmd06xe3g000me6bqh9gabe3e",
+      "institutionName": "OFISI YA RAIS, TAWALA ZA MIKOA, SERIKALI ZA MITAA NA IDARA MAALUMU ZA SMZ",
+      "status": "completed",
+      "employeeCount": 92,
+      "completedAt": "2026-01-22T12:55:08.673Z"
+    },
+    {
+      "institutionId": "cmde5633af0fb1bb7af7905",
+      "institutionName": "Skuli ya Sheria Zanzibar",
+      "status": "completed",
+      "employeeCount": 0,
+      "completedAt": "2026-01-22T12:55:24.361Z"
+    },
+    {
+      "institutionId": "cmd06xe2w000de6bqzqo9qu3m",
+      "institutionName": "TAASISI YA ELIMU ZANZIBAR",
+      "status": "completed",
+      "employeeCount": 0,
+      "completedAt": "2026-01-22T12:55:40.197Z"
+    },
+    {
+      "institutionId": "cmd06xe2m0009e6bq0ps9u9ut",
+      "institutionName": "TAASISI YA NYARAKA NA KUMBUKUMBU",
+      "status": "completed",
+      "employeeCount": 0,
+      "completedAt": "2026-01-22T12:55:55.975Z"
+    },
+    {
+      "institutionId": "cmd4375abda3f14b3a95b77",
+      "institutionName": "Taasisi ya Utafiti wa Uvuvi (ZAFIRI)",
+      "status": "completed",
+      "employeeCount": 239,
+      "completedAt": "2026-01-22T13:00:47.583Z"
+    },
+    {
+      "institutionId": "cme6s7yqe000m2bgx708j9uly",
+      "institutionName": "Tume ya kusimamia Nidhamu",
+      "status": "skipped",
+      "error": "No identifier available",
+      "completedAt": "2026-01-22T13:01:02.588Z"
+    },
+    {
+      "institutionId": "cmd06xe48000ye6bqwhlp0tum",
+      "institutionName": "TUME YA MAADILI YA VIONGOZI WA UMMA",
+      "status": "completed",
+      "employeeCount": 0,
+      "completedAt": "2026-01-22T13:01:03.150Z"
+    },
+    {
+      "institutionId": "cmd3c2909246966ab8bc819",
+      "institutionName": "Tume ya Mipango",
+      "status": "completed",
+      "employeeCount": 25,
+      "completedAt": "2026-01-22T13:01:41.371Z"
+    },
+    {
+      "institutionId": "cmd06xe3n000pe6bquce6e6ga",
+      "institutionName": "TUME YA UCHAGUZI YA ZANZIBAR",
+      "status": "completed",
+      "employeeCount": 13,
+      "completedAt": "2026-01-22T13:02:09.025Z"
+    },
+    {
+      "institutionId": "cmdd32c25c06bcef1153da0",
+      "institutionName": "Tume ya Ushindani Halali wa Biashara",
+      "status": "completed",
+      "employeeCount": 0,
+      "completedAt": "2026-01-22T13:02:24.727Z"
+    },
+    {
+      "institutionId": "cmd059ion0000e6d85kexfukl",
+      "institutionName": "TUME YA UTUMISHI SERIKALINI",
+      "status": "completed",
+      "employeeCount": 0,
+      "completedAt": "2026-01-22T13:02:40.415Z"
+    },
+    {
+      "institutionId": "cmd2376970b68ca8887a4fa",
+      "institutionName": "Wakala wa Barabara",
+      "status": "completed",
+      "employeeCount": 378,
+      "completedAt": "2026-01-22T13:08:59.976Z"
+    },
+    {
+      "institutionId": "cmd06xe30000fe6bqe6ljiz1v",
+      "institutionName": "WAKALA WA MAJENGO ZANZIBAR",
+      "status": "completed",
+      "employeeCount": 61,
+      "completedAt": "2026-01-22T13:10:11.902Z"
+    },
+    {
+      "institutionId": "cmd4a32f22d9f78e3dec338",
+      "institutionName": "Wakala wa Matrekta",
+      "status": "completed",
+      "employeeCount": 15,
+      "completedAt": "2026-01-22T13:10:40.791Z"
+    },
+    {
+      "institutionId": "cmd06xe250002e6bqp8aabk92",
+      "institutionName": "Wakala wa Vipimo Zanzibar",
+      "status": "completed",
+      "employeeCount": 0,
+      "completedAt": "2026-01-22T13:10:56.622Z"
+    },
+    {
+      "institutionId": "cmd06nn7u0003e67wa4hiyie7",
+      "institutionName": "WIZARA YA AFYA",
+      "status": "completed",
+      "employeeCount": 6204,
+      "completedAt": "2026-01-22T14:55:53.012Z"
+    },
+    {
+      "institutionId": "cmd06xe3y000ue6bqzqkztrsa",
+      "institutionName": "WIZARA YA ARDHI NA MAENDELEO YA MAKAAZI ZANZIBAR",
+      "status": "completed",
+      "employeeCount": 42,
+      "completedAt": "2026-01-22T14:56:48.376Z"
+    },
+    {
+      "institutionId": "cmd06xe3b000ke6bqxuwovzub",
+      "institutionName": "WIZARA YA BIASHARA NA MAENDELEO YA VIWANDA",
+      "status": "completed",
+      "employeeCount": 55,
+      "completedAt": "2026-01-22T14:58:00.905Z"
+    },
+    {
+      "institutionId": "cmd06nn7r0002e67w8df8thtn",
+      "institutionName": "WIZARA YA ELIMU NA MAFUNZO YA AMALI",
+      "status": "completed",
+      "employeeCount": 18759,
+      "completedAt": "2026-01-22T20:14:31.039Z"
+    },
+    {
+      "institutionId": "cmd06xe3l000oe6bq5drrocqt",
+      "institutionName": "WIZARA YA HABARI, VIJANA, UTAMADUNI NA MICHEZO",
+      "status": "completed",
+      "employeeCount": 411,
+      "completedAt": "2026-01-22T20:21:08.424Z"
+    },
+    {
+      "institutionId": "cmd06xe34000he6bqfdqiw9ll",
+      "institutionName": "WIZARA YA KILIMO UMWAGILIAJI MALIASILI NA MIFUGO",
+      "status": "completed",
+      "employeeCount": 1667,
+      "completedAt": "2026-01-22T20:49:31.095Z"
+    },
+    {
+      "institutionId": "cmd06xe270003e6bq0wm0v3c7",
+      "institutionName": "WIZARA YA MAENDELEO YA JAMII,JINSIA,WAZEE NA WATOTO",
+      "status": "completed",
+      "employeeCount": 222,
+      "completedAt": "2026-01-22T20:53:18.195Z"
+    },
+    {
+      "institutionId": "cmd06xe4g0012e6bqou5f9gur",
+      "institutionName": "WIZARA YA MAJI NISHATI NA MADINI",
+      "status": "completed",
+      "employeeCount": 118,
+      "completedAt": "2026-01-22T20:55:26.047Z"
+    },
+    {
+      "institutionId": "cmd06xe3r000re6bqum8g62id",
+      "institutionName": "WIZARA YA UCHUMI WA BULUU NA UVUVI",
+      "status": "completed",
+      "employeeCount": 210,
+      "completedAt": "2026-01-22T20:59:11.661Z"
+    },
+    {
+      "institutionId": "cmd06xe37000ie6bq43r62ea6",
+      "institutionName": "WIZARA YA UJENZI MAWASILIANO NA UCHUKUZI",
+      "status": "completed",
+      "employeeCount": 122,
+      "completedAt": "2026-01-22T21:01:31.588Z"
+    },
+    {
+      "institutionId": "cmd06xe40000ve6bqrip9e4m6",
+      "institutionName": "WIZARA YA UTALII NA MAMBO YA KALE",
+      "status": "completed",
+      "employeeCount": 209,
+      "completedAt": "2026-01-22T21:05:18.833Z"
+    }
+  ],
+  "isComplete": true,
+  "totalEmployeesFetched": 33815,
+  "successCount": 66,
+  "failureCount": 0,
+  "skippedCount": 6
+}

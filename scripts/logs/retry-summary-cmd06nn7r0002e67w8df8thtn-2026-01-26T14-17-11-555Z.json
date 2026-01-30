@@ -1,0 +1,10 @@
+{
+  "institutionId": "cmd06nn7r0002e67w8df8thtn",
+  "timestamp": "2026-01-26T14:17:11.555Z",
+  "duration": "4m 49s",
+  "total": 20,
+  "successful": 15,
+  "failed": 5,
+  "skipped": 0,
+  "successRate": "75.0%"
+}

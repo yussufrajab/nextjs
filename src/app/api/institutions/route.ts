@@ -17,6 +17,9 @@ export async function GET(req: Request) {
         phoneNumber: true,
         voteNumber: true,
         tinNumber: true,
+        manualEntryEnabled: true,
+        manualEntryStartDate: true,
+        manualEntryEndDate: true,
       },
       orderBy: { name: 'asc' },
     });
@@ -53,7 +56,16 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { name, email, phoneNumber, voteNumber, tinNumber } = body;
+    const {
+      name,
+      email,
+      phoneNumber,
+      voteNumber,
+      tinNumber,
+      manualEntryEnabled,
+      manualEntryStartDate,
+      manualEntryEndDate,
+    } = body;
 
     if (!name || typeof name !== 'string' || name.trim().length === 0) {
       return NextResponse.json(
@@ -154,6 +166,13 @@ export async function POST(req: Request) {
         phoneNumber: phoneNumber?.trim() || null,
         voteNumber: voteNumber?.trim() || null,
         tinNumber: tinNumber?.trim() || null,
+        manualEntryEnabled: manualEntryEnabled || false,
+        manualEntryStartDate: manualEntryStartDate
+          ? new Date(manualEntryStartDate)
+          : null,
+        manualEntryEndDate: manualEntryEndDate
+          ? new Date(manualEntryEndDate)
+          : null,
       },
     });
 

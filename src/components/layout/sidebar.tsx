@@ -33,53 +33,74 @@ export function AppSidebar() {
   const pathname = usePathname();
   const { role, logout, user } = useAuth();
   const { state: sidebarState } = useSidebar(); // 'expanded' or 'collapsed'
-  const [hasManualEntryPermission, setHasManualEntryPermission] = React.useState<boolean>(true);
+  const [hasManualEntryPermission, setHasManualEntryPermission] = React.useState<boolean>(false);
 
   // Check if HRO user has manual entry permission for their institution
   React.useEffect(() => {
     const checkManualEntryPermission = async () => {
+      console.log('[Sidebar] Checking manual entry permission:', {
+        role,
+        userId: user?.id,
+        username: user?.username,
+        institutionId: user?.institutionId,
+      });
+
       // Only check for HRO users with an institutionId
       if (role !== 'HRO' || !user?.institutionId) {
+        console.log('[Sidebar] Not HRO or no institutionId, setting permission to false');
         setHasManualEntryPermission(false);
         return;
       }
 
       try {
-        const response = await fetch(
-          `/api/institutions/${user.institutionId}/manual-entry-permission?t=${Date.now()}`,
-          {
-            cache: 'no-store',
-            headers: {
-              'Cache-Control': 'no-cache',
-              'Pragma': 'no-cache',
-            },
-          }
-        );
+        const url = `/api/institutions/${user.institutionId}/manual-entry-permission?t=${Date.now()}`;
+        console.log('[Sidebar] Fetching permission from:', url);
+
+        const response = await fetch(url, {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache',
+          },
+        });
 
         const result = await response.json();
+        console.log('[Sidebar] Permission API response:', result);
+
         if (result.success && result.data) {
-          // Set to true only if manual entry is enabled (not checking time window here)
-          setHasManualEntryPermission(result.data.enabled === true);
+          const hasPermission = result.data.enabled === true;
+          console.log('[Sidebar] Setting hasManualEntryPermission to:', hasPermission);
+          setHasManualEntryPermission(hasPermission);
         } else {
+          console.log('[Sidebar] Invalid response, setting permission to false');
           setHasManualEntryPermission(false);
         }
       } catch (error) {
-        console.error('Error checking manual entry permission:', error);
+        console.error('[Sidebar] Error checking manual entry permission:', error);
         setHasManualEntryPermission(false);
       }
     };
 
     checkManualEntryPermission();
-  }, [role, user?.institutionId]);
+  }, [role, user?.institutionId, user?.id, user?.username]);
 
   const navItems = React.useMemo(() => {
     const items = getNavItemsForRole(role);
+    console.log('[Sidebar] Computing navItems:', {
+      role,
+      hasManualEntryPermission,
+      totalItems: items.length,
+      itemTitles: items.map(item => item.title),
+    });
 
     // Filter out "Add Employee" if HRO doesn't have manual entry permission
     if (role === 'HRO' && !hasManualEntryPermission) {
-      return items.filter((item) => item.href !== '/dashboard/add-employee?nocache=1');
+      const filtered = items.filter((item) => item.href !== '/dashboard/add-employee?nocache=1');
+      console.log('[Sidebar] Filtering out Add Employee. Before:', items.length, 'After:', filtered.length);
+      return filtered;
     }
 
+    console.log('[Sidebar] Not filtering, returning all items');
     return items;
   }, [role, hasManualEntryPermission]);
 

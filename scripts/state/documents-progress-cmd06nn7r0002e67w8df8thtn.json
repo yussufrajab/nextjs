@@ -1,0 +1,12 @@
+{
+  "institutionId": "cmd06nn7r0002e67w8df8thtn",
+  "lastOffset": 14723,
+  "totalProcessed": 9347,
+  "timestamp": "2026-01-26T05:58:12.867Z",
+  "summary": {
+    "successful": 5512,
+    "partial": 0,
+    "failed": 3835,
+    "skipped": 0
+  }
+}

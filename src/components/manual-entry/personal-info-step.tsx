@@ -1,6 +1,7 @@
 'use client';
 
-// v2.0 - Real-time validation with required fields (Jan 28, 2026)
+// v2.1 - Duplicate validation on submit only (Jan 30, 2026)
+// Removed real-time duplicate checking for better performance
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -27,123 +28,6 @@ export function PersonalInfoStep({
 }: PersonalInfoStepProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [validatingFields, setValidatingFields] = useState<Record<string, boolean>>({});
-
-  // Validate ZanID for duplicates
-  const validateZanId = async (zanId: string) => {
-    if (!zanId) {
-      setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors.zanId;
-        return newErrors;
-      });
-      return;
-    }
-
-    setValidatingFields((prev) => ({ ...prev, zanId: true }));
-    try {
-      const response = await fetch('/api/employees/validate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ zanId }),
-      });
-
-      const result = await response.json();
-      if (result.zanIdExists) {
-        setErrors((prev) => ({
-          ...prev,
-          zanId: 'An employee with this ZanID already exists',
-        }));
-      } else {
-        setErrors((prev) => {
-          const newErrors = { ...prev };
-          delete newErrors.zanId;
-          return newErrors;
-        });
-      }
-    } catch (error) {
-      console.error('Error validating ZanID:', error);
-    } finally {
-      setValidatingFields((prev) => ({ ...prev, zanId: false }));
-    }
-  };
-
-  // Validate Payroll Number for duplicates
-  const validatePayrollNumber = async (payrollNumber: string) => {
-    if (!payrollNumber) {
-      setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors.payrollNumber;
-        return newErrors;
-      });
-      return;
-    }
-
-    setValidatingFields((prev) => ({ ...prev, payrollNumber: true }));
-    try {
-      const response = await fetch('/api/employees/validate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ payrollNumber }),
-      });
-
-      const result = await response.json();
-      if (result.payrollNumberExists) {
-        setErrors((prev) => ({
-          ...prev,
-          payrollNumber: 'An employee with this Payroll Number already exists',
-        }));
-      } else {
-        setErrors((prev) => {
-          const newErrors = { ...prev };
-          delete newErrors.payrollNumber;
-          return newErrors;
-        });
-      }
-    } catch (error) {
-      console.error('Error validating Payroll Number:', error);
-    } finally {
-      setValidatingFields((prev) => ({ ...prev, payrollNumber: false }));
-    }
-  };
-
-  // Validate ZSSF Number for duplicates
-  const validateZssfNumber = async (zssfNumber: string) => {
-    if (!zssfNumber) {
-      setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors.zssfNumber;
-        return newErrors;
-      });
-      return;
-    }
-
-    setValidatingFields((prev) => ({ ...prev, zssfNumber: true }));
-    try {
-      const response = await fetch('/api/employees/validate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ zssfNumber }),
-      });
-
-      const result = await response.json();
-      if (result.zssfNumberExists) {
-        setErrors((prev) => ({
-          ...prev,
-          zssfNumber: 'An employee with this ZSSF Number already exists',
-        }));
-      } else {
-        setErrors((prev) => {
-          const newErrors = { ...prev };
-          delete newErrors.zssfNumber;
-          return newErrors;
-        });
-      }
-    } catch (error) {
-      console.error('Error validating ZSSF Number:', error);
-    } finally {
-      setValidatingFields((prev) => ({ ...prev, zssfNumber: false }));
-    }
-  };
 
   // Validate phone number format (10 digits starting with 0)
   const validatePhoneNumber = (phoneNumber: string) => {
@@ -187,7 +71,7 @@ export function PersonalInfoStep({
     }
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     const newErrors: Record<string, string> = {};
 
     // Required field validation
@@ -206,15 +90,61 @@ export function PersonalInfoStep({
       }
     }
 
-    // Merge with existing errors
-    const allErrors = { ...errors, ...newErrors };
-
-    if (Object.keys(allErrors).length > 0) {
-      setErrors(allErrors);
+    // If there are validation errors, show them and stop
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
-    onNext();
+    // Show validating state
+    setValidatingFields({
+      zanId: true,
+      zssfNumber: true,
+      payrollNumber: true,
+    });
+
+    // Check for duplicates on submission
+    try {
+      const response = await fetch('/api/employees/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          zanId: data.zanId,
+          zssfNumber: data.zssfNumber,
+          payrollNumber: data.payrollNumber,
+        }),
+      });
+
+      const result = await response.json();
+
+      const duplicateErrors: Record<string, string> = {};
+
+      if (result.zanIdExists) {
+        duplicateErrors.zanId = 'An employee with this ZanID already exists';
+      }
+      if (result.zssfNumberExists) {
+        duplicateErrors.zssfNumber = 'An employee with this ZSSF Number already exists';
+      }
+      if (result.payrollNumberExists) {
+        duplicateErrors.payrollNumber = 'An employee with this Payroll Number already exists';
+      }
+
+      if (Object.keys(duplicateErrors).length > 0) {
+        setErrors(duplicateErrors);
+        setValidatingFields({});
+        return;
+      }
+
+      // All validations passed, proceed to next step
+      setValidatingFields({});
+      onNext();
+    } catch (error) {
+      console.error('Error validating employee data:', error);
+      setErrors({
+        submit: 'Failed to validate employee data. Please try again.',
+      });
+      setValidatingFields({});
+    }
   };
 
   return (
@@ -222,7 +152,8 @@ export function PersonalInfoStep({
       <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4">
         <p className="text-sm text-blue-800">
           <span className="font-semibold">Note:</span> Fields marked with{' '}
-          <span className="text-red-500 font-bold">*</span> are required and must be filled before proceeding.
+          <span className="text-red-500 font-bold">*</span> are required. Duplicate checking
+          will be performed when you click "Next".
         </p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -280,7 +211,6 @@ export function PersonalInfoStep({
               onChange('zanId', e.target.value);
               validateRequiredField('zanId', e.target.value);
             }}
-            onBlur={(e) => validateZanId(e.target.value)}
             placeholder="e.g., 19901234567"
             className={errors.zanId ? 'border-red-500' : ''}
           />
@@ -383,7 +313,6 @@ export function PersonalInfoStep({
               onChange('zssfNumber', e.target.value);
               validateRequiredField('zssfNumber', e.target.value);
             }}
-            onBlur={(e) => validateZssfNumber(e.target.value)}
             placeholder="ZSSF membership number"
             className={errors.zssfNumber ? 'border-red-500' : ''}
           />
@@ -409,7 +338,6 @@ export function PersonalInfoStep({
               onChange('payrollNumber', e.target.value);
               validateRequiredField('payrollNumber', e.target.value);
             }}
-            onBlur={(e) => validatePayrollNumber(e.target.value)}
             placeholder="Employee payroll number"
             className={errors.payrollNumber ? 'border-red-500' : ''}
           />
@@ -426,17 +354,15 @@ export function PersonalInfoStep({
       </div>
 
       <div className="flex justify-between items-center pt-4">
-        {Object.keys(errors).length > 0 && (
+        {Object.keys(errors).length > 0 && !validatingFields.zanId && (
           <p className="text-sm text-red-500">
             Please fix {Object.keys(errors).length} error(s) before proceeding
           </p>
         )}
-        {Object.keys(errors).length === 0 && (
-          validatingFields.zanId || validatingFields.payrollNumber || validatingFields.zssfNumber
-        ) && (
+        {(validatingFields.zanId || validatingFields.payrollNumber || validatingFields.zssfNumber) && (
           <p className="text-sm text-gray-500 flex items-center gap-1">
             <Loader2 className="h-3 w-3 animate-spin" />
-            Validating...
+            Validating for duplicates...
           </p>
         )}
         <div className="ml-auto">
@@ -445,10 +371,12 @@ export function PersonalInfoStep({
             disabled={
               validatingFields.zanId ||
               validatingFields.payrollNumber ||
-              validatingFields.zssfNumber ||
-              Object.keys(errors).length > 0
+              validatingFields.zssfNumber
             }
           >
+            {(validatingFields.zanId || validatingFields.payrollNumber || validatingFields.zssfNumber) && (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            )}
             Next
           </Button>
         </div>

@@ -1,0 +1,67 @@
+{
+  "institutionId": "cmd06nn7r0002e67w8df8thtn",
+  "timestamp": "2026-01-26T13:50:41.007Z",
+  "totalFailed": 10,
+  "employees": [
+    {
+      "employeeId": "d94ac1ce-8e8f-48ed-a524-20cf786733f4",
+      "employeeName": "Abadi Ali Abadi",
+      "payrollNumber": "189535",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "ad66214a-1fd9-4533-a13a-30cd4a4d58eb",
+      "employeeName": "Abass Abdulla Abass",
+      "payrollNumber": "575452",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "30ae53eb-6d30-4227-9968-9bcdacedd03b",
+      "employeeName": "Abass Ali Hassan",
+      "payrollNumber": "282918",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "53062925-32f1-4607-b41b-b6d028f8e4c4",
+      "employeeName": "Abass Hassan Abass",
+      "payrollNumber": "847259",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "14ca7078-414a-4949-a5f8-c525fae49171",
+      "employeeName": "Abass Hassan Abass",
+      "payrollNumber": "828831",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "bc81fefa-eb10-4403-8e51-7c560a256772",
+      "employeeName": "Abassi Khamissi Issa",
+      "payrollNumber": "776150",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "7228c3aa-8e6e-41ce-87fa-8e8c71df6df9",
+      "employeeName": "Abass Issa Abass",
+      "payrollNumber": "418232",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "e79ef1fe-8b0a-4f68-8aed-0a138f1fc27b",
+      "employeeName": "Abass Khamis Abass",
+      "payrollNumber": "289593",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "6d09e111-bb35-4f45-a25c-4779fdcf8ada",
+      "employeeName": "Abass Khamis Ali",
+      "payrollNumber": "459551",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "0c0e01d0-52dc-4283-a4c5-1263ab1137ff",
+      "employeeName": "Abass Makame Dosa",
+      "payrollNumber": "576368",
+      "error": "No documents found in HRIMS response"
+    }
+  ]
+}
