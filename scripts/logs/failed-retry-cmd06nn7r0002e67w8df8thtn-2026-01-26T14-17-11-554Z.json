@@ -1,0 +1,37 @@
+{
+  "institutionId": "cmd06nn7r0002e67w8df8thtn",
+  "timestamp": "2026-01-26T14:17:11.555Z",
+  "totalFailed": 5,
+  "employees": [
+    {
+      "employeeId": "58485a6f-5c78-46ea-bdef-3c5fa8c74fbc",
+      "employeeName": "Khamis Moh'd Khamis",
+      "payrollNumber": "336927",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "58fed80a-26ed-4c47-8673-ad51ff8010c2",
+      "employeeName": "Khamis Mossi Mgeni",
+      "payrollNumber": "880363",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "dacf6366-50b7-4436-854d-e1d41e8b5cb8",
+      "employeeName": "Khamis Mrisho Khamis",
+      "payrollNumber": "818309",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "59d8f8bc-aa05-4d69-a593-c0ce7dfcf695",
+      "employeeName": "Khamis Mtumwa Muhunzi",
+      "payrollNumber": "651858",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "2fa3129c-8ead-4939-b7f3-a5651e22dcdc",
+      "employeeName": "Khamis Mwadini Moh'd",
+      "payrollNumber": "348129",
+      "error": "No documents found in HRIMS"
+    }
+  ]
+}

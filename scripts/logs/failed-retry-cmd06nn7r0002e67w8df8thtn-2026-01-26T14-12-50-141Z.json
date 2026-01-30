@@ -1,0 +1,307 @@
+{
+  "institutionId": "cmd06nn7r0002e67w8df8thtn",
+  "timestamp": "2026-01-26T14:12:50.141Z",
+  "totalFailed": 50,
+  "employees": [
+    {
+      "employeeId": "d94ac1ce-8e8f-48ed-a524-20cf786733f4",
+      "employeeName": "Abadi Ali Abadi",
+      "payrollNumber": "189535",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "ad66214a-1fd9-4533-a13a-30cd4a4d58eb",
+      "employeeName": "Abass Abdulla Abass",
+      "payrollNumber": "575452",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "30ae53eb-6d30-4227-9968-9bcdacedd03b",
+      "employeeName": "Abass Ali Hassan",
+      "payrollNumber": "282918",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "14ca7078-414a-4949-a5f8-c525fae49171",
+      "employeeName": "Abass Hassan Abass",
+      "payrollNumber": "828831",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "53062925-32f1-4607-b41b-b6d028f8e4c4",
+      "employeeName": "Abass Hassan Abass",
+      "payrollNumber": "847259",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "bc81fefa-eb10-4403-8e51-7c560a256772",
+      "employeeName": "Abassi Khamissi Issa",
+      "payrollNumber": "776150",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "7228c3aa-8e6e-41ce-87fa-8e8c71df6df9",
+      "employeeName": "Abass Issa Abass",
+      "payrollNumber": "418232",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "e79ef1fe-8b0a-4f68-8aed-0a138f1fc27b",
+      "employeeName": "Abass Khamis Abass",
+      "payrollNumber": "289593",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "6d09e111-bb35-4f45-a25c-4779fdcf8ada",
+      "employeeName": "Abass Khamis Ali",
+      "payrollNumber": "459551",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "0c0e01d0-52dc-4283-a4c5-1263ab1137ff",
+      "employeeName": "Abass Makame Dosa",
+      "payrollNumber": "576368",
+      "error": "No documents found in HRIMS response"
+    },
+    {
+      "employeeId": "5e6de94a-f1e9-4058-be19-161b98acc83d",
+      "employeeName": "Abass Moh'd Hamza",
+      "payrollNumber": "489627",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "5708e176-5ad6-4987-999d-591f5a0386f8",
+      "employeeName": "Abass Salim Said",
+      "payrollNumber": "976744",
+      "error": "No documents found in HRIMS response"
+    },
+    {
+      "employeeId": "a750bd66-3fe6-4dbb-83f1-79732269703c",
+      "employeeName": "Abdalla Ali Abdalla",
+      "payrollNumber": "734898",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "b3d33dca-dcce-4c40-8c06-556b36c67c77",
+      "employeeName": "Abdalla Ali Ali",
+      "payrollNumber": "430171",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "c5911bef-6d56-4c17-8d31-06e0106ee5c8",
+      "employeeName": "Abdalla Ali Khamis",
+      "payrollNumber": "857602",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "dba8d670-9ea9-47aa-8f6b-937b07feaa5a",
+      "employeeName": "Abdalla Ali Said",
+      "payrollNumber": "753916",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "d09276f5-deea-4d57-9f0a-4c8f9e48d56b",
+      "employeeName": "Abdalla Ali Yussuf",
+      "payrollNumber": "350915",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "3255d845-9f11-45ca-a21d-8c12fc2c7501",
+      "employeeName": "Abdalla Ame Pandu",
+      "payrollNumber": "868498",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "e6e385a8-bf20-4057-b785-877ebe73793f",
+      "employeeName": "Abdalla Amour Ali",
+      "payrollNumber": "823014",
+      "error": "No documents found in HRIMS response"
+    },
+    {
+      "employeeId": "f789480c-1168-48b6-8636-3779cc4b39a4",
+      "employeeName": "Abdalla Amour Haji",
+      "payrollNumber": "719937",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "a64c1543-2aef-4557-a909-1e53273f67b9",
+      "employeeName": "Abdalla Daud Khamis",
+      "payrollNumber": "460725",
+      "error": "No documents found in HRIMS response"
+    },
+    {
+      "employeeId": "003f692a-b343-4d74-ba4d-b14e0f8f27b7",
+      "employeeName": "Abdalla Haji Kondo",
+      "payrollNumber": "421342",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "5286e518-92ce-4aaf-af4a-4dab0cf2c243",
+      "employeeName": "Abdallah Ali Haji",
+      "payrollNumber": "259388",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "60c44721-100c-4dd8-89ca-e7bf569857cb",
+      "employeeName": "Abdalla Hamad Abdalla",
+      "payrollNumber": "350712",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "71c19f0c-5e29-43ac-a97d-4c4deb7ccd15",
+      "employeeName": "Abdalla Hamad Abdalla",
+      "payrollNumber": "175140",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "2b2a2e33-9646-4d01-aae3-abc27695dcf3",
+      "employeeName": "Abdalla Hamad Ali",
+      "payrollNumber": "317924",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "dc86e1f7-c269-4ae4-b1c6-b2a1a4bc6115",
+      "employeeName": "Abdallah Hamad Salum",
+      "payrollNumber": "575428",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "0b483037-8b30-4ee7-bebc-4fe34ef1d874",
+      "employeeName": "Abdallah Hassan Ussi",
+      "payrollNumber": "828604",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "52c8d0fe-bec2-438d-a802-b1a3d082eb81",
+      "employeeName": "Abdallah Omar Pongwa",
+      "payrollNumber": "131879",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "21d45614-292e-4e58-b7e2-13b4a31271ec",
+      "employeeName": "Abdallah Rajab Mohamed",
+      "payrollNumber": "848417",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "68fe944c-8936-49cb-8795-377a4e21a91a",
+      "employeeName": "Abdalla Juma Abdalla",
+      "payrollNumber": "336432",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "b28d7c0c-5f68-4f31-a1e8-ef8b6f3a2d64",
+      "employeeName": "Abdalla Juma Moh'd",
+      "payrollNumber": "861288",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "6b43d387-d8fe-4a87-ad18-bf5ea4690276",
+      "employeeName": "Abdalla Keis Omar",
+      "payrollNumber": "624228",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "ca614491-1605-49d7-a9dc-3d6a9facdc70",
+      "employeeName": "Abdalla Khatib Abdalla",
+      "payrollNumber": "625849",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "c8f3fa91-90ae-41f5-a82e-275570f95e15",
+      "employeeName": "Abdalla Khatib Ali",
+      "payrollNumber": "563464",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "ca7b2c0d-b65a-4ddb-a1aa-0267bb0fdf9a",
+      "employeeName": "Abdalla Kombo Khamis",
+      "payrollNumber": "526933",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "e0c172fd-2873-4a51-944f-d1008b47df1c",
+      "employeeName": "Abdalla Mbarouk Abdalla",
+      "payrollNumber": "121623",
+      "error": "No documents found in HRIMS response"
+    },
+    {
+      "employeeId": "c8b2c0f3-d31f-40da-976b-d0b3e2f467a3",
+      "employeeName": "Abdalla Mohamed Abdalla",
+      "payrollNumber": "281849",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "e1cc0aff-efde-47ce-a4ae-0b247ca03dea",
+      "employeeName": "Abdalla Moh'd Abdalla",
+      "payrollNumber": "730303",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "a91a415f-79dc-436c-acba-d1cd30662c65",
+      "employeeName": "Abdalla Moh'd Makame",
+      "payrollNumber": "147252",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "c42b123c-6778-40ce-818e-2a4d88b44ff7",
+      "employeeName": "Abdalla Moh'd Mshirazi",
+      "payrollNumber": "727323",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "56027d19-b7b6-4f4b-aa8c-fd5c117df17f",
+      "employeeName": "Abdalla Moh'd Soud",
+      "payrollNumber": "628676",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "6bc9dfad-6576-4be8-86a3-49c1344cb649",
+      "employeeName": "Abdalla Mussa Pandu",
+      "payrollNumber": "730182",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "3bbb6353-48a5-44c6-8722-36ad4e96d751",
+      "employeeName": "Abdalla Mussa Vuai",
+      "payrollNumber": "719353",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "afc47ec0-ff8a-467d-b626-4a57f25003b7",
+      "employeeName": "Abdalla Mwadini Ali",
+      "payrollNumber": "536523",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "39f6f3c0-9d2f-4ea5-afad-2aecd9136409",
+      "employeeName": "Abdalla Othman Yussuf",
+      "payrollNumber": "149797",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "c2864396-8fe5-4a5e-baf1-e353569b940a",
+      "employeeName": "Abdalla Said Ally",
+      "payrollNumber": "668496",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "2d8ecaef-f5b4-44f9-9e30-b5c3947e57dd",
+      "employeeName": "Abdalla Said Juma",
+      "payrollNumber": "928662",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "6be3deaf-4985-47ea-a622-24da5cacdb4e",
+      "employeeName": "Abdalla Saleh Abdalla",
+      "payrollNumber": "247456",
+      "error": "No documents found in HRIMS"
+    },
+    {
+      "employeeId": "5d2ef2a8-b5a4-451e-b341-994b5f188ccb",
+      "employeeName": "Abdalla Saleh Adam",
+      "payrollNumber": "320994",
+      "error": "No documents found in HRIMS"
+    }
+  ]
+}

@@ -43,6 +43,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -67,6 +68,9 @@ export interface Institution {
   phoneNumber?: string;
   voteNumber?: string;
   tinNumber?: string;
+  manualEntryEnabled?: boolean;
+  manualEntryStartDate?: Date | string | null;
+  manualEntryEndDate?: Date | string | null;
 }
 
 const institutionSchema = z.object({
@@ -77,6 +81,9 @@ const institutionSchema = z.object({
   phoneNumber: z.string().optional(),
   voteNumber: z.string().optional(),
   tinNumber: z.string().optional(),
+  manualEntryEnabled: z.boolean().optional(),
+  manualEntryStartDate: z.string().optional().or(z.literal('')),
+  manualEntryEndDate: z.string().optional().or(z.literal('')),
 });
 
 type InstitutionFormValues = z.infer<typeof institutionSchema>;
@@ -129,6 +136,9 @@ export default function InstitutionManagementPage() {
       phoneNumber: '',
       voteNumber: '',
       tinNumber: '',
+      manualEntryEnabled: false,
+      manualEntryStartDate: '',
+      manualEntryEndDate: '',
     },
   });
 
@@ -136,9 +146,20 @@ export default function InstitutionManagementPage() {
     setIsSubmitting(true);
 
     try {
+      // Format the data for API
+      const formattedData = {
+        ...data,
+        manualEntryStartDate: data.manualEntryStartDate
+          ? new Date(data.manualEntryStartDate).toISOString()
+          : null,
+        manualEntryEndDate: data.manualEntryEndDate
+          ? new Date(data.manualEntryEndDate).toISOString()
+          : null,
+      };
+
       const response = editingInstitution
-        ? await apiClient.updateInstitution(editingInstitution.id, data)
-        : await apiClient.createInstitution(data);
+        ? await apiClient.updateInstitution(editingInstitution.id, formattedData)
+        : await apiClient.createInstitution(formattedData);
 
       if (!response.success) {
         throw new Error(response.message || 'An error occurred');
@@ -163,12 +184,24 @@ export default function InstitutionManagementPage() {
 
   const openEditDialog = (institution: Institution) => {
     setEditingInstitution(institution);
+
+    // Format dates for datetime-local input
+    const formatDateForInput = (date: Date | string | null | undefined) => {
+      if (!date) return '';
+      const d = new Date(date);
+      if (isNaN(d.getTime())) return '';
+      return d.toISOString().slice(0, 16); // Format: YYYY-MM-DDTHH:mm
+    };
+
     form.reset({
       name: institution.name,
       email: institution.email || '',
       phoneNumber: institution.phoneNumber || '',
       voteNumber: institution.voteNumber || '',
       tinNumber: institution.tinNumber || '',
+      manualEntryEnabled: institution.manualEntryEnabled || false,
+      manualEntryStartDate: formatDateForInput(institution.manualEntryStartDate),
+      manualEntryEndDate: formatDateForInput(institution.manualEntryEndDate),
     });
     setIsDialogOpen(true);
   };
@@ -181,6 +214,9 @@ export default function InstitutionManagementPage() {
       phoneNumber: '',
       voteNumber: '',
       tinNumber: '',
+      manualEntryEnabled: false,
+      manualEntryStartDate: '',
+      manualEntryEndDate: '',
     });
     setIsDialogOpen(true);
   };
@@ -255,16 +291,21 @@ export default function InstitutionManagementPage() {
         'Phone Number',
         'Tin Number',
         'Vote Number',
+        'Manual Entry',
       ];
       const tableRows: any[][] = [];
 
       filteredInstitutions.forEach((institution) => {
+        const manualEntryStatus = institution.manualEntryEnabled
+          ? 'Enabled'
+          : 'Disabled';
         const rowData = [
           institution.name,
           institution.email || '-',
           institution.phoneNumber || '-',
           institution.tinNumber || '-',
           institution.voteNumber || '-',
+          manualEntryStatus,
         ];
         tableRows.push(rowData);
       });
@@ -320,16 +361,21 @@ export default function InstitutionManagementPage() {
           'Phone Number',
           'Tin Number',
           'Vote Number',
+          'Manual Entry',
         ],
       ];
 
       filteredInstitutions.forEach((institution) => {
+        const manualEntryStatus = institution.manualEntryEnabled
+          ? 'Enabled'
+          : 'Disabled';
         const rowData = [
           institution.name,
           institution.email || '',
           institution.phoneNumber || '',
           institution.tinNumber || '',
           institution.voteNumber || '',
+          manualEntryStatus,
         ];
         wsData.push(rowData);
       });
@@ -449,39 +495,76 @@ export default function InstitutionManagementPage() {
                     <TableHead>Phone Number</TableHead>
                     <TableHead>Tin Number</TableHead>
                     <TableHead>Vote Number</TableHead>
+                    <TableHead>Manual Entry</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {paginatedInstitutions.map((inst) => (
-                    <TableRow key={inst.id}>
-                      <TableCell className="font-medium">{inst.name}</TableCell>
-                      <TableCell>{inst.email || '-'}</TableCell>
-                      <TableCell>{inst.phoneNumber || '-'}</TableCell>
-                      <TableCell className="font-mono text-sm text-gray-600">
-                        {inst.tinNumber || '-'}
-                      </TableCell>
-                      <TableCell>{inst.voteNumber || '-'}</TableCell>
-                      <TableCell className="text-right space-x-2">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => openEditDialog(inst)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                          <span className="sr-only">Edit</span>
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="icon"
-                          onClick={() => openDeleteDialog(inst)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          <span className="sr-only">Delete</span>
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {paginatedInstitutions.map((inst) => {
+                    const isEnabled = inst.manualEntryEnabled || false;
+                    const now = new Date();
+                    const startDate = inst.manualEntryStartDate
+                      ? new Date(inst.manualEntryStartDate)
+                      : null;
+                    const endDate = inst.manualEntryEndDate
+                      ? new Date(inst.manualEntryEndDate)
+                      : null;
+                    const isActive =
+                      isEnabled &&
+                      startDate &&
+                      endDate &&
+                      now >= startDate &&
+                      now <= endDate;
+
+                    return (
+                      <TableRow key={inst.id}>
+                        <TableCell className="font-medium">
+                          {inst.name}
+                        </TableCell>
+                        <TableCell>{inst.email || '-'}</TableCell>
+                        <TableCell>{inst.phoneNumber || '-'}</TableCell>
+                        <TableCell className="font-mono text-sm text-gray-600">
+                          {inst.tinNumber || '-'}
+                        </TableCell>
+                        <TableCell>{inst.voteNumber || '-'}</TableCell>
+                        <TableCell>
+                          {isEnabled ? (
+                            <span
+                              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                                isActive
+                                  ? 'bg-green-100 text-green-800'
+                                  : 'bg-yellow-100 text-yellow-800'
+                              }`}
+                            >
+                              {isActive ? '🟢 Active' : '🟡 Enabled'}
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-gray-100 text-gray-800">
+                              ❌ Disabled
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right space-x-2">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => openEditDialog(inst)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                            <span className="sr-only">Edit</span>
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="icon"
+                            onClick={() => openDeleteDialog(inst)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            <span className="sr-only">Delete</span>
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
               <Pagination
@@ -574,6 +657,70 @@ export default function InstitutionManagementPage() {
                   </FormItem>
                 )}
               />
+
+              <div className="border-t pt-4 space-y-4">
+                <h3 className="text-sm font-semibold">Manual Employee Entry Permission</h3>
+                <FormField
+                  control={form.control}
+                  name="manualEntryEnabled"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                      <div className="space-y-0.5">
+                        <FormLabel>Enable Manual Entry</FormLabel>
+                        <div className="text-sm text-muted-foreground">
+                          Allow HRO users from this institution to manually add employees
+                        </div>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+
+                {form.watch('manualEntryEnabled') && (
+                  <>
+                    <FormField
+                      control={form.control}
+                      name="manualEntryStartDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Start Date</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="datetime-local"
+                              {...field}
+                              className="block w-full"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="manualEntryEndDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>End Date</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="datetime-local"
+                              {...field}
+                              className="block w-full"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </>
+                )}
+              </div>
+
               <DialogFooter>
                 <Button
                   type="button"
