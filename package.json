@@ -30,7 +30,13 @@
     "loadtest:hr": "./load-tests/run-tests.sh hr-workflows",
     "loadtest:files": "./load-tests/run-tests.sh file-ops",
     "loadtest:smoke": "./load-tests/run-tests.sh smoke",
-    "loadtest:all": "./load-tests/run-tests.sh all"
+    "loadtest:all": "./load-tests/run-tests.sh all",
+    "start:all": "./scripts/start-all.sh",
+    "stop:all": "./scripts/stop-all.sh",
+    "restart:all": "./scripts/restart-all.sh",
+    "status": "./scripts/status.sh",
+    "pm2:logs": "pm2 logs",
+    "pm2:monit": "pm2 monit"
   },
   "dependencies": {
     "@genkit-ai/googleai": "^1.8.0",
