@@ -11,9 +11,12 @@ import { useAuth } from '@/hooks/use-auth';
 import { PersonalInfoStep } from '@/components/manual-entry/personal-info-step';
 import { EmploymentInfoStep } from '@/components/manual-entry/employment-info-step';
 import { DocumentsStep } from '@/components/manual-entry/documents-step';
+import { BulkUpload } from '@/components/manual-entry/bulk-upload';
 import { toast } from '@/hooks/use-toast';
 import { refreshAuthCookie } from '@/lib/auth-cookie-helper';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { UserPlus, Upload } from 'lucide-react';
 
 export default function AddEmployeePage() {
   const router = useRouter();
@@ -311,10 +314,23 @@ export default function AddEmployeePage() {
     <div>
       <PageHeader
         title="Add Employee"
-        description="Manually enter employee data for your institution"
+        description="Add employees manually or upload bulk data from CSV file"
       />
 
-      <Card>
+      <Tabs defaultValue="manual" className="w-full">
+        <TabsList className="grid w-full max-w-md grid-cols-2 mb-6">
+          <TabsTrigger value="manual" className="flex items-center gap-2">
+            <UserPlus className="h-4 w-4" />
+            Manual Entry
+          </TabsTrigger>
+          <TabsTrigger value="bulk" className="flex items-center gap-2">
+            <Upload className="h-4 w-4" />
+            Bulk Upload
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="manual">
+          <Card>
         <CardHeader>
           <div className="space-y-2">
             <div className="flex justify-between items-center mb-2">
@@ -384,6 +400,16 @@ export default function AddEmployeePage() {
           )}
         </CardContent>
       </Card>
+        </TabsContent>
+
+        <TabsContent value="bulk">
+          <BulkUpload
+            onComplete={() => {
+              router.push('/dashboard/profile');
+            }}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
