@@ -71,7 +71,8 @@ COMMON ERRORS:
 
 NEED HELP?
 ----------
-Read the full guide: /BULK_EMPLOYEE_UPLOAD_GUIDE.md
+Read the full guide: https://csms.zanajira.go.tz/dashboard/docs/bulk-upload
+Download PDF guide: https://csms.zanajira.go.tz/BULK_EMPLOYEE_UPLOAD_GUIDE.pdf
 Contact: CSMS Administrator
 Email: support@csms.zanajira.go.tz
 
