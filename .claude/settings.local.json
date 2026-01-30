@@ -150,7 +150,15 @@
       "Bash(DATABASE_URL=\"postgresql://postgres:Mamlaka2020@localhost:5432/csms_test?schema=public\" npx prisma db push:*)",
       "Bash(psql:*)",
       "Bash(PORT=9002 npm run build:*)",
-      "Bash(jobs)"
+      "Bash(jobs)",
+      "Bash(nginx:*)",
+      "Bash(systemctl reload:*)",
+      "Bash(systemctl start:*)",
+      "Bash(/etc/init.d/nginx start)",
+      "Bash(service:*)",
+      "Bash(/www/server/nginx/sbin/nginx:*)",
+      "Bash(node -e:*)",
+      "Bash(git pull:*)"
     ],
     "deny": []
   }
