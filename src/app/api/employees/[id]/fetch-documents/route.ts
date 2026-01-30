@@ -215,6 +215,7 @@ export async function POST(
         confirmationLetterUrl: true,
         jobContractUrl: true,
         birthCertificateUrl: true,
+        dataSource: true,
       },
     });
 
@@ -222,6 +223,17 @@ export async function POST(
       return NextResponse.json(
         { success: false, message: 'Employee not found' },
         { status: 404 }
+      );
+    }
+
+    // Don't fetch from HRIMS for manually entered employees
+    if (employee.dataSource === 'MANUAL_ENTRY') {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Cannot fetch documents from HRIMS for manually entered employees',
+        },
+        { status: 400 }
       );
     }
 

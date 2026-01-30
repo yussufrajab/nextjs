@@ -168,12 +168,15 @@ const EmployeeDetailsCard = ({
       // 1. Photo is missing, OR
       // 2. Photo doesn't start with "data:image" (base64) or "/api/files/employee-photos/" (MinIO)
       // 3. Employee has a payroll number
+      // 4. Employee is NOT manually entered (dataSource !== 'MANUAL_ENTRY')
       const hasExistingPhoto =
         profileImageUrl &&
         (profileImageUrl.startsWith('data:image') ||
           profileImageUrl.startsWith('/api/files/employee-photos/'));
 
-      if (!hasExistingPhoto && emp.payrollNumber && !isFetchingPhoto) {
+      const isManuallyEntered = (emp as any).dataSource === 'MANUAL_ENTRY';
+
+      if (!hasExistingPhoto && emp.payrollNumber && !isFetchingPhoto && !isManuallyEntered) {
         setIsFetchingPhoto(true);
 
         try {
@@ -217,6 +220,7 @@ const EmployeeDetailsCard = ({
       // Only fetch if:
       // 1. Any document is missing or not from MinIO
       // 2. Employee has a payroll number
+      // 3. Employee is NOT manually entered (dataSource !== 'MANUAL_ENTRY')
       const hasAllDocuments =
         documentUrls['ardhil-hali']?.startsWith(
           '/api/files/employee-documents/'
@@ -231,7 +235,9 @@ const EmployeeDetailsCard = ({
           '/api/files/employee-documents/'
         );
 
-      if (!hasAllDocuments && emp.payrollNumber && !isFetchingDocuments) {
+      const isManuallyEntered = (emp as any).dataSource === 'MANUAL_ENTRY';
+
+      if (!hasAllDocuments && emp.payrollNumber && !isFetchingDocuments && !isManuallyEntered) {
         setIsFetchingDocuments(true);
 
         try {
