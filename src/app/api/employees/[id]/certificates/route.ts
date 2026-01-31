@@ -42,6 +42,11 @@ export async function POST(
     // Verify employee exists
     const employee = await prisma.employee.findUnique({
       where: { id: employeeId },
+      select: {
+        id: true,
+        institutionId: true,
+        dataSource: true,
+      },
     });
 
     if (!employee) {
@@ -51,7 +56,7 @@ export async function POST(
       );
     }
 
-    // For HRO role, check if employee belongs to their institution
+    // For HRO role, check if employee belongs to their institution and is manually entered
     if (userRole === 'HRO') {
       if (employee.institutionId !== userInstitutionId) {
         return NextResponse.json(
@@ -59,6 +64,18 @@ export async function POST(
             success: false,
             message:
               'Can only upload certificates for employees in your institution',
+          },
+          { status: 403 }
+        );
+      }
+
+      // HRO can only upload certificates for manually entered employees
+      if (employee.dataSource !== 'MANUAL_ENTRY') {
+        return NextResponse.json(
+          {
+            success: false,
+            message:
+              'HRO can only upload certificates for manually entered employees',
           },
           { status: 403 }
         );
@@ -94,11 +111,11 @@ export async function POST(
       );
     }
 
-    // Validate file size (max 5MB for certificates)
-    const maxSize = 5 * 1024 * 1024; // 5MB
+    // Validate file size (max 1MB for certificates)
+    const maxSize = 1 * 1024 * 1024; // 1MB
     if (file.size > maxSize) {
       return NextResponse.json(
-        { success: false, message: 'File size exceeds 5MB limit' },
+        { success: false, message: 'File size exceeds 1MB limit' },
         { status: 400 }
       );
     }
