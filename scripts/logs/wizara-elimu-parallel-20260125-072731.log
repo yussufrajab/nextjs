@@ -1,0 +1,211 @@
+🚀 Parallel Document Fetching Script
+
+────────────────────────────────────────────────────────────────────────────────
+Institution ID: cmd06nn7r0002e67w8df8thtn
+Batch Size: 2 employees in parallel
+Starting Offset: 0
+Skip No IDs: Yes
+────────────────────────────────────────────────────────────────────────────────
+
+📋 Institution: WIZARA YA ELIMU NA MAFUNZO YA AMALI
+   Vote: 011 | TIN: 101817709
+
+   ⏭️  Skipping 3731 employees who already have documents in MinIO
+📊 Total employees in database: 14803
+   ⊘ Skipped 3731 employees without zanId or payrollNumber
+📦 Processing 14803 employees (starting from #1)
+
+
+📦 Batch 1/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.3s per employee)
+📊 Progress: 2/14803 (0.0%) | ✓0 ⚠0 ✗2 ⊘0 | ETA: 17.1h | Rate: 0.24 emp/s
+📦 Batch 2/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.2s per employee)
+📊 Progress: 4/14803 (0.0%) | ✓0 ⚠0 ✗4 ⊘0 | ETA: 19.1h | Rate: 0.22 emp/s
+📦 Batch 3/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.2s per employee)
+📊 Progress: 6/14803 (0.0%) | ✓0 ⚠0 ✗6 ⊘0 | ETA: 19.7h | Rate: 0.21 emp/s
+📦 Batch 4/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.3s per employee)
+📊 Progress: 8/14803 (0.1%) | ✓0 ⚠0 ✗8 ⊘0 | ETA: 20.1h | Rate: 0.20 emp/s
+📦 Batch 5/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.3s per employee)
+📊 Progress: 10/14803 (0.1%) | ✓0 ⚠0 ✗10 ⊘0 | ETA: 20.3h | Rate: 0.20 emp/s
+📦 Batch 6/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.3s per employee)
+📊 Progress: 12/14803 (0.1%) | ✓0 ⚠0 ✗12 ⊘0 | ETA: 20.4h | Rate: 0.20 emp/s
+📦 Batch 7/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.2s per employee)
+📊 Progress: 14/14803 (0.1%) | ✓0 ⚠0 ✗14 ⊘0 | ETA: 20.5h | Rate: 0.20 emp/s
+📦 Batch 8/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.3s per employee)
+📊 Progress: 16/14803 (0.1%) | ✓0 ⚠0 ✗16 ⊘0 | ETA: 20.6h | Rate: 0.20 emp/s
+📦 Batch 9/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.3s per employee)
+📊 Progress: 18/14803 (0.1%) | ✓0 ⚠0 ✗18 ⊘0 | ETA: 20.6h | Rate: 0.20 emp/s
+📦 Batch 10/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.3s per employee)
+📊 Progress: 20/14803 (0.1%) | ✓0 ⚠0 ✗20 ⊘0 | ETA: 20.7h | Rate: 0.20 emp/s
+📦 Batch 11/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.3s per employee)
+📊 Progress: 22/14803 (0.1%) | ✓0 ⚠0 ✗22 ⊘0 | ETA: 20.7h | Rate: 0.20 emp/s
+📦 Batch 12/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.3s per employee)
+📊 Progress: 24/14803 (0.2%) | ✓0 ⚠0 ✗24 ⊘0 | ETA: 20.8h | Rate: 0.20 emp/s
+📦 Batch 13/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.3s per employee)
+📊 Progress: 26/14803 (0.2%) | ✓0 ⚠0 ✗26 ⊘0 | ETA: 20.8h | Rate: 0.20 emp/s
+📦 Batch 14/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.2s per employee)
+📊 Progress: 28/14803 (0.2%) | ✓0 ⚠0 ✗28 ⊘0 | ETA: 20.8h | Rate: 0.20 emp/s
+📦 Batch 15/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.3s per employee)
+📊 Progress: 30/14803 (0.2%) | ✓0 ⚠0 ✗30 ⊘0 | ETA: 20.8h | Rate: 0.20 emp/s
+📦 Batch 16/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.3s per employee)
+📊 Progress: 32/14803 (0.2%) | ✓0 ⚠0 ✗32 ⊘0 | ETA: 20.8h | Rate: 0.20 emp/s
+📦 Batch 17/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.3s per employee)
+📊 Progress: 34/14803 (0.2%) | ✓0 ⚠0 ✗34 ⊘0 | ETA: 20.8h | Rate: 0.20 emp/s
+📦 Batch 18/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.3s per employee)
+📊 Progress: 36/14803 (0.2%) | ✓0 ⚠0 ✗36 ⊘0 | ETA: 20.8h | Rate: 0.20 emp/s
+📦 Batch 19/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.3s per employee)
+📊 Progress: 38/14803 (0.3%) | ✓0 ⚠0 ✗38 ⊘0 | ETA: 20.9h | Rate: 0.20 emp/s
+📦 Batch 20/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.2s per employee)
+📊 Progress: 40/14803 (0.3%) | ✓0 ⚠0 ✗40 ⊘0 | ETA: 20.9h | Rate: 0.20 emp/s
+📦 Batch 21/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.3s per employee)
+📊 Progress: 42/14803 (0.3%) | ✓0 ⚠0 ✗42 ⊘0 | ETA: 20.9h | Rate: 0.20 emp/s
+📦 Batch 22/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.3s per employee)
+📊 Progress: 44/14803 (0.3%) | ✓0 ⚠0 ✗44 ⊘0 | ETA: 20.9h | Rate: 0.20 emp/s
+📦 Batch 23/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.3s per employee)
+📊 Progress: 46/14803 (0.3%) | ✓0 ⚠0 ✗46 ⊘0 | ETA: 20.9h | Rate: 0.20 emp/s
+📦 Batch 24/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.3s per employee)
+📊 Progress: 48/14803 (0.3%) | ✓0 ⚠0 ✗48 ⊘0 | ETA: 20.9h | Rate: 0.20 emp/s
+📦 Batch 25/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.2s per employee)
+📊 Progress: 50/14803 (0.3%) | ✓0 ⚠0 ✗50 ⊘0 | ETA: 20.9h | Rate: 0.20 emp/s
+📦 Batch 26/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.3s per employee)
+📊 Progress: 52/14803 (0.4%) | ✓0 ⚠0 ✗52 ⊘0 | ETA: 20.9h | Rate: 0.20 emp/s
+📦 Batch 27/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.2s per employee)
+📊 Progress: 54/14803 (0.4%) | ✓0 ⚠0 ✗54 ⊘0 | ETA: 20.9h | Rate: 0.20 emp/s
+📦 Batch 28/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.2s per employee)
+📊 Progress: 56/14803 (0.4%) | ✓0 ⚠0 ✗56 ⊘0 | ETA: 20.9h | Rate: 0.20 emp/s
+📦 Batch 29/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.3s per employee)
+📊 Progress: 58/14803 (0.4%) | ✓0 ⚠0 ✗58 ⊘0 | ETA: 20.9h | Rate: 0.20 emp/s
+📦 Batch 30/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.3s per employee)
+📊 Progress: 60/14803 (0.4%) | ✓0 ⚠0 ✗60 ⊘0 | ETA: 20.9h | Rate: 0.20 emp/s
+📦 Batch 31/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.3s per employee)
+📊 Progress: 62/14803 (0.4%) | ✓0 ⚠0 ✗62 ⊘0 | ETA: 20.9h | Rate: 0.20 emp/s
+📦 Batch 32/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.2s per employee)
+📊 Progress: 64/14803 (0.4%) | ✓0 ⚠0 ✗64 ⊘0 | ETA: 20.9h | Rate: 0.20 emp/s
+📦 Batch 33/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.2s per employee)
+📊 Progress: 66/14803 (0.4%) | ✓0 ⚠0 ✗66 ⊘0 | ETA: 20.9h | Rate: 0.20 emp/s
+📦 Batch 34/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.2s per employee)
+📊 Progress: 68/14803 (0.5%) | ✓0 ⚠0 ✗68 ⊘0 | ETA: 20.9h | Rate: 0.20 emp/s
+📦 Batch 35/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.2s per employee)
+📊 Progress: 70/14803 (0.5%) | ✓0 ⚠0 ✗70 ⊘0 | ETA: 20.9h | Rate: 0.20 emp/s
+📦 Batch 36/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.3s per employee)
+📊 Progress: 72/14803 (0.5%) | ✓0 ⚠0 ✗72 ⊘0 | ETA: 20.9h | Rate: 0.20 emp/s
+📦 Batch 37/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.3s per employee)
+📊 Progress: 74/14803 (0.5%) | ✓0 ⚠0 ✗74 ⊘0 | ETA: 20.9h | Rate: 0.20 emp/s
+📦 Batch 38/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.3s per employee)
+📊 Progress: 76/14803 (0.5%) | ✓0 ⚠0 ✗76 ⊘0 | ETA: 20.9h | Rate: 0.20 emp/s
+📦 Batch 39/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.2s per employee)
+📊 Progress: 78/14803 (0.5%) | ✓0 ⚠0 ✗78 ⊘0 | ETA: 20.9h | Rate: 0.20 emp/s
+📦 Batch 40/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.3s per employee)
+📊 Progress: 80/14803 (0.5%) | ✓0 ⚠0 ✗80 ⊘0 | ETA: 20.9h | Rate: 0.20 emp/s
+📦 Batch 41/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.3s per employee)
+📊 Progress: 82/14803 (0.6%) | ✓0 ⚠0 ✗82 ⊘0 | ETA: 20.9h | Rate: 0.20 emp/s
+📦 Batch 42/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.2s per employee)
+📊 Progress: 84/14803 (0.6%) | ✓0 ⚠0 ✗84 ⊘0 | ETA: 20.9h | Rate: 0.20 emp/s
+📦 Batch 43/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.3s per employee)
+📊 Progress: 86/14803 (0.6%) | ✓0 ⚠0 ✗86 ⊘0 | ETA: 20.9h | Rate: 0.20 emp/s
+📦 Batch 44/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.3s per employee)
+📊 Progress: 88/14803 (0.6%) | ✓0 ⚠0 ✗88 ⊘0 | ETA: 20.9h | Rate: 0.20 emp/s
+📦 Batch 45/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.2s per employee)
+📊 Progress: 90/14803 (0.6%) | ✓0 ⚠0 ✗90 ⊘0 | ETA: 20.9h | Rate: 0.20 emp/s
+📦 Batch 46/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.2s per employee)
+📊 Progress: 92/14803 (0.6%) | ✓0 ⚠0 ✗92 ⊘0 | ETA: 20.9h | Rate: 0.20 emp/s
+📦 Batch 47/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.3s per employee)
+📊 Progress: 94/14803 (0.6%) | ✓0 ⚠0 ✗94 ⊘0 | ETA: 20.9h | Rate: 0.20 emp/s
+📦 Batch 48/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.3s per employee)
+📊 Progress: 96/14803 (0.6%) | ✓0 ⚠0 ✗96 ⊘0 | ETA: 20.9h | Rate: 0.20 emp/s
+📦 Batch 49/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.3s per employee)
+📊 Progress: 98/14803 (0.7%) | ✓0 ⚠0 ✗98 ⊘0 | ETA: 20.9h | Rate: 0.20 emp/s
+📦 Batch 50/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.3s per employee)
+📊 Progress: 100/14803 (0.7%) | ✓0 ⚠0 ✗100 ⊘0 | ETA: 20.9h | Rate: 0.20 emp/s
+📦 Batch 51/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.3s per employee)
+📊 Progress: 102/14803 (0.7%) | ✓0 ⚠0 ✗102 ⊘0 | ETA: 20.9h | Rate: 0.20 emp/s
+📦 Batch 52/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.3s per employee)
+📊 Progress: 104/14803 (0.7%) | ✓0 ⚠0 ✗104 ⊘0 | ETA: 20.9h | Rate: 0.20 emp/s
+📦 Batch 53/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.2s per employee)
+📊 Progress: 106/14803 (0.7%) | ✓0 ⚠0 ✗106 ⊘0 | ETA: 20.9h | Rate: 0.20 emp/s
+📦 Batch 54/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.3s per employee)
+📊 Progress: 108/14803 (0.7%) | ✓0 ⚠0 ✗108 ⊘0 | ETA: 20.9h | Rate: 0.20 emp/s
+📦 Batch 55/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.2s per employee)
+📊 Progress: 110/14803 (0.7%) | ✓0 ⚠0 ✗110 ⊘0 | ETA: 20.9h | Rate: 0.20 emp/s
+📦 Batch 56/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.3s per employee)
+📊 Progress: 112/14803 (0.8%) | ✓0 ⚠0 ✗112 ⊘0 | ETA: 20.9h | Rate: 0.20 emp/s
+📦 Batch 57/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.3s per employee)
+📊 Progress: 114/14803 (0.8%) | ✓0 ⚠0 ✗114 ⊘0 | ETA: 20.9h | Rate: 0.20 emp/s
+📦 Batch 58/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.3s per employee)
+📊 Progress: 116/14803 (0.8%) | ✓0 ⚠0 ✗116 ⊘0 | ETA: 20.9h | Rate: 0.20 emp/s
+📦 Batch 59/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.2s per employee)
+📊 Progress: 118/14803 (0.8%) | ✓0 ⚠0 ✗118 ⊘0 | ETA: 20.9h | Rate: 0.20 emp/s
+📦 Batch 60/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.3s per employee)
+📊 Progress: 120/14803 (0.8%) | ✓0 ⚠0 ✗120 ⊘0 | ETA: 20.9h | Rate: 0.20 emp/s
+📦 Batch 61/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.3s per employee)
+📊 Progress: 122/14803 (0.8%) | ✓0 ⚠0 ✗122 ⊘0 | ETA: 20.9h | Rate: 0.20 emp/s
+📦 Batch 62/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.2s per employee)
+📊 Progress: 124/14803 (0.8%) | ✓0 ⚠0 ✗124 ⊘0 | ETA: 20.9h | Rate: 0.20 emp/s
+📦 Batch 63/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.3s per employee)
+📊 Progress: 126/14803 (0.9%) | ✓0 ⚠0 ✗126 ⊘0 | ETA: 20.9h | Rate: 0.20 emp/s
+📦 Batch 64/7402 - Processing 2 employees in parallel...
+   ✅ Batch complete: 0 success, 2 failed, 0 skipped (avg 8.3s per employee)
+📊 Progress: 128/14803 (0.9%) | ✓0 ⚠0 ✗128 ⊘0 | ETA: 20.9h | Rate: 0.20 emp/s
+📦 Batch 65/7402 - Processing 2 employees in parallel...

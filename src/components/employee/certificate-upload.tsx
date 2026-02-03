@@ -87,12 +87,12 @@ export function CertificateUpload({
       return;
     }
 
-    // Validate file size (5MB)
-    const maxSize = 5 * 1024 * 1024;
+    // Validate file size (1MB)
+    const maxSize = 1 * 1024 * 1024;
     if (file.size > maxSize) {
       toast({
         title: 'File too large',
-        description: 'File size must be less than 5MB',
+        description: 'File size must be less than 1MB',
         variant: 'destructive',
       });
       return;

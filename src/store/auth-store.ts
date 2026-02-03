@@ -60,6 +60,7 @@ interface AuthState {
   initializeAuth: () => void;
   updateTokenFromApiClient: (newAccessToken: string) => void;
   getCSRFToken: () => string | null; // Helper to get CSRF token
+  refreshUserData: () => Promise<boolean>; // Refresh user data from database
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -500,6 +501,61 @@ export const useAuthStore = create<AuthState>()(
       // Helper to get CSRF token
       getCSRFToken: () => {
         return get().csrfToken;
+      },
+
+      // Refresh user data from database
+      refreshUserData: async () => {
+        try {
+          console.log('[AUTH] Refreshing user data from database...');
+          const response = await fetch(`/api/auth/refresh-user-data?t=${Date.now()}`, {
+            cache: 'no-store',
+            headers: {
+              'Cache-Control': 'no-cache',
+              'Pragma': 'no-cache',
+            },
+          });
+
+          if (!response.ok) {
+            console.error('[AUTH] Failed to refresh user data:', response.status);
+            return false;
+          }
+
+          const result = await response.json();
+
+          if (result.success && result.data) {
+            console.log('[AUTH] User data refreshed successfully');
+
+            // Update the store with fresh user data
+            set({
+              user: {
+                ...result.data,
+                createdAt: new Date(result.data.createdAt),
+                updatedAt: new Date(result.data.updatedAt),
+                temporaryPasswordExpiry: result.data.temporaryPasswordExpiry
+                  ? new Date(result.data.temporaryPasswordExpiry)
+                  : null,
+                lastPasswordChange: result.data.lastPasswordChange
+                  ? new Date(result.data.lastPasswordChange)
+                  : null,
+                passwordChangeLockoutUntil: result.data.passwordChangeLockoutUntil
+                  ? new Date(result.data.passwordChangeLockoutUntil)
+                  : null,
+              },
+              role: result.data.role,
+            });
+
+            // Update auth cookie with fresh data
+            setAuthCookie(get());
+
+            return true;
+          }
+
+          console.error('[AUTH] Invalid response from refresh endpoint');
+          return false;
+        } catch (error) {
+          console.error('[AUTH] Error refreshing user data:', error);
+          return false;
+        }
       },
     }),
     {

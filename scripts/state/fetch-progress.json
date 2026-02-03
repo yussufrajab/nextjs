@@ -1,0 +1,77 @@
+{
+  "startedAt": "2026-01-22T10:53:31.314Z",
+  "lastUpdatedAt": "2026-01-22T10:57:56.642Z",
+  "totalInstitutions": 72,
+  "completedInstitutions": [
+    {
+      "institutionId": "cmd06xe4b0010e6bqt54zkblq",
+      "institutionName": "AFISI YA MKURUGENZI WA MASHTAKA",
+      "status": "failed",
+      "error": "Job not found after multiple attempts",
+      "completedAt": "2026-01-22T10:53:51.362Z",
+      "retryCount": 0
+    },
+    {
+      "institutionId": "cmd06xe4e0011e6bqv8eg0b16",
+      "institutionName": "AFISI YA MWANASHERIA MKUU",
+      "status": "failed",
+      "error": "Job not found after multiple attempts",
+      "completedAt": "2026-01-22T10:54:26.405Z",
+      "retryCount": 0
+    },
+    {
+      "institutionId": "cmd06xe2o000ae6bquqbkbg4z",
+      "institutionName": "AFISI YA RAISI KAZI, UCHUMI NA UWEKEZAJI",
+      "status": "failed",
+      "error": "Job not found after multiple attempts",
+      "completedAt": "2026-01-22T10:55:01.450Z",
+      "retryCount": 0
+    },
+    {
+      "institutionId": "cmdca390e5b7e3c6f4ddbd4",
+      "institutionName": "Baraza la Jiji",
+      "status": "failed",
+      "error": "Job not found after multiple attempts",
+      "completedAt": "2026-01-22T10:55:36.491Z",
+      "retryCount": 0
+    },
+    {
+      "institutionId": "cmd4caf3852445c2568bc7c",
+      "institutionName": "Baraza la Manispaa Magharibi A",
+      "status": "failed",
+      "error": "Job not found after multiple attempts",
+      "completedAt": "2026-01-22T10:56:11.526Z",
+      "retryCount": 0
+    },
+    {
+      "institutionId": "cmdbcf753dfb9d0ae18259a",
+      "institutionName": "Baraza la Manispaa Magharibi B",
+      "status": "failed",
+      "error": "Job not found after multiple attempts",
+      "completedAt": "2026-01-22T10:56:46.564Z",
+      "retryCount": 0
+    },
+    {
+      "institutionId": "cmd59d412885295792e5a6f",
+      "institutionName": "Baraza la Manispaa Mjini Unguja",
+      "status": "failed",
+      "error": "Job not found after multiple attempts",
+      "completedAt": "2026-01-22T10:57:21.604Z",
+      "retryCount": 0
+    },
+    {
+      "institutionId": "cmd1545dfaf1f7a12e14814",
+      "institutionName": "Baraza la Mitihani",
+      "status": "failed",
+      "error": "Job not found after multiple attempts",
+      "completedAt": "2026-01-22T10:57:56.642Z",
+      "retryCount": 0
+    }
+  ],
+  "currentInstitutionIndex": 8,
+  "isComplete": false,
+  "totalEmployeesFetched": 0,
+  "successCount": 0,
+  "failureCount": 8,
+  "skippedCount": 0
+}

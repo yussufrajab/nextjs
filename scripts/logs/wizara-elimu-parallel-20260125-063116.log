@@ -1,0 +1,79 @@
+🚀 Parallel Document Fetching Script
+
+────────────────────────────────────────────────────────────────────────────────
+Institution ID: cmd06nn7r0002e67w8df8thtn
+Batch Size: 4 employees in parallel
+Starting Offset: 7000
+Skip No IDs: Yes
+Limit: 50 employees
+────────────────────────────────────────────────────────────────────────────────
+
+📋 Institution: WIZARA YA ELIMU NA MAFUNZO YA AMALI
+   Vote: 011 | TIN: 101817709
+
+📊 Total employees in database: 18534
+📦 Processing 50 employees (starting from #7001)
+
+
+📦 Batch 1/13 - Processing 4 employees in parallel...
+   ✅ Batch complete: 3 success, 1 failed, 0 skipped (avg 8.4s per employee)
+📊 Progress: 4/50 (8.0%) | ✓3 ⚠0 ✗1 ⊘0 | ETA: 2m | Rate: 0.47 emp/s
+📦 Batch 2/13 - Processing 4 employees in parallel...
+   ✅ Batch complete: 2 success, 2 failed, 0 skipped (avg 8.4s per employee)
+📊 Progress: 8/50 (16.0%) | ✓5 ⚠0 ✗3 ⊘0 | ETA: 2m | Rate: 0.42 emp/s
+📦 Batch 3/13 - Processing 4 employees in parallel...
+   ✅ Batch complete: 3 success, 1 failed, 0 skipped (avg 8.4s per employee)
+📊 Progress: 12/50 (24.0%) | ✓8 ⚠0 ✗4 ⊘0 | ETA: 2m | Rate: 0.40 emp/s
+📦 Batch 4/13 - Processing 4 employees in parallel...
+   ✅ Batch complete: 1 success, 3 failed, 0 skipped (avg 8.3s per employee)
+📊 Progress: 16/50 (32.0%) | ✓9 ⚠0 ✗7 ⊘0 | ETA: 1m | Rate: 0.40 emp/s
+📦 Batch 5/13 - Processing 4 employees in parallel...
+   ✅ Batch complete: 1 success, 3 failed, 0 skipped (avg 8.4s per employee)
+📊 Progress: 20/50 (40.0%) | ✓10 ⚠0 ✗10 ⊘0 | ETA: 1m | Rate: 0.40 emp/s
+📦 Batch 6/13 - Processing 4 employees in parallel...
+   ✅ Batch complete: 1 success, 3 failed, 0 skipped (avg 8.3s per employee)
+📊 Progress: 24/50 (48.0%) | ✓11 ⚠0 ✗13 ⊘0 | ETA: 1m | Rate: 0.39 emp/s
+📦 Batch 7/13 - Processing 4 employees in parallel...
+   ✅ Batch complete: 2 success, 2 failed, 0 skipped (avg 8.4s per employee)
+📊 Progress: 28/50 (56.0%) | ✓13 ⚠0 ✗15 ⊘0 | ETA: 56s | Rate: 0.39 emp/s
+📦 Batch 8/13 - Processing 4 employees in parallel...
+   ✅ Batch complete: 3 success, 1 failed, 0 skipped (avg 8.6s per employee)
+📊 Progress: 32/50 (64.0%) | ✓16 ⚠0 ✗16 ⊘0 | ETA: 46s | Rate: 0.39 emp/s
+📦 Batch 9/13 - Processing 4 employees in parallel...
+   ✅ Batch complete: 3 success, 1 failed, 0 skipped (avg 8.5s per employee)
+📊 Progress: 36/50 (72.0%) | ✓19 ⚠0 ✗17 ⊘0 | ETA: 36s | Rate: 0.39 emp/s
+📦 Batch 10/13 - Processing 4 employees in parallel...
+   ✅ Batch complete: 2 success, 2 failed, 0 skipped (avg 8.4s per employee)
+📊 Progress: 40/50 (80.0%) | ✓21 ⚠0 ✗19 ⊘0 | ETA: 26s | Rate: 0.39 emp/s
+📦 Batch 11/13 - Processing 4 employees in parallel...
+   ✅ Batch complete: 3 success, 1 failed, 0 skipped (avg 8.4s per employee)
+📊 Progress: 44/50 (88.0%) | ✓24 ⚠0 ✗20 ⊘0 | ETA: 16s | Rate: 0.39 emp/s
+📦 Batch 12/13 - Processing 4 employees in parallel...
+   ✅ Batch complete: 3 success, 1 failed, 0 skipped (avg 8.4s per employee)
+📊 Progress: 48/50 (96.0%) | ✓27 ⚠0 ✗21 ⊘0 | ETA: 5s | Rate: 0.38 emp/s
+📦 Batch 13/13 - Processing 2 employees in parallel...
+   ✅ Batch complete: 2 success, 0 failed, 0 skipped (avg 8.5s per employee)
+📊 Progress: 50/50 (100.0%) | ✓29 ⚠0 ✗21 ⊘0 | ETA: 0s | Rate: 0.37 emp/s
+
+════════════════════════════════════════════════════════════════════════════════
+📊 FINAL SUMMARY
+
+────────────────────────────────────────────────────────────────────────────────
+Institution: WIZARA YA ELIMU NA MAFUNZO YA AMALI
+Total Employees Processed: 50
+  ✅ Successful: 29
+  ⚠️  Partial: 0
+  ❌ Failed: 21
+  ⊘  Skipped: 0
+  ⏱️  Duration: 2m
+  📈 Average Rate: 0.37 employees/second
+  📊 Success Rate: 58.0%
+
+❌ 21 employees failed (too many to list)
+
+════════════════════════════════════════════════════════════════════════════════
+✅ Document fetch completed!
+
+📝 To continue from where you left off, run:
+npx tsx scripts/fetch-institution-documents-parallel.ts --institution-id=cmd06nn7r0002e67w8df8thtn --offset=7050 --batch-size=4
+

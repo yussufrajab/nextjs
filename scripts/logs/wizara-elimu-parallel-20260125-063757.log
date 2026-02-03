@@ -1,0 +1,50 @@
+🚀 Parallel Document Fetching Script
+
+────────────────────────────────────────────────────────────────────────────────
+Institution ID: cmd06nn7r0002e67w8df8thtn
+Batch Size: 4 employees in parallel
+Starting Offset: 7000
+Skip No IDs: Yes
+────────────────────────────────────────────────────────────────────────────────
+
+📋 Institution: WIZARA YA ELIMU NA MAFUNZO YA AMALI
+   Vote: 011 | TIN: 101817709
+
+📊 Total employees in database: 18534
+📦 Processing 11534 employees (starting from #7001)
+
+
+📦 Batch 1/2884 - Processing 4 employees in parallel...
+   ✅ Batch complete: 0 success, 4 failed, 0 skipped (avg 4.2s per employee)
+📊 Progress: 4/11534 (0.0%) | ✓0 ⚠0 ✗4 ⊘0 | ETA: 6.6h | Rate: 0.48 emp/s
+📦 Batch 2/2884 - Processing 4 employees in parallel...
+   ✅ Batch complete: 0 success, 4 failed, 0 skipped (avg 4.7s per employee)
+📊 Progress: 8/11534 (0.1%) | ✓0 ⚠0 ✗8 ⊘0 | ETA: 7.4h | Rate: 0.43 emp/s
+📦 Batch 3/2884 - Processing 4 employees in parallel...
+   ✅ Batch complete: 0 success, 4 failed, 0 skipped (avg 3.7s per employee)
+📊 Progress: 12/11534 (0.1%) | ✓0 ⚠0 ✗12 ⊘0 | ETA: 7.7h | Rate: 0.42 emp/s
+📦 Batch 4/2884 - Processing 4 employees in parallel...
+   ✅ Batch complete: 0 success, 4 failed, 0 skipped (avg 8.3s per employee)
+📊 Progress: 16/11534 (0.1%) | ✓0 ⚠0 ✗16 ⊘0 | ETA: 7.8h | Rate: 0.41 emp/s
+📦 Batch 5/2884 - Processing 4 employees in parallel...
+   ✅ Batch complete: 0 success, 4 failed, 0 skipped (avg 6.3s per employee)
+📊 Progress: 20/11534 (0.2%) | ✓0 ⚠0 ✗20 ⊘0 | ETA: 7.9h | Rate: 0.40 emp/s
+📦 Batch 6/2884 - Processing 4 employees in parallel...
+   ✅ Batch complete: 0 success, 4 failed, 0 skipped (avg 7.8s per employee)
+📊 Progress: 24/11534 (0.2%) | ✓0 ⚠0 ✗24 ⊘0 | ETA: 8.0h | Rate: 0.40 emp/s
+📦 Batch 7/2884 - Processing 4 employees in parallel...
+   ✅ Batch complete: 0 success, 4 failed, 0 skipped (avg 5.2s per employee)
+📊 Progress: 28/11534 (0.2%) | ✓0 ⚠0 ✗28 ⊘0 | ETA: 8.0h | Rate: 0.40 emp/s
+📦 Batch 8/2884 - Processing 4 employees in parallel...
+   ✅ Batch complete: 0 success, 4 failed, 0 skipped (avg 3.7s per employee)
+📊 Progress: 32/11534 (0.3%) | ✓0 ⚠0 ✗32 ⊘0 | ETA: 8.0h | Rate: 0.40 emp/s
+📦 Batch 9/2884 - Processing 4 employees in parallel...
+   ✅ Batch complete: 0 success, 4 failed, 0 skipped (avg 4.2s per employee)
+📊 Progress: 36/11534 (0.3%) | ✓0 ⚠0 ✗36 ⊘0 | ETA: 8.0h | Rate: 0.40 emp/s
+📦 Batch 10/2884 - Processing 4 employees in parallel...
+   ✅ Batch complete: 0 success, 4 failed, 0 skipped (avg 5.2s per employee)
+📊 Progress: 40/11534 (0.3%) | ✓0 ⚠0 ✗40 ⊘0 | ETA: 8.0h | Rate: 0.40 emp/s
+📦 Batch 11/2884 - Processing 4 employees in parallel...
+   ✅ Batch complete: 0 success, 4 failed, 0 skipped (avg 4.7s per employee)
+📊 Progress: 44/11534 (0.4%) | ✓0 ⚠0 ✗44 ⊘0 | ETA: 8.1h | Rate: 0.40 emp/s
+📦 Batch 12/2884 - Processing 4 employees in parallel...

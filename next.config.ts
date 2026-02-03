@@ -15,6 +15,19 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: false,
   },
 
+  // Webpack configuration to suppress warnings
+  webpack: (config, { isServer }) => {
+    // Suppress common warnings that don't affect functionality
+    config.ignoreWarnings = [
+      { module: /node_modules\/handlebars\/lib\/index\.js/ },
+      { message: /require\.extensions is not supported by webpack/ },
+      { message: /Critical dependency: the request of a dependency is an expression/ },
+      { module: /node_modules\/bullmq/ },
+    ];
+
+    return config;
+  },
+
   images: {
     remotePatterns: [
       {

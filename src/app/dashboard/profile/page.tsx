@@ -47,6 +47,18 @@ import {
 import { Pagination } from '@/components/shared/pagination';
 import { useSearchParams } from 'next/navigation';
 
+// Standard certificate types to display for upload
+const STANDARD_CERTIFICATE_TYPES = [
+  'Certificate of Secondary education (Form IV)',
+  'Advanced Certificate of Secondary education (Form VII)',
+  'Certificate',
+  'Diploma',
+  'Advanced Diploma',
+  'Bachelor Degree',
+  'Master Degree',
+  'PHd',
+];
+
 // Helper function to get initials for avatar
 const getInitials = (name?: string) => {
   if (!name) return '??';
@@ -168,12 +180,15 @@ const EmployeeDetailsCard = ({
       // 1. Photo is missing, OR
       // 2. Photo doesn't start with "data:image" (base64) or "/api/files/employee-photos/" (MinIO)
       // 3. Employee has a payroll number
+      // 4. Employee is NOT manually entered (dataSource !== 'MANUAL_ENTRY')
       const hasExistingPhoto =
         profileImageUrl &&
         (profileImageUrl.startsWith('data:image') ||
           profileImageUrl.startsWith('/api/files/employee-photos/'));
 
-      if (!hasExistingPhoto && emp.payrollNumber && !isFetchingPhoto) {
+      const isManuallyEntered = (emp as any).dataSource === 'MANUAL_ENTRY';
+
+      if (!hasExistingPhoto && emp.payrollNumber && !isFetchingPhoto && !isManuallyEntered) {
         setIsFetchingPhoto(true);
 
         try {
@@ -217,6 +232,7 @@ const EmployeeDetailsCard = ({
       // Only fetch if:
       // 1. Any document is missing or not from MinIO
       // 2. Employee has a payroll number
+      // 3. Employee is NOT manually entered (dataSource !== 'MANUAL_ENTRY')
       const hasAllDocuments =
         documentUrls['ardhil-hali']?.startsWith(
           '/api/files/employee-documents/'
@@ -231,7 +247,9 @@ const EmployeeDetailsCard = ({
           '/api/files/employee-documents/'
         );
 
-      if (!hasAllDocuments && emp.payrollNumber && !isFetchingDocuments) {
+      const isManuallyEntered = (emp as any).dataSource === 'MANUAL_ENTRY';
+
+      if (!hasAllDocuments && emp.payrollNumber && !isFetchingDocuments && !isManuallyEntered) {
         setIsFetchingDocuments(true);
 
         try {
@@ -672,35 +690,47 @@ const EmployeeDetailsCard = ({
               {canUploadDocuments && (
                 <p className="text-sm text-muted-foreground">
                   You can upload and manage employee certificates. Only PDF
-                  files up to 5MB are allowed.
+                  files up to 1MB are allowed.
+                  {userRole === 'HRO' && (
+                    <span className="block mt-1 text-xs text-amber-600">
+                      Note: HRO can only upload certificates for manually entered employees.
+                    </span>
+                  )}
                 </p>
               )}
             </CardHeader>
             <CardContent className="pt-0 pb-4 space-y-3">
-              {/* Display all certificates with their original HRIMS names */}
-              {certificates && certificates.length > 0 ? (
-                certificates.map((cert) => (
-                  <CertificateUpload
-                    key={cert.id}
-                    employeeId={emp.id}
-                    certificateType={cert.type}
-                    certificateTitle={cert.type}
-                    currentCertificate={cert}
-                    canUpload={canUploadDocuments || false}
-                    userRole={userRole}
-                    userInstitutionId={userInstitutionId}
-                    onUploadSuccess={handleCertificateUploadSuccess}
-                    onDeleteSuccess={handleCertificateDeleteSuccess}
-                  />
-                ))
-              ) : (
-                <div className="text-sm text-muted-foreground italic text-center py-4">
-                  No certificates available.{' '}
-                  {canUploadDocuments
-                    ? 'Upload certificates or they will be automatically fetched from HRIMS if available.'
-                    : 'Certificates will be automatically fetched from HRIMS if available.'}
-                </div>
-              )}
+              {/* Display all standard certificate types with upload capability */}
+              {(() => {
+                // Check if employee is manually entered
+                const isManuallyEntered = (emp as any).dataSource === 'MANUAL_ENTRY';
+
+                // For HRO, only show upload if employee is manually entered
+                const canUploadForThisEmployee = canUploadDocuments &&
+                  (userRole !== 'HRO' || isManuallyEntered);
+
+                return STANDARD_CERTIFICATE_TYPES.map((certType) => {
+                  // Find existing certificate of this type
+                  const existingCert = certificates?.find(
+                    (cert) => cert.type === certType
+                  );
+
+                  return (
+                    <CertificateUpload
+                      key={certType}
+                      employeeId={emp.id}
+                      certificateType={certType}
+                      certificateTitle={certType}
+                      currentCertificate={existingCert}
+                      canUpload={canUploadForThisEmployee || false}
+                      userRole={userRole}
+                      userInstitutionId={userInstitutionId}
+                      onUploadSuccess={handleCertificateUploadSuccess}
+                      onDeleteSuccess={handleCertificateDeleteSuccess}
+                    />
+                  );
+                });
+              })()}
             </CardContent>
           </Card>
         </section>

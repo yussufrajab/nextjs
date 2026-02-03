@@ -24,6 +24,7 @@ import {
   Activity,
   Camera,
   FileText,
+  UserPlus,
 } from 'lucide-react';
 import type { NavItem, Role } from './types';
 import { ROLES } from './constants';
@@ -116,6 +117,13 @@ export const NAV_ITEMS: NavItem[] = [
     icon: AlertTriangle,
     roles: [ROLES.HRO, ROLES.HRRP],
     description: 'View employees needing immediate attention.',
+  },
+  {
+    title: 'Add Employee',
+    href: '/dashboard/add-employee?nocache=1',
+    icon: UserPlus,
+    roles: [ROLES.HRO],
+    description: 'Manually add a new employee to the system.',
   },
   {
     title: 'Employee Profiles',

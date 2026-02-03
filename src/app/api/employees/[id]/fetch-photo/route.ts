@@ -25,6 +25,7 @@ export async function POST(
         payrollNumber: true,
         profileImageUrl: true,
         name: true,
+        dataSource: true,
       },
     });
 
@@ -32,6 +33,17 @@ export async function POST(
       return NextResponse.json(
         { success: false, message: 'Employee not found' },
         { status: 404 }
+      );
+    }
+
+    // Don't fetch from HRIMS for manually entered employees
+    if (employee.dataSource === 'MANUAL_ENTRY') {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Cannot fetch photo from HRIMS for manually entered employees',
+        },
+        { status: 400 }
       );
     }
 
