@@ -19,7 +19,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Navigate to project directory
-cd /www/wwwroot/nextjspro
+cd /home/latest
 
 echo -e "${RED}[1/13] Stopping PM2 processes...${NC}"
 pm2 stop all || true

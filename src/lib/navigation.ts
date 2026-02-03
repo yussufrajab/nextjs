@@ -25,6 +25,7 @@ import {
   Camera,
   FileText,
   UserPlus,
+  Settings,
 } from 'lucide-react';
 import type { NavItem, Role } from './types';
 import { ROLES } from './constants';
@@ -93,6 +94,13 @@ export const NAV_ITEMS: NavItem[] = [
         roles: [ROLES.ADMIN as Role],
         description:
           'Bulk fetch employee documents and certificates from HRIMS.',
+      },
+      {
+        title: 'HRIMS Settings',
+        href: '/dashboard/admin/hrims-settings',
+        icon: Settings,
+        roles: [ROLES.ADMIN as Role],
+        description: 'Configure HRIMS server connection settings (IP, port, API credentials).',
       },
       {
         title: 'Test HRIMS',
