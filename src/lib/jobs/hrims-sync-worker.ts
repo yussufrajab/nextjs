@@ -6,6 +6,7 @@
  */
 
 import { Worker, Job } from 'bullmq';
+import { getHrimsApiConfig } from '@/lib/hrims-config';
 import { createRedisConnection } from '../redis';
 import {
   HRIMS_SYNC_QUEUE_NAME,
@@ -16,29 +17,22 @@ import { db } from '../db';
 import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
 
-// HRIMS API Configuration
-const HRIMS_CONFIG = {
-  BASE_URL: 'http://10.0.217.11:8135/api',
-  API_KEY: '0ea1e3f5-ea57-410b-a199-246fa288b851',
-  TOKEN:
-    'CfDJ8M6SKjORsSdBliudb_vdU_DEea8FKIcQckiBxdvt4EJgtcP0ba_3REOpGvWYeOF46fvqw8heVnqFnXTwOmD5Wg5Qg3yNJlwyGDHVhqbgyKxB31Bjh2pI6C2qAYnLMovU4XLlQFVu7cTpIqtgItNZpM4',
-};
-
 async function fetchFromHRIMS(
   requestId: string,
-  requestPayloadData: any
+  requestPayloadData: any,
+  hrimsConfig: { BASE_URL: string; API_KEY: string; TOKEN: string }
 ): Promise<any> {
   try {
     const response = await axios.post(
-      `${HRIMS_CONFIG.BASE_URL}/Employees`,
+      `${hrimsConfig.BASE_URL}/Employees`,
       {
         RequestId: requestId,
         RequestPayloadData: requestPayloadData,
       },
       {
         headers: {
-          ApiKey: HRIMS_CONFIG.API_KEY,
-          Token: HRIMS_CONFIG.TOKEN,
+          ApiKey: hrimsConfig.API_KEY,
+          Token: hrimsConfig.TOKEN,
           'Content-Type': 'application/json',
         },
         timeout: 900000, // 15 minutes
@@ -231,6 +225,7 @@ async function saveEmployeeFromDetailedData(
  * Process a single HRIMS sync job
  */
 async function processHRIMSSyncJob(job: Job<HRIMSSyncJobData>): Promise<any> {
+  const HRIMS_CONFIG = await getHrimsApiConfig();
   const {
     institutionId,
     institutionName,
@@ -278,11 +273,15 @@ async function processHRIMSSyncJob(job: Job<HRIMSSyncJobData>): Promise<any> {
     } as HRIMSSyncProgress);
 
     try {
-      const employeeListResponse = await fetchFromHRIMS(requestId, {
-        PageNumber: currentPage,
-        PageSize: pageSize,
-        RequestBody: identifier,
-      });
+      const employeeListResponse = await fetchFromHRIMS(
+        requestId,
+        {
+          PageNumber: currentPage,
+          PageSize: pageSize,
+          RequestBody: identifier,
+        },
+        HRIMS_CONFIG
+      );
 
       const pageFetchTime = Date.now() - pageStartTime;
       console.log(`   Response received in ${pageFetchTime}ms`);

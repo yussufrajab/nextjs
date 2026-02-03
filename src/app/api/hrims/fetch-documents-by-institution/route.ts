@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getHrimsApiConfig } from '@/lib/hrims-config';
 import { db as prisma } from '@/lib/db';
 import { uploadFile } from '@/lib/minio';
 
@@ -8,14 +9,6 @@ export const dynamic = 'force-dynamic';
 
 // Utility function to add delay between requests
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-// HRIMS API Configuration
-const HRIMS_CONFIG = {
-  BASE_URL: 'http://10.0.217.11:8135/api',
-  API_KEY: '0ea1e3f5-ea57-410b-a199-246fa288b851',
-  TOKEN:
-    'CfDJ8M6SKjORsSdBliudb_vdU_DEea8FKIcQckiBxdvt4EJgtcP0ba_3REOpGvWYeOF46fvqw8heVnqFnXTwOmD5Wg5Qg3yNJlwyGDHVhqbgyKxB31Bjh2pI6C2qAYnLMovU4XLlQFVu7cTpIqtgItNZpM4',
-};
 
 // Document types for HRIMS RequestId 206
 const DOCUMENT_TYPES = [
@@ -74,7 +67,8 @@ async function fetchDocumentsFromHRIMS(
     confirmationLetterUrl: string | null;
     jobContractUrl: string | null;
     birthCertificateUrl: string | null;
-  }
+  },
+  hrimsConfig: { BASE_URL: string; API_KEY: string; TOKEN: string }
 ): Promise<{ success: boolean; data?: any; error?: string }> {
   try {
     console.log(
@@ -115,11 +109,11 @@ async function fetchDocumentsFromHRIMS(
       };
 
       try {
-        const response = await fetch(`${HRIMS_CONFIG.BASE_URL}/Employees`, {
+        const response = await fetch(`${hrimsConfig.BASE_URL}/Employees`, {
           method: 'POST',
           headers: {
-            ApiKey: HRIMS_CONFIG.API_KEY,
-            Token: HRIMS_CONFIG.TOKEN,
+            ApiKey: hrimsConfig.API_KEY,
+            Token: hrimsConfig.TOKEN,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(payload),
@@ -228,15 +222,18 @@ async function storeDocumentInMinIO(
 }
 
 // Process documents for a single employee using RequestId 206
-async function processEmployeeDocuments(employee: {
-  id: string;
-  name: string;
-  payrollNumber: string | null;
-  ardhilHaliUrl: string | null;
-  confirmationLetterUrl: string | null;
-  jobContractUrl: string | null;
-  birthCertificateUrl: string | null;
-}): Promise<DocumentResult> {
+async function processEmployeeDocuments(
+  employee: {
+    id: string;
+    name: string;
+    payrollNumber: string | null;
+    ardhilHaliUrl: string | null;
+    confirmationLetterUrl: string | null;
+    jobContractUrl: string | null;
+    birthCertificateUrl: string | null;
+  },
+  hrimsConfig: { BASE_URL: string; API_KEY: string; TOKEN: string }
+): Promise<DocumentResult> {
   const result: DocumentResult = {
     employeeId: employee.id,
     employeeName: employee.name,
@@ -255,7 +252,8 @@ async function processEmployeeDocuments(employee: {
   // Fetch documents from HRIMS using RequestId 206 (3 separate API calls)
   const fetchResult = await fetchDocumentsFromHRIMS(
     employee.payrollNumber,
-    employee
+    employee,
+    hrimsConfig
   );
 
   if (!fetchResult.success || !fetchResult.data) {
@@ -503,6 +501,7 @@ async function processEmployeeDocuments(employee: {
 
 export async function POST(request: NextRequest) {
   try {
+    const HRIMS_CONFIG = await getHrimsApiConfig();
     const { institutionId } = await request.json();
 
     if (!institutionId) {
@@ -598,7 +597,7 @@ export async function POST(request: NextRequest) {
             continue;
           }
 
-          const result = await processEmployeeDocuments(employee);
+          const result = await processEmployeeDocuments(employee, HRIMS_CONFIG);
           results.push(result);
 
           if (result.status === 'success') {

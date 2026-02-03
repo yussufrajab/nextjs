@@ -1,24 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { v4 as uuidv4 } from 'uuid';
-
-// HRIMS API Configuration
-const HRIMS_CONFIG = {
-  BASE_URL: 'http://10.0.217.11:8135/api',
-  API_KEY: '0ea1e3f5-ea57-410b-a199-246fa288b851',
-  TOKEN:
-    'CfDJ8M6SKjORsSdBliudb_vdU_DEea8FKIcQckiBxdvt4EJgtcP0ba_3REOpGvWYeOF46fvqw8heVnqFnXTwOmD5Wg5Qg3yNJlwyGDHVhqbgyKxB31Bjh2pI6C2qAYnLMovU4XLlQFVu7cTpIqtgItNZpM4',
-};
+import { getHrimsApiConfig } from '@/lib/hrims-config';
 
 async function fetchFromHRIMS(
   requestId: string,
-  requestPayloadData: any
+  requestPayloadData: any,
+  config: { BASE_URL: string; API_KEY: string; TOKEN: string }
 ): Promise<any> {
-  const response = await fetch(`${HRIMS_CONFIG.BASE_URL}/Employees`, {
+  const response = await fetch(`${config.BASE_URL}/Employees`, {
     method: 'POST',
     headers: {
-      ApiKey: HRIMS_CONFIG.API_KEY,
-      Token: HRIMS_CONFIG.TOKEN,
+      ApiKey: config.API_KEY,
+      Token: config.TOKEN,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
@@ -235,13 +229,14 @@ async function saveEmployeeFromListData(
 async function processEmployeeDocuments(
   zanId: string,
   payrollNumber: string,
-  employeeId: string
+  employeeId: string,
+  HRIMS_CONFIG: { BASE_URL: string; API_KEY: string; TOKEN: string }
 ) {
   try {
     // Fetch documents
     const documentsResponse = await fetchFromHRIMS('202', {
       RequestBody: payrollNumber || zanId,
-    });
+    }, HRIMS_CONFIG);
 
     if (!documentsResponse.success || !documentsResponse.data?.documents) {
       return 0;
@@ -283,13 +278,14 @@ async function processEmployeeDocuments(
 async function processEmployeeCertificates(
   zanId: string,
   payrollNumber: string,
-  employeeId: string
+  employeeId: string,
+  HRIMS_CONFIG: { BASE_URL: string; API_KEY: string; TOKEN: string }
 ) {
   try {
     // Fetch certificates
     const certificatesResponse = await fetchFromHRIMS('203', {
       RequestBody: payrollNumber || zanId,
-    });
+    }, HRIMS_CONFIG);
 
     if (
       !certificatesResponse.success ||
@@ -327,7 +323,8 @@ async function processEmployeeCertificates(
 async function processBulkFetch(
   institutionVoteNumber: string,
   institutionId: string,
-  fetchMode: 'fast' | 'detailed' = 'fast'
+  fetchMode: 'fast' | 'detailed' = 'fast',
+  HRIMS_CONFIG: { BASE_URL: string; API_KEY: string; TOKEN: string }
 ) {
   let totalEmployees = 0;
   const totalDocuments = 0;
@@ -347,7 +344,7 @@ async function processBulkFetch(
       const employeeListResponse = await fetchFromHRIMS('201', {
         PageNumber: page,
         PageSize: fetchMode === 'fast' ? 100 : 50, // Larger batches for fast mode
-      });
+      }, HRIMS_CONFIG);
 
       console.log(`Page ${page} response:`, {
         code: employeeListResponse.code,
@@ -417,7 +414,7 @@ async function processBulkFetch(
             // Fetch detailed employee data using RequestId 202
             const detailedResponse = await fetchFromHRIMS('202', {
               RequestBody: employeeBasicInfo.zanIdNumber,
-            });
+            }, HRIMS_CONFIG);
 
             if (
               detailedResponse.code === 200 &&
@@ -485,6 +482,9 @@ async function processBulkFetch(
 
 export async function POST(req: NextRequest) {
   try {
+    // Get HRIMS configuration from database (or use defaults)
+    const HRIMS_CONFIG = await getHrimsApiConfig();
+
     const body = await req.json();
     const { institutionVoteNumber } = body;
 
@@ -514,7 +514,7 @@ export async function POST(req: NextRequest) {
 
     // Note: In a production environment, you would typically use a job queue system
     // like Bull, Agenda, or a background worker service for this kind of operation
-    processBulkFetch(institutionVoteNumber, institution.id)
+    processBulkFetch(institutionVoteNumber, institution.id, 'fast', HRIMS_CONFIG)
       .then((result) => {
         console.log(`Bulk fetch completed for ${institution.name}:`, result);
       })

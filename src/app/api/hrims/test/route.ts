@@ -1,15 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getHrimsApiConfig } from '@/lib/hrims-config';
 
 // Utility function to add delay between tests
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-// HRIMS API Configuration
-const HRIMS_CONFIG = {
-  BASE_URL: 'http://10.0.217.11:8135/api',
-  API_KEY: '0ea1e3f5-ea57-410b-a199-246fa288b851',
-  TOKEN:
-    'CfDJ8M6SKjORsSdBliudb_vdU_DEea8FKIcQckiBxdvt4EJgtcP0ba_3REOpGvWYeOF46fvqw8heVnqFnXTwOmD5Wg5Qg3yNJlwyGDHVhqbgyKxB31Bjh2pI6C2qAYnLMovU4XLlQFVu7cTpIqtgItNZpM4',
-};
 
 interface TestParameters {
   pageNumber?: number;
@@ -24,6 +17,9 @@ interface TestParameters {
 }
 
 export async function POST(request: NextRequest) {
+  // Get HRIMS configuration from database (or use defaults)
+  const HRIMS_CONFIG = await getHrimsApiConfig();
+
   // Parse request body for custom parameters
   let params: TestParameters = {};
   try {

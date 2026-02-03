@@ -1,15 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getHrimsApiConfig } from '@/lib/hrims-config';
 import { db } from '@/lib/db';
 import { v4 as uuidv4 } from 'uuid';
 import { uploadFile } from '@/lib/minio';
-
-// HRIMS API Configuration
-const HRIMS_CONFIG = {
-  BASE_URL: 'http://10.0.217.11:8135/api',
-  API_KEY: '0ea1e3f5-ea57-410b-a199-246fa288b851',
-  TOKEN:
-    'CfDJ8M6SKjORsSdBliudb_vdU_DEea8FKIcQckiBxdvt4EJgtcP0ba_3REOpGvWYeOF46fvqw8heVnqFnXTwOmD5Wg5Qg3yNJlwyGDHVhqbgyKxB31Bjh2pI6C2qAYnLMovU4XLlQFVu7cTpIqtgItNZpM4',
-};
 
 interface HRIMSEmployeeResponse {
   success: boolean;
@@ -85,13 +78,14 @@ interface HRIMSCertificatesResponse {
 
 async function fetchFromHRIMS(
   requestId: string,
-  requestPayloadData: any
+  requestPayloadData: any,
+  hrimsConfig: { BASE_URL: string; API_KEY: string; TOKEN: string }
 ): Promise<any> {
-  const response = await fetch(`${HRIMS_CONFIG.BASE_URL}/Employees`, {
+  const response = await fetch(`${hrimsConfig.BASE_URL}/Employees`, {
     method: 'POST',
     headers: {
-      ApiKey: HRIMS_CONFIG.API_KEY,
-      Token: HRIMS_CONFIG.TOKEN,
+      ApiKey: hrimsConfig.API_KEY,
+      Token: hrimsConfig.TOKEN,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
@@ -229,7 +223,11 @@ const DOCUMENT_TYPES = [
   },
 ] as const;
 
-async function processDocuments(payrollNumber: string, employeeId: string) {
+async function processDocuments(
+  payrollNumber: string,
+  employeeId: string,
+  hrimsConfig: { BASE_URL: string; API_KEY: string; TOKEN: string }
+) {
   try {
     console.log(
       `📄 Fetching documents for employee (Payroll: ${payrollNumber})`
@@ -247,11 +245,11 @@ async function processDocuments(payrollNumber: string, employeeId: string) {
           },
         };
 
-        const response = await fetch(`${HRIMS_CONFIG.BASE_URL}/Employees`, {
+        const response = await fetch(`${hrimsConfig.BASE_URL}/Employees`, {
           method: 'POST',
           headers: {
-            ApiKey: HRIMS_CONFIG.API_KEY,
-            Token: HRIMS_CONFIG.TOKEN,
+            ApiKey: hrimsConfig.API_KEY,
+            Token: hrimsConfig.TOKEN,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(payload),
@@ -316,7 +314,11 @@ async function processDocuments(payrollNumber: string, employeeId: string) {
   }
 }
 
-async function processPhoto(payrollNumber: string, employeeId: string) {
+async function processPhoto(
+  payrollNumber: string,
+  employeeId: string,
+  hrimsConfig: { BASE_URL: string; API_KEY: string; TOKEN: string }
+) {
   try {
     console.log(`📸 Fetching photo for employee (Payroll: ${payrollNumber})`);
 
@@ -325,11 +327,11 @@ async function processPhoto(payrollNumber: string, employeeId: string) {
       SearchCriteria: payrollNumber,
     };
 
-    const photoResponse = await fetch(`${HRIMS_CONFIG.BASE_URL}/Employees`, {
+    const photoResponse = await fetch(`${hrimsConfig.BASE_URL}/Employees`, {
       method: 'POST',
       headers: {
-        ApiKey: HRIMS_CONFIG.API_KEY,
-        Token: HRIMS_CONFIG.TOKEN,
+        ApiKey: hrimsConfig.API_KEY,
+        Token: hrimsConfig.TOKEN,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(photoPayload),
@@ -413,6 +415,7 @@ async function processPhoto(payrollNumber: string, employeeId: string) {
 
 export async function POST(req: NextRequest) {
   try {
+    const HRIMS_CONFIG = await getHrimsApiConfig();
     const body = await req.json();
     const { zanId, payrollNumber, institutionVoteNumber } = body;
 
@@ -448,9 +451,13 @@ export async function POST(req: NextRequest) {
 
     // Fetch employee data from HRIMS
     console.log('Fetching employee data from HRIMS...');
-    const employeeResponse = await fetchFromHRIMS('202', {
-      RequestBody: zanId || payrollNumber, // Use the provided identifier
-    });
+    const employeeResponse = await fetchFromHRIMS(
+      '202',
+      {
+        RequestBody: zanId || payrollNumber, // Use the provided identifier
+      },
+      HRIMS_CONFIG
+    );
 
     console.log('HRIMS Response received:', {
       code: employeeResponse.code,
@@ -491,8 +498,8 @@ export async function POST(req: NextRequest) {
 
       // Run photo and documents fetch in parallel for better performance
       const [photoResult, docsCount] = await Promise.all([
-        processPhoto(employeePayrollNumber, employeeId),
-        processDocuments(employeePayrollNumber, employeeId),
+        processPhoto(employeePayrollNumber, employeeId, HRIMS_CONFIG),
+        processDocuments(employeePayrollNumber, employeeId, HRIMS_CONFIG),
       ]);
 
       photoStored = photoResult;

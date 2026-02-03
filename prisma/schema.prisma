@@ -12,7 +12,6 @@ model CadreChangeRequest {
   id                                          String   @id
   status                                      String
   reviewStage                                 String
-  originalCadre                               String?
   newCadre                                    String
   reason                                      String?
   studiedOutsideCountry                       Boolean?
@@ -23,6 +22,7 @@ model CadreChangeRequest {
   reviewedById                                String?
   createdAt                                   DateTime @default(now())
   updatedAt                                   DateTime
+  originalCadre                               String?
   Employee                                    Employee @relation(fields: [employeeId], references: [id])
   User_CadreChangeRequest_reviewedByIdToUser  User?    @relation("CadreChangeRequest_reviewedByIdToUser", fields: [reviewedById], references: [id])
   User_CadreChangeRequest_submittedByIdToUser User     @relation("CadreChangeRequest_submittedByIdToUser", fields: [submittedById], references: [id])
@@ -115,6 +115,7 @@ model Employee {
   jobContractUrl          String?
   birthCertificateUrl     String?
   institutionId           String
+  dataSource              String                    @default("HRIMS")
   CadreChangeRequest      CadreChangeRequest[]
   ConfirmationRequest     ConfirmationRequest[]
   Institution             Institution               @relation(fields: [institutionId], references: [id])
@@ -127,12 +128,12 @@ model Employee {
   ServiceExtensionRequest ServiceExtensionRequest[]
   User                    User?
 
-  // Performance indexes for search optimization
   @@index([name])
   @@index([payrollNumber])
   @@index([employmentDate(sort: Desc)])
   @@index([status, institutionId])
   @@index([institutionId])
+  @@index([dataSource])
 }
 
 model EmployeeCertificate {
@@ -145,14 +146,17 @@ model EmployeeCertificate {
 }
 
 model Institution {
-  id          String     @id
-  name        String     @unique
-  email       String?    @unique
-  phoneNumber String?
-  voteNumber  String?    @unique
-  tinNumber   String?    @unique
-  Employee    Employee[]
-  User        User[]
+  id                   String     @id
+  name                 String     @unique
+  email                String?
+  phoneNumber          String?
+  voteNumber           String?
+  tinNumber            String?    @unique
+  manualEntryEnabled   Boolean    @default(false)
+  manualEntryEndDate   DateTime?
+  manualEntryStartDate DateTime?
+  Employee             Employee[]
+  User                 User[]
 }
 
 model LwopRequest {
@@ -195,7 +199,6 @@ model PromotionRequest {
   status                                    String
   reviewStage                               String
   proposedCadre                             String
-  finalCadre                                String?
   promotionType                             String
   studiedOutsideCountry                     Boolean?
   documents                                 String[]
@@ -206,6 +209,7 @@ model PromotionRequest {
   createdAt                                 DateTime @default(now())
   updatedAt                                 DateTime
   commissionDecisionReason                  String?
+  finalCadre                                String?
   Employee                                  Employee @relation(fields: [employeeId], references: [id])
   User_PromotionRequest_reviewedByIdToUser  User?    @relation("PromotionRequest_reviewedByIdToUser", fields: [reviewedById], references: [id])
   User_PromotionRequest_submittedByIdToUser User     @relation("PromotionRequest_submittedByIdToUser", fields: [submittedById], references: [id])
@@ -324,29 +328,26 @@ model User {
   updatedAt                                                           DateTime
   phoneNumber                                                         String?
   email                                                               String?
-  // Password Policy Fields
-  passwordHistory                                                     String[]                  @default([])
-  isTemporaryPassword                                                 Boolean                   @default(false)
-  temporaryPasswordExpiry                                             DateTime?
-  mustChangePassword                                                  Boolean                   @default(false)
-  lastPasswordChange                                                  DateTime?
   failedPasswordChangeAttempts                                        Int                       @default(0)
+  isTemporaryPassword                                                 Boolean                   @default(false)
+  lastPasswordChange                                                  DateTime?
+  mustChangePassword                                                  Boolean                   @default(false)
   passwordChangeLockoutUntil                                          DateTime?
-  // Password Expiration Fields
-  passwordExpiresAt                                                   DateTime?
-  lastExpirationWarningLevel                                          Int?                      @default(0)
+  passwordHistory                                                     String[]                  @default([])
+  temporaryPasswordExpiry                                             DateTime?
   gracePeriodStartedAt                                                DateTime?
-  // Account Lockout Fields
+  lastExpirationWarningLevel                                          Int?                      @default(0)
+  passwordExpiresAt                                                   DateTime?
   failedLoginAttempts                                                 Int                       @default(0)
+  isManuallyLocked                                                    Boolean                   @default(false)
+  lockedAt                                                            DateTime?
+  lockedBy                                                            String?
+  lockoutNotes                                                        String?
   loginLockedUntil                                                    DateTime?
   loginLockoutReason                                                  String?
   loginLockoutType                                                    String?
-  isManuallyLocked                                                    Boolean                   @default(false)
-  lockedBy                                                            String?
-  lockedAt                                                            DateTime?
-  lockoutNotes                                                        String?
-  // Session Inactivity Fields
   lastActivity                                                        DateTime?
+  AuditLog                                                            AuditLog[]
   CadreChangeRequest_CadreChangeRequest_reviewedByIdToUser            CadreChangeRequest[]      @relation("CadreChangeRequest_reviewedByIdToUser")
   CadreChangeRequest_CadreChangeRequest_submittedByIdToUser           CadreChangeRequest[]      @relation("CadreChangeRequest_submittedByIdToUser")
   Complaint_Complaint_complainantIdToUser                             Complaint[]               @relation("Complaint_complainantIdToUser")
@@ -366,31 +367,29 @@ model User {
   SeparationRequest_SeparationRequest_submittedByIdToUser             SeparationRequest[]       @relation("SeparationRequest_submittedByIdToUser")
   ServiceExtensionRequest_ServiceExtensionRequest_reviewedByIdToUser  ServiceExtensionRequest[] @relation("ServiceExtensionRequest_reviewedByIdToUser")
   ServiceExtensionRequest_ServiceExtensionRequest_submittedByIdToUser ServiceExtensionRequest[] @relation("ServiceExtensionRequest_submittedByIdToUser")
+  Session                                                             Session[]
   Employee                                                            Employee?                 @relation(fields: [employeeId], references: [id])
   Institution                                                         Institution               @relation(fields: [institutionId], references: [id])
-  AuditLog                                                            AuditLog[]
-  Session                                                             Session[]
 }
 
 model AuditLog {
-  id                String   @id @default(cuid())
-  eventType         String   // e.g., "UNAUTHORIZED_ACCESS", "LOGIN_FAILED", "ACCESS_DENIED"
-  eventCategory     String   // e.g., "SECURITY", "ACCESS", "AUTHENTICATION"
-  severity          String   // e.g., "INFO", "WARNING", "ERROR", "CRITICAL"
-  userId            String?  // User who attempted access (null if unauthenticated)
-  username          String?  // Username for quick reference
-  userRole          String?  // Role of the user attempting access
-  ipAddress         String?  // IP address of the request
-  userAgent         String?  // Browser/client information
-  attemptedRoute    String   // The route they tried to access
-  requestMethod     String?  // HTTP method (GET, POST, etc.)
-  isAuthenticated   Boolean  @default(false)
-  wasBlocked        Boolean  @default(true)
-  blockReason       String?  // Why access was denied
-  timestamp         DateTime @default(now())
-  additionalData    Json?    // Any extra contextual information
-
-  User              User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  id              String   @id @default(cuid())
+  eventType       String
+  eventCategory   String
+  severity        String
+  userId          String?
+  username        String?
+  userRole        String?
+  ipAddress       String?
+  userAgent       String?
+  attemptedRoute  String
+  requestMethod   String?
+  isAuthenticated Boolean  @default(false)
+  wasBlocked      Boolean  @default(true)
+  blockReason     String?
+  timestamp       DateTime @default(now())
+  additionalData  Json?
+  User            User?    @relation(fields: [userId], references: [id])
 
   @@index([userId])
   @@index([timestamp])
@@ -406,16 +405,25 @@ model Session {
   sessionToken String   @unique
   ipAddress    String?
   userAgent    String?
-  deviceInfo   String?  // Browser, OS, device type
-  location     String?  // Approximate location from IP
+  deviceInfo   String?
+  location     String?
   createdAt    DateTime @default(now())
   lastActivity DateTime @default(now())
   expiresAt    DateTime
-  isSuspicious Boolean  @default(false) // Flagged if login looks suspicious
-
+  isSuspicious Boolean  @default(false)
   User         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([sessionToken])
   @@index([expiresAt])
+}
+
+model SystemSettings {
+  id        String   @id
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+
+  @@index([key])
 }

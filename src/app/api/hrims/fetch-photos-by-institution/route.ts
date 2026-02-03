@@ -1,18 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getHrimsApiConfig } from '@/lib/hrims-config';
 import { db as prisma } from '@/lib/db';
 import { uploadFile } from '@/lib/minio';
 
 // Configure route for long-running operations
 export const maxDuration = 300; // 5 minutes (increase if needed)
 export const dynamic = 'force-dynamic';
-
-// HRIMS API Configuration
-const HRIMS_CONFIG = {
-  BASE_URL: 'http://10.0.217.11:8135/api',
-  API_KEY: '0ea1e3f5-ea57-410b-a199-246fa288b851',
-  TOKEN:
-    'CfDJ8M6SKjORsSdBliudb_vdU_DEea8FKIcQckiBxdvt4EJgtcP0ba_3REOpGvWYeOF46fvqw8heVnqFnXTwOmD5Wg5Qg3yNJlwyGDHVhqbgyKxB31Bjh2pI6C2qAYnLMovU4XLlQFVu7cTpIqtgItNZpM4',
-};
 
 interface PhotoFetchResult {
   employeeName: string;
@@ -23,6 +16,7 @@ interface PhotoFetchResult {
 
 export async function POST(request: NextRequest) {
   try {
+    const HRIMS_CONFIG = await getHrimsApiConfig();
     const body = await request.json();
     const { institutionId } = body;
 
