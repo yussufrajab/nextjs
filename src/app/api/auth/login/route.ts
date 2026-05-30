@@ -9,14 +9,19 @@ import { createMfaToken, checkOtpRateLimit, maskEmail } from '@/lib/mfa-utils';
 import { sendMfaEmail } from '@/lib/email';
 import { withRateLimit } from '@/lib/rate-limiter';
 import { authLogger } from '@/lib/logger';
+import { wrapHandler } from '@/lib/error-handler';
+import {
+  generatePreSessionToken,
+  getPreSessionCookieOptions,
+  PRE_SESSION_COOKIE_NAME,
+} from '@/lib/session-manager';
 
 const loginSchema = z.object({
   username: z.string().min(1, 'Username or email is required.'),
   password: z.string().min(1, 'Password is required.'),
 });
 
-export const POST = withRateLimit(async (request) => {
-  try {
+export const POST = wrapHandler(withRateLimit(async (request) => {
     const body = await request.json();
     const { username, password } = loginSchema.parse(body);
 
@@ -26,6 +31,12 @@ export const POST = withRateLimit(async (request) => {
     const ipAddress = getClientIp(request.headers);
     const userAgent = request.headers.get('user-agent');
     const deviceInfo: Record<string, any> | null = JSON.parse(request.headers.get('x-device-info') || 'null');
+
+    // Session fixation protection: set a pre-session cookie before authentication.
+    // This token must be presented back after successful login to prevent fixation.
+    const isProduction = process.env.NODE_ENV === 'production';
+    const preSessionToken = generatePreSessionToken();
+    const preSessionCookieOptions = getPreSessionCookieOptions(isProduction);
 
     // Check if the input is an email (contains @) or username
     const isEmail = username.includes('@');
@@ -51,10 +62,13 @@ export const POST = withRateLimit(async (request) => {
         failureReason: 'User not found',
       });
 
-      return NextResponse.json(
+      const response = NextResponse.json(
         { success: false, message: 'Invalid username/email or password' },
         { status: 401 }
       );
+      // Still set pre-session cookie so legitimate users get it for their next attempt
+      response.cookies.set(PRE_SESSION_COOKIE_NAME, preSessionToken, preSessionCookieOptions);
+      return response;
     }
 
     // Auto-unlock expired standard lockouts
@@ -97,10 +111,12 @@ export const POST = withRateLimit(async (request) => {
     });
 
     if (!refreshedUser) {
-      return NextResponse.json(
+      const response = NextResponse.json(
         { success: false, message: 'User not found' },
         { status: 401 }
       );
+      response.cookies.set(PRE_SESSION_COOKIE_NAME, preSessionToken, preSessionCookieOptions);
+      return response;
     }
 
     // Use refreshed user data for subsequent checks
@@ -137,7 +153,9 @@ export const POST = withRateLimit(async (request) => {
         message += 'Please contact an administrator to unlock your account.';
       }
 
-      return NextResponse.json({ success: false, message }, { status: 403 });
+      const lockoutResponse = NextResponse.json({ success: false, message }, { status: 403 });
+      lockoutResponse.cookies.set(PRE_SESSION_COOKIE_NAME, preSessionToken, preSessionCookieOptions);
+      return lockoutResponse;
     }
 
     if (!user.active) {
@@ -154,10 +172,12 @@ export const POST = withRateLimit(async (request) => {
         failureReason: 'Account is inactive',
       });
 
-      return NextResponse.json(
+      const response = NextResponse.json(
         { success: false, message: 'Account is inactive' },
         { status: 401 }
       );
+      response.cookies.set(PRE_SESSION_COOKIE_NAME, preSessionToken, preSessionCookieOptions);
+      return response;
     }
 
     // Verify password
@@ -204,7 +224,9 @@ export const POST = withRateLimit(async (request) => {
         message = `Invalid username or password, ${attemptsText}`;
       }
 
-      return NextResponse.json({ success: false, message }, { status: 401 });
+      const invalidPwResponse = NextResponse.json({ success: false, message }, { status: 401 });
+      invalidPwResponse.cookies.set(PRE_SESSION_COOKIE_NAME, preSessionToken, preSessionCookieOptions);
+      return invalidPwResponse;
     }
 
     // Reset failed login attempts on successful login
@@ -220,7 +242,7 @@ export const POST = withRateLimit(async (request) => {
     // If temporary password has expired, deny login
     if (isTemporaryPasswordExpired) {
       authLogger.info({ username }, 'Temporary password expired');
-      return NextResponse.json(
+      const response = NextResponse.json(
         {
           success: false,
           message:
@@ -228,6 +250,8 @@ export const POST = withRateLimit(async (request) => {
         },
         { status: 401 }
       );
+      response.cookies.set(PRE_SESSION_COOKIE_NAME, preSessionToken, preSessionCookieOptions);
+      return response;
     }
 
     // Check password expiration (non-temporary passwords only)
@@ -257,7 +281,7 @@ export const POST = withRateLimit(async (request) => {
           failureReason: 'Password expired beyond grace period',
         });
 
-        return NextResponse.json(
+        const response = NextResponse.json(
           {
             success: false,
             message:
@@ -265,6 +289,8 @@ export const POST = withRateLimit(async (request) => {
           },
           { status: 401 }
         );
+        response.cookies.set(PRE_SESSION_COOKIE_NAME, preSessionToken, preSessionCookieOptions);
+        return response;
       }
 
       // If in grace period, allow login but set mustChangePassword
@@ -284,13 +310,15 @@ export const POST = withRateLimit(async (request) => {
     if (user.email) {
       const rateLimitCheck = await checkOtpRateLimit(currentUser.id);
       if (!rateLimitCheck.allowed) {
-        return NextResponse.json(
+        const response = NextResponse.json(
           {
             success: false,
             message: `Too many verification requests. Please try again in ${rateLimitCheck.retryAfterSeconds} seconds.`,
           },
           { status: 429 }
         );
+        response.cookies.set(PRE_SESSION_COOKIE_NAME, preSessionToken, preSessionCookieOptions);
+        return response;
       }
 
       const mfaTokenExpiryMinutes = Number(process.env.MFA_TOKEN_EXPIRY_MINUTES) || 10;
@@ -304,13 +332,15 @@ export const POST = withRateLimit(async (request) => {
 
       if (!emailResult.success) {
         authLogger.error({ err: emailResult.error }, 'Failed to send MFA email');
-        return NextResponse.json(
+        const response = NextResponse.json(
           { success: false, message: 'Failed to send verification email. Please try again.' },
           { status: 500 }
         );
+        response.cookies.set(PRE_SESSION_COOKIE_NAME, preSessionToken, preSessionCookieOptions);
+        return response;
       }
 
-      return NextResponse.json({
+      const mfaResponse = NextResponse.json({
         success: true,
         code: 'MFA_REQUIRED',
         data: {
@@ -319,10 +349,16 @@ export const POST = withRateLimit(async (request) => {
         },
         message: 'MFA verification required',
       });
+      // Preserve pre-session cookie through MFA flow
+      mfaResponse.cookies.set(PRE_SESSION_COOKIE_NAME, preSessionToken, preSessionCookieOptions);
+      return mfaResponse;
     }
 
     // No email on file — skip MFA and complete login directly
     authLogger.info({ username }, 'No email on file, skipping MFA');
+
+    // Read pre-session token for session fixation protection
+    const cookiePreSessionToken = (request as any).cookies.get(PRE_SESSION_COOKIE_NAME)?.value || null;
 
     return completeLogin({
       user: {
@@ -334,18 +370,6 @@ export const POST = withRateLimit(async (request) => {
       ipAddress,
       userAgent,
       deviceInfo,
+      preSessionToken: cookiePreSessionToken,
     });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { success: false, errors: error.errors },
-        { status: 400 }
-      );
-    }
-    authLogger.error({ err: error }, 'Login POST error');
-    return NextResponse.json(
-      { success: false, message: 'Internal Server Error' },
-      { status: 500 }
-    );
-  }
-}, 'auth');
+}, 'auth'), 'auth-login');

@@ -9,6 +9,7 @@ import { withAuth } from '@/lib/api-auth';
 import { withRateLimit } from '@/lib/rate-limiter';
 import { maskSessionToken } from '@/lib/sanitize-response';
 import { authLogger } from '@/lib/logger';
+import { wrapHandler } from '@/lib/error-handler';
 
 const getSessionsSchema = z.object({
   userId: z.string().min(1, 'User ID is required'),
@@ -26,9 +27,8 @@ const terminateSessionSchema = z.object({
  * GET /api/auth/sessions
  * Get all active sessions for a user
  */
-export const GET = withRateLimit(
+export const GET = wrapHandler(withRateLimit(
   withAuth(async (request, { auth }) => {
-    try {
       const { searchParams } = new URL(request.url);
       const userId = searchParams.get('userId') || auth.userId;
 
@@ -47,24 +47,16 @@ export const GET = withRateLimit(
       count: sessions.length,
       maxSessions: 3,
     });
-  } catch (error) {
-    authLogger.error({ err: error }, 'Sessions GET error');
-    return NextResponse.json(
-      { success: false, message: 'Internal Server Error' },
-      { status: 500 }
-    );
-  }
 }, { allowedRoles: ['ADMIN', 'HRO', 'HHRMD', 'HRMO', 'DO', 'CSCS', 'PO'] }),
   'read'
-);
+), 'auth-sessions');
 
 /**
  * POST /api/auth/sessions/validate
  * Validate a session token
  */
-export const POST = withRateLimit(
+export const POST = wrapHandler(withRateLimit(
   withAuth(async (request, { auth }) => {
-    try {
       const body = await request.json();
       const { searchParams } = new URL(request.url);
       const action = searchParams.get('action');
@@ -118,19 +110,6 @@ export const POST = withRateLimit(
         { success: false, message: 'Invalid action' },
         { status: 400 }
       );
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return NextResponse.json(
-          { success: false, message: 'Validation error', errors: error.errors },
-          { status: 400 }
-        );
-      }
-      authLogger.error({ err: error }, 'Sessions POST error');
-      return NextResponse.json(
-        { success: false, message: 'Internal Server Error' },
-        { status: 500 }
-      );
-    }
   }),
   'write'
-);
+), 'auth-sessions');

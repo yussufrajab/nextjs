@@ -7,14 +7,14 @@ import { incrementOtpVerifyAttempts, verifyMfaToken } from '@/lib/mfa-utils';
 import { logAuditEvent, AuditEventType, AuditEventCategory, AuditSeverity, getClientIp } from '@/lib/audit-logger';
 import { withRateLimit } from '@/lib/rate-limiter';
 import { authLogger } from '@/lib/logger';
+import { wrapHandler } from '@/lib/error-handler';
 
 const verifyOtpSchema = z.object({
   userId: z.string().min(1),
   otpCode: z.string().length(6),
 });
 
-export const POST = withRateLimit(async (request) => {
-  try {
+export const POST = wrapHandler(withRateLimit(async (request) => {
     const body = await request.json();
     const { userId, otpCode } = verifyOtpSchema.parse(body);
 
@@ -136,17 +136,4 @@ export const POST = withRateLimit(async (request) => {
       userAgent,
       deviceInfo,
     });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { success: false, errors: error.errors },
-        { status: 400 }
-      );
-    }
-    authLogger.error({ err: error }, 'MFA verify OTP error');
-    return NextResponse.json(
-      { success: false, message: 'Internal Server Error' },
-      { status: 500 }
-    );
-  }
-}, 'auth');
+}, 'auth'), 'auth-mfa-verify-otp');

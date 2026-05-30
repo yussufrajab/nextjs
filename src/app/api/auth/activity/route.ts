@@ -6,6 +6,7 @@ import {
   isSessionTimedOut,
 } from '@/lib/session-timeout-utils';
 import { authLogger } from '@/lib/logger';
+import { wrapHandler } from '@/lib/error-handler';
 
 const activitySchema = z.object({
   userId: z.string().min(1, 'User ID is required'),
@@ -15,8 +16,7 @@ const activitySchema = z.object({
  * POST /api/auth/activity
  * Update user's last activity timestamp and check session status
  */
-export async function POST(req: Request) {
-  try {
+export const POST = wrapHandler(async (req: Request) => {
     const body = await req.json();
     const { userId } = activitySchema.parse(body);
 
@@ -50,27 +50,13 @@ export async function POST(req: Request) {
       message: 'Activity updated',
       lastActivity: newActivity,
     });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { success: false, message: 'Validation error', errors: error.errors },
-        { status: 400 }
-      );
-    }
-    authLogger.error({ err: error }, 'Activity POST error');
-    return NextResponse.json(
-      { success: false, message: 'Internal Server Error' },
-      { status: 500 }
-    );
-  }
-}
+}, 'auth-activity');
 
 /**
  * GET /api/auth/activity
  * Get user's current activity status
  */
-export async function GET(req: Request) {
-  try {
+export const GET = wrapHandler(async (req: Request) => {
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get('userId');
 
@@ -89,11 +75,4 @@ export async function GET(req: Request) {
       lastActivity,
       sessionExpired,
     });
-  } catch (error) {
-    authLogger.error({ err: error }, 'Activity GET error');
-    return NextResponse.json(
-      { success: false, message: 'Internal Server Error' },
-      { status: 500 }
-    );
-  }
-}
+}, 'auth-activity');

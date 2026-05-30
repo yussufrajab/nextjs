@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { authLogger } from '@/lib/logger';
+import { wrapHandler } from '@/lib/error-handler';
 
 const prisma = new PrismaClient();
 
@@ -36,8 +37,7 @@ function parseAuthStorage(cookieValue: string | undefined): {
   }
 }
 
-export async function GET(request: NextRequest) {
-  try {
+export const GET = wrapHandler(async (request: NextRequest) => {
     // Get auth from cookie
     const authCookie = request.cookies.get('auth-storage')?.value;
     const { userId } = parseAuthStorage(authCookie);
@@ -128,16 +128,4 @@ export async function GET(request: NextRequest) {
     response.headers.set('Pragma', 'no-cache');
     response.headers.set('Expires', '0');
     return response;
-  } catch (error) {
-    authLogger.error({ err: error }, 'Error refreshing user data');
-    const response = NextResponse.json(
-      { success: false, error: 'Internal Server Error' },
-      { status: 500 }
-    );
-    // Prevent caching
-    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
-    response.headers.set('Pragma', 'no-cache');
-    response.headers.set('Expires', '0');
-    return response;
-  }
-}
+}, 'auth-refresh-user-data');

@@ -14,6 +14,7 @@ import { sendMfaEmail } from '@/lib/email';
 import { logLoginAttempt, getClientIp } from '@/lib/audit-logger';
 import { withRateLimit } from '@/lib/rate-limiter';
 import { authLogger } from '@/lib/logger';
+import { wrapHandler } from '@/lib/error-handler';
 
 const employeeLoginSchema = z.object({
   zanId: z.string().min(1),
@@ -29,8 +30,7 @@ function generateUsername(name: string): string {
     .slice(0, 50); // Limit to 50 characters
 }
 
-export const POST = withRateLimit(async (request) => {
-  try {
+export const POST = wrapHandler(withRateLimit(async (request) => {
     const body = await request.json();
     const { zanId, zssfNumber, payrollNumber } =
       employeeLoginSchema.parse(body);
@@ -117,8 +117,8 @@ export const POST = withRateLimit(async (request) => {
           counter++;
         }
 
-        // Generate default password (using ZAN ID as default for security)
-        const defaultPassword = employee.zanId;
+        // Generate cryptographically random default password
+        const defaultPassword = randomBytes(16).toString('hex');
         const hashedPassword = await hashPassword(defaultPassword);
 
         // Generate unique id for user
@@ -301,26 +301,4 @@ export const POST = withRateLimit(async (request) => {
       userAgent,
       deviceInfo,
     });
-  } catch (error) {
-    authLogger.error({ err: error }, 'Employee login error');
-
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: 'Invalid input data',
-          errors: error.errors,
-        },
-        { status: 400 }
-      );
-    }
-
-    return NextResponse.json(
-      {
-        success: false,
-        message: 'Internal server error. Please try again later.',
-      },
-      { status: 500 }
-    );
-  }
-}, 'auth');
+}, 'auth'), 'auth-employee-login');

@@ -1,15 +1,14 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { terminateSessionById } from '@/lib/session-manager';
-import { authLogger } from '@/lib/logger';
+import { wrapHandler } from '@/lib/error-handler';
 
 const forceLogoutSchema = z.object({
   sessionId: z.string().min(1, 'Session ID is required'),
   userId: z.string().min(1, 'User ID is required'),
 });
 
-export async function POST(req: Request) {
-  try {
+export const POST = wrapHandler(async (req: Request) => {
     const body = await req.json();
     const { sessionId, userId } = forceLogoutSchema.parse(body);
 
@@ -29,25 +28,4 @@ export async function POST(req: Request) {
       success: true,
       message: 'Session terminated successfully',
     });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: 'Validation error',
-          errors: error.errors,
-        },
-        { status: 400 }
-      );
-    }
-
-    authLogger.error({ err: error }, 'Force logout error');
-    return NextResponse.json(
-      {
-        success: false,
-        message: 'Internal Server Error',
-      },
-      { status: 500 }
-    );
-  }
-}
+}, 'auth-force-logout');

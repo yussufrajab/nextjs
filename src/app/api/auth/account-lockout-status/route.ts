@@ -2,14 +2,13 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/db';
 import { getAccountLockoutStatus } from '@/lib/account-lockout-utils';
-import { authLogger } from '@/lib/logger';
+import { wrapHandler } from '@/lib/error-handler';
 
 const lockoutStatusSchema = z.object({
   userId: z.string().min(1, 'User ID is required'),
 });
 
-export async function POST(req: Request) {
-  try {
+export const POST = wrapHandler(async (req: Request) => {
     const body = await req.json();
     const { userId } = lockoutStatusSchema.parse(body);
 
@@ -58,17 +57,4 @@ export async function POST(req: Request) {
         lockedByUsername,
       },
     });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { success: false, message: 'Validation error', errors: error.errors },
-        { status: 400 }
-      );
-    }
-    authLogger.error({ err: error }, 'Account lockout status error');
-    return NextResponse.json(
-      { success: false, message: 'Internal Server Error' },
-      { status: 500 }
-    );
-  }
-}
+}, 'auth-account-lockout-status');

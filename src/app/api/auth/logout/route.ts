@@ -12,9 +12,9 @@ import {
   getClientIp,
 } from '@/lib/audit-logger';
 import { authLogger } from '@/lib/logger';
+import { wrapHandler } from '@/lib/error-handler';
 
-export async function POST(req: Request) {
-  try {
+export const POST = wrapHandler(async (req: Request) => {
     // Get userId and sessionToken from request body
     const body = await req.json();
     const userId = body?.userId;
@@ -84,14 +84,4 @@ export async function POST(req: Request) {
       success: true,
       message: 'Logged out successfully',
     });
-  } catch (error) {
-    authLogger.error({ err: error }, 'Logout POST error');
-    return NextResponse.json(
-      {
-        success: false,
-        message: 'Internal Server Error',
-      },
-      { status: 500 }
-    );
-  }
-}
+}, 'auth-logout');

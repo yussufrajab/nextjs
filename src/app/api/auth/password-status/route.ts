@@ -2,14 +2,13 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/db';
 import { getPasswordExpirationStatus } from '@/lib/password-expiration-utils';
-import { authLogger } from '@/lib/logger';
+import { wrapHandler } from '@/lib/error-handler';
 
 const passwordStatusSchema = z.object({
   userId: z.string().min(1, 'User ID is required'),
 });
 
-export async function POST(req: Request) {
-  try {
+export const POST = wrapHandler(async (req: Request) => {
     const body = await req.json();
     const { userId } = passwordStatusSchema.parse(body);
 
@@ -47,17 +46,4 @@ export async function POST(req: Request) {
         mustChangePassword: user.mustChangePassword,
       },
     });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { success: false, message: 'Validation error', errors: error.errors },
-        { status: 400 }
-      );
-    }
-    authLogger.error({ err: error }, 'Password status error');
-    return NextResponse.json(
-      { success: false, message: 'Internal Server Error' },
-      { status: 500 }
-    );
-  }
-}
+}, 'auth-password-status');

@@ -6,13 +6,13 @@ import { completeLogin } from '@/lib/auth-helpers';
 import { logAuditEvent, AuditEventType, AuditEventCategory, AuditSeverity, getClientIp } from '@/lib/audit-logger';
 import { withRateLimit } from '@/lib/rate-limiter';
 import { authLogger } from '@/lib/logger';
+import { wrapHandler } from '@/lib/error-handler';
 
 const magicLinkSchema = z.object({
   token: z.string().min(1),
 });
 
-export const POST = withRateLimit(async (request) => {
-  try {
+export const POST = wrapHandler(withRateLimit(async (request) => {
     const body = await request.json();
     const { token } = magicLinkSchema.parse(body);
 
@@ -91,17 +91,4 @@ export const POST = withRateLimit(async (request) => {
       userAgent,
       deviceInfo,
     });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { success: false, errors: error.errors },
-        { status: 400 }
-      );
-    }
-    authLogger.error({ err: error }, 'MFA magic link verify error');
-    return NextResponse.json(
-      { success: false, message: 'Internal Server Error' },
-      { status: 500 }
-    );
-  }
-}, 'auth');
+}, 'auth'), 'auth-mfa-magic-link');

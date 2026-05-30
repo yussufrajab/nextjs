@@ -16,6 +16,7 @@ import {
 } from '@/lib/password-utils';
 import { withRateLimit } from '@/lib/rate-limiter';
 import { authLogger } from '@/lib/logger';
+import { wrapHandler } from '@/lib/error-handler';
 
 const changePasswordSchema = z.object({
   userId: z.string().min(1, 'User ID is required'),
@@ -23,8 +24,7 @@ const changePasswordSchema = z.object({
   newPassword: z.string().min(1, 'New password is required'),
 });
 
-export const POST = withRateLimit(async (request) => {
-  try {
+export const POST = wrapHandler(withRateLimit(async (request) => {
     const body = await request.json();
     const { userId, currentPassword, newPassword } =
       changePasswordSchema.parse(body);
@@ -226,17 +226,4 @@ export const POST = withRateLimit(async (request) => {
       success: true,
       message: 'Password changed successfully',
     });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { success: false, message: 'Validation error', errors: error.errors },
-        { status: 400 }
-      );
-    }
-    authLogger.error({ err: error }, 'Change password POST error');
-    return NextResponse.json(
-      { success: false, message: 'Internal Server Error' },
-      { status: 500 }
-    );
-  }
-}, 'auth');
+}, 'auth'), 'auth-change-password');
