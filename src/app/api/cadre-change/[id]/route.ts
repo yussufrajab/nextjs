@@ -9,6 +9,7 @@ import {
 } from '@/lib/audit-logger';
 import { sendRequestStatusUpdateEmail } from '@/lib/email';
 import { logger } from '@/lib/logger';
+import { wrapHandler } from '@/lib/error-handler';
 
 const updateSchema = z.object({
   status: z.string().optional(),
@@ -28,7 +29,6 @@ async function handleUpdate(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
     const { id } = await params;
     const body = await req.json();
     logger.info({ value: id, body }, 'Updating cadre change request');
@@ -190,24 +190,16 @@ async function handleUpdate(
       'Cadre change request updated successfully'
     );
     return NextResponse.json(updatedRequest);
-  } catch (error) {
-    logger.error({ err: error }, 'CADRE CHANGE PUT');
-    if (error instanceof z.ZodError) {
-      return new NextResponse(JSON.stringify(error.errors), { status: 400 });
-    }
-    return new NextResponse('Internal Server Error', { status: 500 });
-  }
 }
 
 // Export both PUT and PATCH handlers
-export const PUT = handleUpdate;
-export const PATCH = handleUpdate;
+export const PUT = wrapHandler(handleUpdate, 'cadre-change');
+export const PATCH = wrapHandler(handleUpdate, 'cadre-change');
 
-export async function GET(
+async function GETHandler(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
     const { id } = await params;
     const request = await db.cadreChangeRequest.findUnique({
       where: { id },
@@ -245,8 +237,6 @@ export async function GET(
     }
 
     return NextResponse.json(request);
-  } catch (error) {
-    logger.error({ err: error }, 'CADRE CHANGE GET BY ID');
-    return new NextResponse('Internal Server Error', { status: 500 });
-  }
 }
+
+export const GET = wrapHandler(GETHandler, 'cadre-change');

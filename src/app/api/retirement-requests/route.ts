@@ -2,9 +2,9 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { shouldApplyInstitutionFilter } from '@/lib/role-utils';
 import { logger } from '@/lib/logger';
+import { wrapHandler } from '@/lib/error-handler';
 
-export async function GET(req: Request) {
-  try {
+async function GETHandler(req: Request) {
     const { searchParams } = new URL(req.url);
     const userRole = searchParams.get('userRole');
     const userInstitutionId = searchParams.get('userInstitutionId');
@@ -49,11 +49,6 @@ export async function GET(req: Request) {
       .catch(() => []);
 
     return NextResponse.json({ success: true, data: requests });
-  } catch (error) {
-    logger.error({ err: error }, 'RETIREMENT REQUESTS GET');
-    return NextResponse.json(
-      { success: false, message: 'Internal Server Error' },
-      { status: 500 }
-    );
-  }
 }
+
+export const GET = wrapHandler(GETHandler, 'retirement-requests');

@@ -12,9 +12,9 @@ import { createNotification, createNotificationForRole, NotificationTemplates } 
 import { sendRequestSubmissionEmails, sendRequestStatusUpdateEmail } from '@/lib/email';
 import { ROLES } from '@/lib/constants';
 import { logger } from '@/lib/logger';
+import { wrapHandler } from '@/lib/error-handler';
 
-export async function GET(req: Request) {
-  try {
+async function GETHandler(req: Request) {
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get('userId');
     const userRole = searchParams.get('userRole');
@@ -23,7 +23,7 @@ export async function GET(req: Request) {
     const size = parseInt(searchParams.get('size') || '50', 10);
     const status = searchParams.get('status') || 'all';
 
-    logger.info({ 
+    logger.info({
       userId,
       userRole,
       userInstitutionId,
@@ -120,17 +120,11 @@ export async function GET(req: Request) {
         size,
       },
     });
-  } catch (error) {
-    logger.error({ err: error }, 'TERMINATION GET');
-    return NextResponse.json(
-      { success: false, message: 'Internal Server Error' },
-      { status: 500 }
-    );
-  }
 }
 
-export async function POST(req: Request) {
-  try {
+export const GET = wrapHandler(GETHandler, 'termination');
+
+async function POSTHandler(req: Request) {
     const body = await req.json();
     logger.info({ value: body }, 'Creating termination request');
 
@@ -273,21 +267,11 @@ export async function POST(req: Request) {
       success: true,
       data: transformedRequest,
     });
-  } catch (error) {
-    logger.error({ err: error }, 'TERMINATION POST');
-    return NextResponse.json(
-      {
-        success: false,
-        message: 'Internal Server Error',
-        error: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
-  }
 }
 
-export async function PATCH(req: Request) {
-  try {
+export const POST = wrapHandler(POSTHandler, 'termination');
+
+async function PATCHHandler(req: Request) {
     const body = await req.json();
     const { id, userRole, userId, ...updateData } = body;
 
@@ -537,15 +521,6 @@ export async function PATCH(req: Request) {
       success: true,
       data: transformedRequest,
     });
-  } catch (error) {
-    logger.error({ err: error }, 'TERMINATION PATCH');
-    return NextResponse.json(
-      {
-        success: false,
-        message: 'Internal Server Error',
-        error: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
-  }
 }
+
+export const PATCH = wrapHandler(PATCHHandler, 'termination');

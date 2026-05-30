@@ -17,6 +17,7 @@ import {
 } from '@/lib/audit-logger';
 import { sendRequestSubmissionEmails, sendRequestStatusUpdateEmail } from '@/lib/email';
 import { logger } from '@/lib/logger';
+import { wrapHandler } from '@/lib/error-handler';
 
 // Cache configuration for LWOP requests
 const CACHE_TTL = 30; // 30 seconds cache (request status changes frequently)
@@ -40,8 +41,7 @@ function checkRoleAuthorization(
   return { authorized: true };
 }
 
-export async function GET(req: Request) {
-  try {
+async function GETHandler(req: Request) {
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get('userId');
     const userRole = searchParams.get('userRole');
@@ -50,7 +50,7 @@ export async function GET(req: Request) {
     const size = parseInt(searchParams.get('size') || '50', 10);
     const status = searchParams.get('status') || 'all';
 
-    logger.info({ 
+    logger.info({
       userId,
       userRole,
       userInstitutionId,
@@ -147,17 +147,11 @@ export async function GET(req: Request) {
         size,
       },
     });
-  } catch (error) {
-    logger.error({ err: error }, 'LWOP GET');
-    return NextResponse.json(
-      { success: false, message: 'Internal Server Error' },
-      { status: 500 }
-    );
-  }
 }
 
-export async function POST(req: Request) {
-  try {
+export const GET = wrapHandler(GETHandler, 'lwop');
+
+async function POSTHandler(req: Request) {
     const body = await req.json();
     logger.info({ value: body }, 'Creating LWOP request');
 
@@ -352,21 +346,11 @@ export async function POST(req: Request) {
       success: true,
       data: transformedRequest,
     });
-  } catch (error) {
-    logger.error({ err: error }, 'LWOP POST');
-    return NextResponse.json(
-      {
-        success: false,
-        message: 'Internal Server Error',
-        error: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
-  }
 }
 
-export async function PATCH(req: Request) {
-  try {
+export const POST = wrapHandler(POSTHandler, 'lwop');
+
+async function PATCHHandler(req: Request) {
     const body = await req.json();
     const { id, userRole, userId, ...updateData } = body;
 
@@ -607,15 +591,6 @@ export async function PATCH(req: Request) {
       success: true,
       data: transformedRequest,
     });
-  } catch (error) {
-    logger.error({ err: error }, 'LWOP PATCH');
-    return NextResponse.json(
-      {
-        success: false,
-        message: 'Internal Server Error',
-        error: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
-  }
 }
+
+export const PATCH = wrapHandler(PATCHHandler, 'lwop');
