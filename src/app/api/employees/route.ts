@@ -4,12 +4,12 @@ import { shouldApplyInstitutionFilter, isCSCRole } from '@/lib/role-utils';
 import { withAuth } from '@/lib/api-auth';
 import { withRateLimit } from '@/lib/rate-limiter';
 import { logger } from '@/lib/logger';
+import { wrapHandler } from '@/lib/error-handler';
 
 // Cache configuration for employee data
 const CACHE_TTL = 60; // 60 seconds cache (employee data changes infrequently)
 
-export const GET = withRateLimit(withAuth(async (request, { auth }) => {
-  try {
+export const GET = wrapHandler(withRateLimit(withAuth(async (request, { auth }) => {
     const { searchParams } = new URL(request.url);
     const userRole = auth.role;
     const userInstitutionId = auth.institutionId;
@@ -233,15 +233,4 @@ export const GET = withRateLimit(withAuth(async (request, { auth }) => {
       },
       { headers }
     );
-  } catch (error) {
-    logger.error({ err: error }, 'EMPLOYEES GET');
-    return NextResponse.json(
-      {
-        success: false,
-        message: 'Internal Server Error',
-        error: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
-  }
-}), 'read');
+}), 'read'), 'employees');
