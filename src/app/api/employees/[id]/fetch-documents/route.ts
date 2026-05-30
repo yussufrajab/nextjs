@@ -6,6 +6,7 @@ import { getHrimsApiConfig } from '@/lib/hrims-config';
 import { logger } from '@/lib/logger';
 import { verifyAuth } from '@/lib/api-auth';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limiter';
+import { wrapHandler } from '@/lib/error-handler';
 
 // Valid educational certificate types (excluding primary education)
 const VALID_CERTIFICATE_TYPES = [
@@ -205,10 +206,10 @@ async function storeDocumentInMinIO(
  }
 }
 
-export async function POST(
+export const POST = wrapHandler(async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   const authResult = await verifyAuth(request);
   if (!authResult.authenticated) {
     return authResult.response!;
@@ -223,7 +224,6 @@ export async function POST(
     );
   }
 
- try {
  const { id: employeeId } = await params;
 
  // Fetch employee from database to get payroll number
@@ -652,15 +652,4 @@ export async function POST(
  totalProcessed: documentsProcessed,
  },
  });
- } catch (error) {
- logger.error({ value: error }, ' Error fetching documents from HRIMS');
- return NextResponse.json(
- {
- success: false,
- message: 'Failed to fetch documents from HRIMS',
- error: error instanceof Error ? error.message : 'Unknown error',
- },
- { status: 500 }
- );
- }
-}
+}, 'employees-fetch-documents');

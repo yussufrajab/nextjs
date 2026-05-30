@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { wrapHandler } from '@/lib/error-handler';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(request: Request) {
+export const GET = wrapHandler(async (request: Request) => {
   const { searchParams } = new URL(request.url);
   const email = searchParams.get('email');
 
@@ -37,4 +38,4 @@ export async function GET(request: Request) {
   }
 
   return NextResponse.json({ inUse: false });
-}
+}, 'employees-email-check');
