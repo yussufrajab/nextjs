@@ -5,6 +5,7 @@ import { uploadFile } from '@/lib/minio';
 import { hrimsLogger } from '@/lib/logger';
 import { verifyAuth } from '@/lib/api-auth';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limiter';
+import { wrapHandler } from '@/lib/error-handler';
 
 // Configure route for long-running operations
 export const maxDuration = 300; // 5 minutes (increase if needed)
@@ -17,7 +18,7 @@ interface PhotoFetchResult {
   message?: string;
 }
 
-export async function POST(request: NextRequest) {
+export const POST = wrapHandler(async (request: NextRequest) => {
   const authResult = await verifyAuth(request);
   if (!authResult.authenticated) {
     return authResult.response!;
@@ -41,8 +42,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  try {
-    const HRIMS_CONFIG = await getHrimsApiConfig();
+  const HRIMS_CONFIG = await getHrimsApiConfig();
     const body = await request.json();
     const { institutionId } = body;
 
@@ -441,15 +441,4 @@ export async function POST(request: NextRequest) {
         Connection: 'keep-alive',
       },
     });
-  } catch (error) {
-    hrimsLogger.error({ err: error }, 'Error in bulk photo fetch:');
-    return NextResponse.json(
-      {
-        success: false,
-        message: 'Failed to fetch photos',
-        error: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
-  }
-}
+  });

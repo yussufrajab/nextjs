@@ -37,7 +37,7 @@ export interface ApiErrorResponse {
  * Usage:
  *   export const GET = withErrorHandler(async (request) => { ... });
  */
-export function withErrorHandler<T extends (...args: any[]) => Promise<NextResponse>>(
+export function withErrorHandler<T extends (...args: any[]) => Promise<Response>>(
   handler: T,
   context?: string,
 ): T {
@@ -110,7 +110,7 @@ export function withErrorHandler<T extends (...args: any[]) => Promise<NextRespo
  *     // ...
  *   }, 'auth'), 'auth-login');
  */
-export function wrapHandler<T extends (...args: any[]) => Promise<NextResponse>>(
+export function wrapHandler<T extends (...args: any[]) => Promise<Response>>(
   handler: T,
   context?: string,
 ): T {

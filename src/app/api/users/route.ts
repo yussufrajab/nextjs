@@ -11,6 +11,7 @@ import { logUserAction, getClientIp } from '@/lib/audit-logger';
 import { withAuth } from '@/lib/api-auth';
 import { withRateLimit } from '@/lib/rate-limiter';
 import { sanitizeUser, sanitizeUsers } from '@/lib/sanitize-response';
+import { wrapHandler } from '@/lib/error-handler';
 import { logger } from '@/lib/logger';
 
 const userSchema = z.object({
@@ -29,8 +30,7 @@ const userSchema = z.object({
   password: z.string().min(6, 'Password must be at least 6 characters.'),
 });
 
-export const GET = withRateLimit(withAuth(async (request, { auth }) => {
-  try {
+export const GET = wrapHandler(withRateLimit(withAuth(async (request, { auth }) => {
     const users = await db.user.findMany({
       orderBy: { name: 'asc' },
       include: {
@@ -84,14 +84,9 @@ export const GET = withRateLimit(withAuth(async (request, { auth }) => {
     });
 
     return NextResponse.json(formattedUsers);
-  } catch (error) {
-    logger.error({ err: error }, 'USERS GET');
-    return new NextResponse('Internal Server Error', { status: 500 });
-  }
-}, { allowedRoles: ['ADMIN', 'HHRMD', 'HRO'] }), 'read');
+  }, { allowedRoles: ['ADMIN', 'HHRMD', 'HRO'] }), 'read'), 'users');
 
-export const POST = withRateLimit(withAuth(async (request, { auth }) => {
-  try {
+export const POST = wrapHandler(withRateLimit(withAuth(async (request, { auth }) => {
     const body = await request.json();
     const {
       name,
@@ -209,70 +204,4 @@ export const POST = withRateLimit(withAuth(async (request, { auth }) => {
     }).catch(() => {});
 
     return NextResponse.json(sanitizeUser(response), { status: 201 });
-  } catch (error) {
-    logger.error({ err: error }, 'USERS POST');
-
-    // Handle Zod validation errors with user-friendly messages
-    if (error instanceof z.ZodError) {
-      const validationErrors = error.errors.map((err) => {
-        const field = err.path.join('.');
-        return {
-          field,
-          message: err.message,
-        };
-      });
-
-      return NextResponse.json(
-        {
-          error: 'Validation failed',
-          message: 'Please check the following errors and try again.',
-          validationErrors,
-        },
-        { status: 400 }
-      );
-    }
-
-    // Handle Prisma unique constraint violations (P2002)
-    if ((error as any).code === 'P2002') {
-      const target = (error as any).meta?.target;
-      let message = 'A user with this information already exists.';
-      let field = 'unknown';
-
-      // Determine which field caused the duplicate
-      if (Array.isArray(target)) {
-        if (target.includes('username')) {
-          field = 'username';
-          message =
-            'This username is already taken. Please choose a different username.';
-        } else if (target.includes('email')) {
-          field = 'email';
-          message =
-            'This email address is already registered. Please use a different email.';
-        } else if (target.includes('phoneNumber')) {
-          field = 'phoneNumber';
-          message =
-            'This phone number is already registered. Please use a different phone number.';
-        }
-      }
-
-      return NextResponse.json(
-        {
-          error: 'Duplicate entry',
-          message,
-          field,
-        },
-        { status: 409 }
-      );
-    }
-
-    // Handle other errors
-    return NextResponse.json(
-      {
-        error: 'Internal server error',
-        message:
-          'An unexpected error occurred while creating the user. Please try again later.',
-      },
-      { status: 500 }
-    );
-  }
-}, { allowedRoles: ['ADMIN'] }), 'write');
+  }, { allowedRoles: ['ADMIN'] }), 'write'), 'users');

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { z } from 'zod';
 import { hrimsLogger } from '@/lib/logger';
+import { wrapHandler } from '@/lib/error-handler';
 
 // Validation schema for the HRIMS documents sync request
 const hrimsDocumentsRequestSchema = z
@@ -51,8 +52,7 @@ const hrimsDocumentsResponseSchema = z.object({
   }),
 });
 
-export async function POST(req: Request) {
-  try {
+export const POST = wrapHandler(async (req: Request) => {
     const body = await req.json();
     hrimsLogger.info({
       ...body,
@@ -138,30 +138,7 @@ export async function POST(req: Request) {
       },
       { status: 200 }
     );
-  } catch (error) {
-    hrimsLogger.error({ err: error }, '[HRIMS_DOCUMENTS_SYNC_ERROR]');
-
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: 'Invalid request data',
-          errors: error.errors,
-        },
-        { status: 400 }
-      );
-    }
-
-    return NextResponse.json(
-      {
-        success: false,
-        message: 'Internal server error during HRIMS documents sync',
-        error: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
-  }
-}
+  }, 'hrims-documents');
 
 // Function to fetch employee documents from external HRIMS system
 async function fetchDocumentsFromHRIMS(

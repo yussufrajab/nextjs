@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { wrapHandler } from '@/lib/error-handler';
 
 const employeeSelect = {
   id: true,
@@ -80,8 +81,7 @@ const REQUEST_TYPES = [
   },
 ] as const;
 
-export async function GET(req: Request) {
-  try {
+export const GET = wrapHandler(async (req: Request) => {
     const { searchParams } = new URL(req.url);
     const institutionName = searchParams.get('institutionName');
     const requestType = searchParams.get('requestType');
@@ -173,15 +173,4 @@ export async function GET(req: Request) {
         totalPages: Math.ceil(paginatedRequests.length / limit) || 1,
       },
     });
-  } catch (error) {
-    logger.error({ err: error }, 'TRACK REQUESTS GET');
-    return NextResponse.json(
-      {
-        success: false,
-        message: 'Internal Server Error',
-        error: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
-  }
-}
+  });

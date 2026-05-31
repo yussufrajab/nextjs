@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { z } from 'zod';
 import { logInstitutionAction, getClientIp } from '@/lib/audit-logger';
 import { logger } from '@/lib/logger';
+import { wrapHandler } from '@/lib/error-handler';
 
 const institutionSchema = z.object({
   name: z.string().min(3, {
@@ -17,11 +18,10 @@ const institutionSchema = z.object({
   manualEntryEndDate: z.string().optional().or(z.literal('')).nullable(),
 });
 
-export async function PUT(
+export const PUT = wrapHandler(async (
   req: Request,
   { params }: { params: Promise<{ id: string }> }
-) {
-  try {
+) => {
     const { id } = await params;
     const body = await req.json();
     const validatedData = institutionSchema.parse(body);
@@ -141,77 +141,15 @@ export async function PUT(
     }).catch(() => {});
 
     return NextResponse.json(updatedInstitution);
-  } catch (error) {
-    logger.error({ err: error }, 'INSTITUTION PUT');
-    if (error instanceof z.ZodError) {
-      return new NextResponse(JSON.stringify(error.errors), { status: 400 });
-    }
-    if ((error as any).code === 'P2002') {
-      const target = (error as any).meta?.target;
-      if (target && target.includes('tinNumber')) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: 'An institution with this Tin Number already exists',
-          },
-          { status: 409 }
-        );
-      }
-      if (target && target.includes('voteNumber')) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: 'An institution with this Vote Number already exists',
-          },
-          { status: 409 }
-        );
-      }
-      if (target && target.includes('email')) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: 'An institution with this Email already exists',
-          },
-          { status: 409 }
-        );
-      }
-      return NextResponse.json(
-        {
-          success: false,
-          message: 'An institution with this name already exists',
-        },
-        { status: 409 }
-      );
-    }
-    if ((error as any).code === 'P2025') {
-      return new NextResponse('Institution not found', { status: 404 });
-    }
-    return new NextResponse('Internal Server Error', { status: 500 });
-  }
-}
+  }, 'institutions');
 
-export async function DELETE(
+export const DELETE = wrapHandler(async (
   req: Request,
   { params }: { params: Promise<{ id: string }> }
-) {
-  try {
+) => {
     const { id } = await params;
     await db.institution.delete({
       where: { id },
     });
     return new NextResponse(null, { status: 204 });
-  } catch (error) {
-    logger.error({ err: error }, 'INSTITUTION DELETE');
-    if ((error as any).code === 'P2025') {
-      return new NextResponse('Institution not found', { status: 404 });
-    }
-    // Foreign key constraint error (if institutions are linked to users)
-    if ((error as any).code === 'P2003') {
-      return new NextResponse(
-        'Cannot delete institution. It may have associated users or data.',
-        { status: 409 }
-      );
-    }
-    return new NextResponse('Internal Server Error', { status: 500 });
-  }
-}
+  }, 'institutions');

@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { AlertCircle } from 'lucide-react';
 
-export default function DashboardError({
+export default function Error({
   error,
   reset,
 }: {
@@ -12,7 +12,16 @@ export default function DashboardError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error('Dashboard error:', error);
+    fetch('/api/error-report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: error.message,
+        digest: error.digest,
+        url: window.location.pathname,
+        userAgent: navigator.userAgent,
+      }),
+    }).catch(() => {});
   }, [error]);
 
   return (

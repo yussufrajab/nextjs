@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { wrapHandler } from '@/lib/error-handler';
 
 interface ReportOutput {
   data: any[];
@@ -671,8 +672,7 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
   };
 }
 
-export async function GET(req: Request) {
-  try {
+export const GET = wrapHandler(async (req: Request) => {
     const { searchParams } = new URL(req.url);
     const reportType = searchParams.get('reportType');
     const fromDate = searchParams.get('fromDate');
@@ -1316,15 +1316,4 @@ export async function GET(req: Request) {
         count: reportData.length,
       },
     });
-  } catch (error) {
-    logger.error({ err: error }, 'REPORTS GET');
-    return NextResponse.json(
-      {
-        success: false,
-        message: 'Internal Server Error',
-        error: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
-  }
-}
+  });

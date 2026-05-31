@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import { hrimsLogger } from '@/lib/logger';
+import { wrapHandler } from '@/lib/error-handler';
 
 // Validation schema for the HRIMS sync request
 const hrimsRequestSchema = z
@@ -67,8 +68,7 @@ const hrimsEmployeeResponseSchema = z.object({
   }),
 });
 
-export async function POST(req: Request) {
-  try {
+export const POST = wrapHandler(async (req: Request) => {
     const body = await req.json();
     hrimsLogger.info({ ...body, hrimsApiKey: '[REDACTED]' }, 'HRIMS sync request received');
 
@@ -170,30 +170,7 @@ export async function POST(req: Request) {
       },
       { status: 200 }
     );
-  } catch (error) {
-    hrimsLogger.error({ err: error }, 'HRIMS sync error');
-
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: 'Invalid request data',
-          errors: error.errors,
-        },
-        { status: 400 }
-      );
-    }
-
-    return NextResponse.json(
-      {
-        success: false,
-        message: 'Internal server error during HRIMS sync',
-        error: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
-  }
-}
+  }, 'hrims-sync');
 
 // Function to fetch employee data from external HRIMS system
 async function fetchEmployeeFromHRIMS(
