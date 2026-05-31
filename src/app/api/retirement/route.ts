@@ -398,9 +398,15 @@ async function PATCHHandler(req: Request) {
     }
 
     // Log audit event for approvals and rejections
-    if (updateData.reviewedById && updateData.status) {
+    // Support both commission review (reviewedById) and HRRP action (hrrpReviewedById)
+    const isHrrpAction = isHrrpApproval || isHrrpRejection;
+    const auditReviewerId = isHrrpAction
+      ? (updateData.hrrpReviewedById || userId)
+      : updateData.reviewedById;
+
+    if (auditReviewerId && updateData.status) {
       const reviewer = await db.user.findUnique({
-        where: { id: updateData.reviewedById },
+        where: { id: auditReviewerId },
         select: { username: true, role: true },
       });
 
@@ -410,11 +416,11 @@ async function PATCHHandler(req: Request) {
           statusLower.includes('approved') && !statusLower.includes('rejected');
         const isRejection = statusLower.includes('rejected');
 
-        logger.info({ 
+        logger.info({
           status: updateData.status,
           isApproval,
           isRejection,
-          reviewedById: updateData.reviewedById,
+          reviewerId: auditReviewerId,
           reviewer: reviewer.username,
          }, 'Retirement status update:');
 
@@ -425,7 +431,7 @@ async function PATCHHandler(req: Request) {
             employeeId: updatedRequest.employeeId,
             employeeName: updatedRequest.Employee?.name,
             employeeZanId: updatedRequest.Employee?.zanId,
-            approvedById: updateData.reviewedById,
+            approvedById: auditReviewerId,
             approvedByUsername: reviewer.username,
             approvedByRole: reviewer.role || 'Unknown',
             reviewStage: updateData.reviewStage,
@@ -443,7 +449,7 @@ async function PATCHHandler(req: Request) {
             employeeId: updatedRequest.employeeId,
             employeeName: updatedRequest.Employee?.name,
             employeeZanId: updatedRequest.Employee?.zanId,
-            rejectedById: updateData.reviewedById,
+            rejectedById: auditReviewerId,
             rejectedByUsername: reviewer.username,
             rejectedByRole: reviewer.role || 'Unknown',
             rejectionReason: updateData.rejectionReason,
