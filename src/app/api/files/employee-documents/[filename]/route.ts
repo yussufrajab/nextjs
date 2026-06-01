@@ -5,11 +5,12 @@ import { logger } from '@/lib/logger';
 import { verifyAuth } from '@/lib/api-auth';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limiter';
 import { logFileAction } from '@/lib/audit-logger';
+import { wrapHandler } from '@/lib/error-handler';
 
-export async function GET(
+export const GET = wrapHandler(async (
   request: NextRequest,
   { params }: { params: Promise<{ filename: string }> }
-) {
+) => {
   const authResult = await verifyAuth(request);
   if (!authResult.authenticated) {
     return authResult.response!;
@@ -24,98 +25,86 @@ export async function GET(
     );
   }
 
-  try {
-    const { filename } = await params;
+  const { filename } = await params;
 
-    if (!filename || filename.includes('..') || filename.includes('/')) {
-      return NextResponse.json(
-        { success: false, message: 'Invalid filename' },
-        { status: 400 }
-      );
-    }
-
-    const employeeId = filename.substring(0, filename.indexOf('_'));
-
-    if (auth.role === 'HRO') {
-      const employee = await prisma.employee.findUnique({
-        where: { id: employeeId },
-        select: { institutionId: true },
-      });
-      if (!employee || employee.institutionId !== auth.institutionId) {
-        return NextResponse.json(
-          { success: false, message: 'Access denied' },
-          { status: 403 }
-        );
-      }
-    }
-
-    const filePath = `employee-documents/${filename}`;
-
-    let fileStream: any;
-    try {
-      fileStream = await downloadFile(filePath);
-    } catch (downloadError) {
-      logger.error(
-        { err: downloadError },
-        `Failed to download file from MinIO: ${filePath}`
-      );
-      return NextResponse.json(
-        { success: false, message: 'Document not found' },
-        { status: 404 }
-      );
-    }
-
-    const chunks: Buffer[] = [];
-    for await (const chunk of fileStream) {
-      chunks.push(Buffer.from(chunk));
-    }
-    const fileBuffer = Buffer.concat(chunks);
-
-    const extension = filename.split('.').pop()?.toLowerCase();
-    const contentTypeMap: { [key: string]: string } = {
-      pdf: 'application/pdf',
-      jpg: 'image/jpeg',
-      jpeg: 'image/jpeg',
-      png: 'image/png',
-      gif: 'image/gif',
-      doc: 'application/msword',
-      docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      xls: 'application/vnd.ms-excel',
-      xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    };
-    const contentType =
-      contentTypeMap[extension || 'pdf'] || 'application/octet-stream';
-
-    await logFileAction({
-      action: 'DOWNLOADED',
-      fileName: filename,
-      objectKey: filePath,
-      performedById: auth.userId,
-      performedByUsername: auth.username,
-      performedByRole: auth.role,
-      ipAddress: getClientIp(request),
-      deviceInfo: JSON.parse(request.headers.get('x-device-info') || 'null'),
-      additionalData: { employeeId },
-    }).catch(() => {});
-
-    return new NextResponse(fileBuffer, {
-      status: 200,
-      headers: {
-        'Content-Type': contentType,
-        'Cache-Control': 'public, max-age=31536000, immutable',
-        'Content-Disposition': `inline; filename="${filename}"`,
-        'Content-Length': fileBuffer.length.toString(),
-      },
-    });
-  } catch (error) {
-    logger.error({ value: error }, 'Error serving employee document');
+  if (!filename || filename.includes('..') || filename.includes('/')) {
     return NextResponse.json(
-      {
-        success: false,
-        message: 'Failed to serve document',
-        error: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
+      { success: false, message: 'Invalid filename' },
+      { status: 400 }
     );
   }
-}
+
+  const employeeId = filename.substring(0, filename.indexOf('_'));
+
+  if (auth.role === 'HRO') {
+    const employee = await prisma.employee.findUnique({
+      where: { id: employeeId },
+      select: { institutionId: true },
+    });
+    if (!employee || employee.institutionId !== auth.institutionId) {
+      return NextResponse.json(
+        { success: false, message: 'Access denied' },
+        { status: 403 }
+      );
+    }
+  }
+
+  const filePath = `employee-documents/${filename}`;
+
+  let fileStream: any;
+  try {
+    fileStream = await downloadFile(filePath);
+  } catch (downloadError) {
+    logger.error(
+      { err: downloadError },
+      `Failed to download file from MinIO: ${filePath}`
+    );
+    return NextResponse.json(
+      { success: false, message: 'Document not found' },
+      { status: 404 }
+    );
+  }
+
+  const chunks: Buffer[] = [];
+  for await (const chunk of fileStream) {
+    chunks.push(Buffer.from(chunk));
+  }
+  const fileBuffer = Buffer.concat(chunks);
+
+  const extension = filename.split('.').pop()?.toLowerCase();
+  const contentTypeMap: { [key: string]: string } = {
+    pdf: 'application/pdf',
+    jpg: 'image/jpeg',
+    jpeg: 'image/jpeg',
+    png: 'image/png',
+    gif: 'image/gif',
+    doc: 'application/msword',
+    docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    xls: 'application/vnd.ms-excel',
+    xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  };
+  const contentType =
+    contentTypeMap[extension || 'pdf'] || 'application/octet-stream';
+
+  await logFileAction({
+    action: 'DOWNLOADED',
+    fileName: filename,
+    objectKey: filePath,
+    performedById: auth.userId,
+    performedByUsername: auth.username,
+    performedByRole: auth.role,
+    ipAddress: getClientIp(request),
+    deviceInfo: JSON.parse(request.headers.get('x-device-info') || 'null'),
+    additionalData: { employeeId },
+  }).catch(() => {});
+
+  return new NextResponse(fileBuffer, {
+    status: 200,
+    headers: {
+      'Content-Type': contentType,
+      'Cache-Control': 'public, max-age=31536000, immutable',
+      'Content-Disposition': `inline; filename="${filename}"`,
+      'Content-Length': fileBuffer.length.toString(),
+    },
+  });
+}, 'files-employee-documents');

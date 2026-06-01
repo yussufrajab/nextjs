@@ -38,6 +38,7 @@ process.env.HRIMS_PORT = '8135';
 process.env.HRIMS_API_KEY = 'test-hrims-api-key';
 process.env.HRIMS_TOKEN = 'test-hrims-token';
 process.env.ALLOWED_ORIGINS = 'http://localhost:9002';
+process.env.CSRF_SECRET = 'test-csrf-secret-key-for-testing-only';
 
 // =============================================================================
 // Global Mocks

@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { v4 as uuidv4 } from 'uuid';
 import { uploadFile } from '@/lib/minio';
 import { hrimsLogger } from '@/lib/logger';
+import { wrapHandler } from '@/lib/error-handler';
 
 interface HRIMSEmployeeResponse {
   success: boolean;
@@ -413,153 +414,140 @@ async function processPhoto(
   }
 }
 
-export async function POST(req: NextRequest) {
-  try {
-    const HRIMS_CONFIG = await getHrimsApiConfig();
-    const body = await req.json();
-    const { zanId, payrollNumber, institutionVoteNumber } = body;
+export const POST = wrapHandler(async (req: NextRequest) => {
+  const HRIMS_CONFIG = await getHrimsApiConfig();
+  const body = await req.json();
+  const { zanId, payrollNumber, institutionVoteNumber } = body;
 
-    // Validation
-    if (!zanId && !payrollNumber) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: 'Either ZanID or Payroll Number must be provided',
-        },
-        { status: 400 }
-      );
-    }
-
-    if (!institutionVoteNumber) {
-      return NextResponse.json(
-        { success: false, message: 'Institution vote number is required' },
-        { status: 400 }
-      );
-    }
-
-    // Find institution by vote number
-    const institution = await db.institution.findFirst({
-      where: { voteNumber: institutionVoteNumber },
-    });
-
-    if (!institution) {
-      return NextResponse.json(
-        { success: false, message: 'Institution not found' },
-        { status: 404 }
-      );
-    }
-
-    // Fetch employee data from HRIMS
-    hrimsLogger.info('Fetching employee data from HRIMS...');
-    const employeeResponse = await fetchFromHRIMS(
-      '202',
-      {
-        RequestBody: zanId || payrollNumber, // Use the provided identifier
-      },
-      HRIMS_CONFIG
-    );
-
-    hrimsLogger.info({
-      code: employeeResponse.code,
-      status: employeeResponse.status,
-      message: employeeResponse.message,
-      hasData: !!employeeResponse.data,
-      hasPersonalInfo: !!(
-        employeeResponse.data && employeeResponse.data.personalInfo
-      ),
-    }, 'HRIMS Response received:');
-
-    if (employeeResponse.code !== 200 || !employeeResponse.data?.personalInfo) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: employeeResponse.message || 'Employee not found in HRIMS',
-        },
-        { status: 404 }
-      );
-    }
-
-    // Save employee to database
-    hrimsLogger.info('Saving employee to database...');
-    const employeeId = await saveEmployeeToDatabase(
-      employeeResponse.data,
-      institution.id
-    );
-
-    const personalInfo = employeeResponse.data.personalInfo;
-    const employeePayrollNumber = personalInfo.payrollNumber || payrollNumber;
-
-    // Process photo and documents in parallel
-    let photoStored = false;
-    let documentsCount = 0;
-
-    if (employeePayrollNumber) {
-      hrimsLogger.info(' Processing photo and documents...');
-
-      // Run photo and documents fetch in parallel for better performance
-      const [photoResult, docsCount] = await Promise.all([
-        processPhoto(employeePayrollNumber, employeeId, HRIMS_CONFIG),
-        processDocuments(employeePayrollNumber, employeeId, HRIMS_CONFIG),
-      ]);
-
-      photoStored = photoResult;
-      documentsCount = docsCount;
-
-      hrimsLogger.info(
-        ` Completed: Photo=${photoStored ? 'stored' : 'not found'}, Documents=${documentsCount} stored`
-      );
-    } else {
-      hrimsLogger.info(
-        ' No payroll number available - skipping photo and documents fetch'
-      );
-    }
-
-    const currentEmployment =
-      employeeResponse.data.employmentHistories?.find(
-        (emp: any) => emp.isCurrent
-      ) || employeeResponse.data.employmentHistories?.[0];
-
-    return NextResponse.json({
-      success: true,
-      message: 'Employee data fetched and stored successfully from HRIMS',
-      data: {
-        Employee: {
-          zanId: personalInfo.zanIdNumber,
-          name: [
-            personalInfo.firstName,
-            personalInfo.middleName,
-            personalInfo.lastName,
-          ]
-            .filter((name) => name && name.trim())
-            .join(' '),
-          payrollNumber: personalInfo.payrollNumber || '',
-          cadre: currentEmployment?.titleName || 'N/A',
-          status: personalInfo.isEmployeeConfirmed
-            ? 'Confirmed'
-            : 'On Probation',
-        },
-        documents: documentsCount,
-        photo: photoStored,
-        hrimsData: {
-          employmentHistories:
-            employeeResponse.data.employmentHistories?.length || 0,
-          educationHistories:
-            employeeResponse.data.educationHistories?.length || 0,
-          salaryInformation:
-            employeeResponse.data.salaryInformation?.length || 0,
-        },
-      },
-    });
-  } catch (error) {
-    hrimsLogger.error({ err: error }, 'Error in HRIMS fetch-employee API:');
-
+  // Validation
+  if (!zanId && !payrollNumber) {
     return NextResponse.json(
       {
         success: false,
-        message:
-          error instanceof Error ? error.message : 'Internal server error',
+        message: 'Either ZanID or Payroll Number must be provided',
       },
-      { status: 500 }
+      { status: 400 }
     );
   }
-}
+
+  if (!institutionVoteNumber) {
+    return NextResponse.json(
+      { success: false, message: 'Institution vote number is required' },
+      { status: 400 }
+    );
+  }
+
+  // Find institution by vote number
+  const institution = await db.institution.findFirst({
+    where: { voteNumber: institutionVoteNumber },
+  });
+
+  if (!institution) {
+    return NextResponse.json(
+      { success: false, message: 'Institution not found' },
+      { status: 404 }
+    );
+  }
+
+  // Fetch employee data from HRIMS
+  hrimsLogger.info('Fetching employee data from HRIMS...');
+  const employeeResponse = await fetchFromHRIMS(
+    '202',
+    {
+      RequestBody: zanId || payrollNumber, // Use the provided identifier
+    },
+    HRIMS_CONFIG
+  );
+
+  hrimsLogger.info({
+    code: employeeResponse.code,
+    status: employeeResponse.status,
+    message: employeeResponse.message,
+    hasData: !!employeeResponse.data,
+    hasPersonalInfo: !!(
+      employeeResponse.data && employeeResponse.data.personalInfo
+    ),
+  }, 'HRIMS Response received:');
+
+  if (employeeResponse.code !== 200 || !employeeResponse.data?.personalInfo) {
+    return NextResponse.json(
+      {
+        success: false,
+        message: employeeResponse.message || 'Employee not found in HRIMS',
+      },
+      { status: 404 }
+    );
+  }
+
+  // Save employee to database
+  hrimsLogger.info('Saving employee to database...');
+  const employeeId = await saveEmployeeToDatabase(
+    employeeResponse.data,
+    institution.id
+  );
+
+  const personalInfo = employeeResponse.data.personalInfo;
+  const employeePayrollNumber = personalInfo.payrollNumber || payrollNumber;
+
+  // Process photo and documents in parallel
+  let photoStored = false;
+  let documentsCount = 0;
+
+  if (employeePayrollNumber) {
+    hrimsLogger.info(' Processing photo and documents...');
+
+    // Run photo and documents fetch in parallel for better performance
+    const [photoResult, docsCount] = await Promise.all([
+      processPhoto(employeePayrollNumber, employeeId, HRIMS_CONFIG),
+      processDocuments(employeePayrollNumber, employeeId, HRIMS_CONFIG),
+    ]);
+
+    photoStored = photoResult;
+    documentsCount = docsCount;
+
+    hrimsLogger.info(
+      ` Completed: Photo=${photoStored ? 'stored' : 'not found'}, Documents=${documentsCount} stored`
+    );
+  } else {
+    hrimsLogger.info(
+      ' No payroll number available - skipping photo and documents fetch'
+    );
+  }
+
+  const currentEmployment =
+    employeeResponse.data.employmentHistories?.find(
+      (emp: any) => emp.isCurrent
+    ) || employeeResponse.data.employmentHistories?.[0];
+
+  return NextResponse.json({
+    success: true,
+    message: 'Employee data fetched and stored successfully from HRIMS',
+    data: {
+      Employee: {
+        zanId: personalInfo.zanIdNumber,
+        name: [
+          personalInfo.firstName,
+          personalInfo.middleName,
+          personalInfo.lastName,
+        ]
+          .filter((name) => name && name.trim())
+          .join(' '),
+        payrollNumber: personalInfo.payrollNumber || '',
+        cadre: currentEmployment?.titleName || 'N/A',
+        status: personalInfo.isEmployeeConfirmed
+          ? 'Confirmed'
+          : 'On Probation',
+      },
+      documents: documentsCount,
+      photo: photoStored,
+      hrimsData: {
+        employmentHistories:
+          employeeResponse.data.employmentHistories?.length || 0,
+        educationHistories:
+          employeeResponse.data.educationHistories?.length || 0,
+        salaryInformation:
+          employeeResponse.data.salaryInformation?.length || 0,
+      },
+    },
+  });
+});

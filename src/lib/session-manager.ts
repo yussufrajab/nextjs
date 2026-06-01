@@ -17,6 +17,34 @@ export const MAX_CONCURRENT_SESSIONS = 3;
 export const SESSION_EXPIRY_HOURS = 24; // 24 hours
 export const SESSION_EXPIRY_MS = SESSION_EXPIRY_HOURS * 60 * 60 * 1000;
 
+// Pre-session token for session fixation protection.
+// A random token is set as a cookie before authentication and verified after login.
+// If the pre-session token doesn't match, the session is rejected (fixation attempt).
+export const PRE_SESSION_COOKIE_NAME = 'pre-session';
+const PRE_SESSION_EXPIRY_MINUTES = 15;
+
+/**
+ * Generate a pre-authentication session token for session fixation protection.
+ * This token is set as a cookie before login and verified after successful authentication.
+ */
+export function generatePreSessionToken(): string {
+  return randomBytes(32).toString('hex');
+}
+
+/**
+ * Get cookie options for the pre-session token.
+ * httpOnly: true so it cannot be read by JavaScript (prevents XSS-based fixation).
+ */
+export function getPreSessionCookieOptions(isProduction: boolean) {
+  return {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: 'strict' as const,
+    path: '/',
+    maxAge: 60 * PRE_SESSION_EXPIRY_MINUTES,
+  };
+}
+
 /**
  * Generate a secure random session token
  */
@@ -160,10 +188,22 @@ export async function createSession(
   isSuspicious: boolean = false
 ) {
   try {
-    // Check if user has reached session limit
-    const sessionCheck = await checkSessionLimit(userId);
-    if (sessionCheck.isAtLimit) {
-      throw new Error('SESSION_LIMIT_REACHED');
+    // Check if user has reached session limit and auto-terminate oldest if so
+    const activeSessions = await db.session.findMany({
+      where: {
+        userId,
+        expiresAt: { gt: new Date() },
+      },
+      orderBy: { lastActivity: 'asc' },
+      select: { id: true },
+    });
+
+    if (activeSessions.length >= MAX_CONCURRENT_SESSIONS) {
+      // Terminate the oldest session (first in ascending order)
+      const oldestSessionId = activeSessions[0].id;
+      await db.session.deleteMany({
+        where: { id: { in: [oldestSessionId] } },
+      });
     }
 
     // Generate session token

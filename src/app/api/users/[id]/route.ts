@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 import { logUserAction, getClientIp } from '@/lib/audit-logger';
-import { logger } from '@/lib/logger';
+import { wrapHandler } from '@/lib/error-handler';
 
 const userUpdateSchema = z.object({
   name: z.string().min(2).optional(),
@@ -25,10 +25,10 @@ const userUpdateSchema = z.object({
   password: z.string().min(6).optional(),
 });
 
-export async function PUT(
+export const PUT = wrapHandler(async (
   req: Request,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   try {
     const { id } = await params;
     const body = await req.json();
@@ -117,21 +117,23 @@ export async function PUT(
 
     return NextResponse.json(response);
   } catch (error) {
-    logger.error({ err: error }, 'USER PUT');
     if (error instanceof z.ZodError) {
       return new NextResponse(JSON.stringify(error.errors), { status: 400 });
     }
     if ((error as any).code === 'P2002') {
       return new NextResponse('Username already exists', { status: 409 });
     }
-    return new NextResponse('Internal Server Error', { status: 500 });
+    if ((error as any).code === 'P2025') {
+      return new NextResponse('User not found', { status: 404 });
+    }
+    throw error;
   }
-}
+}, 'users-put');
 
-export async function DELETE(
+export const DELETE = wrapHandler(async (
   req: Request,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   try {
     const { id } = await params;
     await db.user.delete({
@@ -139,10 +141,15 @@ export async function DELETE(
     });
     return new NextResponse(null, { status: 204 });
   } catch (error) {
-    logger.error({ err: error }, 'USER DELETE');
     if ((error as any).code === 'P2025') {
       return new NextResponse('User not found', { status: 404 });
     }
-    return new NextResponse('Internal Server Error', { status: 500 });
+    if ((error as any).code === 'P2003') {
+      return new NextResponse(
+        'Cannot delete user. It may have associated data.',
+        { status: 409 }
+      );
+    }
+    throw error;
   }
-}
+}, 'users-delete');

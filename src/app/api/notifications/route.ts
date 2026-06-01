@@ -3,68 +3,52 @@ import { db } from '@/lib/db';
 import { withAuth } from '@/lib/api-auth';
 import { withRateLimit } from '@/lib/rate-limiter';
 import { validateRequest, notificationQuerySchema } from '@/lib/api-schemas';
-import { logger } from '@/lib/logger';
+import { wrapHandler } from '@/lib/error-handler';
 
-export const GET = withRateLimit(withAuth(async (request, { auth }) => {
-  try {
-    const validation = await validateRequest(request as NextRequest, notificationQuerySchema, 'query');
-    if (!validation.success) return validation.response;
+export const GET = wrapHandler(withRateLimit(withAuth(async (request, { auth }) => {
+  const validation = await validateRequest(request as NextRequest, notificationQuerySchema, 'query');
+  if (!validation.success) return validation.response;
 
-    const { userId } = validation.data;
+  const { userId } = validation.data;
 
-    // Verify auth.userId matches userId or admin role
-    if (userId !== auth.userId && auth.role !== 'Admin') {
-      return NextResponse.json(
-        { success: false, message: 'Forbidden' },
-        { status: 403 }
-      );
-    }
-
-    const notifications = await db.notification.findMany({
-      where: { userId: userId },
-      orderBy: { createdAt: 'desc' },
-      take: 20,
-    });
-
-    return NextResponse.json({
-      success: true,
-      data: notifications,
-    });
-  } catch (error) {
-    logger.error({ err: error }, 'NOTIFICATIONS GET');
+  // Verify auth.userId matches userId or admin role
+  if (userId !== auth.userId && auth.role !== 'Admin') {
     return NextResponse.json(
-      { success: false, message: 'Internal Server Error' },
-      { status: 500 }
+      { success: false, message: 'Forbidden' },
+      { status: 403 }
     );
   }
-}), 'read');
 
-export const POST = withRateLimit(withAuth(async (request, { auth: _auth }) => {
-  try {
-    const body = await request.json();
-    const { notificationIds } = body;
+  const notifications = await db.notification.findMany({
+    where: { userId: userId },
+    orderBy: { createdAt: 'desc' },
+    take: 20,
+  });
 
-    if (!notificationIds || !Array.isArray(notificationIds)) {
-      return NextResponse.json(
-        { success: false, message: 'Notification IDs are required' },
-        { status: 400 }
-      );
-    }
+  return NextResponse.json({
+    success: true,
+    data: notifications,
+  });
+}), 'read'), 'notifications-get');
 
-    await db.notification.updateMany({
-      where: { id: { in: notificationIds } },
-      data: { isRead: true },
-    });
+export const POST = wrapHandler(withRateLimit(withAuth(async (request, { auth: _auth }) => {
+  const body = await request.json();
+  const { notificationIds } = body;
 
-    return NextResponse.json({
-      success: true,
-      message: 'Notifications marked as read',
-    });
-  } catch (error) {
-    logger.error({ err: error }, 'NOTIFICATIONS POST');
+  if (!notificationIds || !Array.isArray(notificationIds)) {
     return NextResponse.json(
-      { success: false, message: 'Internal Server Error' },
-      { status: 500 }
+      { success: false, message: 'Notification IDs are required' },
+      { status: 400 }
     );
   }
-}), 'write');
+
+  await db.notification.updateMany({
+    where: { id: { in: notificationIds } },
+    data: { isRead: true },
+  });
+
+  return NextResponse.json({
+    success: true,
+    message: 'Notifications marked as read',
+  });
+}), 'write'), 'notifications-post');

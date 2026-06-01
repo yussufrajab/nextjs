@@ -57,150 +57,105 @@ type Role =
   | 'Admin'
   | null;
 
-const ROLES = {
-  HRO: 'HRO',
-  HHRMD: 'HHRMD',
-  HRMO: 'HRMO',
-  DO: 'DO',
-  EMPLOYEE: 'EMPLOYEE',
-  CSCS: 'CSCS',
-  HRRP: 'HRRP',
-  PO: 'PO',
-  ADMIN: 'Admin',
-} as const;
-
 interface RoutePermission {
   pattern: string | RegExp;
   allowedRoles: Role[];
 }
 
-// Route permission configuration (matches src/lib/route-permissions.ts)
+/**
+ * Route permission configuration.
+ * This is a copy of the canonical source in src/lib/route-permissions-config.ts.
+ * Middleware cannot import from @/lib due to Next.js edge runtime constraints,
+ * so this list must be kept in sync manually.
+ *
+ * When changing permissions, update BOTH this file AND route-permissions-config.ts.
+ * A CI test verifies they stay in sync.
+ */
 const ROUTE_PERMISSIONS: RoutePermission[] = [
   // Admin-only routes
   {
     pattern: /^\/dashboard\/admin/,
-    allowedRoles: [ROLES.ADMIN as Role],
+    allowedRoles: ['Admin' as Role],
   },
-  // HR Officer routes - HHRMD and HRMO can approve, HRO can submit, CSCS and HRRP can view
+  // HR Officer routes
   {
     pattern: '/dashboard/urgent-actions',
-    allowedRoles: [ROLES.HRO, ROLES.HRRP, ROLES.CSCS],
+    allowedRoles: ['HRO', 'HRRP', 'CSCS'],
   },
   {
     pattern: '/dashboard/confirmation',
-    allowedRoles: [ROLES.HRO, ROLES.HHRMD, ROLES.HRMO, ROLES.CSCS, ROLES.HRRP],
+    allowedRoles: ['HRO', 'HHRMD', 'HRMO', 'CSCS', 'HRRP'],
   },
   {
     pattern: '/dashboard/lwop',
-    allowedRoles: [ROLES.HRO, ROLES.HHRMD, ROLES.HRMO, ROLES.CSCS, ROLES.HRRP],
+    allowedRoles: ['HRO', 'HHRMD', 'HRMO', 'CSCS', 'HRRP'],
   },
   {
     pattern: '/dashboard/promotion',
-    allowedRoles: [ROLES.HRO, ROLES.HHRMD, ROLES.HRMO, ROLES.CSCS, ROLES.HRRP],
+    allowedRoles: ['HRO', 'HHRMD', 'HRMO', 'CSCS', 'HRRP'],
   },
   {
     pattern: '/dashboard/cadre-change',
-    allowedRoles: [ROLES.HRO, ROLES.HHRMD, ROLES.HRMO, ROLES.CSCS, ROLES.HRRP],
+    allowedRoles: ['HRO', 'HHRMD', 'HRMO', 'CSCS', 'HRRP'],
   },
   {
     pattern: '/dashboard/retirement',
-    allowedRoles: [ROLES.HRO, ROLES.HHRMD, ROLES.HRMO, ROLES.CSCS, ROLES.HRRP],
+    allowedRoles: ['HRO', 'HHRMD', 'HRMO', 'CSCS', 'HRRP'],
   },
   {
     pattern: '/dashboard/resignation',
-    allowedRoles: [ROLES.HRO, ROLES.HHRMD, ROLES.HRMO, ROLES.CSCS, ROLES.HRRP],
+    allowedRoles: ['HRO', 'HHRMD', 'HRMO', 'CSCS', 'HRRP'],
   },
   {
     pattern: '/dashboard/service-extension',
-    allowedRoles: [ROLES.HRO, ROLES.HHRMD, ROLES.HRMO, ROLES.CSCS, ROLES.HRRP],
+    allowedRoles: ['HRO', 'HHRMD', 'HRMO', 'CSCS', 'HRRP'],
   },
-  // Disciplinary actions - HHRMD and DO only, NOT HRMO
+  // Disciplinary actions
   {
     pattern: '/dashboard/termination',
-    allowedRoles: [ROLES.HRO, ROLES.DO, ROLES.HHRMD, ROLES.CSCS, ROLES.HRRP],
+    allowedRoles: ['HRO', 'DO', 'HHRMD', 'CSCS', 'HRRP'],
   },
   {
     pattern: '/dashboard/dismissal',
-    allowedRoles: [ROLES.HRO, ROLES.DO, ROLES.HHRMD, ROLES.CSCS, ROLES.HRRP],
+    allowedRoles: ['HRO', 'DO', 'HHRMD', 'CSCS'],
   },
-  // Complaints - EMPLOYEE submits, DO/HHRMD handle, CSCS view
+  // Complaints
   {
     pattern: '/dashboard/complaints',
-    allowedRoles: [ROLES.EMPLOYEE, ROLES.DO, ROLES.HHRMD, ROLES.CSCS],
+    allowedRoles: ['EMPLOYEE', 'DO', 'HHRMD', 'CSCS'],
   },
   // Institution management
   {
     pattern: '/dashboard/institutions',
-    allowedRoles: [ROLES.HHRMD, ROLES.CSCS, ROLES.DO, ROLES.HRMO],
+    allowedRoles: ['HHRMD', 'CSCS', 'DO', 'HRMO', 'HRRP'],
+  },
+  // Manual employee entry
+  {
+    pattern: '/dashboard/add-employee',
+    allowedRoles: ['HRO'],
   },
   // Profile access
   {
     pattern: '/dashboard/profile',
-    allowedRoles: [
-      ROLES.HRO,
-      ROLES.EMPLOYEE,
-      ROLES.HHRMD,
-      ROLES.HRMO,
-      ROLES.DO,
-      ROLES.CSCS,
-      ROLES.HRRP,
-    ],
+    allowedRoles: ['HRO', 'EMPLOYEE', 'HHRMD', 'HRMO', 'DO', 'CSCS', 'HRRP', 'PO'],
   },
-  // Manual employee entry - HRO only
-  {
-    pattern: '/dashboard/add-employee',
-    allowedRoles: [ROLES.HRO],
-  },
-  // Tracking and reports - All roles can view their relevant data
+  // Tracking and reports
   {
     pattern: '/dashboard/track-status',
-    allowedRoles: [
-      ROLES.HRO,
-      ROLES.HHRMD,
-      ROLES.HRMO,
-      ROLES.DO,
-      ROLES.CSCS,
-      ROLES.HRRP,
-      ROLES.EMPLOYEE,
-    ],
+    allowedRoles: ['HRO', 'HHRMD', 'HRMO', 'DO', 'CSCS', 'HRRP', 'EMPLOYEE', 'PO'],
   },
   {
     pattern: '/dashboard/recent-activities',
-    allowedRoles: [
-      ROLES.HRO,
-      ROLES.HHRMD,
-      ROLES.HRMO,
-      ROLES.DO,
-      ROLES.CSCS,
-      ROLES.HRRP,
-    ],
+    allowedRoles: ['HRO', 'HHRMD', 'HRMO', 'DO', 'CSCS', 'HRRP'],
   },
   {
     pattern: '/dashboard/reports',
-    allowedRoles: [
-      ROLES.HRO,
-      ROLES.HHRMD,
-      ROLES.HRMO,
-      ROLES.DO,
-      ROLES.CSCS,
-      ROLES.HRRP,
-      ROLES.PO,
-    ],
+    allowedRoles: ['HRO', 'HHRMD', 'HRMO', 'DO', 'CSCS', 'HRRP', 'PO'],
   },
-  // Dashboard home - accessible to all authenticated users
+  // Dashboard home
   {
     pattern: '/dashboard',
-    allowedRoles: [
-      ROLES.HRO,
-      ROLES.HHRMD,
-      ROLES.HRMO,
-      ROLES.DO,
-      ROLES.EMPLOYEE,
-      ROLES.CSCS,
-      ROLES.HRRP,
-      ROLES.PO,
-      ROLES.ADMIN as Role,
-    ],
+    allowedRoles: ['HRO', 'HHRMD', 'HRMO', 'DO', 'EMPLOYEE', 'CSCS', 'HRRP', 'PO', 'Admin' as Role],
   },
 ];
 
@@ -237,6 +192,7 @@ function canAccessRoute(pathname: string, userRole: Role | null): boolean {
 
 /**
  * Parse and validate the auth-storage cookie
+ * Supports both the new server-set format and the legacy client-set format
  */
 function parseAuthStorage(cookieValue: string | undefined): {
   role: Role | null;
@@ -251,7 +207,16 @@ function parseAuthStorage(cookieValue: string | undefined): {
     const decoded = decodeURIComponent(cookieValue);
     const authData = JSON.parse(decoded);
 
-    // Extract state from the Zustand persisted storage format
+    // New server-set format: { userId, role, username, institutionId, isAuthenticated }
+    if (authData.userId && authData.role && !authData.state) {
+      return {
+        role: authData.role as Role,
+        isAuthenticated: authData.isAuthenticated === true,
+        userId: authData.userId,
+      };
+    }
+
+    // Legacy client-set format: { state: { user: { id, role }, role, isAuthenticated } }
     const state = authData.state || authData;
 
     return {
@@ -265,8 +230,25 @@ function parseAuthStorage(cookieValue: string | undefined): {
   }
 }
 
+// Maximum request body size (10MB)
+const MAX_BODY_SIZE = 10 * 1024 * 1024;
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // Check Content-Length for API routes to prevent oversized payloads
+  if (pathname.startsWith('/api/')) {
+    const contentLength = request.headers.get('content-length');
+    if (contentLength) {
+      const size = parseInt(contentLength, 10);
+      if (!isNaN(size) && size > MAX_BODY_SIZE) {
+        return NextResponse.json(
+          { success: false, message: 'Request body too large' },
+          { status: 413 }
+        );
+      }
+    }
+  }
 
   // Allow access to public routes
   if (

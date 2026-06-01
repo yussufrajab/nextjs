@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { v4 as uuidv4 } from 'uuid';
 import { getHrimsApiConfig } from '@/lib/hrims-config';
 import { hrimsLogger } from '@/lib/logger';
+import { wrapHandler } from '@/lib/error-handler';
 
 async function fetchFromHRIMS(
  requestId: string,
@@ -481,8 +482,7 @@ async function processBulkFetch(
  }
 }
 
-export async function POST(req: NextRequest) {
- try {
+export const POST = wrapHandler(async (req: NextRequest) => {
  // Get HRIMS configuration from database (or use defaults)
  const HRIMS_CONFIG = await getHrimsApiConfig();
 
@@ -531,17 +531,5 @@ export async function POST(req: NextRequest) {
  institutionVoteNumber,
  status: 'started',
  },
- });
- } catch (error) {
- hrimsLogger.error({ err: error }, 'Error in HRIMS bulk-fetch API:');
-
- return NextResponse.json(
- {
- success: false,
- message:
- error instanceof Error ? error.message : 'Internal server error',
- },
- { status: 500 }
- );
- }
-}
+	});
+}, 'hrims-bulk-fetch');

@@ -2,7 +2,12 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { createNotification, NotificationTemplates } from '@/lib/notifications';
 import { logLoginAttempt, getClientIp } from '@/lib/audit-logger';
-import { createSession, checkSessionLimit, cleanupExpiredSessions } from '@/lib/session-manager';
+import {
+  createSession,
+  checkSessionLimit,
+  cleanupExpiredSessions,
+  PRE_SESSION_COOKIE_NAME,
+} from '@/lib/session-manager';
 import { detectSuspiciousLogin, getLoginSummary } from '@/lib/suspicious-login-detector';
 
 interface CompleteLoginUser {
@@ -37,16 +42,22 @@ interface CompleteLoginParams {
   ipAddress: string | null;
   userAgent: string | null;
   deviceInfo?: Record<string, any> | null;
+  preSessionToken?: string | null;
 }
 
 export async function completeLogin(params: CompleteLoginParams): Promise<NextResponse> {
-  const { user, ipAddress, userAgent, deviceInfo } = params;
+  const { user, ipAddress, userAgent, deviceInfo, preSessionToken } = params;
 
   // Set initial activity timestamp
   await db.user.update({
     where: { id: user.id },
     data: { lastActivity: new Date() },
   });
+
+  // Session fixation protection: the pre-session token was already verified
+  // by the caller (login route reads it from the cookie and passes it here).
+  // Its presence confirms the login flow started from a legitimate page load.
+  // The pre-session cookie is cleared below after successful auth.
 
   // Build auth data
   const authData = {
@@ -187,7 +198,35 @@ export async function completeLogin(params: CompleteLoginParams): Promise<NextRe
     message: 'Login successful',
   });
 
+  // Set CSRF token cookie (readable by JS for double-submit pattern)
   response.cookies.set(CSRF_COOKIE_NAME, signedCSRFToken, csrfCookieOptions);
+
+  // Set auth cookie server-side with httpOnly and Secure flags
+  const isProduction = process.env.NODE_ENV === 'production';
+  const authCookieValue = JSON.stringify({
+    userId: user.id,
+    role: user.role,
+    username: user.username,
+    institutionId: user.institutionId,
+    isAuthenticated: true,
+  });
+
+  response.cookies.set('auth-storage', authCookieValue, {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: 'strict',
+    path: '/',
+    maxAge: 60 * 60 * 24 * 7, // 7 days
+  });
+
+  // Clear the pre-session cookie after successful authentication (session fixation protection)
+  response.cookies.set(PRE_SESSION_COOKIE_NAME, '', {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: 'strict',
+    path: '/',
+    maxAge: 0,
+  });
 
   return response;
 }

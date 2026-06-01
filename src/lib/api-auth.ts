@@ -117,10 +117,13 @@ export async function verifyAuth(
   const state = parsed.state || parsed;
 
   // 3. Extract auth fields ---------------------------------------------------
-  const userId: string | undefined = state.user?.id;
+  // Support both:
+  //   New server-set format: { userId, role, username, institutionId, isAuthenticated }
+  //   Legacy format:         { state: { user: { id, role, institutionId, username } } }
+  const userId: string | undefined = state.user?.id || state.userId;
   const role: string | undefined = state.user?.role || state.role;
-  const institutionId: string | null = state.user?.institutionId ?? null;
-  const username: string | undefined = state.user?.username;
+  const institutionId: string | null = state.user?.institutionId ?? state.institutionId ?? null;
+  const username: string | undefined = state.user?.username || state.username;
 
   if (!userId || !role) {
     return invalidSession();
@@ -144,7 +147,8 @@ export async function verifyAuth(
 
   // 5. Success ---------------------------------------------------------------
   // Use institutionId from cookie if available, fall back to database value
-  const resolvedInstitutionId = institutionId ?? user.institutionId;
+  // Must guard against null vs undefined: cookie may explicitly set null
+  const resolvedInstitutionId = institutionId !== undefined ? institutionId : (user.institutionId ?? null);
   return {
     authenticated: true,
     context: {

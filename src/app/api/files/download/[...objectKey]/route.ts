@@ -5,16 +5,17 @@ import { fileLogger } from '@/lib/logger';
 import { verifyAuth } from '@/lib/api-auth';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limiter';
 import { logFileAction } from '@/lib/audit-logger';
+import { wrapHandler } from '@/lib/error-handler';
 
 function getObjectKeyFromUrl(url: string): string | null {
   const match = url.match(/\/api\/files\/download\/(.+)/);
   return match ? decodeURIComponent(match[1]) : null;
 }
 
-export async function GET(
+export const GET = wrapHandler(async (
   request: NextRequest,
   { params }: { params: Promise<{ objectKey: string[] }> }
-) {
+) => {
   const authResult = await verifyAuth(request);
   if (!authResult.authenticated) {
     return authResult.response!;
@@ -29,61 +30,53 @@ export async function GET(
     );
   }
 
-  try {
-    const resolvedParams = await params;
-    const objectKey = decodeURIComponent(resolvedParams.objectKey.join('/'));
+  const resolvedParams = await params;
+  const objectKey = decodeURIComponent(resolvedParams.objectKey.join('/'));
 
-    fileLogger.info(
-      { objectKeySegments: resolvedParams.objectKey },
-      'Download API - Object key segments'
-    );
-    fileLogger.info({ value: objectKey }, 'Download API - Reconstructed object key');
+  fileLogger.info(
+    { objectKeySegments: resolvedParams.objectKey },
+    'Download API - Object key segments'
+  );
+  fileLogger.info({ value: objectKey }, 'Download API - Reconstructed object key');
 
-    const metadata = await getFileMetadata(objectKey);
-    const fileStream = await downloadFile(objectKey);
-    const filename = objectKey.split('/').pop() || 'download';
+  const metadata = await getFileMetadata(objectKey);
+  const fileStream = await downloadFile(objectKey);
+  const filename = objectKey.split('/').pop() || 'download';
 
-    const readable = new ReadableStream({
-      start(controller) {
-        fileStream.on('data', (chunk: Buffer) => {
-          controller.enqueue(new Uint8Array(chunk));
-        });
+  const readable = new ReadableStream({
+    start(controller) {
+      fileStream.on('data', (chunk: Buffer) => {
+        controller.enqueue(new Uint8Array(chunk));
+      });
 
-        fileStream.on('end', () => {
-          controller.close();
-        });
+      fileStream.on('end', () => {
+        controller.close();
+      });
 
-        fileStream.on('error', (error: Error) => {
-          controller.error(error);
-        });
-      },
-    });
+      fileStream.on('error', (error: Error) => {
+        controller.error(error);
+      });
+    },
+  });
 
-    const headers = new Headers();
-    headers.set('Content-Type', metadata.contentType);
-    headers.set('Content-Disposition', `attachment; filename="${filename}"`);
-    headers.set('Content-Length', metadata.size.toString());
+  const headers = new Headers();
+  headers.set('Content-Type', metadata.contentType);
+  headers.set('Content-Disposition', `attachment; filename="${filename}"`);
+  headers.set('Content-Length', metadata.size.toString());
 
-    await logFileAction({
-      action: 'DOWNLOADED',
-      fileName: filename,
-      objectKey: objectKey,
-      performedById: auth.userId,
-      performedByUsername: auth.username,
-      performedByRole: auth.role,
-      ipAddress: getClientIp(request),
-      deviceInfo: JSON.parse(request.headers.get('x-device-info') || 'null'),
-    }).catch(() => {});
+  await logFileAction({
+    action: 'DOWNLOADED',
+    fileName: filename,
+    objectKey: objectKey,
+    performedById: auth.userId,
+    performedByUsername: auth.username,
+    performedByRole: auth.role,
+    ipAddress: getClientIp(request),
+    deviceInfo: JSON.parse(request.headers.get('x-device-info') || 'null'),
+  }).catch(() => {});
 
-    return new NextResponse(readable, {
-      status: 200,
-      headers,
-    });
-  } catch (error) {
-    fileLogger.error({ value: error }, 'File download error');
-    return NextResponse.json(
-      { success: false, message: 'File not found or internal server error' },
-      { status: 404 }
-    );
-  }
-}
+  return new NextResponse(readable, {
+    status: 200,
+    headers,
+  });
+}, 'files-download');

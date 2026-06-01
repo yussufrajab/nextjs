@@ -7,41 +7,15 @@ import { clientLogger } from '@/lib/logger-client';
 const log = clientLogger.child({ component: 'auth-store' });
 
 /**
- * Helper function to set a cookie for middleware authentication
- * This allows Next.js middleware to read auth state server-side
+ * The auth cookie is now set server-side (httpOnly, Secure, SameSite=Strict)
+ * via the login response in src/lib/auth-helpers.ts.
+ *
+ * Client-side cookie helpers are kept for logout (clearing) and for the
+ * transition period where both old and new formats may exist.
  */
-function setAuthCookie(state: {
-  user: User | null;
-  role: Role | null;
-  isAuthenticated: boolean;
-}) {
-  if (typeof window === 'undefined') return;
-
-  const cookieValue = JSON.stringify({
-    state: {
-      user: state.user
-        ? {
-            id: state.user.id,
-            role: state.user.role,
-            username: state.user.username,
-            institutionId: state.user.institutionId,
-          }
-        : null,
-      role: state.role,
-      isAuthenticated: state.isAuthenticated,
-    },
-  });
-
-  // Set cookie with 7 days expiry, httpOnly is not available from client-side
-  // This is read by middleware for server-side route protection
-  const expiryDate = new Date();
-  expiryDate.setDate(expiryDate.getDate() + 7);
-
-  document.cookie = `auth-storage=${encodeURIComponent(cookieValue)}; path=/; expires=${expiryDate.toUTCString()}; SameSite=Strict`;
-}
 
 /**
- * Helper function to clear the auth cookie
+ * Clear the auth cookie (client-side fallback for logout)
  */
 function clearAuthCookie() {
   if (typeof window === 'undefined') return;
@@ -250,8 +224,8 @@ export const useAuthStore = create<AuthState>()(
             csrfToken: csrfToken,
           });
 
-          // Set auth cookie for middleware
-          setAuthCookie({ user, role: userRole, isAuthenticated: true });
+          // Auth cookie is now set server-side (httpOnly) in auth-helpers.ts
+          // No client-side cookie setting needed
 
           // Verify the state was set correctly
           const newState = get();
@@ -395,18 +369,8 @@ export const useAuthStore = create<AuthState>()(
           set({ isAuthenticated: true });
         }
 
-        // Ensure cookie is set for valid auth state
-        if (
-          currentState.isAuthenticated &&
-          currentState.user &&
-          currentState.role
-        ) {
-          setAuthCookie({
-            user: currentState.user,
-            role: currentState.role,
-            isAuthenticated: currentState.isAuthenticated,
-          });
-        }
+        // Auth cookie is managed server-side (httpOnly).
+        // Client-side persistence is handled by Zustand localStorage middleware.
 
         // Refresh user data from database to pick up institution name
         // and other profile changes that may have occurred since login
@@ -475,8 +439,8 @@ export const useAuthStore = create<AuthState>()(
               role: result.data.role,
             });
 
-            // Update auth cookie with fresh data
-            setAuthCookie(get());
+            // Auth cookie is managed server-side (httpOnly).
+            // No client-side cookie update needed.
 
             return true;
           }

@@ -9,13 +9,12 @@ const port = parseInt(process.env.MINIO_PORT || '9000');
 const useSSL = process.env.MINIO_USE_SSL === 'true';
 
 fileLogger.info({
-  accessKey,
   secretKeyConfigured: !!secretKey,
   endPoint,
   port,
   useSSL,
   nodeEnv: process.env.NODE_ENV,
-}, 'MinIO credentials check');
+}, 'MinIO client initialized');
 
 const minioClient = new MinioClient({
   endPoint,

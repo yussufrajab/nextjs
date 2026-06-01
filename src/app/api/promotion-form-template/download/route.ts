@@ -3,10 +3,11 @@ import { downloadFile, getFileMetadata } from '@/lib/minio';
 import { logger } from '@/lib/logger';
 import { verifyAuth } from '@/lib/api-auth';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limiter';
+import { wrapHandler } from '@/lib/error-handler';
 
 const TEMPLATE_OBJECT_KEY = 'templates/promotion-form-template.docx';
 
-export async function GET(request: NextRequest) {
+export const GET = wrapHandler(async (request: NextRequest) => {
   const authResult = await verifyAuth(request);
   if (!authResult.authenticated) {
     return authResult.response!;
@@ -20,40 +21,10 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  let metadata;
   try {
-    const metadata = await getFileMetadata(TEMPLATE_OBJECT_KEY);
-    const fileStream = await downloadFile(TEMPLATE_OBJECT_KEY);
-
-    const readable = new ReadableStream({
-      start(controller) {
-        fileStream.on('data', (chunk: Buffer) => {
-          controller.enqueue(new Uint8Array(chunk));
-        });
-
-        fileStream.on('end', () => {
-          controller.close();
-        });
-
-        fileStream.on('error', (error: Error) => {
-          controller.error(error);
-        });
-      },
-    });
-
-    const headers = new Headers();
-    headers.set('Content-Type', metadata.contentType);
-    headers.set(
-      'Content-Disposition',
-      'attachment; filename="Civil_Service_Commission_Promotion_Form.docx"'
-    );
-    headers.set('Content-Length', metadata.size.toString());
-
-    return new NextResponse(readable, {
-      status: 200,
-      headers,
-    });
-  } catch (error) {
-    logger.error({ value: error }, 'Promotion form template download error');
+    metadata = await getFileMetadata(TEMPLATE_OBJECT_KEY);
+  } catch {
     return NextResponse.json(
       {
         success: false,
@@ -62,4 +33,35 @@ export async function GET(request: NextRequest) {
       { status: 404 }
     );
   }
-}
+
+  const fileStream = await downloadFile(TEMPLATE_OBJECT_KEY);
+
+  const readable = new ReadableStream({
+    start(controller) {
+      fileStream.on('data', (chunk: Buffer) => {
+        controller.enqueue(new Uint8Array(chunk));
+      });
+
+      fileStream.on('end', () => {
+        controller.close();
+      });
+
+      fileStream.on('error', (error: Error) => {
+        controller.error(error);
+      });
+    },
+  });
+
+  const headers = new Headers();
+  headers.set('Content-Type', metadata.contentType);
+  headers.set(
+    'Content-Disposition',
+    'attachment; filename="Civil_Service_Commission_Promotion_Form.docx"'
+  );
+  headers.set('Content-Length', metadata.size.toString());
+
+  return new NextResponse(readable, {
+    status: 200,
+    headers,
+  });
+}, 'promotion-form-template-download');

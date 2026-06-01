@@ -12,6 +12,7 @@ import {
   getQueueEvents,
   HRIMS_SYNC_QUEUE_NAME,
 } from '@/lib/jobs/hrims-sync-queue';
+import { wrapHandler } from '@/lib/error-handler';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // 5 minutes max

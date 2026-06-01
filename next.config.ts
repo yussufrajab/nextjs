@@ -53,10 +53,12 @@ const nextConfig: NextConfig = {
     const isProduction = process.env.NODE_ENV === 'production';
 
     // Content Security Policy configuration
-    // This CSP is balanced between security and functionality
+    // Uses 'unsafe-inline' as a fallback for Next.js compatibility.
+    // For strict CSP with nonces, use the CSP utility in src/lib/csp.ts
+    // and set the nonce on <Script> components in the root layout.
     const ContentSecurityPolicy = `
       default-src 'self';
-      script-src 'self' 'unsafe-eval' 'unsafe-inline' https://accounts.google.com https://www.gstatic.com;
+      script-src 'self' 'unsafe-inline' https://accounts.google.com https://www.gstatic.com;
       style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
       font-src 'self' https://fonts.gstatic.com data:;
       img-src 'self' data: https: blob:;
@@ -68,6 +70,7 @@ const nextConfig: NextConfig = {
       form-action 'self';
       frame-ancestors 'self';
       upgrade-insecure-requests;
+      report-uri /api/csp-report;
     `.replace(/\s{2,}/g, ' ').trim();
 
     return [

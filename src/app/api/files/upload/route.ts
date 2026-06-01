@@ -6,8 +6,9 @@ import { verifyAuth } from '@/lib/api-auth';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limiter';
 import { validateCSRF } from '@/lib/api-csrf-middleware';
 import { logger } from '@/lib/logger';
+import { wrapHandler } from '@/lib/error-handler';
 
-export async function POST(request: Request) {
+export const POST = wrapHandler(async (request: Request) => {
   // 1. Verify authentication
   const authResult = await verifyAuth(request);
   if (!authResult.authenticated) {
@@ -30,64 +31,56 @@ export async function POST(request: Request) {
     return csrfCheck.response!;
   }
 
-  try {
-    const formData = await request.formData();
-    const file = formData.get('file') as File;
-    const folder = (formData.get('folder') as string) || 'documents';
+  const formData = await request.formData();
+  const file = formData.get('file') as File;
+  const folder = (formData.get('folder') as string) || 'documents';
 
-    if (!file) {
-      return NextResponse.json(
-        { success: false, message: 'No file provided' },
-        { status: 400 }
-      );
-    }
-
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    const validation = await validateFileUpload(buffer, file.name, file.type, 'generic');
-    if (!validation.success) {
-      return NextResponse.json(
-        { success: false, message: validation.error, errorCode: validation.errorCode },
-        { status: validation.status! }
-      );
-    }
-
-    const objectKey = generateObjectKey(folder, file.name);
-    const uploadResult = await uploadFile(
-      buffer,
-      objectKey,
-      file.type || 'application/octet-stream'
-    );
-
-    await logFileAction({
-      action: 'UPLOADED',
-      fileName: file.name,
-      objectKey: uploadResult.objectKey,
-      performedById: auth.userId || 'unknown',
-      performedByUsername: auth.username || 'unknown',
-      performedByRole: auth.role || 'unknown',
-      ipAddress: getAuditClientIp(request.headers),
-      deviceInfo: JSON.parse(request.headers.get('x-device-info') || 'null'),
-    }).catch(() => {});
-
-    return NextResponse.json({
-      success: true,
-      message: 'File uploaded successfully',
-      data: {
-        objectKey: uploadResult.objectKey,
-        originalName: file.name,
-        size: file.size,
-        contentType: file.type,
-        etag: uploadResult.etag,
-        bucketName: uploadResult.bucketName,
-      },
-    });
-  } catch (error) {
-    logger.error({ value: error }, 'File upload error');
+  if (!file) {
     return NextResponse.json(
-      { success: false, message: 'Internal server error' },
-      { status: 500 }
+      { success: false, message: 'No file provided' },
+      { status: 400 }
     );
   }
-}
+
+  const arrayBuffer = await file.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+
+  const validation = await validateFileUpload(buffer, file.name, file.type, 'generic');
+  if (!validation.success) {
+    return NextResponse.json(
+      { success: false, message: validation.error, errorCode: validation.errorCode },
+      { status: validation.status! }
+    );
+  }
+
+  const objectKey = generateObjectKey(folder, file.name);
+  const uploadResult = await uploadFile(
+    buffer,
+    objectKey,
+    file.type || 'application/octet-stream'
+  );
+
+  await logFileAction({
+    action: 'UPLOADED',
+    fileName: file.name,
+    objectKey: uploadResult.objectKey,
+    performedById: auth.userId || 'unknown',
+    performedByUsername: auth.username || 'unknown',
+    performedByRole: auth.role || 'unknown',
+    ipAddress: getAuditClientIp(request.headers),
+    deviceInfo: JSON.parse(request.headers.get('x-device-info') || 'null'),
+  }).catch(() => {});
+
+  return NextResponse.json({
+    success: true,
+    message: 'File uploaded successfully',
+    data: {
+      objectKey: uploadResult.objectKey,
+      originalName: file.name,
+      size: file.size,
+      contentType: file.type,
+      etag: uploadResult.etag,
+      bucketName: uploadResult.bucketName,
+    },
+  });
+}, 'files-upload');

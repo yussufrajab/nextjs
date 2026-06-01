@@ -8,6 +8,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z, ZodError, ZodType } from 'zod';
+import { sanitizeText } from '@/lib/sanitize-input';
 
 // ---------------------------------------------------------------------------
 // Result types
@@ -67,7 +68,11 @@ export async function validateRequest<T extends ZodType>(
 
   try {
     const parsed = schema.parse(input);
-    return { success: true, data: parsed };
+
+    // Sanitize all string fields in the parsed data to prevent stored XSS
+    const sanitized = sanitizeStrings(parsed);
+
+    return { success: true, data: sanitized };
   } catch (err) {
     if (err instanceof ZodError) {
       return {
@@ -140,3 +145,28 @@ export const dashboardMetricsSchema = z.object({
   userRole: z.string().optional(),
   institutionId: z.string().optional(),
 });
+
+// ---------------------------------------------------------------------------
+// XSS Sanitization Helper
+// ---------------------------------------------------------------------------
+
+/**
+ * Recursively sanitize all string values in an object to prevent stored XSS.
+ * Uses DOMPurify to strip HTML tags and dangerous content from all strings.
+ */
+function sanitizeStrings<T>(data: T): T {
+  if (typeof data === 'string') {
+    return sanitizeText(data) as unknown as T;
+  }
+  if (Array.isArray(data)) {
+    return data.map((item) => sanitizeStrings(item)) as unknown as T;
+  }
+  if (data !== null && typeof data === 'object') {
+    const result: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
+      result[key] = sanitizeStrings(value);
+    }
+    return result as unknown as T;
+  }
+  return data;
+}

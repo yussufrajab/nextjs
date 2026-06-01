@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getHrimsApiConfig } from '@/lib/hrims-config';
 import { hrimsLogger } from '@/lib/logger';
+import { wrapHandler } from '@/lib/error-handler';
 
 // Utility function to add delay between tests
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));

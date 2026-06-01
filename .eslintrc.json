@@ -6,6 +6,15 @@
     "sourceType": "module"
   },
   "plugins": ["@typescript-eslint"],
+  "overrides": [
+    {
+      "files": ["e2e/**/*.ts"],
+      "rules": {
+        "no-restricted-imports": "off",
+        "no-restricted-modules": "off"
+      }
+    }
+  ],
   "rules": {
     "@typescript-eslint/no-unused-vars": [
       "warn",
@@ -17,6 +26,24 @@
     "@typescript-eslint/no-explicit-any": "warn",
     "@typescript-eslint/explicit-function-return-type": "off",
     "@typescript-eslint/no-require-imports": "warn",
+
+    "no-restricted-imports": [
+      "error",
+      {
+        "patterns": [
+          {
+            "group": ["child_process"],
+            "message": "child_process is prohibited in application code. Use a dedicated job queue or external service for process execution."
+          }
+        ]
+      }
+    ],
+    "no-restricted-modules": [
+      "error",
+      {
+        "patterns": ["child_process"]
+      }
+    ],
 
     "no-console": ["warn", { "allow": ["warn", "error"] }],
     "no-debugger": "error",

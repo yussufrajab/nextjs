@@ -15,8 +15,14 @@ import { csrfLogger } from '@/lib/logger';
 export const CSRF_TOKEN_LENGTH = 32; // 32 bytes = 256 bits
 export const CSRF_COOKIE_NAME = 'csrf-token';
 export const CSRF_HEADER_NAME = 'x-csrf-token';
-export const CSRF_SECRET_ENV =
-  process.env.CSRF_SECRET || 'default-csrf-secret-change-in-production';
+const CSRF_SECRET = process.env.CSRF_SECRET;
+if (!CSRF_SECRET) {
+  throw new Error(
+    'CRITICAL: CSRF_SECRET environment variable is not set. ' +
+    'Generate one with: node -e "console.log(require(\'crypto\').randomBytes(64).toString(\'hex\'))"'
+  );
+}
+export const CSRF_SECRET_ENV = CSRF_SECRET;
 
 /**
  * Generate a cryptographically secure CSRF token

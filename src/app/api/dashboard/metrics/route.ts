@@ -5,6 +5,7 @@ import { shouldApplyInstitutionFilter, isCSCRole } from '@/lib/role-utils';
 import { withAuth } from '@/lib/api-auth';
 import { withRateLimit } from '@/lib/rate-limiter';
 import { logger } from '@/lib/logger';
+import { wrapHandler } from '@/lib/error-handler';
 
 const getRequestHref = (type: string, id: string) => {
   switch (type) {
@@ -35,15 +36,14 @@ const getRequestHref = (type: string, id: string) => {
 // Cache configuration
 const CACHE_TTL = 60; // 60 seconds cache
 
-export const GET = withRateLimit(withAuth(async (request, { auth }) => {
-  try {
-    logger.info('=== Dashboard metrics API called ===');
-    const startTime = Date.now();
+export const GET = wrapHandler(withRateLimit(withAuth(async (request, { auth }) => {
+  logger.info('=== Dashboard metrics API called ===');
+  const startTime = Date.now();
 
-    // Get role and institution from verified auth context
-    const { searchParams } = new URL(request.url);
-    const userRole = auth.role;
-    const userInstitutionId = auth.institutionId;
+  // Get role and institution from verified auth context
+  const { searchParams } = new URL(request.url);
+  const userRole = auth.role;
+  const userInstitutionId = auth.institutionId;
 
     // Get pagination parameters
     const page = parseInt(searchParams.get('page') || '1');
@@ -733,15 +733,4 @@ export const GET = withRateLimit(withAuth(async (request, { auth }) => {
     headers.set('Vercel-CDN-Cache-Control', `public, s-maxage=${CACHE_TTL}`);
 
     return NextResponse.json(response, { headers });
-  } catch (error) {
-    logger.error({ err: error }, 'DASHBOARD METRICS GET');
-    return NextResponse.json(
-      {
-        success: false,
-        message: 'Internal Server Error',
-        error: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
-  }
-}), 'read');
+}), 'read'), 'dashboard-metrics');

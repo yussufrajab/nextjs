@@ -17,13 +17,12 @@ export type RequestType =
 let transporter: nodemailer.Transporter | null = null;
 
 function createTransporter(): nodemailer.Transporter {
-  if (transporter) return transporter;
-
+  const smtpSecure = process.env.SMTP_SECURE === 'true';
   transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: Number(process.env.SMTP_PORT) || 25,
-    secure: process.env.SMTP_SECURE === 'true',
-    requireTLS: true,
+    secure: smtpSecure,
+    requireTLS: false,
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASSWORD,
@@ -32,8 +31,8 @@ function createTransporter(): nodemailer.Transporter {
       rejectUnauthorized: false,
     },
     pool: true,
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
   });
 
   return transporter;

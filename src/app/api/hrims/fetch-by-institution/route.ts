@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { addHRIMSSyncJob } from '@/lib/jobs/hrims-sync-queue';
 import { hrimsLogger } from '@/lib/logger';
+import { wrapHandler } from '@/lib/error-handler';
 
 // Configure route
 export const dynamic = 'force-dynamic';
@@ -12,8 +13,7 @@ export const dynamic = 'force-dynamic';
  * Queue a background job to sync HRIMS data for an institution
  * Returns immediately with a job ID for progress tracking
  */
-export async function POST(req: NextRequest) {
- try {
+export const POST = wrapHandler(async (req: NextRequest) => {
  const body = await req.json();
  const {
  identifierType,
@@ -109,16 +109,4 @@ export async function POST(req: NextRequest) {
  institutionName: institution.name,
  statusUrl: `/api/hrims/sync-status/${jobId}`,
  });
- } catch (error) {
- hrimsLogger.error({ err: error }, 'Error queueing HRIMS sync job:');
-
- return NextResponse.json(
- {
- success: false,
- message:
- error instanceof Error ? error.message : 'Internal server error',
- },
- { status: 500 }
- );
- }
-}
+});

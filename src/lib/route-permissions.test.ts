@@ -414,8 +414,9 @@ describe('route-permissions', () => {
       expect(roles).toContain(ROLES.DO);
       expect(roles).toContain(ROLES.HHRMD);
       expect(roles).toContain(ROLES.CSCS);
+      expect(roles).toContain(ROLES.HRRP);
       expect(roles).not.toContain(ROLES.HRMO); // HRMO NOT allowed
-      expect(roles.length).toBe(4);
+      expect(roles.length).toBe(5);
     });
 
     it('should return allowed roles for complaints route', () => {

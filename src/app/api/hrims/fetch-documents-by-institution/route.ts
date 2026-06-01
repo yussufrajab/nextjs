@@ -5,6 +5,7 @@ import { uploadFile } from '@/lib/minio';
 import { hrimsLogger } from '@/lib/logger';
 import { verifyAuth } from '@/lib/api-auth';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limiter';
+import { wrapHandler } from '@/lib/error-handler';
 
 // Configure route for long-running operations
 export const maxDuration = 900; // 15 minutes for large institutions

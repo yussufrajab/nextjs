@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { z } from 'zod';
 import { hrimsLogger } from '@/lib/logger';
+import { wrapHandler } from '@/lib/error-handler';
 
 // Validation schema for the HRIMS certificates sync request
 const hrimsCertificatesRequestSchema = z
@@ -46,117 +47,93 @@ const hrimsCertificatesResponseSchema = z.object({
   }),
 });
 
-export async function POST(req: Request) {
-  try {
-    const body = await req.json();
-    hrimsLogger.info({
-      ...body,
-      hrimsApiKey: '[REDACTED]',
-    }, 'HRIMS certificates sync request received');
+export const POST = wrapHandler(async (req: Request) => {
+  const body = await req.json();
+  hrimsLogger.info({
+    ...body,
+    hrimsApiKey: '[REDACTED]',
+  }, 'HRIMS certificates sync request received');
 
-    // Validate request payload
-    const validatedRequest = hrimsCertificatesRequestSchema.parse(body);
+  // Validate request payload
+  const validatedRequest = hrimsCertificatesRequestSchema.parse(body);
 
-    // Find institution by vote number
-    const institution = await db.institution.findFirst({
-      where: {
-        voteNumber: validatedRequest.institutionVoteNumber,
-      },
-    });
+  // Find institution by vote number
+  const institution = await db.institution.findFirst({
+    where: {
+      voteNumber: validatedRequest.institutionVoteNumber,
+    },
+  });
 
-    if (!institution) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: `Institution with vote number ${validatedRequest.institutionVoteNumber} not found`,
-        },
-        { status: 404 }
-      );
-    }
-
-    // Find employee to ensure they exist
-    const employee = await db.employee.findFirst({
-      where: {
-        OR: [
-          { zanId: validatedRequest.zanId },
-          { payrollNumber: validatedRequest.payrollNumber },
-        ],
-        institutionId: institution.id,
-      },
-    });
-
-    if (!employee) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: 'Employee not found in the specified institution',
-        },
-        { status: 404 }
-      );
-    }
-
-    // Fetch employee certificates from HRIMS
-    const hrimsData = await fetchCertificatesFromHRIMS(validatedRequest);
-
-    if (!hrimsData) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: 'Certificates not found in HRIMS system',
-        },
-        { status: 404 }
-      );
-    }
-
-    // Validate HRIMS response
-    const validatedHrimsData = hrimsCertificatesResponseSchema.parse(hrimsData);
-
-    // Store certificates in database
-    const result = await storeEmployeeCertificates(
-      validatedHrimsData,
-      employee.id
-    );
-
-    hrimsLogger.info({ employeeId: employee.id }, 'Certificates synced successfully for Employee');
-
-    return NextResponse.json(
-      {
-        success: true,
-        message: 'Employee certificates synced successfully from HRIMS',
-        data: {
-          employeeId: employee.id,
-          certificatesProcessed: validatedHrimsData.data.certificates.length,
-          certificatesSuccessful: result.successful,
-          certificatesFailed: result.failed,
-          pagination: validatedHrimsData.data.pagination,
-        },
-      },
-      { status: 200 }
-    );
-  } catch (error) {
-    hrimsLogger.error({ err: error }, '[HRIMS_CERTIFICATES_SYNC_ERROR]');
-
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: 'Invalid request data',
-          errors: error.errors,
-        },
-        { status: 400 }
-      );
-    }
-
+  if (!institution) {
     return NextResponse.json(
       {
         success: false,
-        message: 'Internal server error during HRIMS certificates sync',
-        error: error instanceof Error ? error.message : 'Unknown error',
+        message: `Institution with vote number ${validatedRequest.institutionVoteNumber} not found`,
       },
-      { status: 500 }
+      { status: 404 }
     );
   }
-}
+
+  // Find employee to ensure they exist
+  const employee = await db.employee.findFirst({
+    where: {
+      OR: [
+        { zanId: validatedRequest.zanId },
+        { payrollNumber: validatedRequest.payrollNumber },
+      ],
+      institutionId: institution.id,
+    },
+  });
+
+  if (!employee) {
+    return NextResponse.json(
+      {
+        success: false,
+        message: 'Employee not found in the specified institution',
+      },
+      { status: 404 }
+    );
+  }
+
+  // Fetch employee certificates from HRIMS
+  const hrimsData = await fetchCertificatesFromHRIMS(validatedRequest);
+
+  if (!hrimsData) {
+    return NextResponse.json(
+      {
+        success: false,
+        message: 'Certificates not found in HRIMS system',
+      },
+      { status: 404 }
+    );
+  }
+
+  // Validate HRIMS response
+  const validatedHrimsData = hrimsCertificatesResponseSchema.parse(hrimsData);
+
+  // Store certificates in database
+  const result = await storeEmployeeCertificates(
+    validatedHrimsData,
+    employee.id
+  );
+
+  hrimsLogger.info({ employeeId: employee.id }, 'Certificates synced successfully for Employee');
+
+  return NextResponse.json(
+    {
+      success: true,
+      message: 'Employee certificates synced successfully from HRIMS',
+      data: {
+        employeeId: employee.id,
+        certificatesProcessed: validatedHrimsData.data.certificates.length,
+        certificatesSuccessful: result.successful,
+        certificatesFailed: result.failed,
+        pagination: validatedHrimsData.data.pagination,
+      },
+    },
+    { status: 200 }
+  );
+}, 'hrims-sync-certificates');
 
 // Function to fetch employee certificates from external HRIMS system
 async function fetchCertificatesFromHRIMS(

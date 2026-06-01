@@ -28,8 +28,11 @@ function parseAuthStorage(cookieValue: string | undefined): {
     const authData = JSON.parse(decoded);
     const state = authData.state || authData;
 
+    // Support both server-set (flat) and legacy (nested) formats
+    const userId = state.user?.id || state.userId || null;
+
     return {
-      userId: state.user?.id || null,
+      userId,
     };
   } catch (error) {
     authLogger.error({ err: error }, 'Failed to parse auth-storage cookie');
