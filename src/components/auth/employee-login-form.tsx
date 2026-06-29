@@ -86,34 +86,21 @@ export function EmployeeLoginForm() {
         // Use the auth store to set user data with session and CSRF tokens
         // Handle both response formats: direct (result.user) and completeLogin (result.data.user)
         const userData = result.user || result.data?.user;
-        const sessionToken = result.sessionToken || result.data?.sessionToken || null;
         const csrfToken = result.csrfToken || result.data?.csrfToken || null;
 
         useAuthStore.setState({
           user: userData,
           role: userData?.role,
           isAuthenticated: true,
-          sessionToken: sessionToken,
           csrfToken: csrfToken,
           accessToken: null,
           refreshToken: null,
+          sessionToken: null,
         });
 
-        // Set auth cookie for middleware (same format as auth-store)
-        const cookieValue = JSON.stringify({
-          state: {
-            user: {
-              id: userData?.id,
-              role: userData?.role,
-              username: userData?.username,
-            },
-            role: userData?.role,
-            isAuthenticated: true,
-          },
-        });
-        const expiryDate = new Date();
-        expiryDate.setDate(expiryDate.getDate() + 7);
-        document.cookie = `auth-storage=${encodeURIComponent(cookieValue)}; path=/; expires=${expiryDate.toUTCString()}; SameSite=Strict`;
+        // The server sets the `session` and `auth-storage` HttpOnly cookies
+        // via Set-Cookie headers in completeLogin(). No client-side cookie
+        // writes needed.
 
         toast({
           title: 'Login Successful',

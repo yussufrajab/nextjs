@@ -56,7 +56,6 @@ export default function MagicLinkConfirmPage() {
       // MFA verified — set auth state
       const authData = result.data;
       const userData = authData?.user;
-      const sessionToken = result.sessionToken;
       const csrfToken = result.csrfToken;
 
       if (userData) {
@@ -68,22 +67,15 @@ export default function MagicLinkConfirmPage() {
           },
           role: userData.role,
           isAuthenticated: true,
-          sessionToken: sessionToken || null,
           csrfToken: csrfToken || null,
           accessToken: null,
           refreshToken: null,
+          sessionToken: null,
         });
 
-        const cookieValue = JSON.stringify({
-          state: {
-            user: { id: userData.id, role: userData.role, username: userData.username },
-            role: userData.role,
-            isAuthenticated: true,
-          },
-        });
-        const expiryDate = new Date();
-        expiryDate.setDate(expiryDate.getDate() + 7);
-        document.cookie = `auth-storage=${encodeURIComponent(cookieValue)}; path=/; expires=${expiryDate.toUTCString()}; SameSite=Strict`;
+        // The server sets the `session` and `auth-storage` HttpOnly cookies
+        // via Set-Cookie headers in completeLogin(). No client-side cookie
+        // writes needed.
 
         if (userData.mustChangePassword || userData.isTemporaryPassword) {
           if (userData.role !== 'EMPLOYEE') {
