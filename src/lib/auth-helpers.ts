@@ -7,6 +7,9 @@ import {
   checkSessionLimit,
   cleanupExpiredSessions,
   PRE_SESSION_COOKIE_NAME,
+  SESSION_COOKIE_NAME,
+  getSessionCookieOptions,
+  signSessionToken,
 } from '@/lib/session-manager';
 import { detectSuspiciousLogin, getLoginSummary } from '@/lib/suspicious-login-detector';
 
@@ -190,10 +193,8 @@ export async function completeLogin(params: CompleteLoginParams): Promise<NextRe
     success: true,
     data: {
       ...authData,
-      sessionToken: session.sessionToken,
     },
     passwordStatus,
-    sessionToken: session.sessionToken,
     csrfToken: signedCSRFToken,
     message: 'Login successful',
   });
@@ -201,8 +202,16 @@ export async function completeLogin(params: CompleteLoginParams): Promise<NextRe
   // Set CSRF token cookie (readable by JS for double-submit pattern)
   response.cookies.set(CSRF_COOKIE_NAME, signedCSRFToken, csrfCookieOptions);
 
-  // Set auth cookie server-side with httpOnly and Secure flags
+  // Set the HttpOnly, HMAC-signed session cookie. The client never receives
+  // the raw token; the browser sends the signed value automatically.
   const isProduction = process.env.NODE_ENV === 'production';
+  response.cookies.set(
+    SESSION_COOKIE_NAME,
+    signSessionToken(session.sessionToken),
+    getSessionCookieOptions(isProduction)
+  );
+
+  // Set auth cookie server-side with httpOnly and Secure flags
   const authCookieValue = JSON.stringify({
     userId: user.id,
     role: user.role,
