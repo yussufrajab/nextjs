@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/db';
 import {
@@ -14,6 +14,11 @@ import {
   PASSWORD_HISTORY_LENGTH,
   MAX_PASSWORD_CHANGE_ATTEMPTS,
 } from '@/lib/password-utils';
+import {
+  SESSION_COOKIE_NAME,
+  verifySessionToken,
+  terminateOtherUserSessions,
+} from '@/lib/session-manager';
 import { withRateLimit } from '@/lib/rate-limiter';
 import { authLogger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
@@ -194,6 +199,33 @@ export const POST = wrapHandler(withRateLimit(async (request) => {
       await import('@/lib/password-expiration-utils');
     await resetPasswordExpiration(userId, user.role);
 
+    // Invalidate all other sessions for this user (force re-login on other
+    // devices). The current device stays signed in on its existing session.
+    let currentSessionToken: string | undefined;
+    if (request instanceof NextRequest && 'cookies' in request) {
+      currentSessionToken = verifySessionToken(
+        request.cookies.get(SESSION_COOKIE_NAME)?.value ?? ''
+      ) ?? undefined;
+    } else {
+      const cookieHeader = request.headers.get('cookie');
+      if (cookieHeader) {
+        const match = cookieHeader.match(new RegExp(`${SESSION_COOKIE_NAME}=([^;]+)`));
+        if (match) {
+          currentSessionToken = verifySessionToken(match[1]) ?? undefined;
+        }
+      }
+    }
+    if (currentSessionToken) {
+      const terminated = await terminateOtherUserSessions(user.id, currentSessionToken);
+      authLogger.info({ userId: user.id, terminated }, 'Terminated other sessions after password change');
+    } else {
+      // No session cookie on the request (e.g. admin forcing a password
+      // change on behalf of a user) — terminate ALL sessions to be safe.
+      const { terminateAllUserSessions } = await import('@/lib/session-manager');
+      const terminated = await terminateAllUserSessions(user.id);
+      authLogger.info({ userId: user.id, terminated }, 'Terminated all sessions after password change (no current session cookie)');
+    }
+
     // Log password change with audit
     const { logAuditEvent, AuditEventCategory, AuditSeverity, getClientIp } =
       await import('@/lib/audit-logger');
@@ -217,6 +249,7 @@ export const POST = wrapHandler(withRateLimit(async (request) => {
           new Date(),
           user.role
         ),
+        sessionsInvalidated: true,
       },
     });
 
