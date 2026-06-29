@@ -2,25 +2,15 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import {
   getUserActiveSessions,
-  validateSession,
-  terminateSession,
+  terminateSessionById,
 } from '@/lib/session-manager';
 import { withAuth } from '@/lib/api-auth';
 import { withRateLimit } from '@/lib/rate-limiter';
 import { maskSessionToken } from '@/lib/sanitize-response';
-import { authLogger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
 
-const getSessionsSchema = z.object({
-  userId: z.string().min(1, 'User ID is required'),
-});
-
-const validateSessionSchema = z.object({
-  sessionToken: z.string().min(1, 'Session token is required'),
-});
-
 const terminateSessionSchema = z.object({
-  sessionToken: z.string().min(1, 'Session token is required'),
+  sessionId: z.string().min(1, 'Session ID is required'),
 });
 
 /**
@@ -52,8 +42,8 @@ export const GET = wrapHandler(withRateLimit(
 ), 'auth-sessions');
 
 /**
- * POST /api/auth/sessions/validate
- * Validate a session token
+ * POST /api/auth/sessions?action=terminate
+ * Terminate one of the caller's own sessions by sessionId.
  */
 export const POST = wrapHandler(withRateLimit(
   withAuth(async (request, { auth }) => {
@@ -61,37 +51,12 @@ export const POST = wrapHandler(withRateLimit(
       const { searchParams } = new URL(request.url);
       const action = searchParams.get('action');
 
-      if (action === 'validate') {
-        const { sessionToken } = validateSessionSchema.parse(body);
-
-        const session = await validateSession(sessionToken);
-
-        if (!session) {
-          return NextResponse.json(
-            {
-              success: false,
-              message: 'Invalid or expired session',
-              isValid: false,
-            },
-            { status: 401 }
-          );
-        }
-
-        return NextResponse.json({
-          success: true,
-          isValid: true,
-          session: {
-            userId: session.userId,
-            expiresAt: session.expiresAt,
-            lastActivity: session.lastActivity,
-          },
-        });
-      }
-
       if (action === 'terminate') {
-        const { sessionToken } = terminateSessionSchema.parse(body);
+        const { sessionId } = terminateSessionSchema.parse(body);
 
-        const success = await terminateSession(sessionToken);
+        // terminateSessionById verifies the session belongs to auth.userId,
+        // so a user can only terminate their own sessions.
+        const success = await terminateSessionById(sessionId, auth.userId);
 
         if (!success) {
           return NextResponse.json(
