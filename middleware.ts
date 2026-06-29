@@ -272,7 +272,17 @@ export function middleware(request: NextRequest) {
     // Get auth state from cookie (Zustand persist stores to localStorage,
     // but we also set a cookie for middleware)
     const authCookie = request.cookies.get('auth-storage')?.value;
+    const sessionCookie = request.cookies.get('session')?.value;
     const { role, isAuthenticated, userId } = parseAuthStorage(authCookie);
+
+    // After the DB-session rollout, a valid login always sets a `session`
+    // cookie. A stale auth-storage-only cookie (from before the rollout) must
+    // not reach a dashboard page — require the session cookie too.
+    if (!sessionCookie) {
+      const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('from', pathname);
+      return NextResponse.redirect(loginUrl);
+    }
 
     console.log('[Middleware] Checking access:', {
       pathname,
