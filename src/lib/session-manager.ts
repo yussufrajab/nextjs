@@ -1,6 +1,6 @@
 import { db } from '@/lib/db';
 import { sessionLogger } from '@/lib/logger';
-import { randomBytes } from 'crypto';
+import { randomBytes, createHmac, timingSafeEqual } from 'crypto';
 
 /**
  * Session Manager Utility
@@ -13,6 +13,14 @@ import { randomBytes } from 'crypto';
  */
 
 // Configuration
+const SESSION_SECRET = process.env.SESSION_SECRET;
+if (!SESSION_SECRET) {
+  throw new Error(
+    'CRITICAL: SESSION_SECRET environment variable is not set. ' +
+    "Generate one with: node -e \"console.log(require('crypto').randomBytes(64).toString('hex'))\""
+  );
+}
+
 export const MAX_CONCURRENT_SESSIONS = 3;
 export const SESSION_EXPIRY_HOURS = 24; // 24 hours
 export const SESSION_EXPIRY_MS = SESSION_EXPIRY_HOURS * 60 * 60 * 1000;
@@ -50,6 +58,64 @@ export function getPreSessionCookieOptions(isProduction: boolean) {
  */
 export function generateSessionToken(): string {
   return randomBytes(32).toString('hex');
+}
+
+/**
+ * Name of the HttpOnly cookie that carries the DB session token.
+ */
+export const SESSION_COOKIE_NAME = 'session';
+
+/**
+ * Cookie options for the session token cookie.
+ * httpOnly: true so the token is never readable by JavaScript (XSS defense).
+ * sameSite: 'strict' so the cookie is not sent on cross-site requests.
+ * maxAge matches SESSION_EXPIRY_MS so the cookie and DB row expire together.
+ */
+export function getSessionCookieOptions(isProduction: boolean) {
+  return {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: 'strict' as const,
+    path: '/',
+    maxAge: SESSION_EXPIRY_MS / 1000,
+  };
+}
+
+/**
+ * HMAC-sign an opaque session token for cookie transport.
+ * Cookie value format: `<token>.<base64-signature>`. The signature lets
+ * verifyAuth reject forged cookies without a DB lookup; the DB row remains
+ * the source of truth for validity and expiry.
+ */
+export function signSessionToken(token: string): string {
+  const hmac = createHmac('sha256', SESSION_SECRET!);
+  hmac.update(token);
+  const signature = hmac.digest('base64');
+  return `${token}.${signature}`;
+}
+
+/**
+ * Verify a signed session cookie value and return the raw token on success.
+ * Returns null if the value is malformed or the signature does not match
+ * (constant-time comparison). The raw token is then used for validateSession.
+ */
+export function verifySessionToken(signed: string): string | null {
+  try {
+    const parts = signed.split('.');
+    if (parts.length !== 2) return null;
+    const [token, providedSignature] = parts;
+
+    const hmac = createHmac('sha256', SESSION_SECRET!);
+    hmac.update(token);
+    const expectedSignature = hmac.digest('base64');
+
+    const a = Buffer.from(providedSignature, 'base64');
+    const b = Buffer.from(expectedSignature, 'base64');
+    if (a.length !== b.length) return null;
+    return timingSafeEqual(a, b) ? token : null;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -306,6 +372,37 @@ export async function terminateAllUserSessions(
     return result.count;
   } catch (error) {
     sessionLogger.error({ err: error, userId }, 'Failed to terminate all sessions');
+    return 0;
+  }
+}
+
+/**
+ * Terminate all sessions for a user EXCEPT the one matching keepSessionToken.
+ * Used on password change to force re-login on other devices while keeping
+ * the current device signed in.
+ *
+ * @param userId - User ID
+ * @param keepSessionToken - Session token to preserve (the current device)
+ * @returns Number of sessions terminated
+ */
+export async function terminateOtherUserSessions(
+  userId: string,
+  keepSessionToken: string
+): Promise<number> {
+  try {
+    const result = await db.session.deleteMany({
+      where: {
+        userId,
+        sessionToken: { not: keepSessionToken },
+      },
+    });
+    sessionLogger.info(
+      { count: result.count, userId },
+      'Terminated other sessions for user'
+    );
+    return result.count;
+  } catch (error) {
+    sessionLogger.error({ err: error, userId }, 'Failed to terminate other sessions');
     return 0;
   }
 }

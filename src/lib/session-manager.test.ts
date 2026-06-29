@@ -13,12 +13,17 @@ import {
   validateSession,
   terminateSession,
   terminateAllUserSessions,
+  terminateOtherUserSessions,
   getUserActiveSessions,
   cleanupExpiredSessions,
   getUserSessionCount,
+  signSessionToken,
+  verifySessionToken,
   MAX_CONCURRENT_SESSIONS,
   SESSION_EXPIRY_HOURS,
   SESSION_EXPIRY_MS,
+  SESSION_COOKIE_NAME,
+  getSessionCookieOptions,
 } from './session-manager';
 
 // Mock the database
@@ -692,6 +697,91 @@ describe('session-manager', () => {
   // =============================================================================
   // Edge Cases
   // =============================================================================
+
+    describe('Session cookie options', () => {
+    it('exposes the session cookie name', () => {
+      expect(SESSION_COOKIE_NAME).toBe('session');
+    });
+
+    it('returns HttpOnly, Strict, path=/ cookie options in production', () => {
+      const opts = getSessionCookieOptions(true);
+      expect(opts).toEqual({
+        httpOnly: true,
+        secure: true,
+        sameSite: 'strict',
+        path: '/',
+        maxAge: SESSION_EXPIRY_MS / 1000,
+      });
+    });
+
+    it('returns non-secure cookie options in dev', () => {
+      const opts = getSessionCookieOptions(false);
+      expect(opts.httpOnly).toBe(true);
+      expect(opts.secure).toBe(false);
+      expect(opts.sameSite).toBe('strict');
+      expect(opts.path).toBe('/');
+      expect(opts.maxAge).toBe(SESSION_EXPIRY_MS / 1000);
+    });
+  });
+
+  describe('signSessionToken / verifySessionToken', () => {
+    it('produces a token.signature string', () => {
+      const token = generateSessionToken();
+      const signed = signSessionToken(token);
+      expect(signed).toContain('.');
+      expect(signed.startsWith(token + '.')).toBe(true);
+    });
+
+    it('verifySessionToken returns the raw token for a valid signature', () => {
+      const token = generateSessionToken();
+      const signed = signSessionToken(token);
+      expect(verifySessionToken(signed)).toBe(token);
+    });
+
+    it('verifySessionToken returns null for a tampered signature', () => {
+      const token = generateSessionToken();
+      const signed = signSessionToken(token);
+      const tampered = signed.slice(0, -2) + 'xx';
+      expect(verifySessionToken(tampered)).toBeNull();
+    });
+
+    it('verifySessionToken returns null for a token signed with a different secret', () => {
+      const token = generateSessionToken();
+      expect(verifySessionToken(token)).toBeNull();
+    });
+
+    it('verifySessionToken returns null for malformed input', () => {
+      expect(verifySessionToken('')).toBeNull();
+      expect(verifySessionToken('no-signature-here-with-no-dot')).toBeNull();
+    });
+  });
+
+  describe('terminateOtherUserSessions', () => {
+    const userId = 'user-123';
+    const keepToken = 'keep-token';
+
+    it('deletes all sessions for the user except the keep token', async () => {
+      mockedDb.session.deleteMany.mockResolvedValue({ count: 2 });
+
+      const count = await terminateOtherUserSessions(userId, keepToken);
+
+      expect(count).toBe(2);
+      expect(mockedDb.session.deleteMany).toHaveBeenCalledWith({
+        where: {
+          userId,
+          sessionToken: { not: keepToken },
+        },
+      });
+    });
+
+    it('returns 0 when deleteMany fails', async () => {
+      mockedDb.session.deleteMany.mockRejectedValue(new Error('DB Error'));
+
+      const count = await terminateOtherUserSessions(userId, keepToken);
+
+      expect(count).toBe(0);
+    });
+  });
 
   describe('Edge Cases', () => {
     it('should handle null IP address in createSession', async () => {
