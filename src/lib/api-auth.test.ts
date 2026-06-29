@@ -16,10 +16,12 @@ import { signSessionToken } from '@/lib/session-manager';
 // ---------------------------------------------------------------------------
 
 const mockValidateSession = vi.fn();
+const mockMarkSessionSuspicious = vi.fn();
 const mockFindUnique = vi.fn();
 
 vi.mock('@/lib/session-manager', () => ({
   validateSession: (...args: any[]) => mockValidateSession(...args),
+  markSessionSuspicious: (...args: any[]) => mockMarkSessionSuspicious(...args),
   // Pass-through signing helpers so the tests can build realistic cookies.
   signSessionToken: (token: string) => {
     const { createHmac } = require('crypto');
@@ -54,6 +56,10 @@ vi.mock('@/lib/db', () => ({
   },
 }));
 
+vi.mock('@/lib/audit-logger', () => ({
+  getClientIp: (headers: Headers) => headers.get('x-forwarded-for') || null,
+}));
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -78,6 +84,7 @@ describe('verifyAuth', () => {
   beforeEach(() => {
     mockValidateSession.mockReset();
     mockFindUnique.mockReset();
+    mockMarkSessionSuspicious.mockReset();
   });
 
   it('returns UNAUTHENTICATED (401) when no session cookie is present', async () => {
@@ -112,7 +119,7 @@ describe('verifyAuth', () => {
   });
 
   it('returns INVALID_SESSION when the DB user lookup returns null', async () => {
-    mockValidateSession.mockResolvedValue({ id: 's1', userId: 'user-1', User: { id: 'user-1' } });
+    mockValidateSession.mockResolvedValue({ id: 's1', userId: 'user-1', ipAddress: '10.0.0.1', userAgent: 'TestAgent/1.0', User: { id: 'user-1' } });
     mockFindUnique.mockResolvedValue(null);
     const req = makeRequestWithSessionCookie(signSessionToken('good-token'));
     const result = await verifyAuth(req);
@@ -123,7 +130,7 @@ describe('verifyAuth', () => {
   });
 
   it('returns INVALID_SESSION when the user is inactive', async () => {
-    mockValidateSession.mockResolvedValue({ id: 's1', userId: 'user-1', User: { id: 'user-1' } });
+    mockValidateSession.mockResolvedValue({ id: 's1', userId: 'user-1', ipAddress: '10.0.0.1', userAgent: 'TestAgent/1.0', User: { id: 'user-1' } });
     mockFindUnique.mockResolvedValue({ id: 'user-1', active: false, role: 'Admin', institutionId: null, username: 'admin' });
     const req = makeRequestWithSessionCookie(signSessionToken('good-token'));
     const result = await verifyAuth(req);
@@ -134,7 +141,7 @@ describe('verifyAuth', () => {
   });
 
   it('returns authenticated context derived from the session row + DB user', async () => {
-    mockValidateSession.mockResolvedValue({ id: 's1', userId: 'user-1', User: { id: 'user-1' } });
+    mockValidateSession.mockResolvedValue({ id: 's1', userId: 'user-1', ipAddress: '10.0.0.1', userAgent: 'TestAgent/1.0', User: { id: 'user-1' } });
     mockFindUnique.mockResolvedValue({ id: 'user-1', active: true, role: 'HRO', institutionId: 'inst-1', username: 'hro1' });
     const req = makeRequestWithSessionCookie(signSessionToken('good-token'));
     const result = await verifyAuth(req);
@@ -190,7 +197,7 @@ describe('verifyAuth', () => {
   });
 
   it('returns INVALID_SESSION when the user lookup throws', async () => {
-    mockValidateSession.mockResolvedValue({ id: 's1', userId: 'user-1', User: { id: 'user-1' } });
+    mockValidateSession.mockResolvedValue({ id: 's1', userId: 'user-1', ipAddress: '10.0.0.1', userAgent: 'TestAgent/1.0', User: { id: 'user-1' } });
     mockFindUnique.mockRejectedValue(new Error('DB down'));
     const req = makeRequestWithSessionCookie(signSessionToken('good-token'));
     const result = await verifyAuth(req);
@@ -201,7 +208,7 @@ describe('verifyAuth', () => {
   });
 
   it('supports plain Request objects by parsing the cookie header', async () => {
-    mockValidateSession.mockResolvedValue({ id: 's1', userId: 'user-1', User: { id: 'user-1' } });
+    mockValidateSession.mockResolvedValue({ id: 's1', userId: 'user-1', ipAddress: '10.0.0.1', userAgent: 'TestAgent/1.0', User: { id: 'user-1' } });
     mockFindUnique.mockResolvedValue({ id: 'user-1', active: true, role: 'Admin', institutionId: null, username: 'admin' });
     const req = new Request('http://localhost:9002/api/test', {
       headers: { cookie: 'session=' + signSessionToken('good-token') },
@@ -210,6 +217,95 @@ describe('verifyAuth', () => {
 
     expect(result.authenticated).toBe(true);
     expect(result.context!.userId).toBe('user-1');
+  });
+
+  // -----------------------------------------------------------------------
+  // Session hijacking (IP/User-Agent binding)
+  // -----------------------------------------------------------------------
+
+  it('rejects request when IP does not match the stored session IP', async () => {
+    // Session was created from 10.0.0.1 but request comes from 10.0.0.99
+    mockValidateSession.mockResolvedValue({ id: 's1', userId: 'user-1', ipAddress: '10.0.0.1', userAgent: 'TestAgent/1.0', User: { id: 'user-1' } });
+    mockFindUnique.mockResolvedValue({ id: 'user-1', active: true, role: 'Admin', institutionId: null, username: 'admin' });
+    const req = new NextRequest('http://localhost:9002/api/test', {
+      headers: {
+        cookie: 'session=' + signSessionToken('good-token'),
+        'x-forwarded-for': '10.0.0.99',
+        'user-agent': 'TestAgent/1.0',
+      },
+    });
+    const result = await verifyAuth(req);
+
+    expect(result.authenticated).toBe(false);
+    const body = await responseBody(result.response!);
+    expect(body.errorCode).toBe('INVALID_SESSION');
+    expect(mockMarkSessionSuspicious).toHaveBeenCalledWith('s1');
+  });
+
+  it('rejects request when User-Agent does not match the stored session UA', async () => {
+    mockValidateSession.mockResolvedValue({ id: 's1', userId: 'user-1', ipAddress: '10.0.0.1', userAgent: 'Chrome/120', User: { id: 'user-1' } });
+    mockFindUnique.mockResolvedValue({ id: 'user-1', active: true, role: 'Admin', institutionId: null, username: 'admin' });
+    const req = new NextRequest('http://localhost:9002/api/test', {
+      headers: {
+        cookie: 'session=' + signSessionToken('good-token'),
+        'x-forwarded-for': '10.0.0.1',
+        'user-agent': 'Firefox/90',
+      },
+    });
+    const result = await verifyAuth(req);
+
+    expect(result.authenticated).toBe(false);
+    const body = await responseBody(result.response!);
+    expect(body.errorCode).toBe('INVALID_SESSION');
+    expect(mockMarkSessionSuspicious).toHaveBeenCalledWith('s1');
+  });
+
+  it('allows request when IP and UA match the stored session', async () => {
+    mockValidateSession.mockResolvedValue({ id: 's1', userId: 'user-1', ipAddress: '10.0.0.1', userAgent: 'TestAgent/1.0', User: { id: 'user-1' } });
+    mockFindUnique.mockResolvedValue({ id: 'user-1', active: true, role: 'Admin', institutionId: null, username: 'admin' });
+    const req = new NextRequest('http://localhost:9002/api/test', {
+      headers: {
+        cookie: 'session=' + signSessionToken('good-token'),
+        'x-forwarded-for': '10.0.0.1',
+        'user-agent': 'TestAgent/1.0',
+      },
+    });
+    const result = await verifyAuth(req);
+
+    expect(result.authenticated).toBe(true);
+    expect(result.context!.userId).toBe('user-1');
+  });
+
+  it('skips IP check when request has no IP header (not available)', async () => {
+    mockValidateSession.mockResolvedValue({ id: 's1', userId: 'user-1', ipAddress: '10.0.0.1', userAgent: 'TestAgent/1.0', User: { id: 'user-1' } });
+    mockFindUnique.mockResolvedValue({ id: 'user-1', active: true, role: 'Admin', institutionId: null, username: 'admin' });
+    const req = new NextRequest('http://localhost:9002/api/test', {
+      headers: {
+        cookie: 'session=' + signSessionToken('good-token'),
+        'user-agent': 'TestAgent/1.0',
+        // No x-forwarded-for or x-real-ip header
+      },
+    });
+    const result = await verifyAuth(req);
+
+    // Should pass because getClientIp returns null — skip the binding check
+    expect(result.authenticated).toBe(true);
+  });
+
+  it('skips UA check when session has no stored userAgent', async () => {
+    mockValidateSession.mockResolvedValue({ id: 's1', userId: 'user-1', ipAddress: '10.0.0.1', userAgent: null, User: { id: 'user-1' } });
+    mockFindUnique.mockResolvedValue({ id: 'user-1', active: true, role: 'Admin', institutionId: null, username: 'admin' });
+    const req = new NextRequest('http://localhost:9002/api/test', {
+      headers: {
+        cookie: 'session=' + signSessionToken('good-token'),
+        'x-forwarded-for': '10.0.0.1',
+        'user-agent': 'SomeBrowser/1.0',
+      },
+    });
+    const result = await verifyAuth(req);
+
+    // Should pass because session has no UA to compare against
+    expect(result.authenticated).toBe(true);
   });
 });
 
@@ -224,7 +320,7 @@ describe('withAuth', () => {
   });
 
   it('calls the handler with the DB-derived auth context', async () => {
-    mockValidateSession.mockResolvedValue({ id: 's1', userId: 'user-1', User: { id: 'user-1' } });
+    mockValidateSession.mockResolvedValue({ id: 's1', userId: 'user-1', ipAddress: '10.0.0.1', userAgent: 'TestAgent/1.0', User: { id: 'user-1' } });
     mockFindUnique.mockResolvedValue({ id: 'user-1', active: true, role: 'User', institutionId: null, username: 'user' });
 
     const handler = vi.fn().mockResolvedValue(NextResponse.json({ ok: true }));
@@ -239,7 +335,7 @@ describe('withAuth', () => {
   });
 
   it('returns 403 FORBIDDEN when the DB role is not in allowedRoles', async () => {
-    mockValidateSession.mockResolvedValue({ id: 's1', userId: 'user-1', User: { id: 'user-1' } });
+    mockValidateSession.mockResolvedValue({ id: 's1', userId: 'user-1', ipAddress: '10.0.0.1', userAgent: 'TestAgent/1.0', User: { id: 'user-1' } });
     mockFindUnique.mockResolvedValue({ id: 'user-1', active: true, role: 'User', institutionId: null, username: 'user' });
 
     const handler = vi.fn().mockResolvedValue(NextResponse.json({ ok: true }));

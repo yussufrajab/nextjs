@@ -12,6 +12,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { authLogger } from '@/lib/logger';
+import { markSessionSuspicious } from '@/lib/session-manager';
+import { getClientIp } from '@/lib/audit-logger';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -124,6 +126,34 @@ export async function verifyAuth(
   }
 
   if (!session) {
+    return invalidSession();
+  }
+
+  // 3b. Per-request IP/User-Agent binding check (session hijacking protection) -
+  const requestIp = getClientIp(request.headers);
+
+  // Compare IP if both values are available
+  if (requestIp && session.ipAddress && requestIp !== session.ipAddress) {
+    authLogger.warn({
+      sessionId: session.id,
+      userId: session.userId,
+      expectedIp: session.ipAddress,
+      actualIp: requestIp,
+    }, 'Session hijacking detected: IP mismatch');
+    await markSessionSuspicious(session.id);
+    return invalidSession();
+  }
+
+  // Compare User-Agent if both values are available
+  const requestUserAgent = request.headers.get('user-agent');
+  if (requestUserAgent && session.userAgent && requestUserAgent !== session.userAgent) {
+    authLogger.warn({
+      sessionId: session.id,
+      userId: session.userId,
+      expectedUA: session.userAgent,
+      actualUA: requestUserAgent,
+    }, 'Session hijacking detected: User-Agent mismatch');
+    await markSessionSuspicious(session.id);
     return invalidSession();
   }
 

@@ -339,6 +339,23 @@ export async function validateSession(sessionToken: string) {
 }
 
 /**
+ * Mark a session as suspicious (hijacking detection).
+ * Updates the isSuspicious flag on the session row so the user can review
+ * their active sessions and take action.
+ */
+export async function markSessionSuspicious(sessionId: string): Promise<void> {
+  try {
+    await db.session.update({
+      where: { id: sessionId },
+      data: { isSuspicious: true },
+    });
+    sessionLogger.warn({ sessionId }, 'Marked session as suspicious');
+  } catch (error) {
+    sessionLogger.error({ err: error, sessionId }, 'Failed to mark session suspicious');
+  }
+}
+
+/**
  * Terminate a specific session
  *
  * @param sessionToken - Session token to terminate
