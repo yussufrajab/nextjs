@@ -394,13 +394,10 @@ class ApiClient {
     });
   }
 
-  async logout(
-    userId?: string,
-    sessionToken?: string | null
-  ): Promise<ApiResponse<void>> {
+  async logout(userId?: string, logoutAll: boolean = false): Promise<ApiResponse<void>> {
     const result = await this.request<void>('/auth/logout', {
       method: 'POST',
-      body: JSON.stringify({ userId, sessionToken }),
+      body: JSON.stringify({ userId, logoutAll }),
     });
     this.clearToken();
     return result;
