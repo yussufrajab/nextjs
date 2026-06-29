@@ -202,14 +202,6 @@ export const useAuthStore = create<AuthState>()(
             apiClient.setToken(token);
           }
 
-          // Extract session token from backend response (check both locations)
-          const sessionToken =
-            backendResponse?.sessionToken ||
-            backendResponse?.data?.sessionToken ||
-            (response as any).sessionToken ||
-            null;
-          log.info({ hasSessionToken: !!sessionToken }, 'Session token extracted');
-
           // Extract CSRF token from backend response
           const csrfToken = backendResponse?.csrfToken || null;
           log.info({ hasCsrfToken: !!csrfToken }, 'CSRF token extracted');
@@ -220,7 +212,6 @@ export const useAuthStore = create<AuthState>()(
             isAuthenticated: true,
             accessToken: token || null,
             refreshToken: refreshToken || null,
-            sessionToken: sessionToken,
             csrfToken: csrfToken,
           });
 
@@ -241,33 +232,17 @@ export const useAuthStore = create<AuthState>()(
 
       logout: async () => {
         try {
-          // Get current user ID and session token before clearing state
           const currentUserId = get().user?.id;
-          const currentSessionToken = get().sessionToken;
-
-          // Call backend logout endpoint with userId and sessionToken
-          await apiClient.logout(currentUserId, currentSessionToken);
+          await apiClient.logout(currentUserId);
         } catch (error) {
           log.error({ err: error }, 'Logout error');
         } finally {
-          // Clear tokens from API client
           apiClient.clearToken();
-
-          // Clear local storage
-          if (typeof window !== 'undefined') {
-            localStorage.removeItem('accessToken');
-            localStorage.removeItem('refreshToken');
-            localStorage.removeItem('sessionToken');
-          }
-
-          // Clear auth cookie and CSRF cookie
           clearAuthCookie();
           if (typeof window !== 'undefined') {
             document.cookie =
               'csrf-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
           }
-
-          // Reset store state
           set({
             user: null,
             role: null,
@@ -302,12 +277,6 @@ export const useAuthStore = create<AuthState>()(
           // Update API client with new token
           apiClient.setToken(newAccessToken);
 
-          // Update localStorage
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('accessToken', newAccessToken);
-            localStorage.setItem('refreshToken', newRefreshToken);
-          }
-
           // Update store
           set({
             accessToken: newAccessToken,
@@ -339,10 +308,6 @@ export const useAuthStore = create<AuthState>()(
           log.info('Clearing inconsistent auth state - authenticated but no user/role data');
           clearAuthCookie();
           set({ user: null, role: null, isAuthenticated: false });
-          if (typeof window !== 'undefined') {
-            localStorage.removeItem('accessToken');
-            localStorage.removeItem('refreshToken');
-          }
           return;
         }
 
@@ -382,9 +347,6 @@ export const useAuthStore = create<AuthState>()(
       // Add a method to sync token updates from API client
       updateTokenFromApiClient: (newAccessToken: string) => {
         set({ accessToken: newAccessToken });
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('accessToken', newAccessToken);
-        }
       },
 
       // Helper to get CSRF token
@@ -497,9 +459,6 @@ export const useAuthStore = create<AuthState>()(
           user: serializableUser,
           role: state.role,
           isAuthenticated: state.isAuthenticated,
-          accessToken: state.accessToken,
-          refreshToken: state.refreshToken,
-          sessionToken: state.sessionToken,
           csrfToken: state.csrfToken,
         };
 
