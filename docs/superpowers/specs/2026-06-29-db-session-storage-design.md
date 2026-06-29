@@ -168,3 +168,13 @@ The JS-readable `csrf-token` cookie (double-submit) is unchanged.
 - **Cookie-trust / privilege escalation:** `userId` no longer taken from a client-controlled cookie; DB session row is authoritative.
 - **Revocation on deactivation:** a deactivated user's next request 401s immediately (DB lookup in `verifyAuth`).
 - **Concurrent-session enforcement:** eviction now actually takes effect on the evicted session's next request.
+
+## 10. Addendum (post-approval extensions for security test rows 2.2 and 2.3)
+
+Two additions were approved after the initial design review to satisfy security-test expectations:
+
+**10.1 HMAC-signed cookie value (test 2.2 — "token cryptographically signed").**
+The `session` cookie value is `<rawToken>.<base64-HMAC-SHA256(rawToken)>` using a `SESSION_SECRET` env var (separate from `CSRF_SECRET`, required at boot — mirrors `csrf-utils.ts`). `verifyAuth` calls `verifySessionToken(signedValue)` before `validateSession`; a forged/unsigned/tampered cookie is rejected pre-DB. The DB session row remains the source of truth for validity, expiry, and revocation — signing is a forgery filter, not a replacement for DB validation. The raw token stored in the DB is unchanged (32-byte hex); only the cookie transport is signed.
+
+**10.2 Session invalidation on password change (test 2.3).**
+On a successful password change in `src/app/api/auth/change-password/route.ts`, call `terminateOtherUserSessions(userId, currentSessionToken)` — a new `session-manager` helper that deletes all of the user's sessions except the one matching the current device's `session` cookie. The current device stays signed in; every other device is forced to re-login. If the request has no `session` cookie (admin-initiated change), terminate ALL of the user's sessions.
