@@ -1,8 +1,10 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { clearUserActivity } from '@/lib/session-timeout-utils';
 import {
   terminateSession,
   terminateAllUserSessions,
+  SESSION_COOKIE_NAME,
+  verifySessionToken,
 } from '@/lib/session-manager';
 import {
   logAuditEvent,
@@ -14,74 +16,92 @@ import {
 import { authLogger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
 
+function readRawSessionToken(req: Request): string | undefined {
+  let signed: string | undefined;
+  if (req instanceof NextRequest && 'cookies' in req) {
+    signed = req.cookies.get(SESSION_COOKIE_NAME)?.value;
+  } else {
+    const cookieHeader = req.headers.get('cookie');
+    if (cookieHeader) {
+      const match = cookieHeader.match(new RegExp(`${SESSION_COOKIE_NAME}=([^;]+)`));
+      signed = match ? match[1] : undefined;
+    }
+  }
+  if (!signed) return undefined;
+  return verifySessionToken(signed) ?? undefined;
+}
+
 export const POST = wrapHandler(async (req: Request) => {
-    // Get userId and sessionToken from request body
-    const body = await req.json();
-    const userId = body?.userId;
-    const sessionToken = body?.sessionToken;
-    const logoutAll = body?.logoutAll || false; // Option to logout all sessions
+  const body = await req.json().catch(() => ({}));
+  const userId = body?.userId;
+  const logoutAll = body?.logoutAll === true;
 
-    authLogger.info({
+  const sessionToken = readRawSessionToken(req);
+
+  authLogger.info({
+    userId,
+    hasSessionToken: !!sessionToken,
+    logoutAll,
+  }, 'Logout request');
+
+  if (logoutAll && userId) {
+    const count = await terminateAllUserSessions(userId);
+    authLogger.info({ userId, count }, 'Terminated all sessions');
+  } else if (sessionToken) {
+    const success = await terminateSession(sessionToken);
+    if (!success) {
+      authLogger.warn('Failed to terminate session (may already be deleted)');
+    }
+  } else {
+    authLogger.warn('No session cookie or userId provided for logout');
+  }
+
+  if (userId) {
+    await clearUserActivity(userId);
+  }
+
+  if (userId) {
+    await logAuditEvent({
+      eventType: AuditEventType.LOGOUT,
+      eventCategory: AuditEventCategory.AUTHENTICATION,
+      severity: AuditSeverity.INFO,
       userId,
-      hasSessionToken: !!sessionToken,
-      sessionTokenPreview: sessionToken
-        ? sessionToken.substring(0, 15) + '...'
-        : 'none',
-      logoutAll,
-    }, 'Logout request');
+      username: null,
+      userRole: null,
+      ipAddress: getClientIp(req.headers),
+      deviceInfo: JSON.parse(req.headers.get('x-device-info') || 'null'),
+      attemptedRoute: '/api/auth/logout',
+      requestMethod: 'POST',
+      isAuthenticated: true,
+      wasBlocked: false,
+      blockReason: null,
+      additionalData: { logoutAll },
+    }).catch(() => {});
+  }
 
-    // Terminate session(s)
-    if (logoutAll && userId) {
-      // Terminate all sessions for this user
-      const count = await terminateAllUserSessions(userId);
-      authLogger.info({ userId, count }, 'Terminated all sessions');
-    } else if (sessionToken) {
-      // Terminate specific session
-      const success = await terminateSession(sessionToken);
-      if (!success) {
-        authLogger.error(
-          { sessionTokenPreview: sessionToken.substring(0, 15) + '...' },
-          'Failed to terminate session'
-        );
-        // Still clear activity and return success since session might already be deleted
-      } else {
-        authLogger.info(
-          { sessionTokenPreview: sessionToken.substring(0, 15) + '...' },
-          'Successfully terminated session'
-        );
-      }
-    } else {
-      authLogger.warn('No sessionToken or userId provided for logout');
-    }
+  const isProduction = process.env.NODE_ENV === 'production';
+  const response = NextResponse.json({
+    success: true,
+    message: 'Logged out successfully',
+  });
 
-    // Clear user's activity timestamp
-    if (userId) {
-      await clearUserActivity(userId);
-      authLogger.info({ userId }, 'Cleared activity for user');
-    }
+  // Clear the session cookie
+  response.cookies.set(SESSION_COOKIE_NAME, '', {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: 'strict',
+    path: '/',
+    maxAge: 0,
+  });
 
-    // Log logout event
-    if (userId) {
-      await logAuditEvent({
-        eventType: AuditEventType.LOGOUT,
-        eventCategory: AuditEventCategory.AUTHENTICATION,
-        severity: AuditSeverity.INFO,
-        userId: userId,
-        username: null,
-        userRole: null,
-        ipAddress: getClientIp(req.headers),
-        deviceInfo: JSON.parse(req.headers.get('x-device-info') || 'null'),
-        attemptedRoute: '/api/auth/logout',
-        requestMethod: 'POST',
-        isAuthenticated: true,
-        wasBlocked: false,
-        blockReason: null,
-        additionalData: { logoutAll: logoutAll },
-      }).catch(() => {});
-    }
+  // Clear the auth-storage cookie
+  response.cookies.set('auth-storage', '', {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: 'strict',
+    path: '/',
+    maxAge: 0,
+  });
 
-    return NextResponse.json({
-      success: true,
-      message: 'Logged out successfully',
-    });
+  return response;
 }, 'auth-logout');
