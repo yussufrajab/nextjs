@@ -83,30 +83,41 @@ export function getSessionCookieOptions(isProduction: boolean) {
 
 /**
  * HMAC-sign an opaque session token for cookie transport.
- * Cookie value format: `<token>.<base64-signature>`. The signature lets
- * verifyAuth reject forged cookies without a DB lookup; the DB row remains
- * the source of truth for validity and expiry.
+ * Cookie value format: `<token>.<expiryUnixMs>.<base64-signature>`. The signed
+ * payload (`token.expiryUnixMs`) includes an expiration claim so forged cookies
+ * are rejected pre-DB even before the DB row's expiresAt is checked. The DB row
+ * remains the source of truth for revocation, but the embedded expiry provides
+ * a second layer of defense.
  */
 export function signSessionToken(token: string): string {
+  const expiry = Date.now() + SESSION_EXPIRY_MS;
+  const payload = `${token}.${expiry}`;
   const hmac = createHmac('sha256', SESSION_SECRET!);
-  hmac.update(token);
+  hmac.update(payload);
   const signature = hmac.digest('base64');
-  return `${token}.${signature}`;
+  return `${payload}.${signature}`;
 }
 
 /**
  * Verify a signed session cookie value and return the raw token on success.
- * Returns null if the value is malformed or the signature does not match
- * (constant-time comparison). The raw token is then used for validateSession.
+ * Returns null if the value is malformed, the signature does not match
+ * (constant-time comparison), or the embedded expiry claim has elapsed.
+ * The raw token is then used for validateSession.
  */
 export function verifySessionToken(signed: string): string | null {
   try {
     const parts = signed.split('.');
-    if (parts.length !== 2) return null;
-    const [token, providedSignature] = parts;
+    if (parts.length !== 3) return null;
+    const [token, expiryStr, providedSignature] = parts;
+    const expiry = Number(expiryStr);
+    if (!Number.isFinite(expiry)) return null;
 
+    // Reject if the embedded expiry has elapsed (pre-DB defense)
+    if (Date.now() > expiry) return null;
+
+    const payload = `${token}.${expiryStr}`;
     const hmac = createHmac('sha256', SESSION_SECRET!);
-    hmac.update(token);
+    hmac.update(payload);
     const expectedSignature = hmac.digest('base64');
 
     const a = Buffer.from(providedSignature, 'base64');

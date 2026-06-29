@@ -725,11 +725,13 @@ describe('session-manager', () => {
   });
 
   describe('signSessionToken / verifySessionToken', () => {
-    it('produces a token.signature string', () => {
+    it('produces a token.expiry.signature string (3 parts)', () => {
       const token = generateSessionToken();
       const signed = signSessionToken(token);
-      expect(signed).toContain('.');
-      expect(signed.startsWith(token + '.')).toBe(true);
+      const parts = signed.split('.');
+      expect(parts).toHaveLength(3);
+      expect(parts[0]).toBe(token);
+      expect(parts[1]).toMatch(/^\d+$/); // numeric expiry
     });
 
     it('verifySessionToken returns the raw token for a valid signature', () => {
@@ -753,6 +755,26 @@ describe('session-manager', () => {
     it('verifySessionToken returns null for malformed input', () => {
       expect(verifySessionToken('')).toBeNull();
       expect(verifySessionToken('no-signature-here-with-no-dot')).toBeNull();
+      // Two parts (token.expiry) but no signature — should be rejected
+      const token = generateSessionToken();
+      expect(verifySessionToken(`${token}.1234567890`)).toBeNull();
+    });
+
+    it('verifySessionToken rejects an expired token (embedded expiry elapsed)', () => {
+      const token = generateSessionToken();
+      const { createHmac } = require('crypto');
+      const pastExpiry = Date.now() - 1000; // 1 second ago
+      const payload = `${token}.${pastExpiry}`;
+      const hmac = createHmac('sha256', process.env.SESSION_SECRET);
+      hmac.update(payload);
+      const sig = hmac.digest('base64');
+      const expiredSigned = `${payload}.${sig}`;
+      expect(verifySessionToken(expiredSigned)).toBeNull();
+    });
+
+    it('verifySessionToken rejects a token with non-numeric expiry', () => {
+      const signed = 'token.notanumber.signature';
+      expect(verifySessionToken(signed)).toBeNull();
     });
   });
 

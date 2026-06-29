@@ -25,18 +25,23 @@ vi.mock('@/lib/session-manager', () => ({
   // Pass-through signing helpers so the tests can build realistic cookies.
   signSessionToken: (token: string) => {
     const { createHmac } = require('crypto');
+    const expiry = Date.now() + 86400000; // 24h from now
+    const payload = `${token}.${expiry}`;
     const hmac = createHmac('sha256', process.env.SESSION_SECRET);
-    hmac.update(token);
-    return `${token}.${hmac.digest('base64')}`;
+    hmac.update(payload);
+    return `${payload}.${hmac.digest('base64')}`;
   },
   verifySessionToken: (signed: string): string | null => {
     try {
       const parts = signed.split('.');
-      if (parts.length !== 2) return null;
-      const [token, provided] = parts;
+      if (parts.length !== 3) return null;
+      const [token, expiryStr, provided] = parts;
+      const expiry = Number(expiryStr);
+      if (!Number.isFinite(expiry) || Date.now() > expiry) return null;
+      const payload = `${token}.${expiryStr}`;
       const { createHmac, timingSafeEqual } = require('crypto');
       const hmac = createHmac('sha256', process.env.SESSION_SECRET);
-      hmac.update(token);
+      hmac.update(payload);
       const expected = hmac.digest('base64');
       const a = Buffer.from(provided, 'base64');
       const b = Buffer.from(expected, 'base64');
