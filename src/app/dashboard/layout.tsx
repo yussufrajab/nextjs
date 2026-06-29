@@ -19,7 +19,7 @@ export default function DashboardLayout({
   const { isAuthenticated, isLoading, role, user } = useAuth();
   const router = useRouter();
 
-  // Enable session inactivity timeout (7 minutes)
+  // Enable session inactivity timeout (15 minutes)
   useInactivityTimeout({
     enabled: isAuthenticated && !isLoading,
   });

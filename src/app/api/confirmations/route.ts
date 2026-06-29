@@ -14,6 +14,7 @@ import { createNotification, createNotificationForRole, NotificationTemplates } 
 import { sendRequestSubmissionEmails, sendRequestStatusUpdateEmail } from '@/lib/email';
 import { logger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
+import { verifyAuth } from '@/lib/api-auth';
 
 // Cache configuration for confirmation requests
 const CACHE_TTL = 30; // 30 seconds cache (request status changes frequently)
@@ -38,10 +39,15 @@ function checkRoleAuthorization(
 }
 
 export const GET = wrapHandler(async (req: Request) => {
+  const authResult = await verifyAuth(req);
+  if (!authResult.authenticated) {
+    return authResult.response!;
+  }
+  const auth = authResult.context!;
   const { searchParams } = new URL(req.url);
-  const userId = searchParams.get('userId');
-  const userRole = searchParams.get('userRole');
-  const userInstitutionId = searchParams.get('userInstitutionId');
+  const userId = auth.userId;
+  const userRole = auth.role;
+  const userInstitutionId = auth.institutionId;
   const page = parseInt(searchParams.get('page') || '1', 10);
   const size = parseInt(searchParams.get('size') || '50', 10);
   const status = searchParams.get('status') || 'all';
@@ -147,11 +153,16 @@ export const GET = wrapHandler(async (req: Request) => {
 }, 'confirmations');
 
 export const POST = wrapHandler(async (req: Request) => {
+  const authResult = await verifyAuth(req);
+  if (!authResult.authenticated) {
+    return authResult.response!;
+  }
+  const auth = authResult.context!;
   const body = await req.json();
   logger.info({ value: body }, 'Creating confirmation request');
 
   // Authorization: Only HRO and HRRP can create confirmation requests
-  const authCheck = checkRoleAuthorization(body.userRole, [
+  const authCheck = checkRoleAuthorization(auth.role, [
     'HRO' as const,
     'HRRP' as const,
   ]);
@@ -166,11 +177,11 @@ export const POST = wrapHandler(async (req: Request) => {
   }
 
   // Basic validation
-  if (!body.employeeId || !body.submittedById) {
+  if (!body.employeeId) {
     return NextResponse.json(
       {
         success: false,
-        message: 'Missing required fields: employeeId, submittedById',
+        message: 'Missing required fields: employeeId',
       },
       { status: 400 }
     );
@@ -207,14 +218,14 @@ export const POST = wrapHandler(async (req: Request) => {
     );
   }
 
-  const isHRRP = body.userRole === 'HRRP';
+  const isHRRP = auth.role === 'HRRP';
   const initialStatus = isHRRP
     ? 'Approved by HRRP - Awaiting Commission Review'
     : 'Pending HRRP Review';
   const initialReviewStage = isHRRP ? 'hrrp_review' : 'initial';
   const hrrpData = isHRRP
     ? {
-        hrrpReviewedById: body.submittedById,
+        hrrpReviewedById: auth.userId,
         hrrpReviewedAt: new Date(),
       }
     : {};
@@ -223,7 +234,7 @@ export const POST = wrapHandler(async (req: Request) => {
     data: {
       id: uuidv4(),
       employeeId: body.employeeId,
-      submittedById: body.submittedById,
+      submittedById: auth.userId,
       status: initialStatus,
       reviewStage: initialReviewStage,
       documents: body.documents || [],
@@ -302,7 +313,7 @@ export const POST = wrapHandler(async (req: Request) => {
 
   // Log request submission for audit
   const submittedByUser = await db.user.findUnique({
-    where: { id: body.submittedById },
+    where: { id: auth.userId },
     select: { id: true, username: true, role: true },
   });
   await logRequestSubmission({
@@ -311,7 +322,7 @@ export const POST = wrapHandler(async (req: Request) => {
     employeeId: confirmationRequest.employeeId,
     employeeName: confirmationRequest.Employee?.name,
     employeeZanId: confirmationRequest.Employee?.zanId,
-    submittedById: body.submittedById,
+    submittedById: auth.userId,
     submittedByUsername: submittedByUser?.username || 'Unknown',
     submittedByRole: submittedByUser?.role || 'Unknown',
     ipAddress: getClientIp(req.headers),
@@ -333,8 +344,15 @@ export const POST = wrapHandler(async (req: Request) => {
 }, 'confirmations');
 
 export const PATCH = wrapHandler(async (req: Request) => {
+  const authResult = await verifyAuth(req);
+  if (!authResult.authenticated) {
+    return authResult.response!;
+  }
+  const auth = authResult.context!;
   const body = await req.json();
-  const { id, userRole, userId, ...updateData } = body;
+  const { id, ...updateData } = body;
+  const userRole = auth.role;
+  const userId = auth.userId;
 
   if (!id) {
     return NextResponse.json(
@@ -418,6 +436,14 @@ export const PATCH = wrapHandler(async (req: Request) => {
   }
   if (isHrrpRejection) {
     updateData.reviewStage = 'initial';
+  }
+
+  // The authenticated user is the reviewer — ignore any client-supplied reviewer id.
+  if (updateData.reviewedById !== undefined) {
+    updateData.reviewedById = auth.userId;
+  }
+  if (updateData.hrrpReviewedById !== undefined) {
+    updateData.hrrpReviewedById = auth.userId;
   }
 
   const updatedRequest = await db.confirmationRequest.update({

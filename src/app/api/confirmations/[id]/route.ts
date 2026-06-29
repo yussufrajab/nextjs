@@ -10,6 +10,7 @@ import {
 import { sendRequestStatusUpdateEmail } from '@/lib/email';
 import { logger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
+import { verifyAuth } from '@/lib/api-auth';
 
 const updateSchema = z.object({
   status: z.string().optional(),
@@ -28,8 +29,22 @@ const handleUpdate = wrapHandler(async (
   { params }: { params: Promise<{ id: string }> }
 ) => {
   const { id } = await params;
+  const authResult = await verifyAuth(req);
+  if (!authResult.authenticated) {
+    return authResult.response!;
+  }
+  const auth = authResult.context!;
+
   const body = await req.json();
   const validatedData = updateSchema.parse(body);
+
+  // The authenticated user is the reviewer — ignore any client-supplied reviewer id.
+  if (validatedData.reviewedById !== undefined) {
+    validatedData.reviewedById = auth.userId;
+  }
+  if (validatedData.hrrpReviewedById !== undefined) {
+    validatedData.hrrpReviewedById = auth.userId;
+  }
 
   // Get IP and device info for audit logging
   const headers = new Headers(req.headers);

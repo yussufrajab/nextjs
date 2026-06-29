@@ -171,7 +171,23 @@
       "mcp__plugin_playwright_playwright__browser_snapshot",
       "Bash(git checkout *)",
       "Bash(git *)",
-      "Bash(npx vitest *)"
+      "Bash(npx vitest *)",
+      "Bash(cp -r /home/latest/prisma/migrations/20260522010000_migrate_audit_to_partitioned /home/latest/docs/database/migrations/)",
+      "Bash(cp -r /home/latest/prisma/migrations/20260525000000_add_hrrp_review_fields /home/latest/docs/database/migrations/)",
+      "Bash(cp -r /home/latest/prisma/migrations/20260525010000_add_hrrp_review_fields_to_lwop /home/latest/docs/database/migrations/)",
+      "Bash(cp -r /home/latest/prisma/migrations/20260525020000_add_hrrp_review_fields_to_promotion /home/latest/docs/database/migrations/)",
+      "Bash(./backup.sh)",
+      "Bash(PGPASSWORD=\"Mamlaka2020\" /home/latest/docs/database/backup.sh *)",
+      "Bash(PGPASSWORD=\"Mamlaka2020\" /home/latest/docs/database/backup-full.sh)",
+      "Bash(/home/latest/docs/database/package-backup.sh)",
+      "Bash(npm audit *)",
+      "Bash(npx eslint *)",
+      "Bash(awk '{n=gsub\\(/{/,\"{\"\\)+gsub\\(/}/,\"}\"\\); if\\(n>0\\) printf \"%d: %s \\(braces: %+d\\)\\\\n\", NR, $0, gsub\\(/{/,\"{\"\\)-gsub\\(/}/,\"}\"\\)}' /home/latest/src/app/api/dashboard/metrics/route.ts)",
+      "Skill(commit-commands:commit-push-pr)",
+      "Bash(rg csrf *)",
+      "Bash(npx next *)",
+      "Bash(pm2 env *)",
+      "Bash(:)"
     ],
     "deny": []
   }

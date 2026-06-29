@@ -13,12 +13,19 @@ import { sendRequestSubmissionEmails, sendRequestStatusUpdateEmail } from '@/lib
 import { ROLES } from '@/lib/constants';
 import { logger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
+import { verifyAuth } from '@/lib/api-auth';
 
 async function GETHandler(req: Request) {
+    const authResult = await verifyAuth(req);
+    if (!authResult.authenticated) {
+      return authResult.response!;
+    }
+    const auth = authResult.context!;
+
     const { searchParams } = new URL(req.url);
-    const userId = searchParams.get('userId');
-    const userRole = searchParams.get('userRole');
-    const userInstitutionId = searchParams.get('userInstitutionId');
+    const userId = auth.userId;
+    const userRole = auth.role;
+    const userInstitutionId = auth.institutionId;
     const page = parseInt(searchParams.get('page') || '1', 10);
     const size = parseInt(searchParams.get('size') || '50', 10);
     const status = searchParams.get('status') || 'all';
@@ -125,30 +132,36 @@ async function GETHandler(req: Request) {
 export const GET = wrapHandler(GETHandler, 'termination');
 
 async function POSTHandler(req: Request) {
+    const authResult = await verifyAuth(req);
+    if (!authResult.authenticated) {
+      return authResult.response!;
+    }
+    const auth = authResult.context!;
+
     const body = await req.json();
     logger.info({ value: body }, 'Creating termination request');
 
     // Basic validation
-    if (!body.employeeId || !body.submittedById || !body.type || !body.reason) {
+    if (!body.employeeId || !body.type || !body.reason) {
       return NextResponse.json(
         {
           success: false,
           message:
-            'Missing required fields: employeeId, submittedById, type, reason',
+            'Missing required fields: employeeId, type, reason',
         },
         { status: 400 }
       );
     }
 
     // Determine initial status based on submitter role
-    const isHRRP = body.userRole === 'HRRP';
+    const isHRRP = auth.role === 'HRRP';
     const initialStatus = isHRRP
       ? 'Approved by HRRP - Awaiting Commission Review'
       : 'Pending HRRP Review';
     const initialReviewStage = isHRRP ? 'hrrp_review' : 'initial';
     const hrrpData = isHRRP
       ? {
-          hrrpReviewedById: body.submittedById,
+          hrrpReviewedById: auth.userId,
           hrrpReviewedAt: new Date(),
         }
       : {};
@@ -157,7 +170,7 @@ async function POSTHandler(req: Request) {
       data: {
         id: uuidv4(),
         employeeId: body.employeeId,
-        submittedById: body.submittedById,
+        submittedById: auth.userId,
         type: body.type,
         reason: body.reason,
         documents: body.documents || [],
@@ -210,7 +223,7 @@ async function POSTHandler(req: Request) {
         separationRequest.id
       );
       const submitter = await db.user.findUnique({
-        where: { id: body.submittedById },
+        where: { id: auth.userId },
         select: { institutionId: true },
       });
       if (submitter?.institutionId) {
@@ -237,7 +250,7 @@ async function POSTHandler(req: Request) {
 
     // Log request submission for audit
     const submittedByUser = await db.user.findUnique({
-      where: { id: body.submittedById },
+      where: { id: auth.userId },
       select: { id: true, username: true, role: true },
     });
     await logRequestSubmission({
@@ -246,7 +259,7 @@ async function POSTHandler(req: Request) {
       employeeId: separationRequest.employeeId,
       employeeName: separationRequest.Employee?.name,
       employeeZanId: separationRequest.Employee?.zanId,
-      submittedById: body.submittedById,
+      submittedById: auth.userId,
       submittedByUsername: submittedByUser?.username || 'Unknown',
       submittedByRole: submittedByUser?.role || 'Unknown',
       ipAddress: getClientIp(req.headers),
@@ -272,8 +285,16 @@ async function POSTHandler(req: Request) {
 export const POST = wrapHandler(POSTHandler, 'termination');
 
 async function PATCHHandler(req: Request) {
+    const authResult = await verifyAuth(req);
+    if (!authResult.authenticated) {
+      return authResult.response!;
+    }
+    const auth = authResult.context!;
+
     const body = await req.json();
-    const { id, userRole, userId, ...updateData } = body;
+    const { id, ...updateData } = body;
+    const userRole = auth.role;
+    const userId = auth.userId;
 
     if (!id) {
       return NextResponse.json(
@@ -318,6 +339,14 @@ async function PATCHHandler(req: Request) {
     const deviceInfo = JSON.parse(headers.get('x-device-info') || 'null');
 
     // No date conversion needed for separation requests
+
+    // The authenticated user is the reviewer — ignore any client-supplied reviewer id.
+    if (updateData.reviewedById !== undefined) {
+      updateData.reviewedById = auth.userId;
+    }
+    if (updateData.hrrpReviewedById !== undefined) {
+      updateData.hrrpReviewedById = auth.userId;
+    }
 
     const updatedRequest = await db.separationRequest.update({
       where: { id },

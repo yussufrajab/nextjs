@@ -17,6 +17,8 @@ export type RequestType =
 let transporter: nodemailer.Transporter | null = null;
 
 function createTransporter(): nodemailer.Transporter {
+  if (transporter) return transporter;
+
   const smtpSecure = process.env.SMTP_SECURE === 'true';
   transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
@@ -64,6 +66,8 @@ export async function sendEmail(
     return { success: true, messageId: result.messageId };
   } catch (error: any) {
     emailLogger.error({ err: error, to }, 'Failed to send email');
+    // Fallback: if Pino destination is unavailable, log to console.error
+    console.error(`[email] Failed to send email to ${to}:`, error.message);
     return { success: false, error: error.message };
   }
 }

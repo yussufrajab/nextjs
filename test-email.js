@@ -2,10 +2,10 @@ const nodemailer = require("nodemailer");
 
 async function sendMail() {
   const transporter = nodemailer.createTransport({
-    host: "smtp.egaz.go.tz",
+    host: "mx.egaz.go.tz",
     port: 25,
     secure: false,
-    requireTLS: true,
+    requireTLS: false,
 
     auth: {
       user: "tume.serikalini@zanajira.go.tz",
