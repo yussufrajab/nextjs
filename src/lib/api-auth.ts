@@ -2,9 +2,11 @@
  * API Authentication Wrapper
  *
  * Provides verifyAuth() and withAuth() for protecting Next.js API routes.
- * Reads auth state from the `auth-storage` cookie set by the Zustand auth store,
- * verifies the user still exists and is active in the database, and optionally
- * enforces role-based access control.
+ * Reads the HMAC-signed session token from the HttpOnly `session` cookie,
+ * verifies the signature, validates the raw token against the DB Session
+ * table via validateSession(), then looks up the User by the session row's
+ * userId. The client-controlled `auth-storage` cookie is NOT used for
+ * identity — only the DB session row is authoritative.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -86,55 +88,53 @@ function forbidden(): AuthResult {
 export async function verifyAuth(
   request: NextRequest | Request
 ): Promise<AuthResult> {
-  // 1. Read the auth-storage cookie ------------------------------------------
-  let cookieValue: string | undefined;
+  // 1. Read the signed `session` cookie (HttpOnly) ------------------------
+  let signedSessionToken: string | undefined;
 
-  if (request instanceof NextRequest) {
-    cookieValue = request.cookies.get('auth-storage')?.value;
+  if (request instanceof NextRequest && 'cookies' in request) {
+    signedSessionToken = request.cookies.get('session')?.value;
   } else {
     const cookieHeader = request.headers.get('cookie');
     if (cookieHeader) {
-      const match = cookieHeader.match(/auth-storage=([^;]+)/);
+      const match = cookieHeader.match(/session=([^;]+)/);
       if (match) {
-        cookieValue = match[1];
+        signedSessionToken = match[1];
       }
     }
   }
 
-  if (!cookieValue) {
+  if (!signedSessionToken) {
     return unauthenticated();
   }
 
-  // 2. Parse JSON from cookie ------------------------------------------------
-  let parsed: any;
+  // 2. Verify the HMAC signature and extract the raw token ----------------
+  const { verifySessionToken, validateSession } = await import('@/lib/session-manager');
+  const sessionToken = verifySessionToken(signedSessionToken);
+  if (!sessionToken) {
+    return invalidSession();
+  }
+
+  // 3. Validate the session against the DB --------------------------------
+  let session: Awaited<ReturnType<typeof validateSession>>;
   try {
-    const decoded = decodeURIComponent(cookieValue);
-    parsed = JSON.parse(decoded);
-  } catch {
+    session = await validateSession(sessionToken);
+  } catch (error) {
+    authLogger.error({ err: error }, 'Session validation failed');
     return invalidSession();
   }
 
-  const state = parsed.state || parsed;
-
-  // 3. Extract auth fields ---------------------------------------------------
-  // Support both:
-  //   New server-set format: { userId, role, username, institutionId, isAuthenticated }
-  //   Legacy format:         { state: { user: { id, role, institutionId, username } } }
-  const userId: string | undefined = state.user?.id || state.userId;
-  const role: string | undefined = state.user?.role || state.role;
-  const institutionId: string | null = state.user?.institutionId ?? state.institutionId ?? null;
-  const username: string | undefined = state.user?.username || state.username;
-
-  if (!userId || !role) {
+  if (!session) {
     return invalidSession();
   }
 
-  // 4. Verify user exists and is active in database --------------------------
-  let user: { id: string; active: boolean; role: string; institutionId: string | null } | null;
+  // 4. Look up the user by the SESSION's userId (authoritative) -----------
+  const userId = session.userId;
+
+  let user: { id: string; active: boolean; role: string; institutionId: string | null; username: string } | null;
   try {
     user = await db.user.findUnique({
       where: { id: userId },
-      select: { id: true, active: true, role: true, institutionId: true },
+      select: { id: true, active: true, role: true, institutionId: true, username: true },
     });
 
     if (!user || !user.active) {
@@ -145,17 +145,14 @@ export async function verifyAuth(
     return invalidSession();
   }
 
-  // 5. Success ---------------------------------------------------------------
-  // Use institutionId from cookie if available, fall back to database value
-  // Must guard against null vs undefined: cookie may explicitly set null
-  const resolvedInstitutionId = institutionId !== undefined ? institutionId : (user.institutionId ?? null);
+  // 5. Success -------------------------------------------------------------
   return {
     authenticated: true,
     context: {
-      userId,
+      userId: user.id,
       role: user.role,
-      institutionId: resolvedInstitutionId,
-      username: username || '',
+      institutionId: user.institutionId ?? null,
+      username: user.username,
     },
   };
 }

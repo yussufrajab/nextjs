@@ -1,18 +1,50 @@
 /**
  * Unit tests for src/lib/api-auth.ts
  *
- * Tests verifyAuth() and withAuth() for API route authentication.
+ * verifyAuth reads the HttpOnly `session` cookie, verifies its HMAC signature,
+ * validates the raw token against the DB via validateSession, and derives
+ * userId/role from the session row + User table — never from the client-
+ * controlled auth-storage cookie.
  */
-
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuth, withAuth } from './api-auth';
+import { signSessionToken } from '@/lib/session-manager';
 
 // ---------------------------------------------------------------------------
-// Mock @/lib/db
+// Mocks
 // ---------------------------------------------------------------------------
 
+const mockValidateSession = vi.fn();
 const mockFindUnique = vi.fn();
+
+vi.mock('@/lib/session-manager', () => ({
+  validateSession: (...args: any[]) => mockValidateSession(...args),
+  // Pass-through signing helpers so the tests can build realistic cookies.
+  signSessionToken: (token: string) => {
+    const { createHmac } = require('crypto');
+    const hmac = createHmac('sha256', process.env.SESSION_SECRET);
+    hmac.update(token);
+    return `${token}.${hmac.digest('base64')}`;
+  },
+  verifySessionToken: (signed: string): string | null => {
+    try {
+      const parts = signed.split('.');
+      if (parts.length !== 2) return null;
+      const [token, provided] = parts;
+      const { createHmac, timingSafeEqual } = require('crypto');
+      const hmac = createHmac('sha256', process.env.SESSION_SECRET);
+      hmac.update(token);
+      const expected = hmac.digest('base64');
+      const a = Buffer.from(provided, 'base64');
+      const b = Buffer.from(expected, 'base64');
+      if (a.length !== b.length) return null;
+      return timingSafeEqual(a, b) ? token : null;
+    } catch {
+      return null;
+    }
+  },
+}));
 
 vi.mock('@/lib/db', () => ({
   db: {
@@ -26,266 +58,209 @@ vi.mock('@/lib/db', () => ({
 // Helpers
 // ---------------------------------------------------------------------------
 
-/**
- * Build a NextRequest with an `auth-storage` cookie.
- */
-function makeRequest(cookieValue?: string): NextRequest {
+function makeRequestWithSessionCookie(signedSessionToken?: string): NextRequest {
   const url = 'http://localhost:9002/api/test';
-  if (cookieValue === undefined) {
-    return new NextRequest(url);
-  }
-  const encoded = encodeURIComponent(cookieValue);
+  if (signedSessionToken === undefined) return new NextRequest(url);
   return new NextRequest(url, {
-    headers: { cookie: `auth-storage=${encoded}` },
+    headers: { cookie: `session=${signedSessionToken}` },
   });
 }
 
-/**
- * Read the JSON body of a NextResponse.  The module-level constants
- * (UNAUTHENTICATED, INVALID_SESSION, FORBIDDEN) are created once with
- * NextResponse.json(), which means their body streams can only be consumed
- * a single time.  Cloning avoids the "Body is unusable" error in repeated
- * test invocations.
- */
 async function responseBody(response: NextResponse): Promise<any> {
-  const cloned = response.clone();
-  return cloned.json();
+  return response.clone().json();
 }
 
 // ---------------------------------------------------------------------------
-// verifyAuth tests
+// verifyAuth
 // ---------------------------------------------------------------------------
 
 describe('verifyAuth', () => {
   beforeEach(() => {
+    mockValidateSession.mockReset();
     mockFindUnique.mockReset();
   });
 
-  it('returns UNAUTHENTICATED (401) when no cookie is present', async () => {
+  it('returns UNAUTHENTICATED (401) when no session cookie is present', async () => {
     const req = new NextRequest('http://localhost:9002/api/test');
     const result = await verifyAuth(req);
 
     expect(result.authenticated).toBe(false);
     expect(result.response!.status).toBe(401);
-
     const body = await responseBody(result.response!);
-    expect(body.success).toBe(false);
     expect(body.errorCode).toBe('UNAUTHENTICATED');
   });
 
-  it('returns INVALID_SESSION (401) when cookie cannot be parsed', async () => {
-    // Provide a cookie value that is not valid JSON even after decoding
-    const req = makeRequest('not-json-at-all');
+  it('returns INVALID_SESSION (401) when the cookie signature is invalid', async () => {
+    const req = makeRequestWithSessionCookie('forged-token.bogus-signature');
     const result = await verifyAuth(req);
 
     expect(result.authenticated).toBe(false);
-    expect(result.response!.status).toBe(401);
-
     const body = await responseBody(result.response!);
-    expect(body.success).toBe(false);
     expect(body.errorCode).toBe('INVALID_SESSION');
+    expect(mockValidateSession).not.toHaveBeenCalled();
   });
 
-  it('returns INVALID_SESSION (401) when user does not exist in DB', async () => {
+  it('returns INVALID_SESSION (401) when validateSession returns null', async () => {
+    mockValidateSession.mockResolvedValue(null);
+    const req = makeRequestWithSessionCookie(signSessionToken('good-token'));
+    const result = await verifyAuth(req);
+
+    expect(result.authenticated).toBe(false);
+    const body = await responseBody(result.response!);
+    expect(body.errorCode).toBe('INVALID_SESSION');
+    expect(mockFindUnique).not.toHaveBeenCalled();
+  });
+
+  it('returns INVALID_SESSION when the DB user lookup returns null', async () => {
+    mockValidateSession.mockResolvedValue({ id: 's1', userId: 'user-1', User: { id: 'user-1' } });
     mockFindUnique.mockResolvedValue(null);
-
-    const cookie = JSON.stringify({
-      state: {
-        user: { id: 'nonexistent', role: 'Admin', institutionId: null, username: 'admin' },
-      },
-    });
-    const req = makeRequest(cookie);
+    const req = makeRequestWithSessionCookie(signSessionToken('good-token'));
     const result = await verifyAuth(req);
 
     expect(result.authenticated).toBe(false);
-    expect(result.response!.status).toBe(401);
-
     const body = await responseBody(result.response!);
-    expect(body.success).toBe(false);
     expect(body.errorCode).toBe('INVALID_SESSION');
   });
 
-  it('returns INVALID_SESSION (401) when user is inactive in DB', async () => {
-    mockFindUnique.mockResolvedValue({ id: 'user-1', active: false, role: 'Admin' });
-
-    const cookie = JSON.stringify({
-      state: {
-        user: { id: 'user-1', role: 'Admin', institutionId: null, username: 'admin' },
-      },
-    });
-    const req = makeRequest(cookie);
+  it('returns INVALID_SESSION when the user is inactive', async () => {
+    mockValidateSession.mockResolvedValue({ id: 's1', userId: 'user-1', User: { id: 'user-1' } });
+    mockFindUnique.mockResolvedValue({ id: 'user-1', active: false, role: 'Admin', institutionId: null, username: 'admin' });
+    const req = makeRequestWithSessionCookie(signSessionToken('good-token'));
     const result = await verifyAuth(req);
 
     expect(result.authenticated).toBe(false);
-    expect(result.response!.status).toBe(401);
-
     const body = await responseBody(result.response!);
-    expect(body.success).toBe(false);
     expect(body.errorCode).toBe('INVALID_SESSION');
   });
 
-  it('returns authenticated context for a valid user', async () => {
-    mockFindUnique.mockResolvedValue({ id: 'user-1', active: true, role: 'Admin' });
-
-    const cookie = JSON.stringify({
-      state: {
-        user: {
-          id: 'user-1',
-          role: 'Admin',
-          institutionId: 'inst-1',
-          username: 'admin',
-        },
-      },
-    });
-    const req = makeRequest(cookie);
+  it('returns authenticated context derived from the session row + DB user', async () => {
+    mockValidateSession.mockResolvedValue({ id: 's1', userId: 'user-1', User: { id: 'user-1' } });
+    mockFindUnique.mockResolvedValue({ id: 'user-1', active: true, role: 'HRO', institutionId: 'inst-1', username: 'hro1' });
+    const req = makeRequestWithSessionCookie(signSessionToken('good-token'));
     const result = await verifyAuth(req);
 
     expect(result.authenticated).toBe(true);
-    expect(result.context).toBeDefined();
+    expect(result.context).toEqual({
+      userId: 'user-1',
+      role: 'HRO',
+      institutionId: 'inst-1',
+      username: 'hro1',
+    });
+    expect(mockFindUnique).toHaveBeenCalledWith({
+      where: { id: 'user-1' },
+      select: { id: true, active: true, role: true, institutionId: true, username: true },
+    });
+    // validateSession must receive the RAW token, not the signed cookie value.
+    expect(mockValidateSession).toHaveBeenCalledWith('good-token');
+  });
+
+  it('uses the session userId even when an auth-storage cookie claims a different user', async () => {
+    mockValidateSession.mockResolvedValue({ id: 's1', userId: 'real-user', User: { id: 'real-user' } });
+    mockFindUnique.mockImplementation(({ where }: { where: { id: string } }) =>
+      Promise.resolve(
+        where.id === 'real-user'
+          ? { id: 'real-user', active: true, role: 'EMPLOYEE', institutionId: null, username: 'real' }
+          : null
+      )
+    );
+    const req = new NextRequest('http://localhost:9002/api/test', {
+      headers: {
+        cookie:
+          'session=' +
+          signSessionToken('good-token') +
+          '; auth-storage=' +
+          encodeURIComponent(JSON.stringify({ userId: 'attacker-target', role: 'Admin' })),
+      },
+    });
+    const result = await verifyAuth(req);
+
+    expect(result.authenticated).toBe(true);
+    expect(result.context!.userId).toBe('real-user');
+    expect(result.context!.role).toBe('EMPLOYEE');
+  });
+
+  it('returns INVALID_SESSION when validateSession throws', async () => {
+    mockValidateSession.mockRejectedValue(new Error('DB down'));
+    const req = makeRequestWithSessionCookie(signSessionToken('good-token'));
+    const result = await verifyAuth(req);
+
+    expect(result.authenticated).toBe(false);
+    const body = await responseBody(result.response!);
+    expect(body.errorCode).toBe('INVALID_SESSION');
+  });
+
+  it('returns INVALID_SESSION when the user lookup throws', async () => {
+    mockValidateSession.mockResolvedValue({ id: 's1', userId: 'user-1', User: { id: 'user-1' } });
+    mockFindUnique.mockRejectedValue(new Error('DB down'));
+    const req = makeRequestWithSessionCookie(signSessionToken('good-token'));
+    const result = await verifyAuth(req);
+
+    expect(result.authenticated).toBe(false);
+    const body = await responseBody(result.response!);
+    expect(body.errorCode).toBe('INVALID_SESSION');
+  });
+
+  it('supports plain Request objects by parsing the cookie header', async () => {
+    mockValidateSession.mockResolvedValue({ id: 's1', userId: 'user-1', User: { id: 'user-1' } });
+    mockFindUnique.mockResolvedValue({ id: 'user-1', active: true, role: 'Admin', institutionId: null, username: 'admin' });
+    const req = new Request('http://localhost:9002/api/test', {
+      headers: { cookie: 'session=' + signSessionToken('good-token') },
+    });
+    const result = await verifyAuth(req);
+
+    expect(result.authenticated).toBe(true);
     expect(result.context!.userId).toBe('user-1');
-    expect(result.context!.role).toBe('Admin');
-    expect(result.context!.institutionId).toBe('inst-1');
-    expect(result.context!.username).toBe('admin');
-  });
-
-  it('returns INVALID_SESSION when cookie has no userId or role', async () => {
-    const cookie = JSON.stringify({ state: { user: {} } });
-    const req = makeRequest(cookie);
-    const result = await verifyAuth(req);
-
-    expect(result.authenticated).toBe(false);
-
-    const body = await responseBody(result.response!);
-    expect(body.errorCode).toBe('INVALID_SESSION');
-  });
-
-  it('error responses include success: false and errorCode fields', async () => {
-    // Test with no cookie — UNAUTHENTICATED
-    const req1 = new NextRequest('http://localhost:9002/api/test');
-    const result1 = await verifyAuth(req1);
-    const body1 = await responseBody(result1.response!);
-    expect(body1.success).toBe(false);
-    expect(body1.errorCode).toBeDefined();
-
-    // Test with invalid cookie — INVALID_SESSION
-    const req2 = makeRequest('garbage');
-    const result2 = await verifyAuth(req2);
-    const body2 = await responseBody(result2.response!);
-    expect(body2.success).toBe(false);
-    expect(body2.errorCode).toBeDefined();
-  });
-
-  it('defaults username to empty string when not in cookie', async () => {
-    mockFindUnique.mockResolvedValue({ id: 'user-1', active: true, role: 'User' });
-
-    const cookie = JSON.stringify({
-      state: {
-        user: { id: 'user-1', role: 'User', institutionId: null },
-      },
-    });
-    const req = makeRequest(cookie);
-    const result = await verifyAuth(req);
-
-    expect(result.authenticated).toBe(true);
-    expect(result.context!.username).toBe('');
-  });
-
-  it('returns INVALID_SESSION when DB query throws', async () => {
-    mockFindUnique.mockRejectedValue(new Error('DB connection failed'));
-
-    const cookie = JSON.stringify({
-      state: {
-        user: { id: 'user-1', role: 'Admin', institutionId: null, username: 'admin' },
-      },
-    });
-    const req = makeRequest(cookie);
-    const result = await verifyAuth(req);
-
-    expect(result.authenticated).toBe(false);
-
-    const body = await responseBody(result.response!);
-    expect(body.errorCode).toBe('INVALID_SESSION');
   });
 });
 
 // ---------------------------------------------------------------------------
-// withAuth tests
+// withAuth
 // ---------------------------------------------------------------------------
 
 describe('withAuth', () => {
   beforeEach(() => {
+    mockValidateSession.mockReset();
     mockFindUnique.mockReset();
   });
 
-  it('calls handler when auth succeeds with no role restriction', async () => {
-    mockFindUnique.mockResolvedValue({ id: 'user-1', active: true, role: 'User' });
+  it('calls the handler with the DB-derived auth context', async () => {
+    mockValidateSession.mockResolvedValue({ id: 's1', userId: 'user-1', User: { id: 'user-1' } });
+    mockFindUnique.mockResolvedValue({ id: 'user-1', active: true, role: 'User', institutionId: null, username: 'user' });
 
-    const handler = vi.fn().mockResolvedValue(
-      NextResponse.json({ ok: true })
-    );
-
+    const handler = vi.fn().mockResolvedValue(NextResponse.json({ ok: true }));
     const wrapped = withAuth(handler);
-    const cookie = JSON.stringify({
-      state: {
-        user: { id: 'user-1', role: 'User', institutionId: null, username: 'user' },
-      },
-    });
-    const req = makeRequest(cookie);
+    const req = makeRequestWithSessionCookie(signSessionToken('good-token'));
 
-    const response = await wrapped(req);
+    await wrapped(req);
 
-    expect(handler).toHaveBeenCalledOnce();
     expect(handler).toHaveBeenCalledWith(req, {
-      auth: {
-        userId: 'user-1',
-        role: 'User',
-        institutionId: null,
-        username: 'user',
-      },
+      auth: { userId: 'user-1', role: 'User', institutionId: null, username: 'user' },
     });
-    const body = await response.json();
-    expect(body.ok).toBe(true);
   });
 
-  it('returns 403 with errorCode FORBIDDEN when role not in allowedRoles', async () => {
-    mockFindUnique.mockResolvedValue({ id: 'user-1', active: true, role: 'User' });
+  it('returns 403 FORBIDDEN when the DB role is not in allowedRoles', async () => {
+    mockValidateSession.mockResolvedValue({ id: 's1', userId: 'user-1', User: { id: 'user-1' } });
+    mockFindUnique.mockResolvedValue({ id: 'user-1', active: true, role: 'User', institutionId: null, username: 'user' });
 
-    const handler = vi.fn().mockResolvedValue(
-      NextResponse.json({ ok: true })
-    );
-
+    const handler = vi.fn().mockResolvedValue(NextResponse.json({ ok: true }));
     const wrapped = withAuth(handler, { allowedRoles: ['Admin'] });
-    const cookie = JSON.stringify({
-      state: {
-        user: { id: 'user-1', role: 'User', institutionId: null, username: 'user' },
-      },
-    });
-    const req = makeRequest(cookie);
+    const req = makeRequestWithSessionCookie(signSessionToken('good-token'));
 
     const response = await wrapped(req);
 
     expect(handler).not.toHaveBeenCalled();
     expect(response.status).toBe(403);
-
     const body = await response.clone().json();
-    expect(body.success).toBe(false);
     expect(body.errorCode).toBe('FORBIDDEN');
   });
 
-  it('allows access when role is in allowedRoles', async () => {
-    mockFindUnique.mockResolvedValue({ id: 'admin-1', active: true, role: 'Admin' });
+  it('matches allowedRoles case-insensitively', async () => {
+    mockValidateSession.mockResolvedValue({ id: 's1', userId: 'a1', User: { id: 'a1' } });
+    mockFindUnique.mockResolvedValue({ id: 'a1', active: true, role: 'Admin', institutionId: 'inst-1', username: 'admin' });
 
-    const handler = vi.fn().mockResolvedValue(
-      NextResponse.json({ ok: true })
-    );
-
-    const wrapped = withAuth(handler, { allowedRoles: ['Admin', 'SuperAdmin'] });
-    const cookie = JSON.stringify({
-      state: {
-        user: { id: 'admin-1', role: 'Admin', institutionId: 'inst-1', username: 'admin' },
-      },
-    });
-    const req = makeRequest(cookie);
+    const handler = vi.fn().mockResolvedValue(NextResponse.json({ ok: true }));
+    const wrapped = withAuth(handler, { allowedRoles: ['ADMIN'] });
+    const req = makeRequestWithSessionCookie(signSessionToken('good-token'));
 
     const response = await wrapped(req);
 
@@ -294,26 +269,14 @@ describe('withAuth', () => {
     expect(body.ok).toBe(true);
   });
 
-  it('allows access when role casing differs from allowedRoles (case-insensitive)', async () => {
-    mockFindUnique.mockResolvedValue({ id: 'admin-1', active: true, role: 'Admin' });
-
-    const handler = vi.fn().mockResolvedValue(
-      NextResponse.json({ ok: true })
-    );
-
-    // DB stores 'Admin' but allowedRoles uses 'ADMIN' — should still match
-    const wrapped = withAuth(handler, { allowedRoles: ['ADMIN', 'HHRMD', 'HRO'] });
-    const cookie = JSON.stringify({
-      state: {
-        user: { id: 'admin-1', role: 'Admin', institutionId: 'inst-1', username: 'admin' },
-      },
-    });
-    const req = makeRequest(cookie);
+  it('returns 401 when no session cookie is present', async () => {
+    const handler = vi.fn().mockResolvedValue(NextResponse.json({ ok: true }));
+    const wrapped = withAuth(handler);
+    const req = new NextRequest('http://localhost:9002/api/test');
 
     const response = await wrapped(req);
 
-    expect(handler).toHaveBeenCalledOnce();
-    const body = await response.json();
-    expect(body.ok).toBe(true);
+    expect(handler).not.toHaveBeenCalled();
+    expect(response.status).toBe(401);
   });
 });
