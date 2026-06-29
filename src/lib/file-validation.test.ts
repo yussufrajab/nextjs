@@ -332,10 +332,14 @@ describe('file-validation', () => {
       expect(isMimeTypeCompatible('image/png', 'application/pdf')).toBe(false);
     });
 
-    it('should reject null detected type when checking incompatibility', () => {
-      // null detected means we can't confirm or deny, but the function allows it through
-      // Actually the implementation allows null through as compatible
-      expect(isMimeTypeCompatible(null, 'application/pdf')).toBe(true);
+    it('should reject null detected type when the declared type has known magic signatures', () => {
+      // application/pdf has a known magic signature but no match was found — reject spoof
+      expect(isMimeTypeCompatible(null, 'application/pdf')).toBe(false);
+    });
+
+    it('should allow null detected type for CSV (no known magic signature)', () => {
+      // text/csv has no known magic signature, so null detection is acceptable
+      expect(isMimeTypeCompatible(null, 'text/csv')).toBe(true);
     });
 
     it('should allow image/jpeg compatible with image/jpg', () => {
@@ -507,6 +511,86 @@ describe('file-validation', () => {
       expect(result.success).toBe(false);
       // application/pdf not in photos allowed mimes
       expect(result.errorCode).toBe('INVALID_FILE_TYPE');
+    });
+
+    // -------------------------------------------------------------------------
+    // Test 10.4: File Type Validation — Disguised executables
+    // -------------------------------------------------------------------------
+
+    it('should reject disguised executable (.pdf.exe) via extension blocklist', async () => {
+      // .exe is the last extension — blocked by extension list
+      const buffer = Buffer.alloc(100);
+      const result = await validateFileUpload(buffer, 'report.pdf.exe', 'application/x-executable', 'documents');
+      expect(result.success).toBe(false);
+      expect(result.errorCode).toBe('BLOCKED_FILE_TYPE');
+      expect(result.status).toBe(403);
+    });
+
+    it('should reject disguised executable (.exe.pdf) via magic-byte mismatch', async () => {
+      // Starts with MZ (EXE header) but claims to be PDF — magic bytes won't match
+      const exeBuffer = Buffer.from([0x4d, 0x5a, 0x90, 0x00, 0x03, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00]);
+      const result = await validateFileUpload(exeBuffer, 'document.exe.pdf', 'application/pdf', 'documents');
+      expect(result.success).toBe(false);
+      expect(result.errorCode).toBe('FILE_CONTENT_MISMATCH');
+    });
+
+    // -------------------------------------------------------------------------
+    // Test 10.5: MIME Type Spoofing — magic-byte verification
+    // -------------------------------------------------------------------------
+
+    it('should reject executable renamed to .pdf via magic-byte verification', async () => {
+      // EXE with MZ header, declared as application/pdf
+      const exeBuffer = Buffer.from([0x4d, 0x5a, 0x90, 0x00, 0x03, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00]);
+      const result = await validateFileUpload(exeBuffer, 'notavirus.pdf', 'application/pdf', 'documents');
+      expect(result.success).toBe(false);
+      expect(result.errorCode).toBe('FILE_CONTENT_MISMATCH');
+    });
+
+    it('should reject shell script renamed to .pdf via magic-byte verification', async () => {
+      // Shell script starts with #!/bin/sh
+      const shBuffer = Buffer.from('#!/bin/sh\nrm -rf /');
+      const result = await validateFileUpload(shBuffer, 'clean.pdf', 'application/pdf', 'documents');
+      expect(result.success).toBe(false);
+      expect(result.errorCode).toBe('FILE_CONTENT_MISMATCH');
+    });
+
+    it('should reject batch file renamed to .docx via magic-byte verification', async () => {
+      const batBuffer = Buffer.from('@echo off\ndel /F /S *.*');
+      const result = await validateFileUpload(batBuffer, 'document.docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'templates');
+      expect(result.success).toBe(false);
+      expect(result.errorCode).toBe('FILE_CONTENT_MISMATCH');
+    });
+
+    // -------------------------------------------------------------------------
+    // Test 10.6: File Size Limit — boundary tests
+    // -------------------------------------------------------------------------
+
+    it('should accept file exactly at the size limit', async () => {
+      const MB = 1024 * 1024;
+      const buffer = createPdfBuffer(MB);
+      const result = await validateFileUpload(buffer, 'exact.pdf', 'application/pdf', 'documents');
+      expect(result.success).toBe(true);
+    });
+
+    it('should accept file just under the size limit', async () => {
+      const MB = 1024 * 1024;
+      const buffer = createPdfBuffer(MB - 1);
+      const result = await validateFileUpload(buffer, 'small.pdf', 'application/pdf', 'documents');
+      expect(result.success).toBe(true);
+    });
+
+    it('should reject 100MB file with FILE_TOO_LARGE', async () => {
+      const MB = 1024 * 1024;
+      const oversizedBuffer = Buffer.alloc(100 * MB);
+      const result = await validateFileUpload(
+        oversizedBuffer,
+        'huge.pdf',
+        'application/pdf',
+        'documents'
+      );
+      expect(result.success).toBe(false);
+      expect(result.errorCode).toBe('FILE_TOO_LARGE');
+      expect(result.status).toBe(413);
     });
 
     // -------------------------------------------------------------------------

@@ -235,6 +235,22 @@ export function isBlockedMime(mimeType: string): boolean {
 // ---------------------------------------------------------------------------
 
 /**
+ * MIME types for which we have known magic-byte signatures.
+ * When the declared MIME is in this set but detectMimeType returns null,
+ * the file content does NOT match any known signature and should be rejected
+ * (prevents exe→pdf, sh→docx, and other MIME spoofing attacks).
+ */
+const KNOWN_MAGIC_MIMES = new Set([
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+]);
+
+/**
  * Determines whether the detected (magic-byte) MIME type is compatible with
  * the declared MIME type.
  *
@@ -244,10 +260,16 @@ export function isBlockedMime(mimeType: string): boolean {
  *  - image/jpeg is compatible with image/jpg (common misdeclaration)
  *  - application/vnd.openxmlformats-officedocument.wordprocessingml.document
  *    is compatible with application/msword (DOCX vs DOC)
+ *  - When the declared type has a known magic signature but detectMimeType
+ *    returns null, the file is rejected (prevents MIME spoofing attacks).
  */
 export function isMimeTypeCompatible(detected: string | null, declared: string): boolean {
   if (!detected) {
-    // No magic-byte match — cannot confirm or deny, so allow through
+    if (KNOWN_MAGIC_MIMES.has(declared)) {
+      // Declared type has a known magic signature but none matched — reject spoof attempt
+      return false;
+    }
+    // No magic-byte match for a type without known signatures (CSV, text) — allow through
     return true;
   }
 
