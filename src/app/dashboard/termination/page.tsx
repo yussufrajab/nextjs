@@ -14,7 +14,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/hooks/use-auth';
 import { ROLES, EMPLOYEES } from '@/lib/constants';
-import { useAuthStore } from '@/store/auth-store';
 import React, { useState, useEffect, useCallback } from 'react';
 import type { Employee, User, Role } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
@@ -74,7 +73,7 @@ interface SeparationRequest {
 
 export default function TerminationAndDismissalPage() {
   const { role, user } = useAuth();
-  const { accessToken } = useAuthStore();
+  const accessToken: string | null = null;
   const [employeeDetails, setEmployeeDetails] = useState<Employee | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);

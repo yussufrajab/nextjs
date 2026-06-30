@@ -59,7 +59,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Pagination } from '@/components/shared/pagination';
 import { FileUpload } from '@/components/ui/file-upload';
 import { FilePreviewModal } from '@/components/ui/file-preview-modal';
-import { useAuthStore } from '@/store/auth-store';
 import { EmployeeSearch } from '@/components/shared/employee-search';
 
 interface RetirementRequest {
@@ -95,7 +94,7 @@ const VOLUNTARY_RETIREMENT_AGE = 55;
 
 export default function RetirementPage() {
   const { role, user } = useAuth();
-  const { accessToken } = useAuthStore();
+  const accessToken: string | null = null;
   const [employeeDetails, setEmployeeDetails] = useState<Employee | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);

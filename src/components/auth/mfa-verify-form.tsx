@@ -117,7 +117,6 @@ export function MfaVerifyForm({ userId, email }: MfaVerifyFormProps) {
       // MFA verified — set auth state from the login response
       const authData = result.data;
       const userData = authData?.user;
-      const csrfToken = result.csrfToken;
 
       if (userData) {
         useAuthStore.setState({
@@ -128,10 +127,6 @@ export function MfaVerifyForm({ userId, email }: MfaVerifyFormProps) {
           },
           role: userData.role,
           isAuthenticated: true,
-          csrfToken: csrfToken || null,
-          accessToken: null,
-          refreshToken: null,
-          sessionToken: null,
         });
 
         // The server sets the `session` and `auth-storage` HttpOnly cookies

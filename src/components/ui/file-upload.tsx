@@ -64,7 +64,7 @@ export function FileUpload({
   const [uploading, setUploading] = useState(false);
 
   // Get auth state
-  const { accessToken, user } = useAuthStore();
+  const { user } = useAuthStore();
   const [uploadProgress, setUploadProgress] = useState(0);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);

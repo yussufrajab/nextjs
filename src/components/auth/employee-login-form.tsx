@@ -39,10 +39,6 @@ export function EmployeeLoginForm() {
       user: null,
       role: null,
       isAuthenticated: false,
-      accessToken: null,
-      refreshToken: null,
-      sessionToken: null,
-      csrfToken: null,
     });
 
     // Clear auth cookie for middleware
@@ -86,16 +82,11 @@ export function EmployeeLoginForm() {
         // Use the auth store to set user data with session and CSRF tokens
         // Handle both response formats: direct (result.user) and completeLogin (result.data.user)
         const userData = result.user || result.data?.user;
-        const csrfToken = result.csrfToken || result.data?.csrfToken || null;
 
         useAuthStore.setState({
           user: userData,
           role: userData?.role,
           isAuthenticated: true,
-          csrfToken: csrfToken,
-          accessToken: null,
-          refreshToken: null,
-          sessionToken: null,
         });
 
         // The server sets the `session` and `auth-storage` HttpOnly cookies

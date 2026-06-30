@@ -9,10 +9,12 @@ import { clientLogger } from '@/lib/logger-client';
 const log = clientLogger.child({ component: 'api-init' });
 
 export function useApiInit() {
-  const { isAuthenticated, refreshAuthToken, logout } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
 
   useEffect(() => {
-    // Initialize API client with stored token on mount
+    // Session-based auth uses an HttpOnly cookie set by the server; there is
+    // no access/refresh token to restore from localStorage. Automatic token
+    // refresh was removed with the JWT-based auth design.
     if (typeof window !== 'undefined') {
       const storedToken = localStorage.getItem('accessToken');
       if (storedToken) {
@@ -20,40 +22,12 @@ export function useApiInit() {
       }
     }
 
-    // Set up automatic token refresh
-    const setupTokenRefresh = () => {
-      // Only set up refresh if we have a refresh token (JWT-based auth)
-      const storedRefreshToken =
-        typeof window !== 'undefined'
-          ? localStorage.getItem('refreshToken')
-          : null;
-
-      if (!storedRefreshToken) {
-        log.info('No refresh token found, skipping automatic token refresh (session-based auth)');
-        return null;
-      }
-
-      // Refresh token every 8 minutes (tokens expire in 10 minutes)
-      const refreshInterval = setInterval(
-        async () => {
-          if (isAuthenticated) {
-            const success = await refreshAuthToken();
-            if (!success) {
-              log.info('Token refresh failed, logging out');
-              clearInterval(refreshInterval);
-            }
-          }
-        },
-        8 * 60 * 1000
-      ); // 8 minutes
-
-      return refreshInterval;
-    };
-
+    // No-op: kept for compatibility. Token refresh is handled server-side via
+    // the session cookie lifecycle.
     let refreshInterval: NodeJS.Timeout | null = null;
 
     if (isAuthenticated) {
-      refreshInterval = setupTokenRefresh();
+      log.info('Session-based auth active; no client token refresh needed');
     }
 
     return () => {
@@ -61,7 +35,7 @@ export function useApiInit() {
         clearInterval(refreshInterval);
       }
     };
-  }, [isAuthenticated, refreshAuthToken]);
+  }, [isAuthenticated]);
 
   // Return the API client for direct use if needed
   return apiClient;

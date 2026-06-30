@@ -56,7 +56,6 @@ export default function MagicLinkConfirmPage() {
       // MFA verified — set auth state
       const authData = result.data;
       const userData = authData?.user;
-      const csrfToken = result.csrfToken;
 
       if (userData) {
         useAuthStore.setState({
@@ -67,10 +66,6 @@ export default function MagicLinkConfirmPage() {
           },
           role: userData.role,
           isAuthenticated: true,
-          csrfToken: csrfToken || null,
-          accessToken: null,
-          refreshToken: null,
-          sessionToken: null,
         });
 
         // The server sets the `session` and `auth-storage` HttpOnly cookies

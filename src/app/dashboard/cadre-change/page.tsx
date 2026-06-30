@@ -44,7 +44,6 @@ import { Pagination } from '@/components/shared/pagination';
 import { FileUpload } from '@/components/ui/file-upload';
 import { apiClient } from '@/lib/api-client';
 import { FilePreviewModal } from '@/components/ui/file-preview-modal';
-import { useAuthStore } from '@/store/auth-store';
 import { EmployeeSearch } from '@/components/shared/employee-search';
 import { validateEmployeeStatusForRequest } from '@/lib/employee-status-validation';
 
@@ -75,7 +74,7 @@ interface CadreChangeRequest {
 
 export default function CadreChangePage() {
   const { role, user } = useAuth();
-  const { accessToken } = useAuthStore();
+  const accessToken: string | null = null;
   const [employeeDetails, setEmployeeDetails] = useState<Employee | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);

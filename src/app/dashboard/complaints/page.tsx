@@ -13,7 +13,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/hooks/use-auth';
-import { useAuthStore } from '@/store/auth-store';
 import { ROLES, EMPLOYEES } from '@/lib/constants';
 import React, { useState, useEffect } from 'react';
 import { standardizeComplaintFormatting } from '@/ai/wrapper';
@@ -132,7 +131,7 @@ interface SubmittedComplaint {
 
 export default function ComplaintsPage() {
   const { role, user } = useAuth();
-  const { accessToken } = useAuthStore();
+  const accessToken: string | null = null;
   const [rewrittenComplaint, setRewrittenComplaint] = useState<string | null>(
     null
   );

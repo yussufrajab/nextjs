@@ -63,7 +63,7 @@ export const useAuth = (): AuthHookState => {
   if (isLoading && typeof window !== 'undefined') {
     const state = useAuthStore.getState();
     return {
-      user: state.user,
+      user: state.user as unknown as User,
       role: state.role,
       isAuthenticated: state.isAuthenticated,
       login: state.login,
@@ -73,7 +73,7 @@ export const useAuth = (): AuthHookState => {
   }
 
   return {
-    user: storeState.user,
+    user: storeState.user as unknown as User,
     role: storeState.role,
     isAuthenticated: storeState.isAuthenticated,
     login: storeState.login,
