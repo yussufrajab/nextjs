@@ -211,23 +211,6 @@ export async function completeLogin(params: CompleteLoginParams): Promise<NextRe
     getSessionCookieOptions(isProduction)
   );
 
-  // Set auth cookie server-side with httpOnly and Secure flags
-  const authCookieValue = JSON.stringify({
-    userId: user.id,
-    role: user.role,
-    username: user.username,
-    institutionId: user.institutionId,
-    isAuthenticated: true,
-  });
-
-  response.cookies.set('auth-storage', authCookieValue, {
-    httpOnly: true,
-    secure: isProduction,
-    sameSite: 'strict',
-    path: '/',
-    maxAge: 60 * 60 * 24 * 7, // 7 days
-  });
-
   // Clear the pre-session cookie after successful authentication (session fixation protection)
   response.cookies.set(PRE_SESSION_COOKIE_NAME, '', {
     httpOnly: true,
