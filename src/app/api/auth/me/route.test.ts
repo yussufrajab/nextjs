@@ -83,7 +83,7 @@ describe('GET /api/auth/me', () => {
   });
 
   it('returns the UI-safe payload with no password fields', async () => {
-    // verifyAuth's lookup (select subset, no name) vs getMePayload's lookup (select name) — branch on select.name
+    // verifyAuth's lookup uses a minimal select (no `name`); getMePayload's lookup includes `name` — branch the mock on `select.name`.
     mockValidateSession.mockResolvedValue({ id: 's1', userId: 'u1', ipAddress: '10.0.0.1', userAgent: 'TestAgent/1.0' });
     mockUserFindUnique.mockImplementation(({ select }: { select: Record<string, boolean> }) =>
       Promise.resolve(select?.name ? SAFE_USER : { id: 'u1', active: true, role: 'Admin', institutionId: 'inst-1', username: 'ymrajab' })
@@ -113,5 +113,20 @@ describe('GET /api/auth/me', () => {
     const { GET } = await import('./route');
     const res = await GET(authedRequest());
     expect(res.status).toBe(401);
+  });
+
+  it('returns 401 INVALID_SESSION when the user has been deleted but the session is still valid', async () => {
+    mockValidateSession.mockResolvedValue({ id: 's1', userId: 'u1', ipAddress: '10.0.0.1', userAgent: 'TestAgent/1.0' });
+    // verifyAuth's lookup uses a minimal select (no `name`); getMePayload's lookup includes `name` — branch the mock on `select.name`.
+    mockUserFindUnique.mockImplementation(({ select }: { select: Record<string, boolean> }) =>
+      Promise.resolve(select?.name ? null : { id: 'u1', active: true, role: 'Admin', institutionId: 'inst-1', username: 'ymrajab' })
+    );
+
+    const { GET } = await import('./route');
+    const res = await GET(authedRequest());
+    expect(res.status).toBe(401);
+    const body = await res.clone().json();
+    expect(body.success).toBe(false);
+    expect(body.errorCode).toBe('INVALID_SESSION');
   });
 });

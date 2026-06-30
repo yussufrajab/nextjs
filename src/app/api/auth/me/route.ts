@@ -17,10 +17,14 @@ export const GET = wrapHandler(
   withAuth(async (_request: NextRequest | Request, { auth }) => {
     const payload = await getMePayload(auth.userId);
     if (!payload) {
-      return NextResponse.json(
+      const notFound = NextResponse.json(
         { success: false, error: 'User not found', errorCode: 'INVALID_SESSION' },
         { status: 401 }
       );
+      notFound.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
+      notFound.headers.set('Pragma', 'no-cache');
+      notFound.headers.set('Expires', '0');
+      return notFound;
     }
     const response = NextResponse.json({ success: true, data: payload });
     response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
