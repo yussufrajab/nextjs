@@ -144,26 +144,18 @@ class ApiClient {
   private token: string | null = null;
 
   constructor() {
-    // Use relative URLs for Next.js proxy, or frontend URL for client-side requests
-    // This allows Next.js to proxy requests to the backend automatically
+    // Client-side: relative path so requests hit Next.js API routes and the
+    // HttpOnly session cookie is sent automatically (credentials: 'include').
+    // Server-side: direct backend URL.
     this.baseURL =
       typeof window !== 'undefined'
-        ? '/api' // Client-side: use relative path for Next.js proxy
-        : process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'; // Server-side: direct backend URL
-
-    // Load token from localStorage if available
-    if (typeof window !== 'undefined') {
-      this.token = localStorage.getItem('accessToken');
-
-      // Authentication is now handled properly via login endpoint
-      // No need for development tokens or automatic user setting
-    }
+        ? '/api'
+        : process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
   }
 
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {},
-    retryCount: number = 0
+    options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`;
 
@@ -171,15 +163,6 @@ class ApiClient {
       'Content-Type': 'application/json',
       ...((options.headers as Record<string, string>) || {}),
     };
-
-    // Add JWT token if available - always get fresh token from localStorage
-    const currentToken =
-      typeof window !== 'undefined'
-        ? localStorage.getItem('accessToken')
-        : this.token;
-    if (currentToken) {
-      headers['Authorization'] = `Bearer ${currentToken}`;
-    }
 
     // Add CSRF token for state-changing requests (POST, PUT, PATCH, DELETE)
     const method = options.method?.toUpperCase() || 'GET';
@@ -215,66 +198,22 @@ class ApiClient {
         credentials: 'include', // Include cookies for session auth
       });
 
-      // Handle 401 Unauthorized with automatic token refresh
+      // 401 on a non-auth route means the session is gone/expired. There is no
+      // refresh token in the session-cookie model — clear local auth state and
+      // let the caller / route guard redirect to /login.
       if (
         response.status === 401 &&
-        retryCount === 0 &&
-        endpoint !== '/auth/refresh' &&
-        endpoint !== '/auth/login'
+        endpoint !== '/auth/login' &&
+        endpoint !== '/auth/refresh'
       ) {
-        clientLogger.info(
-          { endpoint },
-          '401 Unauthorized, attempting token refresh'
-        );
-
-        const refreshToken =
-          typeof window !== 'undefined'
-            ? localStorage.getItem('refreshToken')
-            : null;
-        if (refreshToken) {
-          try {
-            clientLogger.info('Attempting to refresh token');
-            const refreshResponse = await this.refreshToken(refreshToken);
-
-            if (refreshResponse.success && refreshResponse.data) {
-              clientLogger.info('Token refresh successful');
-              const newAccessToken = refreshResponse.data.token;
-              const newRefreshToken = refreshResponse.data.refreshToken;
-
-              // Update tokens
-              this.setToken(newAccessToken);
-              if (typeof window !== 'undefined') {
-                localStorage.setItem('refreshToken', newRefreshToken);
-              }
-
-              // Update auth store with new token
-              if (typeof window !== 'undefined') {
-                import('@/store/auth-store').then(({ useAuthStore }) => {
-                  useAuthStore
-                    .getState()
-                    .updateTokenFromApiClient(newAccessToken);
-                });
-              }
-
-              // Retry the original request with new token
-              clientLogger.info('Retrying original request with new token');
-              return this.request<T>(endpoint, options, retryCount + 1);
-            }
-          } catch (refreshError) {
-            clientLogger.error({ err: refreshError }, 'Token refresh failed');
-          }
-        }
-
-        // If refresh failed or no refresh token, clear auth and redirect
-        clientLogger.info('Token refresh failed, clearing authentication');
+        clientLogger.info({ endpoint }, '401 Unauthorized, clearing auth');
         this.clearToken();
         if (typeof window !== 'undefined') {
-          // Import auth store dynamically to logout user
           import('@/store/auth-store').then(({ useAuthStore }) => {
             useAuthStore.getState().logout();
           });
         }
-        return { success: false, message: 'Authentication failed' };
+        return { success: false, message: 'Authentication failed', code: 'UNAUTHENTICATED' };
       }
 
       const contentType = response.headers.get('content-type');
@@ -325,48 +264,13 @@ class ApiClient {
     }
   }
 
-  setToken(token: string) {
-    this.token = token;
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('accessToken', token);
-    }
+  /** No-op storage kept for API compatibility. Auth is cookie-based. */
+  setToken(_token: string) {
+    this.token = null;
   }
 
   clearToken() {
-    // Clear any persisted auth state
     this.token = null;
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-    }
-  }
-
-  private setDevelopmentUser() {
-    // Set the development user in auth store
-    if (typeof window !== 'undefined') {
-      // Import auth store dynamically to avoid circular dependencies
-      import('@/store/auth-store').then(({ useAuthStore }) => {
-        const user = {
-          id: 'admin-backend-id', // ID for admin user
-          name: 'System Administrator',
-          username: 'admin',
-          password: '',
-          role: 'Admin' as any, // This matches ROLES.ADMIN from constants
-          active: true,
-          employeeId: null,
-          institutionId: 'cmd059ion0000e6d85kexfukl', // Real institution ID
-          institution: {
-            id: 'cmd059ion0000e6d85kexfukl',
-            name: 'TUME YA UTUMISHI SERIKALINI',
-          },
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        };
-
-        useAuthStore.getState().setUserManually(user);
-        clientLogger.info({ userName: user.name }, 'Development user set in auth store');
-      });
-    }
   }
 
   // Authentication APIs
@@ -404,19 +308,13 @@ class ApiClient {
   }
 
   async refreshToken(
-    refreshToken: string
+    _refreshToken: string
   ): Promise<ApiResponse<{ token: string; refreshToken: string }>> {
-    // Backend expects plain string, not JSON object
-    return this.request<{ token: string; refreshToken: string }>(
-      '/auth/refresh',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'text/plain',
-        },
-        body: refreshToken, // Send as plain string
-      }
-    );
+    // Session-cookie auth has no refresh token. Kept for API compatibility
+    // with existing callers (e.g. auth-store); always reports failure so the
+    // caller falls through to logout.
+    this.clearToken();
+    return { success: false, message: 'Refresh not supported in cookie auth', code: 'UNAUTHENTICATED' };
   }
 
   // Employee APIs
