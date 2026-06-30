@@ -1,134 +1,50 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { verifyAuth } from '@/lib/api-auth';
+import { getMePayload } from '@/lib/auth-me';
 import { authLogger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
 
-const prisma = new PrismaClient();
-
-// Force dynamic rendering - never cache this route
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 /**
  * Refresh User Data API
- * Fetches the latest user data from database and returns it
- * This helps fix stale auth states without requiring logout/login
+ *
+ * Returns the latest UI-safe user data from the database. Authenticated via
+ * the signed `session` cookie (verifyAuth) — not the legacy auth-storage
+ * cookie. Returns no password hashes or password history. Clients should
+ * prefer GET /api/auth/me; this route is kept for compatibility and delegates
+ * to the same safe payload.
  */
-
-// Parse auth storage from cookie
-function parseAuthStorage(cookieValue: string | undefined): {
-  userId: string | null;
-} {
-  if (!cookieValue) {
-    return { userId: null };
-  }
-
-  try {
-    const decoded = decodeURIComponent(cookieValue);
-    const authData = JSON.parse(decoded);
-    const state = authData.state || authData;
-
-    // Support both server-set (flat) and legacy (nested) formats
-    const userId = state.user?.id || state.userId || null;
-
-    return {
-      userId,
-    };
-  } catch (error) {
-    authLogger.error({ err: error }, 'Failed to parse auth-storage cookie');
-    return { userId: null };
-  }
-}
-
 export const GET = wrapHandler(async (request: NextRequest) => {
-    // Get auth from cookie
-    const authCookie = request.cookies.get('auth-storage')?.value;
-    const { userId } = parseAuthStorage(authCookie);
-
-    if (!userId) {
-      const response = NextResponse.json(
-        { success: false, error: 'Not authenticated' },
-        { status: 401 }
-      );
-      // Prevent caching
-      response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
-      response.headers.set('Pragma', 'no-cache');
-      response.headers.set('Expires', '0');
-      return response;
-    }
-
-    // Fetch fresh user data from database
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        username: true,
-        name: true,
-        email: true,
-        role: true,
-        active: true,
-        employeeId: true,
-        institutionId: true,
-        createdAt: true,
-        updatedAt: true,
-        passwordHistory: true,
-        isTemporaryPassword: true,
-        temporaryPasswordExpiry: true,
-        mustChangePassword: true,
-        lastPasswordChange: true,
-        failedPasswordChangeAttempts: true,
-        passwordChangeLockoutUntil: true,
-      },
-    });
-
-    if (!user) {
-      const response = NextResponse.json(
-        { success: false, error: 'User not found' },
-        { status: 404 }
-      );
-      // Prevent caching
-      response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
-      response.headers.set('Pragma', 'no-cache');
-      response.headers.set('Expires', '0');
-      return response;
-    }
-
-    // Get institution name if exists
-    let institutionName = null;
-    if (user.institutionId) {
-      const institution = await prisma.institution.findUnique({
-        where: { id: user.institutionId },
-        select: { name: true },
-      });
-      institutionName = institution?.name || null;
-    }
-
-    const response = NextResponse.json({
-      success: true,
-      data: {
-        id: user.id,
-        username: user.username,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        active: user.active,
-        employeeId: user.employeeId,
-        institutionId: user.institutionId,
-        institutionName,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
-        passwordHistory: user.passwordHistory,
-        isTemporaryPassword: user.isTemporaryPassword,
-        temporaryPasswordExpiry: user.temporaryPasswordExpiry,
-        mustChangePassword: user.mustChangePassword,
-        lastPasswordChange: user.lastPasswordChange,
-        failedPasswordChangeAttempts: user.failedPasswordChangeAttempts,
-        passwordChangeLockoutUntil: user.passwordChangeLockoutUntil,
-      },
-    });
-    // Prevent caching
+  const authResult = await verifyAuth(request);
+  if (!authResult.authenticated) {
+    const response = NextResponse.json(
+      { success: false, error: 'Not authenticated' },
+      { status: 401 }
+    );
     response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
     response.headers.set('Pragma', 'no-cache');
     response.headers.set('Expires', '0');
     return response;
+  }
+
+  const payload = await getMePayload(authResult.context!.userId);
+  if (!payload) {
+    authLogger.warn({ userId: authResult.context!.userId }, 'refresh-user-data: user not found');
+    const response = NextResponse.json(
+      { success: false, error: 'User not found' },
+      { status: 404 }
+    );
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+    return response;
+  }
+
+  const response = NextResponse.json({ success: true, data: payload });
+  response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
+  response.headers.set('Pragma', 'no-cache');
+  response.headers.set('Expires', '0');
+  return response;
 }, 'auth-refresh-user-data');
