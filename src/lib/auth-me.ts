@@ -11,6 +11,7 @@ export interface MePayload {
   id: string;
   username: string;
   name: string;
+  email: string | null;
   role: string;
   active: boolean;
   employeeId: string | null;
@@ -40,6 +41,7 @@ export async function getMePayload(userId: string): Promise<MePayload | null> {
       id: true,
       username: true,
       name: true,
+      email: true,
       role: true,
       active: true,
       employeeId: true,
@@ -66,6 +68,7 @@ export async function getMePayload(userId: string): Promise<MePayload | null> {
     id: user.id,
     username: user.username,
     name: user.name,
+    email: user.email ?? null,
     role: user.role,
     active: user.active,
     employeeId: user.employeeId ?? null,
