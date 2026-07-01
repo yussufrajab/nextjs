@@ -85,7 +85,7 @@ export const POST = wrapHandler(async (req: Request) => {
     message: 'Logged out successfully',
   });
 
-  // Clear the session cookie
+  // Clear the session cookie (the real credential)
   response.cookies.set(SESSION_COOKIE_NAME, '', {
     httpOnly: true,
     secure: isProduction,
@@ -94,9 +94,11 @@ export const POST = wrapHandler(async (req: Request) => {
     maxAge: 0,
   });
 
-  // Clear the auth-storage cookie
-  response.cookies.set('auth-storage', '', {
-    httpOnly: true,
+  // Clear the CSRF cookie (double-submit token) alongside the session so it
+  // does not outlive the session. The legacy unsigned auth-storage cookie is
+  // no longer set or read anywhere, so it is not cleared here.
+  response.cookies.set('csrf-token', '', {
+    httpOnly: false,
     secure: isProduction,
     sameSite: 'strict',
     path: '/',
