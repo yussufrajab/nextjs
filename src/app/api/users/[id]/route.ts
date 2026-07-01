@@ -4,6 +4,7 @@ import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 import { logUserAction, getClientIp } from '@/lib/audit-logger';
 import { wrapHandler } from '@/lib/error-handler';
+import { getAuthContext } from '@/lib/api-auth';
 
 const userUpdateSchema = z.object({
   name: z.string().min(2).optional(),
@@ -88,29 +89,17 @@ export const PUT = wrapHandler(async (
     };
 
     // Audit log: user updated
-    // Parse auth info from cookie for audit context (admin who updated the user)
-    const authCookie = req.headers.get('cookie')?.split(';').find(c => c.trim().startsWith('auth-storage='));
-    let adminUserId: string | null = null;
-    let adminUsername: string | null = null;
-    let adminRole: string | null = null;
-    if (authCookie) {
-      try {
-        const cookieValue = decodeURIComponent(authCookie.split('=')[1]);
-        const authData = JSON.parse(cookieValue);
-        const state = authData.state || authData;
-        adminUserId = state.user?.id || null;
-        adminUsername = state.user?.name || state.user?.username || null;
-        adminRole = state.user?.role || state.role || null;
-      } catch {}
-    }
+    // Derive the actor's identity from the signed session (authoritative),
+    // not the forgeable auth-storage cookie.
+    const actor = await getAuthContext(req);
 
     await logUserAction({
       action: 'UPDATED',
       targetUserId: updatedUser.id,
       targetUsername: updatedUser.username,
-      performedById: adminUserId || 'system',
-      performedByUsername: adminUsername || 'system',
-      performedByRole: adminRole || 'ADMIN',
+      performedById: actor?.userId || 'system',
+      performedByUsername: actor?.username || 'system',
+      performedByRole: actor?.role || 'ADMIN',
       ipAddress: getClientIp(req.headers),
       deviceInfo: JSON.parse(req.headers.get('x-device-info') || 'null'),
     }).catch(() => {});

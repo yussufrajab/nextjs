@@ -9,6 +9,7 @@ import {
   getClientIp,
 } from '@/lib/csrf-utils';
 import { csrfLogger } from '@/lib/logger';
+import { getAuthContext } from '@/lib/api-auth';
 
 /**
  * CSRF Protection Middleware for API Routes
@@ -46,7 +47,7 @@ export async function validateCSRF(request: NextRequest | Request): Promise<{
 
   if (!isValid) {
     // Extract user info for logging (if available from auth cookie)
-    const { userId, username } = extractUserInfo(request);
+    const { userId, username } = await extractUserInfo(request);
     const ipAddress = getClientIp(request.headers);
     const deviceInfo = JSON.parse(request.headers.get('x-device-info') || 'null');
     const url =
@@ -131,38 +132,19 @@ function safeDecode(value: string): string {
 }
 
 /**
- * Helper to extract user info from auth cookie (for logging)
+ * Helper to extract user info from the signed session (for logging on CSRF
+ * failure). Derives userId/username from verifyAuth — never from the legacy,
+ * forgeable auth-storage cookie. Returns nulls when unauthenticated.
  */
-function extractUserInfo(request: NextRequest | Request): {
+async function extractUserInfo(request: NextRequest | Request): Promise<{
   userId: string | null;
   username: string | null;
-} {
+}> {
   try {
-    let authCookie: string | undefined;
-
-    if (request instanceof NextRequest) {
-      authCookie = request.cookies.get('auth-storage')?.value;
-    } else {
-      const cookieHeader = request.headers.get('cookie');
-      if (cookieHeader) {
-        const cookies = parseCookies(cookieHeader);
-        authCookie = cookies['auth-storage'];
-      }
-    }
-
-    if (!authCookie) {
-      return { userId: null, username: null };
-    }
-
-    // authCookie is already URL-decoded (by NextRequest.cookies.get or parseCookies)
-    const authData = JSON.parse(authCookie);
-    const state = authData.state || authData;
-
-    return {
-      userId: state.user?.id || null,
-      username: state.user?.username || null,
-    };
-  } catch (error) {
+    const ctx = await getAuthContext(request);
+    if (!ctx) return { userId: null, username: null };
+    return { userId: ctx.userId, username: ctx.username };
+  } catch {
     return { userId: null, username: null };
   }
 }

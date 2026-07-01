@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { logInstitutionAction, getClientIp } from '@/lib/audit-logger';
 import { logger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
+import { getAuthContext } from '@/lib/api-auth';
 
 const institutionSchema = z.object({
   name: z.string().min(3, {
@@ -114,28 +115,17 @@ export const PUT = wrapHandler(async (
     });
 
     // Audit log: institution updated
-    const authCookie = req.headers.get('cookie')?.split(';').find(c => c.trim().startsWith('auth-storage='));
-    let auditUserId: string | null = null;
-    let auditUsername: string | null = null;
-    let auditUserRole: string | null = null;
-    if (authCookie) {
-      try {
-        const cookieValue = decodeURIComponent(authCookie.split('=')[1]);
-        const authData = JSON.parse(cookieValue);
-        const state = authData.state || authData;
-        auditUserId = state.user?.id || null;
-        auditUsername = state.user?.name || state.user?.username || null;
-        auditUserRole = state.user?.role || state.role || null;
-      } catch {}
-    }
+    // Derive the actor's identity from the signed session (authoritative),
+    // not the forgeable auth-storage cookie.
+    const actor = await getAuthContext(req);
 
     await logInstitutionAction({
       action: 'UPDATED',
       institutionId: updatedInstitution.id,
       institutionName: updatedInstitution.name,
-      performedById: auditUserId || 'system',
-      performedByUsername: auditUsername || 'system',
-      performedByRole: auditUserRole || 'ADMIN',
+      performedById: actor?.userId || 'system',
+      performedByUsername: actor?.username || 'system',
+      performedByRole: actor?.role || 'ADMIN',
       ipAddress: getClientIp(req.headers),
       deviceInfo: JSON.parse(req.headers.get('x-device-info') || 'null'),
     }).catch(() => {});

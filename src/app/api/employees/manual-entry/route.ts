@@ -4,72 +4,26 @@ import { v4 as uuidv4 } from 'uuid';
 import { logEmployeeAction, getClientIp } from '@/lib/audit-logger';
 import { logger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
+import { withAuth } from '@/lib/api-auth';
 
 const prisma = new PrismaClient();
 
-// Parse auth storage from cookie
-function parseAuthStorage(cookieValue: string | undefined): {
-  role: string | null;
-  isAuthenticated: boolean;
-  userId: string | null;
-  institutionId: string | null;
-  username: string | null;
-} {
-  if (!cookieValue) {
-    return { role: null, isAuthenticated: false, userId: null, institutionId: null, username: null };
-  }
+export const POST = wrapHandler(
+  withAuth(async (request: NextRequest | Request, { auth }) => {
+    // Authorization is enforced by withAuth: an authenticated HRO with a valid
+    // signed session. The forgeable auth-storage cookie is no longer consulted.
+    const { userId, role, username } = auth;
+    const institutionId = auth.institutionId;
 
-  try {
-    const decoded = decodeURIComponent(cookieValue);
-    const authData = JSON.parse(decoded);
-    const state = authData.state || authData;
-
-    return {
-      role: state.role || state.user?.role || null,
-      isAuthenticated: state.isAuthenticated || false,
-      userId: state.user?.id || null,
-      institutionId: state.user?.institutionId || null,
-      username: state.user?.name || state.user?.username || null,
-    };
-  } catch (error) {
-    logger.error({ value: error }, 'Failed to parse auth-storage cookie');
-    return { role: null, isAuthenticated: false, userId: null, institutionId: null, username: null };
-  }
-}
-
-export const POST = wrapHandler(async (request: NextRequest) => {
-  // Get auth from cookie
-  const authCookie = request.cookies.get('auth-storage')?.value;
-  let { role, isAuthenticated, userId, institutionId, username } = parseAuthStorage(authCookie);
-
-  // Security check 1: Must be authenticated HRO
-  if (!isAuthenticated || role !== 'HRO' || !userId) {
-    return NextResponse.json(
-      { success: false, error: 'Unauthorized' },
-      { status: 403 }
-    );
-  }
-
-  // If institutionId is missing from cookie, fetch it from database
-  if (!institutionId) {
-    logger.info({ value: userId }, '[MANUAL-ENTRY] institutionId missing from cookie, fetching from database for user');
-
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { institutionId: true },
-    });
-
-    if (!user || !user.institutionId) {
-      logger.error({ value: userId }, '[MANUAL-ENTRY] User not found or has no institutionId');
+    // verifyAuth already looked the user up in the DB; its institutionId is
+    // authoritative. If empty, the user has no institution to create against.
+    if (!institutionId) {
+      logger.error({ value: userId }, '[MANUAL-ENTRY] User has no institutionId');
       return NextResponse.json(
         { success: false, error: 'User institution not found. Please logout and login again.' },
         { status: 403 }
       );
     }
-
-    institutionId = user.institutionId;
-    logger.info({ value: institutionId }, '[MANUAL-ENTRY] Successfully fetched institutionId from database');
-  }
 
   // Parse request body
   const body = await request.json();
@@ -252,4 +206,6 @@ export const POST = wrapHandler(async (request: NextRequest) => {
     },
     { status: 201 }
   );
-}, 'employees-manual-entry');
+  }, { allowedRoles: ['HRO'] }),
+  'employees-manual-entry'
+);

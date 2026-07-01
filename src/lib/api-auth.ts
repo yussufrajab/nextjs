@@ -81,11 +81,11 @@ function forbidden(): AuthResult {
 // ---------------------------------------------------------------------------
 
 /**
- * Verify authentication from the request's `auth-storage` cookie.
+ * Verify authentication from the request's signed `session` cookie.
  *
  * Supports both `NextRequest` (App Router) and plain `Request` objects.
- * After parsing the cookie the function checks that the user still exists
- * and is active in the database.
+ * After verifying the session against the DB, the function checks that the
+ * user still exists and is active.
  */
 export async function verifyAuth(
   request: NextRequest | Request
@@ -238,5 +238,31 @@ export function withAuth(
     }
 
     return handler(request, { auth: authResult.context! });
+  };
+}
+
+// ---------------------------------------------------------------------------
+// getAuthContext (audit/logging attribution)
+// ---------------------------------------------------------------------------
+
+/**
+ * Best-effort authoritative auth context for audit/logging attribution.
+ *
+ * Returns the userId/username/role derived from the signed `session` cookie
+ * via verifyAuth, or null when the request is unauthenticated. Use this
+ * instead of parsing the legacy, forgeable `auth-storage` cookie for audit
+ * context (who performed an action). This does NOT enforce authorization —
+ * it is for attribution only; routes that need to gate access must use
+ * withAuth/verifyAuth directly.
+ */
+export async function getAuthContext(
+  request: NextRequest | Request
+): Promise<{ userId: string; username: string; role: string } | null> {
+  const result = await verifyAuth(request);
+  if (!result.authenticated || !result.context) return null;
+  return {
+    userId: result.context.userId,
+    username: result.context.username,
+    role: result.context.role,
   };
 }
