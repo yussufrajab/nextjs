@@ -290,9 +290,7 @@ export default function DashboardPage() {
 
   // Get institution name for display
   const getInstitutionName = () => {
-    if (!user?.institution) return '';
-    if (typeof user.institution === 'string') return user.institution;
-    return user.institution.name;
+    return user?.institutionName ?? '';
   };
 
   const institutionName = getInstitutionName();

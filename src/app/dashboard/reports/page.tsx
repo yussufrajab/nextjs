@@ -274,12 +274,8 @@ export default function ReportsPage() {
           (i) => i.id === institutionFilter
         )?.name;
         doc.text(`Taasisi: ${instName}`, 14, 36);
-      } else if ((role === ROLES.HRO || role === ROLES.HRRP) && user?.institution) {
-        doc.text(
-          `Taasisi: ${typeof user.institution === 'object' ? user.institution.name : user.institution}`,
-          14,
-          36
-        );
+      } else if ((role === ROLES.HRO || role === ROLES.HRRP) && user?.institutionName) {
+        doc.text(`Taasisi: ${user.institutionName}`, 14, 36);
       }
 
       const tableColumn = reportHeaders;

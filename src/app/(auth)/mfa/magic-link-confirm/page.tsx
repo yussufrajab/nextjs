@@ -68,9 +68,8 @@ export default function MagicLinkConfirmPage() {
           isAuthenticated: true,
         });
 
-        // The server sets the `session` and `auth-storage` HttpOnly cookies
-        // via Set-Cookie headers in completeLogin(). No client-side cookie
-        // writes needed.
+        // The server sets the signed `session` HttpOnly cookie via Set-Cookie
+        // in completeLogin(). No client-side identity cookie is written.
 
         if (userData.mustChangePassword || userData.isTemporaryPassword) {
           if (userData.role !== 'EMPLOYEE') {

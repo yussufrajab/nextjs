@@ -181,14 +181,9 @@ export default function TrackStatusPage() {
   useEffect(() => {
     if (isTableView) {
       const params = new URLSearchParams();
-      if (
-        role === ROLES.HRO &&
-        user?.institution &&
-        typeof user.institution !== 'string' &&
-        user.institution.name
-      ) {
-        params.append('institutionName', user.institution.name);
-        setInstitutionFilter(user.institution.name);
+      if (role === ROLES.HRO && user?.institutionName) {
+        params.append('institutionName', user.institutionName);
+        setInstitutionFilter(user.institutionName);
       }
       fetchRequests(params);
     }
@@ -220,13 +215,8 @@ export default function TrackStatusPage() {
     if (statusFilter && statusFilter !== ALL_STATUSES_FILTER_VALUE)
       params.append('status', statusFilter);
 
-    if (
-      role === ROLES.HRO &&
-      user?.institution &&
-      typeof user.institution !== 'string' &&
-      user.institution.name
-    ) {
-      params.set('institutionName', user.institution.name);
+    if (role === ROLES.HRO && user?.institutionName) {
+      params.set('institutionName', user.institutionName);
     }
 
     fetchRequests(params);

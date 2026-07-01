@@ -94,7 +94,6 @@ const VOLUNTARY_RETIREMENT_AGE = 55;
 
 export default function RetirementPage() {
   const { role, user } = useAuth();
-  const accessToken: string | null = null;
   const [employeeDetails, setEmployeeDetails] = useState<Employee | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -2210,17 +2209,10 @@ export default function RetirementPage() {
                               size="sm"
                               onClick={async () => {
                                 try {
-                                  const headers: HeadersInit = {};
-                                  if (accessToken) {
-                                    headers['Authorization'] =
-                                      `Bearer ${accessToken}`;
-                                  }
-
                                   const response = await fetch(
                                     `/api/files/download/${objectKey}`,
                                     {
                                       credentials: 'include',
-                                      headers,
                                     }
                                   );
                                   if (response.ok) {

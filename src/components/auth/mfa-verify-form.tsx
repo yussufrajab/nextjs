@@ -129,9 +129,8 @@ export function MfaVerifyForm({ userId, email }: MfaVerifyFormProps) {
           isAuthenticated: true,
         });
 
-        // The server sets the `session` and `auth-storage` HttpOnly cookies
-        // via Set-Cookie headers in completeLogin(). No client-side cookie
-        // writes needed.
+        // The server sets the signed `session` HttpOnly cookie via Set-Cookie
+        // in completeLogin(). No client-side identity cookie is written.
 
         // Check password change recommended (but don't force EMPLOYEE role)
         if (userData.mustChangePassword || userData.isTemporaryPassword) {

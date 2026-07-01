@@ -131,7 +131,6 @@ interface SubmittedComplaint {
 
 export default function ComplaintsPage() {
   const { role, user } = useAuth();
-  const accessToken: string | null = null;
   const [rewrittenComplaint, setRewrittenComplaint] = useState<string | null>(
     null
   );
@@ -2255,17 +2254,10 @@ export default function ComplaintsPage() {
                               size="sm"
                               onClick={async () => {
                                 try {
-                                  const headers: HeadersInit = {};
-                                  if (accessToken) {
-                                    headers['Authorization'] =
-                                      `Bearer ${accessToken}`;
-                                  }
-
                                   const response = await fetch(
                                     `/api/files/download/${objectKey}`,
                                     {
                                       credentials: 'include',
-                                      headers,
                                     }
                                   );
                                   if (response.ok) {

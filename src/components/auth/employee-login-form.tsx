@@ -40,9 +40,6 @@ export function EmployeeLoginForm() {
       role: null,
       isAuthenticated: false,
     });
-
-    // Clear auth cookie for middleware
-    document.cookie = 'auth-storage=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
   }, []);
 
   const form = useForm<EmployeeLoginValues>({
@@ -89,9 +86,8 @@ export function EmployeeLoginForm() {
           isAuthenticated: true,
         });
 
-        // The server sets the `session` and `auth-storage` HttpOnly cookies
-        // via Set-Cookie headers in completeLogin(). No client-side cookie
-        // writes needed.
+        // The server sets the signed `session` HttpOnly cookie via Set-Cookie
+        // in completeLogin(). No client-side identity cookie is written.
 
         toast({
           title: 'Login Successful',

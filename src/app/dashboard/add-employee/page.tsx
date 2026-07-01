@@ -13,7 +13,6 @@ import { EmploymentInfoStep } from '@/components/manual-entry/employment-info-st
 import { DocumentsStep } from '@/components/manual-entry/documents-step';
 import { BulkUpload } from '@/components/manual-entry/bulk-upload';
 import { toast } from '@/hooks/use-toast';
-import { refreshAuthCookie } from '@/lib/auth-cookie-helper';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UserPlus, Upload } from 'lucide-react';
@@ -202,9 +201,8 @@ export default function AddEmployeePage() {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
-      // Ensure auth cookie is synced before making API call
-      refreshAuthCookie(user, role, true);
-
+      // Auth rides the HttpOnly signed session cookie (sent automatically with
+      // credentials:'include'); no client-side identity cookie to sync.
       const response = await fetch('/api/employees/manual-entry', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

@@ -1247,13 +1247,7 @@ export default function ProfilePage() {
   const pageTitle = useMemo(() => {
     if (role === ROLES.EMPLOYEE) return 'My Profile';
     if (isInstitutionalViewer) {
-      const inst = user?.institution;
-      const instName =
-        typeof inst === 'object' && inst !== null
-          ? inst.name
-          : typeof inst === 'string'
-            ? inst
-            : undefined;
+      const instName = user?.institutionName ?? undefined;
       return `Employee Profiles - ${instName || 'Your Institution'}`;
     }
     return 'All Employee Profiles';

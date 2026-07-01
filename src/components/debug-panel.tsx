@@ -21,8 +21,6 @@ export function DebugPanel() {
     role,
     userId: user?.id,
     userName: user?.name,
-    hasAccessToken: !!localStorage.getItem('accessToken'),
-    hasRefreshToken: !!localStorage.getItem('refreshToken'),
   };
 
   const clearLogs = () => {

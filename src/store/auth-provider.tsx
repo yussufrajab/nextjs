@@ -5,20 +5,24 @@ import { useAuthStore } from './auth-store';
 import { useApiInit } from '@/hooks/use-api-init';
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [isHydrated, setIsHydrated] = useState(false);
-  const { user, role, isAuthenticated } = useAuthStore(); // Access store to ensure it's initialized
+  const [hydrated, setHydrated] = useState(false);
+  const initializeAuth = useAuthStore((s) => s.initializeAuth);
 
-  // Initialize API client with stored tokens
   useApiInit();
 
   useEffect(() => {
-    // This effect ensures that Zustand has rehydrated from localStorage by the time
-    // any child component that depends on the auth state renders.
-    setIsHydrated(true);
-  }, []);
+    // Hydrate auth state from the backend (GET /api/auth/me) on first load.
+    // Nothing is read from localStorage — the backend is the source of truth.
+    let cancelled = false;
+    initializeAuth().finally(() => {
+      if (!cancelled) setHydrated(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [initializeAuth]);
 
-  if (!isHydrated) {
-    // Optionally, return a loading state or null
+  if (!hydrated) {
     return null;
   }
 

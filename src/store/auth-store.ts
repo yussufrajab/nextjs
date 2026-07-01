@@ -15,7 +15,7 @@ const log = clientLogger.child({ component: 'auth-store' });
  * the `csrf-token` cookie (double-submit pattern) when making state-changing
  * requests.
  */
-interface SafeUser {
+export interface SafeUser {
   id: string;
   name: string;
   username: string;

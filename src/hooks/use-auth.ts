@@ -1,13 +1,10 @@
 'use client';
-import { useAuthStore } from '@/store/auth-store';
-import { useEffect, useState, useRef } from 'react';
-import type { User, Role } from '@/lib/types';
-import { clientLogger } from '@/lib/logger-client';
-
-const log = clientLogger.child({ component: 'auth' });
+import { useAuthStore, type SafeUser } from '@/store/auth-store';
+import { useEffect, useState } from 'react';
+import type { Role, User } from '@/lib/types';
 
 interface AuthHookState {
-  user: User | null;
+  user: SafeUser | null;
   role: Role | null;
   isAuthenticated: boolean;
   login: (username: string, password: string) => Promise<User | null>;
@@ -16,68 +13,24 @@ interface AuthHookState {
 }
 
 export const useAuth = (): AuthHookState => {
-  const storeState = useAuthStore();
+  const user = useAuthStore((s) => s.user);
+  const role = useAuthStore((s) => s.role);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const login = useAuthStore((s) => s.login);
+  const logoutStore = useAuthStore((s) => s.logout);
   const [isLoading, setIsLoading] = useState(true);
-  const initialized = useRef(false);
 
   useEffect(() => {
-    if (initialized.current) return;
-    initialized.current = true;
-
-    // Zustand persist rehydration runs synchronously from localStorage.
-    // Initialize auth after the store is fully available.
-    const state = useAuthStore.getState();
-    if (state.user !== undefined) {
-      state.initializeAuth();
-      // Check if user is actually authenticated after init
-      const updatedState = useAuthStore.getState();
-      if (updatedState.isAuthenticated && updatedState.user) {
-        log.info(
-          {
-            userId: updatedState.user.id,
-            role: updatedState.role,
-          },
-          'Auth state hydrated and initialized'
-        );
-      }
-    }
+    // AuthProvider drives initializeAuth(); once mounted, hydration is done.
     setIsLoading(false);
-
-    const unsubscribe = useAuthStore.subscribe((state) => {
-      log.info(
-        {
-          user: !!state.user,
-          role: state.role,
-          isAuthenticated: state.isAuthenticated,
-        },
-        'Auth store state changed'
-      );
-    });
-
-    return () => {
-      unsubscribe();
-    };
   }, []);
 
-  // When loading, return the raw store state (may be from localStorage hydrate)
-  if (isLoading && typeof window !== 'undefined') {
-    const state = useAuthStore.getState();
-    return {
-      user: state.user as unknown as User,
-      role: state.role,
-      isAuthenticated: state.isAuthenticated,
-      login: state.login,
-      logout: () => state.logout(),
-      isLoading: true,
-    };
-  }
-
   return {
-    user: storeState.user as unknown as User,
-    role: storeState.role,
-    isAuthenticated: storeState.isAuthenticated,
-    login: storeState.login,
-    logout: () => storeState.logout(),
-    isLoading: false,
+    user,
+    role,
+    isAuthenticated,
+    login,
+    logout: () => logoutStore(),
+    isLoading,
   };
 };

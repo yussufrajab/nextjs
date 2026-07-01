@@ -205,18 +205,9 @@ export default function TrackStatusPage() {
     if (isTableView) {
       const params = new URLSearchParams();
       params.set('limit', '100'); // Always get 100 latest requests
-      if ((role === ROLES.HRO || role === ROLES.HRRP) && user?.institution) {
-        params.append(
-          'institutionName',
-          typeof user.institution === 'object'
-            ? user.institution.name
-            : user.institution
-        );
-        setInstitutionFilter(
-          typeof user.institution === 'object'
-            ? user.institution.name
-            : user.institution
-        );
+      if ((role === ROLES.HRO || role === ROLES.HRRP) && user?.institutionName) {
+        params.append('institutionName', user.institutionName);
+        setInstitutionFilter(user.institutionName);
       }
       fetchRequests(params);
     }
@@ -274,13 +265,8 @@ export default function TrackStatusPage() {
       params.set('limit', '100');
     }
 
-    if ((role === ROLES.HRO || role === ROLES.HRRP) && user?.institution) {
-      params.set(
-        'institutionName',
-        typeof user.institution === 'object'
-          ? user.institution.name
-          : user.institution
-      );
+    if ((role === ROLES.HRO || role === ROLES.HRRP) && user?.institutionName) {
+      params.set('institutionName', user.institutionName);
     }
 
     fetchRequests(params);

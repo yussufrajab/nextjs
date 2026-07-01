@@ -74,7 +74,6 @@ interface CadreChangeRequest {
 
 export default function CadreChangePage() {
   const { role, user } = useAuth();
-  const accessToken: string | null = null;
   const [employeeDetails, setEmployeeDetails] = useState<Employee | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -1820,66 +1819,6 @@ export default function CadreChangePage() {
                                         title: 'Download Failed',
                                         description:
                                           'Could not download the file. Please try again.',
-                                        variant: 'destructive',
-                                      });
-                                    }
-                                  }}
-                                >
-                                  Download
-                                </Button>
-                                <Button
-                                  variant="link"
-                                  size="sm"
-                                  className="h-auto p-0"
-                                  onClick={() => {
-                                    const token =
-                                      localStorage.getItem('accessToken');
-                                    if (token) {
-                                      fetch(
-                                        `/api/files/download/${objectKey}`,
-                                        {
-                                          headers: {
-                                            Authorization: `Bearer ${token}`,
-                                          },
-                                        }
-                                      )
-                                        .then((response) => {
-                                          if (!response.ok) {
-                                            throw new Error('Download failed');
-                                          }
-                                          return response.blob();
-                                        })
-                                        .then((blob) => {
-                                          const url =
-                                            window.URL.createObjectURL(blob);
-                                          const a = document.createElement('a');
-                                          a.href = url;
-                                          const filename =
-                                            objectKey.split('/').pop() ||
-                                            'document.pdf';
-                                          a.download = filename;
-                                          document.body.appendChild(a);
-                                          a.click();
-                                          window.URL.revokeObjectURL(url);
-                                          document.body.removeChild(a);
-                                        })
-                                        .catch((error) => {
-                                          console.error(
-                                            'Download error:',
-                                            error
-                                          );
-                                          toast({
-                                            title: 'Download Error',
-                                            description:
-                                              'Failed to download file',
-                                            variant: 'destructive',
-                                          });
-                                        });
-                                    } else {
-                                      toast({
-                                        title: 'Authorization Error',
-                                        description:
-                                          'You do not have permission to download this file',
                                         variant: 'destructive',
                                       });
                                     }

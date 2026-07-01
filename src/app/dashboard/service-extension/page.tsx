@@ -69,7 +69,6 @@ interface ServiceExtensionRequest {
 
 export default function ServiceExtensionPage() {
   const { role, user } = useAuth();
-  const accessToken: string | null = null;
   const [employeeDetails, setEmployeeDetails] = useState<Employee | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -1821,13 +1820,9 @@ export default function ServiceExtensionPage() {
                         size="sm"
                         onClick={async () => {
                           try {
-                            const headers: HeadersInit = {};
-                            if (accessToken) {
-                              headers['Authorization'] = `Bearer ${accessToken}`;
-                            }
                             const response = await fetch(
                               `/api/files/download/${selectedRequest.commissionLetterKey}`,
-                              { credentials: 'include', headers }
+                              { credentials: 'include' }
                             );
                             if (response.ok) {
                               const blob = await response.blob();
@@ -1886,17 +1881,10 @@ export default function ServiceExtensionPage() {
                               size="sm"
                               onClick={async () => {
                                 try {
-                                  const headers: HeadersInit = {};
-                                  if (accessToken) {
-                                    headers['Authorization'] =
-                                      `Bearer ${accessToken}`;
-                                  }
-
                                   const response = await fetch(
                                     `/api/files/download/${objectKey}`,
                                     {
                                       credentials: 'include',
-                                      headers,
                                     }
                                   );
                                   if (response.ok) {
