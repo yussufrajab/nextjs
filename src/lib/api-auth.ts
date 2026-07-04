@@ -13,7 +13,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { authLogger } from '@/lib/logger';
 import { markSessionSuspicious } from '@/lib/session-manager';
-import { getClientIp } from '@/lib/audit-logger';
+import { getClientIp, logAccessDenied, logForbiddenRoute } from '@/lib/audit-logger';
+import { validateCSRF } from '@/lib/api-csrf-middleware';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -224,6 +225,18 @@ export function withAuth(
     const authResult = await verifyAuth(request);
 
     if (!authResult.authenticated) {
+      // SECURITY: Log unauthenticated access attempts to audit trail
+      const url = new URL(request.url);
+      logAccessDenied({
+        userId: null,
+        username: null,
+        userRole: null,
+        attemptedRoute: url.pathname,
+        blockReason: 'UNAUTHENTICATED',
+        ipAddress: getClientIp(request.headers),
+        requestMethod: request.method,
+      }).catch(() => {}); // fail-safe: never break the request flow
+
       return authResult.response!;
     }
 
@@ -233,7 +246,37 @@ export function withAuth(
       const roleUpper = authResult.context!.role.toUpperCase();
       const allowedUpper = options.allowedRoles.map(r => r.toUpperCase());
       if (!allowedUpper.includes(roleUpper)) {
+        // SECURITY: Log role violation to audit trail
+        const url = new URL(request.url);
+        logForbiddenRoute({
+          userId: authResult.context!.userId,
+          username: authResult.context!.username,
+          userRole: authResult.context!.role,
+          attemptedRoute: url.pathname,
+          ipAddress: getClientIp(request.headers),
+          requestMethod: request.method,
+          additionalData: {
+            requiredRoles: options.allowedRoles,
+            actualRole: authResult.context!.role,
+          },
+        }).catch(() => {}); // fail-safe
+
         return forbidden().response!;
+      }
+    }
+
+    // SECURITY: CSRF protection for state-changing methods
+    // All authenticated POST/PUT/PATCH/DELETE requests must include a valid CSRF token
+    const method = request.method?.toUpperCase();
+    if (method === 'POST' || method === 'PUT' || method === 'PATCH' || method === 'DELETE') {
+      const csrfResult = await validateCSRF(request);
+      if (!csrfResult.valid) {
+        authLogger.warn({
+          userId: authResult.context!.userId,
+          method,
+          url: request.url,
+        }, 'CSRF validation failed for authenticated request');
+        return csrfResult.response!;
       }
     }
 

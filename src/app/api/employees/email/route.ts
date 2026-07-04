@@ -4,6 +4,7 @@ import { withAuth } from '@/lib/api-auth';
 import { withRateLimit } from '@/lib/rate-limiter';
 import { authLogger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
+import { shouldApplyInstitutionFilter } from '@/lib/role-utils';
 
 // Email must end with .go.tz or .ac.tz
 const ALLOWED_EMAIL_DOMAINS = ['.go.tz', '.ac.tz'];
@@ -76,6 +77,20 @@ export const PATCH = wrapHandler(withRateLimit(withAuth(async (request, { auth }
       { success: false, message: 'You can only update your own email' },
       { status: 403 }
     );
+  }
+
+  // SECURITY: Institution ownership check for HRO/HRRP
+  if (shouldApplyInstitutionFilter(user.role, auth.institutionId)) {
+    const targetEmployee = await db.employee.findUnique({
+      where: { id: employeeId },
+      select: { institutionId: true },
+    });
+    if (!targetEmployee || targetEmployee.institutionId !== auth.institutionId) {
+      return NextResponse.json(
+        { success: false, message: 'Access denied: employee belongs to a different institution' },
+        { status: 403 }
+      );
+    }
   }
 
   // Check for duplicate email — another user already has this email

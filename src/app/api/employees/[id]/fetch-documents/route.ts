@@ -226,6 +226,39 @@ export const POST = wrapHandler(async (
 
  const { id: employeeId } = await params;
 
+ // SECURITY: Institution ownership check
+ const roleUpper = auth.role.toUpperCase();
+ if (['ADMIN', 'HRMO', 'HHRMD', 'CSCS', 'DO', 'PO'].includes(roleUpper)) {
+   // Central/commission roles — unrestricted access
+ } else if (roleUpper === 'HRO' || roleUpper === 'HRRP') {
+   const empCheck = await prisma.employee.findUnique({
+     where: { id: employeeId },
+     select: { institutionId: true },
+   });
+   if (!empCheck || empCheck.institutionId !== auth.institutionId) {
+     return NextResponse.json(
+       { success: false, message: 'Access denied' },
+       { status: 403 }
+     );
+   }
+ } else if (roleUpper === 'EMPLOYEE') {
+   const user = await prisma.user.findUnique({
+     where: { id: auth.userId },
+     select: { employeeId: true },
+   });
+   if (!user?.employeeId || user.employeeId !== employeeId) {
+     return NextResponse.json(
+       { success: false, message: 'Access denied' },
+       { status: 403 }
+     );
+   }
+ } else {
+   return NextResponse.json(
+     { success: false, message: 'Access denied' },
+     { status: 403 }
+   );
+ }
+
  // Fetch employee from database to get payroll number
  const employee = await prisma.employee.findUnique({
  where: { id: employeeId },

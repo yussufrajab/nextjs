@@ -3,14 +3,11 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import { getAccountLockoutStatus } from '@/lib/account-lockout-utils';
 import { wrapHandler } from '@/lib/error-handler';
+import { withAuth } from '@/lib/api-auth';
 
-const lockoutStatusSchema = z.object({
-  userId: z.string().min(1, 'User ID is required'),
-});
-
-export const POST = wrapHandler(async (req: Request) => {
-    const body = await req.json();
-    const { userId } = lockoutStatusSchema.parse(body);
+export const POST = wrapHandler(withAuth(async (req: Request, { auth }) => {
+    // SECURITY: Use authenticated user ID, not client-supplied
+    const userId = auth.userId;
 
     // Find user
     const user = await db.user.findUnique({
@@ -57,4 +54,4 @@ export const POST = wrapHandler(async (req: Request) => {
         lockedByUsername,
       },
     });
-}, 'auth-account-lockout-status');
+}), 'auth-account-lockout-status');

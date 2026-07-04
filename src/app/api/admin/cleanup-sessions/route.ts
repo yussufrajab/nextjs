@@ -3,11 +3,12 @@ import { cleanupExpiredSessions } from '@/lib/session-manager';
 import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
+import { withAuth } from '@/lib/api-auth';
 
 /**
- * GET handler — returns session statistics for the admin dashboard
+ * GET handler — returns session statistics for the admin dashboard (Admin only)
  */
-export const GET = wrapHandler(async () => {
+export const GET = wrapHandler(withAuth(async () => {
   const now = new Date();
 
   const [totalSessions, activeSessions, expiredSessions, suspiciousSessions] =
@@ -47,13 +48,13 @@ export const GET = wrapHandler(async () => {
       perUserBreakdown,
     },
   });
-}, 'admin-cleanup-sessions');
+}, { allowedRoles: ['Admin'] }), 'admin-cleanup-sessions');
 
 /**
- * Admin endpoint to manually clean up sessions
+ * Admin endpoint to manually clean up sessions (Admin only)
  * Can be used to clean up all sessions or just expired ones
  */
-export const POST = wrapHandler(async (req: Request) => {
+export const POST = wrapHandler(withAuth(async (req: Request) => {
   const body = await req.json();
   const { action, userId } = body;
 
@@ -140,4 +141,4 @@ export const POST = wrapHandler(async (req: Request) => {
     },
     { status: 400 }
   );
-}, 'admin-cleanup-sessions');
+}, { allowedRoles: ['Admin'] }), 'admin-cleanup-sessions');

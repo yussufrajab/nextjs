@@ -11,6 +11,7 @@ import { sendRequestStatusUpdateEmail } from '@/lib/email';
 import { logger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
 import { verifyAuth } from '@/lib/api-auth';
+import { shouldApplyInstitutionFilter } from '@/lib/role-utils';
 
 const updateSchema = z.object({
   status: z.string().optional(),
@@ -50,6 +51,33 @@ const handleUpdate = wrapHandler(async (
   const headers = new Headers(req.headers);
   const ipAddress = getClientIp(headers);
   const deviceInfo = JSON.parse(headers.get('x-device-info') || 'null');
+
+  // SECURITY: Fetch existing request to verify institution ownership
+  const existingRequest = await db.confirmationRequest.findUnique({
+    where: { id },
+    include: { Employee: { select: { id: true, institutionId: true } } },
+  });
+  if (!existingRequest) {
+    return new NextResponse('Confirmation request not found', { status: 404 });
+  }
+
+  // SECURITY: Institution ownership check — HRO/HRRP can only modify their own institution's requests
+  if (shouldApplyInstitutionFilter(auth.role, auth.institutionId)) {
+    if (!existingRequest.Employee || existingRequest.Employee.institutionId !== auth.institutionId) {
+      return NextResponse.json(
+        { success: false, message: 'Access denied: request belongs to a different institution' },
+        { status: 403 }
+      );
+    }
+  }
+
+  // SECURITY: Enforce rejection reason for all rejections
+  if (validatedData.status?.toLowerCase().includes('rejected') && !validatedData.rejectionReason) {
+    return NextResponse.json(
+      { success: false, message: 'Rejection reason is required when rejecting a request' },
+      { status: 400 }
+    );
+  }
 
   const updatedRequest = await db.confirmationRequest.update({
     where: { id },

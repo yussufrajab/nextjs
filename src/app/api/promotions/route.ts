@@ -48,12 +48,21 @@ export const GET = wrapHandler(async (req: Request) => {
     return authResult.response!;
   }
   const auth = authResult.context!;
+
+  // SECURITY: Restrict to authorized workflow roles
+  const allowedGetRoles = ['ADMIN', 'HRO', 'HRRP', 'HHRMD', 'HRMO', 'DO', 'PO', 'CSCS'];
+  if (!allowedGetRoles.includes(auth.role.toUpperCase())) {
+    return NextResponse.json(
+      { success: false, error: 'Insufficient permissions' },
+      { status: 403 }
+    );
+  }
   const { searchParams } = new URL(req.url);
   const userId = auth.userId;
   const userRole = auth.role;
   const userInstitutionId = auth.institutionId;
-  const page = parseInt(searchParams.get('page') || '1', 10);
-  const size = parseInt(searchParams.get('size') || '50', 10);
+  const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10) || 1);
+  const size = Math.min(100, Math.max(1, parseInt(searchParams.get('size') || '50', 10) || 50));
   const status = searchParams.get('status') || 'all';
 
   logger.info({
@@ -210,7 +219,7 @@ export const POST = wrapHandler(async (req: Request) => {
   // Get employee details to check status
   const employee = await db.employee.findUnique({
     where: { id: body.employeeId },
-    select: { id: true, name: true, status: true },
+    select: { id: true, name: true, status: true, institutionId: true },
   });
 
   if (!employee) {
@@ -221,6 +230,16 @@ export const POST = wrapHandler(async (req: Request) => {
       },
       { status: 404 }
     );
+  }
+
+  // SECURITY: Institution ownership check — HRO/HRRP can only create requests for their own institution's employees
+  if (shouldApplyInstitutionFilter(auth.role, auth.institutionId)) {
+    if (employee.institutionId !== auth.institutionId) {
+      return NextResponse.json(
+        { success: false, message: 'Access denied: employee belongs to a different institution' },
+        { status: 403 }
+      );
+    }
   }
 
   // Validate employee status for promotion request
@@ -388,6 +407,9 @@ export const PATCH = wrapHandler(async (req: Request) => {
   const userRole = auth.role;
   const userId = auth.userId;
 
+  // SECURITY: reviewStage is server-controlled only — ignore client-supplied value
+  delete updateData.reviewStage;
+
   logger.info({  id, updateData  }, '🔵 PATCH /api/promotions called with');
 
   if (!id) {
@@ -398,6 +420,28 @@ export const PATCH = wrapHandler(async (req: Request) => {
       },
       { status: 400 }
     );
+  }
+
+  // SECURITY: Fetch existing request to verify institution ownership
+  const existingPromotion = await db.promotionRequest.findUnique({
+    where: { id },
+    include: { Employee: { select: { id: true, institutionId: true } } },
+  });
+  if (!existingPromotion) {
+    return NextResponse.json(
+      { success: false, message: 'Promotion request not found' },
+      { status: 404 }
+    );
+  }
+
+  // SECURITY: Institution ownership check — HRO/HRRP can only modify their own institution's requests
+  if (shouldApplyInstitutionFilter(auth.role, auth.institutionId)) {
+    if (!existingPromotion.Employee || existingPromotion.Employee.institutionId !== auth.institutionId) {
+      return NextResponse.json(
+        { success: false, message: 'Access denied: request belongs to a different institution' },
+        { status: 403 }
+      );
+    }
   }
 
   // Get IP and device info for audit logging
@@ -417,6 +461,15 @@ export const PATCH = wrapHandler(async (req: Request) => {
   const isResubmission =
     updateData.status === 'Pending HRRP Review' &&
     !updateData.reviewedById;
+
+  // SECURITY: Enforce rejection reason for all rejections
+  const isRejection = updateData.status?.toLowerCase().includes('rejected');
+  if (isRejection && !updateData.rejectionReason && !body.rejectionReason) {
+    return NextResponse.json(
+      { success: false, message: 'Rejection reason is required when rejecting a request' },
+      { status: 400 }
+    );
+  }
 
   let authCheck;
   if (isHrrpAction) {

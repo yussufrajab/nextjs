@@ -3,11 +3,12 @@ import { db } from '@/lib/db';
 import { shouldApplyInstitutionFilter } from '@/lib/role-utils';
 import { logger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
+import { withAuth } from '@/lib/api-auth';
 
-async function GETHandler(req: Request) {
-    const { searchParams } = new URL(req.url);
-    const userRole = searchParams.get('userRole');
-    const userInstitutionId = searchParams.get('userInstitutionId');
+async function GETHandler(req: Request, { auth }: { auth: any }) {
+    // SECURITY: Use authenticated user context, not client-supplied params
+    const userRole = auth.role;
+    const userInstitutionId = auth.institutionId;
 
     const whereClause: any = {};
 
@@ -51,4 +52,4 @@ async function GETHandler(req: Request) {
     return NextResponse.json({ success: true, data: requests });
 }
 
-export const GET = wrapHandler(GETHandler, 'lwop-requests');
+export const GET = wrapHandler(withAuth(GETHandler), 'lwop-requests');

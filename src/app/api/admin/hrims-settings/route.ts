@@ -6,11 +6,12 @@ import {
   testHrimsConnection,
 } from '@/lib/hrims-config';
 import { wrapHandler } from '@/lib/error-handler';
+import { withAuth } from '@/lib/api-auth';
 
 /**
- * GET - Get current HRIMS configuration
+ * GET - Get current HRIMS configuration (Admin only)
  */
-export const GET = wrapHandler(async () => {
+export const GET = wrapHandler(withAuth(async () => {
   const config = await getHrimsConfig();
 
   // Mask the token for security (only show first/last few characters)
@@ -33,17 +34,14 @@ export const GET = wrapHandler(async () => {
       apiKey: maskedApiKey,
       token: maskedToken,
       baseUrl: config.baseUrl,
-      // Include full values only for admin form (they'll be pre-populated)
-      _fullApiKey: config.apiKey,
-      _fullToken: config.token,
     },
   });
-}, 'admin-hrims-settings');
+}, { allowedRoles: ['Admin'] }), 'admin-hrims-settings');
 
 /**
- * PUT - Update HRIMS configuration
+ * PUT - Update HRIMS configuration (Admin only)
  */
-export const PUT = wrapHandler(async (request: NextRequest) => {
+export const PUT = wrapHandler(withAuth(async (request: Request) => {
   const body = await request.json();
   const { host, port, apiKey, token } = body;
 
@@ -100,12 +98,12 @@ export const PUT = wrapHandler(async (request: NextRequest) => {
       baseUrl: `http://${host}:${portNumber}/api`,
     },
   });
-}, 'admin-hrims-settings');
+}, { allowedRoles: ['Admin'] }), 'admin-hrims-settings');
 
 /**
- * POST - Test HRIMS connection with provided configuration
+ * POST - Test HRIMS connection with provided configuration (Admin only)
  */
-export const POST = wrapHandler(async (request: NextRequest) => {
+export const POST = wrapHandler(withAuth(async (request: Request) => {
   const body = await request.json();
   const { host, port, apiKey, token } = body;
 
@@ -135,4 +133,4 @@ export const POST = wrapHandler(async (request: NextRequest) => {
       testedUrl: `http://${host}:${port}/api`,
     },
   });
-}, 'admin-hrims-settings');
+}, { allowedRoles: ['Admin'] }), 'admin-hrims-settings');

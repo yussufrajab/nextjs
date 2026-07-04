@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { z } from 'zod';
 import { hrimsLogger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
+import { withAuth } from '@/lib/api-auth';
 
 // Validation schema for the HRIMS documents sync request
 const hrimsDocumentsRequestSchema = z
@@ -52,7 +53,7 @@ const hrimsDocumentsResponseSchema = z.object({
   }),
 });
 
-export const POST = wrapHandler(async (req: Request) => {
+export const POST = wrapHandler(withAuth(async (req: Request) => {
     const body = await req.json();
     hrimsLogger.info({
       ...body,
@@ -138,7 +139,7 @@ export const POST = wrapHandler(async (req: Request) => {
       },
       { status: 200 }
     );
-  }, 'hrims-documents');
+  }, { allowedRoles: ['Admin', 'HHRMD', 'CSCS'] }), 'hrims-documents');
 
 // Function to fetch employee documents from external HRIMS system
 async function fetchDocumentsFromHRIMS(

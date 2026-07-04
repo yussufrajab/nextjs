@@ -11,6 +11,8 @@ import { sendRequestSubmissionEmails } from '@/lib/email';
 import { logComplaintAction, getClientIp } from '@/lib/audit-logger';
 import { logger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
+import { withAuth } from '@/lib/api-auth';
+import { sanitizeText } from '@/lib/sanitize-input';
 
 const complaintSchema = z.object({
   complaintType: z.string().min(1),
@@ -19,11 +21,11 @@ const complaintSchema = z.object({
   complainantPhoneNumber: z.string(),
   nextOfKinPhoneNumber: z.string(),
   attachments: z.array(z.string()).optional(),
-  complainantId: z.string().min(1),
+  // complainantId is now derived from auth session, not client
   assignedOfficerRole: z.string().optional(),
 });
 
-export const POST = wrapHandler(async (req: Request) => {
+export const POST = wrapHandler(withAuth(async (req: Request, { auth }) => {
   const body = await req.json();
   const {
     complaintType,
@@ -32,16 +34,18 @@ export const POST = wrapHandler(async (req: Request) => {
     complainantPhoneNumber,
     nextOfKinPhoneNumber,
     attachments,
-    complainantId,
     assignedOfficerRole,
   } = complaintSchema.parse(body);
+
+  // SECURITY: Use authenticated user ID, not client-supplied one
+  const complainantId = auth.userId;
 
   const newComplaint = await db.complaint.create({
     data: {
       id: uuidv4(),
-      complaintType,
-      subject,
-      details: complaintText,
+      complaintType: sanitizeText(complaintType),
+      subject: sanitizeText(subject),
+      details: sanitizeText(complaintText),
       complainantPhoneNumber,
       nextOfKinPhoneNumber,
       attachments: attachments || [],
@@ -109,19 +113,17 @@ export const POST = wrapHandler(async (req: Request) => {
   }).catch(() => {});
 
   return NextResponse.json(newComplaint, { status: 201 });
-}, 'complaints');
+}), 'complaints');
 
-export const GET = wrapHandler(async (req: Request) => {
+export const GET = wrapHandler(withAuth(async (req: Request, { auth }) => {
   const { searchParams } = new URL(req.url);
-  const userId = searchParams.get('userId');
-  const userRole = searchParams.get('userRole');
-  const page = parseInt(searchParams.get('page') || '1', 10);
-  const size = parseInt(searchParams.get('size') || '50', 10);
+  const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10) || 1);
+  const size = Math.min(100, Math.max(1, parseInt(searchParams.get('size') || '50', 10) || 50));
   const status = searchParams.get('status') || 'all';
 
-  if (!userId || !userRole) {
-    return new NextResponse('User ID and Role are required', { status: 400 });
-  }
+  // SECURITY: Use authenticated user context, not client-supplied params
+  const userId = auth.userId;
+  const userRole = auth.role;
 
   const includeOptions = {
     User_Complaint_complainantIdToUser: {
@@ -194,6 +196,9 @@ export const GET = wrapHandler(async (req: Request) => {
     db.complaint.count({ where: finalWhere }),
   ]);
 
+  // SECURITY: Only complaint-reviewing roles and Admin can see internalNotes and officerComments
+  const canSeeInternalNotes = ['Admin', 'DO', 'HHRMD', 'CSCS'].includes(userRole);
+
   // Map the response to match frontend expectations
   const formattedComplaints = complaints.map((c) => ({
     id: c.id,
@@ -211,8 +216,8 @@ export const GET = wrapHandler(async (req: Request) => {
     submissionDate: c.createdAt.toISOString(),
     status: c.status,
     attachments: c.attachments,
-    officerComments: c.officerComments,
-    internalNotes: c.internalNotes,
+    officerComments: canSeeInternalNotes ? c.officerComments : null,
+    internalNotes: canSeeInternalNotes ? c.internalNotes : null,
     assignedOfficerRole: c.assignedOfficerRole,
     reviewStage: c.reviewStage,
     rejectionReason: c.rejectionReason,
@@ -228,4 +233,4 @@ export const GET = wrapHandler(async (req: Request) => {
       size,
     },
   });
-}, 'complaints');
+}), 'complaints');

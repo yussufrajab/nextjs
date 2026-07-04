@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import { hrimsLogger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
+import { withAuth } from '@/lib/api-auth';
 
 // Validation schema for the HRIMS sync request
 const hrimsRequestSchema = z
@@ -68,7 +69,7 @@ const hrimsEmployeeResponseSchema = z.object({
   }),
 });
 
-export const POST = wrapHandler(async (req: Request) => {
+export const POST = wrapHandler(withAuth(async (req, { auth }) => {
     const body = await req.json();
     hrimsLogger.info({ ...body, hrimsApiKey: '[REDACTED]' }, 'HRIMS sync request received');
 
@@ -170,7 +171,7 @@ export const POST = wrapHandler(async (req: Request) => {
       },
       { status: 200 }
     );
-  }, 'hrims-sync');
+  }, { allowedRoles: ['Admin', 'HHRMD'] }), 'hrims-sync');
 
 // Function to fetch employee data from external HRIMS system
 async function fetchEmployeeFromHRIMS(

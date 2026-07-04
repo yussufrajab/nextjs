@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getHrimsApiConfig } from '@/lib/hrims-config';
 import { hrimsLogger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
+import { verifyAuth } from '@/lib/api-auth';
 
 // Utility function to add delay between tests
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -19,6 +20,19 @@ interface TestParameters {
 }
 
 export async function POST(request: NextRequest) {
+  // SECURITY: Require authentication with Admin/HHRMD/CSCS role
+  const authResult = await verifyAuth(request);
+  if (!authResult.authenticated) {
+    return authResult.response!;
+  }
+  const allowedRoles = ['Admin', 'HHRMD', 'CSCS'];
+  if (!allowedRoles.includes(authResult.context!.role)) {
+    return NextResponse.json(
+      { success: false, error: 'Insufficient permissions' },
+      { status: 403 }
+    );
+  }
+
   // Get HRIMS configuration from database (or use defaults)
   const HRIMS_CONFIG = await getHrimsApiConfig();
 

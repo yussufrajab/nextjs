@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { logger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
+import { withAuth } from '@/lib/api-auth';
+import { withRateLimit } from '@/lib/rate-limiter';
 
 const prisma = new PrismaClient();
 
-export const POST = wrapHandler(async (request: NextRequest) => {
+export const POST = wrapHandler(withRateLimit(withAuth(async (request) => {
   const body = await request.json();
   const { zanId, payrollNumber, zssfNumber } = body;
 
@@ -46,4 +48,4 @@ export const POST = wrapHandler(async (request: NextRequest) => {
     payrollNumberExists,
     zssfNumberExists,
   });
-}, 'employees-validate');
+}), 'write'), 'employees-validate');

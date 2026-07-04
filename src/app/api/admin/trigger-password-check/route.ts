@@ -2,15 +2,15 @@ import { NextResponse } from 'next/server';
 import { checkPasswordExpirations } from '@/lib/cron-service';
 import { logger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
+import { withAuth } from '@/lib/api-auth';
 
-export const POST = wrapHandler(async (req: Request) => {
-  // TODO: Add admin authentication check
-  // For now, allow in development only
-  if (process.env.NODE_ENV !== 'development') {
+export const POST = wrapHandler(withAuth(async (req: Request, { auth }) => {
+  // Only allow in development mode OR for Admin users
+  if (process.env.NODE_ENV !== 'development' && auth.role.toUpperCase() !== 'ADMIN') {
     return NextResponse.json(
       {
         success: false,
-        message: 'This endpoint is only available in development mode',
+        message: 'This endpoint is only available in development mode or for administrators',
       },
       { status: 403 }
     );
@@ -23,4 +23,4 @@ export const POST = wrapHandler(async (req: Request) => {
     success: true,
     message: 'Password expiration check completed successfully',
   });
-}, 'admin-trigger-password-check');
+}, { allowedRoles: ['Admin'] }), 'admin-trigger-password-check');

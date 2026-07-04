@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { logUnauthorizedAccess, getClientIp } from '@/lib/audit-logger';
 import { logger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
+import { withAuth } from '@/lib/api-auth';
 
-export const POST = wrapHandler(async (request: NextRequest) => {
+export const POST = wrapHandler(withAuth(async (request: Request, { auth }) => {
   const body = await request.json();
 
   const {
@@ -37,4 +38,4 @@ export const POST = wrapHandler(async (request: NextRequest) => {
     success: true,
     message: 'Audit event logged successfully',
   });
-}, 'audit-log');
+}), 'audit-log');

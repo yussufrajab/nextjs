@@ -7,18 +7,15 @@ import {
 } from '@/lib/session-timeout-utils';
 import { authLogger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
-
-const activitySchema = z.object({
-  userId: z.string().min(1, 'User ID is required'),
-});
+import { withAuth } from '@/lib/api-auth';
 
 /**
  * POST /api/auth/activity
  * Update user's last activity timestamp and check session status
  */
-export const POST = wrapHandler(async (req: Request) => {
-    const body = await req.json();
-    const { userId } = activitySchema.parse(body);
+export const POST = wrapHandler(withAuth(async (req: Request, { auth }) => {
+    // SECURITY: Use authenticated user ID, not client-supplied
+    const userId = auth.userId;
 
     // Get current activity status before updating
     const currentActivity = await getUserActivity(userId);
@@ -50,22 +47,15 @@ export const POST = wrapHandler(async (req: Request) => {
       message: 'Activity updated',
       lastActivity: newActivity,
     });
-}, 'auth-activity');
+}), 'auth-activity');
 
 /**
  * GET /api/auth/activity
  * Get user's current activity status
  */
-export const GET = wrapHandler(async (req: Request) => {
-    const { searchParams } = new URL(req.url);
-    const userId = searchParams.get('userId');
-
-    if (!userId) {
-      return NextResponse.json(
-        { success: false, message: 'User ID is required' },
-        { status: 400 }
-      );
-    }
+export const GET = wrapHandler(withAuth(async (req: Request, { auth }) => {
+    // SECURITY: Use authenticated user ID, not client-supplied
+    const userId = auth.userId;
 
     const lastActivity = await getUserActivity(userId);
     const sessionExpired = isSessionTimedOut(lastActivity);
@@ -75,4 +65,4 @@ export const GET = wrapHandler(async (req: Request) => {
       lastActivity,
       sessionExpired,
     });
-}, 'auth-activity');
+}), 'auth-activity');

@@ -190,8 +190,19 @@ export const GET = wrapHandler(withRateLimit(withAuth(async (
     );
   }
 
-  // For HRO role, check if employee belongs to their institution
-  if (userRole === 'HRO') {
+  // Ownership / institution check to prevent IDOR
+  if (userRole === 'EMPLOYEE') {
+    const requestingUser = await prisma.user.findUnique({
+      where: { id: auth.userId },
+      select: { employeeId: true },
+    });
+    if (!requestingUser || requestingUser.employeeId !== employeeId) {
+      return NextResponse.json(
+        { success: false, message: 'Access denied' },
+        { status: 403 }
+      );
+    }
+  } else if (userRole === 'HRO' || userRole === 'HRRP') {
     if (employee.institutionId !== userInstitutionId) {
       return NextResponse.json(
         { success: false, message: 'Access denied' },

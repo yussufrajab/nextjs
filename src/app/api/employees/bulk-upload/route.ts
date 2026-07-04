@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
-import { logEmployeeAction, getClientIp } from '@/lib/audit-logger';
+import { logEmployeeAction, logFileAction, getClientIp } from '@/lib/audit-logger';
 import { validateFileUpload } from '@/lib/file-validation';
 import { withAuth, AuthContext } from '@/lib/api-auth';
 import { withRateLimit } from '@/lib/rate-limiter';
@@ -99,8 +99,8 @@ export const POST = wrapHandler(withRateLimit(withAuth(async (
   const institutionId = auth.institutionId;
   const username = auth.username;
 
-  // Security check: Must be authenticated HRO
-  if (role !== 'HRO') {
+  // Security check: Must be authenticated HRO or ADMIN
+  if (!['HRO', 'ADMIN'].includes(role)) {
     return NextResponse.json(
       { success: false, error: 'Unauthorized' },
       { status: 403 }
@@ -318,6 +318,36 @@ export const POST = wrapHandler(withRateLimit(withAuth(async (
       }
     });
 
+    // Date range validation
+    const now = new Date();
+    if (employeeData.dateOfBirth && validateDate(employeeData.dateOfBirth)) {
+      const dob = new Date(employeeData.dateOfBirth);
+      if (dob > now) {
+        errors.push('Date of birth cannot be in the future');
+      } else {
+        const age = now.getFullYear() - dob.getFullYear();
+        if (age > 120) {
+          errors.push('Invalid date of birth: age exceeds 120 years');
+        }
+      }
+    }
+    if (employeeData.employmentDate && validateDate(employeeData.employmentDate)) {
+      const empDate = new Date(employeeData.employmentDate);
+      if (empDate > now) {
+        errors.push('Employment date cannot be in the future');
+      }
+    }
+
+    // Name length validation
+    if (employeeData.name && employeeData.name.length > 200) {
+      errors.push('Name must be 200 characters or less');
+    }
+
+    // ZAN ID format validation
+    if (employeeData.zanId && !/^\d{5,12}$/.test(employeeData.zanId)) {
+      errors.push('ZanID must be a numeric string between 5 and 12 digits');
+    }
+
     // Validate status
     if (employeeData.status) {
       const validStatuses = [
@@ -402,6 +432,19 @@ export const POST = wrapHandler(withRateLimit(withAuth(async (
       );
     }
 
+    // Check ZSSF Number uniqueness against database
+    if (emp.zssfNumber) {
+      const existingByZssf = await prisma.employee.findFirst({
+        where: { zssfNumber: emp.zssfNumber },
+        select: { id: true },
+      });
+      if (existingByZssf) {
+        emp.errors.push(
+          'An employee with this ZSSF Number already exists in database'
+        );
+      }
+    }
+
     if (emp.errors.length > 0) {
       invalidEmployees.push(emp);
     }
@@ -411,6 +454,24 @@ export const POST = wrapHandler(withRateLimit(withAuth(async (
   const finalValidEmployees = validEmployees.filter(
     (emp) => emp.errors.length === 0
   );
+
+  // Audit log: file validation performed
+  await logFileAction({
+    action: 'UPLOADED',
+    fileName: file.name || 'unknown',
+    performedById: userId,
+    performedByUsername: username,
+    performedByRole: role,
+    ipAddress: getClientIp(request.headers),
+    deviceInfo: JSON.parse(request.headers.get('x-device-info') || 'null'),
+    additionalData: {
+      totalRows: employees.length,
+      validRows: finalValidEmployees.length,
+      invalidRows: invalidEmployees.length,
+      dataSource: 'BULK_UPLOAD',
+      institutionId,
+    },
+  }).catch(() => {});
 
   // Return validation results (don't create yet)
   return NextResponse.json({
@@ -437,8 +498,8 @@ export const PUT = wrapHandler(withRateLimit(withAuth(async (
   let institutionId = auth.institutionId;
   const username = auth.username;
 
-  // Security check
-  if (role !== 'HRO') {
+  // Security check: Must be authenticated HRO or ADMIN
+  if (!['HRO', 'ADMIN'].includes(role)) {
     return NextResponse.json(
       { success: false, error: 'Unauthorized' },
       { status: 403 }
@@ -474,65 +535,67 @@ export const PUT = wrapHandler(withRateLimit(withAuth(async (
     );
   }
 
-  // Create all employees in a transaction
-  const createdEmployees = [];
-  const failedEmployees = [];
+  // Create all employees in a transaction for atomicity
+  const createdEmployees: Array<{ rowNumber: number; name: string; id: string }> = [];
+  const failedEmployees: Array<{ rowNumber: number; name: string; error: string }> = [];
 
-  for (const emp of employees) {
-    try {
-      const employee = await prisma.employee.create({
-        data: {
-          id: uuidv4(),
+  await prisma.$transaction(async (tx) => {
+    for (const emp of employees) {
+      try {
+        const employee = await tx.employee.create({
+          data: {
+            id: uuidv4(),
+            name: emp.name,
+            gender: emp.gender,
+            zanId: emp.zanId,
+            dateOfBirth: emp.dateOfBirth ? new Date(emp.dateOfBirth) : null,
+            placeOfBirth: emp.placeOfBirth || null,
+            region: emp.region || null,
+            countryOfBirth: emp.countryOfBirth || null,
+            phoneNumber: emp.phoneNumber || null,
+            contactAddress: emp.contactAddress || null,
+            zssfNumber: emp.zssfNumber || null,
+            payrollNumber: emp.payrollNumber || null,
+            cadre: emp.cadre || null,
+            salaryScale: emp.salaryScale || null,
+            ministry: emp.ministry || null,
+            department: emp.department || null,
+            appointmentType: emp.appointmentType || null,
+            contractType: emp.contractType || null,
+            recentTitleDate: emp.recentTitleDate
+              ? new Date(emp.recentTitleDate)
+              : null,
+            currentReportingOffice: emp.currentReportingOffice || null,
+            currentWorkplace: emp.currentWorkplace || null,
+            employmentDate: emp.employmentDate
+              ? new Date(emp.employmentDate)
+              : null,
+            confirmationDate: emp.confirmationDate
+              ? new Date(emp.confirmationDate)
+              : null,
+            retirementDate: emp.retirementDate
+              ? new Date(emp.retirementDate)
+              : null,
+            status: emp.status || 'On Probation',
+            institutionId: institutionId,
+            dataSource: 'MANUAL_ENTRY',
+          },
+        });
+
+        createdEmployees.push({
+          rowNumber: emp.rowNumber,
           name: emp.name,
-          gender: emp.gender,
-          zanId: emp.zanId,
-          dateOfBirth: emp.dateOfBirth ? new Date(emp.dateOfBirth) : null,
-          placeOfBirth: emp.placeOfBirth || null,
-          region: emp.region || null,
-          countryOfBirth: emp.countryOfBirth || null,
-          phoneNumber: emp.phoneNumber || null,
-          contactAddress: emp.contactAddress || null,
-          zssfNumber: emp.zssfNumber || null,
-          payrollNumber: emp.payrollNumber || null,
-          cadre: emp.cadre || null,
-          salaryScale: emp.salaryScale || null,
-          ministry: emp.ministry || null,
-          department: emp.department || null,
-          appointmentType: emp.appointmentType || null,
-          contractType: emp.contractType || null,
-          recentTitleDate: emp.recentTitleDate
-            ? new Date(emp.recentTitleDate)
-            : null,
-          currentReportingOffice: emp.currentReportingOffice || null,
-          currentWorkplace: emp.currentWorkplace || null,
-          employmentDate: emp.employmentDate
-            ? new Date(emp.employmentDate)
-            : null,
-          confirmationDate: emp.confirmationDate
-            ? new Date(emp.confirmationDate)
-            : null,
-          retirementDate: emp.retirementDate
-            ? new Date(emp.retirementDate)
-            : null,
-          status: emp.status || 'On Probation',
-          institutionId: institutionId,
-          dataSource: 'MANUAL_ENTRY',
-        },
-      });
-
-      createdEmployees.push({
-        rowNumber: emp.rowNumber,
-        name: emp.name,
-        id: employee.id,
-      });
-    } catch (error) {
-      failedEmployees.push({
-        rowNumber: emp.rowNumber,
-        name: emp.name,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+          id: employee.id,
+        });
+      } catch (error) {
+        failedEmployees.push({
+          rowNumber: emp.rowNumber,
+          name: emp.name,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+      }
     }
-  }
+  });
 
   // Audit log: bulk employee creation
   for (const emp of createdEmployees) {

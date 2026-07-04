@@ -6,6 +6,7 @@ import { sendRequestStatusUpdateEmail } from '@/lib/email';
 import { logComplaintAction, getClientIp } from '@/lib/audit-logger';
 import { logger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
+import { withAuth } from '@/lib/api-auth';
 
 const updateComplaintSchema = z.object({
   status: z.string().optional(),
@@ -30,18 +31,91 @@ export const PUT = wrapHandler(async (
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) => {
+  // SECURITY: Require authentication
+  const { verifyAuth } = await import('@/lib/api-auth');
+  const authResult = await verifyAuth(req);
+  if (!authResult.authenticated) {
+    return authResult.response!;
+  }
+  const auth = authResult.context!;
+
   const { id } = await params;
   const body = await req.json();
   const validatedData = updateComplaintSchema.parse(body);
 
-  // Map officerInternalNote → internalNotes and strip it from the Prisma payload
-  const { officerInternalNote, ...prismaData } = validatedData;
-  const dbData = {
-    ...prismaData,
-    ...(officerInternalNote
-      ? { internalNotes: officerInternalNote }
-      : {}),
-  };
+  // SECURITY: Fetch existing complaint for ownership/status checks
+  const existingComplaint = await db.complaint.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      complainantId: true,
+      status: true,
+      assignedOfficerRole: true,
+    },
+  });
+
+  if (!existingComplaint) {
+    return NextResponse.json(
+      { success: false, message: 'Complaint not found' },
+      { status: 404 }
+    );
+  }
+
+  // SECURITY: Role-based access control
+  const userRole = auth.role;
+  const isOfficerRole = ['DO', 'HHRMD', 'Admin', 'CSCS', 'HRMO'].includes(userRole);
+  const isComplainant = existingComplaint.complainantId === auth.userId;
+
+  // EMPLOYEE can only update their own complaint (e.g., add more info)
+  if (userRole === 'EMPLOYEE') {
+    if (!isComplainant) {
+      return NextResponse.json(
+        { success: false, message: 'Access denied: you can only update your own complaint' },
+        { status: 403 }
+      );
+    }
+    // EMPLOYEE can only update limited fields
+    const allowedEmployeeFields = ['details', 'complainantPhoneNumber', 'nextOfKinPhoneNumber', 'attachments'];
+    const attemptedFields = Object.keys(validatedData);
+    const disallowedFields = attemptedFields.filter(f => !allowedEmployeeFields.includes(f));
+    if (disallowedFields.length > 0) {
+      return NextResponse.json(
+        { success: false, message: `Employees can only update: ${allowedEmployeeFields.join(', ')}` },
+        { status: 403 }
+      );
+    }
+  } else if (!isOfficerRole) {
+    // HRO, HRRP, and other non-officer roles cannot update complaints
+    return NextResponse.json(
+      { success: false, message: 'Access denied: insufficient permissions to update complaints' },
+      { status: 403 }
+    );
+  }
+
+  // SECURITY: Status transition validation (only for officer roles)
+  if (validatedData.status && isOfficerRole) {
+    const VALID_TRANSITIONS: Record<string, string[]> = {
+      'Submitted': ['Under Review', 'Awaiting More Information'],
+      'Under Review': ['Resolved - Pending Employee Confirmation', 'Awaiting More Information', 'Closed - Commission Decision (Resolved)', 'Closed - Commission Decision (Rejected)'],
+      'Awaiting More Information': ['Under Review', 'Resolved - Pending Employee Confirmation'],
+      'Resolved - Pending Employee Confirmation': ['Closed - Satisfied', 'Under Review'],
+    };
+    const allowedNext = VALID_TRANSITIONS[existingComplaint.status] || [];
+    if (!allowedNext.includes(validatedData.status)) {
+      return NextResponse.json(
+        { success: false, message: `Invalid status transition from "${existingComplaint.status}" to "${validatedData.status}". Allowed: ${allowedNext.join(', ') || 'none'}` },
+        { status: 400 }
+      );
+    }
+  }
+
+  // SECURITY: reviewedById comes from authenticated session, not client
+  const dbData: any = { ...validatedData };
+  delete dbData.reviewedById;
+  delete dbData.officerInternalNote;
+  if (body.officerInternalNote) {
+    dbData.internalNotes = body.officerInternalNote;
+  }
 
   const updatedComplaint = await db.complaint.update({
     where: { id },
@@ -136,15 +210,14 @@ export const PUT = wrapHandler(async (
     },
   };
 
-  // Audit log: complaint updated or resolved
-  const reviewedByUser = updatedComplaint.User_Complaint_reviewedByIdToUser;
+  // Audit log: complaint updated or resolved (using authenticated user identity)
   await logComplaintAction({
     action: updatedComplaint.status === 'Resolved' ? 'RESOLVED' : 'UPDATED',
     complaintId: updatedComplaint.id,
     subject: updatedComplaint.subject,
-    performedById: validatedData.reviewedById || updatedComplaint.complainantId,
-    performedByUsername: reviewedByUser?.name || 'unknown',
-    performedByRole: reviewedByUser?.role || 'unknown',
+    performedById: auth.userId,
+    performedByUsername: auth.username,
+    performedByRole: auth.role,
     ipAddress: getClientIp(req.headers),
     deviceInfo: JSON.parse(req.headers.get('x-device-info') || 'null'),
     additionalData: { newStatus: updatedComplaint.status },

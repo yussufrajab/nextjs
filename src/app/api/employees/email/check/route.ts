@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { wrapHandler } from '@/lib/error-handler';
+import { withAuth } from '@/lib/api-auth';
 
 export const dynamic = 'force-dynamic';
 
-export const GET = wrapHandler(async (request: Request) => {
+export const GET = wrapHandler(withAuth(async (request: Request) => {
   const { searchParams } = new URL(request.url);
   const email = searchParams.get('email');
 
@@ -38,4 +39,4 @@ export const GET = wrapHandler(async (request: Request) => {
   }
 
   return NextResponse.json({ inUse: false });
-}, 'employees-email-check');
+}), 'employees-email-check');

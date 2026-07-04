@@ -31,7 +31,7 @@ export const GET = wrapHandler(withRateLimit(withAuth(async (request, { auth }) 
   });
 }), 'read'), 'notifications-get');
 
-export const POST = wrapHandler(withRateLimit(withAuth(async (request, { auth: _auth }) => {
+export const POST = wrapHandler(withRateLimit(withAuth(async (request, { auth }) => {
   const body = await request.json();
   const { notificationIds } = body;
 
@@ -42,8 +42,12 @@ export const POST = wrapHandler(withRateLimit(withAuth(async (request, { auth: _
     );
   }
 
+  // SECURITY: Only mark notifications that belong to the authenticated user
   await db.notification.updateMany({
-    where: { id: { in: notificationIds } },
+    where: {
+      id: { in: notificationIds },
+      userId: auth.userId,
+    },
     data: { isRead: true },
   });
 

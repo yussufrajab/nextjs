@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { z } from 'zod';
-import bcrypt from 'bcryptjs';
 import { logUserAction, getClientIp } from '@/lib/audit-logger';
 import { wrapHandler } from '@/lib/error-handler';
-import { getAuthContext } from '@/lib/api-auth';
+import { withAuth } from '@/lib/api-auth';
 
-const userUpdateSchema = z.object({
+// Safe fields that any admin can update on another user's profile.
+const profileUpdateSchema = z.object({
   name: z.string().min(2).optional(),
   username: z.string().min(3).optional(),
   email: z
@@ -20,24 +20,35 @@ const userUpdateSchema = z.object({
     .max(10, 'Phone number must be exactly 10 digits.')
     .regex(/^\d{10}$/, 'Phone number must contain only digits.')
     .optional(),
+});
+
+// SECURITY: This endpoint is Admin-only (enforced by withAuth below).
+// Sensitive fields like role, institutionId, and active are included here
+// because admins legitimately need to manage them. Password is deliberately
+// excluded -- admins must use the dedicated /reset-password endpoint instead.
+// Self-role-change is blocked in the handler to prevent escalation/demotion.
+const adminUpdateSchema = profileUpdateSchema.extend({
   role: z.string().optional(),
   institutionId: z.string().optional(),
   active: z.boolean().optional(),
-  password: z.string().min(6).optional(),
 });
 
-export const PUT = wrapHandler(async (
+export const PUT = wrapHandler(withAuth(async (
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { auth }: { auth: any }
 ) => {
+  const url = new URL(req.url);
+  const id = url.pathname.split('/').pop()!;
   try {
-    const { id } = await params;
     const body = await req.json();
-    const validatedData = userUpdateSchema.parse(body);
+    const validatedData = adminUpdateSchema.parse(body);
 
-    if (validatedData.password) {
-      const salt = await bcrypt.genSalt(10);
-      validatedData.password = await bcrypt.hash(validatedData.password, salt);
+    // Prevent admins from changing their own role (self-escalation or self-demotion).
+    if (validatedData.role && id === auth.userId) {
+      return new NextResponse(
+        'Cannot change your own role. Ask another admin.',
+        { status: 403 }
+      );
     }
 
     // If activating a user, clear all lockout fields
@@ -91,15 +102,13 @@ export const PUT = wrapHandler(async (
     // Audit log: user updated
     // Derive the actor's identity from the signed session (authoritative),
     // not the forgeable auth-storage cookie.
-    const actor = await getAuthContext(req);
-
     await logUserAction({
       action: 'UPDATED',
       targetUserId: updatedUser.id,
       targetUsername: updatedUser.username,
-      performedById: actor?.userId || 'system',
-      performedByUsername: actor?.username || 'system',
-      performedByRole: actor?.role || 'ADMIN',
+      performedById: auth.userId,
+      performedByUsername: auth.username,
+      performedByRole: auth.role,
       ipAddress: getClientIp(req.headers),
       deviceInfo: JSON.parse(req.headers.get('x-device-info') || 'null'),
     }).catch(() => {});
@@ -117,14 +126,15 @@ export const PUT = wrapHandler(async (
     }
     throw error;
   }
-}, 'users-put');
+}, { allowedRoles: ['Admin'] }), 'users-put');
 
-export const DELETE = wrapHandler(async (
+export const DELETE = wrapHandler(withAuth(async (
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { auth }: { auth: any }
 ) => {
   try {
-    const { id } = await params;
+    const url = new URL(req.url);
+    const id = url.pathname.split('/').pop()!;
     await db.user.delete({
       where: { id },
     });
@@ -141,4 +151,4 @@ export const DELETE = wrapHandler(async (
     }
     throw error;
   }
-}, 'users-delete');
+}, { allowedRoles: ['Admin'] }), 'users-delete');

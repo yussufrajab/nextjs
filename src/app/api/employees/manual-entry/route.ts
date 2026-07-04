@@ -79,6 +79,65 @@ export const POST = wrapHandler(
     }
   }
 
+  // Name validation: length and character check
+  if (name.length > 200) {
+    return NextResponse.json(
+      { success: false, error: 'Name must be 200 characters or less' },
+      { status: 400 }
+    );
+  }
+
+  // Date of birth validation: not in future, reasonable age
+  if (dateOfBirth) {
+    const dob = new Date(dateOfBirth);
+    const now = new Date();
+    if (isNaN(dob.getTime())) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid date of birth format' },
+        { status: 400 }
+      );
+    }
+    if (dob > now) {
+      return NextResponse.json(
+        { success: false, error: 'Date of birth cannot be in the future' },
+        { status: 400 }
+      );
+    }
+    const age = now.getFullYear() - dob.getFullYear();
+    if (age > 120) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid date of birth: age exceeds 120 years' },
+        { status: 400 }
+      );
+    }
+  }
+
+  // Employment date validation: not in future
+  if (employmentDate) {
+    const empDate = new Date(employmentDate);
+    const now = new Date();
+    if (isNaN(empDate.getTime())) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid employment date format' },
+        { status: 400 }
+      );
+    }
+    if (empDate > now) {
+      return NextResponse.json(
+        { success: false, error: 'Employment date cannot be in the future' },
+        { status: 400 }
+      );
+    }
+  }
+
+  // ZAN ID format validation: must be numeric string
+  if (!/^\d{5,12}$/.test(zanId)) {
+    return NextResponse.json(
+      { success: false, error: 'ZanID must be a numeric string between 5 and 12 digits' },
+      { status: 400 }
+    );
+  }
+
   // Security check 2: Verify institution has manual entry enabled
   const institution = await prisma.institution.findUnique({
     where: { id: institutionId },
@@ -140,6 +199,21 @@ export const POST = wrapHandler(
     if (existingByPayroll) {
       return NextResponse.json(
         { success: false, error: 'An employee with this Payroll Number already exists' },
+        { status: 409 }
+      );
+    }
+  }
+
+  // Check ZSSF Number uniqueness (if provided)
+  if (zssfNumber) {
+    const existingByZssf = await prisma.employee.findFirst({
+      where: { zssfNumber },
+      select: { id: true },
+    });
+
+    if (existingByZssf) {
+      return NextResponse.json(
+        { success: false, error: 'An employee with this ZSSF Number already exists' },
         { status: 409 }
       );
     }

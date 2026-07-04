@@ -3,15 +3,17 @@ import { db } from '@/lib/db';
 import { shouldApplyInstitutionFilter } from '@/lib/role-utils';
 import { logger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
+import { withAuth } from '@/lib/api-auth';
 
 // Cache configuration
 const CACHE_TTL = 300; // 5 minutes cache for urgent actions
 
-export const GET = wrapHandler(async (req: Request) => {
+export const GET = wrapHandler(withAuth(async (req: Request, { auth }) => {
   const startTime = Date.now();
   const { searchParams } = new URL(req.url);
-  const userRole = searchParams.get('userRole');
-  const userInstitutionId = searchParams.get('userInstitutionId');
+  // SECURITY: Use authenticated user context, not client-supplied params
+  const userRole = auth.role;
+  const userInstitutionId = auth.institutionId;
   const countOnly = searchParams.get('countOnly') === 'true';
 
   // Server-side pagination parameters
@@ -219,4 +221,4 @@ export const GET = wrapHandler(async (req: Request) => {
     },
     { headers }
   );
-}, 'employees-urgent-actions');
+}), 'employees-urgent-actions');

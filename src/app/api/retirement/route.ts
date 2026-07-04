@@ -168,6 +168,28 @@ async function POSTHandler(req: Request) {
       );
     }
 
+    // SECURITY: Verify employee exists and check institution ownership
+    const employee = await db.employee.findUnique({
+      where: { id: body.employeeId },
+      select: { id: true, name: true, institutionId: true },
+    });
+    if (!employee) {
+      return NextResponse.json(
+        { success: false, message: 'Employee not found' },
+        { status: 404 }
+      );
+    }
+
+    // SECURITY: Institution ownership check — HRO/HRRP can only create requests for their own institution's employees
+    if (shouldApplyInstitutionFilter(auth.role, auth.institutionId)) {
+      if (employee.institutionId !== auth.institutionId) {
+        return NextResponse.json(
+          { success: false, message: 'Access denied: employee belongs to a different institution' },
+          { status: 403 }
+        );
+      }
+    }
+
     // Determine initial status based on submitter role
     const isHRRP = auth.role === 'HRRP';
     const initialStatus = isHRRP

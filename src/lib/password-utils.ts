@@ -39,8 +39,9 @@ export function validatePasswordComplexity(password: string): boolean {
   const hasNumber = /\d/.test(password);
   const hasSpecial = /[@$!%*?&#^()_+\-=\[\]{}|;:,.<>?]/.test(password);
 
-  // Must have at least one of the character types
-  return hasUppercase || hasLowercase || hasNumber || hasSpecial;
+  // SECURITY: Require at least 2 character classes (not just 1)
+  const classCount = [hasUppercase, hasLowercase, hasNumber, hasSpecial].filter(Boolean).length;
+  return classCount >= 2;
 }
 
 /**

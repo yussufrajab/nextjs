@@ -3,14 +3,11 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import { getPasswordExpirationStatus } from '@/lib/password-expiration-utils';
 import { wrapHandler } from '@/lib/error-handler';
+import { withAuth } from '@/lib/api-auth';
 
-const passwordStatusSchema = z.object({
-  userId: z.string().min(1, 'User ID is required'),
-});
-
-export const POST = wrapHandler(async (req: Request) => {
-    const body = await req.json();
-    const { userId } = passwordStatusSchema.parse(body);
+export const POST = wrapHandler(withAuth(async (req: Request, { auth }) => {
+    // SECURITY: Use authenticated user ID, not client-supplied
+    const userId = auth.userId;
 
     // Find user
     const user = await db.user.findUnique({
@@ -46,4 +43,4 @@ export const POST = wrapHandler(async (req: Request) => {
         mustChangePassword: user.mustChangePassword,
       },
     });
-}, 'auth-password-status');
+}), 'auth-password-status');

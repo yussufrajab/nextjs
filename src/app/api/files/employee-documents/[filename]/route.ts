@@ -35,8 +35,12 @@ export const GET = wrapHandler(async (
   }
 
   const employeeId = filename.substring(0, filename.indexOf('_'));
+  const roleUpper = auth.role.toUpperCase();
 
-  if (auth.role === 'HRO') {
+  if (['ADMIN', 'HRMO', 'HHRMD', 'CSCS', 'DO', 'PO'].includes(roleUpper)) {
+    // Central/commission roles — unrestricted access
+  } else if (roleUpper === 'HRO' || roleUpper === 'HRRP') {
+    // Institution-scoped access: employee must belong to the user's institution
     const employee = await prisma.employee.findUnique({
       where: { id: employeeId },
       select: { institutionId: true },
@@ -47,6 +51,24 @@ export const GET = wrapHandler(async (
         { status: 403 }
       );
     }
+  } else if (roleUpper === 'EMPLOYEE') {
+    // Ownership check: the requested employee must be the user's own record
+    const user = await prisma.user.findUnique({
+      where: { id: auth.userId },
+      select: { employeeId: true },
+    });
+    if (!user?.employeeId || user.employeeId !== employeeId) {
+      return NextResponse.json(
+        { success: false, message: 'Access denied' },
+        { status: 403 }
+      );
+    }
+  } else {
+    // Unknown role — deny by default
+    return NextResponse.json(
+      { success: false, message: 'Access denied' },
+      { status: 403 }
+    );
   }
 
   const filePath = `employee-documents/${filename}`;

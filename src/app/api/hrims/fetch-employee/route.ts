@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { uploadFile } from '@/lib/minio';
 import { hrimsLogger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
+import { withAuth } from '@/lib/api-auth';
 
 interface HRIMSEmployeeResponse {
   success: boolean;
@@ -414,7 +415,7 @@ async function processPhoto(
   }
 }
 
-export const POST = wrapHandler(async (req: NextRequest) => {
+export const POST = wrapHandler(withAuth(async (req) => {
   const HRIMS_CONFIG = await getHrimsApiConfig();
   const body = await req.json();
   const { zanId, payrollNumber, institutionVoteNumber } = body;
@@ -550,4 +551,4 @@ export const POST = wrapHandler(async (req: NextRequest) => {
       },
     },
   });
-});
+}, { allowedRoles: ['Admin', 'HHRMD', 'CSCS'] }), 'hrims-fetch-employee');

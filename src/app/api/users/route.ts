@@ -13,6 +13,7 @@ import { withRateLimit } from '@/lib/rate-limiter';
 import { sanitizeUser, sanitizeUsers } from '@/lib/sanitize-response';
 import { wrapHandler } from '@/lib/error-handler';
 import { logger } from '@/lib/logger';
+import { shouldApplyInstitutionFilter } from '@/lib/role-utils';
 
 const userSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
@@ -31,7 +32,14 @@ const userSchema = z.object({
 });
 
 export const GET = wrapHandler(withRateLimit(withAuth(async (request, { auth }) => {
+    // SECURITY: Apply institution filtering for non-CSC roles (e.g. HRO)
+    const whereClause: any = {};
+    if (shouldApplyInstitutionFilter(auth.role, auth.institutionId)) {
+      whereClause.institutionId = auth.institutionId;
+    }
+
     const users = await db.user.findMany({
+      where: whereClause,
       orderBy: { name: 'asc' },
       include: {
         Institution: {

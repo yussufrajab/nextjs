@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
+import { withAuth } from '@/lib/api-auth';
+import { shouldApplyInstitutionFilter, isCSCRole } from '@/lib/role-utils';
 
 interface ReportOutput {
   data: any[];
@@ -9,6 +11,17 @@ interface ReportOutput {
   title: string;
   totals?: any;
   dataKeys?: string[];
+}
+
+/** SECURITY: Sanitize text fields to prevent XSS in report data */
+function sanitizeText(value: unknown): string {
+  if (typeof value !== 'string') return String(value ?? '-');
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
 }
 
 function getStatusDisplayText(status: string): string {
@@ -582,11 +595,10 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
 
       formattedData = rawData.map((item, index) => ({
         sn: index + 1,
-        complainant: item.User_Complaint_complainantIdToUser?.name || '-',
-        gender:
-          item.User_Complaint_complainantIdToUser?.Employee?.gender || '-',
-        complaintType: item.complaintType || '-',
-        subject: item.subject || '-',
+        complainant: sanitizeText(item.User_Complaint_complainantIdToUser?.name),
+        gender: sanitizeText(item.User_Complaint_complainantIdToUser?.Employee?.gender),
+        complaintType: sanitizeText(item.complaintType),
+        subject: sanitizeText(item.subject),
         date: new Date(item.createdAt).toLocaleDateString('sw-TZ'),
         status: getStatusDisplayText(item.status),
         commissionDecision: getCommissionDecision(
@@ -672,13 +684,14 @@ function formatReportData(reportType: string, rawData: any[]): ReportOutput {
   };
 }
 
-export const GET = wrapHandler(async (req: Request) => {
+export const GET = wrapHandler(withAuth(async (req: Request, { auth }) => {
     const { searchParams } = new URL(req.url);
     const reportType = searchParams.get('reportType');
     const fromDate = searchParams.get('fromDate');
     const toDate = searchParams.get('toDate');
     const institutionId = searchParams.get('institutionId');
-    const userRole = searchParams.get('userRole');
+    // SECURITY: Use authenticated role, not client-supplied
+    const userRole = auth.role;
 
     logger.info({ 
       reportType,
@@ -734,9 +747,15 @@ export const GET = wrapHandler(async (req: Request) => {
       };
     }
 
-    // Build institution filter
+    // SECURITY: Build institution filter — use auth.institutionId for non-CSC roles (ignore client param)
     const institutionFilter: any = {};
-    if (institutionId) {
+    if (shouldApplyInstitutionFilter(userRole, auth.institutionId)) {
+      // Non-CSC roles (HRO/HRRP): always filter by their own institution
+      institutionFilter.Employee = {
+        institutionId: auth.institutionId,
+      };
+    } else if (institutionId && isCSCRole(userRole)) {
+      // CSC roles can optionally filter by a specific institution
       institutionFilter.Employee = {
         institutionId: institutionId,
       };
@@ -1018,14 +1037,18 @@ export const GET = wrapHandler(async (req: Request) => {
           .catch(() => []);
         break;
 
-      case 'complaints':
+      case 'complaints': {
+        // SECURITY: Use auth.institutionId for non-CSC roles (ignore client param)
+        const complaintInstitutionId = shouldApplyInstitutionFilter(userRole, auth.institutionId)
+          ? auth.institutionId
+          : (institutionId && isCSCRole(userRole)) ? institutionId : null;
         reportData = await db.complaint
           .findMany({
             where: {
               ...dateFilter,
-              ...(institutionId && {
+              ...(complaintInstitutionId && {
                 User_Complaint_complainantIdToUser: {
-                  institutionId: institutionId,
+                  institutionId: complaintInstitutionId,
                 },
               }),
             },
@@ -1048,6 +1071,7 @@ export const GET = wrapHandler(async (req: Request) => {
           })
           .catch(() => []);
         break;
+      }
 
       case 'contractual':
         // For now, return empty array as contractual employment might need special handling
@@ -1316,4 +1340,4 @@ export const GET = wrapHandler(async (req: Request) => {
         count: reportData.length,
       },
     });
-  });
+  }));

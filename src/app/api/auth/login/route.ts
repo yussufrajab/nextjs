@@ -153,7 +153,8 @@ export const POST = wrapHandler(withRateLimit(async (request) => {
         message += 'Please contact an administrator to unlock your account.';
       }
 
-      const lockoutResponse = NextResponse.json({ success: false, message }, { status: 403 });
+      // SECURITY: Use generic message to prevent username enumeration
+      const lockoutResponse = NextResponse.json({ success: false, message: 'Invalid username/email or password' }, { status: 401 });
       lockoutResponse.cookies.set(PRE_SESSION_COOKIE_NAME, preSessionToken, preSessionCookieOptions);
       return lockoutResponse;
     }
@@ -172,8 +173,9 @@ export const POST = wrapHandler(withRateLimit(async (request) => {
         failureReason: 'Account is inactive',
       });
 
+      // SECURITY: Use generic message to prevent username enumeration
       const response = NextResponse.json(
-        { success: false, message: 'Account is inactive' },
+        { success: false, message: 'Invalid username/email or password' },
         { status: 401 }
       );
       response.cookies.set(PRE_SESSION_COOKIE_NAME, preSessionToken, preSessionCookieOptions);
@@ -208,7 +210,9 @@ export const POST = wrapHandler(withRateLimit(async (request) => {
         failureReason: 'Invalid password',
       });
 
-      let message = 'Invalid username or password';
+      // SECURITY: Use generic message to prevent username enumeration.
+      // Do NOT reveal attempt counts or whether the account exists.
+      let message = 'Invalid username/email or password';
       if (lockoutResult.locked) {
         message =
           'Too many failed login attempts. Your account has been locked. ';
@@ -217,11 +221,6 @@ export const POST = wrapHandler(withRateLimit(async (request) => {
         } else {
           message += 'Please contact an administrator to unlock your account.';
         }
-      } else if (lockoutResult.remainingAttempts > 0) {
-        const attemptsText = lockoutResult.remainingAttempts === 1
-          ? '1 attempt remaining'
-          : `${lockoutResult.remainingAttempts} attempts remaining`;
-        message = `Invalid username or password, ${attemptsText}`;
       }
 
       const invalidPwResponse = NextResponse.json({ success: false, message }, { status: 401 });
@@ -242,11 +241,11 @@ export const POST = wrapHandler(withRateLimit(async (request) => {
     // If temporary password has expired, deny login
     if (isTemporaryPasswordExpired) {
       authLogger.info({ username }, 'Temporary password expired');
+      // SECURITY: Use generic message to prevent username enumeration
       const response = NextResponse.json(
         {
           success: false,
-          message:
-            'Your temporary password has expired. Please contact an administrator to reset your password.',
+          message: 'Invalid username/email or password',
         },
         { status: 401 }
       );

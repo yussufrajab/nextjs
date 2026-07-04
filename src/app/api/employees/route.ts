@@ -5,6 +5,7 @@ import { withAuth } from '@/lib/api-auth';
 import { withRateLimit } from '@/lib/rate-limiter';
 import { logger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
+import { sanitizeEmployee, sanitizeEmployees } from '@/lib/sanitize-response';
 
 // Cache configuration for employee data
 const CACHE_TTL = 60; // 60 seconds cache (employee data changes infrequently)
@@ -73,14 +74,35 @@ export const GET = wrapHandler(withRateLimit(withAuth(async (request, { auth }) 
         );
       }
 
+      // Ownership / institution check to prevent IDOR
+      if (userRole === 'EMPLOYEE') {
+        const requestingUser = await db.user.findUnique({
+          where: { id: auth.userId },
+          select: { employeeId: true },
+        });
+        if (!requestingUser || requestingUser.employeeId !== employeeId) {
+          return NextResponse.json(
+            { success: false, message: 'Access denied' },
+            { status: 403 }
+          );
+        }
+      } else if (userRole === 'HRO' || userRole === 'HRRP') {
+        if (employee.institutionId !== userInstitutionId) {
+          return NextResponse.json(
+            { success: false, message: 'Access denied' },
+            { status: 403 }
+          );
+        }
+      }
+
       // Map EmployeeCertificate to certificates and Institution to institution
-      const mappedEmployee = {
+      const mappedEmployee = sanitizeEmployee({
         ...employee,
         institution: employee.Institution,
         certificates: employee.EmployeeCertificate,
         Institution: undefined,
         EmployeeCertificate: undefined,
-      };
+      }, userRole);
 
       // Set cache headers for single employee lookup
       const headers = new Headers();
@@ -107,10 +129,27 @@ export const GET = wrapHandler(withRateLimit(withAuth(async (request, { auth }) 
     // Build where clause based on parameters
     const whereClause: any = {};
 
+    // EMPLOYEE role can only see their own record
+    if (userRole === 'EMPLOYEE') {
+      const requestingUser = await db.user.findUnique({
+        where: { id: auth.userId },
+        select: { employeeId: true },
+      });
+      if (requestingUser?.employeeId) {
+        whereClause.id = requestingUser.employeeId;
+      } else {
+        // Employee user without an associated employee record: return empty
+        return NextResponse.json({
+          success: true,
+          data: [],
+          pagination: { page, size, total: 0, totalPages: 0 },
+        });
+      }
+    }
     // CSC internal roles and Admin should see ALL employees from all institutions
     // Institution-based roles should only see employees from their institution
     // If no role provided, show all employees (default behavior)
-    if (shouldApplyInstitutionFilter(userRole, userInstitutionId)) {
+    else if (shouldApplyInstitutionFilter(userRole, userInstitutionId)) {
       whereClause.institutionId = userInstitutionId;
       logger.info({ value: userRole }, 'Applying institution filter for role');
     } else if (isCSCRole(userRole)) {
@@ -121,10 +160,10 @@ export const GET = wrapHandler(withRateLimit(withAuth(async (request, { auth }) 
       );
     }
 
-    // If a specific institution ID is provided, filter by that institution
-    if (institutionIdFilter) {
+    // SECURITY: Only CSC roles can filter by a specific institution (prevents HRO from overriding session filter)
+    if (institutionIdFilter && isCSCRole(userRole)) {
       whereClause.institutionId = institutionIdFilter;
-      logger.info({ value: institutionIdFilter }, 'Filtering by specific institution');
+      logger.info({ value: institutionIdFilter }, 'CSC role filtering by specific institution');
     }
 
     // If search query provided, search by name, zanId, payrollNumber, cadre, or institution name
@@ -205,13 +244,13 @@ export const GET = wrapHandler(withRateLimit(withAuth(async (request, { auth }) 
     logger.info(`Found ${employees.length} employees out of ${total} total`);
 
     // Map EmployeeCertificate to certificates and Institution to institution to match TypeScript interface
-    const mappedEmployees = employees.map((emp) => ({
+    const mappedEmployees = sanitizeEmployees(employees.map((emp) => ({
       ...emp,
       institution: emp.Institution,
       certificates: emp.EmployeeCertificate,
       Institution: undefined,
       EmployeeCertificate: undefined,
-    }));
+    })), userRole);
 
     // Set cache headers for employee list
     const headers = new Headers();

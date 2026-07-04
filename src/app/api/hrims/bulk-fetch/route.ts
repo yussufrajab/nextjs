@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { getHrimsApiConfig } from '@/lib/hrims-config';
 import { hrimsLogger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
+import { withAuth } from '@/lib/api-auth';
 
 async function fetchFromHRIMS(
  requestId: string,
@@ -482,7 +483,7 @@ async function processBulkFetch(
  }
 }
 
-export const POST = wrapHandler(async (req: NextRequest) => {
+export const POST = wrapHandler(withAuth(async (req, { auth }) => {
  // Get HRIMS configuration from database (or use defaults)
  const HRIMS_CONFIG = await getHrimsApiConfig();
 
@@ -532,4 +533,4 @@ export const POST = wrapHandler(async (req: NextRequest) => {
  status: 'started',
  },
 	});
-}, 'hrims-bulk-fetch');
+}, { allowedRoles: ['Admin', 'HHRMD'] }), 'hrims-bulk-fetch');

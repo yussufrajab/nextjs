@@ -33,6 +33,14 @@ export const GET = wrapHandler(async (
   const resolvedParams = await params;
   const objectKey = decodeURIComponent(resolvedParams.objectKey.join('/'));
 
+  // SECURITY: Path traversal validation
+  if (objectKey.includes('..') || objectKey.includes('\0') || objectKey.startsWith('/')) {
+    return NextResponse.json(
+      { success: false, message: 'Invalid file path' },
+      { status: 400 }
+    );
+  }
+
   fileLogger.info(
     { objectKeySegments: resolvedParams.objectKey },
     'Download API - Object key segments'

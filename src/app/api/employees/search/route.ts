@@ -5,6 +5,7 @@ import { withAuth } from '@/lib/api-auth';
 import { withRateLimit } from '@/lib/rate-limiter';
 import { logger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
+import { sanitizeEmployees } from '@/lib/sanitize-response';
 
 export const GET = wrapHandler(withRateLimit(withAuth(async (request, { auth }) => {
   const { searchParams } = new URL(request.url);
@@ -161,13 +162,13 @@ export const GET = wrapHandler(withRateLimit(withAuth(async (request, { auth }) 
     );
 
     // Map EmployeeCertificate to certificates and Institution to institution to match TypeScript interface
-    const mappedEmployees = filteredEmployees.map((emp) => ({
+    const mappedEmployees = sanitizeEmployees(filteredEmployees.map((emp) => ({
       ...emp,
       institution: emp.Institution,
       certificates: emp.EmployeeCertificate,
       Institution: undefined,
       EmployeeCertificate: undefined,
-    }));
+    })), userRole);
 
     return NextResponse.json({
       success: true,
@@ -177,13 +178,13 @@ export const GET = wrapHandler(withRateLimit(withAuth(async (request, { auth }) 
 
   // For CSC roles with full access
   // Map EmployeeCertificate to certificates and Institution to institution to match TypeScript interface
-  const mappedEmployees = employees.map((emp) => ({
+  const mappedEmployees = sanitizeEmployees(employees.map((emp) => ({
     ...emp,
     institution: emp.Institution,
     certificates: emp.EmployeeCertificate,
     Institution: undefined,
     EmployeeCertificate: undefined,
-  }));
+  })), userRole);
 
   return NextResponse.json({
     success: true,

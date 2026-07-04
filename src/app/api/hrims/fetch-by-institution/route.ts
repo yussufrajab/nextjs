@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { addHRIMSSyncJob } from '@/lib/jobs/hrims-sync-queue';
 import { hrimsLogger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
+import { withAuth } from '@/lib/api-auth';
 
 // Configure route
 export const dynamic = 'force-dynamic';
@@ -13,7 +14,7 @@ export const dynamic = 'force-dynamic';
  * Queue a background job to sync HRIMS data for an institution
  * Returns immediately with a job ID for progress tracking
  */
-export const POST = wrapHandler(async (req: NextRequest) => {
+export const POST = wrapHandler(withAuth(async (req, { auth }) => {
  const body = await req.json();
  const {
  identifierType,
@@ -109,4 +110,4 @@ export const POST = wrapHandler(async (req: NextRequest) => {
  institutionName: institution.name,
  statusUrl: `/api/hrims/sync-status/${jobId}`,
  });
-});
+}, { allowedRoles: ['Admin', 'HHRMD'] }));

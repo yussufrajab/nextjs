@@ -12,7 +12,7 @@ import {
   getQueueEvents,
   HRIMS_SYNC_QUEUE_NAME,
 } from '@/lib/jobs/hrims-sync-queue';
-import { wrapHandler } from '@/lib/error-handler';
+import { verifyAuth } from '@/lib/api-auth';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // 5 minutes max
@@ -22,11 +22,20 @@ export const maxDuration = 300; // 5 minutes max
  *
  * Stream real-time progress updates for a HRIMS sync job
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ jobId: string }> }
-) {
-  const { jobId } = await params;
+export const GET = async (request: NextRequest) => {
+  // Manual auth check (withAuth doesn't work with SSE Response type)
+  const authResult = await verifyAuth(request);
+  if (!authResult.authenticated) {
+    return authResult.response!;
+  }
+  const allowedRoles = ['Admin', 'HHRMD'];
+  const roleUpper = authResult.context!.role.toUpperCase();
+  if (!allowedRoles.map(r => r.toUpperCase()).includes(roleUpper)) {
+    return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 });
+  }
+
+  const url = new URL(request.url);
+  const jobId = url.pathname.split('/').filter(Boolean).pop()!;
 
   if (!jobId) {
     return NextResponse.json(
@@ -182,4 +191,4 @@ export async function GET(
       'X-Accel-Buffering': 'no', // Disable buffering in nginx
     },
   });
-}
+};

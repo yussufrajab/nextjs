@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getJobStatus } from '@/lib/jobs/hrims-sync-queue';
 import { hrimsLogger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
+import { withAuth } from '@/lib/api-auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,11 +18,9 @@ export const dynamic = 'force-dynamic';
  *
  * Get current job status as JSON (for polling)
  */
-export const GET = wrapHandler(async (
-  request: NextRequest,
-  { params }: { params: Promise<{ jobId: string }> }
-) => {
-  const { jobId } = await params;
+export const GET = wrapHandler(withAuth(async (request, { auth }) => {
+  const url = new URL(request.url);
+  const jobId = url.pathname.split('/').filter(Boolean).pop()!;
 
   if (!jobId) {
     return NextResponse.json(
@@ -51,4 +50,4 @@ export const GET = wrapHandler(async (
     processedOn: jobStatus.processedOn,
     finishedOn: jobStatus.finishedOn,
   });
-});
+}, { allowedRoles: ['Admin', 'HHRMD'] }));

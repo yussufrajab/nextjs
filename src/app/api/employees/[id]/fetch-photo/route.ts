@@ -27,6 +27,41 @@ export const POST = wrapHandler(async (
   }
 
   const { id: employeeId } = await params;
+  const roleUpper = auth.role.toUpperCase();
+
+  if (['ADMIN', 'HRMO', 'HHRMD', 'CSCS', 'DO', 'PO'].includes(roleUpper)) {
+    // Central/commission roles — unrestricted access
+  } else if (roleUpper === 'HRO' || roleUpper === 'HRRP') {
+    // Institution-scoped access: employee must belong to the user's institution
+    const empCheck = await prisma.employee.findUnique({
+      where: { id: employeeId },
+      select: { institutionId: true },
+    });
+    if (!empCheck || empCheck.institutionId !== auth.institutionId) {
+      return NextResponse.json(
+        { success: false, message: 'Access denied' },
+        { status: 403 }
+      );
+    }
+  } else if (roleUpper === 'EMPLOYEE') {
+    // Ownership check: the requested employee must be the user's own record
+    const user = await prisma.user.findUnique({
+      where: { id: auth.userId },
+      select: { employeeId: true },
+    });
+    if (!user?.employeeId || user.employeeId !== employeeId) {
+      return NextResponse.json(
+        { success: false, message: 'Access denied' },
+        { status: 403 }
+      );
+    }
+  } else {
+    // Unknown role — deny by default
+    return NextResponse.json(
+      { success: false, message: 'Access denied' },
+      { status: 403 }
+    );
+  }
 
   const employee = await prisma.employee.findUnique({
     where: { id: employeeId },

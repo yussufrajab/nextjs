@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { z } from 'zod';
 import { hrimsLogger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
+import { withAuth } from '@/lib/api-auth';
 
 // Validation schema for employee search request
 const employeeSearchSchema = z
@@ -18,7 +19,7 @@ const employeeSearchSchema = z
     path: ['zanId', 'payrollNumber'],
   });
 
-export const GET = wrapHandler(async (req: Request) => {
+export const GET = wrapHandler(withAuth(async (req: Request) => {
   const { searchParams } = new URL(req.url);
 
   const requestData = {
@@ -178,9 +179,9 @@ export const GET = wrapHandler(async (req: Request) => {
     },
     { status: 200 }
   );
-}, 'hrims-search-employee');
+}, { allowedRoles: ['Admin', 'HHRMD', 'CSCS'] }), 'hrims-search-employee');
 
-export const POST = wrapHandler(async (req: Request) => {
+export const POST = wrapHandler(withAuth(async (req) => {
   const body = await req.json();
 
   // Validate request payload
@@ -332,4 +333,4 @@ export const POST = wrapHandler(async (req: Request) => {
     },
     { status: 200 }
   );
-}, 'hrims-search-employee');
+}, { allowedRoles: ['Admin', 'HHRMD', 'CSCS'] }), 'hrims-search-employee');

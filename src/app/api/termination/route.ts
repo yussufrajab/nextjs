@@ -153,6 +153,28 @@ async function POSTHandler(req: Request) {
       );
     }
 
+    // SECURITY: Verify employee exists before creating request
+    const employee = await db.employee.findUnique({
+      where: { id: body.employeeId },
+      select: { id: true, name: true, institutionId: true },
+    });
+    if (!employee) {
+      return NextResponse.json(
+        { success: false, message: 'Employee not found' },
+        { status: 404 }
+      );
+    }
+
+    // SECURITY: Institution ownership check — HRO/HRRP can only create requests for their own institution's employees
+    if (shouldApplyInstitutionFilter(auth.role, auth.institutionId)) {
+      if (employee.institutionId !== auth.institutionId) {
+        return NextResponse.json(
+          { success: false, message: 'Access denied: employee belongs to a different institution' },
+          { status: 403 }
+        );
+      }
+    }
+
     // Determine initial status based on submitter role
     const isHRRP = auth.role === 'HRRP';
     const initialStatus = isHRRP
@@ -302,6 +324,36 @@ async function PATCHHandler(req: Request) {
           success: false,
           message: 'Request ID is required',
         },
+        { status: 400 }
+      );
+    }
+
+    // SECURITY: Fetch existing request to verify institution ownership
+    const existingSepRequest = await db.separationRequest.findUnique({
+      where: { id },
+      include: { Employee: { select: { id: true, institutionId: true } } },
+    });
+    if (!existingSepRequest) {
+      return NextResponse.json(
+        { success: false, message: 'Termination request not found' },
+        { status: 404 }
+      );
+    }
+
+    // SECURITY: Institution ownership check — HRO/HRRP can only modify their own institution's requests
+    if (shouldApplyInstitutionFilter(auth.role, auth.institutionId)) {
+      if (!existingSepRequest.Employee || existingSepRequest.Employee.institutionId !== auth.institutionId) {
+        return NextResponse.json(
+          { success: false, message: 'Access denied: request belongs to a different institution' },
+          { status: 403 }
+        );
+      }
+    }
+
+    // SECURITY: Enforce rejection reason for all rejections
+    if (updateData.status?.toLowerCase().includes('rejected') && !updateData.rejectionReason && !body.rejectionReason) {
+      return NextResponse.json(
+        { success: false, message: 'Rejection reason is required when rejecting a request' },
         { status: 400 }
       );
     }

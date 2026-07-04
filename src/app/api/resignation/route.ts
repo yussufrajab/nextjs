@@ -164,7 +164,7 @@ async function POSTHandler(req: Request) {
     // Get employee details to check status
     const employee = await db.employee.findUnique({
       where: { id: body.employeeId },
-      select: { id: true, name: true, status: true },
+      select: { id: true, name: true, status: true, institutionId: true },
     });
 
     if (!employee) {
@@ -175,6 +175,16 @@ async function POSTHandler(req: Request) {
         },
         { status: 404 }
       );
+    }
+
+    // SECURITY: Institution ownership check — HRO/HRRP can only create requests for their own institution's employees
+    if (shouldApplyInstitutionFilter(auth.role, auth.institutionId)) {
+      if (employee.institutionId !== auth.institutionId) {
+        return NextResponse.json(
+          { success: false, message: 'Access denied: employee belongs to a different institution' },
+          { status: 403 }
+        );
+      }
     }
 
     // Validate employee status for resignation request

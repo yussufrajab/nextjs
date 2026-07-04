@@ -11,9 +11,18 @@ import { sendRequestStatusUpdateEmail } from '@/lib/email';
 import { logger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
 import { verifyAuth } from '@/lib/api-auth';
+import { shouldApplyInstitutionFilter } from '@/lib/role-utils';
+
+const VALID_STATUSES = [
+  'Pending HRRP Review',
+  'Approved by HRRP - Awaiting Commission Review',
+  'Rejected by HRRP - Awaiting HRO Correction',
+  'Approved by Commission',
+  'Rejected by Commission - Request Concluded',
+] as const;
 
 const updateSchema = z.object({
-  status: z.string().optional(),
+  status: z.enum(VALID_STATUSES).optional(),
   reviewStage: z.string().optional(),
   rejectionReason: z.string().nullable().optional(),
   reviewedById: z.string().optional(),
@@ -54,6 +63,103 @@ async function handleUpdate(
     const headers = new Headers(req.headers);
     const ipAddress = getClientIp(headers);
     const deviceInfo = JSON.parse(headers.get('x-device-info') || 'null');
+
+    // Fetch existing request for transition validation
+    const existingRequest = await db.cadreChangeRequest.findUnique({
+      where: { id },
+      include: { Employee: { select: { id: true, institutionId: true } } },
+    });
+
+    if (!existingRequest) {
+      return new NextResponse('Cadre change request not found', { status: 404 });
+    }
+
+    // SECURITY: Institution ownership check — HRO/HRRP can only modify their own institution's requests
+    if (shouldApplyInstitutionFilter(auth.role, auth.institutionId)) {
+      if (!existingRequest.Employee || existingRequest.Employee.institutionId !== auth.institutionId) {
+        return NextResponse.json(
+          { success: false, message: 'Access denied: request belongs to a different institution' },
+          { status: 403 }
+        );
+      }
+    }
+
+    // Validate status transition
+    if (validatedData.status && existingRequest.status !== validatedData.status) {
+      const ALLOWED_TRANSITIONS: Record<string, string[]> = {
+        'Pending HRRP Review': [
+          'Approved by HRRP - Awaiting Commission Review',
+          'Rejected by HRRP - Awaiting HRO Correction',
+        ],
+        'Approved by HRRP - Awaiting Commission Review': [
+          'Approved by Commission',
+          'Rejected by Commission - Request Concluded',
+        ],
+        'Rejected by HRRP - Awaiting HRO Correction': [
+          'Pending HRRP Review',
+        ],
+      };
+      const allowed = ALLOWED_TRANSITIONS[existingRequest.status] || [];
+      if (!allowed.includes(validatedData.status)) {
+        return NextResponse.json(
+          { success: false, message: `Invalid status transition from "${existingRequest.status}" to "${validatedData.status}"` },
+          { status: 400 }
+        );
+      }
+    }
+
+  // SECURITY: Enforce rejection reason for all rejections
+  if (validatedData.status?.toLowerCase().includes('rejected') && !validatedData.rejectionReason) {
+    return NextResponse.json(
+      { success: false, message: 'Rejection reason is required when rejecting a request' },
+      { status: 400 }
+    );
+  }
+
+    // Role-based authorization
+    if (validatedData.status) {
+      const isHrrpApproval =
+        validatedData.status === 'Approved by HRRP - Awaiting Commission Review' &&
+        (validatedData.hrrpReviewedById || auth.role === 'HRRP');
+      const isHrrpRejection =
+        validatedData.status === 'Rejected by HRRP - Awaiting HRO Correction';
+      const isHrrpAction = isHrrpApproval || isHrrpRejection;
+      const isCommissionDecision =
+        validatedData.reviewedById !== undefined &&
+        !isHrrpAction &&
+        (validatedData.status === 'Approved by Commission' ||
+          validatedData.status === 'Rejected by Commission - Request Concluded');
+      const isResubmission =
+        validatedData.status === 'Pending HRRP Review' &&
+        !validatedData.reviewedById;
+
+      if (isHrrpAction && auth.role !== 'HRRP') {
+        return NextResponse.json(
+          { success: false, message: 'Only HRRP can perform HRRP review actions' },
+          { status: 403 }
+        );
+      }
+      if (isCommissionDecision && !['HHRMD', 'HRMO'].includes(auth.role)) {
+        return NextResponse.json(
+          { success: false, message: 'Only HHRMD or HRMO can make commission decisions' },
+          { status: 403 }
+        );
+      }
+      if (isResubmission && !['HRO', 'HRRP'].includes(auth.role)) {
+        return NextResponse.json(
+          { success: false, message: 'Only HRO or HRRP can resubmit requests' },
+          { status: 403 }
+        );
+      }
+
+      // Validate that commission decisions include a commission letter
+      if (isCommissionDecision && !validatedData.commissionLetterKey) {
+        return NextResponse.json(
+          { success: false, message: 'Commission letter is required for commission decisions' },
+          { status: 400 }
+        );
+      }
+    }
 
     const updatedRequest = await db.cadreChangeRequest.update({
       where: { id },
@@ -254,6 +360,17 @@ async function GETHandler(
       return new NextResponse('Cadre change request not found', {
         status: 404,
       });
+    }
+
+    // SECURITY: Institution ownership check — HRO/HRRP can only view their own institution's requests
+    if (shouldApplyInstitutionFilter(auth.role, auth.institutionId)) {
+      const employeeInstitutionId = request.Employee?.Institution?.id;
+      if (employeeInstitutionId !== auth.institutionId) {
+        return NextResponse.json(
+          { success: false, message: 'Access denied: request belongs to a different institution' },
+          { status: 403 }
+        );
+      }
     }
 
     return NextResponse.json(request);

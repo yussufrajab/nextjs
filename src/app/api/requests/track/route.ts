@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
+import { verifyAuth } from '@/lib/api-auth';
+import { shouldApplyInstitutionFilter } from '@/lib/role-utils';
 
 const employeeSelect = {
   id: true,
@@ -82,6 +84,12 @@ const REQUEST_TYPES = [
 ] as const;
 
 export const GET = wrapHandler(async (req: Request) => {
+    const authResult = await verifyAuth(req);
+    if (!authResult.authenticated) {
+      return authResult.response!;
+    }
+    const auth = authResult.context!;
+
     const { searchParams } = new URL(req.url);
     const institutionName = searchParams.get('institutionName');
     const requestType = searchParams.get('requestType');
@@ -94,8 +102,16 @@ export const GET = wrapHandler(async (req: Request) => {
       'Track requests API called with'
     );
 
+    // SECURITY: Apply institution filtering based on role
     let institutionFilter: any = {};
-    if (institutionName) {
+    if (shouldApplyInstitutionFilter(auth.role, auth.institutionId)) {
+      institutionFilter = {
+        Employee: {
+          institutionId: auth.institutionId,
+        },
+      };
+    } else if (institutionName) {
+      // CSC roles can optionally filter by institution name
       institutionFilter = {
         Employee: {
           Institution: {
