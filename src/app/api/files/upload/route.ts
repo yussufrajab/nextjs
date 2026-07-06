@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { uploadFile, generateObjectKey } from '@/lib/minio';
 import { logFileAction, getClientIp as getAuditClientIp } from '@/lib/audit-logger';
 import { validateFileUpload } from '@/lib/file-validation';
+import { recordFileHash } from '@/lib/file-integrity';
 import { verifyAuth } from '@/lib/api-auth';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limiter';
 import { validateCSRF } from '@/lib/api-csrf-middleware';
@@ -59,6 +60,13 @@ export const POST = wrapHandler(async (request: Request) => {
     objectKey,
     file.type || 'application/octet-stream'
   );
+
+  // Record the SHA-256 integrity hash so download/preview can detect
+  // tampering after upload. Fail-safe: a recording failure does not abort
+  // the upload — downloads simply fail-open (no hash recorded).
+  await recordFileHash(uploadResult.objectKey, buffer, auth.userId).catch((err) => {
+    logger.error({ err, objectKey: uploadResult.objectKey }, 'Failed to record file integrity hash');
+  });
 
   await logFileAction({
     action: 'UPLOADED',

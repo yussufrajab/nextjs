@@ -1,0 +1,159 @@
+name: ClamAV EICAR Canary (GAP-L2)
+
+on:
+  schedule:
+    # Nightly at 02:30 UTC (off-the-hour to avoid the fleet-wide :00 spike)
+    - cron: '30 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  eicar-canary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: Mamlaka2020
+          POSTGRES_DB: csms_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      minio:
+        image: minio/minio
+        ports:
+          - 9000:9000
+        env:
+          MINIO_ROOT_USER: csmsadmin
+          MINIO_ROOT_PASSWORD: Mamlaka2020MinIO
+        options: >-
+          --health-cmd "curl -f http://localhost:9000/minio/health/live || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        command: server /data
+
+      clamav:
+        image: clamav/clamav:1.2
+        ports:
+          - 3310:3310
+        options: >-
+          --health-interval 15s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Setup test environment variables
+        run: |
+          cp .env.test .env
+          echo "DATABASE_URL=postgresql://postgres:Mamlaka2020@localhost:5432/csms_test?schema=public" >> .env
+          echo "REDIS_HOST=localhost" >> .env
+          echo "CLAMAV_HOST=localhost" >> .env
+          echo "CLAMAV_PORT=3310" >> .env
+          echo "CLAMAV_ENABLED=true" >> .env
+          echo "MINIO_ENDPOINT=localhost" >> .env
+          echo "MINIO_PORT=9000" >> .env
+          echo "MINIO_ACCESS_KEY=csmsadmin" >> .env
+          echo "MINIO_SECRET_KEY=Mamlaka2020MinIO" >> .env
+          echo "MINIO_BUCKET=test-bucket" >> .env
+
+      - name: Run Prisma migrations
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: postgresql://postgres:Mamlaka2020@localhost:5432/csms_test?schema=public
+
+      - name: Seed base data
+        run: npx tsx prisma/seed.ts
+        env:
+          DATABASE_URL: postgresql://postgres:Mamlaka2020@localhost:5432/csms_test?schema=public
+
+      - name: Provision canary user (no email → MFA skipped)
+        run: |
+          npx tsx -e '
+            import { PrismaClient } from "@prisma/client";
+            import bcrypt from "bcryptjs";
+            const db = new PrismaClient();
+            const inst = await db.institution.findFirst();
+            const institutionId = inst?.id ?? null;
+            const password = await bcrypt.hash(process.env.EICAR_CANARY_PASSWORD || "Canary@2026", 10);
+            await db.user.upsert({
+              where: { username: process.env.EICAR_CANARY_USERNAME || "canary_hro" },
+              update: { password, role: "HRO", active: true, email: null, institutionId },
+              create: {
+                id: "canary-hro-1",
+                name: "EICAR Canary HRO",
+                username: process.env.EICAR_CANARY_USERNAME || "canary_hro",
+                password,
+                role: "HRO",
+                active: true,
+                email: null,
+                institutionId,
+              },
+            });
+            await db.$disconnect();
+            console.log("canary user ready");
+          '
+        env:
+          DATABASE_URL: postgresql://postgres:Mamlaka2020@localhost:5432/csms_test?schema=public
+          EICAR_CANARY_USERNAME: canary_hro
+          EICAR_CANARY_PASSWORD: Canary@2026
+
+      - name: Build application
+        run: npm run build
+        env:
+          DATABASE_URL: postgresql://postgres:Mamlaka2020@localhost:5432/csms_test?schema=public
+          CLAMAV_ENABLED: 'true'
+          CLAMAV_HOST: localhost
+          CLAMAV_PORT: '3310'
+
+      - name: Run EICAR canary
+        run: npx playwright test e2e/tests/security/eicar-canary.spec.ts
+        env:
+          CI: 'true'
+          E2E_BASE_URL: http://localhost:9002
+          DATABASE_URL: postgresql://postgres:Mamlaka2020@localhost:5432/csms_test?schema=public
+          CLAMAV_ENABLED: 'true'
+          CLAMAV_HOST: localhost
+          CLAMAV_PORT: '3310'
+          EICAR_CANARY_USERNAME: canary_hro
+          EICAR_CANARY_PASSWORD: Canary@2026
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eicar-canary-report
+          path: playwright-report/
+          retention-days: 30

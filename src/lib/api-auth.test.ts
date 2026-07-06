@@ -22,10 +22,15 @@ const mockFindUnique = vi.fn();
 vi.mock('@/lib/session-manager', () => ({
   validateSession: (...args: any[]) => mockValidateSession(...args),
   markSessionSuspicious: (...args: any[]) => mockMarkSessionSuspicious(...args),
+  // Mirror the production env-aware cookie-name constants so verifyAuth
+  // can read either the prod (__Host-session) or dev (session) cookie.
+  SESSION_COOKIE_NAME_PROD: '__Host-session',
+  SESSION_COOKIE_NAME_DEV: 'session',
+  SESSION_COOKIE_NAME: 'session', // vitest runs in dev (NODE_ENV !== 'production')
   // Pass-through signing helpers so the tests can build realistic cookies.
   signSessionToken: (token: string) => {
     const { createHmac } = require('crypto');
-    const expiry = Date.now() + 86400000; // 24h from now
+    const expiry = Date.now() + 8 * 60 * 60 * 1000; // 8h from now
     const payload = `${token}.${expiry}`;
     const hmac = createHmac('sha256', process.env.SESSION_SECRET);
     hmac.update(payload);
@@ -61,8 +66,15 @@ vi.mock('@/lib/db', () => ({
   },
 }));
 
+// NOTE: `logAccessDenied` / `logForbiddenRoute` are plain arrow functions (not
+// `vi.fn()`) so the `mockReset: true` config does not strip their Promise
+// implementation between tests. `withAuth`/`requireReauth` call `.catch()` on
+// the result; these always return a resolved promise. The api-auth tests do
+// not assert on audit calls, so non-mock functions are sufficient.
 vi.mock('@/lib/audit-logger', () => ({
   getClientIp: (headers: Headers) => headers.get('x-forwarded-for') || null,
+  logAccessDenied: () => Promise.resolve(undefined),
+  logForbiddenRoute: () => Promise.resolve(undefined),
 }));
 
 // ---------------------------------------------------------------------------

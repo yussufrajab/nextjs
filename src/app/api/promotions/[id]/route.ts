@@ -6,6 +6,8 @@ import { v4 as uuidv4 } from 'uuid';
 import {
   logRequestApproval,
   logRequestRejection,
+  logRequestForward,
+  logRequestWithdrawal,
   getClientIp,
 } from '@/lib/audit-logger';
 import { sendRequestStatusUpdateEmail } from '@/lib/email';
@@ -370,6 +372,29 @@ const handleUpdate = wrapHandler(async (
                 currentCadre: updatedRequest.Employee?.cadre,
               },
             });
+
+            // GAP-M1: the HRRP "approve" also forwards the request to the
+            // Commission. Log the stage handoff (distinct from the verdict).
+            if (
+              validatedData.status ===
+                'Approved by HRRP - Awaiting Commission Review' &&
+              existingRequest.status === 'Pending HRRP Review'
+            ) {
+              await logRequestForward({
+                requestType: 'Promotion',
+                requestId: id,
+                employeeId: updatedRequest.employeeId,
+                employeeName: updatedRequest.Employee?.name,
+                employeeZanId: updatedRequest.Employee?.zanId,
+                forwardedById: auth.userId,
+                forwardedByUsername: auth.username,
+                forwardedByRole: auth.role,
+                fromStage: 'HRRP Review',
+                toStage: 'Commission Review',
+                ipAddress,
+                deviceInfo,
+              }).catch(() => {});
+            }
           } else if (isRejection) {
             await logRequestRejection({
               requestType: 'Promotion',
@@ -419,3 +444,110 @@ const handleUpdate = wrapHandler(async (
 // Export both PUT and PATCH handlers
 export const PUT = handleUpdate;
 export const PATCH = handleUpdate;
+
+// GAP-M2: Withdrawal / cancellation handler. The original submitter (or an
+// oversight role) can withdraw a request that has not yet reached a final
+// Commission decision. The withdrawal is logged for non-repudiation BEFORE
+// the row is removed, so the audit trail records WHO cancelled it and WHY
+// even though the request itself is deleted.
+export const DELETE = wrapHandler(async (
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) => {
+  const { id } = await params;
+  const authResult = await verifyAuth(req);
+  if (!authResult.authenticated) {
+    return authResult.response!;
+  }
+  const auth = authResult.context!;
+
+  const headers = new Headers(req.headers);
+  const ipAddress = getClientIp(headers);
+  const deviceInfo = JSON.parse(headers.get('x-device-info') || 'null');
+
+  // Withdrawal reason is optional but recommended for non-repudiation.
+  let withdrawalReason: string | undefined;
+  try {
+    const body = await req.json();
+    withdrawalReason =
+      typeof body?.withdrawalReason === 'string' ? body.withdrawalReason : undefined;
+  } catch {
+    // No body or malformed JSON — treat as withdrawal without a stated reason.
+  }
+
+  const existingRequest = await db.promotionRequest.findUnique({
+    where: { id },
+    include: {
+      Employee: { select: { id: true, institutionId: true, name: true, zanId: true } },
+    },
+  });
+
+  if (!existingRequest) {
+    return new NextResponse('Promotion request not found', { status: 404 });
+  }
+
+  // SECURITY: Institution ownership check — HRO/HRRP can only withdraw their
+  // own institution's requests.
+  if (shouldApplyInstitutionFilter(auth.role, auth.institutionId)) {
+    if (
+      !existingRequest.Employee ||
+      existingRequest.Employee.institutionId !== auth.institutionId
+    ) {
+      return NextResponse.json(
+        { success: false, message: 'Access denied: request belongs to a different institution' },
+        { status: 403 }
+      );
+    }
+  }
+
+  // Only the original submitter or an oversight role (Admin/HHRMD) may withdraw.
+  const canWithdraw =
+    existingRequest.submittedById === auth.userId ||
+    ['Admin', 'HHRMD'].includes(auth.role);
+  if (!canWithdraw) {
+    return NextResponse.json(
+      {
+        success: false,
+        message: 'Only the original submitter or an administrator may withdraw this request',
+      },
+      { status: 403 }
+    );
+  }
+
+  // A request that has already received a final Commission decision is part of
+  // the historical record and cannot be withdrawn.
+  const TERMINAL_STATUSES = [
+    'Approved by Commission',
+    'Rejected by Commission - Request Concluded',
+  ];
+  if (TERMINAL_STATUSES.includes(existingRequest.status)) {
+    return NextResponse.json(
+      {
+        success: false,
+        message: 'Cannot withdraw a request that has already received a final Commission decision',
+      },
+      { status: 409 }
+    );
+  }
+
+  // GAP-M2: log the withdrawal for non-repudiation before deleting the row.
+  // Fail-safe: an audit write failure does not block the withdrawal.
+  await logRequestWithdrawal({
+    requestType: 'Promotion',
+    requestId: id,
+    employeeId: existingRequest.employeeId,
+    employeeName: existingRequest.Employee?.name,
+    employeeZanId: existingRequest.Employee?.zanId,
+    withdrawnById: auth.userId,
+    withdrawnByUsername: auth.username,
+    withdrawnByRole: auth.role,
+    withdrawalReason,
+    reviewStage: existingRequest.reviewStage,
+    ipAddress,
+    deviceInfo,
+  }).catch(() => {});
+
+  await db.promotionRequest.delete({ where: { id } });
+
+  return NextResponse.json({ success: true, message: 'Request withdrawn successfully' });
+}, 'promotions-withdraw');

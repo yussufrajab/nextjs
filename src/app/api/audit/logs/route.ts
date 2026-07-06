@@ -53,7 +53,23 @@ export const GET = wrapHandler(
     if (userId) filters.userId = userId;
     if (username) filters.username = username;
     if (attemptedRoute) filters.attemptedRoute = attemptedRoute;
-    if (limit) filters.limit = parseInt(limit, 10);
+    // SECURITY: hard-cap `limit` to prevent expensive full-table scans
+    // and request timeouts. The cap is 100,000 rows. For exports larger
+    // than this, use the async export endpoint (out of scope here).
+    const MAX_LIMIT = 100_000;
+    const DEFAULT_LIMIT = 100;
+    if (limit) {
+      const parsed = parseInt(limit, 10);
+      if (!Number.isFinite(parsed) || parsed < 1) {
+        return NextResponse.json(
+          { success: false, error: 'Invalid limit parameter', errorCode: 'INVALID_LIMIT' },
+          { status: 400 }
+        );
+      }
+      filters.limit = Math.min(parsed, MAX_LIMIT);
+    } else {
+      filters.limit = DEFAULT_LIMIT;
+    }
     if (offset) filters.offset = parseInt(offset, 10);
 
     const result = await getAuditLogs(filters);
@@ -61,6 +77,10 @@ export const GET = wrapHandler(
     return NextResponse.json({
       success: true,
       data: result,
+      meta: {
+        limit: filters.limit,
+        offset: filters.offset ?? 0,
+      },
     });
   }, { allowedRoles: ['Admin', 'CSCS'] }),
   'audit-logs'

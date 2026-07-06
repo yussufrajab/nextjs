@@ -158,6 +158,41 @@ model EmployeeCertificate {
   Employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 }
 
+/// Cryptographic integrity hash for employee documents (ardhilHaliUrl,
+/// confirmationLetterUrl, jobContractUrl, birthCertificateUrl, certificate.url,
+/// file uploads). SHA-256 hex (64 chars). Verified on download/preview.
+/// A mismatch indicates tampering after upload and triggers an
+/// INTEGRITY_MISMATCH audit event.
+model DocumentHash {
+  id          String   @id @default(cuid())
+  employeeId  String
+  fieldName   String   // e.g. "ardhilHaliUrl", "jobContractUrl", "certificate:abc-123"
+  sha256      String   // hex-encoded SHA-256 (64 chars)
+  byteSize    Int      // size of the data the hash was computed over
+  createdAt   DateTime @default(now())
+  lastVerified DateTime?
+  uploadedBy  String?  // userId of uploader (audit attribution)
+
+  @@unique([employeeId, fieldName])
+  @@index([employeeId])
+  @@index([fieldName])
+}
+
+/// Cryptographic integrity hash for generic MinIO file uploads (objectKey-keyed),
+/// e.g. complaint attachments and other files served via /api/files/download
+/// and /api/files/preview. SHA-256 hex (64 chars). Recorded on upload and
+/// verified on download/preview; a mismatch indicates tampering after upload
+/// and triggers an INTEGRITY_MISMATCH audit event (the file is not served).
+model FileHash {
+  id           String   @id @default(cuid())
+  objectKey    String   @unique
+  sha256       String   // hex-encoded SHA-256 (64 chars)
+  byteSize     Int
+  createdAt    DateTime @default(now())
+  lastVerified DateTime?
+  uploadedBy   String?  // userId of uploader (audit attribution)
+}
+
 model Institution {
   id                   String     @id
   name                 String     @unique

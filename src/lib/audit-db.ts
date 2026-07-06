@@ -461,3 +461,127 @@ export async function ensurePartitions(monthsAhead: number = 12): Promise<void> 
     }
   }
 }
+
+/**
+ * Verify that the current month and next month partitions exist.
+ *
+ * Called at application startup. Throws if either is missing so that the
+ * process can fail-fast instead of silently dropping audit events when the
+ * next month boundary hits and the partition was not pre-created.
+ *
+ * Throwing here is intentional: audit-log INSERT failures are unrecoverable
+ * from the application's perspective (we cannot retroactively create
+ * partitions after writes have started failing) and a missing partition is
+ * always a deployment/scheduling bug, not a transient failure.
+ */
+export async function assertPartitionsReady(): Promise<void> {
+  const pool = getAuditPool();
+  const now = new Date();
+
+  // Check current month + next month
+  const monthsToCheck = [0, 1].map((offset) => {
+    const d = new Date(now.getUTCFullYear(), now.getUTCMonth() + offset, 1);
+    const y = d.getUTCFullYear();
+    const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+    return `audit_log_${y}_${m}`;
+  });
+
+  const sql = `
+    SELECT table_name
+    FROM information_schema.tables
+    WHERE table_schema = 'audit'
+      AND table_name = ANY($1::text[])
+  `;
+  const result = await pool.query<{ table_name: string }>(sql, [monthsToCheck]);
+  const found = new Set(result.rows.map((r) => r.table_name));
+  const missing = monthsToCheck.filter((name) => !found.has(name));
+
+  if (missing.length > 0) {
+    // Try to create them on the fly (handles first boot, fresh dev DBs, etc.)
+    dbLogger.warn({ missing }, 'Audit partitions missing on startup — creating now');
+    await ensurePartitions(2);
+
+    // Re-verify after the creation attempt
+    const verifyResult = await pool.query<{ table_name: string }>(sql, [monthsToCheck]);
+    const verifyFound = new Set(verifyResult.rows.map((r) => r.table_name));
+    const stillMissing = monthsToCheck.filter((name) => !verifyFound.has(name));
+    if (stillMissing.length > 0) {
+      throw new Error(
+        `CRITICAL: audit partitions missing after auto-create: ${stillMissing.join(', ')}. ` +
+          'Audit-log INSERTs will fail at the next month boundary. ' +
+          'Run scripts/ensure-partitions.sh manually to recover.'
+      );
+    }
+  }
+
+  dbLogger.info({ partitions: monthsToCheck }, 'Audit partitions verified on startup');
+}
+
+/**
+ * Detach (and optionally archive) audit partitions older than `retentionMonths`.
+ *
+ * Default retention is 84 months (7 years) — the typical government-HR
+ * compliance window. Partitions older than that are detached from the parent
+ * table (so they no longer receive INSERTs) but are NOT dropped — they
+ * remain in the database for archival/forensic purposes.
+ *
+ * Detached partitions can be:
+ *   - Moved to cold storage (e.g. pg_dump + S3 Glacier)
+ *   - Dropped manually after the compliance window has fully elapsed
+ *   - Kept indefinitely for forensic purposes
+ *
+ * Returns the names of the partitions that were detached.
+ */
+export async function enforceRetentionPolicy(
+  retentionMonths: number = 84,
+  options: { dryRun?: boolean } = {}
+): Promise<string[]> {
+  const pool = getAuditPool();
+  const cutoff = new Date();
+  cutoff.setUTCMonth(cutoff.getUTCMonth() - retentionMonths);
+
+  // Find all partitions and their date ranges
+  const listSql = `
+    SELECT
+      child.relname AS partition_name,
+      pg_get_expr(child.relpartbound, child.oid) AS bound
+    FROM pg_inherits
+    JOIN pg_class parent ON pg_inherits.inhparent = parent.oid
+    JOIN pg_class child  ON pg_inherits.inhrelid   = child.oid
+    WHERE parent.relname = 'audit_log'
+      AND child.relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'audit')
+  `;
+  const result = await pool.query<{ partition_name: string; bound: string }>(listSql);
+  const detached: string[] = [];
+
+  for (const row of result.rows) {
+    // bound is e.g. "FOR VALUES FROM ('2024-01-01 00:00:00+00') TO ('2024-02-01 00:00:00+00')"
+    // Extract the FROM date.
+    const match = row.bound.match(/FROM \('([^']+)'/);
+    if (!match) continue;
+    const partitionStart = new Date(match[1]);
+    if (isNaN(partitionStart.getTime())) continue;
+
+    if (partitionStart < cutoff) {
+      if (options.dryRun) {
+        dbLogger.info({ partition: row.partition_name, start: partitionStart }, 'DRY-RUN: would detach');
+        detached.push(row.partition_name);
+        continue;
+      }
+      // ALTER TABLE audit.audit_log DETACH PARTITION audit.audit_log_YYYY_MM;
+      const detachSql = `ALTER TABLE audit.audit_log DETACH PARTITION audit.${row.partition_name}`;
+      try {
+        await pool.query(detachSql);
+        dbLogger.info(
+          { partition: row.partition_name, start: partitionStart },
+          'Detached audit partition (retention policy)'
+        );
+        detached.push(row.partition_name);
+      } catch (err) {
+        dbLogger.error({ err, partition: row.partition_name }, 'Failed to detach audit partition');
+      }
+    }
+  }
+
+  return detached;
+}

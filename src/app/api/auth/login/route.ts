@@ -3,7 +3,9 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import { comparePassword } from '@/lib/password-utils';
-import { logLoginAttempt, getClientIp } from '@/lib/audit-logger';
+import { logLoginAttempt, getClientIp, logAuditEvent, AuditEventType, AuditEventCategory, AuditSeverity } from '@/lib/audit-logger';
+import { checkPasswordBreached } from '@/lib/hibp';
+import { createNotification } from '@/lib/notifications';
 import { completeLogin } from '@/lib/auth-helpers';
 import { createMfaToken, checkOtpRateLimit, maskEmail } from '@/lib/mfa-utils';
 import { sendMfaEmail } from '@/lib/email';
@@ -230,6 +232,42 @@ export const POST = wrapHandler(withRateLimit(async (request) => {
 
     // Reset failed login attempts on successful login
     await resetFailedLoginAttempts(currentUser.id);
+
+    // HIBP breach flag (GAP-H3): best-effort, non-blocking. If the password that
+    // just authenticated appears in a known breach, flag it via an audit event
+    // + notification so the user changes it. Never blocks or delays the login —
+    // runs fire-and-forget. Fail-open on any error (HIBP down, etc.).
+    void (async () => {
+      try {
+        const breach = await checkPasswordBreached(password);
+        if (breach.isPwned) {
+          await logAuditEvent({
+            eventType: AuditEventType.PASSWORD_PWNED_LOGIN,
+            eventCategory: AuditEventCategory.SECURITY,
+            severity: AuditSeverity.WARNING,
+            userId: currentUser.id,
+            username: user.username,
+            userRole: user.role,
+            ipAddress,
+            deviceInfo,
+            attemptedRoute: '/api/auth/login',
+            requestMethod: 'POST',
+            isAuthenticated: true,
+            wasBlocked: false,
+            blockReason: null,
+            additionalData: { breachCount: breach.count, kind: 'hibp_flag' },
+          }).catch(() => {});
+          await createNotification({
+            userId: currentUser.id,
+            message:
+              'Your password was found in a known data breach. Please change it immediately in your profile settings.',
+            link: '/dashboard/profile',
+          }).catch(() => {});
+        }
+      } catch {
+        // fail-open: never block login
+      }
+    })();
 
     // Check password status
     const now = new Date();

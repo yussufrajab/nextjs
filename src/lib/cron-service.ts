@@ -13,7 +13,7 @@ import {
   AuditSeverity,
 } from '@/lib/audit-logger';
 import { cleanupExpiredMfaTokens } from '@/lib/mfa-utils';
-import { ensurePartitions } from '@/lib/audit-db';
+import { ensurePartitions, assertPartitionsReady, enforceRetentionPolicy } from '@/lib/audit-db';
 
 let cronJobRunning = false;
 
@@ -308,16 +308,19 @@ export function startPasswordExpirationCron(): void {
   cronLogger.info('Password expiration check scheduled: Daily at 6:00 AM');
   cronLogger.info('MFA token cleanup scheduled: Every hour');
 
-  // Schedule audit partition creation: 1st of every month at 00:01
-  cron.schedule('1 0 1 * *', async () => {
-    cronLogger.info('Creating future audit log partitions');
+  // Schedule audit partition creation: daily at 00:01 (idempotent — `IF NOT EXISTS`).
+  // The monthly job (1st @ 00:01) was the original schedule, but a missed run
+  // at month boundary would be unrecoverable. Running daily makes the window
+  // for a missing partition much smaller.
+  cron.schedule('1 0 * * *', async () => {
+    cronLogger.info('Ensuring future audit log partitions exist');
     try {
       await ensurePartitions(3);
     } catch (error) {
       cronLogger.error({ err: error }, 'Error creating audit partitions');
     }
   });
-  cronLogger.info('Audit partition creation scheduled: Monthly on the 1st');
+  cronLogger.info('Audit partition creation scheduled: Daily at 00:01');
 
   // Run once on startup (optional - can be removed if not desired)
   // Useful for development/testing
@@ -328,10 +331,37 @@ export function startPasswordExpirationCron(): void {
     }, 5000); // Wait 5 seconds after startup
   }
 
-  // Ensure audit partitions exist on startup
-  ensurePartitions(3).then(() => {
-    cronLogger.info('Audit partitions verified');
-  }).catch((error) => {
-    cronLogger.error({ err: error }, 'Error creating audit partitions on startup');
+  // Ensure audit partitions exist on startup, then assert they are ready.
+  // If the assertion fails (e.g. ensurePartitions itself errored out), we
+  // log loud but do NOT crash the app — the cron job will retry next month.
+  // For a stricter posture, the caller can `await assertPartitionsReady()`
+  // in a top-level error boundary and exit non-zero.
+  ensurePartitions(3)
+    .then(() => assertPartitionsReady())
+    .then(() => {
+      cronLogger.info('Audit partitions verified on startup (current + next month)');
+    })
+    .catch((error) => {
+      cronLogger.error(
+        { err: error },
+        'CRITICAL: Audit partitions not ready. INSERTs to audit.audit_log will fail at the next month boundary. Run scripts/ensure-partitions.sh manually.'
+      );
+    });
+
+  // Schedule retention-policy enforcement: 1st of every month at 02:00.
+  // Default 7-year retention; override via AUDIT_RETENTION_MONTHS env var.
+  const retentionMonths = parseInt(process.env.AUDIT_RETENTION_MONTHS ?? '84', 10);
+  cron.schedule('0 2 1 * *', async () => {
+    cronLogger.info({ retentionMonths }, 'Enforcing audit retention policy');
+    try {
+      const detached = await enforceRetentionPolicy(retentionMonths);
+      cronLogger.info({ count: detached.length, partitions: detached }, 'Audit retention policy enforced');
+    } catch (error) {
+      cronLogger.error({ err: error }, 'Error enforcing audit retention policy');
+    }
   });
+  cronLogger.info(
+    { retentionMonths },
+    `Audit retention enforcement scheduled: monthly on the 1st at 02:00 (${retentionMonths}-month window)`
+  );
 }

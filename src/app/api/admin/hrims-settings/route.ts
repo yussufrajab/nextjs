@@ -7,6 +7,7 @@ import {
 } from '@/lib/hrims-config';
 import { wrapHandler } from '@/lib/error-handler';
 import { withAuth } from '@/lib/api-auth';
+import { logConfigChange, getClientIp } from '@/lib/audit-logger';
 
 /**
  * GET - Get current HRIMS configuration (Admin only)
@@ -41,7 +42,7 @@ export const GET = wrapHandler(withAuth(async () => {
 /**
  * PUT - Update HRIMS configuration (Admin only)
  */
-export const PUT = wrapHandler(withAuth(async (request: Request) => {
+export const PUT = wrapHandler(withAuth(async (request: Request, { auth }) => {
   const body = await request.json();
   const { host, port, apiKey, token } = body;
 
@@ -81,12 +82,40 @@ export const PUT = wrapHandler(withAuth(async (request: Request) => {
     );
   }
 
+  // Capture previous config for audit (CRITICAL severity — redirects all sync traffic)
+  const previousConfig = await getHrimsConfig();
+  const previousHost = previousConfig.host;
+  const previousPort = previousConfig.port;
+  const apiKeyChanged = !!apiKey && apiKey !== previousConfig.apiKey;
+  const tokenChanged = !!token && token !== previousConfig.token;
+
   // Save the configuration
   await saveHrimsConfig({
     host,
     port: String(portNumber),
     apiKey: apiKey || undefined,
     token: token || undefined,
+  });
+
+  // Audit log: HRIMS config change (CRITICAL severity)
+  // Redact secret values — only record that they changed
+  await logConfigChange({
+    configKey: 'HRIMS_CONFIG',
+    previousValue: previousHost ? `${previousHost}:${previousPort}` : null,
+    newValue: `${host}:${portNumber}`,
+    performedById: auth.userId,
+    performedByUsername: auth.username,
+    performedByRole: auth.role,
+    ipAddress: getClientIp(request.headers),
+    additionalData: {
+      apiKeyChanged,
+      tokenChanged,
+      // Redact secrets — only log presence + length
+      apiKeyLength: apiKey ? apiKey.length : null,
+      tokenLength: token ? token.length : null,
+    },
+  }).catch((err) => {
+    logger.error({ err }, 'Failed to write HRIMS_CONFIG_CHANGED audit event');
   });
 
   return NextResponse.json({

@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 import { z } from 'zod';
 import { logUserAction, getClientIp } from '@/lib/audit-logger';
 import { wrapHandler } from '@/lib/error-handler';
-import { withAuth } from '@/lib/api-auth';
+import { withAuth, requireReauth } from '@/lib/api-auth';
 
 // Safe fields that any admin can update on another user's profile.
 const profileUpdateSchema = z.object({
@@ -43,6 +43,14 @@ export const PUT = wrapHandler(withAuth(async (
     const body = await req.json();
     const validatedData = adminUpdateSchema.parse(body);
 
+    // Step-up re-authentication: changing a user's role or institution is a
+    // Tier-1 sensitive action (privilege escalation / cross-institution
+    // movement). Profile-only edits do not require re-auth.
+    if (validatedData.role !== undefined || validatedData.institutionId !== undefined) {
+      const denied = requireReauth(req, 'users.role-change', auth);
+      if (denied) return denied;
+    }
+
     // Prevent admins from changing their own role (self-escalation or self-demotion).
     if (validatedData.role && id === auth.userId) {
       return new NextResponse(
@@ -63,6 +71,14 @@ export const PUT = wrapHandler(withAuth(async (
       updateData.lockoutNotes = null;
       updateData.failedLoginAttempts = 0;
     }
+
+    // GAP-M3/M4: capture the previous role + institution BEFORE the update so
+    // the audit row records the previous/new diff for forensic attribution of
+    // privilege-escalation and cross-institution moves.
+    const previousUser = await db.user.findUnique({
+      where: { id },
+      select: { id: true, role: true, institutionId: true, username: true },
+    });
 
     const updatedUser = await db.user.update({
       where: { id },
@@ -102,6 +118,12 @@ export const PUT = wrapHandler(withAuth(async (
     // Audit log: user updated
     // Derive the actor's identity from the signed session (authoritative),
     // not the forgeable auth-storage cookie.
+    const roleChanged =
+      validatedData.role !== undefined &&
+      previousUser?.role !== validatedData.role;
+    const institutionChanged =
+      validatedData.institutionId !== undefined &&
+      previousUser?.institutionId !== validatedData.institutionId;
     await logUserAction({
       action: 'UPDATED',
       targetUserId: updatedUser.id,
@@ -111,6 +133,14 @@ export const PUT = wrapHandler(withAuth(async (
       performedByRole: auth.role,
       ipAddress: getClientIp(req.headers),
       deviceInfo: JSON.parse(req.headers.get('x-device-info') || 'null'),
+      additionalData: {
+        previousRole: previousUser?.role,
+        newRole: updatedUser.role,
+        roleChanged,
+        previousInstitutionId: previousUser?.institutionId,
+        newInstitutionId: validatedData.institutionId ?? previousUser?.institutionId,
+        institutionChanged,
+      },
     }).catch(() => {});
 
     return NextResponse.json(response);
@@ -135,6 +165,11 @@ export const DELETE = wrapHandler(withAuth(async (
   try {
     const url = new URL(req.url);
     const id = url.pathname.split('/').pop()!;
+
+    // Step-up re-authentication: user deletion is a Tier-1 sensitive action.
+    const denied = requireReauth(req, 'users.delete', auth);
+    if (denied) return denied;
+
     await db.user.delete({
       where: { id },
     });

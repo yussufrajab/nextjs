@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import { hrimsLogger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
-import { withAuth } from '@/lib/api-auth';
+import { withAuth, requireReauth } from '@/lib/api-auth';
 
 // Validation schema for the HRIMS sync request
 const hrimsRequestSchema = z
@@ -70,6 +70,11 @@ const hrimsEmployeeResponseSchema = z.object({
 });
 
 export const POST = wrapHandler(withAuth(async (req, { auth }) => {
+    // Step-up re-authentication: triggering an HRIMS employee sync is a
+    // Tier-1 sensitive action (writes employee + document data into CSMS).
+    const denied = requireReauth(req, 'hrims.sync', auth);
+    if (denied) return denied;
+
     const body = await req.json();
     hrimsLogger.info({ ...body, hrimsApiKey: '[REDACTED]' }, 'HRIMS sync request received');
 

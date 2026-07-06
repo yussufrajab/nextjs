@@ -54,19 +54,25 @@ function getRedisClient(): Redis | null {
 // Client IP extraction
 // ---------------------------------------------------------------------------
 
+/**
+ * Extract the client IP for rate-limiting purposes.
+ *
+ * SECURITY: delegates to `getClientIp` from `@/lib/audit-logger`, which
+ * honors `x-forwarded-for` ONLY when the request came from a configured
+ * trusted proxy (`TRUSTED_PROXY_IPS`). Without trusted-proxy validation,
+ * an attacker can rotate `x-forwarded-for` to bypass per-IP rate limits.
+ *
+ * Returns 'unknown' when no IP is available so that the rate-limit key
+ * is stable for the same logical request.
+ */
 export function getClientIp(request: Request): string {
-  const forwarded = request.headers.get('x-forwarded-for');
-  if (forwarded) {
-    // x-forwarded-for may contain a comma-separated list; use the first entry
-    return forwarded.split(',')[0].trim();
-  }
-
-  const realIp = request.headers.get('x-real-ip');
-  if (realIp) {
-    return realIp.trim();
-  }
-
-  return 'unknown';
+  // Lazy import to avoid a circular dependency between rate-limiter and
+  // audit-logger (the latter imports logger, which may import rate-limiter).
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { getClientIp: getClientIpAuth } = require('@/lib/audit-logger') as {
+    getClientIp: (headers: Headers) => string | null;
+  };
+  return getClientIpAuth(request.headers) ?? 'unknown';
 }
 
 // ---------------------------------------------------------------------------
@@ -78,18 +84,52 @@ export interface RateLimitResult {
   limit?: number;
   remaining?: number;
   retryAfter?: number;
+  /**
+   * When `allowed: false`, distinguishes a real rate-limit hit (429) from
+   * a fail-closed denial due to Redis being down (503). When `allowed: true`,
+   * this field is undefined.
+   */
+  reason?: 'rate_limit_exceeded' | 'fail_closed';
+}
+
+export interface RateLimitOptions {
+  /**
+   * When true, fail-closed (deny) if Redis is unavailable.
+   * Default: false (fail-open). The `auth` tier should ALWAYS pass true.
+   *
+   * SECURITY: failing open on the `auth` tier is dangerous — a Redis outage
+   * becomes a brute-force window. Tiers that control authentication MUST
+   * fail closed. Other tiers (read/write/download) can fail open because
+   * a brief window of un-throttled traffic is preferable to a 503 storm.
+   */
+  failClosed?: boolean;
 }
 
 export async function checkRateLimit(
   key: string,
-  tier: RateLimitTier
+  tier: RateLimitTier,
+  options: RateLimitOptions = {}
 ): Promise<RateLimitResult> {
   const config = RATE_LIMITS[tier];
   const client = getRedisClient();
+  const failClosed = options.failClosed ?? tier === 'auth';
 
-  // Fail open if Redis is unavailable
+  // Fail closed for auth tier (or any tier that opts in) when Redis is down
   if (!client) {
-    rateLimitLogger.warn('Redis client unavailable – allowing request (fail-open)');
+    if (failClosed) {
+      rateLimitLogger.error(
+        { tier, key },
+        'CRITICAL: Redis unavailable and tier requires fail-closed — denying request'
+      );
+      return {
+        allowed: false,
+        limit: config.limit,
+        remaining: 0,
+        retryAfter: config.windowSeconds,
+        reason: 'fail_closed',
+      };
+    }
+    rateLimitLogger.warn({ tier }, 'Redis client unavailable – allowing request (fail-open)');
     return { allowed: true };
   }
 
@@ -110,6 +150,7 @@ export async function checkRateLimit(
         limit: config.limit,
         remaining: 0,
         retryAfter: ttl > 0 ? ttl : config.windowSeconds,
+        reason: 'rate_limit_exceeded',
       };
     }
 
@@ -120,8 +161,21 @@ export async function checkRateLimit(
       retryAfter: ttl > 0 ? ttl : config.windowSeconds,
     };
   } catch (err) {
-    // Fail open on Redis errors
-    rateLimitLogger.warn({ err }, 'Redis error during rate-limit check');
+    if (failClosed) {
+      rateLimitLogger.error(
+        { err, tier, key },
+        'CRITICAL: Redis error on auth tier — denying request (fail-closed)'
+      );
+      return {
+        allowed: false,
+        limit: config.limit,
+        remaining: 0,
+        retryAfter: config.windowSeconds,
+        reason: 'fail_closed',
+      };
+    }
+    // Fail open on Redis errors for non-auth tiers
+    rateLimitLogger.warn({ err, tier }, 'Redis error during rate-limit check – fail-open');
     return { allowed: true };
   }
 }
@@ -136,19 +190,30 @@ export function withRateLimit(handler: Handler, tier: RateLimitTier): Handler {
   return async (req: Request): Promise<NextResponse> => {
     const ip = getClientIp(req);
     const key = `ratelimit:${ip}:${tier}`;
-    const result = await checkRateLimit(key, tier);
+    // The auth tier MUST fail closed if Redis is down — see checkRateLimit
+    // for the policy. Other tiers default to fail-open.
+    const result = await checkRateLimit(key, tier, { failClosed: tier === 'auth' });
     const config = RATE_LIMITS[tier];
 
     if (!result.allowed) {
+      // Differentiate "you sent too many" (429) from "Redis is down" (503).
+      // The `reason` field set by checkRateLimit is the authoritative signal.
+      const isFailClosedDenial = result.reason === 'fail_closed';
+      const status = isFailClosedDenial ? 503 : 429;
+      const errorCode = isFailClosedDenial ? 'SERVICE_UNAVAILABLE' : 'RATE_LIMIT_EXCEEDED';
+      const errorMessage = isFailClosedDenial
+        ? 'Service temporarily unavailable — please retry shortly'
+        : 'Too many requests';
+
       return NextResponse.json(
         {
           success: false,
-          error: 'Too many requests',
-          errorCode: 'RATE_LIMIT_EXCEEDED',
+          error: errorMessage,
+          errorCode,
           retryAfter: result.retryAfter,
         },
         {
-          status: 429,
+          status,
           headers: {
             'Retry-After': String(result.retryAfter),
             'X-RateLimit-Limit': String(result.limit),

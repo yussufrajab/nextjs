@@ -4,14 +4,14 @@ import { sessionLogger } from '@/lib/logger';
 /**
  * Session Inactivity Timeout Utility
  *
- * Manages automatic logout after 15 minutes of inactivity.
+ * Manages automatic logout after 10 minutes of inactivity.
  * Inactivity is defined as no requests made to the server.
  */
 
 // Session timeout configuration
-export const SESSION_TIMEOUT_MINUTES = 15;
-export const SESSION_TIMEOUT_MS = SESSION_TIMEOUT_MINUTES * 60 * 1000; // 15 minutes in milliseconds
-export const SESSION_WARNING_BEFORE_MS = 5 * 60 * 1000; // Warn 5 minutes before timeout
+export const SESSION_TIMEOUT_MINUTES = 10;
+export const SESSION_TIMEOUT_MS = SESSION_TIMEOUT_MINUTES * 60 * 1000; // 10 minutes in milliseconds
+export const SESSION_WARNING_BEFORE_MS = 1 * 60 * 1000; // Warn 1 minute before timeout (fires at the 9-minute mark)
 
 /**
  * Check if a user's session has timed out due to inactivity

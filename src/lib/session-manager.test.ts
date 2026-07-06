@@ -62,11 +62,11 @@ describe('session-manager', () => {
     });
 
     it('should have correct SESSION_EXPIRY_HOURS value', () => {
-      expect(SESSION_EXPIRY_HOURS).toBe(24);
+      expect(SESSION_EXPIRY_HOURS).toBe(8);
     });
 
     it('should have correct SESSION_EXPIRY_MS value', () => {
-      expect(SESSION_EXPIRY_MS).toBe(24 * 60 * 60 * 1000);
+      expect(SESSION_EXPIRY_MS).toBe(8 * 60 * 60 * 1000);
     });
   });
 
@@ -111,7 +111,7 @@ describe('session-manager', () => {
       expect(expiry.getTime()).toBeGreaterThan(now.getTime());
     });
 
-    it('should set expiry to 24 hours from now', () => {
+    it('should set expiry to 8 hours from now', () => {
       const now = new Date();
       const expiry = calculateSessionExpiry();
       const diffMs = expiry.getTime() - now.getTime();

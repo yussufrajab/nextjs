@@ -8,6 +8,7 @@ import {
 import { verifyAuth } from '@/lib/api-auth';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limiter';
 import { logFileAction } from '@/lib/audit-logger';
+import { verifyFileHash } from '@/lib/file-integrity';
 import { wrapHandler } from '@/lib/error-handler';
 
 export const GET = wrapHandler(async (
@@ -74,25 +75,31 @@ export const GET = wrapHandler(async (
 
   const fileStream = await downloadFile(objectKey);
 
-  const readable = new ReadableStream({
-    start(controller) {
-      fileStream.on('data', (chunk: Buffer) => {
-        controller.enqueue(new Uint8Array(chunk));
-      });
+  // Buffer the file so its SHA-256 can be verified against the recorded
+  // integrity hash before serving (inline mode). Presigned mode hands the
+  // client a direct MinIO URL and cannot verify server-side. A mismatch
+  // (tampering after upload) rejects the preview with 410 Gone.
+  const chunks: Buffer[] = [];
+  for await (const chunk of fileStream) {
+    chunks.push(Buffer.from(chunk));
+  }
+  const fileBuffer = Buffer.concat(chunks);
 
-      fileStream.on('end', () => {
-        controller.close();
-      });
-
-      fileStream.on('error', (error: Error) => {
-        controller.error(error);
-      });
-    },
-  });
+  const integrity = await verifyFileHash(objectKey, fileBuffer);
+  if (!integrity.ok) {
+    logger.fatal(
+      { objectKey, expected: integrity.expected, actual: integrity.actual },
+      'Preview blocked: file integrity hash mismatch'
+    );
+    return NextResponse.json(
+      { success: false, message: 'File integrity check failed', errorCode: 'INTEGRITY_MISMATCH' },
+      { status: 410 }
+    );
+  }
 
   const headers = new Headers();
   headers.set('Content-Type', metadata.contentType);
-  headers.set('Content-Length', metadata.size.toString());
+  headers.set('Content-Length', fileBuffer.length.toString());
 
   if (metadata.contentType === 'application/pdf') {
     headers.set('Content-Disposition', 'inline');
@@ -112,7 +119,7 @@ export const GET = wrapHandler(async (
     deviceInfo: JSON.parse(request.headers.get('x-device-info') || 'null'),
   }).catch(() => {});
 
-  return new NextResponse(readable, {
+  return new NextResponse(fileBuffer, {
     status: 200,
     headers,
   });

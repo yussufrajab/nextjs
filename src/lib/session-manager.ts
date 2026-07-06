@@ -22,7 +22,7 @@ if (!SESSION_SECRET) {
 }
 
 export const MAX_CONCURRENT_SESSIONS = 3;
-export const SESSION_EXPIRY_HOURS = 24; // 24 hours
+export const SESSION_EXPIRY_HOURS = 8; // 8 hours — absolute session lifetime
 export const SESSION_EXPIRY_MS = SESSION_EXPIRY_HOURS * 60 * 60 * 1000;
 
 // Pre-session token for session fixation protection.
@@ -62,8 +62,24 @@ export function generateSessionToken(): string {
 
 /**
  * Name of the HttpOnly cookie that carries the DB session token.
+ *
+ * SECURITY: in production, the cookie uses the `__Host-` prefix which
+ * instructs the browser to:
+ *   1. Require the `Secure` flag
+ *   2. Reject the cookie if any `Domain` attribute is set
+ *   3. Require `Path=/`
+ * This prevents subdomain cookie-injection attacks (e.g. an attacker
+ * controlling a sibling subdomain setting a `session` cookie on the parent
+ * domain). The `__Host-` prefix is a hard browser-enforced invariant.
+ *
+ * In development, the `__Host-` prefix cannot be used because `Secure` is
+ * disabled (localhost is HTTP). We fall back to the plain `session` name.
  */
-export const SESSION_COOKIE_NAME = 'session';
+export const SESSION_COOKIE_NAME_PROD = '__Host-session';
+export const SESSION_COOKIE_NAME_DEV = 'session';
+export const SESSION_COOKIE_NAME = process.env.NODE_ENV === 'production'
+  ? SESSION_COOKIE_NAME_PROD
+  : SESSION_COOKIE_NAME_DEV;
 
 /**
  * Cookie options for the session token cookie.

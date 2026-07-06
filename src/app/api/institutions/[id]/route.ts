@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { logInstitutionAction, getClientIp } from '@/lib/audit-logger';
 import { logger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
-import { getAuthContext } from '@/lib/api-auth';
+import { getAuthContext, verifyAuth, requireReauth } from '@/lib/api-auth';
 
 const institutionSchema = z.object({
   name: z.string().min(3, {
@@ -23,6 +23,16 @@ export const PUT = wrapHandler(async (
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) => {
+    // Step-up re-authentication: institution configuration changes are a
+    // Tier-1 sensitive action. Enforce authentication (this route does not
+    // use withAuth) and then require a recent re-auth.
+    const authResult = await verifyAuth(req);
+    if (!authResult.authenticated || !authResult.context) {
+      return authResult.response!;
+    }
+    const denied = requireReauth(req, 'institutions.update', authResult.context);
+    if (denied) return denied;
+
     const { id } = await params;
     const body = await req.json();
     const validatedData = institutionSchema.parse(body);
@@ -96,6 +106,17 @@ export const PUT = wrapHandler(async (
       }
     }
 
+    // GAP-M5: capture the previous manual-entry window BEFORE the update so the
+    // audit row records the previous/new diff for this sensitive config change.
+    const previousInstitution = await db.institution.findUnique({
+      where: { id },
+      select: {
+        manualEntryEnabled: true,
+        manualEntryStartDate: true,
+        manualEntryEndDate: true,
+      },
+    });
+
     const updatedInstitution = await db.institution.update({
       where: { id },
       data: {
@@ -119,6 +140,11 @@ export const PUT = wrapHandler(async (
     // not the forgeable auth-storage cookie.
     const actor = await getAuthContext(req);
 
+    const manualEntryWindowChanged =
+      validatedData.manualEntryEnabled !== undefined ||
+      validatedData.manualEntryStartDate !== undefined ||
+      validatedData.manualEntryEndDate !== undefined;
+
     await logInstitutionAction({
       action: 'UPDATED',
       institutionId: updatedInstitution.id,
@@ -128,6 +154,17 @@ export const PUT = wrapHandler(async (
       performedByRole: actor?.role || 'ADMIN',
       ipAddress: getClientIp(req.headers),
       deviceInfo: JSON.parse(req.headers.get('x-device-info') || 'null'),
+      additionalData: manualEntryWindowChanged
+        ? {
+            manualEntryWindowChanged: true,
+            previousManualEntryEnabled: previousInstitution?.manualEntryEnabled,
+            newManualEntryEnabled: updatedInstitution.manualEntryEnabled,
+            previousManualEntryStartDate: previousInstitution?.manualEntryStartDate,
+            newManualEntryStartDate: updatedInstitution.manualEntryStartDate,
+            previousManualEntryEndDate: previousInstitution?.manualEntryEndDate,
+            newManualEntryEndDate: updatedInstitution.manualEntryEndDate,
+          }
+        : undefined,
     }).catch(() => {});
 
     return NextResponse.json(updatedInstitution);
@@ -137,6 +174,15 @@ export const DELETE = wrapHandler(async (
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) => {
+    // Step-up re-authentication: institution deletion is a Tier-1 sensitive
+    // action. Enforce authentication and require a recent re-auth.
+    const authResult = await verifyAuth(req);
+    if (!authResult.authenticated || !authResult.context) {
+      return authResult.response!;
+    }
+    const denied = requireReauth(req, 'institutions.delete', authResult.context);
+    if (denied) return denied;
+
     const { id } = await params;
     await db.institution.delete({
       where: { id },

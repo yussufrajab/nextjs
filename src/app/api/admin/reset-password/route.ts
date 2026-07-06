@@ -8,7 +8,7 @@ import {
   validatePasswordComplexity,
   isCommonPassword,
 } from '@/lib/password-utils';
-import { withAuth } from '@/lib/api-auth';
+import { withAuth, requireReauth } from '@/lib/api-auth';
 import { withRateLimit } from '@/lib/rate-limiter';
 import { logger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
@@ -19,6 +19,11 @@ const resetPasswordSchema = z.object({
 });
 
 export const POST = wrapHandler(withRateLimit(withAuth(async (request, { auth }) => {
+  // Step-up re-authentication: resetting another user's password is a
+  // Tier-1 sensitive action.
+  const denied = requireReauth(request, 'admin.reset-password', auth);
+  if (denied) return denied;
+
   const body = await request.json();
   const { userId, temporaryPassword } =
     resetPasswordSchema.parse(body);

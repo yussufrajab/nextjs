@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { createNotification, NotificationTemplates } from '@/lib/notifications';
-import { logLoginAttempt, getClientIp } from '@/lib/audit-logger';
+import { logLoginAttempt, logSuspiciousLoginSuccess, getClientIp } from '@/lib/audit-logger';
 import {
   createSession,
   checkSessionLimit,
@@ -174,6 +174,19 @@ export async function completeLogin(params: CompleteLoginParams): Promise<NextRe
       userId: user.id,
       message: `New login detected from ${loginInfo.device} at ${loginInfo.location} on ${loginInfo.time}. If this wasn't you, please change your password immediately.`,
       link: '/dashboard/profile',
+    });
+
+    // Audit the suspicious login so it is discoverable in the audit trail.
+    // Severity WARNING — this is a security event the SOC should review.
+    await logSuspiciousLoginSuccess({
+      userId: user.id,
+      username: user.username,
+      userRole: user.role,
+      ipAddress,
+      deviceInfo: deviceInfo || null,
+      reasons: suspiciousCheck.reasons,
+    }).catch(() => {
+      // Fail-safe: never block the login flow on an audit write failure
     });
   }
 

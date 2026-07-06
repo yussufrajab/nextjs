@@ -22,6 +22,7 @@ import {
 import { withRateLimit } from '@/lib/rate-limiter';
 import { authLogger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
+import { checkPasswordBreached } from '@/lib/hibp';
 
 const changePasswordSchema = z.object({
   userId: z.string().min(1, 'User ID is required'),
@@ -133,6 +134,33 @@ export const POST = wrapHandler(withRateLimit(async (request) => {
             'This password is too common and easily guessable. Please choose a stronger password.',
         },
         { status: 400 }
+      );
+    }
+
+    // Check HIBP (k-anonymity) — reject if the password appears in a known breach.
+    // Best-effort: a HIBP error does NOT block the change (fail-open), but the
+    // error is logged so the SOC can review coverage.
+    const breachCheck = await checkPasswordBreached(newPassword);
+    if (breachCheck.isPwned) {
+      authLogger.warn(
+        { userId, breachCount: breachCheck.count },
+        'Rejected password change — password found in known breach (HIBP)'
+      );
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            'This password has appeared in a known data breach. Please choose a different password.',
+          errorCode: 'PASSWORD_PWNED',
+        },
+        { status: 400 }
+      );
+    }
+    if (breachCheck.error) {
+      // HIBP unreachable — log for SOC review but do not block
+      authLogger.warn(
+        { userId, reason: breachCheck.errorReason },
+        'HIBP breach check failed (fail-open). Password change proceeded.'
       );
     }
 

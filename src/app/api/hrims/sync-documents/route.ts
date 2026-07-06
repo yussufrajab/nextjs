@@ -4,6 +4,8 @@ import { z } from 'zod';
 import { hrimsLogger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
 import { withAuth } from '@/lib/api-auth';
+import { scanFile, isClamAVEnabled } from '@/lib/clamav';
+import { recordDocumentHash, verifyDocumentHash } from '@/lib/file-integrity';
 
 // Validation schema for the HRIMS documents sync request
 const hrimsDocumentsRequestSchema = z
@@ -205,11 +207,45 @@ async function storeEmployeeDocuments(
 ) {
   let successful = 0;
   let failed = 0;
+  const rejectedForMalware: string[] = [];
 
   for (const doc of hrimsData.data.documents) {
     try {
+      // SECURITY: Scan the document buffer for malware BEFORE persisting.
+      // HRIMS is a trusted source, but a compromised HRIMS server or
+      // man-in-the-middle attack could deliver malicious content. ClamAV
+      // scanning here is the second line of defense (the first being HRIMS
+      // auth + TLS).
+      if (isClamAVEnabled()) {
+        try {
+          const buffer = Buffer.from(doc.content, 'base64');
+          const scanResult = await scanFile(buffer);
+          if (!scanResult.isClean) {
+            const reason = scanResult.virusName
+              ? `malware: ${scanResult.virusName}`
+              : `scan error: ${scanResult.error ?? 'unknown'}`;
+            hrimsLogger.error(
+              { documentId: doc.id, documentType: doc.type, employeeId, reason },
+              'REJECTED HRIMS document — failed ClamAV scan'
+            );
+            rejectedForMalware.push(doc.id);
+            failed++;
+            continue;
+          }
+        } catch (scanErr) {
+          // Fail-closed: if ClamAV throws unexpectedly, do not persist the document
+          hrimsLogger.error(
+            { err: scanErr, documentId: doc.id },
+            'ClamAV scan threw — failing closed (document not stored)'
+          );
+          failed++;
+          continue;
+        }
+      }
+
       // Update employee with document URL based on type
       const updateData: any = {};
+      const fieldName = `${doc.type}Url`;
 
       switch (doc.type) {
         case 'ardhilHali':
@@ -231,6 +267,45 @@ async function storeEmployeeDocuments(
         data: updateData,
       });
 
+      // Record integrity hash so future reads can detect tampering.
+      // Hash is computed over the raw bytes (not the data: URL wrapper) for
+      // cleaner comparison semantics.
+      try {
+        const rawBuffer = Buffer.from(doc.content, 'base64');
+        await recordDocumentHash(employeeId, fieldName, rawBuffer, null);
+
+        // Post-store verification: read the data back from the DB and confirm
+        // the stored bytes still hash to what we just recorded. Catches:
+        //  - DB layer mangling the data on write
+        //  - Encoding round-trip issues (e.g. base64 vs raw)
+        //  - Future migrations that inadvertently transform the column
+        const storedEmployee = await db.employee.findUnique({
+          where: { id: employeeId },
+          select: { [fieldName]: true } as any,
+        });
+        const storedValue = (storedEmployee as any)?.[fieldName];
+        if (storedValue) {
+          // The stored value is a data: URL — extract the base64 portion
+          const base64Match = storedValue.match(/^data:[^;]+;base64,(.+)$/);
+          if (base64Match) {
+            const storedBuffer = Buffer.from(base64Match[1], 'base64');
+            const verify = await verifyDocumentHash(employeeId, fieldName, storedBuffer);
+            if (!verify.ok && verify.reason === 'hash_mismatch') {
+              hrimsLogger.error(
+                { employeeId, fieldName, expected: verify.expected, actual: verify.actual },
+                'CRITICAL: HRIMS document hash mismatch on post-store verification — DB may have corrupted the data'
+              );
+            }
+          }
+        }
+      } catch (hashErr) {
+        // Hash recording failure is non-fatal — the document is stored.
+        hrimsLogger.warn(
+          { err: hashErr, employeeId, fieldName },
+          'Failed to record document integrity hash'
+        );
+      }
+
       successful++;
     } catch (error) {
       hrimsLogger.error({ err: error, documentId: doc.id }, `Failed to store document ${doc.id}`);
@@ -238,7 +313,14 @@ async function storeEmployeeDocuments(
     }
   }
 
-  return { successful, failed };
+  if (rejectedForMalware.length > 0) {
+    hrimsLogger.error(
+      { count: rejectedForMalware.length, documentIds: rejectedForMalware, employeeId },
+      'CRITICAL: HRIMS documents rejected for malware. Investigate HRIMS feed integrity.'
+    );
+  }
+
+  return { successful, failed, rejectedForMalware };
 }
 
 // Mock data for development/testing

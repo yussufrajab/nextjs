@@ -14,9 +14,14 @@ const mockLogEmployeeAction = vi.fn();
 vi.mock('@/lib/session-manager', () => ({
   validateSession: (...a: any[]) => mockValidateSession(...a),
   markSessionSuspicious: vi.fn(),
+  // Mirror the production env-aware cookie-name constants so verifyAuth
+  // can read either the prod (__Host-session) or dev (session) cookie.
+  SESSION_COOKIE_NAME_PROD: '__Host-session',
+  SESSION_COOKIE_NAME_DEV: 'session',
+  SESSION_COOKIE_NAME: 'session',
   signSessionToken: (token: string) => {
     const { createHmac } = require('crypto');
-    const expiry = Date.now() + 86400000;
+    const expiry = Date.now() + 8 * 60 * 60 * 1000;
     const payload = `${token}.${expiry}`;
     const hmac = createHmac('sha256', process.env.SESSION_SECRET);
     hmac.update(payload);
@@ -52,6 +57,8 @@ vi.mock('@/lib/db', () => ({
 vi.mock('@/lib/audit-logger', () => ({
   getClientIp: (headers: Headers) => headers.get('x-forwarded-for') || null,
   logEmployeeAction: (...a: any[]) => mockLogEmployeeAction(...a),
+  logAccessDenied: vi.fn().mockResolvedValue(undefined),
+  logForbiddenRoute: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('@prisma/client', () => {
@@ -68,6 +75,10 @@ vi.mock('@prisma/client', () => {
   }
   return { PrismaClient };
 });
+
+vi.mock('@/lib/api-csrf-middleware', () => ({
+  validateCSRF: vi.fn().mockResolvedValue({ valid: true }),
+}));
 
 const VALID_BODY = {
   name: 'Jane Doe',

@@ -35,7 +35,11 @@ export enum AuditEventType {
   // Suspicious Activity
   MULTIPLE_FAILED_ATTEMPTS = 'MULTIPLE_FAILED_ATTEMPTS',
   SUSPICIOUS_REQUEST = 'SUSPICIOUS_REQUEST',
+  SUSPICIOUS_LOGIN_SUCCESS = 'SUSPICIOUS_LOGIN_SUCCESS',
   POTENTIAL_BREACH = 'POTENTIAL_BREACH',
+  // A successful login used a password that appears in a known breach (HIBP).
+  // Not blocked — flagged for the user to change it and for SOC review.
+  PASSWORD_PWNED_LOGIN = 'PASSWORD_PWNED_LOGIN',
 
   // Request Management Events
   REQUEST_APPROVED = 'REQUEST_APPROVED',
@@ -43,6 +47,7 @@ export enum AuditEventType {
   REQUEST_SUBMITTED = 'REQUEST_SUBMITTED',
   REQUEST_UPDATED = 'REQUEST_UPDATED',
   REQUEST_WITHDRAWN = 'REQUEST_WITHDRAWN',
+  REQUEST_FORWARDED = 'REQUEST_FORWARDED',
   EMPLOYEE_CREATED = 'EMPLOYEE_CREATED',
   EMPLOYEE_UPDATED = 'EMPLOYEE_UPDATED',
   EMPLOYEE_DELETED = 'EMPLOYEE_DELETED',
@@ -62,6 +67,10 @@ export enum AuditEventType {
   FILE_PREVIEWED = 'FILE_PREVIEWED',
   INSTITUTION_CREATED = 'INSTITUTION_CREATED',
   INSTITUTION_UPDATED = 'INSTITUTION_UPDATED',
+
+  // System / Configuration Events
+  HRIMS_CONFIG_CHANGED = 'HRIMS_CONFIG_CHANGED',
+  SYSTEM_SETTING_CHANGED = 'SYSTEM_SETTING_CHANGED',
 }
 
 export enum AuditEventCategory {
@@ -244,27 +253,136 @@ export async function logLoginAttempt(data: {
 }
 
 /**
- * Get client IP address from request headers
+ * Log a successful login that was flagged as suspicious (new device / new IP /
+ * concurrent sessions / rapid succession). This is the audit-record counterpart
+ * to `Session.isSuspicious = true` and the in-app notification.
+ *
+ * The user's notification is sent by the caller — this helper only writes the
+ * audit row so the suspicious event is discoverable in the audit trail.
+ */
+export async function logSuspiciousLoginSuccess(data: {
+  userId: string;
+  username: string;
+  userRole: string;
+  ipAddress: string | null;
+  deviceInfo?: Record<string, any> | null;
+  reasons: string[];
+}): Promise<void> {
+  await logAuditEvent({
+    eventType: AuditEventType.SUSPICIOUS_LOGIN_SUCCESS,
+    eventCategory: AuditEventCategory.SECURITY,
+    severity: AuditSeverity.WARNING,
+    userId: data.userId,
+    username: data.username,
+    userRole: data.userRole,
+    ipAddress: data.ipAddress,
+    deviceInfo: data.deviceInfo,
+    attemptedRoute: '/api/auth/login',
+    requestMethod: 'POST',
+    isAuthenticated: true,
+    wasBlocked: false,
+    additionalData: {
+      reasons: data.reasons,
+      notifyUser: true,
+    },
+  });
+}
+
+/**
+ * Parsed list of CIDR ranges for trusted reverse proxies.
+ *
+ * Sourced from `TRUSTED_PROXY_IPS` env var (comma-separated CIDR list, e.g.
+ * `10.0.0.0/8,192.168.0.0/16,172.16.0.0/12`). When unset, NO upstream proxy is
+ * trusted, which means `x-forwarded-for` / `x-real-ip` / `cf-connecting-ip`
+ * headers are IGNORED and only the immediate peer IP is used. This is the
+ * safe default — it prevents header-spoofing bypasses of per-IP rate limits.
+ */
+let _trustedProxyCidrs: string[] | null = null;
+function getTrustedProxyCidrs(): string[] {
+  if (_trustedProxyCidrs !== null) return _trustedProxyCidrs;
+  const raw = process.env.TRUSTED_PROXY_IPS?.trim() ?? '';
+  _trustedProxyCidrs = raw === '' ? [] : raw.split(',').map((s) => s.trim()).filter(Boolean);
+  return _trustedProxyCidrs;
+}
+
+/**
+ * Check whether an IPv4 address falls within a CIDR block.
+ * IPv6 is accepted as a string but not range-matched (defensive — log a
+ * warning if a v6 trusted proxy is configured).
+ */
+function ipInCidr(ip: string, cidr: string): boolean {
+  if (!ip.includes('.')) return false; // IPv4 only for now
+  const [range, bitsStr] = cidr.split('/');
+  const bits = bitsStr ? parseInt(bitsStr, 10) : 32;
+  if (!range || isNaN(bits) || bits < 0 || bits > 32) return false;
+  const ipParts = ip.split('.').map(Number);
+  const rangeParts = range.split('.').map(Number);
+  if (ipParts.length !== 4 || rangeParts.length !== 4) return false;
+  if (ipParts.some((p) => isNaN(p) || p < 0 || p > 255)) return false;
+  if (rangeParts.some((p) => isNaN(p) || p < 0 || p > 255)) return false;
+  const ipNum = ((ipParts[0] << 24) | (ipParts[1] << 16) | (ipParts[2] << 8) | ipParts[3]) >>> 0;
+  const rangeNum = ((rangeParts[0] << 24) | (rangeParts[1] << 16) | (rangeParts[2] << 8) | rangeParts[3]) >>> 0;
+  if (bits === 0) return true;
+  const mask = (0xffffffff << (32 - bits)) >>> 0;
+  return (ipNum & mask) === (rangeNum & mask);
+}
+
+/**
+ * Get the immediate peer IP (no upstream header inspection).
+ * This is the safe fallback when no trusted proxy is configured.
+ */
+function getPeerIp(headers: Headers): string | null {
+  return (
+    headers.get('x-real-ip') ||
+    headers.get('x-vercel-forwarded-for') ||
+    headers.get('fly-client-ip') ||
+    null
+  );
+}
+
+/**
+ * Get client IP address from request headers.
+ *
+ * SECURITY: Only honors `x-forwarded-for` / `x-real-ip` / `cf-connecting-ip`
+ * when the request came through a configured trusted proxy (see
+ * `TRUSTED_PROXY_IPS`). When no trusted proxy is configured, the function
+ * returns `null` and callers should fall back to the transport-layer peer IP.
+ * This prevents an attacker from rotating these headers to bypass per-IP
+ * rate limits.
  */
 export function getClientIp(headers: Headers): string | null {
-  // Check common headers for client IP
+  const trustedCidrs = getTrustedProxyCidrs();
+  const peerIp = getPeerIp(headers);
+  const isFromTrustedProxy = !!peerIp && trustedCidrs.some((cidr) => ipInCidr(peerIp, cidr));
+
+  if (!isFromTrustedProxy) {
+    // No trusted upstream — return the immediate peer (or null if unavailable)
+    return peerIp;
+  }
+
+  // Request came from a trusted proxy — honor XFF chain
   const forwardedFor = headers.get('x-forwarded-for');
   if (forwardedFor) {
-    // x-forwarded-for can contain multiple IPs, take the first one
-    return forwardedFor.split(',')[0].trim();
+    // x-forwarded-for can contain multiple IPs; the leftmost is the original
+    // client. Take the first entry that is NOT in our trusted-proxy range.
+    const chain = forwardedFor.split(',').map((s) => s.trim());
+    for (const ip of chain) {
+      if (!trustedCidrs.some((cidr) => ipInCidr(ip, cidr))) {
+        return ip;
+      }
+    }
+    return chain[0];
   }
 
+  // Trusted-proxy path didn't yield a XFF — fall back to x-real-ip / cf-connecting-ip
   const realIp = headers.get('x-real-ip');
-  if (realIp) {
-    return realIp;
-  }
+  if (realIp) return realIp;
 
   const cfConnectingIp = headers.get('cf-connecting-ip'); // Cloudflare
-  if (cfConnectingIp) {
-    return cfConnectingIp;
-  }
+  if (cfConnectingIp) return cfConnectingIp;
 
-  return null;
+  // No upstream headers, but the peer itself is the client
+  return peerIp;
 }
 
 /**
@@ -409,6 +527,106 @@ export async function logRequestRejection(data: {
       rejectionReason: data.rejectionReason,
       reviewStage: data.reviewStage,
       action: 'REJECTED',
+      ...data.additionalData,
+    },
+  });
+}
+
+/**
+ * Log request withdrawal (GAP-M2). A withdrawal is the submitter (or an
+ * authorized user) cancelling their own request before a decision is made.
+ * The `withdrawalReason` and `withdrawnBy*` fields are recorded for
+ * non-repudiation. Severity WARNING — withdrawals of in-flight requests are
+ * operationally significant and should be reviewable in the audit trail.
+ */
+export async function logRequestWithdrawal(data: {
+  requestType: string;
+  requestId: string;
+  employeeId?: string;
+  employeeName?: string;
+  employeeZanId?: string;
+  withdrawnById: string;
+  withdrawnByUsername: string;
+  withdrawnByRole: string;
+  withdrawalReason?: string;
+  reviewStage?: string;
+  ipAddress?: string | null;
+  deviceInfo?: Record<string, any> | null;
+  additionalData?: Record<string, any>;
+}): Promise<void> {
+  await logAuditEvent({
+    eventType: AuditEventType.REQUEST_WITHDRAWN,
+    eventCategory: AuditEventCategory.DATA_MODIFICATION,
+    severity: AuditSeverity.WARNING,
+    userId: data.withdrawnById,
+    username: data.withdrawnByUsername,
+    userRole: data.withdrawnByRole,
+    ipAddress: data.ipAddress,
+    deviceInfo: data.deviceInfo,
+    attemptedRoute: `/api/${data.requestType.toLowerCase()}/${data.requestId}`,
+    requestMethod: 'PUT',
+    isAuthenticated: true,
+    wasBlocked: false,
+    blockReason: data.withdrawalReason || null,
+    additionalData: {
+      requestType: data.requestType,
+      requestId: data.requestId,
+      employeeId: data.employeeId,
+      employeeName: data.employeeName,
+      employeeZanId: data.employeeZanId,
+      withdrawalReason: data.withdrawalReason,
+      reviewStage: data.reviewStage,
+      action: 'WITHDRAWN',
+      ...data.additionalData,
+    },
+  });
+}
+
+/**
+ * Log request forwarding (e.g. HRO → HRRP, HRRP → Commission).
+ * Distinct from approval: a forward is a state transition without a verdict.
+ * The `fromStage` and `toStage` are recorded in additionalData for forensic value.
+ */
+export async function logRequestForward(data: {
+  requestType: string;
+  requestId: string;
+  employeeId?: string;
+  employeeName?: string;
+  employeeZanId?: string;
+  forwardedById: string;
+  forwardedByUsername: string;
+  forwardedByRole: string;
+  fromStage: string;
+  toStage: string;
+  comment?: string;
+  ipAddress?: string | null;
+  deviceInfo?: Record<string, any> | null;
+  additionalData?: Record<string, any>;
+}): Promise<void> {
+  await logAuditEvent({
+    eventType: AuditEventType.REQUEST_FORWARDED,
+    eventCategory: AuditEventCategory.DATA_MODIFICATION,
+    severity: AuditSeverity.INFO,
+    userId: data.forwardedById,
+    username: data.forwardedByUsername,
+    userRole: data.forwardedByRole,
+    ipAddress: data.ipAddress,
+    deviceInfo: data.deviceInfo,
+    attemptedRoute: `/api/${data.requestType.toLowerCase()}/${data.requestId}`,
+    requestMethod: 'PUT',
+    isAuthenticated: true,
+    wasBlocked: false,
+    blockReason: null,
+    additionalData: {
+      requestType: data.requestType,
+      requestId: data.requestId,
+      employeeId: data.employeeId,
+      employeeName: data.employeeName,
+      employeeZanId: data.employeeZanId,
+      fromStage: data.fromStage,
+      toStage: data.toStage,
+      comment: data.comment,
+      action: 'FORWARDED',
       ...data.additionalData,
     },
   });
@@ -579,6 +797,51 @@ export async function logUserAction(data: {
       targetUserId: data.targetUserId,
       targetUsername: data.targetUsername,
       action: data.action,
+      ...data.additionalData,
+    },
+  });
+}
+
+/**
+ * Log a system configuration change (HRIMS endpoint, integration keys, etc.).
+ *
+ * These events are CRITICAL severity because they redirect system-wide data flow.
+ * The `previousValue` and `newValue` should NEVER contain the secret itself —
+ * redact the value and only record that it changed.
+ */
+export async function logConfigChange(data: {
+  configKey: string;
+  previousValue: string | null; // redacted
+  newValue: string | null;      // redacted
+  performedById: string;
+  performedByUsername: string;
+  performedByRole: string;
+  ipAddress?: string | null;
+  deviceInfo?: Record<string, any> | null;
+  additionalData?: Record<string, any>;
+}): Promise<void> {
+  const eventType =
+    data.configKey.toUpperCase().startsWith('HRIMS')
+      ? AuditEventType.HRIMS_CONFIG_CHANGED
+      : AuditEventType.SYSTEM_SETTING_CHANGED;
+
+  await logAuditEvent({
+    eventType,
+    eventCategory: AuditEventCategory.SYSTEM,
+    severity: AuditSeverity.CRITICAL,
+    userId: data.performedById,
+    username: data.performedByUsername,
+    userRole: data.performedByRole,
+    ipAddress: data.ipAddress,
+    deviceInfo: data.deviceInfo,
+    attemptedRoute: `/admin/${data.configKey}`,
+    requestMethod: 'PUT',
+    isAuthenticated: true,
+    wasBlocked: false,
+    additionalData: {
+      configKey: data.configKey,
+      previousValue: data.previousValue,
+      newValue: data.newValue,
       ...data.additionalData,
     },
   });
@@ -768,12 +1031,16 @@ export default {
   logAccessDenied,
   logForbiddenRoute,
   logLoginAttempt,
+  logSuspiciousLoginSuccess,
   logRequestApproval,
   logRequestRejection,
+  logRequestForward,
+  logRequestWithdrawal,
   logRequestSubmission,
   logRequestUpdate,
   logEmployeeAction,
   logUserAction,
+  logConfigChange,
   logComplaintAction,
   logFileAction,
   logInstitutionAction,

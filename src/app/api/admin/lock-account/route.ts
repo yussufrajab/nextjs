@@ -4,7 +4,7 @@ import { db } from '@/lib/db';
 import { lockAccountManually } from '@/lib/account-lockout-utils';
 import { createNotification } from '@/lib/notifications';
 import { logAccountAction, getClientIp } from '@/lib/audit-logger';
-import { withAuth } from '@/lib/api-auth';
+import { withAuth, requireReauth } from '@/lib/api-auth';
 import { withRateLimit } from '@/lib/rate-limiter';
 import { logger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
@@ -16,6 +16,11 @@ const lockAccountSchema = z.object({
 });
 
 export const POST = wrapHandler(withRateLimit(withAuth(async (request, { auth }) => {
+  // Step-up re-authentication: manually locking an account is a Tier-1
+  // sensitive action.
+  const denied = requireReauth(request, 'admin.lock-account', auth);
+  if (denied) return denied;
+
   const body = await request.json();
   const { userId, reason, notes } = lockAccountSchema.parse(body);
 

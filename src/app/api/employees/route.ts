@@ -6,6 +6,7 @@ import { withRateLimit } from '@/lib/rate-limiter';
 import { logger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
 import { sanitizeEmployee, sanitizeEmployees } from '@/lib/sanitize-response';
+import { logUnauthorizedAccess, getClientIp } from '@/lib/audit-logger';
 
 // Cache configuration for employee data
 const CACHE_TTL = 60; // 60 seconds cache (employee data changes infrequently)
@@ -81,6 +82,23 @@ export const GET = wrapHandler(withRateLimit(withAuth(async (request, { auth }) 
           select: { employeeId: true },
         });
         if (!requestingUser || requestingUser.employeeId !== employeeId) {
+          // GAP-M7/M10: audit the IDOR attempt with forensic additionalData
+          // (attempted object id + target institution) for SOC triage.
+          await logUnauthorizedAccess({
+            userId: auth.userId,
+            username: auth.username,
+            userRole,
+            attemptedRoute: `/api/employees?id=${employeeId}`,
+            blockReason: 'IDOR: employee does not belong to requesting user',
+            isAuthenticated: true,
+            requestMethod: 'GET',
+            ipAddress: getClientIp(request.headers),
+            additionalData: {
+              idor: true,
+              attemptedObjectId: employeeId,
+              targetInstitutionId: employee.institutionId,
+            },
+          }).catch(() => {});
           return NextResponse.json(
             { success: false, message: 'Access denied' },
             { status: 403 }
@@ -88,6 +106,24 @@ export const GET = wrapHandler(withRateLimit(withAuth(async (request, { auth }) 
         }
       } else if (userRole === 'HRO' || userRole === 'HRRP') {
         if (employee.institutionId !== userInstitutionId) {
+          // GAP-M6/M10: audit the cross-institution attempt with the target
+          // institution id and attempted object id.
+          await logUnauthorizedAccess({
+            userId: auth.userId,
+            username: auth.username,
+            userRole,
+            attemptedRoute: `/api/employees?id=${employeeId}`,
+            blockReason: 'Cross-institution access attempt (IDOR)',
+            isAuthenticated: true,
+            requestMethod: 'GET',
+            ipAddress: getClientIp(request.headers),
+            additionalData: {
+              idor: true,
+              attemptedObjectId: employeeId,
+              targetInstitutionId: employee.institutionId,
+              actorInstitutionId: userInstitutionId,
+            },
+          }).catch(() => {});
           return NextResponse.json(
             { success: false, message: 'Access denied' },
             { status: 403 }

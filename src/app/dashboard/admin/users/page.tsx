@@ -170,6 +170,13 @@ export default function UserManagementPage() {
   const [selectedUser, setSelectedUser] =
     useState<UserWithInstitutionName | null>(null);
 
+  // GAP-H9: one-time display of a server-auto-generated initial password. The
+  // password is never retrievable again after this dialog closes, so the user
+  // must copy it now.
+  const [initialPassword, setInitialPassword] = useState<string | null>(null);
+  const [createdUsername, setCreatedUsername] = useState<string>('');
+  const [hasCopied, setHasCopied] = useState(false);
+
   // Define role categories based on clarified requirements
   const CSC_INTERNAL_ROLES = ['HHRMD', 'HRMO', 'DO', 'PO', 'CSCS']; // Must be from CSC only
   const CSC_ONLY_ROLES = ['Admin']; // Must be from CSC but can see all institutions
@@ -324,6 +331,21 @@ export default function UserManagementPage() {
       });
       await fetchUsers();
       closeDialog();
+
+      // GAP-H9: if the server auto-generated an initial password (admin did
+      // not supply one), surface it ONCE in a copy-to-clipboard dialog. The
+      // plaintext is never retrievable again, so it must be copied now and
+      // communicated securely to the new user.
+      if (!editingUser) {
+        const generated = (response as any)?.data?.initialPassword as
+          | string
+          | undefined;
+        if (generated) {
+          setCreatedUsername((response as any)?.data?.username || data.username);
+          setInitialPassword(generated);
+          setHasCopied(false);
+        }
+      }
     } catch (error: any) {
       toast({
         title: 'Error',
@@ -991,6 +1013,73 @@ export default function UserManagementPage() {
             />
           </>
         )}
+
+        {/* GAP-H9: one-time display of a server-auto-generated initial password */}
+        <Dialog
+          open={initialPassword !== null}
+          onOpenChange={(open) => {
+            if (!open) {
+              setInitialPassword(null);
+              setHasCopied(false);
+            }
+          }}
+        >
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Initial Password Generated</DialogTitle>
+              <DialogDescription>
+                A strong random password was generated for{' '}
+                <span className="font-medium">{createdUsername || 'the new user'}</span>.
+                Copy it now — it cannot be retrieved again after this dialog
+                closes. Communicate it securely to the user, who will be required
+                to change it on first login.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Input
+                  readOnly
+                  value={initialPassword || ''}
+                  className="font-mono"
+                  onFocus={(e) => e.currentTarget.select()}
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(initialPassword || '');
+                      setHasCopied(true);
+                      toast({ title: 'Copied', description: 'Password copied to clipboard.' });
+                    } catch {
+                      toast({
+                        title: 'Copy failed',
+                        description: 'Select the field and copy manually.',
+                        variant: 'destructive',
+                      });
+                    }
+                  }}
+                >
+                  {hasCopied ? 'Copied' : 'Copy'}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Store this securely. The user must change it on first login.
+              </p>
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                onClick={() => {
+                  setInitialPassword(null);
+                  setHasCopied(false);
+                }}
+              >
+                I&apos;ve copied it
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </RouteGuard>
   );

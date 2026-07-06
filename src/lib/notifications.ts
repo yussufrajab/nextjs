@@ -9,18 +9,57 @@ export interface NotificationData {
   userId: string;
 }
 
+/**
+ * Max length of a stored notification message. Notifications are concise
+ * action summaries, not full content payloads — capping the length minimizes
+ * the amount of potentially-sensitive text persisted and surfaced to the UI.
+ */
+const NOTIFICATION_MAX_LENGTH = 500;
+
+/**
+ * Sanitize notification text (GAP-M12 — notification content minimization).
+ *
+ * Applied at the `createNotification` / `createNotificationForRole` sink so it
+ * covers ALL notification templates (66+) without per-template edits. It:
+ *  - strips control / null bytes (prevents terminal-injection and corruption),
+ *  - escapes HTML special chars (defensive against XSS in the in-app UI),
+ *  - truncates to NOTIFICATION_MAX_LENGTH to limit PII exposure.
+ *
+ * Complaint subjects and free-text rejection reasons flow through here, so the
+ * sanitization is defense-in-depth against PII/active-content leakage.
+ */
+export function sanitizeNotificationText(input: string): string {
+  if (input == null) return '';
+  let text = String(input);
+  // Strip control chars (incl. NUL, DEL, C0/C1) but keep newlines/tabs
+  text = text.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+  // Escape HTML special chars
+  text = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+  // Truncate to limit PII exposure
+  if (text.length > NOTIFICATION_MAX_LENGTH) {
+    text = text.slice(0, NOTIFICATION_MAX_LENGTH - 1) + '…';
+  }
+  return text;
+}
+
 export async function createNotification(data: NotificationData) {
   try {
+    const safeMessage = sanitizeNotificationText(data.message);
     await db.notification.create({
       data: {
         id: uuidv4(),
-        message: data.message,
+        message: safeMessage,
         link: data.link,
         userId: data.userId,
         isRead: false,
       },
     });
-    logger.info({ message: data.message, userId: data.userId }, 'Notification created');
+    logger.info({ message: safeMessage, userId: data.userId }, 'Notification created');
   } catch (error) {
     logger.error({ err: error }, 'Failed to create notification');
   }
@@ -32,6 +71,7 @@ export async function createNotificationForRole(
   link?: string
 ) {
   try {
+    const safeMessage = sanitizeNotificationText(message);
     const users = await db.user.findMany({
       where: { role: role, active: true },
       select: { id: true },
@@ -39,7 +79,7 @@ export async function createNotificationForRole(
 
     const notifications = users.map((user) => ({
       id: uuidv4(),
-      message,
+      message: safeMessage,
       link,
       userId: user.id,
       isRead: false,
