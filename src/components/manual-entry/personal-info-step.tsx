@@ -15,6 +15,7 @@ import {
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { clientLogger } from '@/lib/logger-client';
+import { fetchWithCsrf } from '@/lib/fetch-with-csrf';
 
 const log = clientLogger.child({ component: 'personal-info' });
 
@@ -108,7 +109,7 @@ export function PersonalInfoStep({
 
     // Check for duplicates on submission
     try {
-      const response = await fetch('/api/employees/validate', {
+      const response = await fetchWithCsrf('/api/employees/validate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

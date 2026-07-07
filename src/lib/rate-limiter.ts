@@ -1,6 +1,7 @@
 import Redis from 'ioredis';
 import { NextResponse } from 'next/server';
 import { rateLimitLogger } from '@/lib/logger';
+import { getClientIp as getClientIpAuth } from '@/lib/audit-logger';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -66,12 +67,13 @@ function getRedisClient(): Redis | null {
  * is stable for the same logical request.
  */
 export function getClientIp(request: Request): string {
-  // Lazy import to avoid a circular dependency between rate-limiter and
-  // audit-logger (the latter imports logger, which may import rate-limiter).
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { getClientIp: getClientIpAuth } = require('@/lib/audit-logger') as {
-    getClientIp: (headers: Headers) => string | null;
-  };
+  // Static import of getClientIp from audit-logger. There is no circular
+  // dependency: audit-logger only imports audit-db and logger (which imports
+  // pino), neither of which imports rate-limiter. The previous lazy require()
+  // was broken under Turbopack — require() of an ESM module returned a
+  // namespace where the named export destructured to undefined, so every
+  // rate-limited POST (login, logout, all writes) threw
+  // "getClientIpAuth is not a function" and returned 500.
   return getClientIpAuth(request.headers) ?? 'unknown';
 }
 

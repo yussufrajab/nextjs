@@ -3,6 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { fetchWithCsrf } from '@/lib/fetch-with-csrf';
 import {
   Users,
   UserCheck,
@@ -183,7 +184,7 @@ export default function DashboardPage() {
       if (auditDataStr) {
         try {
           const auditData = JSON.parse(auditDataStr);
-          fetch('/api/audit/log', {
+          fetchWithCsrf('/api/audit/log', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(auditData),

@@ -1,6 +1,7 @@
 'use client';
 
 import { PageHeader } from '@/components/shared/page-header';
+import { fetchWithCsrf } from '@/lib/fetch-with-csrf';
 import {
   Card,
   CardContent,
@@ -150,7 +151,7 @@ export default function GetPhotoPage() {
     setProgress(null);
 
     try {
-      const response = await fetch('/api/hrims/fetch-photos-by-institution', {
+      const response = await fetchWithCsrf('/api/hrims/fetch-photos-by-institution', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

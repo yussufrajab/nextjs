@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Loader2, CheckCircle, XCircle, ArrowRight } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { fetchWithCsrf, ensureCsrfToken } from '@/lib/fetch-with-csrf';
 
 type VerificationState = 'loading' | 'success' | 'error';
 
@@ -48,7 +49,8 @@ function ComplaintConfirmContent() {
 
   const verifyMagicLink = async () => {
     try {
-      const response = await fetch(`/api/complaints/magic-link-verify?complaintData=${encodeURIComponent(complaintData || '')}`, {
+      await ensureCsrfToken();
+      const response = await fetchWithCsrf(`/api/complaints/magic-link-verify?complaintData=${encodeURIComponent(complaintData || '')}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token }),

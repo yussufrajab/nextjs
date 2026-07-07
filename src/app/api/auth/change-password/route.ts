@@ -22,6 +22,7 @@ import {
 import { withRateLimit } from '@/lib/rate-limiter';
 import { authLogger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
+import { validateCSRF } from '@/lib/api-csrf-middleware';
 import { checkPasswordBreached } from '@/lib/hibp';
 
 const changePasswordSchema = z.object({
@@ -31,6 +32,9 @@ const changePasswordSchema = z.object({
 });
 
 export const POST = wrapHandler(withRateLimit(async (request) => {
+    const csrfCheck = await validateCSRF(request);
+    if (!csrfCheck.valid) return csrfCheck.response!;
+
     const body = await request.json();
     const { userId, currentPassword, newPassword } =
       changePasswordSchema.parse(body);

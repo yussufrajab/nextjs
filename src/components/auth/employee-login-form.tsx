@@ -16,6 +16,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { useRouter } from 'next/navigation';
 import { toast } from '@/hooks/use-toast';
+import { fetchWithCsrf, ensureCsrfToken } from '@/lib/fetch-with-csrf';
 import { useAuthStore } from '@/store/auth-store';
 import { Loader2, User, CreditCard, Hash } from 'lucide-react';
 
@@ -42,6 +43,12 @@ export function EmployeeLoginForm() {
     });
   }, []);
 
+  // Pre-fetch a CSRF token cookie so employee login satisfies double-submit
+  // CSRF enforcement (no post-login cookie exists yet). Re-ensured in onSubmit.
+  React.useEffect(() => {
+    ensureCsrfToken();
+  }, []);
+
   const form = useForm<EmployeeLoginValues>({
     resolver: zodResolver(employeeLoginSchema),
     defaultValues: {
@@ -55,7 +62,8 @@ export function EmployeeLoginForm() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/auth/employee-login', {
+      await ensureCsrfToken();
+      const response = await fetchWithCsrf('/api/auth/employee-login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

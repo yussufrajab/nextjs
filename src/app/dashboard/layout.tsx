@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DebugLogger } from '@/lib/debug-logger';
 import { PasswordExpirationBanner } from '@/components/auth/password-expiration-banner';
+import { ReauthProvider } from '@/components/auth/reauth-provider';
 import { useInactivityTimeout } from '@/hooks/use-inactivity-timeout';
 
 export default function DashboardLayout({
@@ -71,15 +72,17 @@ export default function DashboardLayout({
   }
 
   return (
-    <SidebarProvider defaultOpen={true}>
-      <AppSidebar />
-      <SidebarInset className="flex flex-col">
-        <AppHeader />
-        <main className="flex-1 overflow-y-auto p-4 md:p-8 bg-background">
-          <PasswordExpirationBanner />
-          {children}
-        </main>
-      </SidebarInset>
-    </SidebarProvider>
+    <ReauthProvider>
+      <SidebarProvider defaultOpen={true}>
+        <AppSidebar />
+        <SidebarInset className="flex flex-col">
+          <AppHeader />
+          <main className="flex-1 overflow-y-auto p-4 md:p-8 bg-background">
+            <PasswordExpirationBanner />
+            {children}
+          </main>
+        </SidebarInset>
+      </SidebarProvider>
+    </ReauthProvider>
   );
 }

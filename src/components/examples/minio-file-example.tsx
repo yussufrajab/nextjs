@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/card';
 import { FileUpload } from '@/components/ui/file-upload';
 import { toast } from '@/hooks/use-toast';
+import { fetchWithCsrf } from '@/lib/fetch-with-csrf';
 import { Eye, Download, Trash2 } from 'lucide-react';
 
 export function MinioFileExample() {
@@ -104,7 +105,7 @@ export function MinioFileExample() {
                     formData.append('file', file);
                     formData.append('folder', 'manual-uploads');
 
-                    const response = await fetch('/api/files/upload', {
+                    const response = await fetchWithCsrf('/api/files/upload', {
                       method: 'POST',
                       body: formData,
                     });

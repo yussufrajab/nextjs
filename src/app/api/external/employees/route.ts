@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getHrimsApiConfig } from '@/lib/hrims-config';
 import { logger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
+import { validateCSRF } from '@/lib/api-csrf-middleware';
 
 function getCorsOrigin(request: NextRequest | Request): string {
   const allowedOrigins = (process.env.ALLOWED_ORIGINS || '').split(',').filter(Boolean);
@@ -10,6 +11,9 @@ function getCorsOrigin(request: NextRequest | Request): string {
 }
 
 export const POST = wrapHandler(async (req: NextRequest) => {
+  const csrfCheck = await validateCSRF(req);
+  if (!csrfCheck.valid) return csrfCheck.response!;
+
   const body = await req.json();
 
   // Get HRIMS config from environment/database (no hardcoded credentials)

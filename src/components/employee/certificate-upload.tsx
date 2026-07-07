@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { useFileExists } from '@/hooks/use-file-exists';
+import { fetchWithCsrf } from '@/lib/fetch-with-csrf';
 import {
   Loader2,
   Upload,
@@ -124,7 +125,7 @@ export function CertificateUpload({
       if (userInstitutionId)
         formData.append('userInstitutionId', userInstitutionId);
 
-      const response = await fetch(
+      const response = await fetchWithCsrf(
         `/api/employees/${employeeId}/certificates`,
         {
           method: 'POST',
@@ -233,7 +234,7 @@ export function CertificateUpload({
 
     setIsDeleting(true);
     try {
-      const response = await fetch(
+      const response = await fetchWithCsrf(
         `/api/employees/${employeeId}/certificates?certificateId=${currentCertificate.id}&userRole=${userRole}&userInstitutionId=${userInstitutionId}`,
         {
           method: 'DELETE',

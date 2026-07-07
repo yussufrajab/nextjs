@@ -1,6 +1,7 @@
 'use client';
 
 import { PageHeader } from '@/components/shared/page-header';
+import { fetchWithCsrf } from '@/lib/fetch-with-csrf';
 import {
   Card,
   CardContent,
@@ -186,7 +187,7 @@ export default function FetchDataPage() {
 
     setIsFetching(true);
     try {
-      const response = await fetch('/api/hrims/fetch-employee', {
+      const response = await fetchWithCsrf('/api/hrims/fetch-employee', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -276,7 +277,7 @@ export default function FetchDataPage() {
 
     try {
       // Step 1: Create the background job
-      const response = await fetch('/api/hrims/fetch-by-institution', {
+      const response = await fetchWithCsrf('/api/hrims/fetch-by-institution', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

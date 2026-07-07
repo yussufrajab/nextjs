@@ -23,8 +23,8 @@ const UAT_USERS: Record<string, string[]> = {
   EMPLOYEE:  ['abdillahomarnajim', 'abdullaameiramour'],
   HHRMD:     ['skhamis', 'vuai'],
   HRMO:      ['fautest', 'fiddi'],
-  HRO:       ['skawesu', 'lela'],
-  HRRP:      ['Hassan', 'shuwekhaawesu'],
+  HRO:       ['skawesu', 'lela', 'yhzubeir'],
+  HRRP:      ['Hassan', 'shuwekhaawesu', 'khamadi'],
   PO:        ['mishak'],
 };
 

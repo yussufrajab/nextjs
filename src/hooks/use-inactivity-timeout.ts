@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth-store';
 import { toast } from '@/hooks/use-toast';
 import { clientLogger } from '@/lib/logger-client';
+import { fetchWithCsrf } from '@/lib/fetch-with-csrf';
 
 const log = clientLogger.child({ component: 'inactivity-timeout' });
 
@@ -57,7 +58,11 @@ export function useInactivityTimeout(
     if (!user?.id) return;
 
     try {
-      const response = await fetch('/api/auth/activity', {
+      // Attach the CSRF token for this state-changing POST. withAuth enforces
+      // CSRF on POST, so without the x-csrf-token header the heartbeat is
+      // rejected with 403 — which both breaks server-side inactivity tracking
+      // and floods the audit trail with false CSRF violation events.
+      const response = await fetchWithCsrf('/api/auth/activity', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: user.id }),

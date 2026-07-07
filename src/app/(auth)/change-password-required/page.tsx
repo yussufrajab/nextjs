@@ -27,6 +27,7 @@ import { Button } from '@/components/ui/button';
 import { PasswordStrengthMeter } from '@/components/auth/password-strength-meter';
 import { Loader2, AlertCircle, Clock } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { fetchWithCsrf } from '@/lib/fetch-with-csrf';
 
 const changePasswordSchema = z
   .object({
@@ -90,7 +91,7 @@ export default function ChangePasswordRequiredPage() {
 
     setIsLoading(true);
     try {
-      const response = await fetch('/api/auth/change-password', {
+      const response = await fetchWithCsrf('/api/auth/change-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

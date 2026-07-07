@@ -16,6 +16,7 @@ import { FileUpload } from '@/components/ui/file-upload';
 import { EmployeeSearch } from '@/components/shared/employee-search';
 import { useAuth } from '@/hooks/use-auth';
 import { ROLES, EMPLOYEES } from '@/lib/constants';
+import { fetchWithCsrf } from '@/lib/fetch-with-csrf';
 import React, { useState, useEffect, useCallback } from 'react';
 import type { Employee, User, Role } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
@@ -459,7 +460,7 @@ export default function LwopPage() {
     setRequestToCorrect(null);
 
     try {
-      const response = await fetch(`/api/lwop`, {
+      const response = await fetchWithCsrf(`/api/lwop`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -609,7 +610,7 @@ export default function LwopPage() {
     };
 
     try {
-      const response = await fetch('/api/lwop', {
+      const response = await fetchWithCsrf('/api/lwop', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -661,7 +662,7 @@ export default function LwopPage() {
     }
 
     try {
-      const response = await fetch(`/api/lwop`, {
+      const response = await fetchWithCsrf(`/api/lwop`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

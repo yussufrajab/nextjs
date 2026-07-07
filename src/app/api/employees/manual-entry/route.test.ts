@@ -1,6 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
 import { signSessionToken } from '@/lib/session-manager';
+// These are the mocked audit/CSRF helpers used by withAuth. vitest's
+// `mockReset: true` clears their factory mockResolvedValue before each test,
+// and the module factory only re-runs on the FIRST import (test 1), so tests
+// 2+ would otherwise see `undefined` and withAuth's `.catch()` on the result
+// would throw. Re-establish them in beforeEach below.
+import { logAccessDenied, logForbiddenRoute } from '@/lib/audit-logger';
+import { validateCSRF } from '@/lib/api-csrf-middleware';
 
 const mockValidateSession = vi.fn();
 const mockDbUserFindUnique = vi.fn(); // verifyAuth's db.user.findUnique
@@ -83,7 +90,7 @@ vi.mock('@/lib/api-csrf-middleware', () => ({
 const VALID_BODY = {
   name: 'Jane Doe',
   gender: 'Female',
-  zanId: 'ZN-TEST-1',
+  zanId: '12345678',
   dateOfBirth: '1990-01-01',
   zssfNumber: 'SSF-1',
   payrollNumber: 'PR-1',
@@ -115,6 +122,11 @@ describe('POST /api/employees/manual-entry authorization', () => {
     mockEmployeeFindUnique.mockReset();
     mockEmployeeFindFirst.mockReset();
     mockEmployeeCreate.mockReset();
+    // vitest `mockReset: true` clears these factory mocks before each test;
+    // re-establish the implementations withAuth relies on for every request.
+    vi.mocked(validateCSRF).mockResolvedValue({ valid: true } as any);
+    vi.mocked(logAccessDenied).mockResolvedValue(undefined);
+    vi.mocked(logForbiddenRoute).mockResolvedValue(undefined);
   });
 
   it('returns 401 when no session cookie is present', async () => {

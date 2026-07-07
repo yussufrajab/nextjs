@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/hooks/use-auth';
 import { ROLES, EMPLOYEES } from '@/lib/constants';
+import { fetchWithCsrf } from '@/lib/fetch-with-csrf';
 import React, { useState, useEffect, useCallback } from 'react';
 import type { Employee, User, Role } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
@@ -340,7 +341,7 @@ export default function ResignationPage() {
     };
 
     try {
-      const response = await fetch('/api/resignation', {
+      const response = await fetchWithCsrf('/api/resignation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -404,7 +405,7 @@ export default function ResignationPage() {
     }
 
     try {
-      const response = await fetch(`/api/resignation`, {
+      const response = await fetchWithCsrf(`/api/resignation`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -667,7 +668,7 @@ export default function ResignationPage() {
       documentsList.push(correctedNoticeOrReceiptFile);
 
     try {
-      const response = await fetch(`/api/resignation`, {
+      const response = await fetchWithCsrf(`/api/resignation`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

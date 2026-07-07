@@ -1,5 +1,6 @@
 'use client';
 import { PageHeader } from '@/components/shared/page-header';
+import { fetchWithCsrf } from '@/lib/fetch-with-csrf';
 import {
   Card,
   CardContent,
@@ -96,7 +97,7 @@ async function getEmployeesList() {
     },
   };
 
-  const response = await fetch(url, {
+  const response = await fetchWithCsrf(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -218,7 +219,7 @@ const EmployeeDetailsCard = ({
         try {
           log.info(`Fetching photo from HRIMS for employee ${emp.name}...`);
 
-          const response = await fetch(`/api/employees/${emp.id}/fetch-photo`, {
+          const response = await fetchWithCsrf(`/api/employees/${emp.id}/fetch-photo`, {
             method: 'POST',
           });
 
@@ -279,7 +280,7 @@ const EmployeeDetailsCard = ({
         try {
           log.info(`Fetching documents from HRIMS for employee ${emp.name}...`);
 
-          const response = await fetch(
+          const response = await fetchWithCsrf(
             `/api/employees/${emp.id}/fetch-documents`,
             {
               method: 'POST',
@@ -419,7 +420,7 @@ const EmployeeDetailsCard = ({
     setEmailError('');
 
     try {
-      const response = await fetch(`/api/employees/email?employeeId=${emp.id}`, {
+      const response = await fetchWithCsrf(`/api/employees/email?employeeId=${emp.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: trimmedEmail }),

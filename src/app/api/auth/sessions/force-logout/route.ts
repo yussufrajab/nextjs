@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { terminateSessionById } from '@/lib/session-manager';
 import { wrapHandler } from '@/lib/error-handler';
+import { validateCSRF } from '@/lib/api-csrf-middleware';
 
 const forceLogoutSchema = z.object({
   sessionId: z.string().min(1, 'Session ID is required'),
@@ -9,6 +10,9 @@ const forceLogoutSchema = z.object({
 });
 
 export const POST = wrapHandler(async (req: Request) => {
+    const csrfCheck = await validateCSRF(req);
+    if (!csrfCheck.valid) return csrfCheck.response!;
+
     const body = await req.json();
     const { sessionId, userId } = forceLogoutSchema.parse(body);
 

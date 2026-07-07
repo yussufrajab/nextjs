@@ -17,24 +17,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { clientLogger } from '@/lib/logger-client';
-
-/**
- * Get CSRF headers for fetch requests
- * Returns headers object with CSRF token for state-changing requests
- */
-function getCsrfHeaders(): Record<string, string> {
-  if (typeof window === 'undefined') return {};
-  // Use indexOf + substring to preserve '=' characters in base64 value
-  const csrfRow = document.cookie
-    .split('; ')
-    .find((row) => row.startsWith('csrf-token='));
-  const csrfToken = csrfRow ? csrfRow.substring(csrfRow.indexOf('=') + 1) : undefined;
-  if (csrfToken) {
-    return { 'x-csrf-token': csrfToken };
-  }
-  clientLogger.warn('CSRF token not found');
-  return {};
-}
+import { fetchWithCsrf } from '@/lib/fetch-with-csrf';
 
 interface ValidationResult {
   totalRows: number;
@@ -88,12 +71,9 @@ export function BulkUpload({ onComplete }: { onComplete?: () => void }) {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await fetch('/api/employees/bulk-upload', {
+      const response = await fetchWithCsrf('/api/employees/bulk-upload', {
         method: 'POST',
         body: formData,
-        headers: {
-          ...getCsrfHeaders(),
-        },
       });
 
       const result = await response.json();
@@ -132,12 +112,9 @@ export function BulkUpload({ onComplete }: { onComplete?: () => void }) {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch('/api/employees/bulk-upload', {
+      const response = await fetchWithCsrf('/api/employees/bulk-upload', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          ...getCsrfHeaders(),
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           employees: validationResult.validEmployees,
         }),

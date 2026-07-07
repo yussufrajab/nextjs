@@ -5,6 +5,7 @@
 
 import { clientLogger } from '@/lib/logger-client';
 import { getDeviceInfoHeader } from './device-info';
+import { requestReauth } from './reauth-client';
 
 export interface ApiResponse<T = any> {
   success: boolean;
@@ -155,7 +156,8 @@ class ApiClient {
 
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    _reauthed = false
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`;
 
@@ -198,14 +200,47 @@ class ApiClient {
         credentials: 'include', // Include cookies for session auth
       });
 
-      // 401 on a non-auth route means the session is gone/expired. There is no
-      // refresh token in the session-cookie model — clear local auth state and
-      // let the caller / route guard redirect to /login.
+      // 401 on a non-auth route means the session is gone/expired — UNLESS it's
+      // a step-up re-auth requirement (requireReauth on a Tier-1 endpoint),
+      // in which case the body carries errorCode REAUTH_REQUIRED + the scope
+      // we need to re-auth for. Handle that first: perform step-up reauth and
+      // retry once, keeping the session intact.
       if (
         response.status === 401 &&
         endpoint !== '/auth/login' &&
         endpoint !== '/auth/refresh'
       ) {
+        let body401: { errorCode?: string; requiredScope?: string; error?: string } | null = null;
+        try {
+          body401 = await response.clone().json();
+        } catch {
+          body401 = null;
+        }
+
+        if (
+          body401 &&
+          body401.errorCode === 'REAUTH_REQUIRED' &&
+          body401.requiredScope
+        ) {
+          if (!_reauthed) {
+            const ok = await requestReauth(body401.requiredScope);
+            if (ok) {
+              // reauth cookie is now set by the browser — retry the original request once.
+              return this.request<T>(endpoint, options, true);
+            }
+          }
+          // Reauth not available / cancelled / already retried — surface the
+          // requirement without clearing the (still-valid) session.
+          return {
+            success: false,
+            message: body401.error || 'Re-authentication required',
+            code: 'REAUTH_REQUIRED',
+          };
+        }
+
+        // Genuine session expiry: no refresh token in the session-cookie
+        // model — clear local auth state and let the caller / route guard
+        // redirect to /login.
         clientLogger.info({ endpoint }, '401 Unauthorized, clearing auth');
         this.clearToken();
         if (typeof window !== 'undefined') {

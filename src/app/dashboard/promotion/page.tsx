@@ -36,6 +36,7 @@ import { FilePreviewModal } from '@/components/ui/file-preview-modal';
 import { EmployeeSearch } from '@/components/shared/employee-search';
 import { useAuth } from '@/hooks/use-auth';
 import { ROLES } from '@/lib/constants';
+import { fetchWithCsrf } from '@/lib/fetch-with-csrf';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import type { Employee, User, Role } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
@@ -159,7 +160,7 @@ export default function PromotionPage() {
       formData.append('file', templateFile);
       formData.append('userRole', role);
 
-      const response = await fetch('/api/promotion-form-template/upload', {
+      const response = await fetchWithCsrf('/api/promotion-form-template/upload', {
         method: 'POST',
         body: formData,
       });
@@ -515,7 +516,7 @@ export default function PromotionPage() {
     };
 
     try {
-      const response = await fetch(url, {
+      const response = await fetchWithCsrf(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -578,7 +579,7 @@ export default function PromotionPage() {
     }
 
     try {
-      const response = await fetch(`/api/promotions`, {
+      const response = await fetchWithCsrf(`/api/promotions`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -967,7 +968,7 @@ export default function PromotionPage() {
     setRequestToCorrect(null);
 
     try {
-      const response = await fetch(`/api/promotions`, {
+      const response = await fetchWithCsrf(`/api/promotions`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

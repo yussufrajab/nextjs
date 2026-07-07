@@ -1,6 +1,7 @@
 'use client';
 
 import { PageHeader } from '@/components/shared/page-header';
+import { fetchWithCsrf } from '@/lib/fetch-with-csrf';
 import {
   Card,
   CardContent,
@@ -116,7 +117,7 @@ export default function SessionCleanupPage() {
       if (showLoading) setIsLoading(true);
       else setIsRefreshing(true);
 
-      const response = await fetch('/api/admin/cleanup-sessions', {
+      const response = await fetchWithCsrf('/api/admin/cleanup-sessions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'list-sessions' }),
@@ -159,7 +160,7 @@ export default function SessionCleanupPage() {
   const handleCleanupExpired = async () => {
     setIsCleaningExpired(true);
     try {
-      const response = await fetch('/api/admin/cleanup-sessions', {
+      const response = await fetchWithCsrf('/api/admin/cleanup-sessions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'cleanup-expired' }),
@@ -193,7 +194,7 @@ export default function SessionCleanupPage() {
   const handleCleanupAll = async () => {
     setIsCleaningAll(true);
     try {
-      const response = await fetch('/api/admin/cleanup-sessions', {
+      const response = await fetchWithCsrf('/api/admin/cleanup-sessions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'cleanup-all' }),
@@ -227,7 +228,7 @@ export default function SessionCleanupPage() {
   const handleCleanupUser = async (userId: string, username: string) => {
     setCleaningUserId(userId);
     try {
-      const response = await fetch('/api/admin/cleanup-sessions', {
+      const response = await fetchWithCsrf('/api/admin/cleanup-sessions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'cleanup-user', userId }),

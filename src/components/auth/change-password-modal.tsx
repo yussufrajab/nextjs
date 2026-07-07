@@ -26,6 +26,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { Loader2 } from 'lucide-react';
 import { PasswordStrengthMeter } from './password-strength-meter';
+import { fetchWithCsrf } from '@/lib/fetch-with-csrf';
 
 const changePasswordSchema = z
   .object({
@@ -74,7 +75,7 @@ export function ChangePasswordModal({
 
     setIsLoading(true);
     try {
-      const response = await fetch('/api/auth/change-password', {
+      const response = await fetchWithCsrf('/api/auth/change-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -20,6 +20,7 @@ import {
   validatePasswordComplexity,
   isCommonPassword,
 } from '@/lib/password-utils';
+import { fetchWithReauth } from '@/lib/fetch-with-csrf';
 
 interface ResetPasswordModalProps {
   isOpen: boolean;
@@ -84,7 +85,7 @@ export function ResetPasswordModal({
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('/api/admin/reset-password', {
+      const response = await fetchWithReauth('/api/admin/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

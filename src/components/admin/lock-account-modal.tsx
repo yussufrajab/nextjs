@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2, ShieldOff, AlertTriangle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { fetchWithReauth } from '@/lib/fetch-with-csrf';
 
 interface LockAccountModalProps {
   isOpen: boolean;
@@ -55,7 +56,7 @@ export function LockAccountModal({
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('/api/admin/lock-account', {
+      const response = await fetchWithReauth('/api/admin/lock-account', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

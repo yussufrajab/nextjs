@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/hooks/use-auth';
 import { ROLES, EMPLOYEES } from '@/lib/constants';
+import { fetchWithCsrf } from '@/lib/fetch-with-csrf';
 import React, { useState, useEffect, useCallback } from 'react';
 import type { Employee, User, Role } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
@@ -347,7 +348,7 @@ export default function ServiceExtensionPage() {
     }
 
     try {
-      const response = await fetch(`/api/service-extension`, {
+      const response = await fetchWithCsrf(`/api/service-extension`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -445,7 +446,7 @@ export default function ServiceExtensionPage() {
     };
 
     try {
-      const response = await fetch('/api/service-extension', {
+      const response = await fetchWithCsrf('/api/service-extension', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -738,7 +739,7 @@ export default function ServiceExtensionPage() {
     setRequestToCorrect(null);
 
     try {
-      const response = await fetch(`/api/service-extension`, {
+      const response = await fetchWithCsrf(`/api/service-extension`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

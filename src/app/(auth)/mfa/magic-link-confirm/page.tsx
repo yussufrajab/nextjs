@@ -15,6 +15,7 @@ import { useAuthStore } from '@/store/auth-store';
 import { toast } from '@/hooks/use-toast';
 import { ROLES } from '@/lib/constants';
 import { Loader2, ShieldCheck, AlertCircle } from 'lucide-react';
+import { fetchWithCsrf, ensureCsrfToken } from '@/lib/fetch-with-csrf';
 
 export default function MagicLinkConfirmPage() {
   const searchParams = useSearchParams();
@@ -31,6 +32,12 @@ export default function MagicLinkConfirmPage() {
     }
   }, [token]);
 
+  // Pre-fetch a CSRF token cookie (mid-login magic-link confirm) so the
+  // confirm POST satisfies double-submit CSRF enforcement.
+  React.useEffect(() => {
+    ensureCsrfToken();
+  }, []);
+
   async function handleConfirm() {
     if (!token) return;
 
@@ -38,7 +45,8 @@ export default function MagicLinkConfirmPage() {
     setError('');
 
     try {
-      const response = await fetch('/api/auth/mfa/magic-link', {
+      await ensureCsrfToken();
+      const response = await fetchWithCsrf('/api/auth/mfa/magic-link', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token }),

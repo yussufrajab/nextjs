@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { PageHeader } from '@/components/shared/page-header';
+import { fetchWithCsrf } from '@/lib/fetch-with-csrf';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -203,7 +204,7 @@ export default function AddEmployeePage() {
     try {
       // Auth rides the HttpOnly signed session cookie (sent automatically with
       // credentials:'include'); no client-side identity cookie to sync.
-      const response = await fetch('/api/employees/manual-entry', {
+      const response = await fetchWithCsrf('/api/employees/manual-entry', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),

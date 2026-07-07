@@ -361,6 +361,14 @@ export const PATCH = wrapHandler(async (req: Request) => {
   const auth = authResult.context!;
   const body = await req.json();
   const { id, ...updateData } = body;
+  // Strip client-supplied identity fields: the reviewer is taken from the
+  // authenticated session (auth.role / auth.userId), and these request models
+  // have no userRole/userId columns. Leaving them in updateData makes Prisma
+  // throw PrismaClientValidationError (→ 500) on every workflow PATCH
+  // (approve/reject/forward/resubmit). Restores a strip dropped by the
+  // centralized error-handling refactor (commit 67fb9c81).
+  delete updateData.userRole;
+  delete updateData.userId;
   const userRole = auth.role;
   const userId = auth.userId;
 

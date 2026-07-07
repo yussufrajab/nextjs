@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/hooks/use-auth';
 import { ROLES, EMPLOYEES } from '@/lib/constants';
+import { fetchWithCsrf } from '@/lib/fetch-with-csrf';
 import React, { useState, useEffect, useCallback } from 'react';
 import type { Employee, User, Role } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
@@ -414,7 +415,7 @@ export default function TerminationAndDismissalPage() {
         patchBody.reviewedById = user?.id;
       }
 
-      const response = await fetch(`/api/termination`, {
+      const response = await fetchWithCsrf(`/api/termination`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(patchBody),
@@ -498,7 +499,7 @@ export default function TerminationAndDismissalPage() {
     };
 
     try {
-      const response = await fetch('/api/termination', {
+      const response = await fetchWithCsrf('/api/termination', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -798,7 +799,7 @@ export default function TerminationAndDismissalPage() {
     }
 
     try {
-      const response = await fetch(`/api/termination`, {
+      const response = await fetchWithCsrf(`/api/termination`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

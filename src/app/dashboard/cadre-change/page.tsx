@@ -15,6 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/hooks/use-auth';
 import { ROLES } from '@/lib/constants';
+import { fetchWithCsrf } from '@/lib/fetch-with-csrf';
 import React, { useState, useEffect, useCallback } from 'react';
 import type { Employee, User, Role } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
@@ -384,7 +385,7 @@ export default function CadreChangePage() {
     };
 
     try {
-      const response = await fetch('/api/cadre-change', {
+      const response = await fetchWithCsrf('/api/cadre-change', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -448,7 +449,7 @@ export default function CadreChangePage() {
     }
 
     try {
-      const response = await fetch(`/api/cadre-change`, {
+      const response = await fetchWithCsrf(`/api/cadre-change`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(patchBody),

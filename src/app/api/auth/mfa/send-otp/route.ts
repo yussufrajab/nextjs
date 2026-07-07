@@ -7,12 +7,16 @@ import { logAuditEvent, AuditEventType, AuditEventCategory, AuditSeverity, getCl
 import { withRateLimit } from '@/lib/rate-limiter';
 import { authLogger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
+import { validateCSRF } from '@/lib/api-csrf-middleware';
 
 const sendOtpSchema = z.object({
   userId: z.string().min(1),
 });
 
 export const POST = wrapHandler(withRateLimit(async (request) => {
+    const csrfCheck = await validateCSRF(request);
+    if (!csrfCheck.valid) return csrfCheck.response!;
+
     const body = await request.json();
     const { userId } = sendOtpSchema.parse(body);
 

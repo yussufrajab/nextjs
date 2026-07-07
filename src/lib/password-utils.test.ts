@@ -89,24 +89,32 @@ describe('password-utils', () => {
   // =============================================================================
 
   describe('validatePasswordComplexity', () => {
-    it('should accept password with uppercase letters', () => {
-      expect(validatePasswordComplexity('ABCDEFGH')).toBe(true);
+    // Security Requirement 33.1: passwords must contain at least TWO
+    // character classes (uppercase, lowercase, number, special). Single-class
+    // passwords are rejected even when long enough — the previous OR
+    // (any-one-class) rule was the vulnerability 33.1 remediated.
+    it('should reject single-class password (uppercase only)', () => {
+      expect(validatePasswordComplexity('ABCDEFGH')).toBe(false);
     });
 
-    it('should accept password with lowercase letters', () => {
-      expect(validatePasswordComplexity('abcdefgh')).toBe(true);
+    it('should reject single-class password (lowercase only)', () => {
+      expect(validatePasswordComplexity('abcdefgh')).toBe(false);
     });
 
-    it('should accept password with numbers', () => {
-      expect(validatePasswordComplexity('12345678')).toBe(true);
+    it('should reject single-class password (numbers only)', () => {
+      expect(validatePasswordComplexity('12345678')).toBe(false);
     });
 
-    it('should accept password with special characters', () => {
-      expect(validatePasswordComplexity('!@#$%^&*')).toBe(true);
+    it('should reject single-class password (special only)', () => {
+      expect(validatePasswordComplexity('!@#$%^&*')).toBe(false);
     });
 
-    it('should accept password with mixed characters', () => {
+    it('should accept multi-class password (mixed characters)', () => {
       expect(validatePasswordComplexity('Pass123!')).toBe(true);
+    });
+
+    it('should accept two-class password (uppercase + lowercase)', () => {
+      expect(validatePasswordComplexity('Abcdefgh')).toBe(true);
     });
 
     it('should reject password shorter than minimum length', () => {
@@ -123,9 +131,14 @@ describe('password-utils', () => {
       expect(validatePasswordComplexity(undefined as any)).toBe(false);
     });
 
-    it('should accept password exactly at minimum length', () => {
+    it('should reject single-class password exactly at minimum length', () => {
       const password = 'A'.repeat(PASSWORD_MIN_LENGTH);
-      expect(validatePasswordComplexity(password)).toBe(true);
+      expect(validatePasswordComplexity(password)).toBe(false);
+    });
+
+    it('should accept multi-class password exactly at minimum length', () => {
+      // 8 chars (PASSWORD_MIN_LENGTH): uppercase + lowercase + number = 3 classes
+      expect(validatePasswordComplexity('Ab123456')).toBe(true);
     });
   });
 

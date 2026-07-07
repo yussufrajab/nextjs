@@ -358,6 +358,14 @@ async function PATCHHandler(req: Request) {
     const auth = authResult.context!;
     const body = await req.json();
     const { id, ...updateData } = body;
+    // Strip client-supplied identity fields: the reviewer is taken from the
+    // authenticated session (auth.role / auth.userId), and these request models
+    // have no userRole/userId columns. Leaving them in updateData makes Prisma
+    // throw PrismaClientValidationError (→ 500) on every workflow PATCH
+    // (approve/reject/forward/resubmit). Restores a strip dropped by the
+    // centralized error-handling refactor (commit 67fb9c81).
+    delete updateData.userRole;
+    delete updateData.userId;
     const userRole = auth.role;
     const userId = auth.userId;
 
@@ -371,7 +379,15 @@ async function PATCHHandler(req: Request) {
       );
     }
 
-    // Authorization: Different roles can perform different update actions
+    // Authorization: Different roles can perform different update actions.
+    // A resubmission is identified by its target status ('Pending HRRP
+    // Review') — the only PATCH that sets this status is an HRO/HRRP
+    // correcting a rejected request — NOT by the absence of reviewedById.
+    // The shared frontend helper sets reviewedById on every non-HRRP action,
+    // so classifying by reviewedById's presence misroutes an HRO resubmit
+    // into the initial-review branch (HHRMD/HRMO only) and returns 403.
+    const isResubmission =
+      updateData.status === 'Pending HRRP Review';
     const isHrrpApproval =
       updateData.status === 'Approved by HRRP - Awaiting Commission Review' &&
       (updateData.hrrpReviewedById || userRole === 'HRRP');
@@ -380,21 +396,18 @@ async function PATCHHandler(req: Request) {
     const isHrrpAction = isHrrpApproval || isHrrpRejection;
     const isCommissionDecision =
       updateData.reviewedById !== undefined &&
-      !isHrrpAction &&
+      !isHrrpAction && !isResubmission &&
       (updateData.status === 'Approved by Commission' || updateData.status === 'Rejected by Commission - Request Concluded');
     const isInitialReviewAction =
-      updateData.reviewedById !== undefined && !isHrrpAction && !isCommissionDecision;
-    const isResubmission =
-      updateData.status === 'Pending HRRP Review' &&
-      !updateData.reviewedById;
+      updateData.reviewedById !== undefined && !isHrrpAction && !isCommissionDecision && !isResubmission;
 
     let authCheck;
     if (isHrrpAction) {
       authCheck = checkRoleAuthorization(userRole, ['HRRP' as const]);
-    } else if (isCommissionDecision || isInitialReviewAction) {
-      authCheck = checkRoleAuthorization(userRole, ['HHRMD' as const, 'HRMO' as const]);
     } else if (isResubmission) {
       authCheck = checkRoleAuthorization(userRole, ['HRO' as const, 'HRRP' as const]);
+    } else if (isCommissionDecision || isInitialReviewAction) {
+      authCheck = checkRoleAuthorization(userRole, ['HHRMD' as const, 'HRMO' as const]);
     } else {
       authCheck = { authorized: false, message: 'Invalid update action' };
     }
@@ -438,6 +451,14 @@ async function PATCHHandler(req: Request) {
     }
     if (updateData.hrrpReviewedById !== undefined) {
       updateData.hrrpReviewedById = auth.userId;
+    }
+
+    // A resubmission returns the request to HRRP review — there is no
+    // reviewer yet. Drop any client-supplied reviewedById (the shared
+    // frontend helper sets it for every non-HRRP action) so the
+    // resubmitting HRO is not recorded as the reviewer.
+    if (isResubmission) {
+      delete updateData.reviewedById;
     }
 
     const updatedRequest = await db.cadreChangeRequest.update({

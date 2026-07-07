@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { AlertTriangle, Clock } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { clientLogger } from '@/lib/logger-client';
+import { fetchWithCsrf } from '@/lib/fetch-with-csrf';
 
 const log = clientLogger.child({ component: 'password-expiration' });
 
@@ -24,7 +25,7 @@ export function PasswordExpirationBanner() {
       }
 
       try {
-        const response = await fetch('/api/auth/password-status', {
+        const response = await fetchWithCsrf('/api/auth/password-status', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

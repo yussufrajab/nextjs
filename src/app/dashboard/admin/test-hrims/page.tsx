@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { clientLogger } from '@/lib/logger-client';
+import { fetchWithCsrf } from '@/lib/fetch-with-csrf';
 const log = clientLogger.child({ component: 'test-hrims' });
 
 interface TestResult {
@@ -127,7 +128,7 @@ export default function TestHRIMSPage() {
         description: `Testing ${testCount} selected HRIMS API ${testCount === 1 ? 'endpoint' : 'endpoints'}...`,
       });
 
-      const response = await fetch('/api/hrims/test', {
+      const response = await fetchWithCsrf('/api/hrims/test', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -1,6 +1,7 @@
 'use client';
 
 import { PageHeader } from '@/components/shared/page-header';
+import { fetchWithCsrf } from '@/lib/fetch-with-csrf';
 import {
   Card,
   CardContent,
@@ -100,7 +101,7 @@ export default function HrimsSettingsPage() {
     setTestResult(null);
 
     try {
-      const response = await fetch('/api/admin/hrims-settings', {
+      const response = await fetchWithCsrf('/api/admin/hrims-settings', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -149,7 +150,7 @@ export default function HrimsSettingsPage() {
     setTestResult(null);
 
     try {
-      const response = await fetch('/api/admin/hrims-settings', {
+      const response = await fetchWithCsrf('/api/admin/hrims-settings', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -1,5 +1,6 @@
 'use client';
 import { PageHeader } from '@/components/shared/page-header';
+import { fetchWithCsrf } from '@/lib/fetch-with-csrf';
 import {
   Card,
   CardContent,
@@ -390,7 +391,7 @@ export default function ComplaintsPage() {
     const complaintDataParam = encodeURIComponent(JSON.stringify(complaintData));
 
     try {
-      const response = await fetch(`/api/complaints/mfa-initiate?complaintData=${complaintDataParam}`, {
+      const response = await fetchWithCsrf(`/api/complaints/mfa-initiate?complaintData=${complaintDataParam}`, {
         method: 'POST',
       });
 
@@ -432,7 +433,7 @@ export default function ComplaintsPage() {
 
   const handleUpdateComplaint = async (complaintId: string, payload: any) => {
     try {
-      const response = await fetch(`/api/complaints/${complaintId}`, {
+      const response = await fetchWithCsrf(`/api/complaints/${complaintId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -969,7 +970,7 @@ export default function ComplaintsPage() {
         uploadFormData.append('file', commissionLetter);
         uploadFormData.append('folder', 'commission-letters');
 
-        const uploadResponse = await fetch('/api/files/upload', {
+        const uploadResponse = await fetchWithCsrf('/api/files/upload', {
           method: 'POST',
           body: uploadFormData,
         });
@@ -1923,7 +1924,7 @@ export default function ComplaintsPage() {
                             );
 
                             try {
-                              const response = await fetch(
+                              const response = await fetchWithCsrf(
                                 `/api/complaints/${complaint.id}`,
                                 {
                                   method: 'PUT',

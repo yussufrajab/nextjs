@@ -18,6 +18,7 @@ import { useAuthStore } from '@/store/auth-store';
 import { useRouter } from 'next/navigation';
 import { toast } from '@/hooks/use-toast';
 import { ROLES } from '@/lib/constants';
+import { fetchWithCsrf, ensureCsrfToken } from '@/lib/fetch-with-csrf';
 import type { User } from '@/lib/types';
 import { Loader2 } from 'lucide-react';
 import { DeviceLimitDialog } from './device-limit-dialog';
@@ -49,6 +50,13 @@ export function LoginForm() {
     logout();
   }, [logout]);
 
+  // Pre-fetch a CSRF token cookie so the login (and any force-logout on
+  // session conflict) can satisfy double-submit CSRF enforcement. The token
+  // is also re-ensured in onSubmit right before submitting.
+  React.useEffect(() => {
+    ensureCsrfToken();
+  }, []);
+
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginFormSchema),
     defaultValues: {
@@ -62,6 +70,7 @@ export function LoginForm() {
     log.info({ username: data.username, passwordLength: data.password?.length }, 'LoginForm onSubmit');
 
     try {
+      await ensureCsrfToken();
       const user = await login(data.username, data.password);
       log.info({ userId: user?.id, userRole: user?.role }, 'LoginForm onSubmit - returned user');
 
@@ -144,7 +153,7 @@ export function LoginForm() {
       log.info({ sessionId }, 'Force logout for session');
 
       // Call API to force logout the selected session
-      const response = await fetch('/api/auth/sessions/force-logout', {
+      const response = await fetchWithCsrf('/api/auth/sessions/force-logout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

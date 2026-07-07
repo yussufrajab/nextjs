@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { fetchWithReauth } from '@/lib/fetch-with-csrf';
 
 interface UnlockAccountModalProps {
   isOpen: boolean;
@@ -63,7 +64,7 @@ export function UnlockAccountModal({
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('/api/admin/unlock-account', {
+      const response = await fetchWithReauth('/api/admin/unlock-account', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

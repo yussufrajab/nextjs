@@ -7,6 +7,7 @@ import { useAuthStore } from '@/store/auth-store';
 import { toast } from '@/hooks/use-toast';
 import { ROLES } from '@/lib/constants';
 import { Loader2, ArrowLeft, RefreshCw } from 'lucide-react';
+import { fetchWithCsrf, ensureCsrfToken } from '@/lib/fetch-with-csrf';
 
 const RATE_LIMIT_SECONDS = 60;
 
@@ -25,6 +26,12 @@ export function MfaVerifyForm({ userId, email }: MfaVerifyFormProps) {
   const [cooldown, setCooldown] = React.useState(RATE_LIMIT_SECONDS);
   const inputRefs = React.useRef<(HTMLInputElement | null)[]>([]);
   const isVerifying = React.useRef(false);
+
+  // Pre-fetch a CSRF token cookie so OTP verify/resend satisfy double-submit
+  // CSRF enforcement (the user is mid-login, before the post-login cookie exists).
+  React.useEffect(() => {
+    ensureCsrfToken();
+  }, []);
 
   // Cooldown timer for resend
   React.useEffect(() => {
@@ -83,7 +90,8 @@ export function MfaVerifyForm({ userId, email }: MfaVerifyFormProps) {
     setError('');
 
     try {
-      const response = await fetch('/api/auth/mfa/verify-otp', {
+      await ensureCsrfToken();
+      const response = await fetchWithCsrf('/api/auth/mfa/verify-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, otpCode: code }),
@@ -176,7 +184,8 @@ export function MfaVerifyForm({ userId, email }: MfaVerifyFormProps) {
     setOtp(['', '', '', '', '', '']);
 
     try {
-      const response = await fetch('/api/auth/mfa/send-otp', {
+      await ensureCsrfToken();
+      const response = await fetchWithCsrf('/api/auth/mfa/send-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId }),

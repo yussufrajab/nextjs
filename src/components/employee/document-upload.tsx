@@ -25,24 +25,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { FilePreviewModal } from '@/components/ui/file-preview-modal';
 import { clientLogger } from '@/lib/logger-client';
-
-/**
- * Get CSRF headers for fetch requests
- * Returns headers object with CSRF token for state-changing requests
- */
-function getCsrfHeaders(): Record<string, string> {
-  if (typeof window === 'undefined') return {};
-  // Use indexOf + substring to preserve '=' characters in base64 value
-  const csrfRow = document.cookie
-    .split('; ')
-    .find((row) => row.startsWith('csrf-token='));
-  const csrfToken = csrfRow ? csrfRow.substring(csrfRow.indexOf('=') + 1) : undefined;
-  if (csrfToken) {
-    return { 'x-csrf-token': csrfToken };
-  }
-  log.warn('CSRF token not found for document upload');
-  return {};
-}
+import { fetchWithCsrf } from '@/lib/fetch-with-csrf';
 
 const log = clientLogger.child({ component: 'document-upload' });
 
@@ -118,10 +101,9 @@ export function DocumentUpload({
       if (userInstitutionId)
         formData.append('userInstitutionId', userInstitutionId);
 
-      const response = await fetch(`/api/employees/${employeeId}/documents`, {
+      const response = await fetchWithCsrf(`/api/employees/${employeeId}/documents`, {
         method: 'POST',
         body: formData,
-        headers: getCsrfHeaders(),
       });
 
       const result = await response.json();

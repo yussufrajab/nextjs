@@ -342,6 +342,14 @@ async function PATCHHandler(req: Request) {
 
     const body = await req.json();
     const { id, ...updateData } = body;
+    // Strip client-supplied identity fields: the reviewer is taken from the
+    // authenticated session (auth.role / auth.userId), and these request models
+    // have no userRole/userId columns. Leaving them in updateData makes Prisma
+    // throw PrismaClientValidationError (→ 500) on every workflow PATCH
+    // (approve/reject/forward/resubmit). Restores a strip dropped by the
+    // centralized error-handling refactor (commit 67fb9c81).
+    delete updateData.userRole;
+    delete updateData.userId;
     const userRole = auth.role;
     const userId = auth.userId;
 
@@ -358,7 +366,12 @@ async function PATCHHandler(req: Request) {
     // Determine HRRP action types before the update
     const isHrrpApproval = updateData.status === 'Approved by HRRP - Awaiting Commission Review' && (updateData.hrrpReviewedById || userRole === 'HRRP');
     const isHrrpRejection = updateData.status === 'Rejected by HRRP - Awaiting HRO Correction';
-    const isResubmission = updateData.status === 'Pending HRRP Review' && !updateData.reviewedById;
+    // A resubmission is identified by its target status ('Pending HRRP
+    // Review'), NOT by the absence of reviewedById — the shared frontend
+    // helper sets reviewedById on every non-HRRP action, including resubmit.
+    // Classifying by reviewedById would skip the HRRP resubmission
+    // notification below.
+    const isResubmission = updateData.status === 'Pending HRRP Review';
 
     // Validate that commission decisions include a commission letter
     const isCommissionDecision = updateData.reviewedById && (
@@ -398,6 +411,15 @@ async function PATCHHandler(req: Request) {
     }
     if (updateData.hrrpReviewedById !== undefined) {
       updateData.hrrpReviewedById = auth.userId;
+    }
+
+    // A resubmission returns the request to HRRP review — there is no
+    // reviewer yet. Drop any client-supplied reviewedById (the shared
+    // frontend helper sets it for every non-HRRP action) so the
+    // resubmitting HRO is not recorded as the reviewer and the HRRP
+    // resubmission notification below fires correctly.
+    if (isResubmission) {
+      delete updateData.reviewedById;
     }
 
     const updatedRequest = await db.resignationRequest.update({

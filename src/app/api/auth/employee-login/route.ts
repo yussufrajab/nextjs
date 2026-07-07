@@ -15,6 +15,7 @@ import { logLoginAttempt, getClientIp } from '@/lib/audit-logger';
 import { withRateLimit } from '@/lib/rate-limiter';
 import { authLogger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
+import { validateCSRF } from '@/lib/api-csrf-middleware';
 
 const employeeLoginSchema = z.object({
   zanId: z.string().min(1),
@@ -31,6 +32,9 @@ function generateUsername(name: string): string {
 }
 
 export const POST = wrapHandler(withRateLimit(async (request) => {
+    const csrfCheck = await validateCSRF(request);
+    if (!csrfCheck.valid) return csrfCheck.response!;
+
     const body = await request.json();
     const { zanId, zssfNumber, payrollNumber } =
       employeeLoginSchema.parse(body);

@@ -9,6 +9,7 @@ import { sendRequestSubmissionEmails } from '@/lib/email';
 import { logComplaintAction, getClientIp } from '@/lib/audit-logger';
 import { authLogger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
+import { validateCSRF } from '@/lib/api-csrf-middleware';
 
 const complaintSchema = z.object({
   complaintType: z.string().min(1),
@@ -26,6 +27,9 @@ const verifyBodySchema = z.object({
 });
 
 export const POST = wrapHandler(async (req: Request) => {
+  const csrfCheck = await validateCSRF(req);
+  if (!csrfCheck.valid) return csrfCheck.response!;
+
   // Extract complaint data from URL query params
   const { searchParams } = new URL(req.url);
   const complaintDataParam = searchParams.get('complaintData');

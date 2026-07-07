@@ -33,6 +33,7 @@ import {
 import { toast } from '@/hooks/use-toast';
 import { Pagination } from '@/components/shared/pagination';
 import { clientLogger } from '@/lib/logger-client';
+import { fetchWithCsrf } from '@/lib/fetch-with-csrf';
 const log = clientLogger.child({ component: 'get-documents' });
 
 interface Institution {
@@ -170,7 +171,7 @@ export default function GetDocumentsPage() {
     setProgress(null);
 
     try {
-      const response = await fetch(
+      const response = await fetchWithCsrf(
         '/api/hrims/fetch-documents-by-institution',
         {
           method: 'POST',

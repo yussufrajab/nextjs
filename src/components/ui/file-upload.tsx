@@ -10,6 +10,7 @@ import { Upload, X, FileText, Eye, Download, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/auth-store';
 import { clientLogger } from '@/lib/logger-client';
+import { getCsrfToken } from '@/lib/fetch-with-csrf';
 
 const log = clientLogger.child({ component: 'file-upload' });
 
@@ -222,12 +223,9 @@ export function FileUpload({
               xhr.open('POST', '/api/files/upload');
               xhr.withCredentials = true; // Include cookies for session-based auth
 
-              // Add CSRF token for state-changing request
-              // Use indexOf + substring to preserve '=' characters in base64 value
-              const csrfRow = document.cookie
-                .split('; ')
-                .find((row) => row.startsWith('csrf-token='));
-              const csrfToken = csrfRow ? csrfRow.substring(csrfRow.indexOf('=') + 1) : undefined;
+              // Add CSRF token for state-changing request (double-submit pattern).
+              // Shared helper so the token read stays in sync with fetchWithCsrf.
+              const csrfToken = getCsrfToken();
               if (csrfToken) {
                 xhr.setRequestHeader('x-csrf-token', csrfToken);
                 log.info({ hasToken: true, tokenPrefix: csrfToken.substring(0, 10) }, 'CSRF token added to request');
