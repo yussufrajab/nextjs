@@ -15,6 +15,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/hooks/use-auth';
 import { ROLES } from '@/lib/constants';
 import React, { useState, useEffect } from 'react';
+import { WorkflowSteps } from '@/components/shared/workflow-steps';
+import type { WorkflowStep } from '@/components/shared/workflow-steps';
 import type { Employee } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
 import {
@@ -87,6 +89,45 @@ const initialMockPendingDismissalRequests: MockPendingDismissalRequest[] = [
     reviewStage: 'initial',
   },
 ];
+
+function getDismissalWorkflowSteps(status: string): WorkflowStep[] {
+  return [
+    {
+      label: 'HRO Submit',
+      status: status === 'Pending DO Review' ||
+              status === 'Pending HHRMD Review' ||
+              status === 'Pending Review'
+        ? 'active'
+        : status.includes('Awaiting HRO') || status.includes('Correction')
+          ? 'rejected'
+          : 'completed',
+    },
+    {
+      label: 'Officer Review',
+      status: status === 'Pending DO Review' ||
+              status === 'Pending HHRMD Review' ||
+              status === 'Pending Review'
+        ? 'active'
+        : status === 'Request Received – Awaiting Commission Decision' ||
+          status.includes('Approved by Commission') ||
+          status.includes('Rejected by Commission')
+          ? 'completed'
+          : status.includes('Rejected by')
+            ? 'rejected'
+            : 'pending',
+    },
+    {
+      label: 'Commission Decision',
+      status: status.includes('Approved by Commission') ||
+             status === 'Rejected by Commission - Request Concluded'
+        ? 'completed'
+        : status === 'Request Received – Awaiting Commission Decision' ||
+          status.includes('Awaiting Commission')
+          ? 'active'
+          : 'pending',
+    },
+  ];
+}
 
 export default function DismissalPage() {
   const { role, user } = useAuth();
@@ -1065,6 +1106,11 @@ export default function DismissalPage() {
                         {request.rejectionReason}
                       </p>
                     )}
+                    {/* Workflow Progress Indicator */}
+                    <div className="mt-2">
+                      <span className="text-xs text-muted-foreground font-medium mr-2">Workflow:</span>
+                      <WorkflowSteps steps={getDismissalWorkflowSteps(request.status)} />
+                    </div>
                     <div className="mt-3 pt-3 border-t flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                       <Button
                         size="sm"
