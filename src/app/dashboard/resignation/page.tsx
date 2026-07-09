@@ -1261,6 +1261,11 @@ export default function ResignationPage() {
                       {request.rejectionReason}
                     </p>
                   )}
+                  {/* Workflow Progress Indicator */}
+                  <div className="mt-2">
+                    <span className="text-xs text-muted-foreground font-medium mr-2">Workflow:</span>
+                    <WorkflowSteps steps={getResignationWorkflowSteps(request.status)} />
+                  </div>
                   <div className="mt-3 pt-3 border-t flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                     <Button
                       size="sm"
@@ -1508,6 +1513,11 @@ export default function ResignationPage() {
                       {request.rejectionReason}
                     </p>
                   )}
+                  {/* Workflow Progress Indicator */}
+                  <div className="mt-2">
+                    <span className="text-xs text-muted-foreground font-medium mr-2">Workflow:</span>
+                    <WorkflowSteps steps={getResignationWorkflowSteps(request.status)} />
+                  </div>
                   <div className="mt-3 pt-3 border-t flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                     <Button
                       size="sm"
