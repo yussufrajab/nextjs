@@ -137,7 +137,6 @@ describe('route-permissions', () => {
         expect(canAccessRoute('/dashboard/termination', ROLES.HHRMD)).toBe(
           true
         );
-        expect(canAccessRoute('/dashboard/dismissal', ROLES.HHRMD)).toBe(true);
       });
 
       it('should allow HHRMD to access complaints', () => {
@@ -164,7 +163,6 @@ describe('route-permissions', () => {
         expect(canAccessRoute('/dashboard/termination', ROLES.HRMO)).toBe(
           false
         );
-        expect(canAccessRoute('/dashboard/dismissal', ROLES.HRMO)).toBe(false);
       });
 
       it('should NOT allow HRMO to access complaints', () => {
@@ -181,7 +179,6 @@ describe('route-permissions', () => {
     describe('DO Routes', () => {
       it('should allow DO to access disciplinary routes', () => {
         expect(canAccessRoute('/dashboard/termination', ROLES.DO)).toBe(true);
-        expect(canAccessRoute('/dashboard/dismissal', ROLES.DO)).toBe(true);
       });
 
       it('should allow DO to access complaints', () => {

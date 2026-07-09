@@ -74,12 +74,6 @@ export const BACKEND_CONFIG = {
       update: (id: string) => `/termination-requests/${id}`,
       get: (id: string) => `/termination-requests/${id}`,
     },
-    dismissal: {
-      list: '/dismissal-requests',
-      create: '/dismissal-requests',
-      update: (id: string) => `/dismissal-requests/${id}`,
-      get: (id: string) => `/dismissal-requests/${id}`,
-    },
   },
 
   // Complaint endpoints

@@ -91,6 +91,8 @@ function getTerminationWorkflowSteps(status: string): WorkflowStep[] {
         : status === 'Rejected by HRRP - Awaiting HRO Correction'
           ? 'rejected'
           : status === 'Pending HRMO/HHRMD Review' ||
+            status === 'Pending DO/HHRMD Review' ||
+            status === 'Pending HHRMD/DO Review' ||
             status === 'Approved by HRRP - Awaiting Commission Review'
             ? 'completed'
             : status.includes('Awaiting Commission') ||
@@ -105,19 +107,21 @@ function getTerminationWorkflowSteps(status: string): WorkflowStep[] {
                 : 'pending',
     },
     {
-      label: status.includes('Approved by HRMO')
-        ? 'HRMO ✓'
-        : status.includes('Approved by HHRMD')
-          ? 'HHRMD ✓'
-          : 'HRMO/HHRMD Review',
-      status: status.includes('Approved by HRMO') || status.includes('Approved by HHRMD')
+      label: status.includes('Approved by HHRMD')
+        ? 'HHRMD ✓'
+        : status.includes('Approved by DO')
+          ? 'DO ✓'
+          : 'HHRMD/DO Review',
+      status: status.includes('Approved by HHRMD') || status.includes('Approved by DO')
         ? 'completed'
         : status === 'Rejected by HRMO - Awaiting HRO Correction'
           ? 'rejected'
           : status === 'Rejected by HHRMD - Awaiting HRO Correction'
             ? 'rejected'
             : status === 'Approved by HRRP - Awaiting Commission Review' ||
-              status === 'Pending HRMO/HHRMD Review'
+              status === 'Pending HRMO/HHRMD Review' ||
+              status === 'Pending DO/HHRMD Review' ||
+              status === 'Pending HHRMD/DO Review'
               ? 'active'
               : status === 'Request Received – Awaiting Commission Decision' ||
                 status.includes('Awaiting Commission Decision') ||
@@ -1452,62 +1456,6 @@ export default function TerminationAndDismissalPage() {
                       {request.status}
                     </span>
                   </div>
-                  {/* Workflow Progress Indicator */}
-                  <div className="flex items-center space-x-2 mt-2">
-                    <div className="flex items-center space-x-1 text-xs text-muted-foreground">
-                      <span>Workflow:</span>
-                      <div className="flex items-center space-x-1">
-                        <div
-                          className={`w-2 h-2 rounded-full ${
-                            request.status !== 'Pending'
-                              ? 'bg-green-500'
-                              : 'bg-gray-300'
-                          }`}
-                        ></div>
-                        <span className="text-[10px]">HRO Submit</span>
-                        <div className="w-3 h-px bg-gray-300"></div>
-                        <div
-                          className={`w-2 h-2 rounded-full ${
-                            request.status === 'Approved by HRRP - Awaiting Commission Review' ||
-                            request.status === 'Request Received – Awaiting Commission Decision' ||
-                            request.status.includes('Approved by Commission') ||
-                            request.status.includes('Rejected by Commission')
-                              ? 'bg-green-500'
-                              : request.status === 'Pending HRRP Review'
-                                ? 'bg-purple-500'
-                                : request.status === 'Rejected by HRRP - Awaiting HRO Correction'
-                                  ? 'bg-red-500'
-                                  : 'bg-gray-300'
-                          }`}
-                        ></div>
-                        <span className="text-[10px]">HRRP Review</span>
-                        <div className="w-3 h-px bg-gray-300"></div>
-                        <div
-                          className={`w-2 h-2 rounded-full ${
-                            request.status === 'Request Received – Awaiting Commission Decision' ||
-                            request.status.includes('Approved by Commission') ||
-                            request.status.includes('Rejected by Commission')
-                              ? 'bg-green-500'
-                              : request.status === 'Approved by HRRP - Awaiting Commission Review'
-                                ? 'bg-orange-500'
-                                : 'bg-gray-300'
-                          }`}
-                        ></div>
-                        <span className="text-[10px]">HHRMD/DO Review</span>
-                        <div className="w-3 h-px bg-gray-300"></div>
-                        <div
-                          className={`w-2 h-2 rounded-full ${
-                            ['Approved by Commission', 'Rejected by Commission - Request Concluded'].includes(request.status)
-                              ? 'bg-green-500'
-                              : request.status.includes('Awaiting Commission')
-                                ? 'bg-blue-500'
-                                : 'bg-gray-300'
-                          }`}
-                        ></div>
-                        <span className="text-[10px]">Commission Decision</span>
-                      </div>
-                    </div>
-                  </div>
                   {request.rejectionReason && (
                     <p className="text-sm text-destructive">
                       <span className="font-medium">Rejection Reason:</span>{' '}
@@ -1684,62 +1632,6 @@ export default function TerminationAndDismissalPage() {
                     >
                       {request.status}
                     </span>
-                  </div>
-                  {/* Workflow Progress Indicator */}
-                  <div className="flex items-center space-x-2 mt-2">
-                    <div className="flex items-center space-x-1 text-xs text-muted-foreground">
-                      <span>Workflow:</span>
-                      <div className="flex items-center space-x-1">
-                        <div
-                          className={`w-2 h-2 rounded-full ${
-                            request.status !== 'Pending'
-                              ? 'bg-green-500'
-                              : 'bg-gray-300'
-                          }`}
-                        ></div>
-                        <span className="text-[10px]">HRO Submit</span>
-                        <div className="w-3 h-px bg-gray-300"></div>
-                        <div
-                          className={`w-2 h-2 rounded-full ${
-                            request.status === 'Approved by HRRP - Awaiting Commission Review' ||
-                            request.status === 'Request Received – Awaiting Commission Decision' ||
-                            request.status.includes('Approved by Commission') ||
-                            request.status.includes('Rejected by Commission')
-                              ? 'bg-green-500'
-                              : request.status === 'Pending HRRP Review'
-                                ? 'bg-purple-500'
-                                : request.status === 'Rejected by HRRP - Awaiting HRO Correction'
-                                  ? 'bg-red-500'
-                                  : 'bg-gray-300'
-                          }`}
-                        ></div>
-                        <span className="text-[10px]">HRRP Review</span>
-                        <div className="w-3 h-px bg-gray-300"></div>
-                        <div
-                          className={`w-2 h-2 rounded-full ${
-                            request.status === 'Request Received – Awaiting Commission Decision' ||
-                            request.status.includes('Approved by Commission') ||
-                            request.status.includes('Rejected by Commission')
-                              ? 'bg-green-500'
-                              : request.status === 'Approved by HRRP - Awaiting Commission Review'
-                                ? 'bg-orange-500'
-                                : 'bg-gray-300'
-                          }`}
-                        ></div>
-                        <span className="text-[10px]">HHRMD/DO Review</span>
-                        <div className="w-3 h-px bg-gray-300"></div>
-                        <div
-                          className={`w-2 h-2 rounded-full ${
-                            ['Approved by Commission', 'Rejected by Commission - Request Concluded'].includes(request.status)
-                              ? 'bg-green-500'
-                              : request.status.includes('Awaiting Commission')
-                                ? 'bg-blue-500'
-                                : 'bg-gray-300'
-                          }`}
-                        ></div>
-                        <span className="text-[10px]">Commission Decision</span>
-                      </div>
-                    </div>
                   </div>
                   {request.rejectionReason && (
                     <p className="text-sm text-destructive">
