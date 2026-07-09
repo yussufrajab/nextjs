@@ -22,6 +22,8 @@ import { useAuth } from '@/hooks/use-auth';
 import { ROLES, EMPLOYEES } from '@/lib/constants';
 import { fetchWithCsrf } from '@/lib/fetch-with-csrf';
 import React, { useState, useEffect, useCallback } from 'react';
+import { WorkflowSteps } from '@/components/shared/workflow-steps';
+import type { WorkflowStep } from '@/components/shared/workflow-steps';
 import type { Employee, User, Role } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
 import {
@@ -92,6 +94,71 @@ interface RetirementRequest {
 
 const COMPULSORY_RETIREMENT_AGE = 60;
 const VOLUNTARY_RETIREMENT_AGE = 55;
+
+function getRetirementWorkflowSteps(status: string): WorkflowStep[] {
+  return [
+    {
+      label: 'HRO Submit',
+      status: status === 'Pending'
+        ? 'active'
+        : ['Rejected by HRRP - Awaiting HRO Correction', 'Rejected by HRMO - Awaiting HRO Correction', 'Rejected by HHRMD - Awaiting HRO Correction'].includes(status)
+          ? 'rejected'
+          : 'completed',
+    },
+    {
+      label: 'HRRP Review',
+      status: status === 'Pending HRRP Review'
+        ? 'active'
+        : status === 'Rejected by HRRP - Awaiting HRO Correction'
+          ? 'rejected'
+          : status === 'Pending HRMO/HHRMD Review' ||
+            status === 'Approved by HRRP - Awaiting Commission Review'
+            ? 'completed'
+            : status.includes('Awaiting Commission') ||
+              status.includes('Approved by Commission') ||
+              status.includes('Rejected by Commission') ||
+              status === 'Approved by HRMO - Awaiting Commission Decision' ||
+              status === 'Approved by HHRMD - Awaiting Commission Decision' ||
+              status === 'Request Received – Awaiting Commission Decision'
+              ? 'completed'
+              : status.includes('Rejected by')
+                ? 'rejected'
+                : 'pending',
+    },
+    {
+      label: status.includes('Approved by HRMO')
+        ? 'HRMO ✓'
+        : status.includes('Approved by HHRMD')
+          ? 'HHRMD ✓'
+          : 'HRMO/HHRMD Review',
+      status: status.includes('Approved by HRMO') || status.includes('Approved by HHRMD')
+        ? 'completed'
+        : status === 'Rejected by HRMO - Awaiting HRO Correction'
+          ? 'rejected'
+          : status === 'Rejected by HHRMD - Awaiting HRO Correction'
+            ? 'rejected'
+            : status === 'Approved by HRRP - Awaiting Commission Review' ||
+              status === 'Pending HRMO/HHRMD Review'
+              ? 'active'
+              : status === 'Request Received – Awaiting Commission Decision' ||
+                status.includes('Awaiting Commission Decision') ||
+                status.includes('Approved by Commission') ||
+                status.includes('Rejected by Commission')
+                ? 'completed'
+                : 'pending',
+    },
+    {
+      label: 'Commission Decision',
+      status: status.includes('Approved by Commission') ||
+             status === 'Rejected by Commission - Request Concluded'
+        ? 'completed'
+        : status === 'Request Received – Awaiting Commission Decision' ||
+          status.includes('Awaiting Commission')
+          ? 'active'
+          : 'pending',
+    },
+  ];
+}
 
 export default function RetirementPage() {
   const { role, user } = useAuth();
@@ -1625,6 +1692,11 @@ export default function RetirementPage() {
                     {request.rejectionReason}
                   </p>
                 )}
+                {/* Workflow Progress Indicator */}
+                <div className="mt-2">
+                  <span className="text-xs text-muted-foreground font-medium mr-2">Workflow:</span>
+                  <WorkflowSteps steps={getRetirementWorkflowSteps(request.status)} />
+                </div>
                 <div className="mt-3 pt-3 border-t flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                   <Button
                     size="sm"
@@ -1886,6 +1958,11 @@ export default function RetirementPage() {
                       {request.rejectionReason}
                     </p>
                   )}
+                  {/* Workflow Progress Indicator */}
+                  <div className="mt-2">
+                    <span className="text-xs text-muted-foreground font-medium mr-2">Workflow:</span>
+                    <WorkflowSteps steps={getRetirementWorkflowSteps(request.status)} />
+                  </div>
                   <div className="mt-3 pt-3 border-t flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                     <Button
                       size="sm"

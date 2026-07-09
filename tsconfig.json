@@ -49,6 +49,7 @@
     "beky5",
     "prizmamigration",
     "scripts",
-    "examples"
+    "examples",
+    "csms"
   ]
 }

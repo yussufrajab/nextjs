@@ -81,3 +81,9 @@ docs/database/schema_*.sql
 # Database backup files with employees (large files - use compressed archive instead)
 docs/database/nody_with_employees_*.sql
 docs/database/schema_full_*.sql
+
+# Production3 VPS source mirror (do not commit)
+/csms
+/.well-known
+/cookies-emp.txt
+/dump.rdb
