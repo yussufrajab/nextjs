@@ -52,9 +52,18 @@ export default defineConfig({
     },
   ],
 
-  // Web server (start dev server for local development)
+  // Web server. In CI, start the built production server (`npm start`) and wait
+  // for it to come up before running tests — the workflow builds the app first
+  // but never starts it, so without this Playwright has nothing to talk to at
+  // localhost:9002 and every navigation fails with a connection error.
+  // Locally, start the dev server against the test database instead.
   webServer: process.env.CI
-    ? undefined
+    ? {
+        command: 'npm start',
+        url: 'http://localhost:9002',
+        timeout: 180000,
+        reuseExistingServer: false,
+      }
     : {
         command: 'DATABASE_URL="postgresql://postgres:Mamlaka2020@localhost:5432/csms_test?schema=public" npm run dev',
         url: 'http://localhost:9002',
