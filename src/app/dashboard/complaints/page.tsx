@@ -1788,77 +1788,9 @@ export default function ComplaintsPage() {
                       </span>
                     </div>
                     {/* Workflow Progress Indicator for Complaints */}
-                    <div className="flex items-center space-x-2 mt-2">
-                      <div className="flex items-center space-x-1 text-xs text-muted-foreground">
-                        <span>Workflow:</span>
-                        <div className="flex items-center space-x-1">
-                          <div
-                            className={`w-2 h-2 rounded-full ${
-                              [
-                                'Submitted',
-                                'lalamiko lako limepokelewa, linafanyiwa kazi',
-                                'Under Review',
-                                'Under Review - Additional Information Provided',
-                                'Resolved - Pending Employee Confirmation',
-                                'Rejected - Pending Employee Confirmation',
-                                'Mtumishi ameridhika na hatua',
-                                'Closed - Satisfied',
-                              ].includes(complaint.status) ||
-                              complaint.status.startsWith('Resolved') ||
-                              complaint.status.startsWith('Rejected by') ||
-                              complaint.status.startsWith('Closed - Commission')
-                                ? 'bg-green-500'
-                                : 'bg-gray-300'
-                            }`}
-                          ></div>
-                          <span className="text-[10px]">Wasilisha</span>
-                          <div className="w-3 h-px bg-gray-300"></div>
-                          <div
-                            className={`w-2 h-2 rounded-full ${
-                              [
-                                'lalamiko lako limepokelewa, linafanyiwa kazi',
-                                'Under Review',
-                                'Under Review - Additional Information Provided',
-                                'Resolved - Pending Employee Confirmation',
-                                'Rejected - Pending Employee Confirmation',
-                                'Mtumishi ameridhika na hatua',
-                                'Closed - Satisfied',
-                              ].includes(complaint.status) ||
-                              complaint.status.startsWith('Resolved') ||
-                              complaint.status.startsWith('Rejected by') ||
-                              complaint.status.startsWith('Closed - Commission')
-                                ? 'bg-green-500'
-                                : 'bg-gray-300'
-                            }`}
-                          ></div>
-                          <span className="text-[10px]">Mkaguzi</span>
-                          <div className="w-3 h-px bg-gray-300"></div>
-                          <div
-                            className={`w-2 h-2 rounded-full ${
-                              [
-                                'Mtumishi ameridhika na hatua',
-                                'Closed - Satisfied',
-                              ].includes(complaint.status)
-                                ? 'bg-green-500'
-                                : complaint.status ===
-                                      'Resolved - Pending Employee Confirmation' ||
-                                    complaint.status ===
-                                      'Rejected - Pending Employee Confirmation'
-                                  ? 'bg-blue-500'
-                                  : complaint.status.startsWith('Resolved') ||
-                                      complaint.status.startsWith(
-                                        'Rejected by'
-                                      ) ||
-                                      complaint.status.startsWith(
-                                        'Closed - Commission'
-                                      )
-                                    ? 'bg-orange-500'
-                                    : 'bg-gray-300'
-                            }`}
-                          ></div>
-                          <span className="text-[10px]">Malizika</span>
-                        </div>
-                      </div>
+                    <div className="mt-2">
+                      <span className="text-xs text-muted-foreground font-medium mr-2">Workflow:</span>
+                      <WorkflowSteps steps={getComplaintWorkflowSteps(complaint.status)} />
                     </div>
                     <p className="text-sm text-muted-foreground">
                       From: {complaint.employeeName}{' '}

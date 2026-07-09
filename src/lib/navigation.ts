@@ -218,7 +218,7 @@ export const NAV_ITEMS: NavItem[] = [
     icon: ShieldAlert,
     roles: [ROLES.HRO, ROLES.DO, ROLES.HHRMD, ROLES.CSCS, ROLES.HRRP],
     description:
-      'Process terminations for confirmed staff and dismissals for probationers.',
+      'Process terminations for probationers and dismissals for confirmed staff.',
   },
   {
     title: 'Track Status',

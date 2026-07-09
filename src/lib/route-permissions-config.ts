@@ -70,12 +70,6 @@ export const ROUTE_PERMISSIONS: RoutePermission[] = [
     allowedRoles: [ROLES.HRO, ROLES.DO, ROLES.HHRMD, ROLES.CSCS, ROLES.HRRP],
     description: 'Termination - HRO submits to HRRP, HRRP approves and forwards to Commission (DO/HHRMD)',
   },
-  {
-    pattern: '/dashboard/dismissal',
-    allowedRoles: [ROLES.HRO, ROLES.DO, ROLES.HHRMD, ROLES.CSCS],
-    description: 'Dismissal - HRO submits, DO/HHRMD approve',
-  },
-
   // Complaints - EMPLOYEE submits, DO/HHRMD handle
   {
     pattern: '/dashboard/complaints',
