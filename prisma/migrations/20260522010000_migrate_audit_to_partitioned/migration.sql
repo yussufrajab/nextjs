@@ -55,31 +55,40 @@ CREATE TABLE audit.audit_log_2027_03 PARTITION OF audit.audit_log FOR VALUES FRO
 CREATE TABLE audit.audit_log_2027_04 PARTITION OF audit.audit_log FOR VALUES FROM ('2027-04-01') TO ('2027-05-01');
 CREATE TABLE audit.audit_log_2027_05 PARTITION OF audit.audit_log FOR VALUES FROM ('2027-05-01') TO ('2027-06-01');
 
--- Step 5: Migrate existing data from public."AuditLog" to audit.audit_log
-INSERT INTO audit.audit_log (
-    action, event_category, severity, user_id, username, user_role,
-    ip_address, device_info, request_method, request_route,
-    is_authenticated, was_blocked, block_reason, additional_data,
-    entity_type, created_at
-)
-SELECT
-    "eventType",
-    "eventCategory",
-    "severity",
-    "userId",
-    "username",
-    "userRole",
-    CASE WHEN "ipAddress" IS NOT NULL AND "ipAddress" != '' THEN "ipAddress"::inet ELSE NULL END,
-    "deviceInfo",
-    "requestMethod",
-    "attemptedRoute",
-    "isAuthenticated",
-    "wasBlocked",
-    "blockReason",
-    "additionalData",
-    'SYSTEM',
-    "timestamp"
-FROM public."AuditLog";
+-- Step 5: Migrate existing data from public."AuditLog" to audit.audit_log.
+-- Guard for fresh databases: the legacy public."AuditLog" table is no longer
+-- created by any earlier migration, so on a fresh deploy there is nothing to
+-- migrate. Only run the data migration when the legacy table exists.
+DO $$
+BEGIN
+  IF to_regclass('public."AuditLog"') IS NOT NULL THEN
+    INSERT INTO audit.audit_log (
+        action, event_category, severity, user_id, username, user_role,
+        ip_address, device_info, request_method, request_route,
+        is_authenticated, was_blocked, block_reason, additional_data,
+        entity_type, created_at
+    )
+    SELECT
+        "eventType",
+        "eventCategory",
+        "severity",
+        "userId",
+        "username",
+        "userRole",
+        CASE WHEN "ipAddress" IS NOT NULL AND "ipAddress" != '' THEN "ipAddress"::inet ELSE NULL END,
+        "deviceInfo",
+        "requestMethod",
+        "attemptedRoute",
+        "isAuthenticated",
+        "wasBlocked",
+        "blockReason",
+        "additionalData",
+        'SYSTEM',
+        "timestamp"
+    FROM public."AuditLog";
+  END IF;
+END
+$$;
 
 -- Step 6: Drop the old AuditLog table
 DROP TABLE IF EXISTS public."AuditLog";
