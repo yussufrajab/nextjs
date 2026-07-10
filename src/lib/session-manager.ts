@@ -1,6 +1,7 @@
 import { db } from '@/lib/db';
 import { sessionLogger } from '@/lib/logger';
 import { randomBytes, createHmac, timingSafeEqual } from 'crypto';
+import { isSessionTimedOut } from '@/lib/session-timeout-utils';
 
 /**
  * Session Manager Utility
@@ -343,12 +344,28 @@ export async function validateSession(sessionToken: string) {
       return null;
     }
 
-    // Check if session has expired
+    // Check if session has expired (absolute lifetime)
     if (new Date() > session.expiresAt) {
       // Delete expired session
       await db.session.delete({
         where: { id: session.id },
       });
+      return null;
+    }
+
+    // SECURITY (Q5): enforce server-side inactivity timeout. The client-side
+    // activity tracker is a UX convenience only — the server must be the source
+    // of truth. If the session has been idle longer than SESSION_TIMEOUT_MINUTES,
+    // treat it as expired. This check MUST run before the lastActivity refresh
+    // below, otherwise every request would reset the clock and a session could
+    // never time out.
+    if (isSessionTimedOut(session.lastActivity)) {
+      await db.session.delete({
+        where: { id: session.id },
+      }).catch((error) => {
+        sessionLogger.error({ err: error, sessionId: session.id }, 'Failed to delete timed-out session');
+      });
+      sessionLogger.info({ sessionId: session.id }, 'Session terminated due to inactivity timeout');
       return null;
     }
 

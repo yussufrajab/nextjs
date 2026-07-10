@@ -31,6 +31,7 @@ import {
   getReauthCookieOptions,
 } from '@/lib/reauth';
 import { comparePassword } from '@/lib/password-utils';
+import { verifyMfaToken } from '@/lib/mfa-utils';
 
 const reauthSchema = z.object({
   scope: z.string().min(1).max(100),
@@ -119,9 +120,36 @@ export const POST = wrapHandler(withAuth(async (request: Request, { auth }) => {
     );
   }
 
-  // Future: wire MfaToken verification (lib/mfa-utils.ts) here.
-  // The `otp` parameter is accepted but not yet validated — full MFA integration
-  // is a separate workstream tracked in gap_analysis.md GAP-M12.
+  // SECURITY (Q7): when an OTP is supplied, validate it against the user's
+  // MFA token before issuing the re-auth token. This makes the step-up factor
+  // functional for MFA-enabled accounts. If no OTP is supplied, step-up remains
+  // password-only (the documented minimal-wiring behavior).
+  if (otp) {
+    const mfa = await verifyMfaToken(otp, 'OTP');
+    if (!mfa.valid || mfa.userId !== user.id) {
+      authLogger.warn({ userId: user.id, scope, ipAddress }, 'Re-auth failed: bad OTP');
+      await logAuditEvent({
+        eventType: AuditEventType.POTENTIAL_BREACH,
+        eventCategory: AuditEventCategory.SECURITY,
+        severity: AuditSeverity.WARNING,
+        userId: user.id,
+        username: auth.username,
+        userRole: auth.role,
+        ipAddress,
+        attemptedRoute: '/api/auth/reauth',
+        requestMethod: 'POST',
+        isAuthenticated: true,
+        wasBlocked: true,
+        blockReason: 'reauth_otp_mismatch',
+        additionalData: { scope },
+      }).catch(() => {});
+
+      return NextResponse.json(
+        { success: false, error: 'Invalid credentials', errorCode: 'INVALID_CREDENTIALS' },
+        { status: 401 }
+      );
+    }
+  }
 
   // Issue the re-auth token
   const token = issueReauthToken(user.id, scope);

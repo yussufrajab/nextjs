@@ -100,14 +100,18 @@ export const POST = wrapHandler(withAuth(async (req: Request, { auth }) => {
   }
 
   // Audit log: complaint submitted
+  // SECURITY (Q3): attribute the action to the authenticated user, not the
+  // client-supplied complainantId, so the audit trail cannot be spoofed.
+  // The DB row already uses the trusted auth.userId (above); the audit row
+  // must match it for non-repudiation.
   await logComplaintAction({
     action: 'SUBMITTED',
     complaintId: newComplaint.id,
-    complainantId: body.complainantId,
-    subject: body.subject,
-    performedById: body.complainantId,
+    complainantId: auth.userId,
+    subject,
+    performedById: auth.userId,
     performedByUsername: complainant?.name || 'unknown',
-    performedByRole: 'EMPLOYEE',
+    performedByRole: auth.role,
     ipAddress: getClientIp(req.headers),
     deviceInfo: JSON.parse(req.headers.get('x-device-info') || 'null'),
   }).catch(() => {});

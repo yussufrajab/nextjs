@@ -2,6 +2,12 @@ import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { ROLES } from '@/lib/constants';
 import { v4 as uuidv4 } from 'uuid';
+import {
+  logAuditEvent,
+  AuditEventType,
+  AuditEventCategory,
+  AuditSeverity,
+} from '@/lib/audit-logger';
 
 export interface NotificationData {
   message: string;
@@ -60,6 +66,26 @@ export async function createNotification(data: NotificationData) {
       },
     });
     logger.info({ message: safeMessage, userId: data.userId }, 'Notification created');
+
+    // Q9 (Domain 13.5): record notification delivery in the tamper-evident
+    // audit trail. Notifications are system-generated, so the actor is null;
+    // the recipient and (truncated) message are captured for traceability.
+    await logAuditEvent({
+      eventType: AuditEventType.NOTIFICATION_SENT,
+      eventCategory: AuditEventCategory.SYSTEM,
+      severity: AuditSeverity.INFO,
+      userId: null,
+      attemptedRoute: '/system/notifications',
+      requestMethod: 'POST',
+      isAuthenticated: false,
+      additionalData: {
+        recipientUserId: data.userId,
+        message: safeMessage,
+        link: data.link,
+      },
+    }).catch((error) => {
+      logger.error({ err: error }, 'Failed to audit notification creation');
+    });
   } catch (error) {
     logger.error({ err: error }, 'Failed to create notification');
   }
@@ -90,6 +116,26 @@ export async function createNotificationForRole(
         data: notifications,
       });
       logger.info({ count: notifications.length, role }, 'Created notifications for role');
+
+      // Q9 (Domain 13.5): one summary audit event per role broadcast (not per
+      // recipient) to avoid flooding the audit trail on large role audiences.
+      await logAuditEvent({
+        eventType: AuditEventType.NOTIFICATION_SENT,
+        eventCategory: AuditEventCategory.SYSTEM,
+        severity: AuditSeverity.INFO,
+        userId: null,
+        attemptedRoute: '/system/notifications',
+        requestMethod: 'POST',
+        isAuthenticated: false,
+        additionalData: {
+          role,
+          recipientCount: notifications.length,
+          message: safeMessage,
+          link,
+        },
+      }).catch((error) => {
+        logger.error({ err: error, role }, 'Failed to audit role notification');
+      });
     }
   } catch (error) {
     logger.error({ err: error, role }, 'Failed to create notifications for role');

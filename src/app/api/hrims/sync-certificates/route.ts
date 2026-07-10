@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { hrimsLogger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
 import { withAuth } from '@/lib/api-auth';
+import { logHrimsSync, getClientIp } from '@/lib/audit-logger';
 
 // Validation schema for the HRIMS certificates sync request
 const hrimsCertificatesRequestSchema = z
@@ -48,12 +49,21 @@ const hrimsCertificatesResponseSchema = z.object({
   }),
 });
 
-export const POST = wrapHandler(withAuth(async (req: Request) => {
+export const POST = wrapHandler(withAuth(async (req: Request, { auth }) => {
   const body = await req.json();
   hrimsLogger.info({
     ...body,
     hrimsApiKey: '[REDACTED]',
   }, 'HRIMS certificates sync request received');
+
+  const auditCommon = {
+    performedById: auth.userId,
+    performedByUsername: auth.username,
+    performedByRole: auth.role,
+    route: '/api/hrims/sync-certificates',
+    ipAddress: getClientIp(req.headers),
+    deviceInfo: JSON.parse(req.headers.get('x-device-info') || 'null'),
+  };
 
   // Validate request payload
   const validatedRequest = hrimsCertificatesRequestSchema.parse(body);
@@ -66,6 +76,12 @@ export const POST = wrapHandler(withAuth(async (req: Request) => {
   });
 
   if (!institution) {
+    await logHrimsSync({
+      ...auditCommon,
+      success: false,
+      institutionVoteNumber: validatedRequest.institutionVoteNumber,
+      additionalData: { reason: 'institution_not_found' },
+    }).catch(() => {});
     return NextResponse.json(
       {
         success: false,
@@ -87,6 +103,14 @@ export const POST = wrapHandler(withAuth(async (req: Request) => {
   });
 
   if (!employee) {
+    await logHrimsSync({
+      ...auditCommon,
+      success: false,
+      institutionId: institution.id,
+      institutionVoteNumber: validatedRequest.institutionVoteNumber,
+      zanId: validatedRequest.zanId,
+      additionalData: { reason: 'employee_not_found_in_institution' },
+    }).catch(() => {});
     return NextResponse.json(
       {
         success: false,
@@ -100,6 +124,14 @@ export const POST = wrapHandler(withAuth(async (req: Request) => {
   const hrimsData = await fetchCertificatesFromHRIMS(validatedRequest);
 
   if (!hrimsData) {
+    await logHrimsSync({
+      ...auditCommon,
+      success: false,
+      institutionId: institution.id,
+      institutionVoteNumber: validatedRequest.institutionVoteNumber,
+      zanId: validatedRequest.zanId,
+      additionalData: { reason: 'certificates_not_found_in_hrims' },
+    }).catch(() => {});
     return NextResponse.json(
       {
         success: false,
@@ -119,6 +151,21 @@ export const POST = wrapHandler(withAuth(async (req: Request) => {
   );
 
   hrimsLogger.info({ employeeId: employee.id }, 'Certificates synced successfully for Employee');
+
+  // Q8: record the certificates sync in the tamper-evident audit trail.
+  await logHrimsSync({
+    ...auditCommon,
+    success: true,
+    institutionId: institution.id,
+    institutionVoteNumber: validatedRequest.institutionVoteNumber,
+    zanId: validatedRequest.zanId,
+    additionalData: {
+      employeeId: employee.id,
+      certificatesProcessed: validatedHrimsData.data.certificates.length,
+      certificatesSuccessful: result.successful,
+      certificatesFailed: result.failed,
+    },
+  }).catch(() => {});
 
   return NextResponse.json(
     {

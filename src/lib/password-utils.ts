@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import zxcvbn from 'zxcvbn';
+import { randomInt } from 'crypto';
 
 // Constants
 export const PASSWORD_MIN_LENGTH = 8;
@@ -141,6 +142,10 @@ export function isCommonPassword(password: string): boolean {
 /**
  * Generate a secure random temporary password
  * Returns a password that meets complexity requirements
+ *
+ * SECURITY (Q6): uses the cryptographically-secure `crypto.randomInt` for all
+ * character selection and a Fisher–Yates shuffle backed by the same CSPRNG.
+ * `Math.random()` is NOT suitable for generating credentials.
  */
 export function generateTemporaryPassword(): string {
   const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -149,23 +154,26 @@ export function generateTemporaryPassword(): string {
   const special = '@$!%*?&#';
 
   // Ensure at least one character from each category
-  let password = '';
-  password += uppercase[Math.floor(Math.random() * uppercase.length)];
-  password += lowercase[Math.floor(Math.random() * lowercase.length)];
-  password += numbers[Math.floor(Math.random() * numbers.length)];
-  password += special[Math.floor(Math.random() * special.length)];
+  const chars: string[] = [
+    uppercase[randomInt(uppercase.length)],
+    lowercase[randomInt(lowercase.length)],
+    numbers[randomInt(numbers.length)],
+    special[randomInt(special.length)],
+  ];
 
   // Fill remaining characters randomly from all categories
   const allChars = uppercase + lowercase + numbers + special;
-  for (let i = password.length; i < 12; i++) {
-    password += allChars[Math.floor(Math.random() * allChars.length)];
+  for (let i = chars.length; i < 12; i++) {
+    chars.push(allChars[randomInt(allChars.length)]);
   }
 
-  // Shuffle the password to avoid predictable pattern
-  return password
-    .split('')
-    .sort(() => Math.random() - 0.5)
-    .join('');
+  // Fisher–Yates shuffle with a CSPRNG to avoid a predictable pattern
+  for (let i = chars.length - 1; i > 0; i--) {
+    const j = randomInt(i + 1);
+    [chars[i], chars[j]] = [chars[j], chars[i]];
+  }
+
+  return chars.join('');
 }
 
 /**

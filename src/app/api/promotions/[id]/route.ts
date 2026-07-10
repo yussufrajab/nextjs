@@ -135,6 +135,20 @@ const handleUpdate = wrapHandler(async (
       validatedData.status === 'Pending HRRP Review' &&
       !validatedData.reviewedById;
 
+    // SECURITY (Q12, Domain 25.3): prevent self-approval / self-rejection.
+    // The user who submitted the request may not approve or reject it — only
+    // resubmit (correction) or withdraw it. Enforced for HRRP and Commission
+    // decisions alike.
+    if (
+      (isHrrpApproval || isHrrpRejection || isCommissionDecision) &&
+      existingRequest.submittedById === auth.userId
+    ) {
+      return NextResponse.json(
+        { success: false, message: 'Cannot approve or reject your own submission' },
+        { status: 403 }
+      );
+    }
+
     if (isHrrpAction && auth.role !== 'HRRP') {
       return NextResponse.json(
         { success: false, message: 'Only HRRP can perform HRRP review actions' },

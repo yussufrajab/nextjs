@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
 import { withAuth } from '@/lib/api-auth';
+import { logAuditEvent, AuditEventCategory, AuditSeverity, getClientIp } from '@/lib/audit-logger';
 
 /**
  * GET handler — returns session statistics for the admin dashboard (Admin only)
@@ -54,13 +55,29 @@ export const GET = wrapHandler(withAuth(async () => {
  * Admin endpoint to manually clean up sessions (Admin only)
  * Can be used to clean up all sessions or just expired ones
  */
-export const POST = wrapHandler(withAuth(async (req: Request) => {
+export const POST = wrapHandler(withAuth(async (req: Request, { auth }) => {
   const body = await req.json();
   const { action, userId } = body;
+
+  const auditBase = {
+    eventType: 'ADMIN_SESSION_CLEANUP' as const,
+    eventCategory: AuditEventCategory.SYSTEM,
+    performedById: auth.userId,
+    performedByUsername: auth.username,
+    performedByRole: auth.role,
+    ipAddress: getClientIp(req.headers),
+    deviceInfo: JSON.parse(req.headers.get('x-device-info') || 'null'),
+    attemptedRoute: '/api/admin/cleanup-sessions',
+    requestMethod: 'POST',
+    isAuthenticated: true,
+    wasBlocked: false,
+    blockReason: null,
+  };
 
   if (action === 'cleanup-expired') {
     // Clean up all expired sessions
     const count = await cleanupExpiredSessions();
+    await logAuditEvent({ ...auditBase, severity: AuditSeverity.INFO, additionalData: { action, count } }).catch(() => {});
     return NextResponse.json({
       success: true,
       message: `Cleaned up ${count} expired sessions`,
@@ -69,6 +86,7 @@ export const POST = wrapHandler(withAuth(async (req: Request) => {
   } else if (action === 'cleanup-all') {
     // Delete ALL sessions (use with caution!)
     const result = await db.session.deleteMany({});
+    await logAuditEvent({ ...auditBase, severity: AuditSeverity.CRITICAL, additionalData: { action, count: result.count } }).catch(() => {});
     return NextResponse.json({
       success: true,
       message: `Deleted all ${result.count} sessions`,
@@ -79,6 +97,7 @@ export const POST = wrapHandler(withAuth(async (req: Request) => {
     const result = await db.session.deleteMany({
       where: { userId },
     });
+    await logAuditEvent({ ...auditBase, severity: AuditSeverity.WARNING, additionalData: { action, count: result.count, targetUserId: userId } }).catch(() => {});
     return NextResponse.json({
       success: true,
       message: `Deleted ${result.count} sessions for user ${userId}`,
