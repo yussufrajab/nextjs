@@ -57,15 +57,17 @@ export async function loginAs(page: Page, user: TestUser) {
     timeout: 10000,
   });
 
-  // Verify login success by checking for the user's name in the dashboard
-  // content. RC2: scope to `<main>` (src/app/dashboard/layout.tsx renders the
-  // page inside <main>) so the check excludes the persistent login-success
-  // toast (shadcn Toast, TOAST_REMOVE_DELAY ≈ 16 min, appended to <body>
-  // outside <main>). Without this scope, getByText(user.name) matched both the
-  // welcome div and the toast → a strict-mode violation.
-  await expect(page.locator('main').getByText(user.name)).toBeVisible({
-    timeout: 5000,
-  });
+  // Verify login success. The user's name appears ONLY in the login-success
+  // toast (LoginForm: `title: 'Login Successful', description: 'Welcome back,
+  // ${name}!'`) — the dashboard itself renders no "Welcome back" text. The
+  // toast root (<span role="status">) also contains the title, so a plain
+  // getByText(user.name) matched two elements (description div + toast root)
+  // → strict-mode violation. An exact match on the full description string
+  // matches only the description div. (shadcn Toast's TOAST_REMOVE_DELAY ≈ 16
+  // min, so the toast stays visible through the test.)
+  await expect(
+    page.getByText(`Welcome back, ${user.name}!`, { exact: true })
+  ).toBeVisible({ timeout: 5000 });
 }
 
 /**

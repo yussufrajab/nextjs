@@ -14,7 +14,14 @@ export type RateLimitTier = 'auth' | 'write' | 'read' | 'upload' | 'download';
 // ---------------------------------------------------------------------------
 
 export const RATE_LIMITS: Record<RateLimitTier, { limit: number; windowSeconds: number }> = {
-  auth: { limit: 5, windowSeconds: 60 },
+  // RC5: the auth limit is env-overridable so the E2E suite (which makes many
+  // logins per minute from one IP) doesn't trip the limiter before the
+  // account-lockout logic runs. Production leaves RATE_LIMIT_AUTH_LIMIT unset
+  // → default 5.
+  auth: {
+    limit: Number(process.env.RATE_LIMIT_AUTH_LIMIT) || 5,
+    windowSeconds: 60,
+  },
   write: { limit: 30, windowSeconds: 60 },
   read: { limit: 100, windowSeconds: 60 },
   upload: { limit: 10, windowSeconds: 60 },
