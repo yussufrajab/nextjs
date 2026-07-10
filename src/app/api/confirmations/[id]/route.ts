@@ -81,6 +81,22 @@ const handleUpdate = wrapHandler(async (
     );
   }
 
+  // SECURITY (Q12, Domain 25.3): prevent self-approval / self-rejection.
+  // The submitter may only resubmit (correction) or withdraw — not approve or
+  // reject their own request. Approval/rejection is detected by the status
+  // string, which excludes resubmission ('Pending HRRP Review').
+  if (validatedData.status) {
+    const statusLower = validatedData.status.toLowerCase();
+    const isApprovalOrRejection =
+      statusLower.includes('approved') || statusLower.includes('rejected');
+    if (isApprovalOrRejection && existingRequest.submittedById === auth.userId) {
+      return NextResponse.json(
+        { success: false, message: 'Cannot approve or reject your own submission' },
+        { status: 403 }
+      );
+    }
+  }
+
   const updatedRequest = await db.confirmationRequest.update({
     where: { id },
     data: validatedData,

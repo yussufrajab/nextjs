@@ -108,8 +108,8 @@ model Employee {
   phoneNumber             String?
   email                   String?
   contactAddress          String?
-  zssfNumber              String?
-  payrollNumber           String?
+  zssfNumber              String?                  @unique
+  payrollNumber           String?                  @unique
   cadre                   String?
   salaryScale             String?
   ministry                String?

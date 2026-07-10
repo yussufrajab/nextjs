@@ -233,6 +233,58 @@ function parseAuthStorage(cookieValue: string | undefined): {
 // Maximum request body size (10MB)
 const MAX_BODY_SIZE = 10 * 1024 * 1024;
 
+/**
+ * Q14 — Content-Security-Policy (Report-Only).
+ *
+ * The enforcing CSP is set in `next.config.ts` and still permits 'unsafe-inline'
+ * for script-src/style-src. To collect real violation data BEFORE switching to
+ * strict enforcement, we additionally emit a stricter nonce-based policy as
+ * `Content-Security-Policy-Report-Only`. The browser reports violations to
+ * /api/csp-report but does NOT block them, so the running UI is unaffected.
+ *
+ * Middleware runs on the Next.js edge runtime, which cannot import from `@/lib`
+ * and does not provide Node's `crypto.randomBytes`/`Buffer`. We therefore
+ * generate the nonce with the Web Crypto API (`crypto.getRandomValues`) and
+ * base64-encode it with `btoa` — both available on the edge runtime.
+ */
+function generateNonce(): string {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  let binary = '';
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+}
+
+function buildCspReportOnly(nonce: string): string {
+  return [
+    "default-src 'self'",
+    `script-src 'self' 'nonce-${nonce}' https://accounts.google.com https://www.gstatic.com`,
+    `style-src 'self' 'nonce-${nonce}' https://fonts.googleapis.com`,
+    "font-src 'self' https://fonts.gstatic.com data:",
+    "img-src 'self' data: https: blob:",
+    "media-src 'self' data: blob:",
+    "connect-src 'self' https://generativelanguage.googleapis.com https://accounts.google.com",
+    "frame-src 'self' https://accounts.google.com",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'self'",
+    "upgrade-insecure-requests",
+    "report-uri /api/csp-report",
+  ].join('; ');
+}
+
+/**
+ * Attach the CSP-Report-Only header to a response (per-request nonce) and
+ * return the same response so callers can `return withCspReportOnly(res)`.
+ */
+function withCspReportOnly(response: NextResponse): NextResponse {
+  response.headers.set('Content-Security-Policy-Report-Only', buildCspReportOnly(generateNonce()));
+  return response;
+}
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -242,9 +294,11 @@ export function middleware(request: NextRequest) {
     if (contentLength) {
       const size = parseInt(contentLength, 10);
       if (!isNaN(size) && size > MAX_BODY_SIZE) {
-        return NextResponse.json(
-          { success: false, message: 'Request body too large' },
-          { status: 413 }
+        return withCspReportOnly(
+          NextResponse.json(
+            { success: false, message: 'Request body too large' },
+            { status: 413 }
+          )
         );
       }
     }
@@ -264,7 +318,7 @@ export function middleware(request: NextRequest) {
     pathname.startsWith('/static') ||
     pathname === '/favicon.ico'
   ) {
-    return NextResponse.next();
+    return withCspReportOnly(NextResponse.next());
   }
 
   // Protect all dashboard routes
@@ -281,7 +335,7 @@ export function middleware(request: NextRequest) {
     if (!sessionCookie) {
       const loginUrl = new URL('/login', request.url);
       loginUrl.searchParams.set('from', pathname);
-      return NextResponse.redirect(loginUrl);
+      return withCspReportOnly(NextResponse.redirect(loginUrl));
     }
 
     console.log('[Middleware] Checking access:', {
@@ -318,7 +372,7 @@ export function middleware(request: NextRequest) {
 
       const loginUrl = new URL('/login', request.url);
       loginUrl.searchParams.set('from', pathname);
-      return NextResponse.redirect(loginUrl);
+      return withCspReportOnly(NextResponse.redirect(loginUrl));
     }
 
     // Check authorization for the specific route
@@ -357,7 +411,7 @@ export function middleware(request: NextRequest) {
       dashboardUrl.searchParams.set('error', 'unauthorized');
       dashboardUrl.searchParams.set('attempted', pathname);
       dashboardUrl.searchParams.set('auditData', JSON.stringify(auditData));
-      return NextResponse.redirect(dashboardUrl);
+      return withCspReportOnly(NextResponse.redirect(dashboardUrl));
     }
 
     console.log('[Middleware] Access granted:', { pathname, role });
@@ -369,10 +423,10 @@ export function middleware(request: NextRequest) {
     response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
     response.headers.set('Pragma', 'no-cache');
     response.headers.set('Expires', '0');
-    return response;
+    return withCspReportOnly(response);
   }
 
-  return NextResponse.next();
+  return withCspReportOnly(NextResponse.next());
 }
 
 // Configure which paths the middleware should run on

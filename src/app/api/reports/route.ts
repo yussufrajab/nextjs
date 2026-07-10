@@ -1340,4 +1340,4 @@ export const GET = wrapHandler(withAuth(async (req: Request, { auth }) => {
         count: reportData.length,
       },
     });
-  }));
+  }, { allowedRoles: ['Admin', 'HRO', 'HHRMD', 'HRMO', 'DO', 'CSCS', 'HRRP', 'PO'] }));

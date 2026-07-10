@@ -7,10 +7,12 @@ import { withAuth } from '@/lib/api-auth';
 export const POST = wrapHandler(withAuth(async (request: Request, { auth }) => {
   const body = await request.json();
 
+  // SECURITY (Q1): The actor identity is derived from the authenticated session,
+  // NOT from the request body. The body only describes the event being reported
+  // (the route that was blocked and why) — it must never be allowed to spoof who
+  // performed the action, otherwise any authenticated user could write fake
+  // UNAUTHORIZED_ACCESS audit entries attributed to someone else.
   const {
-    userId,
-    username,
-    userRole,
     attemptedRoute,
     blockReason,
     isAuthenticated,
@@ -23,9 +25,9 @@ export const POST = wrapHandler(withAuth(async (request: Request, { auth }) => {
 
   // Log the unauthorized access attempt
   await logUnauthorizedAccess({
-    userId: userId || null,
-    username: username || null,
-    userRole: userRole || null,
+    userId: auth.userId,
+    username: auth.username,
+    userRole: auth.role,
     attemptedRoute,
     blockReason,
     ipAddress,

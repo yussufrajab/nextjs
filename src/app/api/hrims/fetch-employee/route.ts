@@ -6,6 +6,7 @@ import { uploadFile } from '@/lib/minio';
 import { hrimsLogger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
 import { withAuth } from '@/lib/api-auth';
+import { logHrimsSync, getClientIp } from '@/lib/audit-logger';
 
 interface HRIMSEmployeeResponse {
   success: boolean;
@@ -415,10 +416,19 @@ async function processPhoto(
   }
 }
 
-export const POST = wrapHandler(withAuth(async (req) => {
+export const POST = wrapHandler(withAuth(async (req, { auth }) => {
   const HRIMS_CONFIG = await getHrimsApiConfig();
   const body = await req.json();
   const { zanId, payrollNumber, institutionVoteNumber } = body;
+
+  const auditCommon = {
+    performedById: auth.userId,
+    performedByUsername: auth.username,
+    performedByRole: auth.role,
+    route: '/api/hrims/fetch-employee',
+    ipAddress: getClientIp(req.headers),
+    deviceInfo: JSON.parse(req.headers.get('x-device-info') || 'null'),
+  };
 
   // Validation
   if (!zanId && !payrollNumber) {
@@ -444,6 +454,13 @@ export const POST = wrapHandler(withAuth(async (req) => {
   });
 
   if (!institution) {
+    await logHrimsSync({
+      ...auditCommon,
+      success: false,
+      institutionVoteNumber,
+      zanId,
+      additionalData: { reason: 'institution_not_found' },
+    }).catch(() => {});
     return NextResponse.json(
       { success: false, message: 'Institution not found' },
       { status: 404 }
@@ -471,6 +488,17 @@ export const POST = wrapHandler(withAuth(async (req) => {
   }, 'HRIMS Response received:');
 
   if (employeeResponse.code !== 200 || !employeeResponse.data?.personalInfo) {
+    await logHrimsSync({
+      ...auditCommon,
+      success: false,
+      institutionId: institution.id,
+      institutionVoteNumber,
+      zanId,
+      additionalData: {
+        reason: 'employee_not_found_in_hrims',
+        hrimsCode: employeeResponse.code,
+      },
+    }).catch(() => {});
     return NextResponse.json(
       {
         success: false,
@@ -519,6 +547,20 @@ export const POST = wrapHandler(withAuth(async (req) => {
     employeeResponse.data.employmentHistories?.find(
       (emp: any) => emp.isCurrent
     ) || employeeResponse.data.employmentHistories?.[0];
+
+  // Q8: record the fetch+store sync in the tamper-evident audit trail.
+  await logHrimsSync({
+    ...auditCommon,
+    success: true,
+    institutionId: institution.id,
+    institutionVoteNumber,
+    zanId: personalInfo.zanIdNumber,
+    additionalData: {
+      employeeId,
+      photoStored,
+      documentsCount,
+    },
+  }).catch(() => {});
 
   return NextResponse.json({
     success: true,

@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { hrimsLogger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
 import { withAuth, requireReauth } from '@/lib/api-auth';
+import { logHrimsSync, getClientIp } from '@/lib/audit-logger';
 
 // Validation schema for the HRIMS sync request
 const hrimsRequestSchema = z
@@ -89,6 +90,17 @@ export const POST = wrapHandler(withAuth(async (req, { auth }) => {
     });
 
     if (!institution) {
+      await logHrimsSync({
+        success: false,
+        performedById: auth.userId,
+        performedByUsername: auth.username,
+        performedByRole: auth.role,
+        institutionVoteNumber: validatedRequest.institutionVoteNumber,
+        route: '/api/hrims/sync-employee',
+        ipAddress: getClientIp(req.headers),
+        deviceInfo: JSON.parse(req.headers.get('x-device-info') || 'null'),
+        additionalData: { reason: 'institution_not_found' },
+      }).catch(() => {});
       return NextResponse.json(
         {
           success: false,
@@ -102,6 +114,19 @@ export const POST = wrapHandler(withAuth(async (req, { auth }) => {
     const hrimsData = await fetchEmployeeFromHRIMS(validatedRequest);
 
     if (!hrimsData) {
+      await logHrimsSync({
+        success: false,
+        performedById: auth.userId,
+        performedByUsername: auth.username,
+        performedByRole: auth.role,
+        institutionId: institution.id,
+        institutionVoteNumber: validatedRequest.institutionVoteNumber,
+        zanId: validatedRequest.zanId,
+        route: '/api/hrims/sync-employee',
+        ipAddress: getClientIp(req.headers),
+        deviceInfo: JSON.parse(req.headers.get('x-device-info') || 'null'),
+        additionalData: { reason: 'employee_not_found_in_hrims' },
+      }).catch(() => {});
       return NextResponse.json(
         {
           success: false,
@@ -121,6 +146,24 @@ export const POST = wrapHandler(withAuth(async (req, { auth }) => {
     );
 
     hrimsLogger.info({ employeeId: savedEmployee.id }, 'Employee synced successfully');
+
+    // Q8: record the sync in the tamper-evident audit trail.
+    await logHrimsSync({
+      success: true,
+      performedById: auth.userId,
+      performedByUsername: auth.username,
+      performedByRole: auth.role,
+      institutionId: institution.id,
+      institutionVoteNumber: validatedRequest.institutionVoteNumber,
+      zanId: savedEmployee.zanId,
+      route: '/api/hrims/sync-employee',
+      ipAddress: getClientIp(req.headers),
+      deviceInfo: JSON.parse(req.headers.get('x-device-info') || 'null'),
+      additionalData: {
+        employeeId: savedEmployee.id,
+        employeeName: savedEmployee.name,
+      },
+    }).catch(() => {});
 
     const documentStats = validatedHrimsData.data.Employee.documentStats;
 

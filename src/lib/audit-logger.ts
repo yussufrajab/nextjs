@@ -71,6 +71,13 @@ export enum AuditEventType {
   // System / Configuration Events
   HRIMS_CONFIG_CHANGED = 'HRIMS_CONFIG_CHANGED',
   SYSTEM_SETTING_CHANGED = 'SYSTEM_SETTING_CHANGED',
+
+  // Integration / Synchronization Events (Q8)
+  HRIMS_SYNCED = 'HRIMS_SYNCED',
+  HRIMS_SYNC_FAILED = 'HRIMS_SYNC_FAILED',
+
+  // Notification Events (Q9)
+  NOTIFICATION_SENT = 'NOTIFICATION_SENT',
 }
 
 export enum AuditEventCategory {
@@ -755,6 +762,52 @@ export async function logEmployeeAction(data: {
       employeeName: data.employeeName,
       employeeZanId: data.employeeZanId,
       action: data.action,
+      ...data.additionalData,
+    },
+  });
+}
+
+/**
+ * Log an HRIMS synchronization event (Q8 — Domains 11.6, 29.1–29.5).
+ *
+ * HRIMS sync routes previously wrote only to the plain structured logger
+ * (`hrimsLogger`), so syncs were absent from the tamper-evident audit trail.
+ * This records the actor, the institution synced, and the result counts in the
+ * audit log for both successful and failed syncs.
+ */
+export async function logHrimsSync(data: {
+  success: boolean;
+  performedById: string;
+  performedByUsername?: string;
+  performedByRole?: string;
+  institutionId?: string | null;
+  institutionVoteNumber?: string | null;
+  zanId?: string | null;
+  route: string;
+  ipAddress?: string | null;
+  deviceInfo?: Record<string, any> | null;
+  additionalData?: Record<string, any>;
+}): Promise<void> {
+  await logAuditEvent({
+    eventType: data.success
+      ? AuditEventType.HRIMS_SYNCED
+      : AuditEventType.HRIMS_SYNC_FAILED,
+    eventCategory: AuditEventCategory.DATA_MODIFICATION,
+    severity: data.success ? AuditSeverity.INFO : AuditSeverity.ERROR,
+    userId: data.performedById,
+    username: data.performedByUsername,
+    userRole: data.performedByRole,
+    ipAddress: data.ipAddress,
+    deviceInfo: data.deviceInfo,
+    attemptedRoute: data.route,
+    requestMethod: 'POST',
+    isAuthenticated: true,
+    wasBlocked: false,
+    blockReason: null,
+    additionalData: {
+      institutionId: data.institutionId,
+      institutionVoteNumber: data.institutionVoteNumber,
+      zanId: data.zanId,
       ...data.additionalData,
     },
   });
