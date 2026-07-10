@@ -515,6 +515,29 @@ export const PATCH = wrapHandler(async (req: Request) => {
     updateData.reviewStage = 'initial';
   }
 
+  // Server-controlled reviewStage for the remaining workflow actions.
+  // The client-supplied reviewStage is ignored above for security, so each
+  // action must advance it server-side in lockstep with the status — the
+  // same transitions the /dashboard/cadre-change workflow relies on. Without
+  // this, forwarding to the Commission leaves reviewStage at 'hrrp_review',
+  // and the Commission Decision buttons (gated on reviewStage ===
+  // 'commission_review' in the page) never render, stranding the request.
+  if (isInitialReviewAction) {
+    // HHRMD/HRMO either forward the request onward to the Commission or
+    // reject it back to the HRO for correction.
+    const isForwardToCommission =
+      typeof updateData.status === 'string' &&
+      updateData.status.includes('Awaiting Commission Decision');
+    updateData.reviewStage = isForwardToCommission ? 'commission_review' : 'initial';
+  }
+  if (isCommissionDecision) {
+    updateData.reviewStage = 'completed';
+  }
+  if (isResubmission) {
+    // HRO/HRRP correcting a rejected request — back to the start.
+    updateData.reviewStage = 'initial';
+  }
+
   // The authenticated user is the reviewer — ignore any client-supplied reviewer id.
   if (updateData.reviewedById !== undefined) {
     updateData.reviewedById = auth.userId;
