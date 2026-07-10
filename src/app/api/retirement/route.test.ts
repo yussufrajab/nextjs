@@ -195,13 +195,11 @@ describe('PATCH /api/retirement — Commission workflow (parity with promotion)'
     expect(employeeArgs.data.status).toBe('Retired');
   });
 
-  it('documents that the older module lacks a role-based auth check (P5 follow-up)', async () => {
-    // KNOWN GAP: this PATCH handler does not call checkRoleAuthorization, so
-    // an HRO can record a Commission decision in the database. The frontend
-    // never offers the buttons to HRO, so the practical risk is low — but
-    // a direct API call would succeed. Filed as P5 to add the auth check
-    // (mirror the promotion pattern: see promotions/route.ts:482-498).
-    // The test pins the current behavior so a future fix is a deliberate change.
+  it('blocks an HRO from recording a commission decision (UAT Req 3.5 / 8.3 / 18.3 / 25.3)', async () => {
+    // Pre-fix: the older collection PATCH handler had no auth gate — only
+    // [id]/route.ts (which the dashboard never calls) had one. An HRO could
+    // record a Commission decision by direct API call. This test pins the
+    // fix: an HRO attempting a commission decision now gets 403.
     mockUserFindUnique.mockResolvedValue({ ...HHRMD_USER, role: 'HRO' });
     const { PATCH } = await import('./route');
     const res = await PATCH(
@@ -213,6 +211,45 @@ describe('PATCH /api/retirement — Commission workflow (parity with promotion)'
         reviewStage: 'completed',
         reviewedById: 'hro-1',
         commissionLetterKey: 'retirement/commission-letters/letter.pdf',
+      }),
+    );
+    expect(res.status).toBe(403);
+  });
+
+  it('also blocks an HRRP from recording a commission decision (UAT Req 3.5 / 8.3 / 18.3 / 25.3)', async () => {
+    // HRRP can approve/reject at the HRRP stage but cannot record a
+    // Commission decision — only HHRMD/HRMO can.
+    mockUserFindUnique.mockResolvedValue({ ...HHRMD_USER, role: 'HRRP' });
+    const { PATCH } = await import('./route');
+    const res = await PATCH(
+      authedRequest({
+        id: 'req-1',
+        userRole: 'HRRP',
+        userId: 'hrrp-1',
+        status: 'Approved by Commission',
+        reviewStage: 'completed',
+        reviewedById: 'hrrp-1',
+        commissionLetterKey: 'retirement/commission-letters/letter.pdf',
+      }),
+    );
+    expect(res.status).toBe(403);
+  });
+
+  it('allows an HRMO to record a commission decision (positive case for the auth gate)', async () => {
+    // Pins the HHRMD/HRMO allow-list — proves the gate isn't over-restrictive.
+    // Reuses the HRMO mock resolve from beforeEach.
+    const { PATCH } = await import('./route');
+    const res = await PATCH(
+      authedRequest({
+        id: 'req-1',
+        userRole: 'HHRMD',
+        userId: HHRMD_USER.id,
+        status: 'Approved by Commission',
+        reviewStage: 'completed',
+        commissionDecisionDate: new Date().toISOString(),
+        reviewedById: HHRMD_USER.id,
+        commissionLetterKey: 'retirement/commission-letters/letter.pdf',
+        commissionDecisionReason: 'Meets all requirements',
       }),
     );
     expect(res.status).toBe(200);
