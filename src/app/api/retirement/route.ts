@@ -382,6 +382,13 @@ async function PATCHHandler(req: Request) {
       updateData.status?.includes('Approved by Commission') ||
       updateData.status?.includes('Rejected by Commission')
     );
+    // HHRMD/HRMO initial review = a forwarded action that isn't an HRRP,
+    // commission-decision, or resubmission step. Inlined (rather than
+    // referencing isHrrpAction) because isHrrpAction is defined further
+    // down, after the audit block.
+    const isInitialReviewAction =
+      updateData.reviewedById !== undefined &&
+      !isHrrpApproval && !isHrrpRejection && !isCommissionDecision && !isResubmission;
     if (isCommissionDecision && !body.commissionLetterKey) {
       return NextResponse.json(
         { success: false, message: 'Commission letter is required for commission decisions' },
@@ -396,6 +403,26 @@ async function PATCHHandler(req: Request) {
       updateData.reviewStage = 'hrrp_review';
     }
     if (isHrrpRejection) {
+      updateData.reviewStage = 'initial';
+    }
+
+    // Server-controlled reviewStage for the remaining workflow actions.
+    // The page's Commission Decision buttons are gated on
+    // reviewStage === 'commission_review' (and status.includes('Awaiting
+    // Commission Decision')) — this branch advances the stage server-side
+    // in lockstep with the status, so HHRMD/HRMO forwarding a request to
+    // the Commission doesn't strand it. Mirrors the promotion workflow.
+    if (isInitialReviewAction) {
+      const isForwardToCommission =
+        typeof updateData.status === 'string' &&
+        updateData.status.includes('Awaiting Commission Decision');
+      updateData.reviewStage = isForwardToCommission ? 'commission_review' : 'initial';
+    }
+    if (isCommissionDecision) {
+      updateData.reviewStage = 'completed';
+    }
+    if (isResubmission) {
+      // HRO/HRRP correcting a rejected request — back to the start.
       updateData.reviewStage = 'initial';
     }
 
