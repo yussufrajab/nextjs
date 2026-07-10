@@ -167,3 +167,112 @@ describe('PATCH /api/cadre-change — HRO resubmit', () => {
     expect(res.status).toBe(403);
   });
 });
+
+describe('PATCH /api/cadre-change — Commission workflow (parity with promotion)', () => {
+  const HHRMD_USER = {
+    id: 'hhrmd-1',
+    active: true,
+    role: 'HHRMD',
+    institutionId: 'inst-1',
+    username: 'hhrmd-user',
+  };
+
+  beforeEach(() => {
+    mockValidateSession.mockReset();
+    mockUserFindUnique.mockReset();
+    mockUpdate.mockReset();
+    mockValidateSession.mockResolvedValue({
+      id: 's1',
+      userId: HHRMD_USER.id,
+      ipAddress: null,
+      userAgent: null,
+    });
+    mockUserFindUnique.mockResolvedValue(HHRMD_USER);
+    mockUpdate.mockResolvedValue({
+      id: 'req-1',
+      employeeId: 'emp-1',
+      submittedById: 'hro-1',
+      newCadre: 'New Cadre',
+      status: 'Request Received – Awaiting Commission Decision',
+      reviewStage: 'commission_review',
+      Employee: { id: 'emp-1', name: 'Emp', zanId: 'Z1', cadre: 'Old' },
+      User_CadreChangeRequest_submittedByIdToUser: { id: 'hro-1', name: 'HRO', username: 'hro-user' },
+      User_CadreChangeRequest_reviewedByIdToUser: null,
+      User_CadreChangeRequest_hrrpReviewedByToUser: null,
+    });
+  });
+
+  it('persists reviewStage="commission_review" when HHRMD forwards to the Commission', async () => {
+    const { PATCH } = await import('./route');
+    const res = await PATCH(
+      authedRequest({
+        id: 'req-1',
+        userRole: 'HHRMD',
+        userId: HHRMD_USER.id,
+        status: 'Request Received – Awaiting Commission Decision',
+        reviewStage: 'commission_review',
+        decisionDate: new Date().toISOString(),
+        reviewedById: HHRMD_USER.id,
+        newCadre: 'New Cadre',
+        reason: 'reason',
+      }),
+    );
+    expect(res.status).toBe(200);
+    const body = await res.clone().json();
+    expect(body.success).toBe(true);
+
+    const updateArgs = mockUpdate.mock.calls[0][0];
+    expect(updateArgs.data.status).toBe('Request Received – Awaiting Commission Decision');
+    expect(updateArgs.data.reviewStage).toBe('commission_review');
+  });
+
+  it('completes the workflow and updates the employee cadre on Commission approval', async () => {
+    const mockEmployeeUpdate = vi.fn();
+    // Re-mock db.employee.update for this test only.
+    const { db } = await import('@/lib/db');
+    const originalUpdate = (db as any).employee?.update;
+    (db as any).employee = { update: mockEmployeeUpdate };
+
+    mockUpdate.mockResolvedValue({
+      id: 'req-1',
+      employeeId: 'emp-1',
+      submittedById: 'hro-1',
+      newCadre: 'Senior Officer',
+      status: 'Approved by Commission',
+      reviewStage: 'completed',
+      Employee: { id: 'emp-1', name: 'Emp', zanId: 'Z1', cadre: 'Old' },
+      User_CadreChangeRequest_submittedByIdToUser: { id: 'hro-1', name: 'HRO', username: 'hro-user' },
+      User_CadreChangeRequest_reviewedByIdToUser: null,
+      User_CadreChangeRequest_hrrpReviewedByToUser: null,
+    });
+
+    const { PATCH } = await import('./route');
+    const res = await PATCH(
+      authedRequest({
+        id: 'req-1',
+        userRole: 'HHRMD',
+        userId: HHRMD_USER.id,
+        status: 'Approved by Commission',
+        reviewStage: 'completed',
+        commissionDecisionDate: new Date().toISOString(),
+        reviewedById: HHRMD_USER.id,
+        commissionLetterKey: 'cadre-change/commission-letters/letter.pdf',
+        commissionDecisionReason: 'Meets all requirements',
+        newCadre: 'Senior Officer',
+      }),
+    );
+    expect(res.status).toBe(200);
+
+    const updateArgs = mockUpdate.mock.calls[0][0];
+    expect(updateArgs.data.reviewStage).toBe('completed');
+
+    // Commission approval must update the employee cadre.
+    expect(mockEmployeeUpdate).toHaveBeenCalledTimes(1);
+    const employeeArgs = mockEmployeeUpdate.mock.calls[0][0];
+    expect(employeeArgs.where.id).toBe('emp-1');
+    expect(employeeArgs.data.cadre).toBe('Senior Officer');
+
+    // Restore for other tests
+    if (originalUpdate) (db as any).employee.update = originalUpdate;
+  });
+});
