@@ -57,8 +57,15 @@ export async function loginAs(page: Page, user: TestUser) {
     timeout: 10000,
   });
 
-  // Verify login success by checking for user name or dashboard content
-  await expect(page.getByText(user.name)).toBeVisible({ timeout: 5000 });
+  // Verify login success by checking for the user's name in the dashboard
+  // content. RC2: scope to `<main>` (src/app/dashboard/layout.tsx renders the
+  // page inside <main>) so the check excludes the persistent login-success
+  // toast (shadcn Toast, TOAST_REMOVE_DELAY ≈ 16 min, appended to <body>
+  // outside <main>). Without this scope, getByText(user.name) matched both the
+  // welcome div and the toast → a strict-mode violation.
+  await expect(page.locator('main').getByText(user.name)).toBeVisible({
+    timeout: 5000,
+  });
 }
 
 /**

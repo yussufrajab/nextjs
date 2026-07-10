@@ -1,9 +1,19 @@
 import { test, expect } from '@playwright/test';
 import { loginAs, TEST_USERS } from '../../utils/auth-helpers';
 import { PromotionPage } from '../../pages/promotion.page';
-import { getTestDb } from '../../utils/db-helpers';
+import { getTestDb, cleanupTestData } from '../../utils/db-helpers';
 
 test.describe('Promotion Request Review Workflow', () => {
+  // RC3: each test creates a PromotionRequest with a hardcoded id. CI retries
+  // failed tests (retries: 2); without cleanup, a retry's `create` collides
+  // with the previous attempt's row → `Unique constraint failed on (id)` /
+  // `duplicate key ... PromotionRequest_pkey`. Tear down after every attempt
+  // so each retry starts from a clean slate. (cleanupTestData deletes ALL
+  // PromotionRequest rows, which is fine — this suite owns them.)
+  test.afterEach(async () => {
+    await cleanupTestData().catch(() => {});
+  });
+
   test('HRMO should approve and forward promotion request', async ({
     page,
   }) => {

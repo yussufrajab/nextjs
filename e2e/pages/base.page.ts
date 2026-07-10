@@ -15,9 +15,14 @@ export class BasePage {
     return this.page.title();
   }
 
-  // Common toast notification handling
+  // Common toast notification handling.
+  // RC1: this app uses shadcn/Radix Toast (@/hooks/use-toast +
+  // ToastProvider/ToastViewport in src/app/layout.tsx), which renders the
+  // toast root as `[role="status"][data-state="open"]` — NOT Sonner's
+  // `[data-sonner-toast]`. Targeting the Sonner selector made every toast
+  // assertion time out.
   async getToastMessage(): Promise<string | null> {
-    const toast = this.page.locator('[data-sonner-toast]').first();
+    const toast = this.page.locator('[role="status"]').first();
     if (await toast.isVisible({ timeout: 5000 })) {
       return toast.textContent();
     }
@@ -25,7 +30,7 @@ export class BasePage {
   }
 
   async waitForToast(expectedText?: string, timeout = 5000) {
-    const toast = this.page.locator('[data-sonner-toast]').first();
+    const toast = this.page.locator('[role="status"]').first();
     await toast.waitFor({ state: 'visible', timeout });
 
     if (expectedText) {

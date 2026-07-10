@@ -29,9 +29,15 @@ const CANARY_PASSWORD = process.env.EICAR_CANARY_PASSWORD || 'Canary@2026';
 
 test.describe('EICAR malware-scanning canary (GAP-L2)', () => {
   test('rejects the EICAR test file on upload', async ({ page, context }) => {
+    // RC4: this canary needs (a) a provisioned `canary_hro` user and (b) a
+    // live ClamAV service. The main E2E workflow (.github/workflows/e2e-tests.yml)
+    // provisions neither and does not set CLAMAV_ENABLED, so running it there
+    // only fails on login + scan. It is run (with both) by the dedicated
+    // .github/workflows/clamav-canary.yml, which sets CLAMAV_ENABLED=true and
+    // provisions the canary user. Skip here unless that flag is set.
     test.skip(
-      !process.env.E2E_BASE_URL && !process.env.CI,
-      'Requires a running dev server (E2E_BASE_URL) or CI'
+      !process.env.CLAMAV_ENABLED,
+      'EICAR canary requires ClamAV + a provisioned canary user — run via .github/workflows/clamav-canary.yml (sets CLAMAV_ENABLED), not the main E2E suite'
     );
 
     // 1. Authenticate through the browser so the session + CSRF cookies are set.
