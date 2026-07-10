@@ -456,6 +456,26 @@ export const PATCH = wrapHandler(async (req: Request) => {
     updateData.reviewStage = 'initial';
   }
 
+  // Server-controlled reviewStage for the remaining workflow actions.
+  // The page's Commission Decision buttons are gated on
+  // reviewStage === 'commission_review' (and status.includes('Awaiting
+  // Commission Decision')) — this branch advances the stage server-side
+  // in lockstep with the status, so HHRMD/HRMO forwarding a request to
+  // the Commission doesn't strand it. Mirrors the promotion workflow.
+  if (isInitialReviewAction) {
+    const isForwardToCommission =
+      typeof updateData.status === 'string' &&
+      updateData.status.includes('Awaiting Commission Decision');
+    updateData.reviewStage = isForwardToCommission ? 'commission_review' : 'initial';
+  }
+  if (isCommissionDecision) {
+    updateData.reviewStage = 'completed';
+  }
+  if (isResubmission) {
+    // HRO/HRRP correcting a rejected request — back to the start.
+    updateData.reviewStage = 'initial';
+  }
+
   // The authenticated user is the reviewer — ignore any client-supplied reviewer id.
   if (updateData.reviewedById !== undefined) {
     updateData.reviewedById = auth.userId;
