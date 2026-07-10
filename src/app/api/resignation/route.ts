@@ -19,6 +19,25 @@ import { verifyAuth } from '@/lib/api-auth';
 // Cache configuration for resignation requests
 const CACHE_TTL = 30; // 30 seconds cache (request status changes frequently)
 
+// Role-based authorization helper
+function checkRoleAuthorization(
+  userRole: string | null,
+  allowedRoles: readonly string[]
+): { authorized: boolean; message?: string } {
+  if (!userRole) {
+    return { authorized: false, message: 'User role is required' };
+  }
+
+  if (!allowedRoles.includes(userRole)) {
+    return {
+      authorized: false,
+      message: `Unauthorized: ${userRole} cannot perform this action. Allowed roles: ${allowedRoles.join(', ')}`,
+    };
+  }
+
+  return { authorized: true };
+}
+
 async function GETHandler(req: Request) {
     const authResult = await verifyAuth(req);
     if (!authResult.authenticated) {
@@ -385,6 +404,31 @@ async function PATCHHandler(req: Request) {
     const isInitialReviewAction =
       updateData.reviewedById !== undefined &&
       !isHrrpApproval && !isHrrpRejection && !isCommissionDecision && !isResubmission;
+
+    // SECURITY (UAT Req 3.5 / 8.3 / 18.3 / 25.3): role-based authorization.
+    // Pre-fix the collection PATCH handler for the older modules had no
+    // auth gate — only the [id]/route.ts subroute (which the dashboard
+    // never calls) had one. An HRO could record a commission decision by
+    // direct API call. Mirror the promotion pattern. isHrrpAction is
+    // inlined here (rather than referenced) because it's defined later,
+    // after the audit block.
+    let authCheck;
+    if (isHrrpApproval || isHrrpRejection) {
+      authCheck = checkRoleAuthorization(userRole, ['HRRP' as const]);
+    } else if (isResubmission) {
+      authCheck = checkRoleAuthorization(userRole, ['HRO' as const, 'HRRP' as const]);
+    } else if (isCommissionDecision || isInitialReviewAction) {
+      authCheck = checkRoleAuthorization(userRole, ['HHRMD' as const, 'HRMO' as const]);
+    } else {
+      authCheck = { authorized: false, message: 'Invalid update action' };
+    }
+    if (!authCheck.authorized) {
+      return NextResponse.json(
+        { success: false, message: authCheck.message },
+        { status: 403 }
+      );
+    }
+
     if (isCommissionDecision && !body.commissionLetterKey) {
       return NextResponse.json(
         { success: false, message: 'Commission letter is required for commission decisions' },
