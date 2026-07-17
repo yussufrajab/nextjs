@@ -1,7 +1,166 @@
 import { PrismaClient } from '@prisma/client';
 import axios, { AxiosError } from 'axios';
+import { execFileSync } from 'child_process';
 
 const prisma = new PrismaClient();
+
+// ---------------------------------------------------------------------------
+// Authentication
+// The fetch-by-institution endpoint is protected by withAuth (Admin/HHRMD) and
+// requires a valid `session` cookie AND a matching `csrf-token` (double-submit
+// CSRF). We log in as an admin, read the MFA OTP directly from the DB, verify
+// it, then capture the session + CSRF cookies for every subsequent request.
+// ---------------------------------------------------------------------------
+const AUTH = {
+  BASE_URL: process.env.HRIMS_FETCH_BASE_URL || 'http://localhost:9002',
+  // Credentials MUST be supplied via environment variables — never committed.
+  USERNAME: process.env.HRIMS_FETCH_USER || '',
+  PASSWORD: process.env.HRIMS_FETCH_PASSWORD || '',
+  // DB connection used only to read the freshly-minted OTP (same trick the
+  // security test scripts use). Falls back to the standard PG* env if set.
+  DB_HOST: process.env.PGHOST || 'localhost',
+  DB_PORT: process.env.PGPORT || '5432',
+  DB_USER: process.env.PGUSER || 'postgres',
+  DB_NAME: process.env.PGDATABASE || 'nody',
+  DB_PASSWORD: process.env.PGPASSWORD || '',
+};
+
+interface CookieJar {
+  [name: string]: string;
+}
+
+/**
+ * Store a single "name=value" Set-Cookie pair in the jar. Honours the leading
+ * name=value and ignores attributes (Path, HttpOnly, Expires, ...).
+ */
+function storeCookie(jar: CookieJar, setCookie: string): void {
+  const sep = setCookie.indexOf('=');
+  if (sep === -1) return;
+  const name = setCookie.substring(0, sep).trim();
+  // value ends at the first ';' (attribute separator)
+  const afterEq = setCookie.substring(sep + 1);
+  const value = afterEq.split(';')[0].trim();
+  if (name) jar[name] = value;
+}
+
+/**
+ * Absorb every Set-Cookie header from an axios response into the jar.
+ */
+function absorbCookies(jar: CookieJar, setCookieHeaders: string | string[] | undefined): void {
+  if (!setCookieHeaders) return;
+  const list = Array.isArray(setCookieHeaders) ? setCookieHeaders : [setCookieHeaders];
+  for (const c of list) storeCookie(jar, c);
+}
+
+/**
+ * Serialize the jar into a Cookie request header.
+ */
+function cookieHeader(jar: CookieJar): string {
+  return Object.entries(jar)
+    .map(([k, v]) => `${k}=${v}`)
+    .join('; ');
+}
+
+/**
+ * Read the most recent unused OTP for a user straight from the MfaToken table.
+ */
+function readOtpFromDb(userId: string): string {
+  const sql = `SELECT token FROM "MfaToken" WHERE "userId" = '${userId}' AND "tokenType" = 'OTP' AND "usedAt" IS NULL AND "expiresAt" > NOW() ORDER BY "createdAt" DESC LIMIT 1;`;
+  const out = execFileSync('psql', [
+    '-h', AUTH.DB_HOST,
+    '-p', String(AUTH.DB_PORT),
+    '-U', AUTH.DB_USER,
+    '-d', AUTH.DB_NAME,
+    '-t', '-A',
+    '-c', sql,
+  ], {
+    env: { ...process.env, PGPASSWORD: AUTH.DB_PASSWORD },
+    encoding: 'utf8',
+  }).trim();
+  return out;
+}
+
+/**
+ * Perform the full login: mint a pre-login CSRF token, log in (MFA required
+ * because the admin has an email), read the OTP from the DB, verify it, and
+ * return a cookie jar holding the session + csrf-token cookies.
+ */
+async function login(): Promise<CookieJar> {
+  const jar: CookieJar = {};
+
+  // 1. Pre-login CSRF token (unauthenticated GET, sets csrf-token cookie).
+  const csrfRes = await axios.get(`${AUTH.BASE_URL}/api/auth/csrf-token`, {
+    validateStatus: () => true,
+  });
+  absorbCookies(jar, csrfRes.headers['set-cookie']);
+  const preCsrf = jar['csrf-token'];
+  if (!preCsrf) {
+    throw new Error('Failed to obtain pre-login CSRF token');
+  }
+
+  // 2. Login → returns userId + MFA_REQUIRED (admin has an email on file).
+  const loginRes = await axios.post(
+    `${AUTH.BASE_URL}/api/auth/login`,
+    { username: AUTH.USERNAME, password: AUTH.PASSWORD },
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        'x-csrf-token': preCsrf,
+        Cookie: cookieHeader(jar),
+      },
+      validateStatus: () => true,
+    }
+  );
+  absorbCookies(jar, loginRes.headers['set-cookie']);
+
+  const loginData = loginRes.data as { success?: boolean; code?: string; data?: { userId?: string } };
+  if (!loginData.success || loginData.code !== 'MFA_REQUIRED' || !loginData.data?.userId) {
+    throw new Error(
+      `Login did not reach MFA stage: ${JSON.stringify(loginData).slice(0, 200)}`
+    );
+  }
+  const userId = loginData.data.userId;
+  logInfo(`Logged in as ${AUTH.USERNAME} (userId=${userId}), MFA required`);
+
+  // 3. Read the OTP the server emailed (we read it from the DB directly).
+  const otp = readOtpFromDb(userId);
+  if (!otp) {
+    throw new Error('No valid OTP found in MfaToken table for this user');
+  }
+  logInfo(`Retrieved OTP from DB (length=${otp.length})`);
+
+  // 4. Verify OTP → completeLogin sets the session + per-session csrf-token.
+  const otpRes = await axios.post(
+    `${AUTH.BASE_URL}/api/auth/mfa/verify-otp`,
+    { userId, otpCode: otp },
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        'x-csrf-token': preCsrf,
+        Cookie: cookieHeader(jar),
+      },
+      validateStatus: () => true,
+    }
+  );
+  absorbCookies(jar, otpRes.headers['set-cookie']);
+
+  // completeLogin sets the session under either `session` (dev) or
+  // `__Host-session` (prod), depending on NODE_ENV. Normalise to `session`
+  // so downstream code only needs to know one name.
+  const prodSession = jar['__Host-session'];
+  if (prodSession && !jar['session']) {
+    jar['session'] = prodSession;
+  }
+
+  const otpData = otpRes.data as { success?: boolean; message?: string };
+  if (!otpData.success || !jar['session'] || !jar['csrf-token']) {
+    throw new Error(
+      `OTP verification failed: ${JSON.stringify(otpData).slice(0, 200)}`
+    );
+  }
+  logSuccess(`MFA verified — session cookie acquired`);
+  return jar;
+}
 
 // Configuration
 const CONFIG = {
@@ -73,6 +232,7 @@ async function fetchInstitutionData(
     voteNumber: string | null;
     tinNumber: string | null;
   },
+  jar: CookieJar,
   retryCount = 0
 ): Promise<FetchResult> {
   const startTime = Date.now();
@@ -105,6 +265,15 @@ async function fetchInstitutionData(
   logInfo(`Fetching: ${institution.name}${retryText}`);
   logInfo(`  Using ${identifierType}: ${identifier}`);
 
+  // Per-session CSRF token lives in the jar's csrf-token cookie. Send it both
+  // as the double-submit cookie and as the x-csrf-token header.
+  const csrf = jar['csrf-token'];
+  const authHeaders: Record<string, string> = {
+    'Content-Type': 'application/json',
+    Cookie: cookieHeader(jar),
+  };
+  if (csrf) authHeaders['x-csrf-token'] = csrf;
+
   try {
     const response = await axios.post(
       CONFIG.API_URL,
@@ -115,9 +284,7 @@ async function fetchInstitutionData(
         institutionId: institution.id,
       },
       {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authHeaders,
         timeout: CONFIG.TIMEOUT,
         validateStatus: (status) => status < 500, // Don't throw on 4xx errors
       }
@@ -206,6 +373,11 @@ async function main() {
 
   const scriptStartTime = Date.now();
 
+  // Authenticate before touching the protected endpoint.
+  logInfo('Authenticating as admin (MFA via DB-read OTP)...');
+  const jar = await login();
+  logInfo('Authentication complete — proceeding with fetch\n');
+
   // Fetch all institutions
   logInfo('Loading institutions from database...');
   const institutions = await prisma.institution.findMany({
@@ -250,7 +422,7 @@ async function main() {
     }
 
     // Fetch data for this institution
-    const result = await fetchInstitutionData(institution);
+    const result = await fetchInstitutionData(institution, jar);
     results.push(result);
 
     // Update statistics

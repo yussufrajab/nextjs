@@ -1421,7 +1421,7 @@ export default function ComplaintsPage() {
                   </div>
                   <Card className="bg-blue-50 border-blue-200 max-w-md mx-auto">
                     <CardContent className="pt-4 pb-4">
-                      <p className="text-sm text-blue-700"><strong>Muda:</strong> Link itamaliza muda baada ya dakika 20.</p>
+                      <p className="text-sm text-blue-700"><strong>Muda:</strong> Link itamaliza muda baada ya dakika 10.</p>
                       <p className="text-sm text-blue-700 mt-1"><strong>Notisi:</strong> Angalia folda yako ya spam ikiwa hujaona email.</p>
                     </CardContent>
                   </Card>

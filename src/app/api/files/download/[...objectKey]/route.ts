@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { downloadFile, getFileMetadata } from '@/lib/minio';
+import { downloadFile, getFileMetadata, isPathTraversal } from '@/lib/minio';
 import { Readable } from 'stream';
 import { fileLogger } from '@/lib/logger';
 import { verifyAuth } from '@/lib/api-auth';
@@ -34,8 +34,9 @@ export const GET = wrapHandler(async (
   const resolvedParams = await params;
   const objectKey = decodeURIComponent(resolvedParams.objectKey.join('/'));
 
-  // SECURITY: Path traversal validation
-  if (objectKey.includes('..') || objectKey.includes('\0') || objectKey.startsWith('/')) {
+  // SECURITY: Path traversal validation (allows ".." inside a filename, which
+  // is not traversal and can appear in legacy keys)
+  if (isPathTraversal(objectKey)) {
     return NextResponse.json(
       { success: false, message: 'Invalid file path' },
       { status: 400 }

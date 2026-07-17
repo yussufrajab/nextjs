@@ -62,6 +62,8 @@ vi.mock('@/lib/minio', () => ({
   downloadFile: (...a: any[]) => mockDownloadFile(...a),
   getFileMetadata: (...a: any[]) => mockGetFileMetadata(...a),
   generatePresignedUrl: () => Promise.resolve('https://minio.example/presigned'),
+  isPathTraversal: (key: string) =>
+    key.includes('..') || key.includes('\0') || key.startsWith('/'),
 }));
 
 // --- audit logger: no-op sink + getClientIp ----------------------------------

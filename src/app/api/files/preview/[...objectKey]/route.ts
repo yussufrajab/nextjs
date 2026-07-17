@@ -4,6 +4,7 @@ import {
   downloadFile,
   getFileMetadata,
   generatePresignedUrl,
+  isPathTraversal,
 } from '@/lib/minio';
 import { verifyAuth } from '@/lib/api-auth';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limiter';
@@ -32,8 +33,9 @@ export const GET = wrapHandler(async (
   const resolvedParams = await params;
   const objectKey = decodeURIComponent(resolvedParams.objectKey.join('/'));
 
-  // SECURITY: Path traversal validation
-  if (objectKey.includes('..') || objectKey.includes('\0') || objectKey.startsWith('/')) {
+  // SECURITY: Path traversal validation (allows ".." inside a filename, which
+  // is not traversal and can appear in legacy keys)
+  if (isPathTraversal(objectKey)) {
     return NextResponse.json(
       { success: false, message: 'Invalid file path' },
       { status: 400 }

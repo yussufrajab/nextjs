@@ -293,7 +293,12 @@ async function upsertEmployeeFromHRIMS(
     },
   });
 
-  const employeeData = {
+  // SECURITY/DATA-INTEGRITY: institutionId must NOT be overwritten on update.
+  // zanId is globally unique, so an employee exists exactly once. If the same
+  // ZAN ID is returned while syncing a different institution, overwriting
+  // institutionId here would silently re-tag the employee under the wrong
+  // institution. The institution is assigned once, at creation.
+  const { institutionId: _instId, ...employeeDataWithoutInstId } = {
     zanId: Employee.zanId,
     name: Employee.name,
     gender: Employee.gender || null,
@@ -335,17 +340,17 @@ async function upsertEmployeeFromHRIMS(
   let savedEmployee;
 
   if (existingEmployee) {
-    // Update existing employee
+    // Update existing employee (preserve original institutionId)
     savedEmployee = await db.employee.update({
       where: { id: existingEmployee.id },
-      data: employeeData as any,
+      data: employeeDataWithoutInstId as any,
     });
   } else {
     // Create new employee
     savedEmployee = await db.employee.create({
       data: {
         id: uuidv4(),
-        ...employeeData,
+        ...employeeDataWithoutInstId,
       } as any,
     });
   }

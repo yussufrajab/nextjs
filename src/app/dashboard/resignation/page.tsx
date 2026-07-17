@@ -107,8 +107,8 @@ function getResignationWorkflowSteps(status: string): WorkflowStep[] {
           : 'HRMO/HHRMD Review',
       status: status.includes('Approved by HRMO') || status.includes('Approved by HHRMD')
         ? 'completed'
-        : status === 'Rejected by HRMO - Awaiting HRO Action' ||
-          status === 'Rejected by HHRMD - Awaiting HRO Action'
+        : status === 'Rejected by HRMO - Awaiting HRO Correction' ||
+          status === 'Rejected by HHRMD - Awaiting HRO Correction'
           ? 'rejected'
           : status === 'Approved by HRRP - Awaiting Commission Review' ||
             status === 'Pending HRMO/HHRMD Review' ||
@@ -537,9 +537,9 @@ export default function ResignationPage() {
     if (!currentRequestToAction || !rejectionReasonInput.trim()) return;
     let rejectionStatus: string;
     if (role === ROLES.HRRP) {
-      rejectionStatus = 'Rejected by HRRP - Awaiting HRO Action';
+      rejectionStatus = 'Rejected by HRRP - Awaiting HRO Correction';
     } else {
-      rejectionStatus = `Rejected by ${role} - Awaiting HRO Action`;
+      rejectionStatus = `Rejected by ${role} - Awaiting HRO Correction`;
     }
 
     const payload = {

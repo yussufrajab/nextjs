@@ -41,9 +41,15 @@ const userSchema = z.object({
 });
 
 export const GET = wrapHandler(withRateLimit(withAuth(async (request, { auth }) => {
-    // SECURITY: Apply institution filtering for non-CSC roles (e.g. HRO)
+    // SECURITY: Apply institution filtering for non-CSC roles (e.g. HRO).
+    // ADMIN is a global/system role and must be able to view and edit ALL
+    // users across every institution, so it is exempt from institution
+    // scoping (the [id] PATCH/PUT route is already global for ADMIN).
     const whereClause: any = {};
-    if (shouldApplyInstitutionFilter(auth.role, auth.institutionId)) {
+    if (
+      auth.role?.toUpperCase() !== 'ADMIN' &&
+      shouldApplyInstitutionFilter(auth.role, auth.institutionId)
+    ) {
       whereClause.institutionId = auth.institutionId;
     }
 

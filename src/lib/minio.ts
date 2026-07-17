@@ -48,8 +48,41 @@ export function generateObjectKey(
 ): string {
   const timestamp = Date.now();
   const randomSuffix = Math.random().toString(36).substring(2, 8);
-  const sanitizedName = originalName.replace(/[^a-zA-Z0-9.-]/g, '_');
-  return `${folder}/${timestamp}_${randomSuffix}_${sanitizedName}`;
+  const sanitizedName = sanitizeObjectName(originalName);
+  const sanitizedFolder = folder
+    .split('/')
+    .map((segment) => sanitizeObjectName(segment))
+    .join('/');
+  return `${sanitizedFolder}/${timestamp}_${randomSuffix}_${sanitizedName}`;
+}
+
+// Sanitize a single path segment (folder name or filename) so it can never
+// form a path-traversal sequence. Spaces and other illegal characters become
+// underscores, runs of dots collapse to a single underscore, and leading/trailing
+// dots are stripped. This prevents keys like "..._foo_..pdf" (which previously
+// tripped the retrieval guard and returned HTTP 400) while keeping the key
+// safe for MinIO.
+export function sanitizeObjectName(name: string): string {
+  return name
+    .replace(/[^a-zA-Z0-9._-]/g, '_') // illegal chars -> underscore
+    .replace(/\.{2,}/g, '_') // collapse dot runs (e.g. "..") so traversal is impossible
+    .replace(/^\.+/, '') // strip leading dots
+    .replace(/\.+$/, '') // strip trailing dots
+    .replace(/_+/g, '_') // collapse repeated underscores
+    .replace(/^-+/, '') // strip leading dashes
+    .replace(/-+$/, ''); // strip trailing dashes
+}
+
+// Validate that a reconstructed object key does not attempt path traversal.
+// Genuine traversal uses ".." as a path *segment* (e.g. "/../", "../",
+// trailing "/.."). A ".." embedded inside a filename (e.g. "report_..pdf") is
+// NOT traversal and must remain accessible — it can occur in legacy keys and is
+// harmless because MinIO treats the whole string as one object name.
+export function isPathTraversal(objectKey: string): boolean {
+  if (objectKey.includes('\0')) return true;
+  if (objectKey.startsWith('/') || objectKey.endsWith('/')) return true;
+  const segments = objectKey.split('/');
+  return segments.some((segment) => segment === '..' || segment.startsWith('../') || segment.endsWith('/..'));
 }
 
 // Upload file to MinIO
