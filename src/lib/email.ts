@@ -24,7 +24,13 @@ function createTransporter(): nodemailer.Transporter {
     host: process.env.SMTP_HOST,
     port: Number(process.env.SMTP_PORT) || 25,
     secure: smtpSecure,
-    requireTLS: false,
+    // Some hardened SMTP relays (e.g. Postfix with smtpd_tls_security_level=encrypt)
+    // refuse to issue a 220 banner until STARTTLS is initiated, which causes
+    // nodemailer to hit greetingTimeout and return success:false on every send.
+    // Default to true; set SMTP_REQUIRE_TLS=false to opt out.
+    requireTLS: process.env.SMTP_REQUIRE_TLS !== 'false',
+    // Some relays reject EHLO without a valid FQDN. Override via SMTP_HELO_NAME.
+    name: process.env.SMTP_HELO_NAME,
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASSWORD,

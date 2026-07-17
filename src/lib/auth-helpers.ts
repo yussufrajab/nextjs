@@ -19,6 +19,7 @@ interface CompleteLoginUser {
   username: string;
   role: string;
   active: boolean;
+  email?: string | null;
   employeeId?: string | null;
   institutionId: string;
   isTemporaryPassword: boolean;
@@ -74,6 +75,7 @@ export async function completeLogin(params: CompleteLoginParams): Promise<NextRe
       name: user.name,
       username: user.username,
       role: user.role,
+      email: user.email ?? null,
       institutionId: user.institutionId,
       institutionName: user.Institution?.name || '',
       Institution: user.Institution,

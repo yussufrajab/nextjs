@@ -18,7 +18,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from '@/hooks/use-toast';
 import { fetchWithCsrf, ensureCsrfToken } from '@/lib/fetch-with-csrf';
 import { useAuthStore } from '@/store/auth-store';
-import { Loader2, User, CreditCard, Hash } from 'lucide-react';
+import { Loader2, User, CreditCard, Hash, Mail } from 'lucide-react';
 
 const employeeLoginSchema = z.object({
   zanId: z.string().min(1, { message: 'ZAN ID is required.' }),
@@ -26,12 +26,25 @@ const employeeLoginSchema = z.object({
   payrollNumber: z.string().min(1, { message: 'Payroll Number is required.' }),
 });
 
+const governmentEmailSchema = z.object({
+  email: z
+    .string()
+    .min(1, { message: 'Government email is required.' })
+    .email({ message: 'Please enter a valid email address.' }),
+});
+
 type EmployeeLoginValues = z.infer<typeof employeeLoginSchema>;
+type GovernmentEmailValues = z.infer<typeof governmentEmailSchema>;
 
 export function EmployeeLoginForm() {
   const router = useRouter();
-  const { setUserManually } = useAuthStore();
   const [isLoading, setIsLoading] = React.useState(false);
+
+  // Step 1: collect credentials. Step 2: capture government email (only when
+  // the server reports EMAIL_REQUIRED — i.e. no email is stored yet).
+  const [step, setStep] = React.useState<1 | 2>(1);
+  const [pendingUserId, setPendingUserId] = React.useState('');
+  const [pendingCreds, setPendingCreds] = React.useState<EmployeeLoginValues | null>(null);
 
   // Clear any existing auth state when component mounts (without API call)
   React.useEffect(() => {
@@ -84,6 +97,16 @@ export function EmployeeLoginForm() {
           setIsLoading(false);
           return;
         }
+
+        // Server needs a government email before MFA can be sent.
+        if (result.code === 'EMAIL_REQUIRED') {
+          setPendingUserId(result.data?.userId || '');
+          setPendingCreds(data);
+          setStep(2);
+          setIsLoading(false);
+          return;
+        }
+
         // Use the auth store to set user data with session and CSRF tokens
         // Handle both response formats: direct (result.user) and completeLogin (result.data.user)
         const userData = result.user || result.data?.user;
@@ -111,7 +134,7 @@ export function EmployeeLoginForm() {
           variant: 'destructive',
         });
       }
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: 'Login Error',
         description: 'An error occurred during login. Please try again.',
@@ -122,9 +145,20 @@ export function EmployeeLoginForm() {
     }
   }
 
+  if (step === 2) {
+    return (
+      <GovernmentEmailStep
+        pendingUserId={pendingUserId}
+        pendingCreds={pendingCreds}
+        onBack={() => setStep(1)}
+        onComplete={(target: string) => router.push(target)}
+      />
+    );
+  }
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
         <FormField
           control={form.control}
           name="zanId"
@@ -188,6 +222,120 @@ export function EmployeeLoginForm() {
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Login as Employee
+        </Button>
+      </form>
+    </Form>
+  );
+}
+
+interface GovernmentEmailStepProps {
+  pendingUserId: string;
+  pendingCreds: EmployeeLoginValues | null;
+  onBack: () => void;
+  onComplete: (target: string) => void;
+}
+
+function GovernmentEmailStep({
+  pendingUserId,
+  pendingCreds,
+  onBack,
+  onComplete,
+}: GovernmentEmailStepProps) {
+  const [isLoading, setIsLoading] = React.useState(false);
+  const emailForm = useForm<GovernmentEmailValues>({
+    resolver: zodResolver(governmentEmailSchema),
+    defaultValues: { email: '' },
+  });
+
+  async function onEmailSubmit(data: GovernmentEmailValues) {
+    if (!pendingCreds) return;
+    setIsLoading(true);
+
+    try {
+      await ensureCsrfToken();
+      const response = await fetchWithCsrf('/api/auth/employee-login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        // Re-send the credentials plus the captured government email so the
+        // server can persist it and then start MFA.
+        body: JSON.stringify({ ...pendingCreds, email: data.email }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success && result.code === 'MFA_REQUIRED') {
+        const params = new URLSearchParams({
+          userId: result.data?.userId || pendingUserId,
+          email: result.data?.email || '',
+        });
+        onComplete(`/mfa-verify?${params.toString()}`);
+        setIsLoading(false);
+        return;
+      }
+
+      // 400 (bad domain) or 409 (duplicate) — show the server message and let
+      // the employee correct the address without losing their credentials.
+      toast({
+        title: 'Email Error',
+        description: result.message || 'Could not save the email address. Please try again.',
+        variant: 'destructive',
+      });
+    } catch (_error) {
+      toast({
+        title: 'Email Error',
+        description: 'An error occurred. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  return (
+    <Form {...emailForm}>
+      <form onSubmit={emailForm.handleSubmit(onEmailSubmit)} className="space-y-4" noValidate>
+        <div className="mb-2 text-sm text-muted-foreground">
+          Please provide your Government Email Address. It will be saved to your
+          profile and used for verification when submitting complaints.
+        </div>
+        <FormField
+          control={emailForm.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="flex items-center gap-2">
+                <Mail className="h-4 w-4" />
+                Government Email Address
+              </FormLabel>
+              <FormControl>
+                <Input
+                  type="email"
+                  placeholder="name@gov.go.tz"
+                  {...field}
+                  className="pl-4"
+                />
+              </FormControl>
+              <p className="text-xs text-muted-foreground">
+                Must end with .go.tz or .ac.tz (government or academic domain).
+              </p>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          Continue
+        </Button>
+        <Button
+          type="button"
+          variant="link"
+          className="w-full text-muted-foreground"
+          onClick={onBack}
+          disabled={isLoading}
+        >
+          Back
         </Button>
       </form>
     </Form>

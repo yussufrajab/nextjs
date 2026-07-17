@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import { db } from '@/lib/db';
 
-const MFA_TOKEN_EXPIRY_MINUTES = Number(process.env.MFA_TOKEN_EXPIRY_MINUTES) || 15;
+const MFA_TOKEN_EXPIRY_MINUTES = Number(process.env.MFA_TOKEN_EXPIRY_MINUTES) || 10;
 const MFA_OTP_RATE_LIMIT_SECONDS = Number(process.env.MFA_OTP_RATE_LIMIT_SECONDS) || 60;
 const MFA_OTP_RATE_LIMIT_MAX_REQUESTS = Number(process.env.MFA_OTP_RATE_LIMIT_MAX_REQUESTS) || 3;
 const MFA_OTP_MAX_VERIFY_ATTEMPTS = Number(process.env.MFA_OTP_MAX_VERIFY_ATTEMPTS) || 5;

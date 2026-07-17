@@ -8,8 +8,8 @@ import {
   hashPassword,
   calculateTemporaryPasswordExpiry,
 } from '@/lib/password-utils';
-import { completeLogin } from '@/lib/auth-helpers';
 import { createMfaToken, checkOtpRateLimit, maskEmail } from '@/lib/mfa-utils';
+import { validateGovernmentEmail, setUserGovernmentEmail } from '@/lib/employee-email';
 import { sendMfaEmail } from '@/lib/email';
 import { logLoginAttempt, getClientIp } from '@/lib/audit-logger';
 import { withRateLimit } from '@/lib/rate-limiter';
@@ -21,6 +21,7 @@ const employeeLoginSchema = z.object({
   zanId: z.string().min(1),
   zssfNumber: z.string().min(1),
   payrollNumber: z.string().min(1),
+  email: z.string().optional(),
 });
 
 // Helper function to generate username from employee name
@@ -36,7 +37,7 @@ export const POST = wrapHandler(withRateLimit(async (request) => {
     if (!csrfCheck.valid) return csrfCheck.response!;
 
     const body = await request.json();
-    const { zanId, zssfNumber, payrollNumber } =
+    const { zanId, zssfNumber, payrollNumber, email } =
       employeeLoginSchema.parse(body);
 
     // Get client info for audit logging
@@ -242,8 +243,34 @@ export const POST = wrapHandler(withRateLimit(async (request) => {
     }
 
     // --- MFA Gate ---
-    // If user has an email address, require MFA verification before creating a session
-    if (user.email) {
+    // Determine the email to use for MFA. If one is already stored on the
+    // user record, reuse it (skip the prompt). Otherwise, if the client
+    // supplied a government email at login, validate and persist it so it
+    // survives future logins, then use it for MFA.
+    let effectiveEmail: string | null = user.email ?? null;
+
+    if (!effectiveEmail && email) {
+      const validation = validateGovernmentEmail(email);
+      if (!validation.ok) {
+        return NextResponse.json(
+          { success: false, message: validation.error },
+          { status: 400 }
+        );
+      }
+
+      const persist = await setUserGovernmentEmail(employee.id, validation.email);
+      if (!persist.ok) {
+        return NextResponse.json(
+          { success: false, message: persist.message },
+          { status: persist.status }
+        );
+      }
+
+      effectiveEmail = validation.email;
+      user = { ...user, email: effectiveEmail };
+    }
+
+    if (effectiveEmail) {
       const rateLimitCheck = await checkOtpRateLimit(user.id);
       if (!rateLimitCheck.allowed) {
         return NextResponse.json(
@@ -256,13 +283,13 @@ export const POST = wrapHandler(withRateLimit(async (request) => {
       }
 
       const mfaTokenExpiryMinutes = Number(process.env.MFA_TOKEN_EXPIRY_MINUTES) || 10;
-      const { token: otpToken } = await createMfaToken(user.id, 'OTP', user.email, ipAddress, userAgent);
-      const { token: magicLinkToken } = await createMfaToken(user.id, 'MAGIC_LINK', user.email, ipAddress, userAgent);
+      const { token: otpToken } = await createMfaToken(user.id, 'OTP', effectiveEmail, ipAddress, userAgent);
+      const { token: magicLinkToken } = await createMfaToken(user.id, 'MAGIC_LINK', effectiveEmail, ipAddress, userAgent);
 
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:9002';
       const magicLinkUrl = `${appUrl}/mfa/magic-link-confirm?token=${magicLinkToken}`;
 
-      const emailResult = await sendMfaEmail(user.email, otpToken, magicLinkUrl, user.name, mfaTokenExpiryMinutes);
+      const emailResult = await sendMfaEmail(effectiveEmail, otpToken, magicLinkUrl, user.name, mfaTokenExpiryMinutes);
 
       if (!emailResult.success) {
         authLogger.error({ err: emailResult.error }, 'Failed to send MFA email');
@@ -277,32 +304,19 @@ export const POST = wrapHandler(withRateLimit(async (request) => {
         code: 'MFA_REQUIRED',
         data: {
           userId: user.id,
-          email: maskEmail(user.email),
+          email: maskEmail(effectiveEmail),
         },
         message: 'MFA verification required',
       });
     }
 
-    // No email on file — skip MFA and complete login directly
-    authLogger.info({ username: user.username }, 'No email on file, skipping MFA');
-
-    // Get full user data for completeLogin
-    const fullUser = await db.user.findUnique({
-      where: { id: user.id },
-      include: { Institution: true, Employee: true },
-    });
-
-    if (!fullUser) {
-      return NextResponse.json(
-        { success: false, message: 'User not found' },
-        { status: 401 }
-      );
-    }
-
-    return completeLogin({
-      user: fullUser,
-      ipAddress,
-      userAgent,
-      deviceInfo,
+    // No stored email and none provided at login — require the government
+    // email before MFA can be sent (it is needed for the verification link).
+    authLogger.info({ username: user.username }, 'No email on file, requesting government email');
+    return NextResponse.json({
+      success: true,
+      code: 'EMAIL_REQUIRED',
+      data: { userId: user.id },
+      message: 'Government email address required to continue',
     });
 }, 'auth'), 'auth-employee-login');
