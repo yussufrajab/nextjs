@@ -428,6 +428,24 @@ async function PATCHHandler(req: Request) {
       );
     }
 
+    // SECURITY (Req 8.9): prevent self-approval / self-rejection — the user
+    // who submitted the request may not approve or reject it (only
+    // resubmit/withdraw). The [id] route enforces this; the collection PATCH
+    // (which the dashboard actually calls) did not, so a submitter could
+    // self-approve via this path.
+    if (isHrrpApproval || isHrrpRejection || isCommissionDecision) {
+      const existing = await db.serviceExtensionRequest.findUnique({
+        where: { id },
+        select: { submittedById: true },
+      });
+      if (existing?.submittedById === auth.userId) {
+        return NextResponse.json(
+          { success: false, message: 'Cannot approve or reject your own submission' },
+          { status: 403 }
+        );
+      }
+    }
+
     if (isCommissionDecision && !body.commissionLetterKey) {
       return NextResponse.json(
         { success: false, message: 'Commission letter is required for commission decisions' },

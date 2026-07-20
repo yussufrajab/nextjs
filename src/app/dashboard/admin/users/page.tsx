@@ -55,6 +55,13 @@ import {
   Unlock,
   KeyRound,
   ShieldAlert,
+  Upload,
+  Download,
+  X,
+  FileText,
+  CheckCircle2,
+  AlertCircle,
+  SkipForward,
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
@@ -103,7 +110,7 @@ const userSchema = z.object({
     .min(8, 'Password must be at least 8 characters.')
     .refine((pwd) => validatePasswordComplexity(pwd), {
       message:
-        'Password must contain at least one uppercase, lowercase, number, or special character.',
+        'Password must contain an uppercase letter, lowercase letter, number, and special character.',
     })
     .refine((pwd) => !isCommonPassword(pwd), {
       message:
@@ -134,7 +141,7 @@ const userEditSchema = z.object({
     .min(8, 'Password must be at least 8 characters.')
     .refine((pwd) => validatePasswordComplexity(pwd), {
       message:
-        'Password must contain at least one uppercase, lowercase, number, or special character.',
+        'Password must contain an uppercase letter, lowercase letter, number, and special character.',
     })
     .refine((pwd) => !isCommonPassword(pwd), {
       message:
@@ -176,6 +183,38 @@ export default function UserManagementPage() {
   const [initialPassword, setInitialPassword] = useState<string | null>(null);
   const [createdUsername, setCreatedUsername] = useState<string>('');
   const [hasCopied, setHasCopied] = useState(false);
+
+  // Bulk upload state
+  const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
+  const [bulkFile, setBulkFile] = useState<File | null>(null);
+  const [bulkPreview, setBulkPreview] = useState<
+    Array<{
+      name: string;
+      username: string;
+      password: string;
+      email: string;
+      phoneNumber: string;
+      institutionName: string;
+      role: string;
+    }>
+  >([]);
+  const [bulkResults, setBulkResults] = useState<{
+    total: number;
+    created: number;
+    skipped: number;
+    failed: number;
+    results: Array<{
+      index: number;
+      name: string;
+      username: string;
+      status: 'created' | 'skipped' | 'error';
+      error?: string;
+    }>;
+  } | null>(null);
+  const [isBulkSubmitting, setIsBulkSubmitting] = useState(false);
+  const [bulkUploadStep, setBulkUploadStep] = useState<
+    'upload' | 'preview' | 'results'
+  >('upload');
 
   // Define role categories based on clarified requirements
   const CSC_INTERNAL_ROLES = ['HHRMD', 'HRMO', 'DO', 'PO', 'CSCS']; // Must be from CSC only
@@ -455,6 +494,200 @@ export default function UserManagementPage() {
     await fetchUsers();
   };
 
+  // ---- Bulk Upload Parser ----
+  const parseMdFile = (file: File): Promise<typeof bulkPreview> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const text = e.target?.result as string;
+          const rows = parseMdTable(text);
+          resolve(rows);
+        } catch (err) {
+          reject(err);
+        }
+      };
+      reader.onerror = () => reject(new Error('Failed to read file.'));
+      reader.readAsText(file);
+    });
+  };
+
+  const parseMdTable = (
+    text: string
+  ): {
+    name: string;
+    username: string;
+    password: string;
+    email: string;
+    phoneNumber: string;
+    institutionName: string;
+    role: string;
+  }[] => {
+    const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
+
+    // Find the header row (first row containing "Full Name" or "name")
+    let headerIdx = -1;
+    for (let i = 0; i < lines.length; i++) {
+      if (
+        lines[i].includes('Full Name') ||
+        lines[i].includes('| Name |') ||
+        lines[i].includes('|name|')
+      ) {
+        headerIdx = i;
+        break;
+      }
+      // Also match a generic table header: | Timestamp | Full Name | ...
+      if (
+        lines[i].startsWith('|') &&
+        lines[i].toLowerCase().includes('name') &&
+        lines[i].toLowerCase().includes('username')
+      ) {
+        headerIdx = i;
+        break;
+      }
+    }
+
+    if (headerIdx === -1) {
+      throw new Error(
+        'Could not find table header. Expected columns: Timestamp, Full Name, Username, Password, Email, Phone, Institution, Role, Status'
+      );
+    }
+
+    // Parse header to find column indices
+    const headerCells = lines[headerIdx]
+      .split('|')
+      .map((c) => c.trim().toLowerCase());
+
+    const colName = headerCells.findIndex(
+      (c) => c === 'full name' || c === 'name'
+    );
+    const colUsername = headerCells.findIndex(
+      (c) => c === 'username'
+    );
+    const colPassword = headerCells.findIndex(
+      (c) => c === 'password'
+    );
+    const colEmail = headerCells.findIndex((c) => c === 'email');
+    const colPhone = headerCells.findIndex(
+      (c) => c === 'phone' || c === 'phone number'
+    );
+    const colInstitution = headerCells.findIndex(
+      (c) => c === 'institution'
+    );
+    const colRole = headerCells.findIndex((c) => c === 'role');
+
+    if (colName === -1 || colUsername === -1 || colPassword === -1) {
+      throw new Error(
+        'Table must have at least "Full Name", "Username", and "Password" columns.'
+      );
+    }
+
+    // Skip header row and separator row (---|---|---)
+    const dataStart = headerIdx + 1;
+    const dataLines: string[] = [];
+    for (let i = dataStart; i < lines.length; i++) {
+      // Skip separator lines (contain only dashes and pipes)
+      if (/^[\|\s\-:]+$/.test(lines[i])) continue;
+      if (lines[i].startsWith('|')) {
+        dataLines.push(lines[i]);
+      }
+    }
+
+    return dataLines.map((line) => {
+      const cells = line.split('|').map((c) => c.trim());
+      return {
+        name: cells[colName] || '',
+        username: cells[colUsername] || '',
+        password: cells[colPassword] || '',
+        email: colEmail >= 0 ? (cells[colEmail] || '') : '',
+        phoneNumber: colPhone >= 0 ? (cells[colPhone] || '') : '',
+        institutionName: colInstitution >= 0 ? (cells[colInstitution] || '') : '',
+        role: colRole >= 0 ? (cells[colRole] || '') : '',
+      };
+    }).filter((row) => row.name && row.username);
+  };
+
+  // Handle file selection
+  const handleBulkFileChange = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setBulkFile(file);
+
+    try {
+      const parsed = await parseMdFile(file);
+      setBulkPreview(parsed);
+      setBulkUploadStep('preview');
+    } catch (err: any) {
+      toast({
+        title: 'Parse Error',
+        description: err.message || 'Could not parse the .md file.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // Submit bulk users
+  const handleBulkSubmit = async () => {
+    if (bulkPreview.length === 0) return;
+    setIsBulkSubmitting(true);
+    try {
+      const response = await apiClient.bulkCreateUsers(bulkPreview);
+      if (!response.success) {
+        throw new Error(response.message || 'Bulk creation failed');
+      }
+      setBulkResults(response.data!);
+      setBulkUploadStep('results');
+      await fetchUsers();
+    } catch (err: any) {
+      toast({
+        title: 'Bulk Upload Failed',
+        description: err.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsBulkSubmitting(false);
+    }
+  };
+
+  // Download all users as .md file
+  const handleDownloadMd = () => {
+    const header =
+      '| Full Name | Username | Password | Email | Phone | Institution | Role |';
+    const separator =
+      '|---|---|---|---|---|---|---|';
+    const rows = users
+      .filter((u) => u.name && u.username)
+      .map((u) => {
+        const passwordPlaceholder = 'ChangeMe@123';
+        return `| ${u.name} | ${u.username} | ${passwordPlaceholder} | ${u.email || ''} | ${u.phoneNumber || ''} | ${u.institution || ''} | ${u.role || ''} |`;
+      });
+    const content = [header, separator, ...rows].join('\n');
+    const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'users-export.md';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast({
+      title: 'Download Complete',
+      description: `${users.length} users exported to users-export.md`,
+    });
+  };
+
+  // Reset bulk upload
+  const resetBulkUpload = () => {
+    setBulkFile(null);
+    setBulkPreview([]);
+    setBulkResults(null);
+    setBulkUploadStep('upload');
+    setIsBulkUploadOpen(false);
+  };
+
   const filteredUsers = users.filter(
     (user) =>
       user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -483,9 +716,23 @@ export default function UserManagementPage() {
           title="User Management"
           description="Create, update, and manage user accounts and access levels."
           actions={
-            <Button onClick={openCreateDialog}>
-              <PlusCircle className="mr-2 h-4 w-4" /> Add New User
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={handleDownloadMd}>
+                <Download className="mr-2 h-4 w-4" /> Download .md
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  resetBulkUpload();
+                  setIsBulkUploadOpen(true);
+                }}
+              >
+                <Upload className="mr-2 h-4 w-4" /> Bulk Upload
+              </Button>
+              <Button onClick={openCreateDialog}>
+                <PlusCircle className="mr-2 h-4 w-4" /> Add New User
+              </Button>
+            </div>
           }
         />
         <div className="flex justify-end mb-4">
@@ -1077,6 +1324,219 @@ export default function UserManagementPage() {
               >
                 I&apos;ve copied it
               </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Bulk Upload Dialog */}
+        <Dialog open={isBulkUploadOpen} onOpenChange={setIsBulkUploadOpen}>
+          <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
+            <DialogHeader className="flex-shrink-0">
+              <DialogTitle>Bulk Upload Users</DialogTitle>
+              <DialogDescription>
+                Upload a .md file containing user data in table format.
+              </DialogDescription>
+            </DialogHeader>
+
+            {bulkUploadStep === 'upload' && (
+              <div className="space-y-4 py-4">
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                  <FileText className="mx-auto h-12 w-12 text-gray-400" />
+                  <h3 className="mt-2 text-sm font-semibold text-gray-900">
+                    Upload a .md file
+                  </h3>
+                  <p className="mt-1 text-xs text-gray-500">
+                    The file must contain a markdown table with columns:{' '}
+                    <strong>Full Name, Username, Password, Email, Phone,
+                    Institution, Role</strong> (Timestamp and Status are
+                    optional).
+                  </p>
+                  <div className="mt-4 flex justify-center">
+                    <label
+                      htmlFor="bulk-md-upload"
+                      className="cursor-pointer rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
+                    >
+                      <Upload className="inline-block mr-2 h-4 w-4" />
+                      Choose File
+                      <input
+                        id="bulk-md-upload"
+                        type="file"
+                        accept=".md,.markdown"
+                        className="sr-only"
+                        onChange={handleBulkFileChange}
+                      />
+                    </label>
+                  </div>
+                </div>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
+                  <p className="font-medium mb-1">Required Format:</p>
+                  <code className="text-xs block whitespace-pre">
+{`| Full Name | Username | Password | Email | Phone | Institution | Role |
+|---|---|---|---|---|---|---|
+| Juma Ali | jali | Temp@123 | jali@smz.go.tz | 0777123456 | WIZARA YA AFYA | HRO |`}
+                  </code>
+                </div>
+              </div>
+            )}
+
+            {bulkUploadStep === 'preview' && (
+              <div className="space-y-4 flex-1 flex flex-col min-h-0">
+                <div className="flex items-center justify-between flex-shrink-0">
+                  <p className="text-sm text-gray-600">
+                    {bulkPreview.length} user(s) found in{' '}
+                    <strong>{bulkFile?.name}</strong>
+                  </p>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setBulkUploadStep('upload');
+                      setBulkFile(null);
+                      setBulkPreview([]);
+                    }}
+                  >
+                    <X className="h-4 w-4 mr-1" /> Change file
+                  </Button>
+                </div>
+                <div className="flex-1 overflow-y-auto border rounded-lg">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>#</TableHead>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Username</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Phone</TableHead>
+                        <TableHead>Institution</TableHead>
+                        <TableHead>Role</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {bulkPreview.map((row, idx) => (
+                        <TableRow key={idx}>
+                          <TableCell>{idx + 1}</TableCell>
+                          <TableCell>{row.name}</TableCell>
+                          <TableCell>{row.username}</TableCell>
+                          <TableCell>{row.email}</TableCell>
+                          <TableCell>{row.phoneNumber}</TableCell>
+                          <TableCell className="max-w-[200px] truncate" title={row.institutionName}>
+                            {row.institutionName}
+                          </TableCell>
+                          <TableCell>{row.role}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            )}
+
+            {bulkUploadStep === 'results' && bulkResults && (
+              <div className="space-y-4 flex-1 flex flex-col min-h-0">
+                <div className="grid grid-cols-3 gap-4 flex-shrink-0">
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+                    <CheckCircle2 className="mx-auto h-8 w-8 text-green-600" />
+                    <p className="mt-1 text-2xl font-bold text-green-700">
+                      {bulkResults.created}
+                    </p>
+                    <p className="text-xs text-green-600">Created</p>
+                  </div>
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
+                    <SkipForward className="mx-auto h-8 w-8 text-yellow-600" />
+                    <p className="mt-1 text-2xl font-bold text-yellow-700">
+                      {bulkResults.skipped}
+                    </p>
+                    <p className="text-xs text-yellow-600">Skipped</p>
+                  </div>
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
+                    <AlertCircle className="mx-auto h-8 w-8 text-red-600" />
+                    <p className="mt-1 text-2xl font-bold text-red-700">
+                      {bulkResults.failed}
+                    </p>
+                    <p className="text-xs text-red-600">Failed</p>
+                  </div>
+                </div>
+                {bulkResults.results.filter(
+                  (r) => r.status !== 'created'
+                ).length > 0 && (
+                  <div className="flex-1 overflow-y-auto border rounded-lg">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Username</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Reason</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {bulkResults.results
+                          .filter((r) => r.status !== 'created')
+                          .map((r) => (
+                            <TableRow key={r.index}>
+                              <TableCell>{r.name}</TableCell>
+                              <TableCell>{r.username}</TableCell>
+                              <TableCell>
+                                <Badge
+                                  variant={
+                                    r.status === 'skipped'
+                                      ? 'secondary'
+                                      : 'destructive'
+                                  }
+                                >
+                                  {r.status === 'skipped'
+                                    ? 'Skipped'
+                                    : 'Error'}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-sm text-gray-600">
+                                {r.error}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <DialogFooter className="flex-shrink-0 pt-4 border-t">
+              {bulkUploadStep === 'upload' && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsBulkUploadOpen(false)}
+                >
+                  Cancel
+                </Button>
+              )}
+              {bulkUploadStep === 'preview' && (
+                <>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsBulkUploadOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={handleBulkSubmit}
+                    disabled={isBulkSubmitting}
+                  >
+                    {isBulkSubmitting && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    Create {bulkPreview.length} User(s)
+                  </Button>
+                </>
+              )}
+              {bulkUploadStep === 'results' && (
+                <Button type="button" onClick={resetBulkUpload}>
+                  Done
+                </Button>
+              )}
             </DialogFooter>
           </DialogContent>
         </Dialog>

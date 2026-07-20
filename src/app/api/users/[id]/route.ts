@@ -4,6 +4,8 @@ import { z } from 'zod';
 import { logUserAction, getClientIp } from '@/lib/audit-logger';
 import { wrapHandler } from '@/lib/error-handler';
 import { withAuth, requireReauth } from '@/lib/api-auth';
+import { terminateAllUserSessions } from '@/lib/session-manager';
+import { authLogger } from '@/lib/logger';
 
 // Safe fields that any admin can update on another user's profile.
 const profileUpdateSchema = z.object({
@@ -142,6 +144,22 @@ export const PUT = wrapHandler(withAuth(async (
         institutionChanged,
       },
     }).catch(() => {});
+
+    // SECURITY (Req 2.5): invalidate the target user's sessions when their
+    // role or institution actually changes, so a demoted/transferred user
+    // cannot keep using their old privileges on an existing session. The
+    // actor (admin) is a different user from the target (self-role-change is
+    // blocked above), so there is no current session to preserve — terminate
+    // ALL of the target's sessions and force a fresh re-authentication that
+    // picks up the new role/institution. Mirrors the password-change flow in
+    // src/app/api/auth/change-password/route.ts.
+    if (roleChanged || institutionChanged) {
+      const terminated = await terminateAllUserSessions(id);
+      authLogger.info(
+        { targetUserId: id, terminated, roleChanged, institutionChanged },
+        'Terminated all sessions for user after role/institution change'
+      );
+    }
 
     return NextResponse.json(response);
   } catch (error) {

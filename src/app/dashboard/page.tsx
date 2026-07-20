@@ -17,6 +17,10 @@ import {
   UserX,
   CalendarPlus,
   Activity,
+  Building,
+  Download,
+  Settings,
+  Trash2,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -279,6 +283,110 @@ export default function DashboardPage() {
 
     loadAllData();
   }, [isAuthLoading, user, role]);
+
+  // Admin users see a simplified dashboard focused on system administration
+  if (role === ROLES.ADMIN) {
+    return (
+      <div className="flex-1 space-y-4">
+        <PageHeader
+          title="Admin Dashboard"
+          description="System administration and management overview."
+        />
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <Link href="/dashboard/admin/users">
+            <Card className="hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  User Management
+                </CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <p className="text-xs text-muted-foreground">
+                  Manage user accounts, roles, and permissions
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+          <Link href="/dashboard/admin/institutions">
+            <Card className="hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Institution Management
+                </CardTitle>
+                <Building className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <p className="text-xs text-muted-foreground">
+                  Create and manage institutions
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+          <Link href="/dashboard/admin/fetch-data">
+            <Card className="hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  HRIMS Data Sync
+                </CardTitle>
+                <Download className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <p className="text-xs text-muted-foreground">
+                  Fetch and sync employee data from HRIMS
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+          <Link href="/dashboard/admin/audit-trail">
+            <Card className="hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Audit Trail
+                </CardTitle>
+                <ShieldAlert className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <p className="text-xs text-muted-foreground">
+                  Monitor security events and access attempts
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+          <Link href="/dashboard/admin/session-cleanup">
+            <Card className="hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Session Management
+                </CardTitle>
+                <Trash2 className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <p className="text-xs text-muted-foreground">
+                  View and cleanup expired user sessions
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+          <Link href="/dashboard/admin/hrims-settings">
+            <Card className="hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  HRIMS Settings
+                </CardTitle>
+                <Settings className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <p className="text-xs text-muted-foreground">
+                  Configure HRIMS connection settings
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   if (
     isAuthLoading ||

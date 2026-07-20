@@ -1,12 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
+import { z } from 'zod';
 import { logEmployeeAction, getClientIp } from '@/lib/audit-logger';
 import { logger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
 import { withAuth } from '@/lib/api-auth';
 
 const prisma = new PrismaClient();
+
+// SECURITY (Req 6.8): allowed values for enumerated text fields. The DB
+// columns are free-text Strings, so without these checks an HRO could submit
+// arbitrary/garbage values for gender, appointmentType, and contractType.
+// Mirrors the bulk-upload gender validation; appointmentType/contractType are
+// optional (may be omitted or empty), so the enum is only enforced when a
+// non-empty value is supplied.
+const GENDER_VALUES = ['Male', 'Female'] as const;
+const APPOINTMENT_TYPE_VALUES = ['Permanent', 'Contract', 'Temporary', 'Casual'] as const;
+const CONTRACT_TYPE_VALUES = ['Full-time', 'Part-time'] as const;
 
 export const POST = wrapHandler(
   withAuth(async (request: NextRequest | Request, { auth }) => {
@@ -63,6 +74,36 @@ export const POST = wrapHandler(
       },
       { status: 400 }
     );
+  }
+
+  // SECURITY (Req 6.8): enforce enumerated values for gender and the
+  // optional appointment/contract type fields. Empty/null optional values
+  // are treated as "not provided" and skipped; any supplied value must match
+  // the allowed set.
+  const genderResult = z.enum(GENDER_VALUES).safeParse(gender);
+  if (!genderResult.success) {
+    return NextResponse.json(
+      { success: false, error: `Gender must be one of: ${GENDER_VALUES.join(', ')}` },
+      { status: 400 }
+    );
+  }
+  if (appointmentType != null && appointmentType !== '') {
+    const r = z.enum(APPOINTMENT_TYPE_VALUES).safeParse(appointmentType);
+    if (!r.success) {
+      return NextResponse.json(
+        { success: false, error: `Appointment type must be one of: ${APPOINTMENT_TYPE_VALUES.join(', ')}` },
+        { status: 400 }
+      );
+    }
+  }
+  if (contractType != null && contractType !== '') {
+    const r = z.enum(CONTRACT_TYPE_VALUES).safeParse(contractType);
+    if (!r.success) {
+      return NextResponse.json(
+        { success: false, error: `Contract type must be one of: ${CONTRACT_TYPE_VALUES.join(', ')}` },
+        { status: 400 }
+      );
+    }
   }
 
   // Phone number format validation (if provided)

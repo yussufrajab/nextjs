@@ -10,6 +10,7 @@ import { hrimsLogger } from '@/lib/logger';
 import {
   getJobStatus,
   getQueueEvents,
+  canAccessJob,
   HRIMS_SYNC_QUEUE_NAME,
 } from '@/lib/jobs/hrims-sync-queue';
 import { verifyAuth } from '@/lib/api-auth';
@@ -50,6 +51,17 @@ export const GET = async (request: NextRequest) => {
     return NextResponse.json(
       { success: false, message: 'Job not found' },
       { status: 404 }
+    );
+  }
+
+  // SECURITY (Req 16.2): owner-bound access — only the job's initiator (or a
+  // user in the synced institution) may stream its progress; Admins may read
+  // any job. Checked before opening the SSE stream so an unauthorized caller
+  // gets a 403 instead of live progress events.
+  if (!canAccessJob(jobStatus.data, authResult.context!)) {
+    return NextResponse.json(
+      { success: false, message: 'Forbidden: you do not have access to this job' },
+      { status: 403 }
     );
   }
 

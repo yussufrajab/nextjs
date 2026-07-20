@@ -4,6 +4,13 @@ import { logger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
 import { withAuth } from '@/lib/api-auth';
 import { shouldApplyInstitutionFilter, isCSCRole } from '@/lib/role-utils';
+import {
+  logAuditEvent,
+  AuditEventType,
+  AuditEventCategory,
+  AuditSeverity,
+  getClientIp,
+} from '@/lib/audit-logger';
 
 interface ReportOutput {
   data: any[];
@@ -1326,6 +1333,32 @@ export const GET = wrapHandler(withAuth(async (req: Request, { auth }) => {
 
     // Format the report based on type
     const formattedReport = formatReportData(reportType, reportData);
+
+    // SECURITY (Req 12.5 / 27.2): audit report access. Reports aggregate
+    // sensitive HR data across employees/institutions, so every read is
+    // recorded with the actor, role, institution scope, report type, and
+    // row count for SOC review. Fail-safe: an audit write failure does not
+    // block the report from being returned.
+    await logAuditEvent({
+      eventType: AuditEventType.REPORT_VIEWED,
+      eventCategory: AuditEventCategory.ACCESS,
+      severity: AuditSeverity.INFO,
+      userId: auth.userId,
+      username: auth.username,
+      userRole: auth.role,
+      ipAddress: getClientIp(req.headers),
+      deviceInfo: JSON.parse(req.headers.get('x-device-info') || 'null'),
+      attemptedRoute: '/api/reports',
+      requestMethod: 'GET',
+      isAuthenticated: true,
+      additionalData: {
+        reportType,
+        fromDate,
+        toDate,
+        institutionId: auth.institutionId,
+        count: reportData.length,
+      },
+    }).catch(() => {});
 
     return NextResponse.json({
       success: true,

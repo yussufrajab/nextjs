@@ -11,8 +11,8 @@ export interface RoutePermission {
  * Canonical route permission configuration.
  * This is the SINGLE SOURCE OF TRUTH for RBAC route permissions.
  *
- * Both middleware.ts and route-permissions.ts import from this file.
- * When adding or changing permissions, update ONLY this file.
+ * Both the Next.js proxy (src/proxy.ts) and route-permissions.ts import from
+ * this file. When adding or changing permissions, update ONLY this file.
  */
 export const ROUTE_PERMISSIONS: RoutePermission[] = [
   // Admin-only routes

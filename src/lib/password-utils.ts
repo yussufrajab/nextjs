@@ -4,7 +4,7 @@ import { randomInt } from 'crypto';
 
 // Constants
 export const PASSWORD_MIN_LENGTH = 8;
-export const PASSWORD_HISTORY_LENGTH = 3;
+export const PASSWORD_HISTORY_LENGTH = 5;
 export const TEMPORARY_PASSWORD_VALIDITY_DAYS = 7;
 export const MAX_PASSWORD_CHANGE_ATTEMPTS = 5;
 export const PASSWORD_LOCKOUT_DURATION_MINUTES = 30;
@@ -24,7 +24,7 @@ export interface PasswordStrengthResult {
 
 /**
  * Validate password complexity requirements
- * Must be at least 8 characters and contain at least ONE of:
+ * Must be at least 8 characters and contain ALL FOUR of:
  * - Uppercase letter (A-Z)
  * - Lowercase letter (a-z)
  * - Number (0-9)
@@ -40,9 +40,9 @@ export function validatePasswordComplexity(password: string): boolean {
   const hasNumber = /\d/.test(password);
   const hasSpecial = /[@$!%*?&#^()_+\-=\[\]{}|;:,.<>?]/.test(password);
 
-  // SECURITY: Require at least 2 character classes (not just 1)
+  // SECURITY: Require all four character classes
   const classCount = [hasUppercase, hasLowercase, hasNumber, hasSpecial].filter(Boolean).length;
-  return classCount >= 2;
+  return classCount >= 4;
 }
 
 /**

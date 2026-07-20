@@ -14,6 +14,7 @@ import { logger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
 import { verifyAuth } from '@/lib/api-auth';
 import { shouldApplyInstitutionFilter } from '@/lib/role-utils';
+import { isAllowedStatusTransition } from '@/lib/request-workflow';
 
 const updateSchema = z.object({
   status: z.string().optional(),
@@ -71,6 +72,22 @@ const handleUpdate = wrapHandler(async (
         { status: 403 }
       );
     }
+  }
+
+  // SECURITY (Req 8.1/8.2/18.1): validate status transition. Prevents a
+  // client from jumping an arbitrary status (e.g. re-approving an already
+  // Commission-concluded request, or skipping the HRRP stage). Mirrors the
+  // FSM in promotions/[id]/route.ts, extended to handle the variable
+  // HHRMD/HRMO forward status.
+  if (
+    validatedData.status &&
+    existingRequest.status !== validatedData.status &&
+    !isAllowedStatusTransition(existingRequest.status, validatedData.status)
+  ) {
+    return NextResponse.json(
+      { success: false, message: `Invalid status transition from "${existingRequest.status}" to "${validatedData.status}"` },
+      { status: 400 }
+    );
   }
 
   // SECURITY: Enforce rejection reason for all rejections

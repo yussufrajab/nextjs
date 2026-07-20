@@ -90,6 +90,26 @@ export const PUT = wrapHandler(async (
       { success: false, message: 'Access denied: insufficient permissions to update complaints' },
       { status: 403 }
     );
+  } else {
+    // Officer role (DO, HHRMD, Admin, CSCS, HRMO).
+    // SECURITY (Req 9.7): only the officer role assigned to this complaint
+    // (or an Admin override) may act on it — not just any officer. Without
+    // this, any DO/HHRMD/CSCS/HRMO could resolve a complaint routed to a
+    // different officer role. When assignedOfficerRole is unset, any officer
+    // may still act (backward-compatible with legacy/unassigned rows).
+    if (
+      existingComplaint.assignedOfficerRole &&
+      userRole !== existingComplaint.assignedOfficerRole &&
+      userRole !== 'Admin'
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: `Access denied: this complaint is assigned to the ${existingComplaint.assignedOfficerRole} officer`,
+        },
+        { status: 403 }
+      );
+    }
   }
 
   // SECURITY: Status transition validation (only for officer roles)

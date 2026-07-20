@@ -568,6 +568,37 @@ class ApiClient {
     });
   }
 
+  async bulkCreateUsers(
+    users: Array<{
+      name: string;
+      username: string;
+      password: string;
+      email: string;
+      phoneNumber: string;
+      institutionName: string;
+      role: string;
+    }>
+  ): Promise<
+    ApiResponse<{
+      total: number;
+      created: number;
+      skipped: number;
+      failed: number;
+      results: Array<{
+        index: number;
+        name: string;
+        username: string;
+        status: 'created' | 'skipped' | 'error';
+        error?: string;
+      }>;
+    }>
+  > {
+    return this.request('/users/bulk', {
+      method: 'POST',
+      body: JSON.stringify(users),
+    });
+  }
+
   async updateUser(
     id: string,
     user: Partial<User>

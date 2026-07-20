@@ -1,14 +1,34 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import {
+  verifySessionToken,
+  validateSession,
+  SESSION_COOKIE_NAME_PROD,
+  SESSION_COOKIE_NAME_DEV,
+} from '@/lib/session-manager';
 
 /**
- * Next.js Middleware for Authentication and Authorization
+ * Next.js Proxy (middleware) for Authentication and Authorization
  *
- * This middleware protects dashboard routes by:
- * 1. Checking if user is authenticated
- * 2. Validating user role has permission to access the route
- * 3. Redirecting unauthorized users appropriately
- * 4. Logging all unauthorized access attempts for security auditing
+ * This proxy protects dashboard routes by:
+ * 1. Verifying the HMAC-signed `session` cookie (cryptographically unforgeable)
+ * 2. Validating that session against the DB Session table (revocation, expiry,
+ *    idle timeout) and loading the authoritative User role from the DB
+ * 3. Validating the DB-sourced role has permission to access the route
+ * 4. Redirecting unauthorized users appropriately
+ * 5. Logging all unauthorized access attempts for security auditing
+ *
+ * SECURITY (Req 2.6 / 3.5): the role used for page gating is read from the
+ * DB-validated session, NOT from the client-controlled, forgeable
+ * `auth-storage` cookie. The `session` cookie is HttpOnly + HMAC-signed with
+ * `SESSION_SECRET`, so an attacker cannot forge a role to reach a dashboard
+ * page they are not entitled to.
+ *
+ * This proxy runs on the Node.js runtime (the Next.js 16 `proxy` file is
+ * always Node.js — the edge runtime is not supported for it) so it can import
+ * `@/lib` helpers and query the database via Prisma on every dashboard
+ * navigation. The DB hit is the price of server-side session validation on
+ * every request — the alternative (trusting a client cookie) is insecure.
  */
 
 // Audit logging - store data to be logged after redirect
@@ -44,7 +64,9 @@ function logUnauthorizedAttempt(
   );
 }
 
-// Import types - using inline types since middleware can't import from @/lib
+// Local Role union used for route gating. The canonical source is
+// `src/lib/route-permissions-config.ts` (single source of truth); this inline
+// copy stays in sync with it — see the note on ROUTE_PERMISSIONS below.
 type Role =
   | 'HRO'
   | 'HHRMD'
@@ -65,11 +87,10 @@ interface RoutePermission {
 /**
  * Route permission configuration.
  * This is a copy of the canonical source in src/lib/route-permissions-config.ts.
- * Middleware cannot import from @/lib due to Next.js edge runtime constraints,
- * so this list must be kept in sync manually.
- *
- * When changing permissions, update BOTH this file AND route-permissions-config.ts.
- * A CI test verifies they stay in sync.
+ * It is duplicated here (rather than imported) to keep the middleware's route
+ * gating explicit and to match the existing CI sync test; the two must be kept
+ * in sync. When changing permissions, update BOTH this file AND
+ * route-permissions-config.ts. A CI test verifies they stay in sync.
  */
 const ROUTE_PERMISSIONS: RoutePermission[] = [
   // Admin-only routes
@@ -191,43 +212,84 @@ function canAccessRoute(pathname: string, userRole: Role | null): boolean {
 }
 
 /**
- * Parse and validate the auth-storage cookie
- * Supports both the new server-set format and the legacy client-set format
+ * Read the HMAC-signed `session` cookie from the request.
+ *
+ * The cookie name depends on NODE_ENV: production uses the `__Host-`-prefixed
+ * name (browser-enforced Secure/Path=/ invariant), development uses the plain
+ * `session` name (localhost is HTTP, so the `__Host-` prefix is unusable). We
+ * try the production name first and fall back to the development name so the
+ * same middleware code works in both environments.
  */
-function parseAuthStorage(cookieValue: string | undefined): {
-  role: Role | null;
-  isAuthenticated: boolean;
-  userId: string | null;
-} {
-  if (!cookieValue) {
-    return { role: null, isAuthenticated: false, userId: null };
+function readSignedSessionCookie(request: NextRequest): string | undefined {
+  return (
+    request.cookies.get(SESSION_COOKIE_NAME_PROD)?.value ??
+    request.cookies.get(SESSION_COOKIE_NAME_DEV)?.value
+  );
+}
+
+/**
+ * Validate the request's `session` cookie end-to-end and return the
+ * authoritative user identity/role from the database.
+ *
+ * Steps (mirrors `verifyAuth` in `src/lib/api-auth.ts`, minus the IP/UA
+ * binding which is enforced at the API layer where the real client IP is
+ * reliably available):
+ *   1. Read the HMAC-signed `session` cookie.
+ *   2. Verify the HMAC signature + embedded expiry (`verifySessionToken`) —
+ *      rejects forged or expired cookies pre-DB.
+ *   3. Look the raw token up in the DB Session table (`validateSession`) —
+ *      enforces absolute expiry, idle timeout, and revocation (row must
+ *      exist), and refreshes `lastActivity`.
+ *   4. Confirm the bound User exists and is active; return its role.
+ *
+ * Returns `{ role, userId, username }` on success, or `null` when the request
+ * is unauthenticated / the session is invalid. The caller decides the redirect
+ * target.
+ */
+async function validateRequestSession(
+  request: NextRequest
+): Promise<{
+  role: Role;
+  userId: string;
+  username: string;
+} | null> {
+  const signedToken = readSignedSessionCookie(request);
+  if (!signedToken) {
+    return null;
   }
 
+  // 2. HMAC + embedded-expiry verification (constant-time signature compare).
+  const sessionToken = verifySessionToken(signedToken);
+  if (!sessionToken) {
+    return null;
+  }
+
+  // 3. DB validation: revocation, absolute expiry, idle timeout.
+  let session: Awaited<ReturnType<typeof validateSession>>;
   try {
-    const decoded = decodeURIComponent(cookieValue);
-    const authData = JSON.parse(decoded);
-
-    // New server-set format: { userId, role, username, institutionId, isAuthenticated }
-    if (authData.userId && authData.role && !authData.state) {
-      return {
-        role: authData.role as Role,
-        isAuthenticated: authData.isAuthenticated === true,
-        userId: authData.userId,
-      };
-    }
-
-    // Legacy client-set format: { state: { user: { id, role }, role, isAuthenticated } }
-    const state = authData.state || authData;
-
-    return {
-      role: state.role || state.user?.role || null,
-      isAuthenticated: state.isAuthenticated || false,
-      userId: state.user?.id || null,
-    };
+    session = await validateSession(sessionToken);
   } catch (error) {
-    console.error('Failed to parse auth-storage cookie:', error);
-    return { role: null, isAuthenticated: false, userId: null };
+    console.error('[Middleware] Session validation failed:', error);
+    return null;
   }
+
+  if (!session) {
+    return null;
+  }
+
+  // 4. The session row is the source of truth for identity. Load the
+  //    authoritative role/active state from the bound User — never trust a
+  //    client-supplied claim.
+  const user = session.User;
+  if (!user || !user.active) {
+    return null;
+  }
+
+  return {
+    role: user.role as Role,
+    userId: user.id,
+    username: user.username,
+  };
 }
 
 // Maximum request body size (10MB)
@@ -242,10 +304,10 @@ const MAX_BODY_SIZE = 10 * 1024 * 1024;
  * `Content-Security-Policy-Report-Only`. The browser reports violations to
  * /api/csp-report but does NOT block them, so the running UI is unaffected.
  *
- * Middleware runs on the Next.js edge runtime, which cannot import from `@/lib`
- * and does not provide Node's `crypto.randomBytes`/`Buffer`. We therefore
- * generate the nonce with the Web Crypto API (`crypto.getRandomValues`) and
- * base64-encode it with `btoa` — both available on the edge runtime.
+ * The proxy runs on the Node.js runtime. We still generate the nonce with the
+ * Web Crypto API (`crypto.getRandomValues`) and base64-encode it with `btoa`
+ * — both are globally available in Node.js, and this keeps the CSP helper
+ * independent of any specific runtime.
  */
 function generateNonce(): string {
   const bytes = new Uint8Array(16);
@@ -285,7 +347,7 @@ function withCspReportOnly(response: NextResponse): NextResponse {
   return response;
 }
 
-export function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Check Content-Length for API routes to prevent oversized payloads
@@ -323,27 +385,10 @@ export function middleware(request: NextRequest) {
 
   // Protect all dashboard routes
   if (pathname.startsWith('/dashboard')) {
-    // Get auth state from cookie (Zustand persist stores to localStorage,
-    // but we also set a cookie for middleware)
-    const authCookie = request.cookies.get('auth-storage')?.value;
-    const sessionCookie = request.cookies.get('session')?.value;
-    const { role, isAuthenticated, userId } = parseAuthStorage(authCookie);
-
-    // After the DB-session rollout, a valid login always sets a `session`
-    // cookie. A stale auth-storage-only cookie (from before the rollout) must
-    // not reach a dashboard page — require the session cookie too.
-    if (!sessionCookie) {
-      const loginUrl = new URL('/login', request.url);
-      loginUrl.searchParams.set('from', pathname);
-      return withCspReportOnly(NextResponse.redirect(loginUrl));
-    }
-
-    console.log('[Middleware] Checking access:', {
-      pathname,
-      role,
-      isAuthenticated,
-      userId,
-    });
+    // SECURITY (Req 2.6 / 3.5): validate the HMAC-signed `session` cookie
+    // against the database and read the role from the DB User row — never from
+    // the client-controlled `auth-storage` cookie, which is forgeable.
+    const session = await validateRequestSession(request);
 
     // Get client info for audit logging
     const ipAddress =
@@ -352,17 +397,16 @@ export function middleware(request: NextRequest) {
       null;
     const userAgent = request.headers.get('user-agent') || null;
 
-    // Check authentication
-    if (!isAuthenticated || !userId) {
-      console.log('[Middleware] User not authenticated, redirecting to login');
+    // Unauthenticated / invalid session → redirect to login.
+    if (!session) {
+      console.log('[Middleware] Invalid or missing session, redirecting to login');
 
-      // Log unauthorized access attempt (unauthenticated)
       logUnauthorizedAttempt(request, {
         userId: null,
         username: null,
         userRole: null,
         attemptedRoute: pathname,
-        blockReason: 'User not authenticated',
+        blockReason: 'Invalid or missing session cookie',
         ipAddress,
         userAgent,
         isAuthenticated: false,
@@ -375,7 +419,15 @@ export function middleware(request: NextRequest) {
       return withCspReportOnly(NextResponse.redirect(loginUrl));
     }
 
-    // Check authorization for the specific route
+    const { role, userId, username } = session;
+
+    console.log('[Middleware] Checking access:', {
+      pathname,
+      role,
+      userId,
+    });
+
+    // Check authorization for the specific route using the DB-sourced role
     const hasAccess = canAccessRoute(pathname, role);
 
     if (!hasAccess) {
@@ -392,7 +444,7 @@ export function middleware(request: NextRequest) {
       // Prepare audit data
       const auditData = {
         userId,
-        username: role, // We only have role from cookie, not username
+        username,
         userRole: role || undefined,
         attemptedRoute: pathname,
         blockReason: `Role "${role}" does not have permission to access "${pathname}"`,
@@ -429,7 +481,11 @@ export function middleware(request: NextRequest) {
   return withCspReportOnly(NextResponse.next());
 }
 
-// Configure which paths the middleware should run on
+// Configure which paths the proxy should run on. The Next.js 16 `proxy` file
+// always runs on the Node.js runtime (the edge runtime is not supported for
+// it, and a `runtime` key here is rejected), which is what lets us import
+// `@/lib` helpers and query the DB via Prisma — required for server-side
+// session validation on every dashboard navigation (Req 2.6 / 3.5).
 export const config = {
   matcher: [
     /*

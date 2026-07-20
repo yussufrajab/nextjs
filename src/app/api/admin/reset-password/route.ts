@@ -57,7 +57,7 @@ export const POST = wrapHandler(withRateLimit(withAuth(async (request, { auth })
         {
           success: false,
           message:
-            'The provided password does not meet complexity requirements. Password must be at least 8 characters and contain at least one uppercase letter, lowercase letter, number, or special character.',
+            'The provided password does not meet complexity requirements. Password must be at least 8 characters and contain an uppercase letter, lowercase letter, number, and special character.',
         },
         { status: 400 }
       );

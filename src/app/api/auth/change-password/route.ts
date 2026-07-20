@@ -123,7 +123,7 @@ export const POST = wrapHandler(withRateLimit(async (request) => {
       return NextResponse.json(
         {
           success: false,
-          message: `Password must be at least ${PASSWORD_MIN_LENGTH} characters and contain at least one uppercase letter, lowercase letter, number, or special character.`,
+          message: `Password must be at least ${PASSWORD_MIN_LENGTH} characters and contain an uppercase letter, lowercase letter, number, and special character.`,
         },
         { status: 400 }
       );
@@ -204,7 +204,7 @@ export const POST = wrapHandler(withRateLimit(async (request) => {
     // Hash the new password
     const hashedPassword = await hashPassword(newPassword);
 
-    // Update password history (prepend current password, keep last 3)
+    // Update password history (prepend current password, keep last PASSWORD_HISTORY_LENGTH)
     const updatedHistory = [user.password, ...passwordHistory].slice(
       0,
       PASSWORD_HISTORY_LENGTH

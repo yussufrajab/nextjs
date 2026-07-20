@@ -55,6 +55,26 @@ export function sanitizeNotificationText(input: string): string {
 
 export async function createNotification(data: NotificationData) {
   try {
+    // SECURITY (Req 13.1): validate the recipient before insert. Only create
+    // notifications for users that exist AND are active. Without this, the
+    // sink accepts any userId — including deleted/deactivated users — so a
+    // locked-out or offboarded user could still receive "your request was
+    // approved" notifications, and bad recipients would only surface as a
+    // Notification→User FK error (P2003) in the catch block below. The
+    // createNotificationForRole path already filters on active: true; this
+    // brings the single-recipient path to the same bar.
+    const recipient = await db.user.findUnique({
+      where: { id: data.userId },
+      select: { id: true, active: true },
+    });
+    if (!recipient || !recipient.active) {
+      logger.warn(
+        { userId: data.userId, exists: !!recipient, active: recipient?.active ?? false },
+        'Skipping notification: recipient does not exist or is inactive'
+      );
+      return;
+    }
+
     const safeMessage = sanitizeNotificationText(data.message);
     await db.notification.create({
       data: {
