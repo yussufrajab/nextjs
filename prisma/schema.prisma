@@ -470,6 +470,7 @@ model User {
   ServiceExtensionRequest_hrrpReviewedByToUser                        ServiceExtensionRequest[] @relation("ServiceExtensionRequest_hrrpReviewedByToUser")
   Session                                                             Session[]
   MfaToken                                                            MfaToken[]
+  PasswordResetToken                                                  PasswordResetToken[]
   Employee                                                            Employee?                 @relation(fields: [employeeId], references: [id])
   Institution                                                         Institution               @relation(fields: [institutionId], references: [id])
 
@@ -522,5 +523,23 @@ model MfaToken {
 
   @@index([userId])
   @@index([token])
+  @@index([expiresAt])
+}
+
+model PasswordResetToken {
+  id           String    @id @default(cuid())
+  userId       String
+  tokenHash    String    @unique
+  email        String
+  attempts     Int       @default(0)
+  expiresAt    DateTime
+  usedAt       DateTime?
+  ipAddress    String?
+  userAgent    String?
+  createdAt    DateTime  @default(now())
+  User         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenHash])
   @@index([expiresAt])
 }
