@@ -46,6 +46,33 @@ import { format } from 'date-fns';
 import { clientLogger } from '@/lib/logger-client';
 const log = clientLogger.child({ component: 'audit-trail' });
 
+/**
+ * Today's date as `YYYY-MM-DD` in the VIEWER's local timezone (not UTC).
+ * Used for the default end of the audit date range so "today" is correct for
+ * users east of UTC (e.g. EAT/UTC+3), where `new Date().toISOString()` is still
+ * the previous calendar day in the early morning.
+ */
+function todayLocal(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+/**
+ * Convert a `YYYY-MM-DD` (local calendar day) value to an ISO timestamp at the
+ * START of that local day (00:00:00 local → UTC). Date-only strings parsed by
+ * `new Date(...)` are treated as UTC midnight, which would cut off the first
+ * hours of each local day for users east of UTC; appending `T00:00:00` makes
+ * the parser use local time, matching what the user sees on the calendar.
+ */
+function startOfDayIso(day: string): string {
+  return new Date(`${day}T00:00:00`).toISOString();
+}
+
+/** Convert a `YYYY-MM-DD` local day to the ISO timestamp at its END (23:59:59 local → UTC). */
+function endOfDayIso(day: string): string {
+  return new Date(`${day}T23:59:59`).toISOString();
+}
+
 interface AuditLog {
   id: string;
   eventType: string;
@@ -134,11 +161,14 @@ export default function AuditTrailPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [eventTypeFilter, setEventTypeFilter] = useState<string>('all');
+  // Default to the FULL audit history (no start bound) up to today. The
+  // previous default of "last 7 days" hid most activity events behind recent
+  // auth noise (logins/access-denied), making it look like activities weren't
+  // logged — an admin should see every event by default. `end` uses the LOCAL
+  // date so "today" is correct in the viewer's timezone.
   const [dateRange, setDateRange] = useState<{ start: string; end: string }>({
-    start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-      .toISOString()
-      .split('T')[0], // Last 7 days
-    end: new Date().toISOString().split('T')[0],
+    start: '',
+    end: todayLocal(),
   });
 
   // Pagination
@@ -158,12 +188,9 @@ export default function AuditTrailPage() {
       });
 
       if (dateRange.start)
-        params.append('startDate', new Date(dateRange.start).toISOString());
+        params.append('startDate', startOfDayIso(dateRange.start));
       if (dateRange.end)
-        params.append(
-          'endDate',
-          new Date(dateRange.end + 'T23:59:59').toISOString()
-        );
+        params.append('endDate', endOfDayIso(dateRange.end));
 if (categoryFilter && categoryFilter !== 'all')
         params.append('eventCategory', categoryFilter);
       if (eventTypeFilter && eventTypeFilter !== 'all')
@@ -203,12 +230,9 @@ if (categoryFilter && categoryFilter !== 'all')
       });
 
       if (dateRange.start)
-        params.append('startDate', new Date(dateRange.start).toISOString());
+        params.append('startDate', startOfDayIso(dateRange.start));
       if (dateRange.end)
-        params.append(
-          'endDate',
-          new Date(dateRange.end + 'T23:59:59').toISOString()
-        );
+        params.append('endDate', endOfDayIso(dateRange.end));
 
       const response = await fetch(`/api/audit/logs?${params.toString()}`);
       const data = await response.json();
@@ -241,12 +265,9 @@ if (categoryFilter && categoryFilter !== 'all')
       const params = new URLSearchParams({ limit: totalLogs.toString(), offset: '0' });
 
       if (dateRange.start)
-        params.append('startDate', new Date(dateRange.start).toISOString());
+        params.append('startDate', startOfDayIso(dateRange.start));
       if (dateRange.end)
-        params.append(
-          'endDate',
-          new Date(dateRange.end + 'T23:59:59').toISOString()
-        );
+        params.append('endDate', endOfDayIso(dateRange.end));
       if (categoryFilter && categoryFilter !== 'all')
         params.append('eventCategory', categoryFilter);
       if (eventTypeFilter && eventTypeFilter !== 'all')
@@ -500,6 +521,7 @@ if (categoryFilter && categoryFilter !== 'all')
                     <SelectItem value="EMPLOYEE_CREATED">Employee Created</SelectItem>
                     <SelectItem value="EMPLOYEE_UPDATED">Employee Updated</SelectItem>
                     <SelectItem value="EMPLOYEE_DELETED">Employee Deleted</SelectItem>
+                    <SelectItem value="EMPLOYEE_VIEWED">Employee Viewed</SelectItem>
                     <SelectItem value="USER_CREATED">User Created</SelectItem>
                     <SelectItem value="USER_UPDATED">User Updated</SelectItem>
                     <SelectItem value="USER_DELETED">User Deleted</SelectItem>
@@ -610,6 +632,7 @@ if (categoryFilter && categoryFilter !== 'all')
                             'REQUEST_UPDATED', 'REQUEST_WITHDRAWN',
                             'COMPLAINT_SUBMITTED', 'COMPLAINT_UPDATED', 'COMPLAINT_RESOLVED',
                             'EMPLOYEE_CREATED', 'EMPLOYEE_UPDATED', 'EMPLOYEE_DELETED',
+                            'EMPLOYEE_VIEWED',
                             'USER_CREATED', 'USER_UPDATED', 'USER_DELETED',
                             'INSTITUTION_CREATED', 'INSTITUTION_UPDATED',
                             'FILE_UPLOADED', 'FILE_DELETED',
@@ -697,7 +720,7 @@ if (categoryFilter && categoryFilter !== 'all')
                               )}
                             </TableCell>
                             <TableCell>
-                              {['REQUEST_APPROVED', 'COMPLAINT_RESOLVED', 'INSTITUTION_CREATED', 'INSTITUTION_UPDATED', 'EMPLOYEE_CREATED', 'USER_CREATED', 'FILE_UPLOADED', 'ACCOUNT_UNLOCKED', 'LOGOUT', 'PASSWORD_CHANGED', 'LOGIN_SUCCESS'].includes(log.eventType) ? (
+                              {['REQUEST_APPROVED', 'COMPLAINT_RESOLVED', 'INSTITUTION_CREATED', 'INSTITUTION_UPDATED', 'EMPLOYEE_CREATED', 'EMPLOYEE_VIEWED', 'USER_CREATED', 'FILE_UPLOADED', 'ACCOUNT_UNLOCKED', 'LOGOUT', 'PASSWORD_CHANGED', 'LOGIN_SUCCESS'].includes(log.eventType) ? (
                                 <Badge variant="default" className="bg-green-600">Success</Badge>
                               ) : ['REQUEST_REJECTED', 'ACCOUNT_LOCKED', 'EMPLOYEE_DELETED', 'USER_DELETED', 'LOGIN_FAILED'].includes(log.eventType) ? (
                                 <Badge variant="destructive">Rejected</Badge>

@@ -56,6 +56,11 @@ model Complaint {
   complainantId                      String
   assignedOfficerRole                String
   reviewedById                       String?
+  // Req 9.6: marks complaints requiring complainant-identity confidentiality
+  // (e.g. harassment / whistleblower-style). When true, the API redacts the
+  // complainant's identity PII for everyone except the complainant and the
+  // exactly-assigned handling officer.
+  confidential                       Boolean @default(false)
   createdAt                          DateTime @default(now())
   updatedAt                          DateTime
   User_Complaint_complainantIdToUser User     @relation("Complaint_complainantIdToUser", fields: [complainantId], references: [id])

@@ -661,6 +661,40 @@ describe('file-validation', () => {
         expect(result.success).toBe(true);
         expect(scanFile).not.toHaveBeenCalled();
       });
+
+      it('should invoke ClamAV scan for generic uploads (files/upload uses context "generic")', async () => {
+        vi.mocked(scanFile).mockResolvedValueOnce({ isClean: true });
+        vi.mocked(isClamAVEnabled).mockReturnValue(true);
+
+        const buffer = createPdfBuffer(512);
+        const result = await validateFileUpload(
+          buffer,
+          'report.pdf',
+          'application/pdf',
+          'generic'
+        );
+        expect(result.success).toBe(true);
+        expect(scanFile).toHaveBeenCalledOnce();
+      });
+
+      it('should reject a generic upload when ClamAV detects malware (MALWARE_DETECTED, 403)', async () => {
+        vi.mocked(scanFile).mockResolvedValueOnce({
+          isClean: false,
+          virusName: 'EICAR-Test',
+        });
+        vi.mocked(isClamAVEnabled).mockReturnValue(true);
+
+        const buffer = createPdfBuffer(512);
+        const result = await validateFileUpload(
+          buffer,
+          'infected.pdf',
+          'application/pdf',
+          'generic'
+        );
+        expect(result.success).toBe(false);
+        expect(result.errorCode).toBe('MALWARE_DETECTED');
+        expect(result.status).toBe(403);
+      });
     });
   });
 });

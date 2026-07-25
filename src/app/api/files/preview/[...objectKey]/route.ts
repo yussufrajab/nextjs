@@ -5,11 +5,13 @@ import {
   getFileMetadata,
   generatePresignedUrl,
   isPathTraversal,
+  MAX_PRESIGNED_URL_EXPIRY_SECONDS,
 } from '@/lib/minio';
 import { verifyAuth } from '@/lib/api-auth';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limiter';
-import { logFileAction } from '@/lib/audit-logger';
+import { logFileAction, safeAuditLog } from '@/lib/audit-logger';
 import { verifyFileHash } from '@/lib/file-integrity';
+import { authorizeFileOrDeny } from '@/lib/file-access';
 import { wrapHandler } from '@/lib/error-handler';
 
 export const GET = wrapHandler(async (
@@ -42,11 +44,23 @@ export const GET = wrapHandler(async (
     );
   }
 
+  // SECURITY (Req 10.1–10.2, 17.3, 27.1, 30.1): per-object authorization
+  // before any MinIO access — closes the IDOR that let any authenticated
+  // user read any object key. Must run before getFileMetadata so a denied
+  // request never learns whether the object exists.
+  const access = await authorizeFileOrDeny(request, auth, objectKey);
+  if (!access.allowed) {
+    return access.response;
+  }
+
   logger.info({ value: resolvedParams.objectKey }, 'Preview API - Object key segments');
   logger.info({ value: objectKey }, 'Preview API - Reconstructed object key');
 
   const searchParams = request.nextUrl.searchParams;
-  const expiry = parseInt(searchParams.get('expiry') || '3600');
+  // SECURITY (Req 10.3): clamp caller-supplied expiry to the max so a client
+  // cannot mint a long-lived presigned URL via ?expiry=.
+  const requestedExpiry = parseInt(searchParams.get('expiry') || '3600');
+  const expiry = Math.max(1, Math.min(requestedExpiry, MAX_PRESIGNED_URL_EXPIRY_SECONDS));
   const mode = searchParams.get('mode') || 'inline';
 
   let metadata;
@@ -110,16 +124,19 @@ export const GET = wrapHandler(async (
   headers.set('Cache-Control', 'public, max-age=3600');
   headers.set('Last-Modified', metadata.lastModified.toUTCString());
 
-  await logFileAction({
-    action: 'PREVIEWED',
-    fileName: objectKey.split('/').pop() || 'preview',
-    objectKey: objectKey,
-    performedById: auth.userId,
-    performedByUsername: auth.username,
-    performedByRole: auth.role,
-    ipAddress: getClientIp(request),
-    deviceInfo: JSON.parse(request.headers.get('x-device-info') || 'null'),
-  }).catch(() => {});
+  await safeAuditLog(
+    logFileAction({
+      action: 'PREVIEWED',
+      fileName: objectKey.split('/').pop() || 'preview',
+      objectKey: objectKey,
+      performedById: auth.userId,
+      performedByUsername: auth.username,
+      performedByRole: auth.role,
+      ipAddress: getClientIp(request),
+      deviceInfo: JSON.parse(request.headers.get('x-device-info') || 'null'),
+    }),
+    'files-preview'
+  );
 
   return new NextResponse(fileBuffer, {
     status: 200,

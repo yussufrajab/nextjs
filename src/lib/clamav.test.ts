@@ -5,6 +5,15 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+// NODE_ENV is typed read-only under @types/node; mutate via a cast.
+const ENV = process.env as Record<string, string | undefined>;
+const setNodeEnv = (val: string) => {
+  ENV.NODE_ENV = val;
+};
+const restoreNodeEnv = () => {
+  delete ENV.NODE_ENV;
+};
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -51,6 +60,43 @@ describe('clamav', () => {
       process.env.CLAMAV_ENABLED = 'FALSE';
       const { isClamAVEnabled } = await import('./clamav');
       expect(isClamAVEnabled()).toBe(false);
+      delete process.env.CLAMAV_ENABLED;
+    });
+
+    it('ignores CLAMAV_ENABLED=false in production without the override (stays ON)', async () => {
+      setNodeEnv('production');
+      process.env.CLAMAV_ENABLED = 'false';
+      delete process.env.CLAMAV_DISABLE_ALLOWED;
+
+      const { isClamAVEnabled } = await import('./clamav');
+      expect(isClamAVEnabled()).toBe(true);
+
+      restoreNodeEnv();
+      delete process.env.CLAMAV_ENABLED;
+    });
+
+    it('honors CLAMAV_ENABLED=false in production only with CLAMAV_DISABLE_ALLOWED=true', async () => {
+      setNodeEnv('production');
+      process.env.CLAMAV_ENABLED = 'false';
+      process.env.CLAMAV_DISABLE_ALLOWED = 'true';
+
+      const { isClamAVEnabled } = await import('./clamav');
+      expect(isClamAVEnabled()).toBe(false);
+
+      restoreNodeEnv();
+      delete process.env.CLAMAV_ENABLED;
+      delete process.env.CLAMAV_DISABLE_ALLOWED;
+    });
+
+    it('keeps the dev/CI escape hatch: CLAMAV_ENABLED=false disables outside production', async () => {
+      setNodeEnv('development');
+      process.env.CLAMAV_ENABLED = 'false';
+      delete process.env.CLAMAV_DISABLE_ALLOWED;
+
+      const { isClamAVEnabled } = await import('./clamav');
+      expect(isClamAVEnabled()).toBe(false);
+
+      restoreNodeEnv();
       delete process.env.CLAMAV_ENABLED;
     });
   });

@@ -6,12 +6,9 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
-  hashPassword,
-  comparePassword,
   validatePasswordComplexity,
   calculatePasswordStrength,
   getPasswordFeedback,
-  checkPasswordHistory,
   isCommonPassword,
   generateTemporaryPassword,
   calculateTemporaryPasswordExpiry,
@@ -22,6 +19,11 @@ import {
   PASSWORD_LOCKOUT_DURATION_MINUTES,
   TEMPORARY_PASSWORD_VALIDITY_DAYS,
 } from './password-utils';
+import {
+  hashPassword,
+  comparePassword,
+  checkPasswordHistory,
+} from './password-hash';
 
 describe('password-utils', () => {
   // =============================================================================
@@ -29,13 +31,13 @@ describe('password-utils', () => {
   // =============================================================================
 
   describe('hashPassword', () => {
-    it('should hash a password using bcrypt', async () => {
+    it('should hash a password using Argon2id', async () => {
       const password = 'MySecurePassword123!';
       const hashed = await hashPassword(password);
 
       expect(hashed).toBeDefined();
       expect(hashed).not.toBe(password);
-      expect(hashed).toMatch(/^\$2[aby]\$\d+\$/); // bcrypt format
+      expect(hashed).toMatch(/^\$argon2id\$v=19\$m=\d+,p=\d+,t=\d+\$/); // Argon2id format
     });
 
     it('should generate different hashes for same password', async () => {
@@ -49,7 +51,7 @@ describe('password-utils', () => {
     it('should handle empty password', async () => {
       const hashed = await hashPassword('');
       expect(hashed).toBeDefined();
-      expect(hashed).toMatch(/^\$2[aby]\$\d+\$/);
+      expect(hashed).toMatch(/^\$argon2id\$v=19\$m=\d+,p=\d+,t=\d+\$/);
     });
   });
 
@@ -110,7 +112,7 @@ describe('password-utils', () => {
     });
 
     it('should accept four-class password (mixed characters)', () => {
-      expect(validatePasswordComplexity('Pass123!')).toBe(true);
+      expect(validatePasswordComplexity('Pass123!Abcd')).toBe(true);
     });
 
     it('should reject two-class password (uppercase + lowercase)', () => {
@@ -141,8 +143,8 @@ describe('password-utils', () => {
     });
 
     it('should accept four-class password exactly at minimum length', () => {
-      // 8 chars (PASSWORD_MIN_LENGTH): uppercase + lowercase + number + special
-      expect(validatePasswordComplexity('Ab1234!@')).toBe(true);
+      // 12 chars (PASSWORD_MIN_LENGTH): uppercase + lowercase + number + special
+      expect(validatePasswordComplexity('Ab1234!@56cd')).toBe(true);
     });
   });
 

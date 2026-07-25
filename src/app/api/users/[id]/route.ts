@@ -188,6 +188,16 @@ export const DELETE = wrapHandler(withAuth(async (
     const denied = requireReauth(req, 'users.delete', auth);
     if (denied) return denied;
 
+    // SECURITY (Req 14.8): prevent self-deletion — an admin must not delete
+    // their own account (would remove the only privileged session and bypass
+    // the two-person rule intent for destructive actions).
+    if (id === auth.userId) {
+      return new NextResponse(
+        JSON.stringify({ success: false, message: 'Cannot delete your own account. Ask another admin.' }),
+        { status: 403, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
     await db.user.delete({
       where: { id },
     });

@@ -1930,6 +1930,17 @@ export default function RetirementPage() {
                           >
                             Rejected by Commission
                           </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-red-500 text-red-600 hover:bg-red-50"
+                            title="Reject and return this request to the HRO for correction (non-terminal)"
+                            onClick={() =>
+                              handleInitialAction(request.id, 'reject')
+                            }
+                          >
+                            Reject &amp; Return to HRO
+                          </Button>
                         </>
                       )}
                   </div>

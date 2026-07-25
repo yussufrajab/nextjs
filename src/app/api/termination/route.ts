@@ -14,6 +14,7 @@ import { ROLES } from '@/lib/constants';
 import { logger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
 import { verifyAuth } from '@/lib/api-auth';
+import { isAllowedStatusTransition } from '@/lib/request-workflow';
 
 // Role-based authorization helper
 function checkRoleAuthorization(
@@ -429,6 +430,22 @@ async function PATCHHandler(req: Request) {
       return NextResponse.json(
         { success: false, message: authCheck.message },
         { status: 403 }
+      );
+    }
+
+    // SECURITY (Req 8.1/8.2/18.1): validate status transition. Prevents a
+    // client from jumping an arbitrary status (e.g. re-approving an already
+    // Commission-concluded request, or skipping the HRRP stage). Mirrors the
+    // FSM in confirmations/lwop collection PATCH, extended to handle the
+    // variable HHRMD/HRMO forward status. existingSepRequest is fetched above.
+    if (
+      updateData.status &&
+      existingSepRequest.status !== updateData.status &&
+      !isAllowedStatusTransition(existingSepRequest.status, updateData.status)
+    ) {
+      return NextResponse.json(
+        { success: false, message: `Invalid status transition from "${existingSepRequest.status}" to "${updateData.status}"` },
+        { status: 400 }
       );
     }
 

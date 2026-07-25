@@ -13,6 +13,12 @@ import { logger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
 import { withAuth } from '@/lib/api-auth';
 import { sanitizeText } from '@/lib/sanitize-input';
+import {
+  canSeeComplainantIdentity,
+  redactComplainantIdentity,
+  resolveConfidential,
+  REDACTED_COMPLAINANT_NAME,
+} from '@/lib/complaint-confidentiality';
 
 const complaintSchema = z.object({
   complaintType: z.string().min(1),
@@ -23,6 +29,9 @@ const complaintSchema = z.object({
   attachments: z.array(z.string()).optional(),
   // complainantId is now derived from auth session, not client
   assignedOfficerRole: z.string().optional(),
+  // Req 9.6: submitter may request confidentiality; harassment complaints are
+  // always confidential (see resolveConfidential).
+  confidential: z.boolean().optional(),
 });
 
 export const POST = wrapHandler(withAuth(async (req: Request, { auth }) => {
@@ -35,10 +44,15 @@ export const POST = wrapHandler(withAuth(async (req: Request, { auth }) => {
     nextOfKinPhoneNumber,
     attachments,
     assignedOfficerRole,
+    confidential: requestedConfidential,
   } = complaintSchema.parse(body);
 
   // SECURITY: Use authenticated user ID, not client-supplied one
   const complainantId = auth.userId;
+
+  // Req 9.6: harassment complaints are always confidential; other types honor
+  // the submitter's request.
+  const confidential = resolveConfidential(complaintType, requestedConfidential);
 
   const newComplaint = await db.complaint.create({
     data: {
@@ -53,6 +67,7 @@ export const POST = wrapHandler(withAuth(async (req: Request, { auth }) => {
       status: 'Submitted',
       reviewStage: 'initial',
       assignedOfficerRole: assignedOfficerRole || ROLES.DO || 'DO',
+      confidential,
       updatedAt: new Date(),
     },
   });
@@ -63,10 +78,17 @@ export const POST = wrapHandler(withAuth(async (req: Request, { auth }) => {
     select: { name: true },
   });
 
+  // Req 9.6: for confidential complaints, never broadcast the complainant's
+  // real name in officer notifications / emails — only the redacted label.
+  const displayName =
+    confidential && complainant?.name
+      ? REDACTED_COMPLAINANT_NAME
+      : complainant?.name;
+
   // Create notification for officers
-  if (complainant && complainant.name) {
+  if (displayName) {
     const notification = NotificationTemplates.complaintSubmitted(
-      complainant.name,
+      displayName,
       newComplaint.id,
       subject
     );
@@ -92,9 +114,9 @@ export const POST = wrapHandler(withAuth(async (req: Request, { auth }) => {
     // Send email notifications to CSC reviewers
     await sendRequestSubmissionEmails({
       requestType: 'Complaint',
-      employeeName: complainant.name,
+      employeeName: displayName,
       requestId: newComplaint.id,
-      submittedByName: complainant.name,
+      submittedByName: displayName,
       dashboardPath: '/dashboard/complaints',
     });
   }
@@ -204,29 +226,47 @@ export const GET = wrapHandler(withAuth(async (req: Request, { auth }) => {
   const canSeeInternalNotes = ['Admin', 'DO', 'HHRMD', 'CSCS'].includes(userRole);
 
   // Map the response to match frontend expectations
-  const formattedComplaints = complaints.map((c) => ({
-    id: c.id,
-    employeeId: c.User_Complaint_complainantIdToUser.employeeId,
-    employeeName: c.User_Complaint_complainantIdToUser.name,
-    zanId: c.User_Complaint_complainantIdToUser.Employee?.zanId,
-    department: c.User_Complaint_complainantIdToUser.Employee?.department,
-    cadre: c.User_Complaint_complainantIdToUser.Employee?.cadre,
-    institutionName: c.User_Complaint_complainantIdToUser.Institution?.name,
-    complaintType: c.complaintType,
-    subject: c.subject,
-    details: c.details,
-    complainantPhoneNumber: c.complainantPhoneNumber,
-    nextOfKinPhoneNumber: c.nextOfKinPhoneNumber,
-    submissionDate: c.createdAt.toISOString(),
-    status: c.status,
-    attachments: c.attachments,
-    officerComments: canSeeInternalNotes ? c.officerComments : null,
-    internalNotes: canSeeInternalNotes ? c.internalNotes : null,
-    assignedOfficerRole: c.assignedOfficerRole,
-    reviewStage: c.reviewStage,
-    rejectionReason: c.rejectionReason,
-    reviewedBy: c.User_Complaint_reviewedByIdToUser?.role,
-  }));
+  const formattedComplaints = complaints.map((c) => {
+    // SECURITY (Req 9.6): redact complainant identity PII for viewers lacking
+    // need-to-know. The complainant, the exactly-assigned handling officer,
+    // and (for non-confidential complaints) CSCS/Admin see the identity; the
+    // co-reviewer tier and all other roles are redacted. Confidential
+    // complaints tighten access to complainant + exactly-assigned officer.
+    const identityVisible = canSeeComplainantIdentity(userRole, userId, {
+      complainantId: c.complainantId,
+      assignedOfficerRole: c.assignedOfficerRole,
+      confidential: c.confidential,
+    });
+
+    const row = {
+      id: c.id,
+      employeeId: c.User_Complaint_complainantIdToUser.employeeId,
+      employeeName: c.User_Complaint_complainantIdToUser.name,
+      zanId: c.User_Complaint_complainantIdToUser.Employee?.zanId,
+      department: c.User_Complaint_complainantIdToUser.Employee?.department,
+      cadre: c.User_Complaint_complainantIdToUser.Employee?.cadre,
+      institutionName: c.User_Complaint_complainantIdToUser.Institution?.name,
+      complaintType: c.complaintType,
+      subject: c.subject,
+      details: c.details,
+      complainantPhoneNumber: c.complainantPhoneNumber,
+      nextOfKinPhoneNumber: c.nextOfKinPhoneNumber,
+      submissionDate: c.createdAt.toISOString(),
+      status: c.status,
+      attachments: c.attachments,
+      officerComments: canSeeInternalNotes ? c.officerComments : null,
+      internalNotes: canSeeInternalNotes ? c.internalNotes : null,
+      assignedOfficerRole: c.assignedOfficerRole,
+      reviewStage: c.reviewStage,
+      rejectionReason: c.rejectionReason,
+      reviewedBy: c.User_Complaint_reviewedByIdToUser?.role,
+      confidential: c.confidential,
+    };
+
+    return identityVisible
+      ? row
+      : redactComplainantIdentity(row);
+  });
 
   return NextResponse.json({
     data: formattedComplaints,

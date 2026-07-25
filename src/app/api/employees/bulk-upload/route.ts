@@ -7,6 +7,20 @@ import { withAuth, AuthContext } from '@/lib/api-auth';
 import { withRateLimit } from '@/lib/rate-limiter';
 import { logger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
+import {
+  getInstitutionOrgFieldValues,
+  validateInstitutionOrgFields,
+  type InstitutionOrgFieldValues,
+} from '@/lib/institution-field-validation';
+import {
+  GENDER_VALUES,
+  APPOINTMENT_TYPE_VALUES,
+  CONTRACT_TYPE_VALUES,
+  isValidEnum,
+  isValidZssfNumber,
+  isValidPayrollNumber,
+  validateCrossFieldDates,
+} from '@/lib/employee-field-validation';
 
 const prisma = new PrismaClient();
 
@@ -169,6 +183,14 @@ export const POST = wrapHandler(withRateLimit(withAuth(async (
     );
   }
 
+  // SECURITY (Req 6.6): ministry/department/currentWorkplace are free-text
+  // columns with no reference table. Build the institution's de-facto org-unit
+  // reference data (distinct values already recorded for its employees) once,
+  // then validate every row against it below. Bootstrap: an institution with
+  // no recorded values for a field accepts any non-empty value.
+  const orgFieldValues: InstitutionOrgFieldValues =
+    await getInstitutionOrgFieldValues(prisma, userInstitutionId);
+
   // Parse multipart form data
   const formData = await request.formData();
   const file = formData.get('file') as File;
@@ -287,12 +309,25 @@ export const POST = wrapHandler(withRateLimit(withAuth(async (
       }
     });
 
-    // Validate gender
+    // Validate gender (Req 6.8)
     if (
       employeeData.gender &&
-      !['Male', 'Female'].includes(employeeData.gender)
+      !GENDER_VALUES.includes(employeeData.gender)
     ) {
-      errors.push('Gender must be "Male" or "Female"');
+      errors.push(`Gender must be one of: ${GENDER_VALUES.join(', ')}`);
+    }
+
+    // SECURITY (Req 6.8): appointmentType / contractType enums. The DB columns
+    // are free-text; optional fields are only enforced when non-empty.
+    if (!isValidEnum(employeeData.appointmentType, APPOINTMENT_TYPE_VALUES)) {
+      errors.push(
+        `Appointment type must be one of: ${APPOINTMENT_TYPE_VALUES.join(', ')}`
+      );
+    }
+    if (!isValidEnum(employeeData.contractType, CONTRACT_TYPE_VALUES)) {
+      errors.push(
+        `Contract type must be one of: ${CONTRACT_TYPE_VALUES.join(', ')}`
+      );
     }
 
     // Validate phone number format
@@ -338,6 +373,18 @@ export const POST = wrapHandler(withRateLimit(withAuth(async (
       }
     }
 
+    // SECURITY (Req 6.8): cross-field date logic — employmentDate after DOB,
+    // confirmationDate on/after employmentDate, retirementDate after
+    // employmentDate. Only compares fields with valid formats (per-field
+    // format errors are already pushed above).
+    const crossFieldDateErrors = validateCrossFieldDates({
+      dateOfBirth: employeeData.dateOfBirth,
+      employmentDate: employeeData.employmentDate,
+      confirmationDate: employeeData.confirmationDate,
+      retirementDate: employeeData.retirementDate,
+    });
+    errors.push(...crossFieldDateErrors);
+
     // Name length validation
     if (employeeData.name && employeeData.name.length > 200) {
       errors.push('Name must be 200 characters or less');
@@ -346,6 +393,16 @@ export const POST = wrapHandler(withRateLimit(withAuth(async (
     // ZAN ID format validation
     if (employeeData.zanId && !/^\d{5,12}$/.test(employeeData.zanId)) {
       errors.push('ZanID must be a numeric string between 5 and 12 digits');
+    }
+
+    // SECURITY (Req 6.8): ZSSF / payroll identifier format. Required-ness is
+    // checked above; reject non-empty but malformed values (spaces, symbols,
+    // leading hyphen, > 50 chars).
+    if (!isValidZssfNumber(employeeData.zssfNumber)) {
+      errors.push('ZSSF number must be 2–50 alphanumeric characters (hyphens allowed)');
+    }
+    if (!isValidPayrollNumber(employeeData.payrollNumber)) {
+      errors.push('Payroll number must be 2–50 alphanumeric characters (hyphens allowed)');
     }
 
     // Validate status
@@ -364,6 +421,23 @@ export const POST = wrapHandler(withRateLimit(withAuth(async (
       }
     } else {
       employeeData.status = 'On Probation'; // Default
+    }
+
+    // SECURITY (Req 6.6): validate free-text org fields (ministry/department/
+    // currentWorkplace) against the institution's existing recorded values.
+    // Bootstrap: fields with no recorded values for the institution accept any
+    // non-empty value; empty values pass (currentWorkplace is optional, and
+    // required-field emptiness for ministry/department is already flagged above).
+    const orgFieldCheck = validateInstitutionOrgFields(
+      {
+        ministry: employeeData.ministry,
+        department: employeeData.department,
+        currentWorkplace: employeeData.currentWorkplace,
+      },
+      orgFieldValues
+    );
+    if (!orgFieldCheck.valid) {
+      errors.push(...orgFieldCheck.errors);
     }
 
     employees.push(employeeData as EmployeeRow);
@@ -535,13 +609,16 @@ export const PUT = wrapHandler(withRateLimit(withAuth(async (
     );
   }
 
-  // Create all employees in a transaction for atomicity
+  // Create all employees in a single transaction for atomicity (Req 7.9).
+  // Any per-row create failure throws and aborts the WHOLE transaction →
+  // Prisma rolls back every row inserted so far, so partial success is
+  // impossible. The previous per-row try/catch swallowed create errors,
+  // leaving partial batches committed.
   const createdEmployees: Array<{ rowNumber: number; name: string; id: string }> = [];
-  const failedEmployees: Array<{ rowNumber: number; name: string; error: string }> = [];
 
-  await prisma.$transaction(async (tx) => {
-    for (const emp of employees) {
-      try {
+  try {
+    await prisma.$transaction(async (tx) => {
+      for (const emp of employees) {
         const employee = await tx.employee.create({
           data: {
             id: uuidv4(),
@@ -587,17 +664,34 @@ export const PUT = wrapHandler(withRateLimit(withAuth(async (
           name: emp.name,
           id: employee.id,
         });
-      } catch (error) {
-        failedEmployees.push({
-          rowNumber: emp.rowNumber,
-          name: emp.name,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
       }
-    }
-  });
+    });
+  } catch (error) {
+    // Transaction rolled back — NO employees were persisted. `createdEmployees`
+    // reflects only what was attempted before the throw; the failing row is the
+    // one at index `createdEmployees.length` (rows before it pushed on success).
+    const failedIdx = createdEmployees.length;
+    const failedEmp = employees[failedIdx];
+    const failedRowNumber = failedEmp?.rowNumber ?? employees[0]?.rowNumber;
+    const reason = error instanceof Error ? error.message : 'Unknown error';
+    logger.error(
+      { err: error, failedRowNumber, batch: employees.length },
+      'Bulk upload transaction failed — rolled back, no employees created'
+    );
+    return NextResponse.json(
+      {
+        success: false,
+        error: `Bulk upload failed at row ${failedRowNumber ?? '?'}; no employees were created (transaction rolled back). Reason: ${reason}`,
+        failedRow: failedRowNumber,
+        failedReason: reason,
+        data: { created: 0, failed: employees.length, createdEmployees: [], failedEmployees: [] },
+      },
+      { status: 500 }
+    );
+  }
 
-  // Audit log: bulk employee creation
+  // Audit log: bulk employee creation (only on full success — a rolled-back
+  // batch creates nothing and must not emit CREATED audit events).
   for (const emp of createdEmployees) {
     await logEmployeeAction({
       action: 'CREATED',
@@ -617,9 +711,12 @@ export const PUT = wrapHandler(withRateLimit(withAuth(async (
     message: `Successfully created ${createdEmployees.length} employee(s)`,
     data: {
       created: createdEmployees.length,
-      failed: failedEmployees.length,
+      // Atomic transaction (Req 7.9): on success every row was created, so
+      // there are no per-row failures. Any create error rolls back the whole
+      // batch and returns from the catch above instead of reaching here.
+      failed: 0,
       createdEmployees,
-      failedEmployees,
+      failedEmployees: [],
     },
   });
 }, { allowedRoles: ['HRO', 'ADMIN'] }), 'upload'), 'employees-bulk-upload');

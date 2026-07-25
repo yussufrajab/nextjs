@@ -1,13 +1,12 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { z } from 'zod';
-import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import {
-  hashPassword,
   calculateTemporaryPasswordExpiry,
   generateTemporaryPassword,
 } from '@/lib/password-utils';
+import { hashPassword } from '@/lib/password-hash';
 import { logUserAction, getClientIp } from '@/lib/audit-logger';
 import { withAuth } from '@/lib/api-auth';
 import { withRateLimit } from '@/lib/rate-limiter';

@@ -4,8 +4,9 @@ import { Readable } from 'stream';
 import { fileLogger } from '@/lib/logger';
 import { verifyAuth } from '@/lib/api-auth';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limiter';
-import { logFileAction } from '@/lib/audit-logger';
+import { logFileAction, safeAuditLog } from '@/lib/audit-logger';
 import { verifyFileHash } from '@/lib/file-integrity';
+import { authorizeFileOrDeny } from '@/lib/file-access';
 import { wrapHandler } from '@/lib/error-handler';
 
 function getObjectKeyFromUrl(url: string): string | null {
@@ -41,6 +42,15 @@ export const GET = wrapHandler(async (
       { success: false, message: 'Invalid file path' },
       { status: 400 }
     );
+  }
+
+  // SECURITY (Req 10.1–10.2, 17.3, 27.1, 30.1): per-object authorization
+  // before any MinIO access — closes the IDOR that let any authenticated
+  // user read any object key. Must run before getFileMetadata so a denied
+  // request never learns whether the object exists.
+  const access = await authorizeFileOrDeny(request, auth, objectKey);
+  if (!access.allowed) {
+    return access.response;
   }
 
   fileLogger.info(
@@ -80,16 +90,19 @@ export const GET = wrapHandler(async (
   headers.set('Content-Disposition', `attachment; filename="${filename}"`);
   headers.set('Content-Length', fileBuffer.length.toString());
 
-  await logFileAction({
-    action: 'DOWNLOADED',
-    fileName: filename,
-    objectKey: objectKey,
-    performedById: auth.userId,
-    performedByUsername: auth.username,
-    performedByRole: auth.role,
-    ipAddress: getClientIp(request),
-    deviceInfo: JSON.parse(request.headers.get('x-device-info') || 'null'),
-  }).catch(() => {});
+  await safeAuditLog(
+    logFileAction({
+      action: 'DOWNLOADED',
+      fileName: filename,
+      objectKey: objectKey,
+      performedById: auth.userId,
+      performedByUsername: auth.username,
+      performedByRole: auth.role,
+      ipAddress: getClientIp(request),
+      deviceInfo: JSON.parse(request.headers.get('x-device-info') || 'null'),
+    }),
+    'files-download'
+  );
 
   return new NextResponse(fileBuffer, {
     status: 200,

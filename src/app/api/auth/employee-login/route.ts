@@ -2,12 +2,9 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { z } from 'zod';
 import { ROLES } from '@/lib/constants';
-import bcrypt from 'bcryptjs';
 import { randomBytes } from 'crypto';
-import {
-  hashPassword,
-  calculateTemporaryPasswordExpiry,
-} from '@/lib/password-utils';
+import { calculateTemporaryPasswordExpiry } from '@/lib/password-utils';
+import { hashPassword } from '@/lib/password-hash';
 import { createMfaToken, checkOtpRateLimit, maskEmail } from '@/lib/mfa-utils';
 import { validateGovernmentEmail, setUserGovernmentEmail } from '@/lib/employee-email';
 import { sendMfaEmail } from '@/lib/email';

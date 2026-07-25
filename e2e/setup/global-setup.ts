@@ -1,7 +1,7 @@
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcryptjs';
+import { hashPassword } from '@/lib/password-hash';
 
 const execAsync = promisify(exec);
 
@@ -53,7 +53,7 @@ async function seedTestData() {
     console.log('✅ Test institution created');
 
     // Create test users for different roles
-    const hashedPassword = await bcrypt.hash('Test@1234', 10);
+    const hashedPassword = await hashPassword('Test@1234');
     const now = new Date();
     const passwordExpiresAt = new Date();
     passwordExpiresAt.setDate(passwordExpiresAt.getDate() + 90);

@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 import { z } from 'zod';
 import { hrimsLogger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
-import { withAuth } from '@/lib/api-auth';
+import { withAuth, requireReauth } from '@/lib/api-auth';
 import { scanFile, isClamAVEnabled } from '@/lib/clamav';
 import { recordDocumentHash, verifyDocumentHash } from '@/lib/file-integrity';
 import { logHrimsSync, getClientIp } from '@/lib/audit-logger';
@@ -57,6 +57,12 @@ const hrimsDocumentsResponseSchema = z.object({
 });
 
 export const POST = wrapHandler(withAuth(async (req: Request, { auth }) => {
+    // Step-up re-authentication: triggering an HRIMS documents sync is a
+    // Tier-1 sensitive action (writes employee document data into CSMS).
+    // Mirrors sync-employee/bulk-fetch (Req 11.1).
+    const denied = requireReauth(req, 'hrims.sync', auth);
+    if (denied) return denied;
+
     const body = await req.json();
     hrimsLogger.info({
       ...body,

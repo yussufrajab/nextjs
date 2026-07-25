@@ -190,6 +190,163 @@ export async function checkRateLimit(
 }
 
 // ---------------------------------------------------------------------------
+// Sliding-window rate limit (per-user, auth tier)
+// ---------------------------------------------------------------------------
+
+/**
+ * Lua script implementing an atomic sliding-window counter backed by a Redis
+ * sorted set. Each request is a unique member scored by its timestamp.
+ *
+ * Atomically: trims members older than the window, counts the survivors, and —
+ * only if under the limit — adds the new member and refreshes the key TTL.
+ * Returns `[allowed(0/1), limit, remaining, retryAfter]`.
+ *
+ * Why sliding (not the fixed-window `checkRateLimit`): a fixed counter resets
+ * at the window edge, so an attacker can burst ~2× the limit by splitting
+ * attempts across a boundary. The sliding window counts the trailing N
+ * seconds at every instant, so the limit holds continuously, and `retryAfter`
+ * reflects the exact moment the oldest attempt ages out.
+ */
+const SLIDING_WINDOW_SCRIPT = `
+local key = KEYS[1]
+local now = tonumber(ARGV[1])
+local windowSeconds = tonumber(ARGV[2])
+local limit = tonumber(ARGV[3])
+local member = ARGV[4]
+local windowMs = windowSeconds * 1000
+local cutoff = now - windowMs
+
+redis.call('ZREMRANGEBYSCORE', key, '-inf', '(' .. cutoff)
+local count = redis.call('ZCARD', key)
+if count >= limit then
+  local oldest = redis.call('ZRANGE', key, 0, 0, 'WITHSCORES')
+  local oldestScore = tonumber(oldest[2])
+  local retryAfter = windowSeconds
+  if oldestScore ~= nil then
+    local ms = oldestScore + windowMs - now
+    retryAfter = math.ceil(ms / 1000)
+    if retryAfter < 1 then retryAfter = 1 end
+  end
+  return {0, limit, 0, retryAfter}
+end
+redis.call('ZADD', key, now, member)
+redis.call('EXPIRE', key, windowSeconds)
+return {1, limit, limit - count - 1, windowSeconds}
+`;
+
+/**
+ * Sliding-window rate-limit check for keys that need a true trailing-window
+ * count (the per-user auth limit, Req 1.8). Same fail-closed policy as
+ * `checkRateLimit`: the `auth` tier denies when Redis is unavailable.
+ *
+ * SECURITY: the per-user key throttles brute-force against a single account
+ * regardless of source IP — the complement to the per-IP `withRateLimit`
+ * wrapper, which catches single-IP floods but is bypassable from a botnet.
+ */
+export async function checkRateLimitSliding(
+  key: string,
+  tier: RateLimitTier,
+  options: RateLimitOptions = {}
+): Promise<RateLimitResult> {
+  const config = RATE_LIMITS[tier];
+  const client = getRedisClient();
+  const failClosed = options.failClosed ?? tier === 'auth';
+
+  // Fail closed for auth tier (or any tier that opts in) when Redis is down
+  if (!client) {
+    if (failClosed) {
+      rateLimitLogger.error(
+        { tier, key },
+        'CRITICAL: Redis unavailable and tier requires fail-closed — denying request (sliding)'
+      );
+      return {
+        allowed: false,
+        limit: config.limit,
+        remaining: 0,
+        retryAfter: config.windowSeconds,
+        reason: 'fail_closed',
+      };
+    }
+    rateLimitLogger.warn(
+      { tier },
+      'Redis client unavailable – allowing request (fail-open, sliding)'
+    );
+    return { allowed: true };
+  }
+
+  const now = Date.now();
+  // Unique ZSET member. Math.random is fine — this is server runtime, not a
+  // workflow script (where Math.random/Date.now are forbidden).
+  const member = `${now}:${Math.random().toString(36).slice(2)}`;
+
+  try {
+    const res = (await client.eval(
+      SLIDING_WINDOW_SCRIPT,
+      1,
+      key,
+      now,
+      config.windowSeconds,
+      config.limit,
+      member
+    )) as number[];
+
+    const allowed = Number(res?.[0]) === 1;
+    const retryAfter = Number(res?.[3]) || config.windowSeconds;
+
+    if (!allowed) {
+      return {
+        allowed: false,
+        limit: config.limit,
+        remaining: 0,
+        retryAfter,
+        reason: 'rate_limit_exceeded',
+      };
+    }
+
+    return {
+      allowed: true,
+      limit: config.limit,
+      remaining: Number(res?.[2]) || 0,
+      retryAfter,
+    };
+  } catch (err) {
+    if (failClosed) {
+      rateLimitLogger.error(
+        { err, tier, key },
+        'CRITICAL: Redis error on auth tier — denying request (fail-closed, sliding)'
+      );
+      return {
+        allowed: false,
+        limit: config.limit,
+        remaining: 0,
+        retryAfter: config.windowSeconds,
+        reason: 'fail_closed',
+      };
+    }
+    // Fail open on Redis errors for non-auth tiers
+    rateLimitLogger.warn(
+      { err, tier },
+      'Redis error during sliding rate-limit check – fail-open'
+    );
+    return { allowed: true };
+  }
+}
+
+/**
+ * Build the per-user rate-limit key for the auth tier (Req 1.8).
+ *
+ * SECURITY: normalize the username (trim + lowercase) so an attacker can't
+ * dodge the per-user counter by varying case ("Admin" vs "admin"). Cap the
+ * length to keep Redis keys bounded against pathologically long inputs. An
+ * empty/whitespace username collapses to a single shared bucket, which is
+ * preferable to leaking whether a username exists.
+ */
+export function buildUserRateLimitKey(username: string): string {
+  const normalized = (username ?? '').trim().toLowerCase().slice(0, 256);
+  return `ratelimit:user:${normalized}:auth`;
+}
+
+// ---------------------------------------------------------------------------
 // Higher-order function for API route handlers
 // ---------------------------------------------------------------------------
 

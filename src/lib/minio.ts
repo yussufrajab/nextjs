@@ -27,6 +27,16 @@ const minioClient = new MinioClient({
 // Default bucket name
 export const DEFAULT_BUCKET = process.env.MINIO_BUCKET_NAME || 'documents';
 
+// Maximum lifetime (seconds) for any presigned URL.
+// SECURITY (Req 10.3): presigned URLs are bearer tokens — anyone who obtains
+// one can fetch the object until it expires. The previous 24h default was
+// excessive; cap at 1 hour and clamp caller-supplied values so a client cannot
+// request a long-lived URL via ?expiry=. Override via env if a use case needs more.
+export const MAX_PRESIGNED_URL_EXPIRY_SECONDS = Math.min(
+  Number(process.env.MAX_PRESIGNED_URL_EXPIRY_SECONDS) || 3600,
+  3600
+);
+
 // Initialize MinIO bucket if it doesn't exist
 export async function ensureBucketExists(bucketName: string = DEFAULT_BUCKET) {
   try {
@@ -152,17 +162,20 @@ export async function getFileMetadata(
   }
 }
 
-// Generate presigned URL for file access
+// Generate presigned URL for file access.
+// `expiry` is clamped to [1, MAX_PRESIGNED_URL_EXPIRY_SECONDS] so callers
+// cannot mint long-lived bearer URLs.
 export async function generatePresignedUrl(
   objectKey: string,
-  expiry: number = 24 * 60 * 60, // 24 hours in seconds
+  expiry: number = MAX_PRESIGNED_URL_EXPIRY_SECONDS,
   bucketName: string = DEFAULT_BUCKET
 ) {
+  const safeExpiry = Math.max(1, Math.min(expiry, MAX_PRESIGNED_URL_EXPIRY_SECONDS));
   try {
     const url = await minioClient.presignedGetObject(
       bucketName,
       objectKey,
-      expiry
+      safeExpiry
     );
     return url;
   } catch (error) {

@@ -7,6 +7,11 @@ import { logger } from '@/lib/logger';
 import { verifyAuth } from '@/lib/api-auth';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limiter';
 import { wrapHandler } from '@/lib/error-handler';
+import {
+  classifyAttachments,
+  HRIMS_EMPTY_CONTENT_ERROR_CODE,
+  HRIMS_EMPTY_CONTENT_MESSAGE,
+} from '@/lib/hrims-documents';
 
 // Valid educational certificate types (excluding primary education)
 const VALID_CERTIFICATE_TYPES = [
@@ -404,6 +409,18 @@ export const POST = wrapHandler(async (
 
  logger.info(` Total attachments collected: ${allAttachments.length}`);
 
+ // Classify attachments into storable (with base64 content) vs upstream
+ // empty-content (metadata only). HRIMS can return contentSize > 0 with an
+ // empty attachmentContent — that is an HRIMS-side content-delivery issue,
+ // not a missing document, and must be reported distinctly.
+ const classification = classifyAttachments(allAttachments);
+ const emptyContentCount = classification.emptyContent.length;
+ if (emptyContentCount > 0) {
+ logger.warn(
+ `${emptyContentCount}/${allAttachments.length} attachment(s) arrived with empty content (HRIMS content-delivery issue)`
+ );
+ }
+
  // Document type mapping: HRIMS attachmentType -> Database field
  const documentTypeMapping: Record<
  string,
@@ -660,6 +677,21 @@ export const POST = wrapHandler(async (
  }
 
  if (documentsProcessed === 0) {
+ // If HRIMS sent metadata with empty content, surface the upstream issue
+ // (502 Bad Gateway) instead of the misleading 404 "No documents found".
+ if (emptyContentCount > 0) {
+ logger.warn(
+ 'HRIMS returned document metadata with empty content — upstream content-delivery issue'
+ );
+ return NextResponse.json(
+ {
+ success: false,
+ errorCode: HRIMS_EMPTY_CONTENT_ERROR_CODE,
+ message: HRIMS_EMPTY_CONTENT_MESSAGE,
+ },
+ { status: 502 }
+ );
+ }
  logger.info(' No documents found in HRIMS response');
  return NextResponse.json(
  {

@@ -14,6 +14,7 @@ import { logger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
 import { verifyAuth } from '@/lib/api-auth';
 import { shouldApplyInstitutionFilter } from '@/lib/role-utils';
+import { denyWorkflowAccess } from '@/lib/workflow-access';
 
 const VALID_STATUSES = [
   'Pending HRRP Review',
@@ -77,10 +78,18 @@ async function handleUpdate(
     // SECURITY: Institution ownership check — HRO/HRRP can only modify their own institution's requests
     if (shouldApplyInstitutionFilter(auth.role, auth.institutionId)) {
       if (!existingRequest.Employee || existingRequest.Employee.institutionId !== auth.institutionId) {
-        return NextResponse.json(
-          { success: false, message: 'Access denied: request belongs to a different institution' },
-          { status: 403 }
-        );
+        return denyWorkflowAccess({
+          auth,
+          routeBase: 'termination',
+          requestId: id,
+          requestType: 'Termination',
+          employeeId: existingRequest.employeeId,
+          blockReason: 'INSTITUTION_OWNERSHIP',
+          message: 'Access denied: request belongs to a different institution',
+          requestMethod: req.method,
+          ipAddress,
+          deviceInfo,
+        });
       }
     }
 
@@ -101,10 +110,20 @@ async function handleUpdate(
       };
       const allowed = ALLOWED_TRANSITIONS[existingRequest.status] || [];
       if (!allowed.includes(validatedData.status)) {
-        return NextResponse.json(
-          { success: false, message: `Invalid status transition from "${existingRequest.status}" to "${validatedData.status}"` },
-          { status: 400 }
-        );
+        return denyWorkflowAccess({
+          auth,
+          routeBase: 'termination',
+          requestId: id,
+          requestType: 'Termination',
+          employeeId: existingRequest.employeeId,
+          blockReason: 'INVALID_STATUS_TRANSITION',
+          message: `Invalid status transition from "${existingRequest.status}" to "${validatedData.status}"`,
+          status: 400,
+          requestMethod: req.method,
+          ipAddress,
+          deviceInfo,
+          additionalData: { fromStatus: existingRequest.status, toStatus: validatedData.status },
+        });
       }
     }
 
@@ -140,29 +159,61 @@ async function handleUpdate(
         (isHrrpApproval || isHrrpRejection || isCommissionDecision) &&
         existingRequest.submittedById === auth.userId
       ) {
-        return NextResponse.json(
-          { success: false, message: 'Cannot approve or reject your own submission' },
-          { status: 403 }
-        );
+        return denyWorkflowAccess({
+          auth,
+          routeBase: 'termination',
+          requestId: id,
+          requestType: 'Termination',
+          employeeId: existingRequest.employeeId,
+          blockReason: 'SELF_APPROVAL',
+          message: 'Cannot approve or reject your own submission',
+          requestMethod: req.method,
+          ipAddress,
+          deviceInfo,
+        });
       }
 
       if (isHrrpAction && auth.role !== 'HRRP') {
-        return NextResponse.json(
-          { success: false, message: 'Only HRRP can perform HRRP review actions' },
-          { status: 403 }
-        );
+        return denyWorkflowAccess({
+          auth,
+          routeBase: 'termination',
+          requestId: id,
+          requestType: 'Termination',
+          employeeId: existingRequest.employeeId,
+          blockReason: 'ROLE_NOT_HRRP',
+          message: 'Only HRRP can perform HRRP review actions',
+          requestMethod: req.method,
+          ipAddress,
+          deviceInfo,
+        });
       }
       if (isCommissionDecision && !['HHRMD', 'HRMO'].includes(auth.role)) {
-        return NextResponse.json(
-          { success: false, message: 'Only HHRMD or HRMO can make commission decisions' },
-          { status: 403 }
-        );
+        return denyWorkflowAccess({
+          auth,
+          routeBase: 'termination',
+          requestId: id,
+          requestType: 'Termination',
+          employeeId: existingRequest.employeeId,
+          blockReason: 'ROLE_NOT_COMMISSION',
+          message: 'Only HHRMD or HRMO can make commission decisions',
+          requestMethod: req.method,
+          ipAddress,
+          deviceInfo,
+        });
       }
       if (isResubmission && !['HRO', 'HRRP'].includes(auth.role)) {
-        return NextResponse.json(
-          { success: false, message: 'Only HRO or HRRP can resubmit requests' },
-          { status: 403 }
-        );
+        return denyWorkflowAccess({
+          auth,
+          routeBase: 'termination',
+          requestId: id,
+          requestType: 'Termination',
+          employeeId: existingRequest.employeeId,
+          blockReason: 'ROLE_NOT_RESUBMIT',
+          message: 'Only HRO or HRRP can resubmit requests',
+          requestMethod: req.method,
+          ipAddress,
+          deviceInfo,
+        });
       }
 
       // Validate that commission decisions include a commission letter
@@ -380,10 +431,18 @@ export const DELETE = wrapHandler(async (
       !existingRequest.Employee ||
       existingRequest.Employee.institutionId !== auth.institutionId
     ) {
-      return NextResponse.json(
-        { success: false, message: 'Access denied: request belongs to a different institution' },
-        { status: 403 }
-      );
+      return denyWorkflowAccess({
+        auth,
+        routeBase: 'termination',
+        requestId: id,
+        requestType: 'Termination',
+        employeeId: existingRequest.employeeId,
+        blockReason: 'INSTITUTION_OWNERSHIP',
+        message: 'Access denied: request belongs to a different institution',
+        requestMethod: 'DELETE',
+        ipAddress,
+        deviceInfo,
+      });
     }
   }
 
@@ -392,13 +451,18 @@ export const DELETE = wrapHandler(async (
     existingRequest.submittedById === auth.userId ||
     ['Admin', 'HHRMD'].includes(auth.role);
   if (!canWithdraw) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: 'Only the original submitter or an administrator may withdraw this request',
-      },
-      { status: 403 }
-    );
+    return denyWorkflowAccess({
+      auth,
+      routeBase: 'termination',
+      requestId: id,
+      requestType: 'Termination',
+      employeeId: existingRequest.employeeId,
+      blockReason: 'NOT_SUBMITTER',
+      message: 'Only the original submitter or an administrator may withdraw this request',
+      requestMethod: 'DELETE',
+      ipAddress,
+      deviceInfo,
+    });
   }
 
   // A request that has already received a final Commission decision is part of

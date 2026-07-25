@@ -2,10 +2,8 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
-import {
-  hashPassword,
-  calculateTemporaryPasswordExpiry,
-} from '@/lib/password-utils';
+import { calculateTemporaryPasswordExpiry } from '@/lib/password-utils';
+import { hashPassword } from '@/lib/password-hash';
 import { logUserAction, getClientIp } from '@/lib/audit-logger';
 import { withAuth } from '@/lib/api-auth';
 import { withRateLimit } from '@/lib/rate-limiter';

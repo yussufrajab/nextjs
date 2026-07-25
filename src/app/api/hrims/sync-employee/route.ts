@@ -6,6 +6,7 @@ import { hrimsLogger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
 import { withAuth, requireReauth } from '@/lib/api-auth';
 import { logHrimsSync, getClientIp } from '@/lib/audit-logger';
+import { scanEmployeePhoto } from '@/lib/hrims-photo-scan';
 
 // Validation schema for the HRIMS sync request
 const hrimsRequestSchema = z
@@ -142,7 +143,13 @@ export const POST = wrapHandler(withAuth(async (req, { auth }) => {
     // Store/Update employee in database
     const savedEmployee = await upsertEmployeeFromHRIMS(
       validatedHrimsData,
-      institution.id
+      institution.id,
+      {
+        userId: auth.userId,
+        username: auth.username,
+        role: auth.role,
+        ipAddress: getClientIp(req.headers),
+      }
     );
 
     hrimsLogger.info({ employeeId: savedEmployee.id }, 'Employee synced successfully');
@@ -280,9 +287,12 @@ async function fetchEmployeeFromHRIMS(
 }
 
 // Function to upsert employee data into the database
+// (HRIMS photo malware scanning lives in src/lib/hrims-photo-scan.ts — Req 10.7.)
+
 async function upsertEmployeeFromHRIMS(
   hrimsData: z.infer<typeof hrimsEmployeeResponseSchema>,
-  institutionId: string
+  institutionId: string,
+  actor: { userId: string; username: string; role: string; ipAddress: string | null }
 ) {
   const { Employee } = hrimsData.data;
 
@@ -332,9 +342,12 @@ async function upsertEmployeeFromHRIMS(
       : null,
     status: Employee.status || null,
     institutionId: institutionId,
-    profileImageUrl: Employee.photo?.content
-      ? `data:${Employee.photo.contentType};base64,${Employee.photo.content}`
-      : null,
+    // SECURITY (Req 10.7): scan the HRIMS photo for malware before storing it
+    // as a data URL. HRIMS is trusted, but a compromised HRIMS server or MITM
+    // could deliver a malicious image. Fail-closed: on malware or a scan error
+    // the photo is DROPPED (profileImageUrl=null) and a CRITICAL audit is emitted
+    // — the employee record is still synced without the photo.
+    profileImageUrl: await scanEmployeePhoto(Employee.photo, Employee.zanId, institutionId, actor),
   };
 
   let savedEmployee;

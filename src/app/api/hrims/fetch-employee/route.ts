@@ -286,9 +286,21 @@ async function processDocuments(
 
         // Take first attachment (most recent)
         const doc = attachments[0];
+        const attachmentContent =
+          typeof doc.attachmentContent === 'string' ? doc.attachmentContent : '';
+
+        // HRIMS can return metadata (contentSize > 0) with an empty
+        // attachmentContent — an upstream content-delivery issue. Skip
+        // rather than storing an empty/invalid file.
+        if (!attachmentContent) {
+          hrimsLogger.warn(
+            ` HRIMS returned ${docType.name} metadata with empty content for ${payrollNumber} (contentSize: ${doc.contentSize ?? 'n/a'}) — skipping, upstream content-delivery issue`
+          );
+          continue;
+        }
 
         // Convert base64 to buffer and upload to MinIO
-        const buffer = Buffer.from(doc.content, 'base64');
+        const buffer = Buffer.from(attachmentContent, 'base64');
         const fileName = `${employeeId}_${docType.dbKey}.pdf`;
         const filePath = `employee-documents/${fileName}`;
 

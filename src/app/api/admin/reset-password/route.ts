@@ -3,11 +3,11 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import {
   generateTemporaryPassword,
-  hashPassword,
   calculateTemporaryPasswordExpiry,
   validatePasswordComplexity,
   isCommonPassword,
 } from '@/lib/password-utils';
+import { hashPassword } from '@/lib/password-hash';
 import { withAuth, requireReauth } from '@/lib/api-auth';
 import { withRateLimit } from '@/lib/rate-limiter';
 import { logger } from '@/lib/logger';
@@ -32,6 +32,17 @@ export const POST = wrapHandler(withRateLimit(withAuth(async (request, { auth })
 
   // Use verified admin ID from auth context
   const adminId = auth.userId;
+
+  // SECURITY (Req 14.8): prevent self-reset — an admin must not reset their
+  // own password through this admin path (bypasses the change-password flow's
+  // history/old-password checks). Self-reset should use the regular
+  // change-password endpoint.
+  if (adminId === userId) {
+    return NextResponse.json(
+      { success: false, message: 'Cannot reset your own password through the admin path. Use the change-password endpoint.' },
+      { status: 403 }
+    );
+  }
 
   // Find the user to reset
   const user = await db.user.findUnique({

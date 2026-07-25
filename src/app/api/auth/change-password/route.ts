@@ -4,9 +4,6 @@ import { db } from '@/lib/db';
 import {
   validatePasswordComplexity,
   isCommonPassword,
-  checkPasswordHistory,
-  hashPassword,
-  comparePassword,
   isLockedOut,
   getRemainingLockoutTime,
   calculateLockoutExpiry,
@@ -14,6 +11,11 @@ import {
   PASSWORD_HISTORY_LENGTH,
   MAX_PASSWORD_CHANGE_ATTEMPTS,
 } from '@/lib/password-utils';
+import {
+  checkPasswordHistory,
+  hashPassword,
+  comparePassword,
+} from '@/lib/password-hash';
 import {
   SESSION_COOKIE_NAME,
   verifySessionToken,

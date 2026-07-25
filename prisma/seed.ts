@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { USERS, INSTITUTIONS, EMPLOYEES } from '@/lib/constants';
-import bcrypt from 'bcryptjs';
+import { hashPassword } from '@/lib/password-hash';
 
 const db = new PrismaClient();
 
@@ -74,7 +74,6 @@ async function main() {
   console.log('Employees seeded successfully!');
 
   console.log('Seeding users and linking to employees...');
-  const salt = await bcrypt.genSalt(10);
 
   for (const user of USERS) {
     const institutionName = user.institution || 'TUME YA UTUMISHI SERIKALINI';
@@ -93,7 +92,7 @@ async function main() {
       create: {
         name: user.name,
         username: user.username,
-        password: await bcrypt.hash('password123', salt),
+        password: await hashPassword('password123'),
         role: user.role as string,
         active: true,
         employeeId: user.employeeId || null,

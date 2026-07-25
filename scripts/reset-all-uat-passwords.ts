@@ -10,7 +10,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcryptjs';
+import { hashPassword } from '@/lib/password-hash';
 
 const prisma = new PrismaClient();
 
@@ -30,7 +30,7 @@ const UAT_USERS: Record<string, string[]> = {
 
 async function main() {
   const newPassword = process.argv[2] || 'Csms@2026';
-  const hashedPassword = await bcrypt.hash(newPassword, 10);
+  const hashedPassword = await hashPassword(newPassword);
 
   console.log(`\n🔑 Resetting UAT user passwords to: ${newPassword}\n`);
 

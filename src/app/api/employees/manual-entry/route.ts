@@ -6,18 +6,22 @@ import { logEmployeeAction, getClientIp } from '@/lib/audit-logger';
 import { logger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
 import { withAuth } from '@/lib/api-auth';
+import {
+  getInstitutionOrgFieldValues,
+  validateInstitutionOrgFields,
+  hasAnyOrgField,
+} from '@/lib/institution-field-validation';
+import {
+  GENDER_VALUES,
+  APPOINTMENT_TYPE_VALUES,
+  CONTRACT_TYPE_VALUES,
+  isValidZssfNumber,
+  isValidPayrollNumber,
+  validateCrossFieldDates,
+  parseISODate,
+} from '@/lib/employee-field-validation';
 
 const prisma = new PrismaClient();
-
-// SECURITY (Req 6.8): allowed values for enumerated text fields. The DB
-// columns are free-text Strings, so without these checks an HRO could submit
-// arbitrary/garbage values for gender, appointmentType, and contractType.
-// Mirrors the bulk-upload gender validation; appointmentType/contractType are
-// optional (may be omitted or empty), so the enum is only enforced when a
-// non-empty value is supplied.
-const GENDER_VALUES = ['Male', 'Female'] as const;
-const APPOINTMENT_TYPE_VALUES = ['Permanent', 'Contract', 'Temporary', 'Casual'] as const;
-const CONTRACT_TYPE_VALUES = ['Full-time', 'Part-time'] as const;
 
 export const POST = wrapHandler(
   withAuth(async (request: NextRequest | Request, { auth }) => {
@@ -171,10 +175,59 @@ export const POST = wrapHandler(
     }
   }
 
+  // SECURITY (Req 6.8): confirmation/retirement date format validation. These
+  // dates may legitimately be in the future (pending confirmation / planned
+  // retirement), so only the format is checked here — not the direction.
+  if (confirmationDate && !parseISODate(confirmationDate)) {
+    return NextResponse.json(
+      { success: false, error: 'Invalid confirmation date format (expected YYYY-MM-DD)' },
+      { status: 400 }
+    );
+  }
+  if (retirementDate && !parseISODate(retirementDate)) {
+    return NextResponse.json(
+      { success: false, error: 'Invalid retirement date format (expected YYYY-MM-DD)' },
+      { status: 400 }
+    );
+  }
+
+  // SECURITY (Req 6.8): cross-field date logic — employmentDate must be after
+  // dateOfBirth, confirmationDate on/after employmentDate, retirementDate
+  // after employmentDate. Invalid formats are already reported above; this
+  // only compares fields that parsed successfully.
+  const crossFieldDateErrors = validateCrossFieldDates({
+    dateOfBirth,
+    employmentDate,
+    confirmationDate,
+    retirementDate,
+  });
+  if (crossFieldDateErrors.length > 0) {
+    return NextResponse.json(
+      { success: false, error: crossFieldDateErrors.join('; ') },
+      { status: 400 }
+    );
+  }
+
   // ZAN ID format validation: must be numeric string
   if (!/^\d{5,12}$/.test(zanId)) {
     return NextResponse.json(
       { success: false, error: 'ZanID must be a numeric string between 5 and 12 digits' },
+      { status: 400 }
+    );
+  }
+
+  // SECURITY (Req 6.8): ZSSF / payroll identifier format. Required-ness is
+  // checked above; here we reject values that are non-empty but malformed
+  // (spaces, symbols, leading hyphen, > 50 chars).
+  if (!isValidZssfNumber(zssfNumber)) {
+    return NextResponse.json(
+      { success: false, error: 'ZSSF number must be 2–50 alphanumeric characters (hyphens allowed)' },
+      { status: 400 }
+    );
+  }
+  if (!isValidPayrollNumber(payrollNumber)) {
+    return NextResponse.json(
+      { success: false, error: 'Payroll number must be 2–50 alphanumeric characters (hyphens allowed)' },
       { status: 400 }
     );
   }
@@ -215,6 +268,26 @@ export const POST = wrapHandler(
       { success: false, error: 'Manual entry is not available at this time' },
       { status: 403 }
     );
+  }
+
+  // SECURITY (Req 6.6): ministry/department/currentWorkplace are free-text
+  // columns with no reference table. Validate any supplied values against the
+  // distinct values already recorded for this institution's employees (the
+  // institution's de-facto org-unit reference data). Bootstrap: an institution
+  // with no recorded values for a field accepts any non-empty value. Skipped
+  // entirely when none of these fields are supplied.
+  if (hasAnyOrgField({ ministry, department, currentWorkplace })) {
+    const orgFieldValues = await getInstitutionOrgFieldValues(prisma, institutionId);
+    const orgFieldCheck = validateInstitutionOrgFields(
+      { ministry, department, currentWorkplace },
+      orgFieldValues
+    );
+    if (!orgFieldCheck.valid) {
+      return NextResponse.json(
+        { success: false, error: orgFieldCheck.errors.join('; ') },
+        { status: 400 }
+      );
+    }
   }
 
   // Check ZanID uniqueness

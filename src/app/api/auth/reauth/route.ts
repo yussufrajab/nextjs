@@ -18,7 +18,6 @@
 
 import { NextResponse, NextRequest } from 'next/server';
 import { z } from 'zod';
-import bcrypt from 'bcryptjs';
 import { db } from '@/lib/db';
 import { withAuth } from '@/lib/api-auth';
 import { logAuditEvent, AuditEventType, AuditEventCategory, AuditSeverity, getClientIp } from '@/lib/audit-logger';
@@ -30,7 +29,7 @@ import {
   REAUTH_TTL_MS,
   getReauthCookieOptions,
 } from '@/lib/reauth';
-import { comparePassword } from '@/lib/password-utils';
+import { comparePassword } from '@/lib/password-hash';
 import { verifyMfaToken } from '@/lib/mfa-utils';
 
 const reauthSchema = z.object({

@@ -49,21 +49,31 @@ export function isAllowedStatusTransition(
     );
   }
 
-  // HRRP-approved → HHRMD/HRMO forward to Commission (variable status), or a
-  // direct Commission decision.
+  // HRRP-approved → HHRMD/HRMO forward to Commission (variable status), a
+  // direct Commission decision, or a return-to-HRO rejection by the reviewing
+  // role (the dashboard's "Reject & Return to HRO" button sends a variable
+  // `Rejected by {HRRP|HRMO|HHRMD} - Awaiting HRO Correction` status from this
+  // state — matched by the shared `Awaiting HRO Correction` substring).
+  // Terminal Commission states remain the only locked outcomes (above).
   if (fromStatus === 'Approved by HRRP - Awaiting Commission Review') {
     return (
       toStatus.includes('Awaiting Commission Decision') ||
       toStatus === 'Approved by Commission' ||
-      toStatus === 'Rejected by Commission - Request Concluded'
+      toStatus === 'Rejected by Commission - Request Concluded' ||
+      toStatus.includes('Awaiting HRO Correction')
     );
   }
 
-  // Forwarded / Awaiting Commission Decision → Commission decision only.
+  // Forwarded / Awaiting Commission Decision → Commission decision only, or a
+  // return-to-HRO rejection by the reviewing role (Commission-stage "Reject &
+  // Return to HRO": the reviewer sends an incomplete request back to the HRO
+  // for correction instead of concluding it). Terminal Commission states remain
+  // the only locked outcomes (above).
   if (fromStatus.includes('Awaiting Commission Decision')) {
     return (
       toStatus === 'Approved by Commission' ||
-      toStatus === 'Rejected by Commission - Request Concluded'
+      toStatus === 'Rejected by Commission - Request Concluded' ||
+      toStatus.includes('Awaiting HRO Correction')
     );
   }
 

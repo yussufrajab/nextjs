@@ -130,6 +130,8 @@ interface SubmittedComplaint {
   rejectionReason?: string | null;
   reviewedBy?: UserRole | null;
   institutionName?: string | null;
+  confidential?: boolean;
+  complainantIdentityRedacted?: boolean;
 }
 
 function getComplaintWorkflowSteps(status: string): WorkflowStep[] {
@@ -2064,6 +2066,15 @@ export default function ComplaintsPage() {
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4 text-sm max-h-[70vh] overflow-y-auto">
+              {selectedComplaint.confidential && (
+                <div className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                  <strong>Lalamiko Siri:</strong> Utambulisho wa mlalamikaji
+                  umefichwa kwa usalama. Watumiaji wasio na mamlaka ya kuhudumia
+                  lalamiko hili hawaoni jina, ZanID au namba za simu.
+                  {selectedComplaint.complainantIdentityRedacted &&
+                    ' Utambulisho umefichwa kwa wewe kwenye lalamiko hili.'}
+                </div>
+              )}
               <div>
                 <strong className="text-muted-foreground">Kichwa:</strong>{' '}
                 <p className="mt-1">{selectedComplaint.subject}</p>

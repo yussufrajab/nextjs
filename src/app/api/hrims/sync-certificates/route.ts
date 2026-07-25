@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 import { z } from 'zod';
 import { hrimsLogger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
-import { withAuth } from '@/lib/api-auth';
+import { withAuth, requireReauth } from '@/lib/api-auth';
 import { logHrimsSync, getClientIp } from '@/lib/audit-logger';
 
 // Validation schema for the HRIMS certificates sync request
@@ -50,6 +50,12 @@ const hrimsCertificatesResponseSchema = z.object({
 });
 
 export const POST = wrapHandler(withAuth(async (req: Request, { auth }) => {
+  // Step-up re-authentication: triggering an HRIMS certificates sync is a
+  // Tier-1 sensitive action (writes employee certificate data into CSMS).
+  // Mirrors sync-employee/bulk-fetch (Req 11.1).
+  const denied = requireReauth(req, 'hrims.sync', auth);
+  if (denied) return denied;
+
   const body = await req.json();
   hrimsLogger.info({
     ...body,

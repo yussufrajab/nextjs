@@ -6,6 +6,11 @@ import {
   SESSION_COOKIE_NAME_PROD,
   SESSION_COOKIE_NAME_DEV,
 } from '@/lib/session-manager';
+import {
+  logUnauthorizedAccess,
+  logForbiddenRoute,
+  safeAuditLog,
+} from '@/lib/audit-logger';
 
 /**
  * Next.js Proxy (middleware) for Authentication and Authorization
@@ -45,9 +50,10 @@ function logUnauthorizedAttempt(
     isAuthenticated: boolean;
     requestMethod: string;
     severity?: string;
+    additionalData?: Record<string, any>;
   }
 ) {
-  // Data will be passed via URL params and logged on the client side
+  // Operational console log (kept for live debugging).
   const severityEmoji =
     data.severity === 'ERROR'
       ? '🔴'
@@ -62,6 +68,44 @@ function logUnauthorizedAttempt(
       authenticated: data.isAuthenticated,
     }
   );
+
+  // SECURITY (Req 15.7 / 17.6): also write the denial to the tamper-evident
+  // audit trail so edge-blocks are reconstructable (not console-only). Fire-
+  // and-forget — a DB/audit outage must never break the redirect. Authenticated
+  // but wrong-role → FORBIDDEN_ROUTE; unauthenticated → UNAUTHORIZED_ACCESS.
+  const deviceInfo = data.userAgent ? { userAgent: data.userAgent } : null;
+  if (data.isAuthenticated) {
+    void safeAuditLog(
+      logForbiddenRoute({
+        userId: data.userId,
+        username: data.username,
+        userRole: data.userRole,
+        attemptedRoute: data.attemptedRoute,
+        ipAddress: data.ipAddress,
+        deviceInfo,
+        requestMethod: data.requestMethod,
+        additionalData: data.additionalData,
+      }),
+      'proxy:forbidden-route'
+    );
+  } else {
+    void safeAuditLog(
+      logUnauthorizedAccess({
+        userId: data.userId,
+        username: data.username,
+        userRole: data.userRole,
+        attemptedRoute: data.attemptedRoute,
+        blockReason: data.blockReason,
+        ipAddress: data.ipAddress,
+        deviceInfo,
+        isAuthenticated: false,
+        requestMethod: data.requestMethod,
+        severity: data.severity || 'WARNING',
+        additionalData: data.additionalData,
+      }),
+      'proxy:unauthorized-access'
+    );
+  }
 }
 
 // Local Role union used for route gating. The canonical source is
