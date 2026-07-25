@@ -47,9 +47,9 @@
 | 28 | Administrative Change Control | 5 | 2 | 1 | 2 |
 | 29 | Synchronization Accountability | 5 | 0 | 5 | 0 |
 | 30 | Government Information Confidentiality | 6 | 3 | 3 | 0 |
-| | **TOTAL** | **206** | **121** | **56** | **29** |
+| | **TOTAL** | **206** | **122** | **56** | **28** |
 
-**Headline result (2026-07-21 re-audit; updated 2026-07-25):** 121/206 controls fully implemented (58.7%), 56/206 partial (27.2%), 29/206 not implemented (14.1%) — up from 94/79/33 at the 2026-07-18 baseline. The strongest areas are Session Security (Req 2), Institution Isolation (Req 4), Authorization (Req 3), Workflow Security (Req 8), and Non-Repudiation (Req 19). The weakest areas remain Data Classification (Req 22), Audit Log Protection (Req 21), Synchronization Accountability (Req 29), Reporting/Export (Req 12), and Administrative Change Control (Req 28).
+**Headline result (2026-07-21 re-audit; updated 2026-07-25):** 122/206 controls fully implemented (59.2%), 56/206 partial (27.2%), 28/206 not implemented (13.6%) — up from 94/79/33 at the 2026-07-18 baseline. The strongest areas are Session Security (Req 2), Institution Isolation (Req 4), Authorization (Req 3), Workflow Security (Req 8), and Non-Repudiation (Req 19). The weakest areas remain Data Classification (Req 22), Audit Log Protection (Req 21), Synchronization Accountability (Req 29), Reporting/Export (Req 12), and Administrative Change Control (Req 28).
 
 ---
 
