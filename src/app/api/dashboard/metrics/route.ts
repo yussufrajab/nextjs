@@ -117,21 +117,26 @@ export const GET = wrapHandler(withRateLimit(withAuth(async (request, { auth }) 
     const countStartTime = Date.now();
 
     // Define status arrays for role-specific filtering
+    // NOTE: Every request module now uses the HRRP-based workflow with the
+    // canonical statuses below. These arrays were previously hard-coded with
+    // the OLD HRMO/HHRMD/DO review statuses (e.g. 'Pending HRMO Review',
+    // 'Pending DO/HHRMD Review'), which no longer exist in the DB after the
+    // security rework — so the dashboard counts silently returned 0. Keep
+    // these aligned with the modules' VALID_STATUSES.
     const getConfirmationStatuses = (role: string | null) => {
       switch (role) {
         case 'HRO':
         case 'HRRP':
-          return ['Pending HRMO Review', 'Pending HRMO/HHRMD Review'];
-        case 'HHRMD':
-          return ['Pending HRMO/HHRMD Review'];
+          return [
+            'Pending HRRP Review',
+            'Rejected by HRRP - Awaiting HRO Correction',
+          ];
         case 'CSCS':
         default:
           return [
-            'PENDING',
-            'Pending HRMO Review',
-            'Pending HRMO/HHRMD Review',
-            'Request Received – Awaiting Commission Decision',
-            'UNDER_REVIEW',
+            'Pending HRRP Review',
+            'Approved by HRRP - Awaiting Commission Review',
+            'Rejected by HRRP - Awaiting HRO Correction',
           ];
       }
     };
@@ -141,21 +146,15 @@ export const GET = wrapHandler(withRateLimit(withAuth(async (request, { auth }) 
         case 'HRO':
         case 'HRRP':
           return [
-            'Pending HRMO Review',
-            'Pending HRMO/HHRMD Review',
-            'Draft - Pending Review',
+            'Pending HRRP Review',
+            'Rejected by HRRP - Awaiting HRO Correction',
           ];
-        case 'HHRMD':
-          return ['Pending HRMO/HHRMD Review'];
         case 'CSCS':
         default:
           return [
-            'PENDING',
-            'Pending HRMO Review',
-            'Pending HRMO/HHRMD Review',
-            'Request Received – Awaiting Commission Decision',
-            'Draft - Pending Review',
-            'UNDER_REVIEW',
+            'Pending HRRP Review',
+            'Approved by HRRP - Awaiting Commission Review',
+            'Rejected by HRRP - Awaiting HRO Correction',
           ];
       }
     };
@@ -165,19 +164,15 @@ export const GET = wrapHandler(withRateLimit(withAuth(async (request, { auth }) 
         case 'HRO':
         case 'HRRP':
           return [
-            'Pending DO/HHRMD Review',
-            'Rejected by HHRMD - Awaiting HRO Correction',
+            'Pending HRRP Review',
+            'Rejected by HRRP - Awaiting HRO Correction',
           ];
-        case 'HHRMD':
-        case 'DO':
-          return ['Pending DO/HHRMD Review'];
         case 'CSCS':
         default:
           return [
-            'PENDING',
-            'Pending DO/HHRMD Review',
-            'Request Received – Awaiting Commission Decision',
-            'Rejected by HHRMD - Awaiting HRO Correction',
+            'Pending HRRP Review',
+            'Approved by HRRP - Awaiting Commission Review',
+            'Rejected by HRRP - Awaiting HRO Correction',
           ];
       }
     };
@@ -187,20 +182,15 @@ export const GET = wrapHandler(withRateLimit(withAuth(async (request, { auth }) 
         case 'HRO':
         case 'HRRP':
           return [
-            'Pending HRMO Review',
-            'Pending HRMO/HHRMD Review',
-            'Rejected by HRMO - Awaiting HRO Correction',
+            'Pending HRRP Review',
+            'Rejected by HRRP - Awaiting HRO Correction',
           ];
-        case 'HHRMD':
-          return ['Pending HRMO/HHRMD Review'];
         case 'CSCS':
         default:
           return [
-            'Pending HRMO Review',
-            'Pending HRMO/HHRMD Review',
-            'Request Received – Awaiting Commission Decision',
-            'Rejected by HRMO - Awaiting HRO Correction',
-            'UNDER_REVIEW',
+            'Pending HRRP Review',
+            'Approved by HRRP - Awaiting Commission Review',
+            'Rejected by HRRP - Awaiting HRO Correction',
           ];
       }
     };
@@ -210,22 +200,15 @@ export const GET = wrapHandler(withRateLimit(withAuth(async (request, { auth }) 
         case 'HRO':
         case 'HRRP':
           return [
-            'Pending HRMO Review',
-            'Pending HRMO/HHRMD Review',
-            'Rejected by HHRMD - Awaiting HRO Correction',
+            'Pending HRRP Review',
+            'Rejected by HRRP - Awaiting HRO Correction',
           ];
-        case 'HHRMD':
-          return ['Pending HRMO/HHRMD Review', 'Pending HHRMD Review'];
         case 'CSCS':
         default:
           return [
-            'PENDING',
-            'Pending HRMO Review',
-            'Pending HRMO/HHRMD Review',
-            'Pending HHRMD Review',
-            'Rejected by HHRMD - Awaiting HRO Correction',
-            'Request Received – Awaiting Commission Decision',
-            'UNDER_REVIEW',
+            'Pending HRRP Review',
+            'Approved by HRRP - Awaiting Commission Review',
+            'Rejected by HRRP - Awaiting HRO Correction',
           ];
       }
     };
@@ -235,18 +218,15 @@ export const GET = wrapHandler(withRateLimit(withAuth(async (request, { auth }) 
         case 'HRO':
         case 'HRRP':
           return [
-            'Pending HRMO/HHRMD Review',
-            'Rejected by HHRMD - Awaiting HRO Action',
+            'Pending HRRP Review',
+            'Rejected by HRRP - Awaiting HRO Correction',
           ];
-        case 'HHRMD':
-          return ['Pending HRMO/HHRMD Review'];
         case 'CSCS':
         default:
           return [
-            'Pending HRMO/HHRMD Review',
-            'Forwarded to Commission for Acknowledgment',
-            'Rejected by HHRMD - Awaiting HRO Action',
-            'UNDER_REVIEW',
+            'Pending HRRP Review',
+            'Approved by HRRP - Awaiting Commission Review',
+            'Rejected by HRRP - Awaiting HRO Correction',
           ];
       }
     };
@@ -256,18 +236,15 @@ export const GET = wrapHandler(withRateLimit(withAuth(async (request, { auth }) 
         case 'HRO':
         case 'HRRP':
           return [
-            'Pending HRMO/HHRMD Review',
-            'Rejected by HHRMD - Awaiting HRO Correction',
+            'Pending HRRP Review',
+            'Rejected by HRRP - Awaiting HRO Correction',
           ];
-        case 'HHRMD':
-          return ['Pending HRMO/HHRMD Review'];
         case 'CSCS':
         default:
           return [
-            'Pending HRMO/HHRMD Review',
-            'Request Received – Awaiting Commission Decision',
-            'Rejected by HHRMD - Awaiting HRO Correction',
-            'UNDER_REVIEW',
+            'Pending HRRP Review',
+            'Approved by HRRP - Awaiting Commission Review',
+            'Rejected by HRRP - Awaiting HRO Correction',
           ];
       }
     };

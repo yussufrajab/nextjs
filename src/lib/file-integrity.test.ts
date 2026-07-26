@@ -41,6 +41,13 @@ vi.mock('@/lib/db', () => ({
 
 vi.mock('@/lib/audit-logger', () => ({
   logAuditEvent: (...a: any[]) => mockLogAudit(...a),
+  safeAuditLog: async (p: Promise<void>) => {
+    try {
+      await p;
+    } catch {
+      /* swallow — exercised helper */
+    }
+  },
   AuditEventType: { POTENTIAL_BREACH: 'POTENTIAL_BREACH' },
   AuditEventCategory: { SECURITY: 'SECURITY' },
   AuditSeverity: { CRITICAL: 'CRITICAL', INFO: 'INFO' },
@@ -90,10 +97,24 @@ describe('file-integrity', () => {
   });
 
   describe('verifyDocumentHash', () => {
-    it('returns ok=true when no hash recorded (fail-open for legacy)', async () => {
+    it('fails closed (ok=false + CRITICAL audit) when no hash recorded by default', async () => {
+      mockFindUnique.mockResolvedValueOnce(null);
+      mockLogAudit.mockResolvedValueOnce(undefined);
+      const { verifyDocumentHash } = await import('./file-integrity');
+      const result = await verifyDocumentHash('emp-1', 'ardhilHaliUrl', 'data');
+      expect(result.ok).toBe(false);
+      expect(result.reason).toBe('no_hash_recorded');
+      expect(mockLogAudit).toHaveBeenCalledOnce();
+      const call = mockLogAudit.mock.calls[0][0];
+      expect(call.severity).toBe('CRITICAL');
+      expect(call.eventType).toBe('POTENTIAL_BREACH');
+      expect(call.blockReason).toBe('NO_HASH_RECORDED');
+    });
+
+    it('returns ok=true when no hash recorded if failClosed:false (legacy)', async () => {
       mockFindUnique.mockResolvedValueOnce(null);
       const { verifyDocumentHash } = await import('./file-integrity');
-      const result = await verifyDocumentHash('emp-1', 'field', 'data');
+      const result = await verifyDocumentHash('emp-1', 'field', 'data', { failClosed: false });
       expect(result.ok).toBe(true);
       expect(result.reason).toBe('no_hash_recorded');
       // Should NOT have logged an audit event on fail-open
@@ -216,6 +237,45 @@ describe('file-integrity', () => {
       mockFileFindUnique.mockRejectedValueOnce(new Error('relation "FileHash" does not exist'));
       const { verifyFileHash } = await import('./file-integrity');
       const result = await verifyFileHash('documents/abc.pdf', 'data');
+      expect(result.ok).toBe(true);
+      expect(result.reason).toBe('no_hash_recorded');
+      expect(mockLogAudit).not.toHaveBeenCalled();
+    });
+
+    it('fails closed + flags CRITICAL audit when no hash recorded for a sensitive key', async () => {
+      mockFileFindUnique.mockResolvedValueOnce(null);
+      mockLogAudit.mockResolvedValueOnce(undefined);
+      const { verifyFileHash } = await import('./file-integrity');
+      const result = await verifyFileHash('employee-documents/emp-1_letter.pdf', 'data');
+      expect(result.ok).toBe(false);
+      expect(result.reason).toBe('no_hash_recorded');
+      expect(mockLogAudit).toHaveBeenCalledOnce();
+      const call = mockLogAudit.mock.calls[0][0];
+      expect(call.severity).toBe('CRITICAL');
+      expect(call.eventType).toBe('POTENTIAL_BREACH');
+      expect(call.blockReason).toBe('NO_HASH_RECORDED');
+      expect(call.additionalData.objectKey).toBe('employee-documents/emp-1_letter.pdf');
+    });
+
+    it('fails closed + flags CRITICAL audit when the DB lookup throws for a sensitive key', async () => {
+      mockFileFindUnique.mockRejectedValueOnce(new Error('relation "FileHash" does not exist'));
+      mockLogAudit.mockResolvedValueOnce(undefined);
+      const { verifyFileHash } = await import('./file-integrity');
+      const result = await verifyFileHash('employee-photos/emp-1.jpg', 'data');
+      expect(result.ok).toBe(false);
+      expect(result.reason).toBe('lookup_failed');
+      expect(mockLogAudit).toHaveBeenCalledOnce();
+      const call = mockLogAudit.mock.calls[0][0];
+      expect(call.severity).toBe('CRITICAL');
+      expect(call.blockReason).toBe('INTEGRITY_LOOKUP_FAILED');
+    });
+
+    it('keeps fail-open for a sensitive key when failClosed:false is passed', async () => {
+      mockFileFindUnique.mockResolvedValueOnce(null);
+      const { verifyFileHash } = await import('./file-integrity');
+      const result = await verifyFileHash('employee-documents/emp-1_letter.pdf', 'data', {
+        failClosed: false,
+      });
       expect(result.ok).toBe(true);
       expect(result.reason).toBe('no_hash_recorded');
       expect(mockLogAudit).not.toHaveBeenCalled();

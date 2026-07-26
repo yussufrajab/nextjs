@@ -24,7 +24,13 @@ function createTransporter(): nodemailer.Transporter {
     host: process.env.SMTP_HOST,
     port: Number(process.env.SMTP_PORT) || 25,
     secure: smtpSecure,
-    requireTLS: false,
+    // Some hardened SMTP relays (e.g. Postfix with smtpd_tls_security_level=encrypt)
+    // refuse to issue a 220 banner until STARTTLS is initiated, which causes
+    // nodemailer to hit greetingTimeout and return success:false on every send.
+    // Default to true; set SMTP_REQUIRE_TLS=false to opt out.
+    requireTLS: process.env.SMTP_REQUIRE_TLS !== 'false',
+    // Some relays reject EHLO without a valid FQDN. Override via SMTP_HELO_NAME.
+    name: process.env.SMTP_HELO_NAME,
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASSWORD,
@@ -143,6 +149,95 @@ export async function sendMfaEmail(
 </html>`;
 
   return sendEmail(to, 'CSMS Login Verification', html);
+}
+
+export async function sendPasswordResetEmail({
+  email,
+  resetLink,
+  userName,
+  expiryMinutes,
+}: {
+  email: string;
+  resetLink: string;
+  userName: string;
+  expiryMinutes: number;
+}): Promise<SendEmailResult> {
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; background-color: #f4f4f5; font-family: Arial, sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f4f5; padding: 40px 0;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+          <tr>
+            <td style="background-color: #1e3a5f; padding: 24px 32px; text-align: center;">
+              <h1 style="color: #ffffff; margin: 0; font-size: 20px;">Civil Service Management System</h1>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 32px;">
+              <p style="color: #18181b; font-size: 16px; margin: 0 0 16px;">Hello <strong>${userName}</strong>,</p>
+              <p style="color: #3f3f46; font-size: 14px; margin: 0 0 24px;">We received a request to reset the password for your CSMS account. Click the button below to choose a new password.</p>
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center" style="padding-bottom: 24px;">
+                    <a href="${resetLink}" style="display: inline-block; background-color: #1e3a5f; color: #ffffff; padding: 12px 32px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: bold;">Reset Password</a>
+                  </td>
+                </tr>
+              </table>
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 4px; margin-bottom: 16px;">
+                <tr>
+                  <td style="padding: 16px;">
+                    <p style="color: #92400e; font-size: 13px; margin: 0 0 4px;"><strong>Important:</strong></p>
+                    <ul style="color: #92400e; font-size: 13px; margin: 4px 0 0; padding-left: 20px;">
+                      <li>This link expires in <strong>${expiryMinutes} minutes</strong>.</li>
+                      <li>This link can be used <strong>only once</strong>.</li>
+                      <li>If you did not request a password reset, ignore this email &mdash; your password has not been changed.</li>
+                    </ul>
+                  </td>
+                </tr>
+              </table>
+              <table width="100%" cellpadding="0" cellspacing="0" style="border-top: 1px solid #e4e4e7; margin-top: 8px;">
+                <tr>
+                  <td style="padding-top: 16px;">
+                    <p style="color: #71717a; font-size: 12px; margin: 0 0 4px;">Or copy and paste this link into your browser:</p>
+                    <p style="color: #a1a1aa; font-size: 11px; word-break: break-all; margin: 0;">${resetLink}</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color: #f4f4f5; padding: 16px 32px; text-align: center;">
+              <p style="color: #a1a1aa; font-size: 11px; margin: 0;">Civil Service Management System &mdash; Zanzibar Government</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+  const text = `Hello ${userName},
+
+We received a request to reset the password for your CSMS account. Open the link below to choose a new password:
+
+${resetLink}
+
+IMPORTANT:
+- This link expires in ${expiryMinutes} minutes.
+- This link can be used only once.
+- If you did not request a password reset, ignore this email — your password has not been changed.
+
+This is an automatic email from the CSMS. If you have questions, contact your HR office.`;
+
+  return sendEmail(email, 'Password Reset Request - CSMS', html, text);
 }
 
 function generateRequestSubmittedEmailHtml(params: {

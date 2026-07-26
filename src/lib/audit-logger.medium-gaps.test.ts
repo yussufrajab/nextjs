@@ -120,6 +120,45 @@ describe('MEDIUM-gap audit helpers', () => {
       expect(AuditEventType.SYSTEM_SETTING_CHANGED).toBe('SYSTEM_SETTING_CHANGED');
       expect(AuditEventType.REQUEST_WITHDRAWN).toBe('REQUEST_WITHDRAWN');
       expect(AuditEventType.PASSWORD_PWNED_LOGIN).toBe('PASSWORD_PWNED_LOGIN');
+      // Req 5.6: profile-view event type must exist for successful PII reads
+      expect(AuditEventType.EMPLOYEE_VIEWED).toBe('EMPLOYEE_VIEWED');
+    });
+  });
+
+  describe('logEmployeeView (Req 5.6 — profile view)', () => {
+    it('emits EMPLOYEE_VIEWED ACCESS event with actor + target, no PII payload', async () => {
+      const { logEmployeeView } = await import('@/lib/audit-logger');
+      await logEmployeeView({
+        employeeId: 'emp-1',
+        employeeName: 'Jane Doe',
+        employeeZanId: '60363181',
+        targetInstitutionId: 'inst-A',
+        performedById: 'user-1',
+        performedByUsername: 'hro_user',
+        performedByRole: 'HRO',
+        ipAddress: '203.0.113.10',
+      });
+      expect(mockWriteAuditLog).toHaveBeenCalledOnce();
+      const call = mockWriteAuditLog.mock.calls[0][0];
+      expect(call.eventType).toBe('EMPLOYEE_VIEWED');
+      expect(call.eventCategory).toBe('ACCESS');
+      expect(call.severity).toBe('INFO');
+      expect(call.requestMethod).toBe('GET');
+      expect(call.attemptedRoute).toBe('/api/employees?id=emp-1');
+      expect(call.isAuthenticated).toBe(true);
+      expect(call.wasBlocked).toBe(false);
+      expect(call.userId).toBe('user-1');
+      expect(call.username).toBe('hro_user');
+      expect(call.userRole).toBe('HRO');
+      expect(call.ipAddress).toBe('203.0.113.10');
+      // Target identity for SOC triage...
+      expect(call.additionalData.employeeId).toBe('emp-1');
+      expect(call.additionalData.employeeZanId).toBe('60363181');
+      expect(call.additionalData.employeeName).toBe('Jane Doe');
+      expect(call.additionalData.targetInstitutionId).toBe('inst-A');
+      expect(call.additionalData.action).toBe('VIEWED');
+      // ...and the read was NOT a block.
+      expect(call.blockReason).toBeNull();
     });
   });
 

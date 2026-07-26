@@ -1,0 +1,22 @@
+
+================================================================================
+  🚀 HRIMS Data Fetch Script (Axios Implementation)
+================================================================================
+Started at: 2026-07-16 09:39:03
+Timeout per institution: 30 minutes
+Retries: DISABLED (single attempt only)
+================================================================================
+
+[2026-07-16 09:39:03] ℹ️  Authenticating as admin (MFA via DB-read OTP)...
+[2026-07-16 09:39:05] ℹ️  Logged in as ymrajab (userId=cme56ma17000x2btjnpvgr0kg), MFA required
+[2026-07-16 09:39:05] ℹ️  Retrieved OTP from DB (length=6)
+
+================================================================================
+💥 FATAL ERROR:
+================================================================================
+Error: OTP verification failed: {"success":true,"data":{"token":null,"refreshToken":null,"tokenType":"Bearer","expiresIn":null,"user":{"id":"cme56ma17000x2btjnpvgr0kg","fullName":"Yussuf Mzee Rajab","name":"Yussuf Mzee Rajab","usern
+    at login (/home/latest/scripts/fetch-hrims-data.ts:148:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async main (/home/latest/scripts/fetch-hrims-data.ts:369:15)
+================================================================================
+

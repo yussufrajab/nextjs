@@ -15,6 +15,7 @@ import {
   ensurePartitions,
 } from './audit-db';
 import { logger } from '@/lib/logger';
+import { dispatchSecurityAlert } from '@/lib/security-alerts';
 
 export enum AuditEventType {
   // Access Control Events
@@ -51,6 +52,10 @@ export enum AuditEventType {
   EMPLOYEE_CREATED = 'EMPLOYEE_CREATED',
   EMPLOYEE_UPDATED = 'EMPLOYEE_UPDATED',
   EMPLOYEE_DELETED = 'EMPLOYEE_DELETED',
+  // Req 5.6: a successful PII read of a single employee profile. Distinct from
+  // the write events above and from IDOR denials (which log UNAUTHORIZED_ACCESS)
+  // so that every disclosure of sanitized PII is discoverable in the audit trail.
+  EMPLOYEE_VIEWED = 'EMPLOYEE_VIEWED',
   USER_CREATED = 'USER_CREATED',
   USER_UPDATED = 'USER_UPDATED',
   USER_DELETED = 'USER_DELETED',
@@ -65,8 +70,13 @@ export enum AuditEventType {
   FILE_DELETED = 'FILE_DELETED',
   FILE_DOWNLOADED = 'FILE_DOWNLOADED',
   FILE_PREVIEWED = 'FILE_PREVIEWED',
+  FILE_EXISTS_CHECK = 'FILE_EXISTS_CHECK',
   INSTITUTION_CREATED = 'INSTITUTION_CREATED',
   INSTITUTION_UPDATED = 'INSTITUTION_UPDATED',
+
+  // Reporting Events (Q14, Req 12.5 / 27.2)
+  REPORT_VIEWED = 'REPORT_VIEWED',
+  REPORT_EXPORTED = 'REPORT_EXPORTED',
 
   // System / Configuration Events
   HRIMS_CONFIG_CHANGED = 'HRIMS_CONFIG_CHANGED',
@@ -145,11 +155,71 @@ export async function logAuditEvent(data: AuditLogData): Promise<void> {
       blocked: data.wasBlocked,
       reason: data.blockReason,
     }, `Audit event: ${data.eventType}`);
+
+    // Real-time outbound alert (Req 26.6): fire-and-forget to webhook/SIEM +
+    // email for events at/above the configured severity threshold. Never
+    // awaited and never throws — see src/lib/security-alerts.ts. An audit
+    // row is the system of record; this is the real-time SOC signal on top.
+    void dispatchSecurityAlert({
+      eventType: data.eventType,
+      eventCategory: data.eventCategory,
+      severity: data.severity,
+      userId: data.userId,
+      username: data.username,
+      userRole: data.userRole,
+      ipAddress: data.ipAddress,
+      attemptedRoute: data.attemptedRoute,
+      requestMethod: data.requestMethod,
+      isAuthenticated: data.isAuthenticated,
+      wasBlocked: data.wasBlocked,
+      blockReason: data.blockReason,
+      additionalData: data.additionalData,
+      message: `Audit event ${data.eventType} on ${data.attemptedRoute}`,
+    });
   } catch (error: any) {
     // If audit logging fails, log to structured logger but don't throw
     // We don't want audit logging failures to break the app
     logger.error({ err: error }, 'Failed to log audit event');
     logger.error({ eventData: data }, 'Event data for failed audit log');
+
+    // An audit-write failure is itself a security signal (DB outage or
+    // tampering) — page the SOC even though the row never landed. Always
+    // ERROR severity so it clears the default CRITICAL-only threshold only
+    // when the operator has lowered it; otherwise the operator can raise it
+    // to ERROR via SECURITY_ALERT_SEVERITY_THRESHOLD=ERROR.
+    void dispatchSecurityAlert({
+      eventType: 'AUDIT_WRITE_FAILED',
+      eventCategory: AuditEventCategory.SECURITY,
+      severity: AuditSeverity.ERROR,
+      userId: data.userId,
+      username: data.username,
+      userRole: data.userRole,
+      ipAddress: data.ipAddress,
+      attemptedRoute: data.attemptedRoute,
+      requestMethod: data.requestMethod,
+      isAuthenticated: data.isAuthenticated,
+      wasBlocked: false,
+      blockReason: error?.message ? String(error.message) : 'audit write failed',
+      additionalData: { eventType: data.eventType },
+      message: `Failed to persist audit event ${data.eventType} on ${data.attemptedRoute}`,
+    });
+  }
+}
+
+/**
+ * Await an audit-write promise, logging (never throwing) on rejection. Use
+ * this instead of `.catch(() => {})` at call sites so an audit-write failure
+ * is never silently swallowed (Req 10.8 / Remediation #13). `logAuditEvent`
+ * already handles failures internally — pino log + `AUDIT_WRITE_FAILED`
+ * security alert — and does not reject in practice; this is a defense-in-depth
+ * backstop that makes the "no silent audit failures" intent explicit at the
+ * call site and survives any future helper that wraps `logAuditEvent`.
+ */
+export async function safeAuditLog(p: Promise<void>, context?: string): Promise<void> {
+  try {
+    await p;
+  } catch (err) {
+    logger.error({ err, context }, 'Audit write failed (call-site backstop)');
   }
 }
 
@@ -768,6 +838,53 @@ export async function logEmployeeAction(data: {
 }
 
 /**
+ * Log a successful profile view (Req 5.6).
+ *
+ * The single-employee GET path returns sanitized PII but previously wrote no
+ * audit event on success — only IDOR denials were logged. This closes that gap
+ * by emitting an ACCESS event for every successful PII read, recording the
+ * actor and the target employee (id + zanId + name) WITHOUT the PII payload
+ * itself. Self-views (an EMPLOYEE reading their own record) are logged too:
+ * the actor/target ids make the relationship explicit for SOC triage.
+ */
+export async function logEmployeeView(data: {
+  employeeId: string;
+  employeeName?: string;
+  employeeZanId?: string;
+  targetInstitutionId?: string | null;
+  performedById: string;
+  performedByUsername: string;
+  performedByRole: string;
+  ipAddress?: string | null;
+  deviceInfo?: Record<string, any> | null;
+  additionalData?: Record<string, any>;
+}): Promise<void> {
+  await logAuditEvent({
+    eventType: AuditEventType.EMPLOYEE_VIEWED,
+    eventCategory: AuditEventCategory.ACCESS,
+    severity: AuditSeverity.INFO,
+    userId: data.performedById,
+    username: data.performedByUsername,
+    userRole: data.performedByRole,
+    ipAddress: data.ipAddress,
+    deviceInfo: data.deviceInfo,
+    attemptedRoute: `/api/employees?id=${data.employeeId}`,
+    requestMethod: 'GET',
+    isAuthenticated: true,
+    wasBlocked: false,
+    blockReason: null,
+    additionalData: {
+      employeeId: data.employeeId,
+      employeeName: data.employeeName,
+      employeeZanId: data.employeeZanId,
+      targetInstitutionId: data.targetInstitutionId,
+      action: 'VIEWED',
+      ...data.additionalData,
+    },
+  });
+}
+
+/**
  * Log an HRIMS synchronization event (Q8 — Domains 11.6, 29.1–29.5).
  *
  * HRIMS sync routes previously wrote only to the plain structured logger
@@ -953,7 +1070,7 @@ export async function logComplaintAction(data: {
  * Log file operation
  */
 export async function logFileAction(data: {
-  action: 'UPLOADED' | 'DELETED' | 'DOWNLOADED' | 'PREVIEWED';
+  action: 'UPLOADED' | 'DELETED' | 'DOWNLOADED' | 'PREVIEWED' | 'EXISTS';
   fileName?: string;
   objectKey?: string;
   performedById: string;
@@ -968,13 +1085,23 @@ export async function logFileAction(data: {
     DELETED: AuditEventType.FILE_DELETED,
     DOWNLOADED: AuditEventType.FILE_DOWNLOADED,
     PREVIEWED: AuditEventType.FILE_PREVIEWED,
+    EXISTS: AuditEventType.FILE_EXISTS_CHECK,
   };
   const requestMethodMap = {
     UPLOADED: 'POST',
     DELETED: 'DELETE',
     DOWNLOADED: 'GET',
     PREVIEWED: 'GET',
+    EXISTS: 'GET',
   };
+  const routeSegment =
+    data.action === 'UPLOADED'
+      ? 'upload'
+      : data.action === 'DELETED'
+        ? 'delete'
+        : data.action === 'EXISTS'
+          ? 'exists'
+          : 'download';
   await logAuditEvent({
     eventType: eventTypeMap[data.action],
     eventCategory: AuditEventCategory.DATA_MODIFICATION,
@@ -984,7 +1111,7 @@ export async function logFileAction(data: {
     userRole: data.performedByRole,
     ipAddress: data.ipAddress,
     deviceInfo: data.deviceInfo,
-    attemptedRoute: `/api/files/${data.action === 'UPLOADED' ? 'upload' : data.action === 'DELETED' ? 'delete' : 'download'}/${data.objectKey || ''}`,
+    attemptedRoute: `/api/files/${routeSegment}/${data.objectKey || ''}`,
     requestMethod: requestMethodMap[data.action],
     isAuthenticated: true,
     wasBlocked: false,
@@ -1080,6 +1207,7 @@ export async function logAccountAction(data: {
 
 export default {
   logAuditEvent,
+  safeAuditLog,
   logUnauthorizedAccess,
   logAccessDenied,
   logForbiddenRoute,
@@ -1092,6 +1220,7 @@ export default {
   logRequestSubmission,
   logRequestUpdate,
   logEmployeeAction,
+  logEmployeeView,
   logUserAction,
   logConfigChange,
   logComplaintAction,

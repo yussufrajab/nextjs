@@ -27,6 +27,16 @@ const minioClient = new MinioClient({
 // Default bucket name
 export const DEFAULT_BUCKET = process.env.MINIO_BUCKET_NAME || 'documents';
 
+// Maximum lifetime (seconds) for any presigned URL.
+// SECURITY (Req 10.3): presigned URLs are bearer tokens — anyone who obtains
+// one can fetch the object until it expires. The previous 24h default was
+// excessive; cap at 1 hour and clamp caller-supplied values so a client cannot
+// request a long-lived URL via ?expiry=. Override via env if a use case needs more.
+export const MAX_PRESIGNED_URL_EXPIRY_SECONDS = Math.min(
+  Number(process.env.MAX_PRESIGNED_URL_EXPIRY_SECONDS) || 3600,
+  3600
+);
+
 // Initialize MinIO bucket if it doesn't exist
 export async function ensureBucketExists(bucketName: string = DEFAULT_BUCKET) {
   try {
@@ -48,8 +58,41 @@ export function generateObjectKey(
 ): string {
   const timestamp = Date.now();
   const randomSuffix = Math.random().toString(36).substring(2, 8);
-  const sanitizedName = originalName.replace(/[^a-zA-Z0-9.-]/g, '_');
-  return `${folder}/${timestamp}_${randomSuffix}_${sanitizedName}`;
+  const sanitizedName = sanitizeObjectName(originalName);
+  const sanitizedFolder = folder
+    .split('/')
+    .map((segment) => sanitizeObjectName(segment))
+    .join('/');
+  return `${sanitizedFolder}/${timestamp}_${randomSuffix}_${sanitizedName}`;
+}
+
+// Sanitize a single path segment (folder name or filename) so it can never
+// form a path-traversal sequence. Spaces and other illegal characters become
+// underscores, runs of dots collapse to a single underscore, and leading/trailing
+// dots are stripped. This prevents keys like "..._foo_..pdf" (which previously
+// tripped the retrieval guard and returned HTTP 400) while keeping the key
+// safe for MinIO.
+export function sanitizeObjectName(name: string): string {
+  return name
+    .replace(/[^a-zA-Z0-9._-]/g, '_') // illegal chars -> underscore
+    .replace(/\.{2,}/g, '_') // collapse dot runs (e.g. "..") so traversal is impossible
+    .replace(/^\.+/, '') // strip leading dots
+    .replace(/\.+$/, '') // strip trailing dots
+    .replace(/_+/g, '_') // collapse repeated underscores
+    .replace(/^-+/, '') // strip leading dashes
+    .replace(/-+$/, ''); // strip trailing dashes
+}
+
+// Validate that a reconstructed object key does not attempt path traversal.
+// Genuine traversal uses ".." as a path *segment* (e.g. "/../", "../",
+// trailing "/.."). A ".." embedded inside a filename (e.g. "report_..pdf") is
+// NOT traversal and must remain accessible — it can occur in legacy keys and is
+// harmless because MinIO treats the whole string as one object name.
+export function isPathTraversal(objectKey: string): boolean {
+  if (objectKey.includes('\0')) return true;
+  if (objectKey.startsWith('/') || objectKey.endsWith('/')) return true;
+  const segments = objectKey.split('/');
+  return segments.some((segment) => segment === '..' || segment.startsWith('../') || segment.endsWith('/..'));
 }
 
 // Upload file to MinIO
@@ -119,17 +162,20 @@ export async function getFileMetadata(
   }
 }
 
-// Generate presigned URL for file access
+// Generate presigned URL for file access.
+// `expiry` is clamped to [1, MAX_PRESIGNED_URL_EXPIRY_SECONDS] so callers
+// cannot mint long-lived bearer URLs.
 export async function generatePresignedUrl(
   objectKey: string,
-  expiry: number = 24 * 60 * 60, // 24 hours in seconds
+  expiry: number = MAX_PRESIGNED_URL_EXPIRY_SECONDS,
   bucketName: string = DEFAULT_BUCKET
 ) {
+  const safeExpiry = Math.max(1, Math.min(expiry, MAX_PRESIGNED_URL_EXPIRY_SECONDS));
   try {
     const url = await minioClient.presignedGetObject(
       bucketName,
       objectKey,
-      expiry
+      safeExpiry
     );
     return url;
   } catch (error) {

@@ -65,7 +65,7 @@ export function ResetPasswordModal({
         toast({
           title: 'Weak Password',
           description:
-            'Password must contain at least one uppercase, lowercase, number, or special character.',
+            'Password must contain an uppercase letter, lowercase letter, number, and special character.',
           variant: 'destructive',
         });
         return;

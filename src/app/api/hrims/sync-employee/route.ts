@@ -6,16 +6,23 @@ import { hrimsLogger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
 import { withAuth, requireReauth } from '@/lib/api-auth';
 import { logHrimsSync, getClientIp } from '@/lib/audit-logger';
+import { scanEmployeePhoto } from '@/lib/hrims-photo-scan';
+import {
+  getHrimsApiConfig,
+  isHrimsConfigError,
+} from '@/lib/hrims-config';
 
-// Validation schema for the HRIMS sync request
+// SECURITY (Req 11.2): the HRIMS endpoint and credentials are sourced ONLY
+// from server config (`getHrimsApiConfig`) — never from the request body —
+// so an authorized caller cannot point the server at an arbitrary host
+// (SSRF) or exfiltrate the API key. `hrimsApiUrl`/`hrimsApiKey` are
+// deliberately absent from this schema.
 const hrimsRequestSchema = z
   .object({
     zanId: z.string().optional(),
     payrollNumber: z.string().optional(),
     institutionVoteNumber: z.string(),
     syncDocuments: z.boolean().optional().default(false), // Default false for two-API approach
-    hrimsApiUrl: z.string().url().optional(), // External HRIMS API URL
-    hrimsApiKey: z.string().optional(), // API key for HRIMS authentication
   })
   .refine((data) => data.zanId || data.payrollNumber, {
     message: 'Either zanId or payrollNumber must be provided',
@@ -77,7 +84,7 @@ export const POST = wrapHandler(withAuth(async (req, { auth }) => {
     if (denied) return denied;
 
     const body = await req.json();
-    hrimsLogger.info({ ...body, hrimsApiKey: '[REDACTED]' }, 'HRIMS sync request received');
+    hrimsLogger.info({ ...body }, 'HRIMS sync request received');
 
     // Validate request payload
     const validatedRequest = hrimsRequestSchema.parse(body);
@@ -110,8 +117,40 @@ export const POST = wrapHandler(withAuth(async (req, { auth }) => {
       );
     }
 
+    // SECURITY (Req 11.2): resolve the trusted HRIMS endpoint + credentials
+    // from server config. A non-allowlisted host or non-https-in-production
+    // config throws `HrimsConfigError` → 400 + `HRIMS_SYNC_FAILED` audit, so
+    // the server is never proxied at a caller-chosen host.
+    let HRIMS_CONFIG;
+    try {
+      HRIMS_CONFIG = await getHrimsApiConfig();
+    } catch (configError) {
+      if (isHrimsConfigError(configError)) {
+        await logHrimsSync({
+          success: false,
+          performedById: auth.userId,
+          performedByUsername: auth.username,
+          performedByRole: auth.role,
+          institutionVoteNumber: validatedRequest.institutionVoteNumber,
+          route: '/api/hrims/sync-employee',
+          ipAddress: getClientIp(req.headers),
+          deviceInfo: JSON.parse(req.headers.get('x-device-info') || 'null'),
+          additionalData: { reason: configError.code },
+        }).catch(() => {});
+        return NextResponse.json(
+          {
+            success: false,
+            message: configError.message,
+            errorCode: configError.code,
+          },
+          { status: 400 }
+        );
+      }
+      throw configError;
+    }
+
     // Fetch employee data from HRIMS
-    const hrimsData = await fetchEmployeeFromHRIMS(validatedRequest);
+    const hrimsData = await fetchEmployeeFromHRIMS(validatedRequest, HRIMS_CONFIG);
 
     if (!hrimsData) {
       await logHrimsSync({
@@ -142,7 +181,13 @@ export const POST = wrapHandler(withAuth(async (req, { auth }) => {
     // Store/Update employee in database
     const savedEmployee = await upsertEmployeeFromHRIMS(
       validatedHrimsData,
-      institution.id
+      institution.id,
+      {
+        userId: auth.userId,
+        username: auth.username,
+        role: auth.role,
+        ipAddress: getClientIp(req.headers),
+      }
     );
 
     hrimsLogger.info({ employeeId: savedEmployee.id }, 'Employee synced successfully');
@@ -223,16 +268,13 @@ export const POST = wrapHandler(withAuth(async (req, { auth }) => {
 
 // Function to fetch employee data from external HRIMS system
 async function fetchEmployeeFromHRIMS(
-  request: z.infer<typeof hrimsRequestSchema>
+  request: z.infer<typeof hrimsRequestSchema>,
+  hrimsConfig: { BASE_URL: string; API_KEY: string; TOKEN: string }
 ) {
   try {
-    // For demo purposes - replace with actual HRIMS API endpoint
-    const hrimsApiUrl =
-      request.hrimsApiUrl ||
-      process.env.HRIMS_API_URL ||
-      'https://hrims-api.example.com';
-    const hrimsApiKey = request.hrimsApiKey || process.env.HRIMS_API_KEY;
-
+    // SECURITY (Req 11.2): endpoint + credentials come from the trusted
+    // server config (`hrimsConfig`), never from the request body. TLS cert
+    // validation is left at undici's secure default (never disabled).
     const searchParams = new URLSearchParams();
     if (request.zanId) searchParams.append('zanId', request.zanId);
     if (request.payrollNumber)
@@ -240,13 +282,13 @@ async function fetchEmployeeFromHRIMS(
     searchParams.append('institutionVoteNumber', request.institutionVoteNumber);
 
     const response = await fetch(
-      `${hrimsApiUrl}/api/employee/search?${searchParams}`,
+      `${hrimsConfig.BASE_URL}/employee/search?${searchParams}`,
       {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${hrimsApiKey}`,
-          'X-API-Key': hrimsApiKey || '',
+          Authorization: `Bearer ${hrimsConfig.API_KEY}`,
+          'X-API-Key': hrimsConfig.API_KEY || '',
         },
         signal: AbortSignal.timeout(30000), // 30 seconds timeout
       }
@@ -280,9 +322,12 @@ async function fetchEmployeeFromHRIMS(
 }
 
 // Function to upsert employee data into the database
+// (HRIMS photo malware scanning lives in src/lib/hrims-photo-scan.ts — Req 10.7.)
+
 async function upsertEmployeeFromHRIMS(
   hrimsData: z.infer<typeof hrimsEmployeeResponseSchema>,
-  institutionId: string
+  institutionId: string,
+  actor: { userId: string; username: string; role: string; ipAddress: string | null }
 ) {
   const { Employee } = hrimsData.data;
 
@@ -293,7 +338,12 @@ async function upsertEmployeeFromHRIMS(
     },
   });
 
-  const employeeData = {
+  // SECURITY/DATA-INTEGRITY: institutionId must NOT be overwritten on update.
+  // zanId is globally unique, so an employee exists exactly once. If the same
+  // ZAN ID is returned while syncing a different institution, overwriting
+  // institutionId here would silently re-tag the employee under the wrong
+  // institution. The institution is assigned once, at creation.
+  const { institutionId: _instId, ...employeeDataWithoutInstId } = {
     zanId: Employee.zanId,
     name: Employee.name,
     gender: Employee.gender || null,
@@ -327,25 +377,28 @@ async function upsertEmployeeFromHRIMS(
       : null,
     status: Employee.status || null,
     institutionId: institutionId,
-    profileImageUrl: Employee.photo?.content
-      ? `data:${Employee.photo.contentType};base64,${Employee.photo.content}`
-      : null,
+    // SECURITY (Req 10.7): scan the HRIMS photo for malware before storing it
+    // as a data URL. HRIMS is trusted, but a compromised HRIMS server or MITM
+    // could deliver a malicious image. Fail-closed: on malware or a scan error
+    // the photo is DROPPED (profileImageUrl=null) and a CRITICAL audit is emitted
+    // — the employee record is still synced without the photo.
+    profileImageUrl: await scanEmployeePhoto(Employee.photo, Employee.zanId, institutionId, actor),
   };
 
   let savedEmployee;
 
   if (existingEmployee) {
-    // Update existing employee
+    // Update existing employee (preserve original institutionId)
     savedEmployee = await db.employee.update({
       where: { id: existingEmployee.id },
-      data: employeeData as any,
+      data: employeeDataWithoutInstId as any,
     });
   } else {
     // Create new employee
     savedEmployee = await db.employee.create({
       data: {
         id: uuidv4(),
-        ...employeeData,
+        ...employeeDataWithoutInstId,
       } as any,
     });
   }
@@ -411,8 +464,6 @@ async function triggerBackgroundDocumentsSync(
     const syncPayload = {
       zanId: zanId,
       institutionVoteNumber: request.institutionVoteNumber,
-      hrimsApiUrl: request.hrimsApiUrl,
-      hrimsApiKey: request.hrimsApiKey,
     };
 
     // Use the internal API base URL for background sync
@@ -451,8 +502,6 @@ async function triggerBackgroundCertificatesSync(
     const syncPayload = {
       zanId: zanId,
       institutionVoteNumber: request.institutionVoteNumber,
-      hrimsApiUrl: request.hrimsApiUrl,
-      hrimsApiKey: request.hrimsApiKey,
     };
 
     // Use the internal API base URL for background sync

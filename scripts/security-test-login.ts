@@ -9,7 +9,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcryptjs';
+import { verifyPassword } from '@/lib/password-hash';
 import crypto from 'crypto';
 
 const prisma = new PrismaClient();
@@ -29,7 +29,7 @@ async function main() {
     });
     if (!user) { console.error('User not found'); process.exit(1); }
 
-    const valid = await bcrypt.compare(password, user.password);
+    const valid = await verifyPassword(password, user.password);
     if (!valid) { console.error('Invalid password'); process.exit(1); }
 
     console.log(`✓ Authenticated: ${user.username} (${user.role})`);

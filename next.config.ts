@@ -6,7 +6,9 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 });
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ['pino', 'pino-pretty', 'nodemailer'],
+  // argon2 is a native C++ addon — must be externalized so Next.js doesn't
+  // try to bundle it (would break build/runtime). bcryptjs was pure JS.
+  serverExternalPackages: ['pino', 'pino-pretty', 'nodemailer', 'argon2'],
   /* config options here */
   // Remove X-Powered-By header for security
   poweredByHeader: false,

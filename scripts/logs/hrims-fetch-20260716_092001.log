@@ -1,0 +1,754 @@
+
+================================================================================
+  🚀 HRIMS Data Fetch Script (Axios Implementation)
+================================================================================
+Started at: 2026-07-16 09:20:02
+Timeout per institution: 30 minutes
+Retries: DISABLED (single attempt only)
+================================================================================
+
+[2026-07-16 09:20:02] ℹ️  Loading institutions from database...
+[2026-07-16 09:20:02] ℹ️  Found 75 institutions
+
+
+[1/75] ======================================================================
+[1/75] Institution: AFISI YA MKURUGENZI WA MASHTAKA
+[1/75] ======================================================================
+[2026-07-16 09:20:02] ℹ️  Fetching: AFISI YA MKURUGENZI WA MASHTAKA
+[2026-07-16 09:20:02] ℹ️    Using votecode: 029
+[2026-07-16 09:20:02] ❌ AFISI YA MKURUGENZI WA MASHTAKA: HTTP 401
+[2026-07-16 09:20:02] ℹ️  Pausing 15s before next institution...
+
+
+[2/75] ======================================================================
+[2/75] Institution: AFISI YA MWANASHERIA MKUU
+[2/75] ======================================================================
+[2026-07-16 09:20:17] ℹ️  Fetching: AFISI YA MWANASHERIA MKUU
+[2026-07-16 09:20:17] ℹ️    Using votecode: 028
+[2026-07-16 09:20:17] ❌ AFISI YA MWANASHERIA MKUU: HTTP 401
+[2026-07-16 09:20:17] ℹ️  Pausing 15s before next institution...
+
+
+[3/75] ======================================================================
+[3/75] Institution: AFISI YA RAISI KAZI, UCHUMI NA UWEKEZAJI
+[3/75] ======================================================================
+[2026-07-16 09:20:32] ℹ️  Fetching: AFISI YA RAISI KAZI, UCHUMI NA UWEKEZAJI
+[2026-07-16 09:20:32] ℹ️    Using votecode: 006
+[2026-07-16 09:20:32] ❌ AFISI YA RAISI KAZI, UCHUMI NA UWEKEZAJI: HTTP 401
+[2026-07-16 09:20:32] ℹ️  Pausing 15s before next institution...
+
+
+[4/75] ======================================================================
+[4/75] Institution: Baraza la Jiji
+[4/75] ======================================================================
+[2026-07-16 09:20:47] ℹ️  Fetching: Baraza la Jiji
+[2026-07-16 09:20:47] ℹ️    Using votecode: 201
+[2026-07-16 09:20:47] ❌ Baraza la Jiji: HTTP 401
+[2026-07-16 09:20:47] ℹ️  Pausing 15s before next institution...
+
+
+[5/75] ======================================================================
+[5/75] Institution: Baraza la Manispaa Magharibi A
+[5/75] ======================================================================
+[2026-07-16 09:21:02] ℹ️  Fetching: Baraza la Manispaa Magharibi A
+[2026-07-16 09:21:02] ℹ️    Using votecode: 203
+[2026-07-16 09:21:02] ❌ Baraza la Manispaa Magharibi A: HTTP 401
+[2026-07-16 09:21:02] ℹ️  Pausing 15s before next institution...
+
+
+[6/75] ======================================================================
+[6/75] Institution: Baraza la Manispaa Magharibi B
+[6/75] ======================================================================
+[2026-07-16 09:21:17] ℹ️  Fetching: Baraza la Manispaa Magharibi B
+[2026-07-16 09:21:17] ℹ️    Using votecode: 204
+[2026-07-16 09:21:17] ❌ Baraza la Manispaa Magharibi B: HTTP 401
+[2026-07-16 09:21:17] ℹ️  Pausing 15s before next institution...
+
+
+[7/75] ======================================================================
+[7/75] Institution: Baraza la Manispaa Mjini Unguja
+[7/75] ======================================================================
+[2026-07-16 09:21:32] ℹ️  Fetching: Baraza la Manispaa Mjini Unguja
+[2026-07-16 09:21:32] ℹ️    Using votecode: 202
+[2026-07-16 09:21:32] ❌ Baraza la Manispaa Mjini Unguja: HTTP 401
+[2026-07-16 09:21:32] ℹ️  Pausing 15s before next institution...
+
+
+[8/75] ======================================================================
+[8/75] Institution: Baraza la Mapinduzi
+[8/75] ======================================================================
+[2026-07-16 09:21:47] ℹ️  Fetching: Baraza la Mapinduzi
+[2026-07-16 09:21:47] ℹ️    Using votecode: A02
+[2026-07-16 09:21:47] ❌ Baraza la Mapinduzi: HTTP 401
+[2026-07-16 09:21:47] ℹ️  Pausing 15s before next institution...
+
+
+[9/75] ======================================================================
+[9/75] Institution: Baraza la Mitihani
+[9/75] ======================================================================
+[2026-07-16 09:22:02] ℹ️  Fetching: Baraza la Mitihani
+[2026-07-16 09:22:02] ℹ️    Using votecode: 547
+[2026-07-16 09:22:02] ❌ Baraza la Mitihani: HTTP 401
+[2026-07-16 09:22:02] ℹ️  Pausing 15s before next institution...
+
+
+[10/75] ======================================================================
+[10/75] Institution: Baraza la Mji Chake Chake
+[10/75] ======================================================================
+[2026-07-16 09:22:17] ℹ️  Fetching: Baraza la Mji Chake Chake
+[2026-07-16 09:22:17] ℹ️    Using votecode: 210
+[2026-07-16 09:22:17] ❌ Baraza la Mji Chake Chake: HTTP 401
+[2026-07-16 09:22:17] ℹ️  Pausing 15s before next institution...
+
+
+[11/75] ======================================================================
+[11/75] Institution: Baraza la Mji Kaskazini A Unguja
+[11/75] ======================================================================
+[2026-07-16 09:22:32] ℹ️  Fetching: Baraza la Mji Kaskazini A Unguja
+[2026-07-16 09:22:32] ℹ️    Using votecode: 207
+[2026-07-16 09:22:32] ❌ Baraza la Mji Kaskazini A Unguja: HTTP 401
+[2026-07-16 09:22:32] ℹ️  Pausing 15s before next institution...
+
+
+[12/75] ======================================================================
+[12/75] Institution: Baraza la Mji Kaskazini B Unguja
+[12/75] ======================================================================
+[2026-07-16 09:22:47] ℹ️  Fetching: Baraza la Mji Kaskazini B Unguja
+[2026-07-16 09:22:47] ℹ️    Using votecode: 208
+[2026-07-16 09:22:47] ❌ Baraza la Mji Kaskazini B Unguja: HTTP 401
+[2026-07-16 09:22:47] ℹ️  Pausing 15s before next institution...
+
+
+[13/75] ======================================================================
+[13/75] Institution: Baraza la Mji Kati Unguja
+[13/75] ======================================================================
+[2026-07-16 09:23:02] ℹ️  Fetching: Baraza la Mji Kati Unguja
+[2026-07-16 09:23:02] ℹ️    Using votecode: 205
+[2026-07-16 09:23:03] ❌ Baraza la Mji Kati Unguja: HTTP 401
+[2026-07-16 09:23:03] ℹ️  Pausing 15s before next institution...
+
+
+[14/75] ======================================================================
+[14/75] Institution: Baraza la Mji Mkoani
+[14/75] ======================================================================
+[2026-07-16 09:23:18] ℹ️  Fetching: Baraza la Mji Mkoani
+[2026-07-16 09:23:18] ℹ️    Using votecode: 209
+[2026-07-16 09:23:18] ❌ Baraza la Mji Mkoani: HTTP 401
+[2026-07-16 09:23:18] ℹ️  Pausing 15s before next institution...
+
+
+[15/75] ======================================================================
+[15/75] Institution: Baraza la Mji Wete
+[15/75] ======================================================================
+[2026-07-16 09:23:33] ℹ️  Fetching: Baraza la Mji Wete
+[2026-07-16 09:23:33] ℹ️    Using votecode: 211
+[2026-07-16 09:23:33] ❌ Baraza la Mji Wete: HTTP 401
+[2026-07-16 09:23:33] ℹ️  Pausing 15s before next institution...
+
+
+[16/75] ======================================================================
+[16/75] Institution: Baraza la Taifa la Biashara
+[16/75] ======================================================================
+[2026-07-16 09:23:48] ℹ️  Fetching: Baraza la Taifa la Biashara
+[2026-07-16 09:23:48] ℹ️    Using tin: 165388267
+[2026-07-16 09:23:48] ❌ Baraza la Taifa la Biashara: HTTP 401
+[2026-07-16 09:23:48] ℹ️  Pausing 15s before next institution...
+
+
+[17/75] ======================================================================
+[17/75] Institution: Bodi ya Huduma za Maktaba
+[17/75] ======================================================================
+[2026-07-16 09:24:03] ℹ️  Fetching: Bodi ya Huduma za Maktaba
+[2026-07-16 09:24:03] ℹ️    Using votecode: 543
+[2026-07-16 09:24:03] ❌ Bodi ya Huduma za Maktaba: HTTP 401
+[2026-07-16 09:24:03] ℹ️  Pausing 15s before next institution...
+
+
+[18/75] ======================================================================
+[18/75] Institution: Chuo cha Kiislamu
+[18/75] ======================================================================
+[2026-07-16 09:24:18] ⚠️  Skipping: No vote number or TIN number
+
+[19/75] ======================================================================
+[19/75] Institution: Halmashauri ya Wilaya ya Kusini Unguja
+[19/75] ======================================================================
+[2026-07-16 09:24:18] ℹ️  Fetching: Halmashauri ya Wilaya ya Kusini Unguja
+[2026-07-16 09:24:18] ℹ️    Using votecode: 206
+[2026-07-16 09:24:18] ❌ Halmashauri ya Wilaya ya Kusini Unguja: HTTP 401
+[2026-07-16 09:24:18] ℹ️  Pausing 15s before next institution...
+
+
+[20/75] ======================================================================
+[20/75] Institution: Halmashauri ya Wilaya ya Micheweni
+[20/75] ======================================================================
+[2026-07-16 09:24:33] ℹ️  Fetching: Halmashauri ya Wilaya ya Micheweni
+[2026-07-16 09:24:33] ℹ️    Using votecode: 212
+[2026-07-16 09:24:33] ❌ Halmashauri ya Wilaya ya Micheweni: HTTP 401
+[2026-07-16 09:24:33] ℹ️  Pausing 15s before next institution...
+
+
+[21/75] ======================================================================
+[21/75] Institution: Hospitali ya Mnazi Mmoja
+[21/75] ======================================================================
+[2026-07-16 09:24:48] ℹ️  Fetching: Hospitali ya Mnazi Mmoja
+[2026-07-16 09:24:48] ℹ️    Using votecode: 025
+[2026-07-16 09:24:48] ❌ Hospitali ya Mnazi Mmoja: HTTP 401
+[2026-07-16 09:24:48] ℹ️  Pausing 15s before next institution...
+
+
+[22/75] ======================================================================
+[22/75] Institution: JKU
+[22/75] ======================================================================
+[2026-07-16 09:25:03] ⚠️  Skipping: No vote number or TIN number
+
+[23/75] ======================================================================
+[23/75] Institution: KAMISHENI YA ARDHI ZANZIBAR
+[23/75] ======================================================================
+[2026-07-16 09:25:03] ℹ️  Fetching: KAMISHENI YA ARDHI ZANZIBAR
+[2026-07-16 09:25:03] ℹ️    Using votecode: 520
+[2026-07-16 09:25:03] ❌ KAMISHENI YA ARDHI ZANZIBAR: HTTP 401
+[2026-07-16 09:25:03] ℹ️  Pausing 15s before next institution...
+
+
+[24/75] ======================================================================
+[24/75] Institution: Kamisheni ya Kazi
+[24/75] ======================================================================
+[2026-07-16 09:25:18] ℹ️  Fetching: Kamisheni ya Kazi
+[2026-07-16 09:25:18] ℹ️    Using votecode: 573
+[2026-07-16 09:25:18] ❌ Kamisheni ya Kazi: HTTP 401
+[2026-07-16 09:25:18] ℹ️  Pausing 15s before next institution...
+
+
+[25/75] ======================================================================
+[25/75] Institution: KAMISHENI YA KUKABILIANA NA MAAFA ZANZIBAR
+[25/75] ======================================================================
+[2026-07-16 09:25:33] ℹ️  Fetching: KAMISHENI YA KUKABILIANA NA MAAFA ZANZIBAR
+[2026-07-16 09:25:33] ℹ️    Using votecode: 510
+[2026-07-16 09:25:33] ❌ KAMISHENI YA KUKABILIANA NA MAAFA ZANZIBAR: HTTP 401
+[2026-07-16 09:25:33] ℹ️  Pausing 15s before next institution...
+
+
+[26/75] ======================================================================
+[26/75] Institution: KAMISHENI YA UTALII ZANZIBAR
+[26/75] ======================================================================
+[2026-07-16 09:25:48] ⚠️  Skipping: No vote number or TIN number
+
+[27/75] ======================================================================
+[27/75] Institution: KAMISHENI YA UTUMISHI WA UMMA
+[27/75] ======================================================================
+[2026-07-16 09:25:48] ℹ️  Fetching: KAMISHENI YA UTUMISHI WA UMMA
+[2026-07-16 09:25:48] ℹ️    Using votecode: 036
+[2026-07-16 09:25:48] ❌ KAMISHENI YA UTUMISHI WA UMMA: HTTP 401
+[2026-07-16 09:25:48] ℹ️  Pausing 15s before next institution...
+
+
+[28/75] ======================================================================
+[28/75] Institution: MAMLAKA YA KUDHIBITI NA KUPAMBANA NA DAWA ZA KULEVYA ZANZIBAR
+[28/75] ======================================================================
+[2026-07-16 09:26:03] ℹ️  Fetching: MAMLAKA YA KUDHIBITI NA KUPAMBANA NA DAWA ZA KULEVYA ZANZIBAR
+[2026-07-16 09:26:03] ℹ️    Using votecode: 032
+[2026-07-16 09:26:03] ❌ MAMLAKA YA KUDHIBITI NA KUPAMBANA NA DAWA ZA KULEVYA ZANZIBAR: HTTP 401
+[2026-07-16 09:26:03] ℹ️  Pausing 15s before next institution...
+
+
+[29/75] ======================================================================
+[29/75] Institution: MAMLAKA YA KUZUIA RUSHWA NA UHUJUMU WA UCHUMI ZANZIBAR
+[29/75] ======================================================================
+[2026-07-16 09:26:18] ℹ️  Fetching: MAMLAKA YA KUZUIA RUSHWA NA UHUJUMU WA UCHUMI ZANZIBAR
+[2026-07-16 09:26:18] ℹ️    Using votecode: 035
+[2026-07-16 09:26:18] ❌ MAMLAKA YA KUZUIA RUSHWA NA UHUJUMU WA UCHUMI ZANZIBAR: HTTP 401
+[2026-07-16 09:26:18] ℹ️  Pausing 15s before next institution...
+
+
+[30/75] ======================================================================
+[30/75] Institution: Mamlaka ya Serikali Mtandao (eGAZ)
+[30/75] ======================================================================
+[2026-07-16 09:26:33] ℹ️  Fetching: Mamlaka ya Serikali Mtandao (eGAZ)
+[2026-07-16 09:26:33] ℹ️    Using votecode: 038
+[2026-07-16 09:26:33] ❌ Mamlaka ya Serikali Mtandao (eGAZ): HTTP 401
+[2026-07-16 09:26:33] ℹ️  Pausing 15s before next institution...
+
+
+[31/75] ======================================================================
+[31/75] Institution: Mamlaka ya Uwezeshaji Wananchi Kiuchumi (ZEA)
+[31/75] ======================================================================
+[2026-07-16 09:26:48] ℹ️  Fetching: Mamlaka ya Uwezeshaji Wananchi Kiuchumi (ZEA)
+[2026-07-16 09:26:48] ℹ️    Using votecode: 105
+[2026-07-16 09:26:48] ❌ Mamlaka ya Uwezeshaji Wananchi Kiuchumi (ZEA): HTTP 401
+[2026-07-16 09:26:48] ℹ️  Pausing 15s before next institution...
+
+
+[32/75] ======================================================================
+[32/75] Institution: Ofisi ya Hatimiliki (COSOZA)
+[32/75] ======================================================================
+[2026-07-16 09:27:03] ℹ️  Fetching: Ofisi ya Hatimiliki (COSOZA)
+[2026-07-16 09:27:03] ℹ️    Using votecode: 558
+[2026-07-16 09:27:03] ❌ Ofisi ya Hatimiliki (COSOZA): HTTP 401
+[2026-07-16 09:27:03] ℹ️  Pausing 15s before next institution...
+
+
+[33/75] ======================================================================
+[33/75] Institution: OFISI YA MAKAMO WA KWANZA WA RAISI
+[33/75] ======================================================================
+[2026-07-16 09:27:18] ℹ️  Fetching: OFISI YA MAKAMO WA KWANZA WA RAISI
+[2026-07-16 09:27:18] ℹ️    Using votecode: 002
+[2026-07-16 09:27:18] ❌ OFISI YA MAKAMO WA KWANZA WA RAISI: HTTP 401
+[2026-07-16 09:27:18] ℹ️  Pausing 15s before next institution...
+
+
+[34/75] ======================================================================
+[34/75] Institution: OFISI YA MAKAMO WA PILI WA RAISI
+[34/75] ======================================================================
+[2026-07-16 09:27:33] ℹ️  Fetching: OFISI YA MAKAMO WA PILI WA RAISI
+[2026-07-16 09:27:33] ℹ️    Using votecode: 003
+[2026-07-16 09:27:33] ❌ OFISI YA MAKAMO WA PILI WA RAISI: HTTP 401
+[2026-07-16 09:27:33] ℹ️  Pausing 15s before next institution...
+
+
+[35/75] ======================================================================
+[35/75] Institution: Ofisi ya Mhasibu Mkuu wa Serikali
+[35/75] ======================================================================
+[2026-07-16 09:27:48] ℹ️  Fetching: Ofisi ya Mhasibu Mkuu wa Serikali
+[2026-07-16 09:27:48] ℹ️    Using votecode: 022
+[2026-07-16 09:27:48] ❌ Ofisi ya Mhasibu Mkuu wa Serikali: HTTP 401
+[2026-07-16 09:27:48] ℹ️  Pausing 15s before next institution...
+
+
+[36/75] ======================================================================
+[36/75] Institution: OFISI YA MKAGUZI MKUU WA NDANI WA SERIKALI
+[36/75] ======================================================================
+[2026-07-16 09:28:03] ℹ️  Fetching: OFISI YA MKAGUZI MKUU WA NDANI WA SERIKALI
+[2026-07-16 09:28:03] ℹ️    Using votecode: 052
+[2026-07-16 09:28:03] ❌ OFISI YA MKAGUZI MKUU WA NDANI WA SERIKALI: HTTP 401
+[2026-07-16 09:28:03] ℹ️  Pausing 15s before next institution...
+
+
+[37/75] ======================================================================
+[37/75] Institution: Ofisi ya Mkaguzi wa Elimu
+[37/75] ======================================================================
+[2026-07-16 09:28:18] ℹ️  Fetching: Ofisi ya Mkaguzi wa Elimu
+[2026-07-16 09:28:18] ℹ️    Using votecode: 546
+[2026-07-16 09:28:18] ❌ Ofisi ya Mkaguzi wa Elimu: HTTP 401
+[2026-07-16 09:28:18] ℹ️  Pausing 15s before next institution...
+
+
+[38/75] ======================================================================
+[38/75] Institution: Ofisi ya Mkuu wa Mkoa wa Kaskazini Pemba
+[38/75] ======================================================================
+[2026-07-16 09:28:33] ℹ️  Fetching: Ofisi ya Mkuu wa Mkoa wa Kaskazini Pemba
+[2026-07-16 09:28:33] ℹ️    Using votecode: 051
+[2026-07-16 09:28:33] ❌ Ofisi ya Mkuu wa Mkoa wa Kaskazini Pemba: HTTP 401
+[2026-07-16 09:28:33] ℹ️  Pausing 15s before next institution...
+
+
+[39/75] ======================================================================
+[39/75] Institution: Ofisi ya Mkuu wa Mkoa wa Kaskazini Unguja
+[39/75] ======================================================================
+[2026-07-16 09:28:48] ℹ️  Fetching: Ofisi ya Mkuu wa Mkoa wa Kaskazini Unguja
+[2026-07-16 09:28:48] ℹ️    Using votecode: 048
+[2026-07-16 09:28:48] ❌ Ofisi ya Mkuu wa Mkoa wa Kaskazini Unguja: HTTP 401
+[2026-07-16 09:28:48] ℹ️  Pausing 15s before next institution...
+
+
+[40/75] ======================================================================
+[40/75] Institution: Ofisi ya Mkuu wa Mkoa wa Kusini Pemba
+[40/75] ======================================================================
+[2026-07-16 09:29:03] ℹ️  Fetching: Ofisi ya Mkuu wa Mkoa wa Kusini Pemba
+[2026-07-16 09:29:03] ℹ️    Using votecode: 050
+[2026-07-16 09:29:03] ❌ Ofisi ya Mkuu wa Mkoa wa Kusini Pemba: HTTP 401
+[2026-07-16 09:29:03] ℹ️  Pausing 15s before next institution...
+
+
+[41/75] ======================================================================
+[41/75] Institution: Ofisi ya Mkuu wa Mkoa wa Kusini Unguja
+[41/75] ======================================================================
+[2026-07-16 09:29:18] ℹ️  Fetching: Ofisi ya Mkuu wa Mkoa wa Kusini Unguja
+[2026-07-16 09:29:18] ℹ️    Using votecode: 049
+[2026-07-16 09:29:18] ❌ Ofisi ya Mkuu wa Mkoa wa Kusini Unguja: HTTP 401
+[2026-07-16 09:29:18] ℹ️  Pausing 15s before next institution...
+
+
+[42/75] ======================================================================
+[42/75] Institution: Ofisi ya Mkuu wa Mkoa wa Mjini Magharibi Unguja
+[42/75] ======================================================================
+[2026-07-16 09:29:33] ℹ️  Fetching: Ofisi ya Mkuu wa Mkoa wa Mjini Magharibi Unguja
+[2026-07-16 09:29:33] ℹ️    Using votecode: 047
+[2026-07-16 09:29:33] ❌ Ofisi ya Mkuu wa Mkoa wa Mjini Magharibi Unguja: HTTP 401
+[2026-07-16 09:29:33] ℹ️  Pausing 15s before next institution...
+
+
+[43/75] ======================================================================
+[43/75] Institution: Ofisi ya Mkuu wa Wilaya ya Kaskazini B
+[43/75] ======================================================================
+[2026-07-16 09:29:48] ⚠️  Skipping: No vote number or TIN number
+
+[44/75] ======================================================================
+[44/75] Institution: Ofisi ya Msajili wa Hazina
+[44/75] ======================================================================
+[2026-07-16 09:29:48] ℹ️  Fetching: Ofisi ya Msajili wa Hazina
+[2026-07-16 09:29:48] ℹ️    Using votecode: 106
+[2026-07-16 09:29:48] ❌ Ofisi ya Msajili wa Hazina: HTTP 401
+[2026-07-16 09:29:48] ℹ️  Pausing 15s before next institution...
+
+
+[45/75] ======================================================================
+[45/75] Institution: OFISI YA MUFTI MKUU WA ZANZIBAR
+[45/75] ======================================================================
+[2026-07-16 09:30:03] ⚠️  Skipping: No vote number or TIN number
+
+[46/75] ======================================================================
+[46/75] Institution: OFISI YA RAIS, FEDHA NA MIPANGO
+[46/75] ======================================================================
+[2026-07-16 09:30:03] ℹ️  Fetching: OFISI YA RAIS, FEDHA NA MIPANGO
+[2026-07-16 09:30:03] ℹ️    Using votecode: 567
+[2026-07-16 09:30:03] ❌ OFISI YA RAIS, FEDHA NA MIPANGO: HTTP 401
+[2026-07-16 09:30:03] ℹ️  Pausing 15s before next institution...
+
+
+[47/75] ======================================================================
+[47/75] Institution: OFISI YA RAIS - IKULU
+[47/75] ======================================================================
+[2026-07-16 09:30:18] ℹ️  Fetching: OFISI YA RAIS - IKULU
+[2026-07-16 09:30:18] ℹ️    Using votecode: 567
+[2026-07-16 09:30:18] ❌ OFISI YA RAIS - IKULU: HTTP 401
+[2026-07-16 09:30:18] ℹ️  Pausing 15s before next institution...
+
+
+[48/75] ======================================================================
+[48/75] Institution: OFISI YA RAIS - KATIBA SHERIA UTUMISHI NA UTAWALA BORA
+[48/75] ======================================================================
+[2026-07-16 09:30:33] ℹ️  Fetching: OFISI YA RAIS - KATIBA SHERIA UTUMISHI NA UTAWALA BORA
+[2026-07-16 09:30:33] ℹ️    Using votecode: 005
+[2026-07-16 09:30:33] ❌ OFISI YA RAIS - KATIBA SHERIA UTUMISHI NA UTAWALA BORA: HTTP 401
+[2026-07-16 09:30:33] ℹ️  Pausing 15s before next institution...
+
+
+[49/75] ======================================================================
+[49/75] Institution: OFISI YA RAIS, TAWALA ZA MIKOA, SERIKALI ZA MITAA NA IDARA MAALUMU ZA SMZ
+[49/75] ======================================================================
+[2026-07-16 09:30:48] ℹ️  Fetching: OFISI YA RAIS, TAWALA ZA MIKOA, SERIKALI ZA MITAA NA IDARA MAALUMU ZA SMZ
+[2026-07-16 09:30:48] ℹ️    Using votecode: 004
+[2026-07-16 09:30:48] ❌ OFISI YA RAIS, TAWALA ZA MIKOA, SERIKALI ZA MITAA NA IDARA MAALUMU ZA SMZ: HTTP 401
+[2026-07-16 09:30:48] ℹ️  Pausing 15s before next institution...
+
+
+[50/75] ======================================================================
+[50/75] Institution: Skuli ya Sheria Zanzibar
+[50/75] ======================================================================
+[2026-07-16 09:31:03] ℹ️  Fetching: Skuli ya Sheria Zanzibar
+[2026-07-16 09:31:03] ℹ️    Using votecode: 570
+[2026-07-16 09:31:03] ❌ Skuli ya Sheria Zanzibar: HTTP 401
+[2026-07-16 09:31:03] ℹ️  Pausing 15s before next institution...
+
+
+[51/75] ======================================================================
+[51/75] Institution: Taasisi ya Afisi ya Rais Ufuatiliaji na Usimamizi wa Utendaji Serikalini (PDB)
+[51/75] ======================================================================
+[2026-07-16 09:31:18] ℹ️  Fetching: Taasisi ya Afisi ya Rais Ufuatiliaji na Usimamizi wa Utendaji Serikalini (PDB)
+[2026-07-16 09:31:18] ℹ️    Using votecode: A09
+[2026-07-16 09:31:18] ❌ Taasisi ya Afisi ya Rais Ufuatiliaji na Usimamizi wa Utendaji Serikalini (PDB): HTTP 401
+[2026-07-16 09:31:18] ℹ️  Pausing 15s before next institution...
+
+
+[52/75] ======================================================================
+[52/75] Institution: TAASISI YA ELIMU ZANZIBAR
+[52/75] ======================================================================
+[2026-07-16 09:31:33] ℹ️  Fetching: TAASISI YA ELIMU ZANZIBAR
+[2026-07-16 09:31:33] ℹ️    Using votecode: 542
+[2026-07-16 09:31:33] ❌ TAASISI YA ELIMU ZANZIBAR: HTTP 401
+[2026-07-16 09:31:33] ℹ️  Pausing 15s before next institution...
+
+
+[53/75] ======================================================================
+[53/75] Institution: TAASISI YA NYARAKA NA KUMBUKUMBU
+[53/75] ======================================================================
+[2026-07-16 09:31:48] ℹ️  Fetching: TAASISI YA NYARAKA NA KUMBUKUMBU
+[2026-07-16 09:31:48] ℹ️    Using votecode: 057
+[2026-07-16 09:31:48] ❌ TAASISI YA NYARAKA NA KUMBUKUMBU: HTTP 401
+[2026-07-16 09:31:48] ℹ️  Pausing 15s before next institution...
+
+
+[54/75] ======================================================================
+[54/75] Institution: Taasisi ya Utafiti wa Uvuvi (ZAFIRI)
+[54/75] ======================================================================
+[2026-07-16 09:32:03] ℹ️  Fetching: Taasisi ya Utafiti wa Uvuvi (ZAFIRI)
+[2026-07-16 09:32:03] ℹ️    Using votecode: 526
+[2026-07-16 09:32:03] ❌ Taasisi ya Utafiti wa Uvuvi (ZAFIRI): HTTP 401
+[2026-07-16 09:32:03] ℹ️  Pausing 15s before next institution...
+
+
+[55/75] ======================================================================
+[55/75] Institution: Tume ya kusimamia Nidhamu
+[55/75] ======================================================================
+[2026-07-16 09:32:18] ⚠️  Skipping: No vote number or TIN number
+
+[56/75] ======================================================================
+[56/75] Institution: TUME YA MAADILI YA VIONGOZI WA UMMA
+[56/75] ======================================================================
+[2026-07-16 09:32:18] ℹ️  Fetching: TUME YA MAADILI YA VIONGOZI WA UMMA
+[2026-07-16 09:32:18] ℹ️    Using votecode: 113
+[2026-07-16 09:32:18] ❌ TUME YA MAADILI YA VIONGOZI WA UMMA: HTTP 401
+[2026-07-16 09:32:18] ℹ️  Pausing 15s before next institution...
+
+
+[57/75] ======================================================================
+[57/75] Institution: Tume ya Mipango
+[57/75] ======================================================================
+[2026-07-16 09:32:33] ℹ️  Fetching: Tume ya Mipango
+[2026-07-16 09:32:33] ℹ️    Using votecode: 024
+[2026-07-16 09:32:33] ❌ Tume ya Mipango: HTTP 401
+[2026-07-16 09:32:33] ℹ️  Pausing 15s before next institution...
+
+
+[58/75] ======================================================================
+[58/75] Institution: TUME YA UCHAGUZI YA ZANZIBAR
+[58/75] ======================================================================
+[2026-07-16 09:32:48] ℹ️  Fetching: TUME YA UCHAGUZI YA ZANZIBAR
+[2026-07-16 09:32:48] ℹ️    Using votecode: 031
+[2026-07-16 09:32:48] ❌ TUME YA UCHAGUZI YA ZANZIBAR: HTTP 401
+[2026-07-16 09:32:48] ℹ️  Pausing 15s before next institution...
+
+
+[59/75] ======================================================================
+[59/75] Institution: Tume ya Ushindani Halali wa Biashara
+[59/75] ======================================================================
+[2026-07-16 09:33:03] ℹ️  Fetching: Tume ya Ushindani Halali wa Biashara
+[2026-07-16 09:33:03] ℹ️    Using votecode: 518
+[2026-07-16 09:33:03] ❌ Tume ya Ushindani Halali wa Biashara: HTTP 401
+[2026-07-16 09:33:03] ℹ️  Pausing 15s before next institution...
+
+
+[60/75] ======================================================================
+[60/75] Institution: TUME YA UTUMISHI SERIKALINI
+[60/75] ======================================================================
+[2026-07-16 09:33:18] ⚠️  Skipping: No vote number or TIN number
+
+[61/75] ======================================================================
+[61/75] Institution: Wakala wa Barabara
+[61/75] ======================================================================
+[2026-07-16 09:33:18] ℹ️  Fetching: Wakala wa Barabara
+[2026-07-16 09:33:18] ℹ️    Using votecode: 559
+[2026-07-16 09:33:18] ❌ Wakala wa Barabara: HTTP 401
+[2026-07-16 09:33:18] ℹ️  Pausing 15s before next institution...
+
+
+[62/75] ======================================================================
+[62/75] Institution: WAKALA WA MAJENGO ZANZIBAR
+[62/75] ======================================================================
+[2026-07-16 09:33:33] ℹ️  Fetching: WAKALA WA MAJENGO ZANZIBAR
+[2026-07-16 09:33:33] ℹ️    Using votecode: 522
+[2026-07-16 09:33:33] ❌ WAKALA WA MAJENGO ZANZIBAR: HTTP 401
+[2026-07-16 09:33:33] ℹ️  Pausing 15s before next institution...
+
+
+[63/75] ======================================================================
+[63/75] Institution: Wakala wa Matrekta
+[63/75] ======================================================================
+[2026-07-16 09:33:48] ℹ️  Fetching: Wakala wa Matrekta
+[2026-07-16 09:33:48] ℹ️    Using votecode: 527
+[2026-07-16 09:33:48] ❌ Wakala wa Matrekta: HTTP 401
+[2026-07-16 09:33:48] ℹ️  Pausing 15s before next institution...
+
+
+[64/75] ======================================================================
+[64/75] Institution: Wakala wa Vipimo Zanzibar
+[64/75] ======================================================================
+[2026-07-16 09:34:03] ℹ️  Fetching: Wakala wa Vipimo Zanzibar
+[2026-07-16 09:34:03] ℹ️    Using votecode: 519
+[2026-07-16 09:34:03] ❌ Wakala wa Vipimo Zanzibar: HTTP 401
+[2026-07-16 09:34:03] ℹ️  Pausing 15s before next institution...
+
+
+[65/75] ======================================================================
+[65/75] Institution: WIZARA YA AFYA
+[65/75] ======================================================================
+[2026-07-16 09:34:18] ℹ️  Fetching: WIZARA YA AFYA
+[2026-07-16 09:34:18] ℹ️    Using votecode: 008
+[2026-07-16 09:34:18] ❌ WIZARA YA AFYA: HTTP 401
+[2026-07-16 09:34:18] ℹ️  Pausing 15s before next institution...
+
+
+[66/75] ======================================================================
+[66/75] Institution: WIZARA YA ARDHI NA MAENDELEO YA MAKAAZI ZANZIBAR
+[66/75] ======================================================================
+[2026-07-16 09:34:33] ℹ️  Fetching: WIZARA YA ARDHI NA MAENDELEO YA MAKAAZI ZANZIBAR
+[2026-07-16 09:34:33] ℹ️    Using votecode: 014
+[2026-07-16 09:34:33] ❌ WIZARA YA ARDHI NA MAENDELEO YA MAKAAZI ZANZIBAR: HTTP 401
+[2026-07-16 09:34:33] ℹ️  Pausing 15s before next institution...
+
+
+[67/75] ======================================================================
+[67/75] Institution: WIZARA YA BIASHARA NA MAENDELEO YA VIWANDA
+[67/75] ======================================================================
+[2026-07-16 09:34:48] ℹ️  Fetching: WIZARA YA BIASHARA NA MAENDELEO YA VIWANDA
+[2026-07-16 09:34:48] ℹ️    Using votecode: 017
+[2026-07-16 09:34:48] ❌ WIZARA YA BIASHARA NA MAENDELEO YA VIWANDA: HTTP 401
+[2026-07-16 09:34:48] ℹ️  Pausing 15s before next institution...
+
+
+[68/75] ======================================================================
+[68/75] Institution: WIZARA YA ELIMU NA MAFUNZO YA AMALI
+[68/75] ======================================================================
+[2026-07-16 09:35:03] ℹ️  Fetching: WIZARA YA ELIMU NA MAFUNZO YA AMALI
+[2026-07-16 09:35:03] ℹ️    Using votecode: 011
+[2026-07-16 09:35:03] ❌ WIZARA YA ELIMU NA MAFUNZO YA AMALI: HTTP 401
+[2026-07-16 09:35:03] ℹ️  Pausing 15s before next institution...
+
+
+[69/75] ======================================================================
+[69/75] Institution: WIZARA YA HABARI, VIJANA, UTAMADUNI NA MICHEZO
+[69/75] ======================================================================
+[2026-07-16 09:35:18] ℹ️  Fetching: WIZARA YA HABARI, VIJANA, UTAMADUNI NA MICHEZO
+[2026-07-16 09:35:18] ℹ️    Using votecode: 018
+[2026-07-16 09:35:18] ❌ WIZARA YA HABARI, VIJANA, UTAMADUNI NA MICHEZO: HTTP 401
+[2026-07-16 09:35:18] ℹ️  Pausing 15s before next institution...
+
+
+[70/75] ======================================================================
+[70/75] Institution: WIZARA YA KILIMO UMWAGILIAJI MALIASILI NA MIFUGO
+[70/75] ======================================================================
+[2026-07-16 09:35:33] ℹ️  Fetching: WIZARA YA KILIMO UMWAGILIAJI MALIASILI NA MIFUGO
+[2026-07-16 09:35:33] ℹ️    Using votecode: 012
+[2026-07-16 09:35:33] ❌ WIZARA YA KILIMO UMWAGILIAJI MALIASILI NA MIFUGO: HTTP 401
+[2026-07-16 09:35:33] ℹ️  Pausing 15s before next institution...
+
+
+[71/75] ======================================================================
+[71/75] Institution: WIZARA YA MAENDELEO YA JAMII,JINSIA,WAZEE NA WATOTO
+[71/75] ======================================================================
+[2026-07-16 09:35:48] ℹ️  Fetching: WIZARA YA MAENDELEO YA JAMII,JINSIA,WAZEE NA WATOTO
+[2026-07-16 09:35:48] ℹ️    Using votecode: 019
+[2026-07-16 09:35:48] ❌ WIZARA YA MAENDELEO YA JAMII,JINSIA,WAZEE NA WATOTO: HTTP 401
+[2026-07-16 09:35:48] ℹ️  Pausing 15s before next institution...
+
+
+[72/75] ======================================================================
+[72/75] Institution: WIZARA YA MAJI NISHATI NA MADINI
+[72/75] ======================================================================
+[2026-07-16 09:36:03] ℹ️  Fetching: WIZARA YA MAJI NISHATI NA MADINI
+[2026-07-16 09:36:03] ℹ️    Using votecode: 015
+[2026-07-16 09:36:03] ❌ WIZARA YA MAJI NISHATI NA MADINI: HTTP 401
+[2026-07-16 09:36:03] ℹ️  Pausing 15s before next institution...
+
+
+[73/75] ======================================================================
+[73/75] Institution: WIZARA YA UCHUMI WA BULUU NA UVUVI
+[73/75] ======================================================================
+[2026-07-16 09:36:18] ℹ️  Fetching: WIZARA YA UCHUMI WA BULUU NA UVUVI
+[2026-07-16 09:36:18] ℹ️    Using votecode: 013
+[2026-07-16 09:36:18] ❌ WIZARA YA UCHUMI WA BULUU NA UVUVI: HTTP 401
+[2026-07-16 09:36:18] ℹ️  Pausing 15s before next institution...
+
+
+[74/75] ======================================================================
+[74/75] Institution: WIZARA YA UJENZI MAWASILIANO NA UCHUKUZI
+[74/75] ======================================================================
+[2026-07-16 09:36:33] ℹ️  Fetching: WIZARA YA UJENZI MAWASILIANO NA UCHUKUZI
+[2026-07-16 09:36:33] ℹ️    Using votecode: 016
+[2026-07-16 09:36:33] ❌ WIZARA YA UJENZI MAWASILIANO NA UCHUKUZI: HTTP 401
+[2026-07-16 09:36:33] ℹ️  Pausing 15s before next institution...
+
+
+[75/75] ======================================================================
+[75/75] Institution: WIZARA YA UTALII NA MAMBO YA KALE
+[75/75] ======================================================================
+[2026-07-16 09:36:48] ℹ️  Fetching: WIZARA YA UTALII NA MAMBO YA KALE
+[2026-07-16 09:36:48] ℹ️    Using votecode: 010
+[2026-07-16 09:36:48] ❌ WIZARA YA UTALII NA MAMBO YA KALE: HTTP 401
+
+================================================================================
+  📊 FETCH SUMMARY
+================================================================================
+Completed at: 2026-07-16 09:36:48
+Total duration: 16m 46s
+
+Total institutions: 75
+✅ Successfully fetched: 0
+❌ Failed: 68
+⏭️  Skipped (no identifier): 7
+👥 Total employees fetched: 0
+⏱️  Average fetch time: 0m 0s
+================================================================================
+
+❌ Failed Fetches:
+--------------------------------------------------------------------------------
+  1. AFISI YA MKURUGENZI WA MASHTAKA - HTTP 401
+  2. AFISI YA MWANASHERIA MKUU - HTTP 401
+  3. AFISI YA RAISI KAZI, UCHUMI NA UWEKEZAJI - HTTP 401
+  4. Baraza la Jiji - HTTP 401
+  5. Baraza la Manispaa Magharibi A - HTTP 401
+  6. Baraza la Manispaa Magharibi B - HTTP 401
+  7. Baraza la Manispaa Mjini Unguja - HTTP 401
+  8. Baraza la Mapinduzi - HTTP 401
+  9. Baraza la Mitihani - HTTP 401
+ 10. Baraza la Mji Chake Chake - HTTP 401
+ 11. Baraza la Mji Kaskazini A Unguja - HTTP 401
+ 12. Baraza la Mji Kaskazini B Unguja - HTTP 401
+ 13. Baraza la Mji Kati Unguja - HTTP 401
+ 14. Baraza la Mji Mkoani - HTTP 401
+ 15. Baraza la Mji Wete - HTTP 401
+ 16. Baraza la Taifa la Biashara - HTTP 401
+ 17. Bodi ya Huduma za Maktaba - HTTP 401
+ 18. Chuo cha Kiislamu - No identifier available
+ 19. Halmashauri ya Wilaya ya Kusini Unguja - HTTP 401
+ 20. Halmashauri ya Wilaya ya Micheweni - HTTP 401
+ 21. Hospitali ya Mnazi Mmoja - HTTP 401
+ 22. JKU - No identifier available
+ 23. KAMISHENI YA ARDHI ZANZIBAR - HTTP 401
+ 24. Kamisheni ya Kazi - HTTP 401
+ 25. KAMISHENI YA KUKABILIANA NA MAAFA ZANZIBAR - HTTP 401
+ 26. KAMISHENI YA UTALII ZANZIBAR - No identifier available
+ 27. KAMISHENI YA UTUMISHI WA UMMA - HTTP 401
+ 28. MAMLAKA YA KUDHIBITI NA KUPAMBANA NA DAWA ZA KULEVYA ZANZIBAR - HTTP 401
+ 29. MAMLAKA YA KUZUIA RUSHWA NA UHUJUMU WA UCHUMI ZANZIBAR - HTTP 401
+ 30. Mamlaka ya Serikali Mtandao (eGAZ) - HTTP 401
+ 31. Mamlaka ya Uwezeshaji Wananchi Kiuchumi (ZEA) - HTTP 401
+ 32. Ofisi ya Hatimiliki (COSOZA) - HTTP 401
+ 33. OFISI YA MAKAMO WA KWANZA WA RAISI - HTTP 401
+ 34. OFISI YA MAKAMO WA PILI WA RAISI - HTTP 401
+ 35. Ofisi ya Mhasibu Mkuu wa Serikali - HTTP 401
+ 36. OFISI YA MKAGUZI MKUU WA NDANI WA SERIKALI - HTTP 401
+ 37. Ofisi ya Mkaguzi wa Elimu - HTTP 401
+ 38. Ofisi ya Mkuu wa Mkoa wa Kaskazini Pemba - HTTP 401
+ 39. Ofisi ya Mkuu wa Mkoa wa Kaskazini Unguja - HTTP 401
+ 40. Ofisi ya Mkuu wa Mkoa wa Kusini Pemba - HTTP 401
+ 41. Ofisi ya Mkuu wa Mkoa wa Kusini Unguja - HTTP 401
+ 42. Ofisi ya Mkuu wa Mkoa wa Mjini Magharibi Unguja - HTTP 401
+ 43. Ofisi ya Mkuu wa Wilaya ya Kaskazini B - No identifier available
+ 44. Ofisi ya Msajili wa Hazina - HTTP 401
+ 45. OFISI YA MUFTI MKUU WA ZANZIBAR - No identifier available
+ 46. OFISI YA RAIS, FEDHA NA MIPANGO - HTTP 401
+ 47. OFISI YA RAIS - IKULU - HTTP 401
+ 48. OFISI YA RAIS - KATIBA SHERIA UTUMISHI NA UTAWALA BORA - HTTP 401
+ 49. OFISI YA RAIS, TAWALA ZA MIKOA, SERIKALI ZA MITAA NA IDARA MAALUMU ZA SMZ - HTTP 401
+ 50. Skuli ya Sheria Zanzibar - HTTP 401
+ 51. Taasisi ya Afisi ya Rais Ufuatiliaji na Usimamizi wa Utendaji Serikalini (PDB) - HTTP 401
+ 52. TAASISI YA ELIMU ZANZIBAR - HTTP 401
+ 53. TAASISI YA NYARAKA NA KUMBUKUMBU - HTTP 401
+ 54. Taasisi ya Utafiti wa Uvuvi (ZAFIRI) - HTTP 401
+ 55. Tume ya kusimamia Nidhamu - No identifier available
+ 56. TUME YA MAADILI YA VIONGOZI WA UMMA - HTTP 401
+ 57. Tume ya Mipango - HTTP 401
+ 58. TUME YA UCHAGUZI YA ZANZIBAR - HTTP 401
+ 59. Tume ya Ushindani Halali wa Biashara - HTTP 401
+ 60. TUME YA UTUMISHI SERIKALINI - No identifier available
+ 61. Wakala wa Barabara - HTTP 401
+ 62. WAKALA WA MAJENGO ZANZIBAR - HTTP 401
+ 63. Wakala wa Matrekta - HTTP 401
+ 64. Wakala wa Vipimo Zanzibar - HTTP 401
+ 65. WIZARA YA AFYA - HTTP 401
+ 66. WIZARA YA ARDHI NA MAENDELEO YA MAKAAZI ZANZIBAR - HTTP 401
+ 67. WIZARA YA BIASHARA NA MAENDELEO YA VIWANDA - HTTP 401
+ 68. WIZARA YA ELIMU NA MAFUNZO YA AMALI - HTTP 401
+ 69. WIZARA YA HABARI, VIJANA, UTAMADUNI NA MICHEZO - HTTP 401
+ 70. WIZARA YA KILIMO UMWAGILIAJI MALIASILI NA MIFUGO - HTTP 401
+ 71. WIZARA YA MAENDELEO YA JAMII,JINSIA,WAZEE NA WATOTO - HTTP 401
+ 72. WIZARA YA MAJI NISHATI NA MADINI - HTTP 401
+ 73. WIZARA YA UCHUMI WA BULUU NA UVUVI - HTTP 401
+ 74. WIZARA YA UJENZI MAWASILIANO NA UCHUKUZI - HTTP 401
+ 75. WIZARA YA UTALII NA MAMBO YA KALE - HTTP 401
+
+================================================================================
+📊 Total Employees in Database: 43,465
+================================================================================
+

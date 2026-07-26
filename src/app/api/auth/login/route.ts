@@ -1,15 +1,14 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/db';
-import bcrypt from 'bcryptjs';
-import { comparePassword } from '@/lib/password-utils';
+import { comparePassword } from '@/lib/password-hash';
 import { logLoginAttempt, getClientIp, logAuditEvent, AuditEventType, AuditEventCategory, AuditSeverity } from '@/lib/audit-logger';
 import { checkPasswordBreached } from '@/lib/hibp';
 import { createNotification } from '@/lib/notifications';
 import { completeLogin } from '@/lib/auth-helpers';
 import { createMfaToken, checkOtpRateLimit, maskEmail } from '@/lib/mfa-utils';
 import { sendMfaEmail } from '@/lib/email';
-import { withRateLimit } from '@/lib/rate-limiter';
+import { withRateLimit, checkRateLimitSliding, buildUserRateLimitKey } from '@/lib/rate-limiter';
 import { authLogger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
 import { validateCSRF } from '@/lib/api-csrf-middleware';
@@ -43,6 +42,38 @@ export const POST = wrapHandler(withRateLimit(async (request) => {
     const isProduction = process.env.NODE_ENV === 'production';
     const preSessionToken = generatePreSessionToken();
     const preSessionCookieOptions = getPreSessionCookieOptions(isProduction);
+
+    // Per-user sliding rate limit (Req 1.8): throttle brute-force against a
+    // single account regardless of source IP. The per-IP `withRateLimit`
+    // wrapper above catches single-IP floods but a distributed attacker
+    // (botnet) hitting one username slips past it — this per-user key closes
+    // that gap. Checked before the DB lookup so guesses against non-existent
+    // usernames are throttled too, and so timing doesn't leak which usernames
+    // exist. Reuses the `auth` tier config (env-overridable via
+    // RATE_LIMIT_AUTH_LIMIT for E2E) and fails closed if Redis is down.
+    const perUserKey = buildUserRateLimitKey(username);
+    const perUserLimit = await checkRateLimitSliding(perUserKey, 'auth', { failClosed: true });
+    if (!perUserLimit.allowed) {
+      const isFailClosedDenial = perUserLimit.reason === 'fail_closed';
+      const response = NextResponse.json(
+        {
+          success: false,
+          message: isFailClosedDenial
+            ? 'Service temporarily unavailable — please retry shortly'
+            : 'Too many login attempts. Please try again shortly.',
+          errorCode: isFailClosedDenial ? 'SERVICE_UNAVAILABLE' : 'RATE_LIMIT_EXCEEDED',
+          retryAfter: perUserLimit.retryAfter,
+        },
+        {
+          status: isFailClosedDenial ? 503 : 429,
+          headers: {
+            'Retry-After': String(perUserLimit.retryAfter),
+          },
+        }
+      );
+      response.cookies.set(PRE_SESSION_COOKIE_NAME, preSessionToken, preSessionCookieOptions);
+      return response;
+    }
 
     // Check if the input is an email (contains @) or username
     const isEmail = username.includes('@');

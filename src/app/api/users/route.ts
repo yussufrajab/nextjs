@@ -1,13 +1,12 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { z } from 'zod';
-import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import {
-  hashPassword,
   calculateTemporaryPasswordExpiry,
   generateTemporaryPassword,
 } from '@/lib/password-utils';
+import { hashPassword } from '@/lib/password-hash';
 import { logUserAction, getClientIp } from '@/lib/audit-logger';
 import { withAuth } from '@/lib/api-auth';
 import { withRateLimit } from '@/lib/rate-limiter';
@@ -41,9 +40,15 @@ const userSchema = z.object({
 });
 
 export const GET = wrapHandler(withRateLimit(withAuth(async (request, { auth }) => {
-    // SECURITY: Apply institution filtering for non-CSC roles (e.g. HRO)
+    // SECURITY: Apply institution filtering for non-CSC roles (e.g. HRO).
+    // ADMIN is a global/system role and must be able to view and edit ALL
+    // users across every institution, so it is exempt from institution
+    // scoping (the [id] PATCH/PUT route is already global for ADMIN).
     const whereClause: any = {};
-    if (shouldApplyInstitutionFilter(auth.role, auth.institutionId)) {
+    if (
+      auth.role?.toUpperCase() !== 'ADMIN' &&
+      shouldApplyInstitutionFilter(auth.role, auth.institutionId)
+    ) {
       whereClause.institutionId = auth.institutionId;
     }
 

@@ -199,7 +199,16 @@ async function saveEmployeeFromDetailedData(
 
     await db.employee.upsert({
       where: { zanId: personalInfo.zanIdNumber },
-      update: dbEmployeeData,
+      // SECURITY/DATA-INTEGRITY: Do NOT overwrite institutionId on update.
+      // zanId is globally unique, so an employee exists exactly once. If the
+      // same ZAN ID surfaces in more than one institution's HRIMS feed (or you
+      // re-sync a different institution whose feed overlaps), the upsert's
+      // update branch previously reset institutionId to whatever institution
+      // is currently syncing — silently "stealing" the employee and tagging
+      // them under the wrong institution. The institution is assigned once,
+      // at creation; later syncs refresh the profile but keep the original
+      // institution.
+      update: employeeDataWithoutInstId,
       create: {
         ...employeeDataWithoutInstId,
         Institution: {

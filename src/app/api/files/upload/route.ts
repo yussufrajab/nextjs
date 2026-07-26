@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { uploadFile, generateObjectKey } from '@/lib/minio';
-import { logFileAction, getClientIp as getAuditClientIp } from '@/lib/audit-logger';
+import { logFileAction, getClientIp as getAuditClientIp, safeAuditLog } from '@/lib/audit-logger';
 import { validateFileUpload } from '@/lib/file-validation';
 import { recordFileHash } from '@/lib/file-integrity';
 import { verifyAuth } from '@/lib/api-auth';
@@ -68,16 +68,19 @@ export const POST = wrapHandler(async (request: Request) => {
     logger.error({ err, objectKey: uploadResult.objectKey }, 'Failed to record file integrity hash');
   });
 
-  await logFileAction({
-    action: 'UPLOADED',
-    fileName: file.name,
-    objectKey: uploadResult.objectKey,
-    performedById: auth.userId || 'unknown',
-    performedByUsername: auth.username || 'unknown',
-    performedByRole: auth.role || 'unknown',
-    ipAddress: getAuditClientIp(request.headers),
-    deviceInfo: JSON.parse(request.headers.get('x-device-info') || 'null'),
-  }).catch(() => {});
+  await safeAuditLog(
+    logFileAction({
+      action: 'UPLOADED',
+      fileName: file.name,
+      objectKey: uploadResult.objectKey,
+      performedById: auth.userId || 'unknown',
+      performedByUsername: auth.username || 'unknown',
+      performedByRole: auth.role || 'unknown',
+      ipAddress: getAuditClientIp(request.headers),
+      deviceInfo: JSON.parse(request.headers.get('x-device-info') || 'null'),
+    }),
+    'files-upload'
+  );
 
   return NextResponse.json({
     success: true,

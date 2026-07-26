@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { shouldApplyInstitutionFilter } from '@/lib/role-utils';
+import { isAllowedStatusTransition } from '@/lib/request-workflow';
 import { validateEmployeeStatusForRequest } from '@/lib/employee-status-validation';
 import { v4 as uuidv4 } from 'uuid';
 import {
@@ -382,6 +383,19 @@ export const PATCH = wrapHandler(async (req: Request) => {
     );
   }
 
+  // Fetch the existing request once for status-transition (FSM) validation
+  // and the self-approval check below. Single round-trip covers both.
+  const existingRequest = await db.confirmationRequest.findUnique({
+    where: { id },
+    select: { id: true, submittedById: true, status: true },
+  });
+  if (!existingRequest) {
+    return NextResponse.json(
+      { success: false, message: 'Confirmation request not found' },
+      { status: 404 }
+    );
+  }
+
   // Authorization: Different roles can perform different update actions
   const isHrrpApproval =
     updateData.status === 'Approved by HRRP - Awaiting Commission Review' &&
@@ -426,6 +440,37 @@ export const PATCH = wrapHandler(async (req: Request) => {
         success: false,
         message: authCheck.message,
       },
+      { status: 403 }
+    );
+  }
+
+  // SECURITY (Req 8.1/8.2/18.1): validate status transition. Prevents a
+  // client from jumping an arbitrary status (e.g. re-approving an already
+  // Commission-concluded request, or skipping the HRRP stage). Mirrors the
+  // FSM in confirmations/[id]/route.ts, extended to handle the variable
+  // HHRMD/HRMO forward status.
+  if (
+    updateData.status &&
+    existingRequest.status !== updateData.status &&
+    !isAllowedStatusTransition(existingRequest.status, updateData.status)
+  ) {
+    return NextResponse.json(
+      { success: false, message: `Invalid status transition from "${existingRequest.status}" to "${updateData.status}"` },
+      { status: 400 }
+    );
+  }
+
+  // SECURITY (Req 8.9): prevent self-approval / self-rejection — the user
+  // who submitted the request may not approve or reject it (only
+  // resubmit/withdraw). The [id] route enforces this; the collection PATCH
+  // (which the dashboard actually calls) did not, so a submitter could
+  // self-approve via this path. Reuses the existingRequest fetched above.
+  if (
+    (isHrrpApproval || isHrrpRejection || isCommissionDecision) &&
+    existingRequest.submittedById === auth.userId
+  ) {
+    return NextResponse.json(
+      { success: false, message: 'Cannot approve or reject your own submission' },
       { status: 403 }
     );
   }

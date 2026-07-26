@@ -96,8 +96,17 @@ export function getQueueEvents(): QueueEvents {
 export async function addHRIMSSyncJob(data: HRIMSSyncJobData): Promise<string> {
   const queue = getHRIMSSyncQueue();
 
+  // SECURITY (Req 16.4): deterministic jobId so a second enqueue of the same
+  // sync (e.g. a double-click) dedupes against the in-flight/queued job
+  // instead of spawning a duplicate. The id is scoped to the institution +
+  // identifier type + identifier value, so a votecode sync and a tin sync for
+  // the same institution can still coexist as separate jobs. (Previously this
+  // used Date.now(), producing a fresh id on every click → duplicate jobs.)
+  //
+  // NOTE: BullMQ rejects custom job IDs that contain a colon ("Custom Id cannot
+  // contain :"), so the segments are joined with hyphens, not colons.
   const job = await queue.add('hrims-sync', data, {
-    jobId: `hrims-sync-${data.institutionId}-${Date.now()}`, // Unique job ID
+    jobId: `hrims-sync-${data.institutionId}-${data.identifierType}-${data.identifier}`,
   });
 
   workerLogger.info(
@@ -136,6 +145,26 @@ export async function getJobStatus(jobId: string) {
     processedOn: job.processedOn,
     finishedOn: job.finishedOn,
   };
+}
+
+/**
+ * SECURITY (Req 16.2): owner-bound access check for a HRIMS sync job.
+ *
+ * Admins may inspect any job. Any other caller may only read a job they
+ * initiated (job.data.userId === auth.userId) or that targets their own
+ * institution (job.data.institutionId === auth.institutionId). Without this
+ * check, any Admin/HHRMD could read any user's job status/progress/data,
+ * leaking which institutions other users are syncing and when.
+ */
+export function canAccessJob(
+  jobData: HRIMSSyncJobData | undefined,
+  auth: { userId: string; role: string; institutionId: string | null }
+): boolean {
+  if (auth.role.toUpperCase() === 'ADMIN') return true;
+  if (!jobData) return false;
+  if (jobData.userId && jobData.userId === auth.userId) return true;
+  if (auth.institutionId && jobData.institutionId === auth.institutionId) return true;
+  return false;
 }
 
 /**

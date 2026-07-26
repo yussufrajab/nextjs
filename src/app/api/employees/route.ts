@@ -6,7 +6,7 @@ import { withRateLimit } from '@/lib/rate-limiter';
 import { logger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
 import { sanitizeEmployee, sanitizeEmployees } from '@/lib/sanitize-response';
-import { logUnauthorizedAccess, getClientIp } from '@/lib/audit-logger';
+import { logUnauthorizedAccess, logEmployeeView, getClientIp } from '@/lib/audit-logger';
 
 // Cache configuration for employee data
 const CACHE_TTL = 60; // 60 seconds cache (employee data changes infrequently)
@@ -139,6 +139,21 @@ export const GET = wrapHandler(withRateLimit(withAuth(async (request, { auth }) 
         Institution: undefined,
         EmployeeCertificate: undefined,
       }, userRole);
+
+      // Req 5.6: audit the successful PII read. The IDOR branches above already
+      // log denials; this records every authorized disclosure of sanitized PII
+      // (including an EMPLOYEE viewing their own record) for the audit trail.
+      // Fire-and-forget — a logging failure must not break the profile read.
+      logEmployeeView({
+        employeeId: employee.id,
+        employeeName: employee.name,
+        employeeZanId: employee.zanId ?? undefined,
+        targetInstitutionId: employee.institutionId,
+        performedById: auth.userId,
+        performedByUsername: auth.username,
+        performedByRole: userRole,
+        ipAddress: getClientIp(request.headers),
+      }).catch(() => {});
 
       // Set cache headers for single employee lookup
       const headers = new Headers();

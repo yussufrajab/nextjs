@@ -1,10 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
+import { z } from 'zod';
 import { logEmployeeAction, getClientIp } from '@/lib/audit-logger';
 import { logger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
 import { withAuth } from '@/lib/api-auth';
+import {
+  getInstitutionOrgFieldValues,
+  validateInstitutionOrgFields,
+  hasAnyOrgField,
+} from '@/lib/institution-field-validation';
+import {
+  GENDER_VALUES,
+  APPOINTMENT_TYPE_VALUES,
+  CONTRACT_TYPE_VALUES,
+  isValidZssfNumber,
+  isValidPayrollNumber,
+  validateCrossFieldDates,
+  parseISODate,
+} from '@/lib/employee-field-validation';
+import { findFuzzyDuplicate } from '@/lib/employee-duplicate-detection';
 
 const prisma = new PrismaClient();
 
@@ -63,6 +79,36 @@ export const POST = wrapHandler(
       },
       { status: 400 }
     );
+  }
+
+  // SECURITY (Req 6.8): enforce enumerated values for gender and the
+  // optional appointment/contract type fields. Empty/null optional values
+  // are treated as "not provided" and skipped; any supplied value must match
+  // the allowed set.
+  const genderResult = z.enum(GENDER_VALUES).safeParse(gender);
+  if (!genderResult.success) {
+    return NextResponse.json(
+      { success: false, error: `Gender must be one of: ${GENDER_VALUES.join(', ')}` },
+      { status: 400 }
+    );
+  }
+  if (appointmentType != null && appointmentType !== '') {
+    const r = z.enum(APPOINTMENT_TYPE_VALUES).safeParse(appointmentType);
+    if (!r.success) {
+      return NextResponse.json(
+        { success: false, error: `Appointment type must be one of: ${APPOINTMENT_TYPE_VALUES.join(', ')}` },
+        { status: 400 }
+      );
+    }
+  }
+  if (contractType != null && contractType !== '') {
+    const r = z.enum(CONTRACT_TYPE_VALUES).safeParse(contractType);
+    if (!r.success) {
+      return NextResponse.json(
+        { success: false, error: `Contract type must be one of: ${CONTRACT_TYPE_VALUES.join(', ')}` },
+        { status: 400 }
+      );
+    }
   }
 
   // Phone number format validation (if provided)
@@ -130,10 +176,59 @@ export const POST = wrapHandler(
     }
   }
 
+  // SECURITY (Req 6.8): confirmation/retirement date format validation. These
+  // dates may legitimately be in the future (pending confirmation / planned
+  // retirement), so only the format is checked here — not the direction.
+  if (confirmationDate && !parseISODate(confirmationDate)) {
+    return NextResponse.json(
+      { success: false, error: 'Invalid confirmation date format (expected YYYY-MM-DD)' },
+      { status: 400 }
+    );
+  }
+  if (retirementDate && !parseISODate(retirementDate)) {
+    return NextResponse.json(
+      { success: false, error: 'Invalid retirement date format (expected YYYY-MM-DD)' },
+      { status: 400 }
+    );
+  }
+
+  // SECURITY (Req 6.8): cross-field date logic — employmentDate must be after
+  // dateOfBirth, confirmationDate on/after employmentDate, retirementDate
+  // after employmentDate. Invalid formats are already reported above; this
+  // only compares fields that parsed successfully.
+  const crossFieldDateErrors = validateCrossFieldDates({
+    dateOfBirth,
+    employmentDate,
+    confirmationDate,
+    retirementDate,
+  });
+  if (crossFieldDateErrors.length > 0) {
+    return NextResponse.json(
+      { success: false, error: crossFieldDateErrors.join('; ') },
+      { status: 400 }
+    );
+  }
+
   // ZAN ID format validation: must be numeric string
   if (!/^\d{5,12}$/.test(zanId)) {
     return NextResponse.json(
       { success: false, error: 'ZanID must be a numeric string between 5 and 12 digits' },
+      { status: 400 }
+    );
+  }
+
+  // SECURITY (Req 6.8): ZSSF / payroll identifier format. Required-ness is
+  // checked above; here we reject values that are non-empty but malformed
+  // (spaces, symbols, leading hyphen, > 50 chars).
+  if (!isValidZssfNumber(zssfNumber)) {
+    return NextResponse.json(
+      { success: false, error: 'ZSSF number must be 2–50 alphanumeric characters (hyphens allowed)' },
+      { status: 400 }
+    );
+  }
+  if (!isValidPayrollNumber(payrollNumber)) {
+    return NextResponse.json(
+      { success: false, error: 'Payroll number must be 2–50 alphanumeric characters (hyphens allowed)' },
       { status: 400 }
     );
   }
@@ -174,6 +269,26 @@ export const POST = wrapHandler(
       { success: false, error: 'Manual entry is not available at this time' },
       { status: 403 }
     );
+  }
+
+  // SECURITY (Req 6.6): ministry/department/currentWorkplace are free-text
+  // columns with no reference table. Validate any supplied values against the
+  // distinct values already recorded for this institution's employees (the
+  // institution's de-facto org-unit reference data). Bootstrap: an institution
+  // with no recorded values for a field accepts any non-empty value. Skipped
+  // entirely when none of these fields are supplied.
+  if (hasAnyOrgField({ ministry, department, currentWorkplace })) {
+    const orgFieldValues = await getInstitutionOrgFieldValues(prisma, institutionId);
+    const orgFieldCheck = validateInstitutionOrgFields(
+      { ministry, department, currentWorkplace },
+      orgFieldValues
+    );
+    if (!orgFieldCheck.valid) {
+      return NextResponse.json(
+        { success: false, error: orgFieldCheck.errors.join('; ') },
+        { status: 400 }
+      );
+    }
   }
 
   // Check ZanID uniqueness
@@ -217,6 +332,29 @@ export const POST = wrapHandler(
         { status: 409 }
       );
     }
+  }
+
+  // SECURITY (Req 6.5): fuzzy duplicate detection on name + dateOfBirth +
+  // institutionId. The exact-key checks above (zanId/zssf/payroll) only catch
+  // the same identifier being re-keyed; this catches the same person being
+  // re-created under a fresh/mistyped identifier — same name, same DOB, same
+  // institution. The DB query is scoped to institutionId + the DOB calendar
+  // day, then normalized Levenshtein name similarity is compared. A match is
+  // a hard block (409), consistent with the exact-key checks, and surfaces the
+  // existing record's zanId so the HRO can verify before re-attempting.
+  const fuzzyDup = await findFuzzyDuplicate(prisma, {
+    name,
+    dateOfBirth,
+    institutionId,
+  });
+  if (fuzzyDup.duplicate && fuzzyDup.existing) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: `A likely duplicate employee already exists in your institution (ZanID ${fuzzyDup.existing.zanId}, name "${fuzzyDup.existing.name}", ${(fuzzyDup.similarity * 100).toFixed(0)}% name match, same date of birth). Verify the existing record before creating a new one.`,
+      },
+      { status: 409 }
+    );
   }
 
   // Create employee - FORCE institutionId to user's institution (security)

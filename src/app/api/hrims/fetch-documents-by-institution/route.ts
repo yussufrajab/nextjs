@@ -6,6 +6,10 @@ import { hrimsLogger } from '@/lib/logger';
 import { verifyAuth } from '@/lib/api-auth';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limiter';
 import { wrapHandler } from '@/lib/error-handler';
+import {
+  classifyAttachments,
+  HRIMS_EMPTY_CONTENT_MESSAGE,
+} from '@/lib/hrims-documents';
 
 // Configure route for long-running operations
 export const maxDuration = 900; // 15 minutes for large institutions
@@ -278,6 +282,18 @@ async function processEmployeeDocuments(
 
  hrimsLogger.info(`Found ${attachments.length} attachments for ${employee.name}`);
 
+ // Classify attachments into storable (with base64 content) vs upstream
+ // empty-content (metadata only). HRIMS can return contentSize > 0 with an
+ // empty attachmentContent — that is an HRIMS-side content-delivery issue,
+ // not a missing document, and must be reported distinctly.
+ const classification = classifyAttachments(attachments);
+ const emptyContentCount = classification.emptyContent.length;
+ if (emptyContentCount > 0) {
+ hrimsLogger.warn(
+ `${emptyContentCount}/${attachments.length} attachment(s) for ${employee.name} arrived with empty content (HRIMS content-delivery issue)`
+ );
+ }
+
  // Document type mapping: HRIMS attachmentType -> Database field
  const documentTypeMapping: Record<
  string,
@@ -491,7 +507,12 @@ async function processEmployeeDocuments(
  // Determine overall status
  if (documentsProcessed === 0) {
  result.status = 'failed';
- result.message = 'No documents found in HRIMS response';
+ // If HRIMS sent metadata with empty content, surface the upstream issue
+ // instead of the misleading "No documents found".
+ result.message =
+ emptyContentCount > 0
+ ? HRIMS_EMPTY_CONTENT_MESSAGE
+ : 'No documents found in HRIMS response';
  } else {
  result.status = 'success';
  result.message = `Successfully stored ${documentsProcessed} document(s)`;

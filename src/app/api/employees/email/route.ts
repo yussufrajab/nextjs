@@ -5,14 +5,7 @@ import { withRateLimit } from '@/lib/rate-limiter';
 import { authLogger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
 import { shouldApplyInstitutionFilter } from '@/lib/role-utils';
-
-// Email must end with .go.tz or .ac.tz
-const ALLOWED_EMAIL_DOMAINS = ['.go.tz', '.ac.tz'];
-
-function isValidGovernmentEmail(email: string): boolean {
-  const lowerEmail = email.toLowerCase();
-  return ALLOWED_EMAIL_DOMAINS.some(domain => lowerEmail.endsWith(domain));
-}
+import { validateGovernmentEmail, setUserGovernmentEmail } from '@/lib/employee-email';
 
 export const PATCH = wrapHandler(withRateLimit(withAuth(async (request, { auth }) => {
   const { searchParams } = new URL(request.url);
@@ -28,35 +21,15 @@ export const PATCH = wrapHandler(withRateLimit(withAuth(async (request, { auth }
   const body = await request.json();
   const { email } = body;
 
-  // Validate email format
-  if (!email || typeof email !== 'string') {
+  // Validate email format + government/academic domain via shared helper
+  const validation = validateGovernmentEmail(email);
+  if (!validation.ok) {
     return NextResponse.json(
-      { success: false, message: 'Email is required' },
+      { success: false, message: validation.error },
       { status: 400 }
     );
   }
-
-  const trimmedEmail = email.trim().toLowerCase();
-
-  // Validate email format
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(trimmedEmail)) {
-    return NextResponse.json(
-      { success: false, message: 'Please enter a valid email address' },
-      { status: 400 }
-    );
-  }
-
-  // Validate domain (.go.tz or .ac.tz only)
-  if (!isValidGovernmentEmail(trimmedEmail)) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: 'Email must end with .go.tz or .ac.tz (government or academic domain only)',
-      },
-      { status: 400 }
-    );
-  }
+  const trimmedEmail = validation.email;
 
   // Verify the employee belongs to the authenticated user
   const user = await db.user.findUnique({
@@ -93,76 +66,21 @@ export const PATCH = wrapHandler(withRateLimit(withAuth(async (request, { auth }
     }
   }
 
-  // Check for duplicate email — another user already has this email
-  const existingUser = await db.user.findFirst({
-    where: {
-      email: trimmedEmail,
-      NOT: { employeeId: employeeId },
-    },
-    select: { id: true, name: true },
-  });
+  // Persist to BOTH User and Employee records, enforcing uniqueness.
+  const result = await setUserGovernmentEmail(employeeId, trimmedEmail);
 
-  if (existingUser) {
+  if (!result.ok) {
     return NextResponse.json(
-      { success: false, message: 'This email address is already in use by another employee' },
-      { status: 409 }
+      { success: false, message: result.message },
+      { status: result.status }
     );
   }
 
-  // Also check Employee table for duplicates
-  const existingEmployee = await db.employee.findFirst({
-    where: {
-      email: trimmedEmail,
-      NOT: { id: employeeId },
-    },
-    select: { id: true, name: true },
-  });
-
-  if (existingEmployee) {
-    return NextResponse.json(
-      { success: false, message: 'This email address is already in use by another employee' },
-      { status: 409 }
-    );
-  }
-
-  // Check if employee exists
-  const employee = await db.employee.findUnique({
-    where: { id: employeeId },
-    select: { id: true, zanId: true, name: true },
-  });
-
-  if (!employee) {
-    return NextResponse.json(
-      { success: false, message: 'Employee not found' },
-      { status: 404 }
-    );
-  }
-
-  // Update employee email on BOTH User and Employee records
-  const [updatedUser, updatedEmployee] = await Promise.all([
-    db.user.update({
-      where: { employeeId: employeeId },
-      data: { email: trimmedEmail },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-      },
-    }),
-    db.employee.update({
-      where: { id: employeeId },
-      data: { email: trimmedEmail },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-      },
-    }),
-  ]);
+  const { user: updatedUser, employee: updatedEmployee } = result;
 
   authLogger.info({
     employeeId,
-    zanId: employee.zanId,
+    zanId: updatedEmployee.id,
     email: trimmedEmail,
     updatedBy: auth.userId,
   }, 'Employee email updated');

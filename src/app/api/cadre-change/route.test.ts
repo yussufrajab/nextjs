@@ -5,6 +5,7 @@ import { signSessionToken } from '@/lib/session-manager';
 const mockValidateSession = vi.fn();
 const mockUserFindUnique = vi.fn();
 const mockUpdate = vi.fn();
+const mockFindUnique = vi.fn();
 
 vi.mock('@/lib/session-manager', () => ({
   validateSession: (...a: any[]) => mockValidateSession(...a),
@@ -44,7 +45,10 @@ vi.mock('@/lib/session-manager', () => ({
 vi.mock('@/lib/db', () => ({
   db: {
     user: { findUnique: (...a: any[]) => mockUserFindUnique(...a) },
-    cadreChangeRequest: { update: (...a: any[]) => mockUpdate(...a) },
+    cadreChangeRequest: {
+      findUnique: (...a: any[]) => mockFindUnique(...a),
+      update: (...a: any[]) => mockUpdate(...a),
+    },
     notification: { create: vi.fn() },
   },
 }));
@@ -99,6 +103,7 @@ describe('PATCH /api/cadre-change — HRO resubmit', () => {
     mockValidateSession.mockReset();
     mockUserFindUnique.mockReset();
     mockUpdate.mockReset();
+    mockFindUnique.mockReset();
     // Session row with no IP/UA binding so the hijack check is skipped.
     mockValidateSession.mockResolvedValue({
       id: 's1',
@@ -107,6 +112,9 @@ describe('PATCH /api/cadre-change — HRO resubmit', () => {
       userAgent: null,
     });
     mockUserFindUnique.mockResolvedValue(HRO_USER);
+    // Self-approval check fetches the existing request's submitter. Default
+    // to a different user so the actor is never the submitter.
+    mockFindUnique.mockResolvedValue({ submittedById: 'someone-else' });
     mockUpdate.mockResolvedValue({
       id: 'req-1',
       employeeId: 'emp-1',
@@ -181,6 +189,7 @@ describe('PATCH /api/cadre-change — Commission workflow (parity with promotion
     mockValidateSession.mockReset();
     mockUserFindUnique.mockReset();
     mockUpdate.mockReset();
+    mockFindUnique.mockReset();
     mockValidateSession.mockResolvedValue({
       id: 's1',
       userId: HHRMD_USER.id,
@@ -188,6 +197,10 @@ describe('PATCH /api/cadre-change — Commission workflow (parity with promotion
       userAgent: null,
     });
     mockUserFindUnique.mockResolvedValue(HHRMD_USER);
+    // Self-approval check fetches the existing request's submitter. The
+    // submitter is the HRO (hro-1), distinct from the HHRMD actor, so the
+    // commission decision is not treated as self-approval.
+    mockFindUnique.mockResolvedValue({ submittedById: 'hro-1' });
     mockUpdate.mockResolvedValue({
       id: 'req-1',
       employeeId: 'emp-1',

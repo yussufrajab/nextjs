@@ -25,6 +25,13 @@ vi.mock('@/lib/file-integrity', () => ({
   verifyFileHash: (...a: any[]) => mockVerifyFileHash(...a),
 }));
 
+// --- file-access (IDOR guard): always allow so these integrity tests reach
+// the MinIO/integrity layer. The access guard itself is unit + route tested
+// in src/lib/file-access.test.ts and src/app/api/files/files-access.route.test.ts.
+vi.mock('@/lib/file-access', () => ({
+  authorizeFileOrDeny: () => Promise.resolve({ allowed: true }),
+}));
+
 // --- auth: always authenticated as an HRO of institution A ------------------
 const authContext = {
   userId: 'user-1',
@@ -62,11 +69,21 @@ vi.mock('@/lib/minio', () => ({
   downloadFile: (...a: any[]) => mockDownloadFile(...a),
   getFileMetadata: (...a: any[]) => mockGetFileMetadata(...a),
   generatePresignedUrl: () => Promise.resolve('https://minio.example/presigned'),
+  isPathTraversal: (key: string) =>
+    key.includes('..') || key.includes('\0') || key.startsWith('/'),
+  MAX_PRESIGNED_URL_EXPIRY_SECONDS: 3600,
 }));
 
 // --- audit logger: no-op sink + getClientIp ----------------------------------
 vi.mock('@/lib/audit-logger', () => ({
   logFileAction: () => Promise.resolve(undefined),
+  safeAuditLog: async (p: Promise<void>) => {
+    try {
+      await p;
+    } catch {
+      /* swallow — exercised helper */
+    }
+  },
   getClientIp: () => '127.0.0.1',
 }));
 

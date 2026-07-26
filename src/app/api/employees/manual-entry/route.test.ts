@@ -15,6 +15,7 @@ const mockPrismaUserFindUnique = vi.fn(); // route's prisma fallback (unused whe
 const mockInstitutionFindUnique = vi.fn();
 const mockEmployeeFindUnique = vi.fn();
 const mockEmployeeFindFirst = vi.fn();
+const mockEmployeeFindMany = vi.fn(); // Req 6.6 org-field lookup
 const mockEmployeeCreate = vi.fn();
 const mockLogEmployeeAction = vi.fn();
 
@@ -77,6 +78,7 @@ vi.mock('@prisma/client', () => {
     this.employee = {
       findUnique: (...a: any[]) => mockEmployeeFindUnique(...a),
       findFirst: (...a: any[]) => mockEmployeeFindFirst(...a),
+      findMany: (...a: any[]) => mockEmployeeFindMany(...a),
       create: (...a: any[]) => mockEmployeeCreate(...a),
     };
   }
@@ -121,6 +123,7 @@ describe('POST /api/employees/manual-entry authorization', () => {
     mockInstitutionFindUnique.mockReset();
     mockEmployeeFindUnique.mockReset();
     mockEmployeeFindFirst.mockReset();
+    mockEmployeeFindMany.mockReset();
     mockEmployeeCreate.mockReset();
     // vitest `mockReset: true` clears these factory mocks before each test;
     // re-establish the implementations withAuth relies on for every request.
@@ -193,6 +196,7 @@ describe('POST /api/employees/manual-entry authorization', () => {
     });
     mockEmployeeFindUnique.mockResolvedValue(null); // zanId not taken
     mockEmployeeFindFirst.mockResolvedValue(null); // payroll not taken
+    mockEmployeeFindMany.mockResolvedValue([]); // Req 6.5: no fuzzy duplicate
     mockEmployeeCreate.mockResolvedValue({
       id: 'e1', name: VALID_BODY.name, zanId: VALID_BODY.zanId, institutionId: 'inst-1',
     });
@@ -204,5 +208,244 @@ describe('POST /api/employees/manual-entry authorization', () => {
     // institutionId must be forced to the authenticated user's institution
     const createCall = mockEmployeeCreate.mock.calls[0][0];
     expect(createCall.data.institutionId).toBe('inst-1');
+  });
+
+  // ---- Req 6.6: institution org-field (ministry/department/currentWorkplace)
+  // validation against the institution's existing recorded values. ----
+
+  // Mocks the three distinct findMany lookups by inspecting the `select` arg.
+  function mockOrgFieldLookup(existing: {
+    ministry?: string[];
+    department?: string[];
+    currentWorkplace?: string[];
+  }) {
+    mockEmployeeFindMany.mockImplementation((args: any) => {
+      if (args.select?.ministry) {
+        return Promise.resolve((existing.ministry ?? []).map((m) => ({ ministry: m })));
+      }
+      if (args.select?.department) {
+        return Promise.resolve((existing.department ?? []).map((d) => ({ department: d })));
+      }
+      if (args.select?.currentWorkplace) {
+        return Promise.resolve((existing.currentWorkplace ?? []).map((w) => ({ currentWorkplace: w })));
+      }
+      return Promise.resolve([]);
+    });
+  }
+
+  async function setupHroWithManualEntry() {
+    mockValidateSession.mockResolvedValue({
+      id: 's1', userId: 'u1', ipAddress: '10.0.0.1', userAgent: 'TestAgent/1.0',
+    });
+    mockDbUserFindUnique.mockResolvedValue({
+      id: 'u1', active: true, role: 'HRO', institutionId: 'inst-1', username: 'ymrajab',
+    });
+    mockInstitutionFindUnique.mockResolvedValue({
+      manualEntryEnabled: true, manualEntryStartDate: null, manualEntryEndDate: null,
+    });
+    mockEmployeeFindUnique.mockResolvedValue(null); // zanId not taken
+    mockEmployeeFindFirst.mockResolvedValue(null); // payroll/zssf not taken
+    mockEmployeeFindMany.mockResolvedValue([]); // Req 6.5: no fuzzy duplicate
+    mockEmployeeCreate.mockResolvedValue({
+      id: 'e1', name: 'Jane Doe', zanId: '12345678', institutionId: 'inst-1',
+    });
+    mockLogEmployeeAction.mockResolvedValue(undefined);
+  }
+
+  it('Req 6.6: rejects a ministry not recorded for the institution (400)', async () => {
+    await setupHroWithManualEntry();
+    mockOrgFieldLookup({ ministry: ['Health', 'Education'], department: ['HR'] });
+    const { POST } = await import('./route');
+    const res = await POST(authedRequest('HRO', { ...VALID_BODY, ministry: 'Defence', department: 'HR' }));
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.success).toBe(false);
+    expect(body.error).toContain('Ministry "Defence"');
+    expect(mockEmployeeCreate).not.toHaveBeenCalled();
+  });
+
+  it('Req 6.6: accepts a ministry that matches a recorded value (201)', async () => {
+    await setupHroWithManualEntry();
+    mockOrgFieldLookup({ ministry: ['Health', 'Education'], department: ['HR'] });
+    const { POST } = await import('./route');
+    const res = await POST(authedRequest('HRO', { ...VALID_BODY, ministry: 'Health', department: 'HR' }));
+    expect(res.status).toBe(201);
+    expect(mockEmployeeCreate).toHaveBeenCalledOnce();
+  });
+
+  it('Req 6.6: bootstrap — accepts any ministry when the institution has none recorded (201)', async () => {
+    await setupHroWithManualEntry();
+    mockOrgFieldLookup({}); // no recorded values → bootstrap
+    const { POST } = await import('./route');
+    const res = await POST(authedRequest('HRO', { ...VALID_BODY, ministry: 'Brand New Ministry', department: 'New Dept' }));
+    expect(res.status).toBe(201);
+    expect(mockEmployeeCreate).toHaveBeenCalledOnce();
+  });
+
+  it('Req 6.6: skips the lookup entirely when no org fields are supplied', async () => {
+    await setupHroWithManualEntry();
+    const { POST } = await import('./route');
+    const res = await POST(authedRequest('HRO', VALID_BODY));
+    expect(res.status).toBe(201);
+    // No org fields supplied → the distinct-value org-field lookup must not
+    // run. (The Req 6.5 fuzzy check also calls findMany, but with a
+    // dateOfBirth/institutionId where clause — not an org-field select.)
+    const orgFieldCalls = mockEmployeeFindMany.mock.calls.filter(
+      (c: any) =>
+        c[0]?.select?.ministry || c[0]?.select?.department || c[0]?.select?.currentWorkplace
+    );
+    expect(orgFieldCalls).toHaveLength(0);
+  });
+
+  // ---- Req 6.8: cross-field date logic + identifier formats ----
+
+  it('Req 6.8: rejects employmentDate not after dateOfBirth (400)', async () => {
+    await setupHroWithManualEntry();
+    const { POST } = await import('./route');
+    const res = await POST(
+      authedRequest('HRO', { ...VALID_BODY, dateOfBirth: '1990-01-01', employmentDate: '1990-01-01' })
+    );
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error).toContain('Employment date must be after date of birth');
+    expect(mockEmployeeCreate).not.toHaveBeenCalled();
+  });
+
+  it('Req 6.8: rejects confirmationDate before employmentDate (400)', async () => {
+    await setupHroWithManualEntry();
+    const { POST } = await import('./route');
+    const res = await POST(
+      authedRequest('HRO', {
+        ...VALID_BODY,
+        dateOfBirth: '1990-01-01',
+        employmentDate: '2018-01-10',
+        confirmationDate: '2017-12-31',
+      })
+    );
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error).toContain('Confirmation date cannot be before employment date');
+  });
+
+  it('Req 6.8: rejects retirementDate not after employmentDate (400)', async () => {
+    await setupHroWithManualEntry();
+    const { POST } = await import('./route');
+    const res = await POST(
+      authedRequest('HRO', {
+        ...VALID_BODY,
+        dateOfBirth: '1990-01-01',
+        employmentDate: '2018-01-10',
+        retirementDate: '2018-01-10',
+      })
+    );
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error).toContain('Retirement date must be after employment date');
+  });
+
+  it('Req 6.8: rejects malformed confirmationDate format (400)', async () => {
+    await setupHroWithManualEntry();
+    const { POST } = await import('./route');
+    const res = await POST(
+      authedRequest('HRO', { ...VALID_BODY, confirmationDate: '31-12-2020' })
+    );
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error).toContain('Invalid confirmation date format');
+  });
+
+  it('Req 6.8: rejects malformed ZSSF number format (400)', async () => {
+    await setupHroWithManualEntry();
+    const { POST } = await import('./route');
+    const res = await POST(authedRequest('HRO', { ...VALID_BODY, zssfNumber: 'ZSSF 123' }));
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error).toContain('ZSSF number');
+    expect(mockEmployeeCreate).not.toHaveBeenCalled();
+  });
+
+  it('Req 6.8: rejects malformed payroll number format (400)', async () => {
+    await setupHroWithManualEntry();
+    const { POST } = await import('./route');
+    const res = await POST(authedRequest('HRO', { ...VALID_BODY, payrollNumber: 'PR#001' }));
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error).toContain('Payroll number');
+  });
+
+  it('Req 6.8: accepts consistent cross-field dates (201)', async () => {
+    await setupHroWithManualEntry();
+    mockOrgFieldLookup({}); // bootstrap → any org value accepted
+    const { POST } = await import('./route');
+    const res = await POST(
+      authedRequest('HRO', {
+        ...VALID_BODY,
+        dateOfBirth: '1990-01-01',
+        employmentDate: '2018-01-10',
+        confirmationDate: '2019-01-10',
+        retirementDate: '2055-01-15',
+      })
+    );
+    expect(res.status).toBe(201);
+    expect(mockEmployeeCreate).toHaveBeenCalledOnce();
+  });
+
+  // ---- Req 6.5: fuzzy duplicate detection on name + DOB + institutionId ----
+
+  it('Req 6.5: blocks creation (409) when a same-DOB / similar-name employee already exists', async () => {
+    await setupHroWithManualEntry();
+    // findFuzzyDuplicate runs prisma.employee.findMany scoped to inst + DOB day.
+    // The existing record's name is a single-typo variant of the submitted name
+    // ("Jane Doe" vs "Jayne Doe" → 0.875 similarity ≥ threshold) → flagged.
+    mockEmployeeFindMany.mockResolvedValue([
+      { id: 'e-existing', name: 'Jayne Doe', zanId: '99999999' },
+    ]);
+    const { POST } = await import('./route');
+    const res = await POST(
+      authedRequest('HRO', { ...VALID_BODY, name: 'Jane Doe', dateOfBirth: '1990-01-01' })
+    );
+    expect(res.status).toBe(409);
+    const body = await res.json();
+    expect(body.success).toBe(false);
+    expect(body.error).toContain('likely duplicate');
+    expect(body.error).toContain('99999999');
+    expect(mockEmployeeCreate).not.toHaveBeenCalled();
+
+    // The DB query must be scoped to the institution + the DOB calendar day.
+    const fuzzyCalls = mockEmployeeFindMany.mock.calls.filter(
+      (c: any) => c[0]?.where?.dateOfBirth
+    );
+    expect(fuzzyCalls.length).toBeGreaterThan(0);
+    expect(fuzzyCalls[0][0].where.institutionId).toBe('inst-1');
+    expect(fuzzyCalls[0][0].where.dateOfBirth.gte.toISOString()).toBe('1990-01-01T00:00:00.000Z');
+  });
+
+  it('Req 6.5: allows creation when the only same-DOB candidate has an unrelated name', async () => {
+    await setupHroWithManualEntry();
+    mockEmployeeFindMany.mockResolvedValue([
+      { id: 'e-other', name: 'John Smith', zanId: '88888888' },
+    ]);
+    const { POST } = await import('./route');
+    const res = await POST(
+      authedRequest('HRO', { ...VALID_BODY, name: 'Jane Doe', dateOfBirth: '1990-01-01' })
+    );
+    expect(res.status).toBe(201);
+    expect(mockEmployeeCreate).toHaveBeenCalledOnce();
+  });
+
+  it('Req 6.5: skips the fuzzy check (201) when DOB is missing — exact-key checks still run', async () => {
+    // dateOfBirth is required by the route, but defensively the fuzzy check
+    // must no-op (not throw) on an unparseable DOB and let creation proceed if
+    // the required-field validator were ever relaxed.
+    await setupHroWithManualEntry();
+    mockEmployeeFindMany.mockResolvedValue([]);
+    const { POST } = await import('./route');
+    const res = await POST(
+      authedRequest('HRO', { ...VALID_BODY, dateOfBirth: 'not-a-date' })
+    );
+    // The route's own DOB format/required validation rejects first; the fuzzy
+    // check is simply never reached with a bad DOB.
+    expect(res.status).toBe(400);
+    expect(mockEmployeeCreate).not.toHaveBeenCalled();
   });
 });

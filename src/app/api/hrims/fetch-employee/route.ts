@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getHrimsApiConfig } from '@/lib/hrims-config';
+import { getHrimsApiConfig, isHrimsConfigError } from '@/lib/hrims-config';
 import { db } from '@/lib/db';
 import { v4 as uuidv4 } from 'uuid';
 import { uploadFile } from '@/lib/minio';
@@ -286,9 +286,21 @@ async function processDocuments(
 
         // Take first attachment (most recent)
         const doc = attachments[0];
+        const attachmentContent =
+          typeof doc.attachmentContent === 'string' ? doc.attachmentContent : '';
+
+        // HRIMS can return metadata (contentSize > 0) with an empty
+        // attachmentContent — an upstream content-delivery issue. Skip
+        // rather than storing an empty/invalid file.
+        if (!attachmentContent) {
+          hrimsLogger.warn(
+            ` HRIMS returned ${docType.name} metadata with empty content for ${payrollNumber} (contentSize: ${doc.contentSize ?? 'n/a'}) — skipping, upstream content-delivery issue`
+          );
+          continue;
+        }
 
         // Convert base64 to buffer and upload to MinIO
-        const buffer = Buffer.from(doc.content, 'base64');
+        const buffer = Buffer.from(attachmentContent, 'base64');
         const fileName = `${employeeId}_${docType.dbKey}.pdf`;
         const filePath = `employee-documents/${fileName}`;
 
@@ -417,7 +429,6 @@ async function processPhoto(
 }
 
 export const POST = wrapHandler(withAuth(async (req, { auth }) => {
-  const HRIMS_CONFIG = await getHrimsApiConfig();
   const body = await req.json();
   const { zanId, payrollNumber, institutionVoteNumber } = body;
 
@@ -429,6 +440,34 @@ export const POST = wrapHandler(withAuth(async (req, { auth }) => {
     ipAddress: getClientIp(req.headers),
     deviceInfo: JSON.parse(req.headers.get('x-device-info') || 'null'),
   };
+
+  // SECURITY (Req 11.2): resolve the trusted HRIMS endpoint + credentials
+  // from server config. A non-allowlisted host or non-https-in-production
+  // config throws `HrimsConfigError` → 400 + `HRIMS_SYNC_FAILED` audit, so
+  // the server is never proxied at a caller-chosen host.
+  let HRIMS_CONFIG;
+  try {
+    HRIMS_CONFIG = await getHrimsApiConfig();
+  } catch (configError) {
+    if (isHrimsConfigError(configError)) {
+      await logHrimsSync({
+        ...auditCommon,
+        success: false,
+        institutionVoteNumber,
+        zanId,
+        additionalData: { reason: configError.code },
+      }).catch(() => {});
+      return NextResponse.json(
+        {
+          success: false,
+          message: configError.message,
+          errorCode: configError.code,
+        },
+        { status: 400 }
+      );
+    }
+    throw configError;
+  }
 
   // Validation
   if (!zanId && !payrollNumber) {

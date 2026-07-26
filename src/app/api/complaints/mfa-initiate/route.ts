@@ -82,7 +82,7 @@ export const POST = wrapHandler(withRateLimit(withAuth(async (request, { auth })
     );
   }
 
-  const mfaTokenExpiryMinutes = Number(process.env.MFA_TOKEN_EXPIRY_MINUTES) || 20;
+  const mfaTokenExpiryMinutes = Number(process.env.MFA_TOKEN_EXPIRY_MINUTES) || 10;
   const { token: magicLinkToken } = await createMfaToken(
     user.id,
     'MAGIC_LINK',

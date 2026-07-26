@@ -527,6 +527,71 @@ class ApiClient {
     return this.request<Institution>(`/institutions/${id}`);
   }
 
+  /**
+   * Download a server-generated report export (Req 12.2). Unlike `request`,
+   * this returns a Blob (the binary file) on success. On failure it returns
+   * the parsed JSON error body so the caller can surface the message — e.g.
+   * a 429 rate-limit or a 403 role-forbidden.
+   */
+  async exportReport(
+    body: { reportType: string; format: 'pdf' | 'xlsx'; fromDate?: string; toDate?: string; institutionId?: string }
+  ): Promise<{ success: boolean; blob?: Blob; fileName?: string; message?: string; code?: string; retryAfter?: number }> {
+    const url = `${this.baseURL}/reports/export`;
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    // CSRF token (POST) — same logic as `request`.
+    if (typeof window !== 'undefined') {
+      const csrfRow = document.cookie
+        .split('; ')
+        .find((row) => row.startsWith('csrf-token='));
+      const csrfToken = csrfRow ? csrfRow.substring(csrfRow.indexOf('=') + 1) : undefined;
+      if (csrfToken) headers['x-csrf-token'] = csrfToken;
+      headers['x-device-info'] = getDeviceInfoHeader();
+    }
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers,
+        credentials: 'include',
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) {
+        let errBody: any = null;
+        try {
+          errBody = await response.json();
+        } catch {
+          errBody = null;
+        }
+        if (response.status === 401) {
+          this.clearToken();
+        }
+        return {
+          success: false,
+          message: errBody?.error || errBody?.message || `HTTP ${response.status}`,
+          code: errBody?.errorCode,
+          retryAfter: errBody?.retryAfter,
+        };
+      }
+
+      // Parse the filename from Content-Disposition.
+      const disposition = response.headers.get('content-disposition') || '';
+      const match = disposition.match(/filename="([^"]+)"/);
+      const fileName = match ? match[1] : `${body.reportType}_report.${body.format}`;
+      const blob = await response.blob();
+      return { success: true, blob, fileName };
+    } catch (error) {
+      clientLogger.error({ err: error }, 'Export request failed');
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Network error',
+      };
+    }
+  }
+
   async createInstitution(
     institution: Partial<Institution>
   ): Promise<ApiResponse<Institution>> {
@@ -565,6 +630,37 @@ class ApiClient {
     return this.request<User>('/users', {
       method: 'POST',
       body: JSON.stringify(user),
+    });
+  }
+
+  async bulkCreateUsers(
+    users: Array<{
+      name: string;
+      username: string;
+      password: string;
+      email: string;
+      phoneNumber: string;
+      institutionName: string;
+      role: string;
+    }>
+  ): Promise<
+    ApiResponse<{
+      total: number;
+      created: number;
+      skipped: number;
+      failed: number;
+      results: Array<{
+        index: number;
+        name: string;
+        username: string;
+        status: 'created' | 'skipped' | 'error';
+        error?: string;
+      }>;
+    }>
+  > {
+    return this.request('/users/bulk', {
+      method: 'POST',
+      body: JSON.stringify(users),
     });
   }
 

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { z } from 'zod';
-import { logInstitutionAction, getClientIp } from '@/lib/audit-logger';
+import { logInstitutionAction, getClientIp, logForbiddenRoute } from '@/lib/audit-logger';
 import { logger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
 import { getAuthContext, verifyAuth, requireReauth } from '@/lib/api-auth';
@@ -32,6 +32,27 @@ export const PUT = wrapHandler(async (
     }
     const denied = requireReauth(req, 'institutions.update', authResult.context);
     if (denied) return denied;
+
+    // SECURITY (Req 14.1/14.6): institution configuration is Admin-only.
+    // verifyAuth + requireReauth confirm the user is authenticated and recently
+    // re-authenticated, but do not restrict by role — without this guard any
+    // authenticated user could edit an institution.
+    if (authResult.context.role.toUpperCase() !== 'ADMIN') {
+      const url = new URL(req.url);
+      await logForbiddenRoute({
+        userId: authResult.context.userId,
+        username: authResult.context.username,
+        userRole: authResult.context.role,
+        attemptedRoute: url.pathname,
+        ipAddress: getClientIp(req.headers),
+        requestMethod: 'PUT',
+        additionalData: { requiredRoles: ['Admin'], actualRole: authResult.context.role },
+      }).catch(() => {});
+      return NextResponse.json(
+        { success: false, message: 'Forbidden: Admin role required.' },
+        { status: 403 }
+      );
+    }
 
     const { id } = await params;
     const body = await req.json();
@@ -182,6 +203,26 @@ export const DELETE = wrapHandler(async (
     }
     const denied = requireReauth(req, 'institutions.delete', authResult.context);
     if (denied) return denied;
+
+    // SECURITY (Req 14.1/14.6): institution deletion is Admin-only. Without
+    // this guard any authenticated user who passes reauth could delete an
+    // institution.
+    if (authResult.context.role.toUpperCase() !== 'ADMIN') {
+      const url = new URL(req.url);
+      await logForbiddenRoute({
+        userId: authResult.context.userId,
+        username: authResult.context.username,
+        userRole: authResult.context.role,
+        attemptedRoute: url.pathname,
+        ipAddress: getClientIp(req.headers),
+        requestMethod: 'DELETE',
+        additionalData: { requiredRoles: ['Admin'], actualRole: authResult.context.role },
+      }).catch(() => {});
+      return NextResponse.json(
+        { success: false, message: 'Forbidden: Admin role required.' },
+        { status: 403 }
+      );
+    }
 
     const { id } = await params;
     await db.institution.delete({

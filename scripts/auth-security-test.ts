@@ -7,7 +7,6 @@
  */
 
 import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 
 const prisma = new PrismaClient();
@@ -612,17 +611,25 @@ async function testPasswordHashing() {
     return;
   }
 
-  const isBcrypt = user.password.startsWith('$2a$') || user.password.startsWith('$2b$');
-  const saltRounds = isBcrypt ? parseInt(user.password.split('$')[2]) : 0;
+  const isArgon2id = user.password.startsWith('$argon2id$');
+  // Parse m=,t=,p= params from the encoded hash ($argon2id$v=19$m=...,t=...,p=...$...)
+  const paramsMatch = user.password.match(/m=(\d+),t=(\d+),p=(\d+)/);
+  const memoryCost = paramsMatch ? parseInt(paramsMatch[1]) : 0;
+  const timeCost = paramsMatch ? parseInt(paramsMatch[2]) : 0;
+  const parallelism = paramsMatch ? parseInt(paramsMatch[3]) : 0;
+
+  // OWASP Argon2id baseline: memoryCost >= 19456 (19 MiB), timeCost >= 2, parallelism >= 1
+  const meetsBaseline =
+    isArgon2id && memoryCost >= 19456 && timeCost >= 2 && parallelism >= 1;
 
   results.push({
     caseId: 'HASH',
     scenario: 'Password Hashing',
-    status: isBcrypt && saltRounds >= 10 ? 'PASS' : 'FAIL',
-    details: `Algorithm: ${isBcrypt ? 'bcrypt' : 'unknown'}, Salt rounds: ${saltRounds}`,
+    status: meetsBaseline ? 'PASS' : 'FAIL',
+    details: `Algorithm: ${isArgon2id ? 'argon2id' : 'unknown'}, m=${memoryCost}, t=${timeCost}, p=${parallelism}`,
   });
 
-  console.log(`Result: ${isBcrypt && saltRounds >= 10 ? 'PASS' : 'FAIL'}`);
+  console.log(`Result: ${meetsBaseline ? 'PASS' : 'FAIL'}`);
   console.log(`Hash starts with: ${user.password.substring(0, 10)}...`);
 }
 

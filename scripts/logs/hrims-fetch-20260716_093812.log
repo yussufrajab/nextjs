@@ -1,0 +1,20 @@
+
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/home/latest/fetch-hrims-data.ts' imported from /home/latest/
+    at finalizeResolution (node:internal/modules/esm/resolve:271:11)
+    at moduleResolve (node:internal/modules/esm/resolve:865:10)
+    at defaultResolve (node:internal/modules/esm/resolve:992:11)
+    at nextResolve (node:internal/modules/esm/hooks:785:28)
+    at resolveBase (file:///home/latest/node_modules/tsx/dist/esm/index.mjs?1784194693246:2:3212)
+    at async resolveDirectory (file:///home/latest/node_modules/tsx/dist/esm/index.mjs?1784194693246:2:3578)
+    at async resolve (file:///home/latest/node_modules/tsx/dist/esm/index.mjs?1784194693246:2:4441)
+    at async nextResolve (node:internal/modules/esm/hooks:785:22)
+    at async AsyncLoaderHooksOnLoaderHookWorker.resolve (node:internal/modules/esm/hooks:269:24)
+    at async handleMessage (node:internal/modules/esm/worker:251:18) {
+  code: 'ERR_MODULE_NOT_FOUND',
+  url: 'file:///home/latest/fetch-hrims-data.ts'
+}
+
+Node.js v24.18.0

@@ -26,7 +26,15 @@ export default function LoginPage() {
         </CardHeader>
         <CardContent>
           <LoginForm />
-          <div className="mt-6 text-center">
+          <div className="mt-4 text-center">
+            <Link
+              href="/forgot-password"
+              className="text-sm text-muted-foreground hover:text-primary underline"
+            >
+              Forgot password?
+            </Link>
+          </div>
+          <div className="mt-4 text-center">
             <Link href="/employee-login">
               <Button variant="outline" size="sm">
                 Employee Login

@@ -14,6 +14,8 @@ import { logger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
 import { verifyAuth } from '@/lib/api-auth';
 import { shouldApplyInstitutionFilter } from '@/lib/role-utils';
+import { isAllowedStatusTransition } from '@/lib/request-workflow';
+import { denyWorkflowAccess } from '@/lib/workflow-access';
 
 const VALID_STATUSES = [
   'Pending HRRP Review',
@@ -71,11 +73,45 @@ async function handleUpdate(
     // SECURITY: Institution ownership check — HRO/HRRP can only modify their own institution's requests
     if (shouldApplyInstitutionFilter(auth.role, auth.institutionId)) {
       if (!existingRequest.Employee || existingRequest.Employee.institutionId !== auth.institutionId) {
-        return NextResponse.json(
-          { success: false, message: 'Access denied: request belongs to a different institution' },
-          { status: 403 }
-        );
+        return denyWorkflowAccess({
+          auth,
+          routeBase: 'lwop',
+          requestId: id,
+          requestType: 'LWOP',
+          employeeId: existingRequest.employeeId,
+          blockReason: 'INSTITUTION_OWNERSHIP',
+          message: 'Access denied: request belongs to a different institution',
+          requestMethod: req.method,
+          ipAddress,
+          deviceInfo,
+        });
       }
+    }
+
+    // SECURITY (Req 8.1/8.2/18.1): validate status transition. Prevents a
+    // client from jumping an arbitrary status (e.g. re-approving an already
+    // Commission-concluded request, or skipping the HRRP stage). Mirrors the
+    // FSM in promotions/[id]/route.ts, extended to handle the variable
+    // HHRMD/HRMO forward status.
+    if (
+      validatedData.status &&
+      existingRequest.status !== validatedData.status &&
+      !isAllowedStatusTransition(existingRequest.status, validatedData.status)
+    ) {
+      return denyWorkflowAccess({
+        auth,
+        routeBase: 'lwop',
+        requestId: id,
+        requestType: 'LWOP',
+        employeeId: existingRequest.employeeId,
+        blockReason: 'INVALID_STATUS_TRANSITION',
+        message: `Invalid status transition from "${existingRequest.status}" to "${validatedData.status}"`,
+        status: 400,
+        requestMethod: req.method,
+        ipAddress,
+        deviceInfo,
+        additionalData: { fromStatus: existingRequest.status, toStatus: validatedData.status },
+      });
     }
 
     // SECURITY: Enforce rejection reason for all rejections
@@ -95,10 +131,18 @@ async function handleUpdate(
       const isApprovalOrRejection =
         statusLower.includes('approved') || statusLower.includes('rejected');
       if (isApprovalOrRejection && existingRequest.submittedById === auth.userId) {
-        return NextResponse.json(
-          { success: false, message: 'Cannot approve or reject your own submission' },
-          { status: 403 }
-        );
+        return denyWorkflowAccess({
+          auth,
+          routeBase: 'lwop',
+          requestId: id,
+          requestType: 'LWOP',
+          employeeId: existingRequest.employeeId,
+          blockReason: 'SELF_APPROVAL',
+          message: 'Cannot approve or reject your own submission',
+          requestMethod: req.method,
+          ipAddress,
+          deviceInfo,
+        });
       }
     }
 
@@ -303,10 +347,18 @@ export const DELETE = wrapHandler(async (
       !existingRequest.Employee ||
       existingRequest.Employee.institutionId !== auth.institutionId
     ) {
-      return NextResponse.json(
-        { success: false, message: 'Access denied: request belongs to a different institution' },
-        { status: 403 }
-      );
+      return denyWorkflowAccess({
+        auth,
+        routeBase: 'lwop',
+        requestId: id,
+        requestType: 'LWOP',
+        employeeId: existingRequest.employeeId,
+        blockReason: 'INSTITUTION_OWNERSHIP',
+        message: 'Access denied: request belongs to a different institution',
+        requestMethod: 'DELETE',
+        ipAddress,
+        deviceInfo,
+      });
     }
   }
 
@@ -315,13 +367,18 @@ export const DELETE = wrapHandler(async (
     existingRequest.submittedById === auth.userId ||
     ['Admin', 'HHRMD'].includes(auth.role);
   if (!canWithdraw) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: 'Only the original submitter or an administrator may withdraw this request',
-      },
-      { status: 403 }
-    );
+    return denyWorkflowAccess({
+      auth,
+      routeBase: 'lwop',
+      requestId: id,
+      requestType: 'LWOP',
+      employeeId: existingRequest.employeeId,
+      blockReason: 'NOT_SUBMITTER',
+      message: 'Only the original submitter or an administrator may withdraw this request',
+      requestMethod: 'DELETE',
+      ipAddress,
+      deviceInfo,
+    });
   }
 
   // A request that has already received a final Commission decision is part of

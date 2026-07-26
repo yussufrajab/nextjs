@@ -9,6 +9,85 @@ const DEFAULT_HRIMS_CONFIG = {
   token: process.env.HRIMS_TOKEN || '',
 };
 
+// ---------------------------------------------------------------------------
+// Trusted-source / SSRF elimination (Req 11.2)
+// ---------------------------------------------------------------------------
+
+/** Error codes surfaced to callers when the resolved HRIMS config is unsafe. */
+export const HRIMS_HOST_NOT_ALLOWED = 'HRIMS_HOST_NOT_ALLOWED';
+export const HRIMS_HTTPS_REQUIRED = 'HRIMS_HTTPS_REQUIRED';
+
+/**
+ * Typed config error thrown by `getHrimsConfig` when the resolved HRIMS host
+ * or transport is unsafe. Routes catch it (via `isHrimsConfigError`) and
+ * surface a 400 + `HRIMS_SYNC_FAILED` audit event so a misconfigured or
+ * tampered HRIMS endpoint can never be used to proxy the server at an
+ * arbitrary host (SSRF) or exfiltrate the API key.
+ */
+export class HrimsConfigError extends Error {
+  code: string;
+  constructor(code: string, message: string) {
+    super(message);
+    this.name = 'HrimsConfigError';
+    this.code = code;
+  }
+}
+
+export function isHrimsConfigError(e: unknown): e is HrimsConfigError {
+  return e instanceof HrimsConfigError;
+}
+
+/**
+ * Parse `HRIMS_ALLOWED_HOSTS` (comma-separated) into a lowercased set. When
+ * set, the resolved HRIMS host (DB setting or env default) MUST be in this
+ * list or `getHrimsConfig` throws `HRIMS_HOST_NOT_ALLOWED`. Empty/unset → no
+ * allow-list enforced (backwards-compatible default for dev/CI).
+ */
+function parseAllowedHosts(): Set<string> {
+  const raw = process.env.HRIMS_ALLOWED_HOSTS || '';
+  return new Set(
+    raw
+      .split(',')
+      .map((s) => s.trim().toLowerCase())
+      .filter(Boolean)
+  );
+}
+
+/**
+ * Resolve the HRIMS transport scheme. Defaults to `http` (the legacy internal
+ * endpoint). Production may set `HRIMS_API_SCHEME=https` to require TLS.
+ */
+function resolveScheme(): string {
+  const scheme = (process.env.HRIMS_API_SCHEME || 'http').trim().toLowerCase();
+  return scheme === 'https' ? 'https' : 'http';
+}
+
+/**
+ * Validate the resolved host + scheme against the trusted-source policy
+ * (Req 11.2). Throws `HrimsConfigError` on violation.
+ */
+function assertTrustedSource(host: string, scheme: string): void {
+  const allowed = parseAllowedHosts();
+  if (allowed.size > 0 && !allowed.has(host.toLowerCase())) {
+    throw new HrimsConfigError(
+      HRIMS_HOST_NOT_ALLOWED,
+      `HRIMS host '${host}' is not in HRIMS_ALLOWED_HOSTS`
+    );
+  }
+  // Reject non-https in production unless the operator explicitly opts in to
+  // insecure HTTP (e.g. a private-network HRIMS without TLS). TLS certificate
+  // validation is never disabled — Node's fetch (undici) validates the cert
+  // chain by default and these routes never set `rejectUnauthorized: false`.
+  const isProduction = process.env.NODE_ENV === 'production';
+  const allowInsecure = process.env.HRIMS_ALLOW_INSECURE_HTTP === 'true';
+  if (isProduction && scheme !== 'https' && !allowInsecure) {
+    throw new HrimsConfigError(
+      HRIMS_HTTPS_REQUIRED,
+      'HRIMS API must use https in production (set HRIMS_API_SCHEME=https, or HRIMS_ALLOW_INSECURE_HTTP=true for an explicit opt-in)'
+    );
+  }
+}
+
 export interface HrimsConfig {
   host: string;
   port: string;
@@ -63,7 +142,14 @@ async function setSetting(key: string, value: string): Promise<void> {
 
 /**
  * Get the HRIMS configuration from the database
- * Falls back to defaults if not configured
+ * Falls back to defaults if not configured.
+ *
+ * SECURITY (Req 11.2): the resolved host + transport are validated against
+ * the trusted-source policy (`HRIMS_ALLOWED_HOSTS` allow-list + https-in-
+ * production) BEFORE the config is handed to a route. A violation throws
+ * `HrimsConfigError`, which routes surface as a 400 + `HRIMS_SYNC_FAILED`
+ * audit event — a misconfigured or tampered endpoint can never proxy the
+ * server at an arbitrary host (SSRF) or exfiltrate the API key.
  */
 export async function getHrimsConfig(): Promise<HrimsConfig> {
   const [host, port, apiKey, token] = await Promise.all([
@@ -80,9 +166,12 @@ export async function getHrimsConfig(): Promise<HrimsConfig> {
     token: token || DEFAULT_HRIMS_CONFIG.token,
   };
 
+  const scheme = resolveScheme();
+  assertTrustedSource(config.host, scheme);
+
   return {
     ...config,
-    baseUrl: `http://${config.host}:${config.port}/api`,
+    baseUrl: `${scheme}://${config.host}:${config.port}/api`,
   };
 }
 

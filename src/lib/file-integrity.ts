@@ -15,14 +15,45 @@
 
 import { createHash } from 'crypto';
 import { db } from '@/lib/db';
-import { logAuditEvent, AuditEventType, AuditEventCategory, AuditSeverity } from './audit-logger';
+import { logAuditEvent, AuditEventType, AuditEventCategory, AuditSeverity, safeAuditLog } from './audit-logger';
 import { authLogger } from './logger';
 
 export interface IntegrityCheckResult {
   ok: boolean;
   expected: string | null;
   actual: string;
-  reason?: 'no_hash_recorded' | 'hash_mismatch' | 'byte_size_mismatch';
+  reason?: 'no_hash_recorded' | 'hash_mismatch' | 'byte_size_mismatch' | 'lookup_failed';
+}
+
+/**
+ * Options for the verify helpers.
+ *
+ * `failClosed` controls what happens when no integrity hash has been recorded
+ * for the object (legacy data) or the integrity-table lookup itself errors.
+ * Historically both paths returned `ok=true` (fail-open), which means a
+ * tampered or never-hashed file is served as if it were clean. For *sensitive*
+ * object keys (employee documents/photos — government PII) we instead fail
+ * closed: the read is blocked AND a CRITICAL `POTENTIAL_BREACH` audit event is
+ * emitted so the unsigned/tampered object is flagged for SOC review rather
+ * than silently served.
+ */
+export interface VerifyOptions {
+  failClosed?: boolean;
+}
+
+/**
+ * Whether `objectKey` points at sensitive government PII that must fail closed
+ * when its integrity hash is missing or unreadable. Employee documents and
+ * photos are PII; system `templates/` are public assets and stay fail-open.
+ * Generic uploads (complaint attachments etc.) keep fail-open so a missing
+ * hash never breaks legitimate legacy access — those are flagged only when a
+ * hash *exists* and mismatches.
+ */
+export function isSensitiveObjectKey(objectKey: string): boolean {
+  return (
+    objectKey.startsWith('employee-documents/') ||
+    objectKey.startsWith('employee-photos/')
+  );
 }
 
 /**
@@ -77,26 +108,52 @@ export async function recordDocumentHash(
  * @param employeeId - Owner of the document
  * @param fieldName  - Identifier for the field
  * @param data       - The data being read (URL contents / file buffer)
- * @returns ok=true when the hash matches (or no hash was recorded — fail-open)
- *          ok=false when the hash mismatches
+ * @param opts       - `failClosed` (default true): block + flag when no hash
+ *                     is recorded. Employee documents are PII, so the default
+ *                     is fail-closed. Pass `false` to keep legacy fail-open.
+ * @returns ok=true when the hash matches. ok=false when the hash mismatches,
+ *          or (fail-closed) when no hash is recorded.
  */
 export async function verifyDocumentHash(
   employeeId: string,
   fieldName: string,
-  data: Buffer | string
+  data: Buffer | string,
+  opts: VerifyOptions = {}
 ): Promise<IntegrityCheckResult> {
+  const failClosed = opts.failClosed ?? true;
+
   const expected = await db.documentHash.findUnique({
     where: { employeeId_fieldName: { employeeId, fieldName } },
   });
 
   if (!expected) {
-    // No hash recorded — fail-open (don't block legacy data)
-    return {
-      ok: true,
-      expected: null,
-      actual: sha256Hex(data),
-      reason: 'no_hash_recorded',
-    };
+    // No hash recorded. Employee documents are sensitive PII — fail closed
+    // (block + flag) by default so an unsigned/tampered document cannot be
+    // served as if clean. Callers that explicitly accept legacy data may
+    // pass failClosed:false to preserve the old fail-open behavior.
+    const actual = sha256Hex(data);
+    if (failClosed) {
+      authLogger.warn(
+        { employeeId, fieldName },
+        'Document integrity hash missing — failing closed (sensitive PII)'
+      );
+      await safeAuditLog(
+        logAuditEvent({
+          eventType: AuditEventType.POTENTIAL_BREACH,
+          eventCategory: AuditEventCategory.SECURITY,
+          severity: AuditSeverity.CRITICAL,
+          attemptedRoute: `/integrity/${fieldName}`,
+          requestMethod: 'GET',
+          isAuthenticated: true,
+          wasBlocked: true,
+          blockReason: 'NO_HASH_RECORDED',
+          additionalData: { employeeId, fieldName, actualHash: actual },
+        }),
+        'verifyDocumentHash:no-hash'
+      );
+      return { ok: false, expected: null, actual, reason: 'no_hash_recorded' };
+    }
+    return { ok: true, expected: null, actual, reason: 'no_hash_recorded' };
   }
 
   const actual = sha256Hex(data);
@@ -106,22 +163,25 @@ export async function verifyDocumentHash(
       { employeeId, fieldName, expected: expected.sha256, actual },
       'CRITICAL: Document integrity hash MISMATCH — possible tampering'
     );
-    await logAuditEvent({
-      eventType: AuditEventType.POTENTIAL_BREACH,
-      eventCategory: AuditEventCategory.SECURITY,
-      severity: AuditSeverity.CRITICAL,
-      attemptedRoute: `/integrity/${fieldName}`,
-      requestMethod: 'GET',
-      isAuthenticated: true,
-      wasBlocked: true,
-      blockReason: 'INTEGRITY_MISMATCH',
-      additionalData: {
-        employeeId,
-        fieldName,
-        expectedHash: expected.sha256,
-        actualHash: actual,
-      },
-    }).catch(() => {});
+    await safeAuditLog(
+      logAuditEvent({
+        eventType: AuditEventType.POTENTIAL_BREACH,
+        eventCategory: AuditEventCategory.SECURITY,
+        severity: AuditSeverity.CRITICAL,
+        attemptedRoute: `/integrity/${fieldName}`,
+        requestMethod: 'GET',
+        isAuthenticated: true,
+        wasBlocked: true,
+        blockReason: 'INTEGRITY_MISMATCH',
+        additionalData: {
+          employeeId,
+          fieldName,
+          expectedHash: expected.sha256,
+          actualHash: actual,
+        },
+      }),
+      'verifyDocumentHash:mismatch'
+    );
 
     return {
       ok: false,
@@ -185,59 +245,90 @@ export async function recordFileHash(
 
 /**
  * Verify a generic MinIO file against its recorded hash. Use this on the
- * download/preview paths to detect tampering. Returns ok=true (fail-open)
- * when no hash was recorded for the objectKey; ok=false on mismatch.
+ * download/preview paths to detect tampering.
+ *
+ * `opts.failClosed` defaults to `isSensitiveObjectKey(objectKey)` (employee
+ * documents/photos — government PII). When fail-closed, a *missing* hash or a
+ * DB-lookup error blocks the read and emits a CRITICAL `POTENTIAL_BREACH`
+ * audit event so the unsigned/tampered object is flagged rather than served
+ * as clean. Non-sensitive keys (templates, generic uploads) keep fail-open so
+ * an integrity-table outage or legacy data never breaks legitimate access;
+ * those are still blocked on a real hash *mismatch*.
  */
 export async function verifyFileHash(
   objectKey: string,
-  data: Buffer | string
+  data: Buffer | string,
+  opts: VerifyOptions = {}
 ): Promise<IntegrityCheckResult> {
+  const failClosed = opts.failClosed ?? isSensitiveObjectKey(objectKey);
+  const actual = sha256Hex(data);
+
+  const flagBlocked = async (blockReason: string, reason: IntegrityCheckResult['reason']) => {
+    authLogger.fatal(
+      { objectKey, blockReason },
+      `CRITICAL: File integrity ${blockReason} — blocking sensitive read (fail-closed)`
+    );
+    await safeAuditLog(
+      logAuditEvent({
+        eventType: AuditEventType.POTENTIAL_BREACH,
+        eventCategory: AuditEventCategory.SECURITY,
+        severity: AuditSeverity.CRITICAL,
+        attemptedRoute: `/api/files/download/${objectKey}`,
+        requestMethod: 'GET',
+        isAuthenticated: true,
+        wasBlocked: true,
+        blockReason,
+        additionalData: { objectKey, actualHash: actual },
+      }),
+      'verifyFileHash:flagBlocked'
+    );
+    return { ok: false, expected: null, actual, reason } satisfies IntegrityCheckResult;
+  };
+
   let expected;
   try {
     expected = await db.fileHash.findUnique({ where: { objectKey } });
   } catch (err) {
-    // DB / table unavailable — fail-open so downloads are never broken by an
-    // integrity-table outage. The mismatch path is the only blocking case.
-    authLogger.error({ err, objectKey }, 'File integrity lookup failed; failing open');
-    return {
-      ok: true,
-      expected: null,
-      actual: sha256Hex(data),
-      reason: 'no_hash_recorded',
-    };
+    // DB / integrity-table unavailable. For sensitive keys this is itself a
+    // tampering/availability signal — fail closed + flag. For non-sensitive
+    // keys keep fail-open so a table outage never breaks legitimate access.
+    authLogger.error({ err, objectKey }, 'File integrity lookup failed');
+    if (failClosed) {
+      return flagBlocked('INTEGRITY_LOOKUP_FAILED', 'lookup_failed');
+    }
+    return { ok: true, expected: null, actual, reason: 'no_hash_recorded' };
   }
 
   if (!expected) {
-    return {
-      ok: true,
-      expected: null,
-      actual: sha256Hex(data),
-      reason: 'no_hash_recorded',
-    };
+    if (failClosed) {
+      return flagBlocked('NO_HASH_RECORDED', 'no_hash_recorded');
+    }
+    return { ok: true, expected: null, actual, reason: 'no_hash_recorded' };
   }
-
-  const actual = sha256Hex(data);
 
   if (actual !== expected.sha256) {
     authLogger.fatal(
       { objectKey, expected: expected.sha256, actual },
       'CRITICAL: File integrity hash MISMATCH — possible tampering'
     );
-    await logAuditEvent({
-      eventType: AuditEventType.POTENTIAL_BREACH,
-      eventCategory: AuditEventCategory.SECURITY,
-      severity: AuditSeverity.CRITICAL,
-      attemptedRoute: `/api/files/download/${objectKey}`,
-      requestMethod: 'GET',
-      isAuthenticated: true,
-      wasBlocked: true,
-      blockReason: 'INTEGRITY_MISMATCH',
-      additionalData: {
-        objectKey,
-        expectedHash: expected.sha256,
-        actualHash: actual,
-      },
-    }).catch(() => {});
+    await safeAuditLog(
+      logAuditEvent({
+        eventType: AuditEventType.POTENTIAL_BREACH,
+        eventCategory: AuditEventCategory.SECURITY,
+        severity: AuditSeverity.CRITICAL,
+        attemptedRoute: `/api/files/download/${objectKey}`,
+        requestMethod: 'GET',
+        isAuthenticated: true,
+        wasBlocked: true,
+        blockReason: 'INTEGRITY_MISMATCH',
+        additionalData: {
+          objectKey,
+          expectedHash: expected.sha256,
+          actualHash: actual,
+        },
+      }),
+      'verifyFileHash:mismatch'
+    );
 
     return { ok: false, expected: expected.sha256, actual, reason: 'hash_mismatch' };
   }

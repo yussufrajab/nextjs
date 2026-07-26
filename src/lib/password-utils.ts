@@ -1,10 +1,15 @@
-import bcrypt from 'bcryptjs';
 import zxcvbn from 'zxcvbn';
 import { randomInt } from 'crypto';
 
+// NOTE: Argon2id hashing (hashPassword / verifyPassword / comparePassword /
+// checkPasswordHistory) lives in ./password-hash, which is server-only because
+// it imports the native `argon2` addon. This module stays client-safe (pure
+// complexity / strength / lockout math only) so it can be imported from client
+// components without pulling native deps into the browser bundle.
+
 // Constants
-export const PASSWORD_MIN_LENGTH = 8;
-export const PASSWORD_HISTORY_LENGTH = 3;
+export const PASSWORD_MIN_LENGTH = 12;
+export const PASSWORD_HISTORY_LENGTH = 5;
 export const TEMPORARY_PASSWORD_VALIDITY_DAYS = 7;
 export const MAX_PASSWORD_CHANGE_ATTEMPTS = 5;
 export const PASSWORD_LOCKOUT_DURATION_MINUTES = 30;
@@ -24,7 +29,7 @@ export interface PasswordStrengthResult {
 
 /**
  * Validate password complexity requirements
- * Must be at least 8 characters and contain at least ONE of:
+ * Must be at least 12 characters and contain ALL FOUR of:
  * - Uppercase letter (A-Z)
  * - Lowercase letter (a-z)
  * - Number (0-9)
@@ -40,9 +45,9 @@ export function validatePasswordComplexity(password: string): boolean {
   const hasNumber = /\d/.test(password);
   const hasSpecial = /[@$!%*?&#^()_+\-=\[\]{}|;:,.<>?]/.test(password);
 
-  // SECURITY: Require at least 2 character classes (not just 1)
+  // SECURITY: Require all four character classes
   const classCount = [hasUppercase, hasLowercase, hasNumber, hasSpecial].filter(Boolean).length;
-  return classCount >= 2;
+  return classCount >= 4;
 }
 
 /**
@@ -103,29 +108,6 @@ export function getPasswordFeedback(password: string): PasswordStrengthResult {
 }
 
 /**
- * Check if password matches any in history
- * Returns true if password matches any historical password
- */
-export async function checkPasswordHistory(
-  password: string,
-  passwordHistory: string[]
-): Promise<boolean> {
-  if (!passwordHistory || passwordHistory.length === 0) {
-    return false; // No history, password is OK
-  }
-
-  // Check against each historical password (they're stored as hashes)
-  for (const historicalHash of passwordHistory) {
-    const matches = await bcrypt.compare(password, historicalHash);
-    if (matches) {
-      return true; // Password matches history
-    }
-  }
-
-  return false; // Password doesn't match any historical password
-}
-
-/**
  * Check if password is a common/weak password using zxcvbn
  * Returns true if password is too common
  */
@@ -174,24 +156,6 @@ export function generateTemporaryPassword(): string {
   }
 
   return chars.join('');
-}
-
-/**
- * Hash a password using bcrypt
- */
-export async function hashPassword(password: string): Promise<string> {
-  const salt = await bcrypt.genSalt(10);
-  return bcrypt.hash(password, salt);
-}
-
-/**
- * Compare a password with a hash
- */
-export async function comparePassword(
-  password: string,
-  hash: string
-): Promise<boolean> {
-  return bcrypt.compare(password, hash);
 }
 
 /**

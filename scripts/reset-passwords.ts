@@ -1,12 +1,12 @@
 import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcryptjs';
+import { hashPassword } from '@/lib/password-hash';
 
 const prisma = new PrismaClient();
 
 async function resetPasswords() {
   try {
     const newPassword = 'Admin@123';
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    const hashedPassword = await hashPassword(newPassword);
 
     // Update akassim
     const akassim = await prisma.user.update({

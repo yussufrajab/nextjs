@@ -66,7 +66,7 @@
     "@radix-ui/react-tooltip": "^1.1.8",
     "@types/minio": "^7.1.0",
     "@types/node-cron": "^3.0.11",
-    "bcryptjs": "^2.4.3",
+    "argon2": "^0.45.0",
     "bullmq": "^5.66.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -111,7 +111,6 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.1",
     "@testing-library/user-event": "^14.6.1",
-    "@types/bcryptjs": "^2.4.6",
     "@types/dompurify": "^3.0.5",
     "@types/jsdom": "^28.0.3",
     "@types/jspdf": "^2.0.0",
@@ -146,5 +145,8 @@
     "typescript": "^5",
     "vitest": "^4.0.16",
     "vitest-mock-extended": "^3.1.0"
+  },
+  "allowScripts": {
+    "argon2@0.45.0": true
   }
 }

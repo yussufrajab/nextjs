@@ -1,4 +1,5 @@
 import net from 'net';
+import { logger } from '@/lib/logger';
 
 /**
  * ClamAV TCP client using the INSTREAM protocol for malware scanning.
@@ -8,14 +9,25 @@ import net from 'net';
  * - CLAMAV_PORT     (default: 3310)
  * - CLAMAV_TIMEOUT  (default: 30000 ms)
  * - CLAMAV_ENABLED  (default: "true", set to "false" to skip scanning)
+ *
+ * SECURITY (Req 10.7): in production, `CLAMAV_ENABLED=false` alone is IGNORED
+ * so a stray/maliciously-set env var cannot silently turn off malware scanning
+ * for user uploads. To actually disable scanning in production you must ALSO
+ * set `CLAMAV_DISABLE_ALLOWED=true` — a deliberate, ops-only two-key action
+ * (the "admin gate"). The dev/CI escape hatch (`CLAMAV_ENABLED=false` alone)
+ * still works outside production where ClamAV typically isn't running.
  */
 
 const CLAMAV_HOST = process.env.CLAMAV_HOST ?? 'localhost';
 const CLAMAV_PORT = parseInt(process.env.CLAMAV_PORT ?? '3310', 10);
 const CLAMAV_TIMEOUT = parseInt(process.env.CLAMAV_TIMEOUT ?? '30000', 10);
 const CLAMAV_ENABLED = process.env.CLAMAV_ENABLED ?? 'true';
+const CLAMAV_DISABLE_ALLOWED = process.env.CLAMAV_DISABLE_ALLOWED ?? 'false';
+const NODE_ENV = process.env.NODE_ENV ?? 'development';
 
 const MAX_CHUNK_SIZE = 2048; // ClamAV INSTREAM max chunk size in bytes
+
+const clamavLogger = logger.child({ component: 'clamav' });
 
 export interface ClamAVResult {
   isClean: boolean;
@@ -24,10 +36,42 @@ export interface ClamAVResult {
 }
 
 /**
- * Returns whether ClamAV scanning is enabled via the CLAMAV_ENABLED env var.
+ * Resolve once at module load whether ClamAV scanning is active, applying the
+ * production two-key disable gate (Req 10.7). Logs the decision once so a
+ * disabled/ignored disable is visible to operators.
+ */
+function resolveClamAVEnabled(): boolean {
+  const wantEnabled = CLAMAV_ENABLED.toLowerCase() !== 'false';
+  if (wantEnabled) return true;
+
+  // Disable requested. In production, require the explicit override so a
+  // single stray env var cannot silently turn off malware scanning.
+  if (
+    NODE_ENV === 'production' &&
+    CLAMAV_DISABLE_ALLOWED.toLowerCase() !== 'true'
+  ) {
+    clamavLogger.warn(
+      { CLAMAV_ENABLED, NODE_ENV },
+      'CLAMAV_ENABLED=false ignored in production without CLAMAV_DISABLE_ALLOWED=true — malware scanning remains ON'
+    );
+    return true;
+  }
+
+  clamavLogger.warn(
+    { CLAMAV_ENABLED, CLAMAV_DISABLE_ALLOWED, NODE_ENV },
+    'ClamAV malware scanning DISABLED via env — uploads/HRIMS content will NOT be scanned'
+  );
+  return false;
+}
+
+const CLAMAV_SCANNING_ENABLED = resolveClamAVEnabled();
+
+/**
+ * Returns whether ClamAV scanning is enabled. In production, a bare
+ * `CLAMAV_ENABLED=false` is ignored unless `CLAMAV_DISABLE_ALLOWED=true`.
  */
 export function isClamAVEnabled(): boolean {
-  return CLAMAV_ENABLED.toLowerCase() !== 'false';
+  return CLAMAV_SCANNING_ENABLED;
 }
 
 /**

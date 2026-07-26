@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcryptjs';
+import { hashPassword } from '@/lib/password-hash';
 
 const db = new PrismaClient();
 
@@ -58,8 +58,6 @@ async function main() {
   const institutions = await db.institution.findMany();
   const institutionMap = new Map(institutions.map(inst => [inst.name, inst.id]));
 
-  const salt = await bcrypt.genSalt(10);
-
   for (const user of MAFUNZO_USERS) {
     const dbInstitutionName = INSTITUTION_NAME_MAP[user.institutionDocName];
     if (!dbInstitutionName) {
@@ -80,7 +78,7 @@ async function main() {
           name: user.name,
           email: user.email,
           phoneNumber: user.phone,
-          password: await bcrypt.hash(user.password, salt),
+          password: await hashPassword(user.password),
           institutionId: institutionId,
           active: true,
         },
@@ -90,7 +88,7 @@ async function main() {
           username: user.username,
           email: user.email,
           phoneNumber: user.phone,
-          password: await bcrypt.hash(user.password, salt),
+          password: await hashPassword(user.password),
           role: 'HRO',
           active: true,
           institutionId: institutionId,

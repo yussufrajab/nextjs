@@ -3,10 +3,18 @@ import { db } from '@/lib/db';
 import { z } from 'zod';
 import { hrimsLogger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
-import { withAuth } from '@/lib/api-auth';
+import { withAuth, requireReauth } from '@/lib/api-auth';
 import { logHrimsSync, getClientIp } from '@/lib/audit-logger';
+import {
+  getHrimsApiConfig,
+  isHrimsConfigError,
+} from '@/lib/hrims-config';
 
-// Validation schema for the HRIMS certificates sync request
+// SECURITY (Req 11.2): the HRIMS endpoint and credentials are sourced ONLY
+// from server config (`getHrimsApiConfig`) — never from the request body —
+// so an authorized caller cannot point the server at an arbitrary host
+// (SSRF) or exfiltrate the API key. `hrimsApiUrl`/`hrimsApiKey` are
+// deliberately absent from this schema.
 const hrimsCertificatesRequestSchema = z
   .object({
     zanId: z.string().optional(),
@@ -14,8 +22,6 @@ const hrimsCertificatesRequestSchema = z
     institutionVoteNumber: z.string(),
     page: z.number().int().min(1).optional().default(1),
     limit: z.number().int().min(1).max(20).optional().default(10),
-    hrimsApiUrl: z.string().url().optional(),
-    hrimsApiKey: z.string().optional(),
   })
   .refine((data) => data.zanId || data.payrollNumber, {
     message: 'Either zanId or payrollNumber must be provided',
@@ -50,11 +56,14 @@ const hrimsCertificatesResponseSchema = z.object({
 });
 
 export const POST = wrapHandler(withAuth(async (req: Request, { auth }) => {
+  // Step-up re-authentication: triggering an HRIMS certificates sync is a
+  // Tier-1 sensitive action (writes employee certificate data into CSMS).
+  // Mirrors sync-employee/bulk-fetch (Req 11.1).
+  const denied = requireReauth(req, 'hrims.sync', auth);
+  if (denied) return denied;
+
   const body = await req.json();
-  hrimsLogger.info({
-    ...body,
-    hrimsApiKey: '[REDACTED]',
-  }, 'HRIMS certificates sync request received');
+  hrimsLogger.info({ ...body }, 'HRIMS certificates sync request received');
 
   const auditCommon = {
     performedById: auth.userId,
@@ -120,8 +129,36 @@ export const POST = wrapHandler(withAuth(async (req: Request, { auth }) => {
     );
   }
 
+  // SECURITY (Req 11.2): resolve the trusted HRIMS endpoint + credentials
+  // from server config. A non-allowlisted host or non-https-in-production
+  // config throws `HrimsConfigError` → 400 + `HRIMS_SYNC_FAILED` audit, so
+  // the server is never proxied at a caller-chosen host.
+  let HRIMS_CONFIG;
+  try {
+    HRIMS_CONFIG = await getHrimsApiConfig();
+  } catch (configError) {
+    if (isHrimsConfigError(configError)) {
+      await logHrimsSync({
+        ...auditCommon,
+        success: false,
+        institutionVoteNumber: validatedRequest.institutionVoteNumber,
+        zanId: validatedRequest.zanId,
+        additionalData: { reason: configError.code },
+      }).catch(() => {});
+      return NextResponse.json(
+        {
+          success: false,
+          message: configError.message,
+          errorCode: configError.code,
+        },
+        { status: 400 }
+      );
+    }
+    throw configError;
+  }
+
   // Fetch employee certificates from HRIMS
-  const hrimsData = await fetchCertificatesFromHRIMS(validatedRequest);
+  const hrimsData = await fetchCertificatesFromHRIMS(validatedRequest, HRIMS_CONFIG);
 
   if (!hrimsData) {
     await logHrimsSync({
@@ -185,15 +222,13 @@ export const POST = wrapHandler(withAuth(async (req: Request, { auth }) => {
 
 // Function to fetch employee certificates from external HRIMS system
 async function fetchCertificatesFromHRIMS(
-  request: z.infer<typeof hrimsCertificatesRequestSchema>
+  request: z.infer<typeof hrimsCertificatesRequestSchema>,
+  hrimsConfig: { BASE_URL: string; API_KEY: string; TOKEN: string }
 ) {
   try {
-    const hrimsApiUrl =
-      request.hrimsApiUrl ||
-      process.env.HRIMS_API_URL ||
-      'https://hrims-api.example.com';
-    const hrimsApiKey = request.hrimsApiKey || process.env.HRIMS_API_KEY;
-
+    // SECURITY (Req 11.2): endpoint + credentials come from the trusted
+    // server config (`hrimsConfig`), never from the request body. TLS cert
+    // validation is left at undici's secure default (never disabled).
     const searchParams = new URLSearchParams();
     if (request.zanId) searchParams.append('zanId', request.zanId);
     if (request.payrollNumber)
@@ -203,13 +238,13 @@ async function fetchCertificatesFromHRIMS(
     searchParams.append('limit', request.limit.toString());
 
     const response = await fetch(
-      `${hrimsApiUrl}/api/employee/certificates?${searchParams}`,
+      `${hrimsConfig.BASE_URL}/employee/certificates?${searchParams}`,
       {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${hrimsApiKey}`,
-          'X-API-Key': hrimsApiKey || '',
+          Authorization: `Bearer ${hrimsConfig.API_KEY}`,
+          'X-API-Key': hrimsConfig.API_KEY || '',
         },
       }
     );

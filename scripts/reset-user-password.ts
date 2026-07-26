@@ -11,14 +11,14 @@
  *   npx tsx scripts/reset-user-password.ts ymrajab Tume@2020
  *
  * What it does:
- *   - Hashes the new password with bcrypt
+ *   - Hashes the new password with Argon2id
  *   - Clears password expiration, lockout, and failed attempt counters
  *   - Sets lastPasswordChange to now
  *   - Unsets mustChangePassword and isTemporaryPassword flags
  */
 
 import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcryptjs';
+import { hashPassword } from '@/lib/password-hash';
 
 const prisma = new PrismaClient();
 
@@ -42,7 +42,7 @@ async function main() {
       process.exit(1);
     }
 
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    const hashedPassword = await hashPassword(newPassword);
 
     await prisma.user.update({
       where: { username },

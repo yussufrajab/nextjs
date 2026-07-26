@@ -29,6 +29,14 @@ vi.mock('@/lib/audit-logger', () => ({
   logRequestRejection: vi.fn(() => Promise.resolve(undefined)),
   logRequestForward: vi.fn(() => Promise.resolve(undefined)),
   logRequestWithdrawal: (...a: any[]) => mockLogRequestWithdrawal(...a),
+  logAccessDenied: vi.fn(() => Promise.resolve(undefined)),
+  safeAuditLog: async (p: Promise<void>) => {
+    try {
+      await p;
+    } catch {
+      /* swallow — exercised helper */
+    }
+  },
   getClientIp: () => '127.0.0.1',
 }));
 
