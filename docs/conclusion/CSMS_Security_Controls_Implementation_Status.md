@@ -28,7 +28,7 @@
 | 9 | Complaint Management Security | 7 | 6 | 1 | 0 |
 | 10 | File & Document Security | 8 | 5 | 2 | 1 |
 | 11 | HRIMS Integration Security | 8 | 4 | 2 | 2 |
-| 12 | Reporting & Export Security | 8 | 3 | 1 | 4 |
+| 12 | Reporting & Export Security | 8 | 5 | 1 | 2 |
 | 13 | Notification Security | 6 | 3 | 3 | 0 |
 | 14 | Administrative Security | 8 | 5 | 3 | 0 |
 | 15 | Audit Trail & Accountability | 7 | 4 | 3 | 0 |
@@ -47,9 +47,9 @@
 | 28 | Administrative Change Control | 5 | 2 | 1 | 2 |
 | 29 | Synchronization Accountability | 5 | 0 | 5 | 0 |
 | 30 | Government Information Confidentiality | 6 | 3 | 3 | 0 |
-| | **TOTAL** | **206** | **123** | **56** | **27** |
+| | **TOTAL** | **206** | **125** | **56** | **25** |
 
-**Headline result (2026-07-21 re-audit; updated 2026-07-25):** 123/206 controls fully implemented (59.7%), 56/206 partial (27.2%), 27/206 not implemented (13.1%) — up from 94/79/33 at the 2026-07-18 baseline. The strongest areas are Session Security (Req 2), Institution Isolation (Req 4), Authorization (Req 3), Workflow Security (Req 8), and Non-Repudiation (Req 19). The weakest areas remain Data Classification (Req 22), Audit Log Protection (Req 21), Synchronization Accountability (Req 29), Reporting/Export (Req 12), and Administrative Change Control (Req 28).
+**Headline result (2026-07-21 re-audit; updated 2026-07-26):** 125/206 controls fully implemented (60.7%), 56/206 partial (27.2%), 25/206 not implemented (12.1%) — up from 94/79/33 at the 2026-07-18 baseline. The strongest areas are Session Security (Req 2), Institution Isolation (Req 4), Authorization (Req 3), Workflow Security (Req 8), and Non-Repudiation (Req 19). The weakest areas remain Data Classification (Req 22), Audit Log Protection (Req 21), Synchronization Accountability (Req 29), and Administrative Change Control (Req 28).
 
 ---
 
@@ -248,13 +248,13 @@
 
 | # | Control | Status | Evidence (file:line) | Remarks / Gap |
 |---|---|---|---|---|
-| 12.1 | Report authorization (roles) | ✅ Implemented | `src/app/api/reports/route.ts:687,1376` | `withAuth(['Admin','HRO','HHRMD','HRMO','DO','CSCS','HRRP','PO'])`; role from session. |
-| 12.2 | Export authorization (roles) | ❌ Not Implemented | `src/lib/export-utils.ts:31-66`; `src/app/dashboard/reports/page.tsx` | No server-side export endpoint; exports remain client-side from already-fetched data — no server authorization/rate limit on the export act. |
-| 12.3 | Institution-based report filtering | ✅ Implemented | `src/app/api/reports/route.ts:750-762,1042-1054` | Non-CSC forced to `auth.institutionId`; client param ignored unless CSC. |
-| 12.4 | Data minimization (exclude sensitive by default) | ✅ Implemented | `src/app/api/reports/route.ts:817-825,1055-1069` | Prisma `select` limits fields; passwords/emails/phones excluded; XSS-sanitized. |
-| 12.5 | Export audit logging | ⚠️ Partial | `src/app/api/reports/route.ts:1342-1361`; `src/lib/audit-logger.ts:73` | **Improved (was ❌).** Reports GET now emits `REPORT_VIEWED` (actor/role/institution/reportType/count). Gap: `REPORT_EXPORTED` enum is defined but never emitted — the client-side export act itself is not separately audited. |
-| 12.6 | Report ownership validation | ❌ Not Implemented | `src/app/api/reports/route.ts:750-762` | Reports remain system-wide aggregates scoped only by role+institution; no per-user ownership/standing check. |
-| 12.7 | Restricted data export controls | ❌ Not Implemented | `src/lib/export-utils.ts:31-66` | No download rate limits, watermarking, quotas, or restricted-flag on sensitive report types (no export endpoint exists). |
+| 12.1 | Report authorization (roles) | ✅ Implemented | `src/app/api/reports/route.ts:28,99` (`withAuth([...8 roles])`); `src/lib/report-generator.ts` (shared query) | Role taken from the signed session; report view GET is role-gated and the query is shared with the export endpoint. |
+| 12.2 | Export authorization (roles) | ✅ Implemented | `src/app/api/reports/export/route.ts`; `src/lib/report-generator.ts`; `src/lib/export-renderer.ts`; `src/app/dashboard/reports/page.tsx` | **Fixed (was ❌).** Exports are now generated server-side at `POST /api/reports/export`: `withAuth` restricts the route to the same 8 roles as the report view, and `generateReport` re-runs the auth-scoped query (role from session; institution scoping enforced server-side) so the client cannot widen the dataset. Per-user `download`-tier rate limit on the export act (Req 12.2/12.7). The reports page POSTs the params and downloads the returned file instead of building the file client-side from already-fetched data. |
+| 12.3 | Institution-based report filtering | ✅ Implemented | `src/app/api/reports/route.ts:750-762,1042-1054` (now via `src/lib/report-generator.ts`) | Non-CSC forced to `auth.institutionId`; client param ignored unless CSC. |
+| 12.4 | Data minimization (exclude sensitive by default) | ✅ Implemented | `src/lib/report-generator.ts:832-870,1066-1080` (moved verbatim from the old route) | Prisma `select` limits fields; passwords/emails/phones excluded; XSS-sanitized. |
+| 12.5 | Export audit logging | ✅ Implemented | `src/app/api/reports/route.ts:64-86` (`REPORT_VIEWED`); `src/app/api/reports/export/route.ts:163-188` (`REPORT_EXPORTED`) | **Fixed (was ⚠️).** Reports GET emits `REPORT_VIEWED` (actor/role/institution/reportType/count). The new export endpoint emits `REPORT_EXPORTED` with actor, role, institution, reportType, format, fileName, and count — the export act is now separately audited. Fire-and-forget so an audit failure cannot block the download. |
+| 12.6 | Report ownership validation | ❌ Not Implemented | `src/lib/report-generator.ts:766-779` | Reports remain system-wide aggregates scoped only by role+institution; no per-user ownership/standing check. |
+| 12.7 | Restricted data export controls | ⚠️ Partial | `src/app/api/reports/export/route.ts:77-103` (per-user `download`-tier rate limit) | **Improved (was ❌).** The export endpoint now enforces a per-user `download`-tier rate limit (`ratelimit:export:user:${userId}`, 429 on breach, fail-open if Redis is down). Gap: no watermarking, no per-report-type quotas, and no restricted-flag gating sensitive report types — those remain open. |
 | 12.8 | Export approval controls (secondary approval) | ❌ Not Implemented | — (grep `export.*approv` → 0 hits) | No approval workflow / second-admin sign-off / reauth on exports. |
 
 ---
