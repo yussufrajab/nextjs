@@ -21,6 +21,10 @@ import {
   isValidPayrollNumber,
   validateCrossFieldDates,
 } from '@/lib/employee-field-validation';
+import {
+  findFuzzyDuplicate,
+  isWithinFileFuzzyDuplicate,
+} from '@/lib/employee-duplicate-detection';
 
 const prisma = new PrismaClient();
 
@@ -107,6 +111,12 @@ export const POST = wrapHandler(withRateLimit(withAuth(async (
   request: NextRequest | Request,
   { auth }: { auth: AuthContext }
 ) => {
+  // Req 7.7: Generate a single batchId that links this import end-to-end —
+  // the UPLOADED audit event emitted here and every CREATED event emitted by
+  // the PUT handler all carry the same id. It is surfaced in the validation
+  // response so the client passes it back in the confirm/create request body.
+  const batchId = uuidv4();
+
   // Use verified auth context
   const role = auth.role;
   const userId = auth.userId;
@@ -484,6 +494,31 @@ export const POST = wrapHandler(withRateLimit(withAuth(async (
     }
   });
 
+  // SECURITY (Req 6.5): fuzzy within-file duplicate detection on name + DOB.
+  // The exact-key dedupe above only catches the same zanId/zssf/payroll being
+  // re-keyed in the file; this catches the same person appearing twice with
+  // different (or mistyped) identifiers — same name, same date of birth.
+  // institutionId is forced from the session for every row, so it is constant
+  // across the file and not part of the within-file comparison.
+  const seenForFuzzy: Array<{ name: string; dateOfBirth: string }> = [];
+  for (const emp of [...validEmployees]) {
+    const fuzzy = isWithinFileFuzzyDuplicate(
+      { name: emp.name, dateOfBirth: emp.dateOfBirth },
+      seenForFuzzy
+    );
+    if (fuzzy.duplicate) {
+      emp.errors.push(
+        `Likely duplicate of an earlier row in this file (same name + date of birth, ${(fuzzy.similarity * 100).toFixed(0)}% name match)`
+      );
+      if (!invalidEmployees.includes(emp)) {
+        invalidEmployees.push(emp);
+        validEmployees.splice(validEmployees.indexOf(emp), 1);
+      }
+      continue; // don't add a known-duplicate to the seen set
+    }
+    seenForFuzzy.push({ name: emp.name, dateOfBirth: emp.dateOfBirth });
+  }
+
   // Check for duplicates in database
   for (const emp of validEmployees) {
     // Check ZanID
@@ -519,6 +554,22 @@ export const POST = wrapHandler(withRateLimit(withAuth(async (
       }
     }
 
+    // SECURITY (Req 6.5): fuzzy duplicate against existing DB records on name
+    // + dateOfBirth + institutionId. institutionId is forced from the session
+    // for every row; the query is scoped to it + the DOB calendar day, then
+    // normalized Levenshtein name similarity is compared. Surfaces the
+    // existing record's zanId so the operator can verify before re-attempting.
+    const fuzzyDup = await findFuzzyDuplicate(prisma, {
+      name: emp.name,
+      dateOfBirth: emp.dateOfBirth,
+      institutionId: userInstitutionId,
+    });
+    if (fuzzyDup.duplicate && fuzzyDup.existing) {
+      emp.errors.push(
+        `Likely duplicate of existing employee in database (ZanID ${fuzzyDup.existing.zanId}, name "${fuzzyDup.existing.name}", ${(fuzzyDup.similarity * 100).toFixed(0)}% name match, same date of birth)`
+      );
+    }
+
     if (emp.errors.length > 0) {
       invalidEmployees.push(emp);
     }
@@ -539,6 +590,7 @@ export const POST = wrapHandler(withRateLimit(withAuth(async (
     ipAddress: getClientIp(request.headers),
     deviceInfo: JSON.parse(request.headers.get('x-device-info') || 'null'),
     additionalData: {
+      batchId,
       totalRows: employees.length,
       validRows: finalValidEmployees.length,
       invalidRows: invalidEmployees.length,
@@ -547,11 +599,14 @@ export const POST = wrapHandler(withRateLimit(withAuth(async (
     },
   }).catch(() => {});
 
-  // Return validation results (don't create yet)
+  // Return validation results (don't create yet). Surface batchId so the
+  // client passes it back in the PUT confirm request, linking CREATED audit
+  // events to this UPLOADED event (Req 7.7).
   return NextResponse.json({
     success: true,
     message: 'File validated successfully',
     data: {
+      batchId,
       totalRows: employees.length,
       validRows: finalValidEmployees.length,
       invalidRows: invalidEmployees.length,
@@ -608,6 +663,12 @@ export const PUT = wrapHandler(withRateLimit(withAuth(async (
       { status: 400 }
     );
   }
+
+  // Req 7.7: batchId links this create batch to the UPLOADED audit event
+  // emitted by the POST (validate) handler. The client must echo the same id
+  // it received in the validation response; fall back to a fresh id only if
+  // the client omitted it, so CREATED events still carry a non-empty batchId.
+  const batchId = body.batchId || uuidv4();
 
   // Create all employees in a single transaction for atomicity (Req 7.9).
   // Any per-row create failure throws and aborts the WHOLE transaction →
@@ -702,7 +763,7 @@ export const PUT = wrapHandler(withRateLimit(withAuth(async (
       performedByRole: role,
       ipAddress: getClientIp(request.headers),
       deviceInfo: JSON.parse(request.headers.get('x-device-info') || 'null'),
-      additionalData: { dataSource: 'BULK_UPLOAD', institutionId, batchRow: emp.rowNumber },
+      additionalData: { dataSource: 'BULK_UPLOAD', institutionId, batchId, batchRow: emp.rowNumber },
     }).catch(() => {});
   }
 

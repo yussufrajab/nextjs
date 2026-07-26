@@ -20,6 +20,7 @@ import {
   validateCrossFieldDates,
   parseISODate,
 } from '@/lib/employee-field-validation';
+import { findFuzzyDuplicate } from '@/lib/employee-duplicate-detection';
 
 const prisma = new PrismaClient();
 
@@ -331,6 +332,29 @@ export const POST = wrapHandler(
         { status: 409 }
       );
     }
+  }
+
+  // SECURITY (Req 6.5): fuzzy duplicate detection on name + dateOfBirth +
+  // institutionId. The exact-key checks above (zanId/zssf/payroll) only catch
+  // the same identifier being re-keyed; this catches the same person being
+  // re-created under a fresh/mistyped identifier — same name, same DOB, same
+  // institution. The DB query is scoped to institutionId + the DOB calendar
+  // day, then normalized Levenshtein name similarity is compared. A match is
+  // a hard block (409), consistent with the exact-key checks, and surfaces the
+  // existing record's zanId so the HRO can verify before re-attempting.
+  const fuzzyDup = await findFuzzyDuplicate(prisma, {
+    name,
+    dateOfBirth,
+    institutionId,
+  });
+  if (fuzzyDup.duplicate && fuzzyDup.existing) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: `A likely duplicate employee already exists in your institution (ZanID ${fuzzyDup.existing.zanId}, name "${fuzzyDup.existing.name}", ${(fuzzyDup.similarity * 100).toFixed(0)}% name match, same date of birth). Verify the existing record before creating a new one.`,
+      },
+      { status: 409 }
+    );
   }
 
   // Create employee - FORCE institutionId to user's institution (security)

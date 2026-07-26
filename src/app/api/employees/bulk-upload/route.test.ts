@@ -11,6 +11,7 @@ import { NextRequest } from 'next/server';
 import { signSessionToken } from '@/lib/session-manager';
 import { logEmployeeAction } from '@/lib/audit-logger';
 import { validateCSRF } from '@/lib/api-csrf-middleware';
+import { validateFileUpload } from '@/lib/file-validation';
 
 const mockValidateSession = vi.fn();
 const mockDbUserFindUnique = vi.fn(); // verifyAuth's db.user.findUnique
@@ -19,6 +20,11 @@ const mockTxEmployeeCreate = vi.fn(); // tx.employee.create inside $transaction
 const mockTransaction = vi.fn();
 const mockLogEmployeeAction = vi.fn();
 const mockLogFileAction = vi.fn();
+// POST (validate) handler mocks
+const mockInstitutionFindUnique = vi.fn();
+const mockEmployeeFindUnique = vi.fn(); // zanId exact-key DB dedupe
+const mockEmployeeFindFirst = vi.fn();  // payroll/zssf exact-key DB dedupe
+const mockEmployeeFindMany = vi.fn();  // Req 6.6 org-field lookup + Req 6.5 fuzzy
 
 vi.mock('@/lib/session-manager', () => ({
   validateSession: (...a: any[]) => mockValidateSession(...a),
@@ -91,6 +97,13 @@ vi.mock('@/lib/logger', () => {
 vi.mock('@prisma/client', () => {
   function PrismaClient(this: any) {
     this.user = { findUnique: (...a: any[]) => mockPrismaUserFindUnique(...a) };
+    this.institution = { findUnique: (...a: any[]) => mockInstitutionFindUnique(...a) };
+    this.employee = {
+      findUnique: (...a: any[]) => mockEmployeeFindUnique(...a),
+      findFirst: (...a: any[]) => mockEmployeeFindFirst(...a),
+      findMany: (...a: any[]) => mockEmployeeFindMany(...a),
+      create: vi.fn(),
+    };
     // $transaction invokes the callback with a tx whose employee.create is the
     // mock. If the callback throws (create rejection), $transaction re-throws,
     // mirroring real Prisma rollback semantics.
@@ -120,7 +133,9 @@ function sessionCookie(): string {
   return `session=${signSessionToken('good-token')}`;
 }
 
-function putRequest(employees: any[]): NextRequest {
+function putRequest(employees: any[], batchId?: string): NextRequest {
+  const payload: any = { employees };
+  if (batchId) payload.batchId = batchId;
   return new NextRequest('http://localhost:9002/api/employees/bulk-upload', {
     method: 'PUT',
     headers: {
@@ -129,7 +144,7 @@ function putRequest(employees: any[]): NextRequest {
       'user-agent': 'TestAgent/1.0',
       'content-type': 'application/json',
     },
-    body: JSON.stringify({ employees }),
+    body: JSON.stringify(payload),
   });
 }
 
@@ -204,5 +219,207 @@ describe('PUT /api/employees/bulk-upload — transaction integrity (Req 7.9)', (
     expect(body.data.created).toBe(0);
     expect(body.failedRow).toBe(1);
     expect(mockLogEmployeeAction).not.toHaveBeenCalled();
+  });
+
+  it('stamps every CREATED event with the same batchId supplied in the request body (Req 7.7)', async () => {
+    await setupHro();
+    mockTxEmployeeCreate.mockResolvedValue({ id: 'e-x' });
+
+    const { PUT } = await import('./route');
+    const res = await PUT(putRequest([row(1, '111'), row(2, '222'), row(3, '333')], 'batch-abc-123'));
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body.success).toBe(true);
+    // One CREATED audit event per row.
+    expect(mockLogEmployeeAction).toHaveBeenCalledTimes(3);
+    // Every CREATED event carries the SAME batchId, next to batchRow —
+    // linking the whole import end-to-end.
+    const calls = mockLogEmployeeAction.mock.calls.map((c: any) => c[0]);
+    expect(calls.every((c: any) => c.additionalData?.batchId === 'batch-abc-123')).toBe(true);
+    expect(calls.map((c: any) => c.additionalData?.batchRow)).toEqual([1, 2, 3]);
+  });
+
+  it('generates a batchId when the client omits one, so CREATED events still carry a non-empty batchId (Req 7.7)', async () => {
+    await setupHro();
+    mockTxEmployeeCreate.mockResolvedValue({ id: 'e-x' });
+
+    const { PUT } = await import('./route');
+    const res = await PUT(putRequest([row(1, '111'), row(2, '222')]));
+
+    expect(res.status).toBe(200);
+    expect(mockLogEmployeeAction).toHaveBeenCalledTimes(2);
+    const calls = mockLogEmployeeAction.mock.calls.map((c: any) => c[0]);
+    const batchIds = new Set(calls.map((c: any) => c.additionalData?.batchId));
+    // Exactly one shared, non-empty batchId across all rows.
+    expect(batchIds.size).toBe(1);
+    expect([...batchIds][0]).toBeTruthy();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// POST /api/employees/bulk-upload — validate (Req 6.5 fuzzy duplicate detection)
+// ---------------------------------------------------------------------------
+
+const CSV_HEADERS =
+  'Name,Gender,ZanID,Date of Birth,ZSSF Number,Payroll Number,Cadre,Ministry,Department,Employment Date';
+
+function csvRow(values: string[]): string {
+  return values.join(',');
+}
+
+function postRequestWithCsv(csv: string): NextRequest {
+  // NextRequest.formData() parses the body with undici, which (in the jsdom
+  // test env) rejects a hand-rolled multipart string body and a jsdom
+  // FormData/File (jsdom's File also lacks arrayBuffer()). Bypass the parser:
+  // spy on NextRequest.prototype.formData to return a fake File whose
+  // arrayBuffer() yields the CSV bytes. The route reads
+  // `await file.arrayBuffer()` → `Buffer.from(...).toString('utf-8')`.
+  const bytes = new TextEncoder().encode(csv);
+  const fakeFile = {
+    name: 'employees.csv',
+    type: 'text/csv',
+    arrayBuffer: () => Promise.resolve(bytes.buffer),
+  };
+  const fakeFormData = { get: (k: string) => (k === 'file' ? fakeFile : null) };
+  vi.spyOn(NextRequest.prototype, 'formData').mockResolvedValue(
+    fakeFormData as any
+  );
+  return new NextRequest('http://localhost:9002/api/employees/bulk-upload', {
+    method: 'POST',
+    headers: {
+      cookie: sessionCookie(),
+      'x-forwarded-for': '10.0.0.1',
+      'user-agent': 'TestAgent/1.0',
+    },
+    body: '',
+  });
+}
+
+async function setupPostValidate() {
+  await setupHro(); // HRO with institutionId inst-1
+  mockInstitutionFindUnique.mockResolvedValue({
+    manualEntryEnabled: true, manualEntryStartDate: null, manualEntryEndDate: null,
+  });
+  mockEmployeeFindUnique.mockResolvedValue(null); // zanId not taken
+  mockEmployeeFindFirst.mockResolvedValue(null);  // payroll/zssf not taken
+  // findMany serves both the Req 6.6 org-field lookup (select.ministry etc.)
+  // and the Req 6.5 fuzzy check (select.id/name/zanId). Default: no recorded
+  // org values (bootstrap → any value accepted) AND no fuzzy DB duplicate.
+  mockEmployeeFindMany.mockImplementation((args: any) => {
+    if (args.select?.ministry || args.select?.department || args.select?.currentWorkplace) {
+      return Promise.resolve([]); // org-field bootstrap
+    }
+    return Promise.resolve([]); // fuzzy: no existing duplicate
+  });
+  mockLogFileAction.mockResolvedValue(undefined);
+}
+
+describe('POST /api/employees/bulk-upload — Req 6.5 fuzzy duplicate detection', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(validateCSRF).mockResolvedValue({ valid: true } as any);
+    // mockReset:true (vitest config) clears the factory mockResolvedValue on
+    // these after the preceding PUT tests; re-establish them for the POST
+    // (validate) handler, which actually calls validateFileUpload.
+    vi.mocked(validateFileUpload).mockResolvedValue({ success: true } as any);
+    mockLogEmployeeAction.mockResolvedValue(undefined);
+    mockLogFileAction.mockResolvedValue(undefined);
+  });
+
+  it('flags a within-file fuzzy duplicate (same DOB + similar name, different zanId)', async () => {
+    await setupPostValidate();
+    const csv = [
+      CSV_HEADERS,
+      csvRow(['Mohammed Ali', 'Male', '111111', '1990-04-20', 'ZSSF1', 'PR1', 'Nurse', 'Health', 'HR', '2018-01-10']),
+      csvRow(['Mohammad Ali', 'Male', '222222', '1990-04-20', 'ZSSF2', 'PR2', 'Nurse', 'Health', 'HR', '2018-01-10']),
+    ].join('\n');
+
+    const { POST } = await import('./route');
+    const res = await POST(postRequestWithCsv(csv));
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body.success).toBe(true);
+    expect(body.data.validRows).toBe(1);
+    expect(body.data.invalidRows).toBe(1);
+    // The duplicate row reports a within-file fuzzy match.
+    const invalid = body.data.invalidEmployees;
+    const fuzzyRow = invalid.find((e: any) =>
+      e.errors?.some((m: string) => m.includes('earlier row in this file'))
+    );
+    expect(fuzzyRow).toBeTruthy();
+    expect(fuzzyRow.errors.join(' ')).toContain('same name + date of birth');
+  });
+
+  it('flags a DB fuzzy duplicate (existing same-DOB / similar-name employee)', async () => {
+    await setupPostValidate();
+    // One clean row; the fuzzy DB check returns one existing near-match
+    // ("Jane Doe" vs "Jayne Doe" → 0.875 similarity ≥ threshold).
+    mockEmployeeFindMany.mockImplementation((args: any) => {
+      if (args.select?.ministry || args.select?.department || args.select?.currentWorkplace) {
+        return Promise.resolve([]);
+      }
+      return Promise.resolve([
+        { id: 'e-existing', name: 'Jayne Doe', zanId: '99999999' },
+      ]);
+    });
+    const csv = [
+      CSV_HEADERS,
+      csvRow(['Jane Doe', 'Female', '333333', '1990-01-01', 'ZSSF3', 'PR3', 'Nurse', 'Health', 'HR', '2018-01-10']),
+    ].join('\n');
+
+    const { POST } = await import('./route');
+    const res = await POST(postRequestWithCsv(csv));
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body.data.validRows).toBe(0);
+    expect(body.data.invalidRows).toBe(1);
+    const invalid = body.data.invalidEmployees[0];
+    expect(invalid.errors.join(' ')).toContain('Likely duplicate of existing employee');
+    expect(invalid.errors.join(' ')).toContain('99999999');
+
+    // The fuzzy DB query must be scoped to the institution + DOB calendar day.
+    const fuzzyCalls = mockEmployeeFindMany.mock.calls.filter(
+      (c: any) => c[0]?.where?.dateOfBirth
+    );
+    expect(fuzzyCalls.length).toBeGreaterThan(0);
+    expect(fuzzyCalls[0][0].where.institutionId).toBe('inst-1');
+    expect(fuzzyCalls[0][0].where.dateOfBirth.gte.toISOString()).toBe('1990-01-01T00:00:00.000Z');
+  });
+
+  it('accepts a clean file with no fuzzy duplicates', async () => {
+    await setupPostValidate();
+    const csv = [
+      CSV_HEADERS,
+      csvRow(['Jane Doe', 'Female', '111111', '1990-01-01', 'ZSSF1', 'PR1', 'Nurse', 'Health', 'HR', '2018-01-10']),
+      csvRow(['John Smith', 'Male', '222222', '1985-05-12', 'ZSSF2', 'PR2', 'Clerk', 'Health', 'Finance', '2019-06-01']),
+    ].join('\n');
+
+    const { POST } = await import('./route');
+    const res = await POST(postRequestWithCsv(csv));
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body.data.validRows).toBe(2);
+    expect(body.data.invalidRows).toBe(0);
+  });
+
+  it('does not flag two rows with the same name but different DOBs', async () => {
+    await setupPostValidate();
+    const csv = [
+      CSV_HEADERS,
+      csvRow(['Jane Doe', 'Female', '111111', '1990-01-01', 'ZSSF1', 'PR1', 'Nurse', 'Health', 'HR', '2018-01-10']),
+      csvRow(['Jane Doe', 'Female', '222222', '1991-01-01', 'ZSSF2', 'PR2', 'Nurse', 'Health', 'HR', '2018-01-10']),
+    ].join('\n');
+
+    const { POST } = await import('./route');
+    const res = await POST(postRequestWithCsv(csv));
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body.data.validRows).toBe(2);
+    expect(body.data.invalidRows).toBe(0);
   });
 });

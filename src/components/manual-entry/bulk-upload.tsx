@@ -20,6 +20,7 @@ import { clientLogger } from '@/lib/logger-client';
 import { fetchWithCsrf } from '@/lib/fetch-with-csrf';
 
 interface ValidationResult {
+  batchId: string;
   totalRows: number;
   validRows: number;
   invalidRows: number;
@@ -117,6 +118,7 @@ export function BulkUpload({ onComplete }: { onComplete?: () => void }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           employees: validationResult.validEmployees,
+          batchId: validationResult.batchId,
         }),
       });
 

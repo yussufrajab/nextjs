@@ -14,11 +14,10 @@ import { wrapHandler } from '@/lib/error-handler';
 import { withAuth } from '@/lib/api-auth';
 import { sanitizeText } from '@/lib/sanitize-input';
 import {
-  canSeeComplainantIdentity,
-  redactComplainantIdentity,
   resolveConfidential,
   REDACTED_COMPLAINANT_NAME,
 } from '@/lib/complaint-confidentiality';
+import { redactComplainantPii } from '@/lib/complaint-privacy';
 
 const complaintSchema = z.object({
   complaintType: z.string().min(1),
@@ -227,19 +226,9 @@ export const GET = wrapHandler(withAuth(async (req: Request, { auth }) => {
 
   // Map the response to match frontend expectations
   const formattedComplaints = complaints.map((c) => {
-    // SECURITY (Req 9.6): redact complainant identity PII for viewers lacking
-    // need-to-know. The complainant, the exactly-assigned handling officer,
-    // and (for non-confidential complaints) CSCS/Admin see the identity; the
-    // co-reviewer tier and all other roles are redacted. Confidential
-    // complaints tighten access to complainant + exactly-assigned officer.
-    const identityVisible = canSeeComplainantIdentity(userRole, userId, {
-      complainantId: c.complainantId,
-      assignedOfficerRole: c.assignedOfficerRole,
-      confidential: c.confidential,
-    });
-
     const row = {
       id: c.id,
+      complainantId: c.complainantId, // decision-only; redactComplainantPii strips it from output
       employeeId: c.User_Complaint_complainantIdToUser.employeeId,
       employeeName: c.User_Complaint_complainantIdToUser.name,
       zanId: c.User_Complaint_complainantIdToUser.Employee?.zanId,
@@ -263,9 +252,16 @@ export const GET = wrapHandler(withAuth(async (req: Request, { auth }) => {
       confidential: c.confidential,
     };
 
-    return identityVisible
-      ? row
-      : redactComplainantIdentity(row);
+    // SECURITY (Req 9.6): mask complainant identity PII for viewers lacking
+    // need-to-know. The complainant, the specifically-assigned officer, and
+    // (for non-confidential complaints) Admin/CSCS see the full identity;
+    // everyone else sees zanId/phones masked to ***1234, employeeId dropped,
+    // and employeeName as initials. complainantId is stripped from output.
+    return redactComplainantPii(row, {
+      viewerRole: userRole,
+      viewerUserId: userId,
+      assignedOfficerId: c.reviewedById ?? null,
+    });
   });
 
   return NextResponse.json({

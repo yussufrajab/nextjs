@@ -196,6 +196,7 @@ describe('POST /api/employees/manual-entry authorization', () => {
     });
     mockEmployeeFindUnique.mockResolvedValue(null); // zanId not taken
     mockEmployeeFindFirst.mockResolvedValue(null); // payroll not taken
+    mockEmployeeFindMany.mockResolvedValue([]); // Req 6.5: no fuzzy duplicate
     mockEmployeeCreate.mockResolvedValue({
       id: 'e1', name: VALID_BODY.name, zanId: VALID_BODY.zanId, institutionId: 'inst-1',
     });
@@ -244,6 +245,7 @@ describe('POST /api/employees/manual-entry authorization', () => {
     });
     mockEmployeeFindUnique.mockResolvedValue(null); // zanId not taken
     mockEmployeeFindFirst.mockResolvedValue(null); // payroll/zssf not taken
+    mockEmployeeFindMany.mockResolvedValue([]); // Req 6.5: no fuzzy duplicate
     mockEmployeeCreate.mockResolvedValue({
       id: 'e1', name: 'Jane Doe', zanId: '12345678', institutionId: 'inst-1',
     });
@@ -285,8 +287,14 @@ describe('POST /api/employees/manual-entry authorization', () => {
     const { POST } = await import('./route');
     const res = await POST(authedRequest('HRO', VALID_BODY));
     expect(res.status).toBe(201);
-    // No org fields supplied → the distinct-value lookup must not run.
-    expect(mockEmployeeFindMany).not.toHaveBeenCalled();
+    // No org fields supplied → the distinct-value org-field lookup must not
+    // run. (The Req 6.5 fuzzy check also calls findMany, but with a
+    // dateOfBirth/institutionId where clause — not an org-field select.)
+    const orgFieldCalls = mockEmployeeFindMany.mock.calls.filter(
+      (c: any) =>
+        c[0]?.select?.ministry || c[0]?.select?.department || c[0]?.select?.currentWorkplace
+    );
+    expect(orgFieldCalls).toHaveLength(0);
   });
 
   // ---- Req 6.8: cross-field date logic + identifier formats ----
@@ -380,5 +388,64 @@ describe('POST /api/employees/manual-entry authorization', () => {
     );
     expect(res.status).toBe(201);
     expect(mockEmployeeCreate).toHaveBeenCalledOnce();
+  });
+
+  // ---- Req 6.5: fuzzy duplicate detection on name + DOB + institutionId ----
+
+  it('Req 6.5: blocks creation (409) when a same-DOB / similar-name employee already exists', async () => {
+    await setupHroWithManualEntry();
+    // findFuzzyDuplicate runs prisma.employee.findMany scoped to inst + DOB day.
+    // The existing record's name is a single-typo variant of the submitted name
+    // ("Jane Doe" vs "Jayne Doe" → 0.875 similarity ≥ threshold) → flagged.
+    mockEmployeeFindMany.mockResolvedValue([
+      { id: 'e-existing', name: 'Jayne Doe', zanId: '99999999' },
+    ]);
+    const { POST } = await import('./route');
+    const res = await POST(
+      authedRequest('HRO', { ...VALID_BODY, name: 'Jane Doe', dateOfBirth: '1990-01-01' })
+    );
+    expect(res.status).toBe(409);
+    const body = await res.json();
+    expect(body.success).toBe(false);
+    expect(body.error).toContain('likely duplicate');
+    expect(body.error).toContain('99999999');
+    expect(mockEmployeeCreate).not.toHaveBeenCalled();
+
+    // The DB query must be scoped to the institution + the DOB calendar day.
+    const fuzzyCalls = mockEmployeeFindMany.mock.calls.filter(
+      (c: any) => c[0]?.where?.dateOfBirth
+    );
+    expect(fuzzyCalls.length).toBeGreaterThan(0);
+    expect(fuzzyCalls[0][0].where.institutionId).toBe('inst-1');
+    expect(fuzzyCalls[0][0].where.dateOfBirth.gte.toISOString()).toBe('1990-01-01T00:00:00.000Z');
+  });
+
+  it('Req 6.5: allows creation when the only same-DOB candidate has an unrelated name', async () => {
+    await setupHroWithManualEntry();
+    mockEmployeeFindMany.mockResolvedValue([
+      { id: 'e-other', name: 'John Smith', zanId: '88888888' },
+    ]);
+    const { POST } = await import('./route');
+    const res = await POST(
+      authedRequest('HRO', { ...VALID_BODY, name: 'Jane Doe', dateOfBirth: '1990-01-01' })
+    );
+    expect(res.status).toBe(201);
+    expect(mockEmployeeCreate).toHaveBeenCalledOnce();
+  });
+
+  it('Req 6.5: skips the fuzzy check (201) when DOB is missing — exact-key checks still run', async () => {
+    // dateOfBirth is required by the route, but defensively the fuzzy check
+    // must no-op (not throw) on an unparseable DOB and let creation proceed if
+    // the required-field validator were ever relaxed.
+    await setupHroWithManualEntry();
+    mockEmployeeFindMany.mockResolvedValue([]);
+    const { POST } = await import('./route');
+    const res = await POST(
+      authedRequest('HRO', { ...VALID_BODY, dateOfBirth: 'not-a-date' })
+    );
+    // The route's own DOB format/required validation rejects first; the fuzzy
+    // check is simply never reached with a bad DOB.
+    expect(res.status).toBe(400);
+    expect(mockEmployeeCreate).not.toHaveBeenCalled();
   });
 });

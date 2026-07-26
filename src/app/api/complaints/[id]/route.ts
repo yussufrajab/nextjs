@@ -12,6 +12,8 @@ import {
   resolveConfidential,
   REDACTED_COMPLAINANT_NAME,
 } from '@/lib/complaint-confidentiality';
+import { redactComplainantPii } from '@/lib/complaint-privacy';
+import { denyWorkflowAccess } from '@/lib/workflow-access';
 
 const updateComplaintSchema = z.object({
   status: z.string().optional(),
@@ -402,4 +404,115 @@ export const PUT = wrapHandler(async (
   }).catch(() => {});
 
   return NextResponse.json(formattedResponse);
+}, 'complaints');
+
+// Req 9.2: single-complaint read with involved-party visibility.
+// GET /api/complaints/[id] is restricted to the complainant and the
+// complaint-handling officers (DO / HHRMD / CSCS / Admin) — the same set the
+// list exposes — and 403s everyone else via the audited `denyWorkflowAccess`
+// path. Complainant identity PII is masked via `redactComplainantPii` before
+// return, so a co-reviewer / non-owning officer sees masked PII while the
+// complainant, the specifically-assigned officer, and (for non-confidential
+// complaints) Admin/CSCS see the full identity.
+export const GET = wrapHandler(async (
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) => {
+  const { verifyAuth } = await import('@/lib/api-auth');
+  const authResult = await verifyAuth(req);
+  if (!authResult.authenticated) {
+    return authResult.response!;
+  }
+  const auth = authResult.context!;
+
+  const { id } = await params;
+
+  const complaint = await db.complaint.findUnique({
+    where: { id },
+    include: {
+      User_Complaint_complainantIdToUser: {
+        select: {
+          name: true,
+          employeeId: true,
+          Employee: {
+            select: {
+              zanId: true,
+              department: true,
+              cadre: true,
+            },
+          },
+          Institution: { select: { name: true } },
+        },
+      },
+      User_Complaint_reviewedByIdToUser: {
+        select: {
+          name: true,
+          role: true,
+        },
+      },
+    },
+  });
+
+  if (!complaint) {
+    return NextResponse.json(
+      { success: false, message: 'Complaint not found' },
+      { status: 404 }
+    );
+  }
+
+  const isComplainant = complaint.complainantId === auth.userId;
+  const isHandler = ['DO', 'HHRMD', 'CSCS', 'Admin'].includes(auth.role);
+
+  // Involved-party visibility: only the complainant or a complaint-handling
+  // officer tier may read a single complaint. Everyone else is denied, and
+  // the denial is written to the audit trail via `denyWorkflowAccess`.
+  if (!isComplainant && !isHandler) {
+    return await denyWorkflowAccess({
+      auth,
+      routeBase: 'complaints',
+      requestId: id,
+      requestType: 'Complaint',
+      blockReason: 'NOT_INVOLVED_PARTY',
+      message: 'Access denied: you are not an involved party to this complaint',
+      requestMethod: 'GET',
+      ipAddress: getClientIp(req.headers),
+      deviceInfo: JSON.parse(req.headers.get('x-device-info') || 'null'),
+    });
+  }
+
+  const canSeeInternalNotes = ['Admin', 'DO', 'HHRMD', 'CSCS'].includes(auth.role);
+
+  const row = {
+    id: complaint.id,
+    complainantId: complaint.complainantId, // decision-only; redactComplainantPii strips it
+    employeeId: complaint.User_Complaint_complainantIdToUser?.employeeId ?? null,
+    employeeName: complaint.User_Complaint_complainantIdToUser?.name ?? null,
+    zanId: complaint.User_Complaint_complainantIdToUser?.Employee?.zanId ?? null,
+    department: complaint.User_Complaint_complainantIdToUser?.Employee?.department ?? null,
+    cadre: complaint.User_Complaint_complainantIdToUser?.Employee?.cadre ?? null,
+    institutionName: complaint.User_Complaint_complainantIdToUser?.Institution?.name ?? null,
+    complaintType: complaint.complaintType,
+    subject: complaint.subject,
+    details: complaint.details,
+    complainantPhoneNumber: complaint.complainantPhoneNumber,
+    nextOfKinPhoneNumber: complaint.nextOfKinPhoneNumber,
+    submissionDate: complaint.createdAt.toISOString(),
+    status: complaint.status,
+    attachments: complaint.attachments,
+    officerComments: canSeeInternalNotes ? complaint.officerComments : null,
+    internalNotes: canSeeInternalNotes ? complaint.internalNotes : null,
+    assignedOfficerRole: complaint.assignedOfficerRole,
+    reviewStage: complaint.reviewStage,
+    rejectionReason: complaint.rejectionReason,
+    reviewedBy: complaint.User_Complaint_reviewedByIdToUser?.role ?? null,
+    confidential: complaint.confidential,
+  };
+
+  const redacted = redactComplainantPii(row, {
+    viewerRole: auth.role,
+    viewerUserId: auth.userId,
+    assignedOfficerId: complaint.reviewedById ?? null,
+  });
+
+  return NextResponse.json(redacted);
 }, 'complaints');

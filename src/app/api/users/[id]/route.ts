@@ -1,11 +1,23 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { z } from 'zod';
-import { logUserAction, getClientIp } from '@/lib/audit-logger';
+import {
+  logUserAction,
+  logAuditEvent,
+  AuditEventType,
+  AuditEventCategory,
+  AuditSeverity,
+  getClientIp,
+} from '@/lib/audit-logger';
 import { wrapHandler } from '@/lib/error-handler';
 import { withAuth, requireReauth } from '@/lib/api-auth';
 import { terminateAllUserSessions } from '@/lib/session-manager';
 import { authLogger } from '@/lib/logger';
+import {
+  isPrivilegeEscalation,
+  isHighPrivilegeRole,
+  detectEscalationBurst,
+} from '@/lib/role-privilege';
 
 // Safe fields that any admin can update on another user's profile.
 const profileUpdateSchema = z.object({
@@ -126,6 +138,17 @@ export const PUT = wrapHandler(withAuth(async (
     const institutionChanged =
       validatedData.institutionId !== undefined &&
       previousUser?.institutionId !== validatedData.institutionId;
+
+    // SECURITY (Req 26.2): classify the role change as a privilege escalation
+    // (strict rank increase) and flag it on the USER_UPDATED audit row so an
+    // unusual run of escalations can be detected from the audit trail. The
+    // CRITICAL POTENTIAL_BREACH alert is emitted below for high-privilege
+    // escalations (→ Admin/HHRMD/CSCS) or when this change is part of a burst.
+    const privilegeEscalation =
+      roleChanged && isPrivilegeEscalation(previousUser?.role, updatedUser.role);
+    const highPrivilegeEscalation =
+      privilegeEscalation && isHighPrivilegeRole(updatedUser.role);
+
     await logUserAction({
       action: 'UPDATED',
       targetUserId: updatedUser.id,
@@ -139,11 +162,59 @@ export const PUT = wrapHandler(withAuth(async (
         previousRole: previousUser?.role,
         newRole: updatedUser.role,
         roleChanged,
+        privilegeEscalation,
         previousInstitutionId: previousUser?.institutionId,
         newInstitutionId: validatedData.institutionId ?? previousUser?.institutionId,
         institutionChanged,
       },
     }).catch(() => {});
+
+    // SECURITY (Req 26.2): privilege-escalation detection & alerting. On a
+    // role change that escalates privilege, emit a CRITICAL POTENTIAL_BREACH
+    // via the existing dispatchSecurityAlert pipeline (already wired into
+    // logAuditEvent). Two triggers:
+    //   1. The new role is a high-privilege tier (Admin/HHRMD/CSCS) — a single
+    //      such escalation pages the SOC immediately.
+    //   2. An unusual run of escalations within a window (burst) — catches a
+    //      distributed/slow accrual of privilege that no single change would
+    //      flag. detectEscalationBurst reads prior USER_UPDATED rows carrying
+    //      the privilegeEscalation flag (set above).
+    // Lateral moves and demotions (no rank increase) emit no alert.
+    if (privilegeEscalation) {
+      const burst = await detectEscalationBurst().catch(() => null);
+      if (highPrivilegeEscalation || burst?.isBurst) {
+        await logAuditEvent({
+          eventType: AuditEventType.POTENTIAL_BREACH,
+          eventCategory: AuditEventCategory.SECURITY,
+          severity: AuditSeverity.CRITICAL,
+          userId: auth.userId,
+          username: auth.username,
+          userRole: auth.role,
+          ipAddress: getClientIp(req.headers),
+          attemptedRoute: `/api/users/${id}`,
+          requestMethod: 'PUT',
+          isAuthenticated: true,
+          wasBlocked: false,
+          blockReason: null,
+          additionalData: {
+            targetUserId: updatedUser.id,
+            targetUsername: updatedUser.username,
+            previousRole: previousUser?.role ?? null,
+            newRole: updatedUser.role,
+            privilegeEscalation: true,
+            highPrivilegeEscalation,
+            burst: burst
+              ? {
+                  count: burst.count,
+                  threshold: burst.threshold,
+                  windowSeconds: burst.windowSeconds,
+                  isBurst: burst.isBurst,
+                }
+              : null,
+          },
+        }).catch(() => {});
+      }
+    }
 
     // SECURITY (Req 2.5): invalidate the target user's sessions when their
     // role or institution actually changes, so a demoted/transferred user
