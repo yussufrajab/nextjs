@@ -362,6 +362,19 @@ export function withRateLimit(handler: Handler, tier: RateLimitTier): Handler {
     const config = RATE_LIMITS[tier];
 
     if (!result.allowed) {
+      // Feed the per-IP rate-limit-hit counter on auth-tier 429s. A sustained
+      // flood of auth 429s auto-bans the source IP (see ip-ban-utils.ts).
+      // Dynamic import avoids a load-order cycle with Prisma `db` + the audit
+      // pool, and only runs on the cold deny path.
+      if (result.reason === 'rate_limit_exceeded' && tier === 'auth') {
+        try {
+          const { recordRateLimitHit } = await import('@/lib/ip-ban-utils');
+          await recordRateLimitHit(ip);
+        } catch (err) {
+          rateLimitLogger.warn({ err, ip }, 'ip-ban: recordRateLimitHit failed – fail-open');
+        }
+      }
+
       // Differentiate "you sent too many" (429) from "Redis is down" (503).
       // The `reason` field set by checkRateLimit is the authoritative signal.
       const isFailClosedDenial = result.reason === 'fail_closed';
