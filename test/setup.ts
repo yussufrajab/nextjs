@@ -45,6 +45,15 @@ process.env.SESSION_SECRET = 'test-session-secret-key-for-testing-only';
 // Global Mocks
 // =============================================================================
 
+// Polyfill ResizeObserver for jsdom. Radix UI primitives (e.g. Checkbox)
+// depend on @radix-ui/react-use-size, which expects ResizeObserver to exist.
+class ResizeObserverMock {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+global.ResizeObserver = ResizeObserverMock as unknown as typeof ResizeObserver;
+
 // Mock Next.js navigation
 vi.mock('next/navigation', () => ({
   useRouter() {

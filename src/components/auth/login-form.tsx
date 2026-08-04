@@ -14,6 +14,8 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import { useAuthStore } from '@/store/auth-store';
 import { useRouter } from 'next/navigation';
 import { toast } from '@/hooks/use-toast';
@@ -37,6 +39,7 @@ export function LoginForm() {
   const router = useRouter();
   const { login, logout } = useAuthStore();
   const [isLoading, setIsLoading] = React.useState(false);
+  const [showPassword, setShowPassword] = React.useState(false);
   const [showDeviceLimitDialog, setShowDeviceLimitDialog] = React.useState(false);
   const [activeSessions, setActiveSessions] = React.useState<any[]>([]);
   const [pendingCredentials, setPendingCredentials] = React.useState<{
@@ -222,11 +225,21 @@ export function LoginForm() {
               <FormLabel>Password</FormLabel>
               <FormControl>
                 <Input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   placeholder="Enter your password"
                   {...field}
                 />
               </FormControl>
+              <div className="flex items-center gap-2 pt-1">
+                <Checkbox
+                  id="show-password"
+                  checked={showPassword}
+                  onCheckedChange={(checked) => setShowPassword(checked === true)}
+                />
+                <Label htmlFor="show-password" className="text-sm font-normal cursor-pointer">
+                  Show password
+                </Label>
+              </div>
               <FormMessage />
             </FormItem>
           )}
