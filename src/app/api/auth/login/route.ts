@@ -43,6 +43,37 @@ export const POST = wrapHandler(withRateLimit(async (request) => {
     const preSessionToken = generatePreSessionToken();
     const preSessionCookieOptions = getPreSessionCookieOptions(isProduction);
 
+    // --- IP ban gate (auto-ban on abuse) ---
+    // Banned IPs are blocked before the DB user lookup. The hard gate reads
+    // Postgres (IpBan), so it survives a Redis outage — only the ephemeral
+    // counters live in Redis. See src/lib/ip-ban-utils.ts.
+    const {
+      isIpBanned: checkIpBanned,
+      getIpBanStatus,
+      recordFailedLoginFromIp,
+      autoUnbanExpiredIps,
+    } = await import('@/lib/ip-ban-utils');
+    await autoUnbanExpiredIps();
+
+    if (await checkIpBanned(ipAddress)) {
+      const status = await getIpBanStatus(ipAddress);
+      const isSecurity = status.banType === 'security';
+      const message = isSecurity
+        ? 'Access denied'
+        : `Too many attempts from this address. Please try again in ${status.remainingMinutes} minutes.`;
+      const ipResponse = NextResponse.json(
+        {
+          success: false,
+          message,
+          errorCode: 'IP_BLOCKED',
+          retryAfter: status.remainingMinutes,
+        },
+        { status: 403 }
+      );
+      ipResponse.cookies.set(PRE_SESSION_COOKIE_NAME, preSessionToken, preSessionCookieOptions);
+      return ipResponse;
+    }
+
     // Per-user sliding rate limit (Req 1.8): throttle brute-force against a
     // single account regardless of source IP. The per-IP `withRateLimit`
     // wrapper above catches single-IP floods but a distributed attacker
@@ -98,6 +129,9 @@ export const POST = wrapHandler(withRateLimit(async (request) => {
         deviceInfo,
         failureReason: 'User not found',
       });
+
+      // Feed the per-IP failed-login counter (may auto-ban on repeated abuse).
+      await recordFailedLoginFromIp(ipAddress).catch(() => {});
 
       const response = NextResponse.json(
         { success: false, message: 'Invalid username/email or password' },
@@ -173,6 +207,9 @@ export const POST = wrapHandler(withRateLimit(async (request) => {
         deviceInfo
       );
 
+      // Feed the per-IP failed-login counter (may auto-ban on repeated abuse).
+      await recordFailedLoginFromIp(ipAddress).catch(() => {});
+
       await logLoginAttempt({
         success: false,
         username: user.username,
@@ -235,6 +272,9 @@ export const POST = wrapHandler(withRateLimit(async (request) => {
         userAgent,
         deviceInfo
       );
+
+      // Feed the per-IP failed-login counter (may auto-ban on repeated abuse).
+      await recordFailedLoginFromIp(ipAddress).catch(() => {});
 
       // Log failed login attempt
       await logLoginAttempt({

@@ -112,17 +112,17 @@ export interface IpBanStatus {
   banNotes: string | null;
 }
 
-export async function getIpBan(ip: string): Promise<IpBan | null> {
+export async function getIpBan(ip: string | null): Promise<IpBan | null> {
   if (!ip || ip === 'unknown') return null;
   return db.ipBan.findUnique({ where: { ipAddress: ip } });
 }
 
-export async function isIpBanned(ip: string): Promise<boolean> {
+export async function isIpBanned(ip: string | null): Promise<boolean> {
   const ban = await getIpBan(ip);
   return isBanRowActive(ban);
 }
 
-export async function getIpBanStatus(ip: string): Promise<IpBanStatus> {
+export async function getIpBanStatus(ip: string | null): Promise<IpBanStatus> {
   const ban = await getIpBan(ip);
   const isBanned = isBanRowActive(ban);
   const banType = (ban?.banType as IpBanType | null) ?? null;
@@ -228,10 +228,10 @@ async function clearIpCounters(ip: string): Promise<void> {
 // ---------------------------------------------------------------------------
 
 export async function recordFailedLoginFromIp(
-  ip: string,
+  ip: string | null,
   context?: Record<string, any>
 ): Promise<void> {
-  if (isTrustedIp(ip)) return;
+  if (!ip || isTrustedIp(ip)) return;
   if (await isIpBanned(ip)) return; // don't count while already actively banned
   const count = await incrementIpCounter(ip, 'ipban:failedlogins');
   if (count === null) return; // Redis down — fail open
@@ -240,8 +240,8 @@ export async function recordFailedLoginFromIp(
   }
 }
 
-export async function recordRateLimitHit(ip: string): Promise<void> {
-  if (isTrustedIp(ip)) return;
+export async function recordRateLimitHit(ip: string | null): Promise<void> {
+  if (!ip || isTrustedIp(ip)) return;
   if (await isIpBanned(ip)) return;
   const count = await incrementIpCounter(ip, 'ipban:limithits');
   if (count === null) return;
