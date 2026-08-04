@@ -53,3 +53,4 @@ export const hrimsLogger = logger.child({ component: 'hrims' });
 export const sessionLogger = logger.child({ component: 'session' });
 export const rateLimitLogger = logger.child({ component: 'rate-limit' });
 export const csrfLogger = logger.child({ component: 'csrf' });
+export const ipBanLogger = logger.child({ component: 'ip-ban' });
