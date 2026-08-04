@@ -64,6 +64,13 @@ export enum AuditEventType {
   COMPLAINT_RESOLVED = 'COMPLAINT_RESOLVED',
   ACCOUNT_LOCKED = 'ACCOUNT_LOCKED',
   ACCOUNT_UNLOCKED = 'ACCOUNT_UNLOCKED',
+  // IP ban on abuse (auto ban on failed-logins-across-accounts or repeated auth
+  // 429s; admin can also ban/unban manually). See ip-ban-utils.ts.
+  IP_BANNED = 'IP_BANNED',
+  IP_BANNED_UPGRADED = 'IP_BANNED_UPGRADED',
+  IP_AUTO_UNBANNED = 'IP_AUTO_UNBANNED',
+  ADMIN_IP_BAN = 'ADMIN_IP_BAN',
+  ADMIN_IP_UNBAN = 'ADMIN_IP_UNBAN',
   PASSWORD_CHANGED = 'PASSWORD_CHANGED',
   ADMIN_PASSWORD_RESET = 'ADMIN_PASSWORD_RESET',
   FILE_UPLOADED = 'FILE_UPLOADED',

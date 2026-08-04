@@ -108,3 +108,14 @@ describe('getClientIp — trusted-proxy validation', () => {
     expect(getClientIp(headers)).toBe('10.0.0.5');
   });
 });
+
+describe('AuditEventType — IP ban events', () => {
+  it('exposes the five IP-ban event types', async () => {
+    const { AuditEventType } = await import('./audit-logger');
+    expect(AuditEventType.IP_BANNED).toBe('IP_BANNED');
+    expect(AuditEventType.IP_BANNED_UPGRADED).toBe('IP_BANNED_UPGRADED');
+    expect(AuditEventType.IP_AUTO_UNBANNED).toBe('IP_AUTO_UNBANNED');
+    expect(AuditEventType.ADMIN_IP_BAN).toBe('ADMIN_IP_BAN');
+    expect(AuditEventType.ADMIN_IP_UNBAN).toBe('ADMIN_IP_UNBAN');
+  });
+});
