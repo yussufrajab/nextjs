@@ -548,3 +548,22 @@ model PasswordResetToken {
   @@index([tokenHash])
   @@index([expiresAt])
 }
+
+model IpBan {
+  id                String    @id @default(cuid())
+  ipAddress         String    @unique
+  banCount          Int       @default(0)
+  banType           String?
+  bannedUntil       DateTime?
+  banReason         String?
+  isManuallyBanned  Boolean   @default(false)
+  bannedBy          String?
+  bannedAt          DateTime?
+  banNotes          String?
+  isActive          Boolean   @default(true)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([ipAddress, isActive])
+  @@index([bannedUntil])
+}
