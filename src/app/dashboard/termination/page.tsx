@@ -15,6 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/hooks/use-auth';
 import { ROLES, EMPLOYEES } from '@/lib/constants';
 import { fetchWithCsrf } from '@/lib/fetch-with-csrf';
+import { isHroLike, isHrrpLike } from '@/lib/role-utils';
 import React, { useState, useEffect, useCallback } from 'react';
 import { WorkflowSteps } from '@/components/shared/workflow-steps';
 import type { WorkflowStep } from '@/components/shared/workflow-steps';
@@ -69,6 +70,7 @@ interface SeparationRequest {
   commissionLetterKey?: string | null;
   hrrpReviewedAt?: string | null;
   createdAt: string;
+  updatedAt?: string;
   type: 'TERMINATION' | 'DISMISSAL';
   reason: string;
   documents: string[];
@@ -625,7 +627,7 @@ export default function TerminationAndDismissalPage() {
       return;
 
     let rejectionStatus: string;
-    if (role === ROLES.HRRP) {
+    if (isHrrpLike(role)) {
       rejectionStatus = 'Rejected by HRRP - Awaiting HRO Correction';
     } else {
       rejectionStatus = `Rejected by ${role} - Awaiting HRO Correction`;
@@ -908,7 +910,7 @@ export default function TerminationAndDismissalPage() {
         title="Termination and Dismissal"
         description="Process employee terminations for probationers and dismissals for confirmed staff."
       />
-      {role === ROLES.HRO && (
+      {isHroLike(role) && (
         <Card className="mb-6 shadow-lg">
           <CardHeader>
             <CardTitle>Submit Termination or Dismissal Request</CardTitle>
@@ -1316,7 +1318,7 @@ export default function TerminationAndDismissalPage() {
         </Card>
       )}
 
-      {role === ROLES.HRO && (
+      {isHroLike(role) && (
         <Card className="mb-6 shadow-lg">
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -1411,7 +1413,7 @@ export default function TerminationAndDismissalPage() {
                   <p className="text-sm text-muted-foreground">
                     Reason: {request.reason}
                   </p>
-                  {role !== ROLES.HRO && (
+                  {!isHroLike(role) && (
                     <p className="text-sm text-muted-foreground">
                       Institution:{' '}
                       {request.Employee?.Institution?.name || 'N/A'}
@@ -1424,6 +1426,11 @@ export default function TerminationAndDismissalPage() {
                       : 'N/A'}{' '}
                     by {request.submittedBy?.name || 'N/A'}
                   </p>
+                    {request.updatedAt && (
+                      <p className="text-sm text-muted-foreground">
+                        Last Updated: {format(parseISO(request.updatedAt), 'PPP')}
+                      </p>
+                    )}
                   {request.hrrpReviewedBy && (
                     <p className="text-sm text-muted-foreground">
                       HRRP Reviewed by: {request.hrrpReviewedBy.name || 'N/A'} (
@@ -1501,7 +1508,7 @@ export default function TerminationAndDismissalPage() {
         </Card>
       )}
 
-      {(role === ROLES.DO || role === ROLES.HHRMD || role === ROLES.CSCS || role === ROLES.HRRP) && (
+      {(role === ROLES.DO || role === ROLES.HHRMD || role === ROLES.CSCS || isHrrpLike(role)) && (
         <Card className="shadow-lg">
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -1595,7 +1602,7 @@ export default function TerminationAndDismissalPage() {
                   <p className="text-sm text-muted-foreground">
                     Reason: {request.reason}
                   </p>
-                  {role !== ROLES.HRO && (
+                  {!isHroLike(role) && (
                     <p className="text-sm text-muted-foreground">
                       Institution:{' '}
                       {request.Employee?.Institution?.name || 'N/A'}
@@ -1655,7 +1662,7 @@ export default function TerminationAndDismissalPage() {
                     >
                       View Details
                     </Button>
-                    {role === ROLES.HRRP &&
+                    {isHrrpLike(role) &&
                       request.status === 'Pending HRRP Review' && (
                         <>
                           <Button
@@ -1845,6 +1852,12 @@ export default function TerminationAndDismissalPage() {
                         {selectedRequest.rejectionReason}
                       </p>
                     </div>
+                  )}
+                  {selectedRequest.updatedAt && (
+                    <p>
+                      <Label className="font-semibold">Last Updated:</Label>{' '}
+                      {format(parseISO(selectedRequest.updatedAt), 'PPP')}
+                    </p>
                   )}
                 </div>
               </div>

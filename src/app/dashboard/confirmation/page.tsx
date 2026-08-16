@@ -61,6 +61,7 @@ interface ConfirmationRequest {
   documents: string[];
   rejectionReason?: string | null;
   createdAt: string;
+  updatedAt?: string;
   decisionDate?: string | null;
   commissionDecisionDate?: string | null;
   commissionLetterKey?: string | null;
@@ -1211,6 +1212,11 @@ export default function ConfirmationPage() {
                     Submitted: {format(parseISO(request.createdAt), 'PPP')} by{' '}
                     {request.submittedBy?.name || 'N/A'}
                   </p>
+                  {request.updatedAt && (
+                    <p className="text-sm text-muted-foreground">
+                      Last Updated: {format(parseISO(request.updatedAt), 'PPP')}
+                    </p>
+                  )}
                   {request.reviewedBy && (
                     <p className="text-sm text-muted-foreground">
                       Reviewed by: {request.reviewedBy.name || 'N/A'} (
@@ -1359,17 +1365,6 @@ export default function ConfirmationPage() {
                                 }}
                               >
                                 Rejected by Commission
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="border-red-500 text-red-600 hover:bg-red-50"
-                                title="Reject and return this request to the HRO for correction (non-terminal)"
-                                onClick={() =>
-                                  handleInitialAction(request.id, 'reject')
-                                }
-                              >
-                                Reject &amp; Return to HRO
                               </Button>
                             </>
                           )}
@@ -1539,6 +1534,16 @@ export default function ConfirmationPage() {
                         {selectedRequest.submittedBy?.name || 'N/A'}
                       </p>
                     </div>
+                    {selectedRequest.updatedAt && (
+                      <div className="grid grid-cols-3 items-center gap-x-4 gap-y-2">
+                        <Label className="text-right font-semibold">
+                          Last Updated:
+                        </Label>
+                        <p className="col-span-2">
+                          {format(parseISO(selectedRequest.updatedAt), 'PPP')}
+                        </p>
+                      </div>
+                    )}
                     {selectedRequest.reviewedBy && (
                       <div className="grid grid-cols-3 items-center gap-x-4 gap-y-2">
                         <Label className="text-right font-semibold">

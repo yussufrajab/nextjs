@@ -13,7 +13,7 @@ import { sendRequestStatusUpdateEmail } from '@/lib/email';
 import { logger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
 import { verifyAuth } from '@/lib/api-auth';
-import { shouldApplyInstitutionFilter } from '@/lib/role-utils';
+import { shouldApplyInstitutionFilter, isHroLike, isHrrpLike, isPembaScopedRole } from '@/lib/role-utils';
 import { denyWorkflowAccess } from '@/lib/workflow-access';
 
 const VALID_STATUSES = [
@@ -139,7 +139,7 @@ async function handleUpdate(
     if (validatedData.status) {
       const isHrrpApproval =
         validatedData.status === 'Approved by HRRP - Awaiting Commission Review' &&
-        (validatedData.hrrpReviewedById || auth.role === 'HRRP');
+        (validatedData.hrrpReviewedById || isHrrpLike(auth.role));
       const isHrrpRejection =
         validatedData.status === 'Rejected by HRRP - Awaiting HRO Correction';
       const isHrrpAction = isHrrpApproval || isHrrpRejection;
@@ -201,7 +201,7 @@ async function handleUpdate(
           deviceInfo,
         });
       }
-      if (isResubmission && !['HRO', 'HRRP'].includes(auth.role)) {
+      if (isResubmission && !isHroLike(auth.role) && !isHrrpLike(auth.role)) {
         return denyWorkflowAccess({
           auth,
           routeBase: 'termination',

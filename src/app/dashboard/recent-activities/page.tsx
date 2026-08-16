@@ -41,6 +41,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ROLES } from '@/lib/constants';
+import { isHroLike, isHrrpLike } from '@/lib/role-utils';
 import { toast } from '@/hooks/use-toast';
 import { clientLogger } from '@/lib/logger-client';
 const log = clientLogger.child({ component: 'recent-activities' });
@@ -234,7 +235,7 @@ export default function RecentActivitiesPage() {
 
   const institutionName = getInstitutionName();
   const shouldShowInstitution =
-    (role === ROLES.HRO || role === ROLES.HRRP) && institutionName;
+    (isHroLike(role) || isHrrpLike(role)) && institutionName;
 
   return (
     <div className="flex-1 space-y-4">

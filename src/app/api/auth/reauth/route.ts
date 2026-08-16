@@ -182,4 +182,4 @@ export const POST = wrapHandler(withAuth(async (request: Request, { auth }) => {
   }).catch(() => {});
 
   return response;
-}, { allowedRoles: ['ADMIN', 'HRO', 'HRRP', 'HRMO', 'HHRMD', 'CSCS', 'PO', 'DO', 'EMPLOYEE'] }), 'reauth');
+}, { allowedRoles: ['ADMIN', 'HRO', 'HRRP', 'HRMO', 'HHRMD', 'CSCS', 'PO', 'DO', 'EMPLOYEE', 'HRO_PEMBA', 'HRRP_PEMBA'] }), 'reauth');

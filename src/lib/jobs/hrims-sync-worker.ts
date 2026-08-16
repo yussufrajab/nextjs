@@ -60,9 +60,21 @@ async function fetchFromHRIMS(
   }
 }
 
+/**
+ * Case-insensitive, whitespace-normalised comparison of two workplace
+ * names. Returns true when they refer to the same institution. Handles
+ * minor formatting differences (extra spaces, case) that HRIMS and the
+ * local Institution table may carry.
+ */
+function workplaceMatch(workplace: string, institutionName: string): boolean {
+  const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, ' ');
+  return norm(workplace) === norm(institutionName);
+}
+
 async function saveEmployeeFromDetailedData(
   hrimsData: any,
-  institutionId: string
+  institutionId: string,
+  institutionName: string
 ) {
   try {
     const personalInfo = hrimsData.personalInfo;
@@ -81,6 +93,26 @@ async function saveEmployeeFromDetailedData(
       hrimsData.educationHistories?.find(
         (edu: any) => edu.isEmploymentHighest
       ) || hrimsData.educationHistories?.[0];
+
+    // ── Workplace filter ───────────────────────────────────────────────
+    // The HRIMS API returns ALL employees appointed under a vote code
+    // (e.g. 6,408 for Tume ya Utumishi 037), not just those currently
+    // working at that institution. A vote code is the appointing authority,
+    // not the current workplace. Skip employees whose current workplace
+    // does not match the institution being synced, so the database only
+    // contains employees who actually work at the institution.
+    const workplace = currentEmployment?.entityName ?? '';
+    if (
+      institutionName &&
+      workplace &&
+      !workplaceMatch(workplace, institutionName)
+    ) {
+      workerLogger.debug(
+        { zanId: personalInfo.zanIdNumber, workplace, institutionName },
+        'Skipping employee — workplace does not match institution'
+      );
+      return null;
+    }
 
     const existingEmployee = await db.employee.findUnique({
       where: { zanId: personalInfo.zanIdNumber },
@@ -407,7 +439,8 @@ async function processHRIMSSyncJob(job: Job<HRIMSSyncJobData>): Promise<any> {
     try {
       const employeeData = await saveEmployeeFromDetailedData(
         allEmployees[i],
-        institutionId
+        institutionId,
+        institutionName
       );
       if (employeeData) {
         savedEmployees.push(employeeData);

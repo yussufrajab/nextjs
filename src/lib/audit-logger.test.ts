@@ -117,5 +117,66 @@ describe('AuditEventType — IP ban events', () => {
     expect(AuditEventType.IP_AUTO_UNBANNED).toBe('IP_AUTO_UNBANNED');
     expect(AuditEventType.ADMIN_IP_BAN).toBe('ADMIN_IP_BAN');
     expect(AuditEventType.ADMIN_IP_UNBAN).toBe('ADMIN_IP_UNBAN');
+});
+});
+
+describe('logForbiddenRoute — severity elevation for sensitive routes', () => {
+  const mockWriteAuditLog = vi.fn();
+  const mockDispatch = vi.fn();
+
+  beforeEach(() => {
+    mockWriteAuditLog.mockReset();
+    mockDispatch.mockReset();
+    mockWriteAuditLog.mockResolvedValue(undefined);
+    mockDispatch.mockResolvedValue(undefined);
+    vi.resetModules();
+    vi.doMock('./audit-db', () => ({
+      writeAuditLog: (...a: unknown[]) => mockWriteAuditLog(...a),
+      queryAuditLogs: vi.fn(async () => ({ logs: [], total: 0, limit: 100, offset: 0 })),
+      queryAuditStats: vi.fn(async () => ({ total: 0, byEventType: [], bySeverity: [] })),
+      ensurePartitions: vi.fn(async () => {}),
+    }));
+    vi.doMock('@/lib/security-alerts', () => ({
+      dispatchSecurityAlert: (...a: unknown[]) => mockDispatch(...a),
+    }));
+    vi.doMock('@/lib/logger', () => ({
+      logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
+    }));
+  });
+
+  async function loadLogForbiddenRoute() {
+    const mod = await import('./audit-logger');
+    return mod.logForbiddenRoute;
+  }
+
+  it('elevates a user-management route denial to CRITICAL', async () => {
+    const logForbiddenRoute = await loadLogForbiddenRoute();
+    await logForbiddenRoute({
+      userId: 'u1',
+      username: 'hro_user',
+      userRole: 'HRO',
+      attemptedRoute: '/api/users/admin-1',
+      requestMethod: 'PUT',
+      additionalData: { requiredRoles: ['Admin'], actualRole: 'HRO' },
+    });
+    expect(mockWriteAuditLog).toHaveBeenCalledTimes(1);
+    const row = mockWriteAuditLog.mock.calls[0][0];
+    expect(row.severity).toBe('CRITICAL');
+    expect(row.wasBlocked).toBe(true);
+    expect(row.eventType).toBe('FORBIDDEN_ROUTE');
+  });
+
+  it('keeps a routine route denial at ERROR', async () => {
+    const logForbiddenRoute = await loadLogForbiddenRoute();
+    await logForbiddenRoute({
+      userId: 'u1',
+      username: 'hro_user',
+      userRole: 'HRO',
+      attemptedRoute: '/api/employees',
+      requestMethod: 'GET',
+      additionalData: { requiredRoles: ['Admin'], actualRole: 'HRO' },
+    });
+    expect(mockWriteAuditLog).toHaveBeenCalledTimes(1);
+    expect(mockWriteAuditLog.mock.calls[0][0].severity).toBe('ERROR');
   });
 });

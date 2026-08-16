@@ -86,6 +86,7 @@ interface PromotionRequest {
   commissionLetterKey?: string | null;
   hrrpReviewedAt?: string | null;
   createdAt: string;
+  updatedAt?: string;
 
   proposedCadre: string;
   finalCadre?: string | null;
@@ -1710,6 +1711,11 @@ export default function PromotionPage() {
                     : 'N/A'}{' '}
                   by {request.submittedBy?.name || 'N/A'}
                 </p>
+                    {request.updatedAt && (
+                      <p className="text-sm text-muted-foreground">
+                        Last Updated: {format(parseISO(request.updatedAt), 'PPP')}
+                      </p>
+                    )}
                 {request.reviewedBy && (
                   <p className="text-sm text-muted-foreground">
                     Reviewed by: {request.reviewedBy.name || 'N/A'} (
@@ -1849,17 +1855,6 @@ export default function PromotionPage() {
                           }
                         >
                           Rejected by Commission
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="border-red-500 text-red-600 hover:bg-red-50"
-                          title="Reject and return this request to the HRO for correction (non-terminal)"
-                          onClick={() =>
-                            handleInitialAction(request.id, 'reject')
-                          }
-                        >
-                          Reject &amp; Return to HRO
                         </Button>
                       </>
                     )}

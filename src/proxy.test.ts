@@ -95,4 +95,24 @@ describe('proxy audit wiring (Req 15.7 / 17.6)', () => {
     expect(mockLogForbiddenRoute).not.toHaveBeenCalled();
     expect(mockLogUnauthorizedAccess).not.toHaveBeenCalled();
   });
+
+  it('grants HRO_PEMBA access to /dashboard (regression: redirect loop on login)', async () => {
+    // The pemba-scoped HRO role must pass the proxy's canAccessRoute check
+    // for /dashboard. Before the fix, HRO_PEMBA/HRRP_PEMBA were absent from
+    // the proxy's ROUTE_PERMISSIONS, so the middleware redirected to
+    // /dashboard?error=unauthorized — which re-entered the proxy and looped
+    // until the browser aborted with redirectLoop.
+    mockVerifySessionToken.mockReturnValue('token-1');
+    mockValidateSession.mockResolvedValue({
+      User: { id: 'user-1', username: 'bimkubwa', role: 'HRO_PEMBA', active: true },
+    });
+
+    await proxy(
+      dashboardReq('/dashboard', { cookie: 'session=signed-token-1' })
+    );
+
+    // Access was granted → no forbidden-route audit, no unauthorized audit.
+    expect(mockLogForbiddenRoute).not.toHaveBeenCalled();
+    expect(mockLogUnauthorizedAccess).not.toHaveBeenCalled();
+  });
 });

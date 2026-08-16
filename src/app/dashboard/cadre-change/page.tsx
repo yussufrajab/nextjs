@@ -67,6 +67,7 @@ interface CadreChangeRequest {
   commissionLetterKey?: string | null;
   hrrpReviewedAt?: string | null;
   createdAt: string;
+  updatedAt?: string;
 
   originalCadre?: string | null;
   newCadre: string;
@@ -1162,6 +1163,11 @@ export default function CadreChangePage() {
                         : 'N/A'}{' '}
                       by {request.submittedBy?.name || 'N/A'}
                     </p>
+                    {request.updatedAt && (
+                      <p className="text-sm text-muted-foreground">
+                        Last Updated: {format(parseISO(request.updatedAt), 'PPP')}
+                      </p>
+                    )}
                     {request.hrrpReviewedBy && (
                       <p className="text-sm text-muted-foreground">
                         HRRP Reviewed by: {request.hrrpReviewedBy.name || 'N/A'} (
@@ -1367,6 +1373,11 @@ export default function CadreChangePage() {
                         : 'N/A'}{' '}
                       by {request.submittedBy?.name || 'N/A'}
                     </p>
+                    {request.updatedAt && (
+                      <p className="text-sm text-muted-foreground">
+                        Last Updated: {format(parseISO(request.updatedAt), 'PPP')}
+                      </p>
+                    )}
                     {request.hrrpReviewedBy && (
                       <p className="text-sm text-muted-foreground">
                         HRRP Reviewed by: {request.hrrpReviewedBy.name || 'N/A'} (
@@ -1489,17 +1500,6 @@ export default function CadreChangePage() {
                               }
                             >
                               Rejected by Commission
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="border-red-500 text-red-600 hover:bg-red-50"
-                              title="Reject and return this request to the HRO for correction (non-terminal)"
-                              onClick={() =>
-                                handleInitialAction(request.id, 'reject')
-                              }
-                            >
-                              Reject &amp; Return to HRO
                             </Button>
                           </>
                         )}

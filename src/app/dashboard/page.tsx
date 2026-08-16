@@ -44,6 +44,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/use-auth';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ROLES } from '@/lib/constants';
+import { isHroLike, isHrrpLike } from '@/lib/role-utils';
 import { toast } from '@/hooks/use-toast';
 import { apiClient } from '@/lib/api-client';
 import { clientLogger } from '@/lib/logger-client';
@@ -250,7 +251,7 @@ export default function DashboardPage() {
     };
 
     const fetchUrgentCount = async () => {
-      if (role === ROLES.HRO || role === ROLES.HRRP) {
+      if (isHroLike(role) || isHrrpLike(role)) {
         if (!user.institutionId) return;
         try {
           // ===== OPTIMIZATION: Use countOnly parameter for faster loading =====
@@ -415,7 +416,7 @@ export default function DashboardPage() {
       />
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-        {role === ROLES.HRO ||
+        {isHroLike(role) ||
         role === ROLES.HHRMD ||
         role === ROLES.HRMO ||
         role === ROLES.CSCS ||
@@ -583,7 +584,7 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </Link>
-        {role === ROLES.HRO || role === ROLES.HRRP ? (
+        {isHroLike(role) || isHrrpLike(role) ? (
           <Link href="/dashboard/urgent-actions">
             <Card className="hover:bg-accent hover:text-accent-foreground transition-colors">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

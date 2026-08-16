@@ -280,6 +280,30 @@ export async function logAccessDenied(data: {
 }
 
 /**
+ * Routes whose RBAC denial is a privilege-escalation probe worth a CRITICAL
+ * alert (not just a routine ERROR). A non-admin hitting a user role-management
+ * endpoint is the canonical escalation attempt and should page the SOC at the
+ * default CRITICAL threshold. Keep this list explicit and narrow — over-broad
+ * matching would cry wolf and train operators to ignore CRITICAL alerts.
+ */
+const CRITICAL_RBAC_ROUTES = [
+  '/api/users', // user create/update/list (role assignment)
+  '/api/users/bulk', // bulk user creation with role
+  '/api/admin/unlock-account', // account-state override
+  '/api/admin/lock-account',
+  '/api/admin/reset-password', // credential override
+];
+
+function rbacRouteSeverity(attemptedRoute: string): string {
+  const path = String(attemptedRoute ?? '').toLowerCase();
+  // Match both exact and sub-path (e.g. /api/users/<id>).
+  if (CRITICAL_RBAC_ROUTES.some((r) => path === r || path.startsWith(r + '/'))) {
+    return AuditSeverity.CRITICAL;
+  }
+  return AuditSeverity.ERROR;
+}
+
+/**
  * Log forbidden route access
  */
 export async function logForbiddenRoute(data: {
@@ -295,7 +319,7 @@ export async function logForbiddenRoute(data: {
   await logAuditEvent({
     eventType: AuditEventType.FORBIDDEN_ROUTE,
     eventCategory: AuditEventCategory.ACCESS,
-    severity: AuditSeverity.ERROR,
+    severity: rbacRouteSeverity(data.attemptedRoute),
     isAuthenticated: true,
     blockReason: `Role "${data.userRole}" does not have permission to access "${data.attemptedRoute}"`,
     ...data,

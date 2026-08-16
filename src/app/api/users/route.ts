@@ -106,7 +106,7 @@ export const GET = wrapHandler(withRateLimit(withAuth(async (request, { auth }) 
     });
 
     return NextResponse.json(formattedUsers);
-  }, { allowedRoles: ['ADMIN', 'HHRMD', 'HRO'] }), 'read'), 'users');
+  }, { allowedRoles: ['ADMIN', 'HHRMD', 'HRO', 'HRO_PEMBA'] }), 'read'), 'users');
 
 export const POST = wrapHandler(withRateLimit(withAuth(async (request, { auth }) => {
     const body = await request.json();

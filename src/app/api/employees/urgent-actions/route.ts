@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { shouldApplyInstitutionFilter } from '@/lib/role-utils';
+import { shouldApplyInstitutionFilter, pembaIslandWhere } from '@/lib/role-utils';
 import { logger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
 import { withAuth } from '@/lib/api-auth';
@@ -49,6 +49,7 @@ export const GET = wrapHandler(withAuth(async (req: Request, { auth }) => {
   const baseWhere: any = {};
   if (shouldApplyInstitutionFilter(userRole, userInstitutionId)) {
     baseWhere.institutionId = userInstitutionId;
+    Object.assign(baseWhere, pembaIslandWhere(userRole));
   }
 
   // ===== OPTIMIZATION: Use counts instead of loading all data =====

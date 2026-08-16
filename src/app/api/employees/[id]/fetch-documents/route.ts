@@ -5,6 +5,7 @@ import { validateFileUpload } from '@/lib/file-validation';
 import { getHrimsApiConfig } from '@/lib/hrims-config';
 import { logger } from '@/lib/logger';
 import { verifyAuth } from '@/lib/api-auth';
+import { isHroLike, isHrrpLike, isPembaScopedRole, isPembaEmployee } from '@/lib/role-utils';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limiter';
 import { wrapHandler } from '@/lib/error-handler';
 import {
@@ -234,19 +235,24 @@ export const POST = wrapHandler(async (
  // SECURITY: Institution ownership check
  const roleUpper = auth.role.toUpperCase();
  if (['ADMIN', 'HRMO', 'HHRMD', 'CSCS', 'DO', 'PO'].includes(roleUpper)) {
-   // Central/commission roles — unrestricted access
- } else if (roleUpper === 'HRO' || roleUpper === 'HRRP') {
-   const empCheck = await prisma.employee.findUnique({
-     where: { id: employeeId },
-     select: { institutionId: true },
-   });
-   if (!empCheck || empCheck.institutionId !== auth.institutionId) {
-     return NextResponse.json(
-       { success: false, message: 'Access denied' },
-       { status: 403 }
-     );
-   }
- } else if (roleUpper === 'EMPLOYEE') {
+} else if (isHroLike(auth.role) || isHrrpLike(auth.role)) {
+  // Institution-scoped access; pemba roles further restricted to Pemba dept.
+  const empCheck = await prisma.employee.findUnique({
+    where: { id: employeeId },
+    select: { institutionId: true, department: true, island: true },
+  });
+  if (
+    !empCheck ||
+    empCheck.institutionId !== auth.institutionId ||
+    (isPembaScopedRole(auth.role) &&
+      !isPembaEmployee(empCheck))
+  ) {
+    return NextResponse.json(
+      { success: false, message: 'Access denied' },
+      { status: 403 }
+    );
+  }
+} else if (roleUpper === 'EMPLOYEE') {
    const user = await prisma.user.findUnique({
      where: { id: auth.userId },
      select: { employeeId: true },

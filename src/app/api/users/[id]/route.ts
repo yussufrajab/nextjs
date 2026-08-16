@@ -66,7 +66,32 @@ export const PUT = wrapHandler(withAuth(async (
     }
 
     // Prevent admins from changing their own role (self-escalation or self-demotion).
+    // SECURITY (Req 26.2): a self-role-change is the canonical privilege-escalation
+    // attack. Block it AND log a CRITICAL POTENTIAL_BREACH so the SOC sees the
+    // attempt — a silent 403 would leave no audit trail for an insider probing
+    // the endpoint.
     if (validatedData.role && id === auth.userId) {
+      await logAuditEvent({
+        eventType: AuditEventType.POTENTIAL_BREACH,
+        eventCategory: AuditEventCategory.SECURITY,
+        severity: AuditSeverity.CRITICAL,
+        userId: auth.userId,
+        username: auth.username,
+        userRole: auth.role,
+        ipAddress: getClientIp(req.headers),
+        attemptedRoute: `/api/users/${id}`,
+        requestMethod: 'PUT',
+        isAuthenticated: true,
+        wasBlocked: true,
+        blockReason: 'SELF_ROLE_CHANGE_BLOCKED',
+        additionalData: {
+          targetUserId: id,
+          previousRole: auth.role,
+          attemptedNewRole: validatedData.role,
+          privilegeEscalation: true,
+          selfRoleChange: true,
+        },
+      }).catch(() => {});
       return new NextResponse(
         'Cannot change your own role. Ask another admin.',
         { status: 403 }

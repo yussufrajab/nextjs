@@ -6,7 +6,7 @@ import {
   testHrimsConnection,
 } from '@/lib/hrims-config';
 import { wrapHandler } from '@/lib/error-handler';
-import { withAuth } from '@/lib/api-auth';
+import { withAuth, requireReauth } from '@/lib/api-auth';
 import { logConfigChange, getClientIp } from '@/lib/audit-logger';
 
 /**
@@ -43,8 +43,14 @@ export const GET = wrapHandler(withAuth(async () => {
  * PUT - Update HRIMS configuration (Admin only)
  */
 export const PUT = wrapHandler(withAuth(async (request: Request, { auth }) => {
+  // Step-up re-authentication (Req 14.2): changing the HRIMS integration
+  // endpoint + credentials is a Tier-1 sensitive config change.
+  const denied = requireReauth(request, 'admin.hrims-settings', auth);
+  if (denied) return denied;
+
   const body = await request.json();
   const { host, port, apiKey, token } = body;
+
 
   // Validate required fields
   if (!host || !port) {

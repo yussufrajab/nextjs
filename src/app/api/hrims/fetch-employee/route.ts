@@ -7,6 +7,7 @@ import { hrimsLogger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
 import { withAuth } from '@/lib/api-auth';
 import { logHrimsSync, getClientIp } from '@/lib/audit-logger';
+import { deriveIsland } from '@/lib/island-utils';
 
 interface HRIMSEmployeeResponse {
   success: boolean;
@@ -107,7 +108,7 @@ async function fetchFromHRIMS(
   return response.json();
 }
 
-async function saveEmployeeToDatabase(hrimsData: any, institutionId: string) {
+async function saveEmployeeToDatabase(hrimsData: any, institutionId: string, institutionName?: string | null) {
   try {
     const personalInfo = hrimsData.personalInfo;
     const currentEmployment =
@@ -167,7 +168,15 @@ async function saveEmployeeToDatabase(hrimsData: any, institutionId: string) {
       recentTitleDate: currentEmployment?.fromDate
         ? new Date(currentEmployment.fromDate)
         : null,
-      currentReportingOffice: currentEmployment?.subEntityName,
+      // Work-location island: derived from the work-location fields above +
+      // the institution name. Defaults to UNGUJA when no Pemba signal is
+      // present (see src/lib/island-utils.ts).
+      island: deriveIsland(
+        currentEmployment?.subEntityName,
+        currentEmployment?.entityName,
+        currentEmployment?.subEntityName,
+        institutionName
+      ),
       currentWorkplace: currentEmployment?.entityName,
       employmentDate: personalInfo.employmentDate
         ? new Date(personalInfo.employmentDate)
@@ -551,7 +560,8 @@ export const POST = wrapHandler(withAuth(async (req, { auth }) => {
   hrimsLogger.info('Saving employee to database...');
   const employeeId = await saveEmployeeToDatabase(
     employeeResponse.data,
-    institution.id
+    institution.id,
+    institution.name
   );
 
   const personalInfo = employeeResponse.data.personalInfo;

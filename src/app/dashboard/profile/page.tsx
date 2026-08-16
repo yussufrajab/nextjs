@@ -22,6 +22,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/use-auth';
 import { useAuthStore } from '@/store/auth-store';
 import { ROLES } from '@/lib/constants';
+import { isHroLike, isHrrpLike } from '@/lib/role-utils';
 import type { Employee, EmployeeCertificate } from '@/lib/types';
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -173,6 +174,11 @@ const EmployeeDetailsCard = ({
   const [emailError, setEmailError] = useState('');
   const [emailChecking, setEmailChecking] = useState(false);
 
+  // Island assignment state — HRO only (not HRO_PEMBA)
+  const [islandValue, setIslandValue] = useState<string>(emp.island || 'UNGUJA');
+  const [isUpdatingIsland, setIsUpdatingIsland] = useState(false);
+  const canAssignIsland = userRole === 'HRO';
+
   // Sync state with emp prop when it changes (e.g., after data refresh)
   useEffect(() => {
     setDocumentUrls({
@@ -183,6 +189,7 @@ const EmployeeDetailsCard = ({
     });
     setCertificates(emp.certificates || []);
     setProfileImageUrl(emp.profileImageUrl);
+    setIslandValue(emp.island || 'UNGUJA');
   }, [
     emp.id,
     emp.ardhilHaliUrl,
@@ -191,12 +198,13 @@ const EmployeeDetailsCard = ({
     emp.birthCertificateUrl,
     emp.certificates,
     emp.profileImageUrl,
+    emp.island,
   ]);
 
   // Check if user can upload documents (HRO or CSC roles)
   const canUploadDocuments =
     userRole &&
-    ['HRO', 'HHRMD', 'HRMO', 'DO', 'CSCS', 'PO', 'ADMIN'].includes(userRole);
+    ['HRO', 'HRO_PEMBA', 'HHRMD', 'HRMO', 'DO', 'CSCS', 'PO', 'ADMIN'].includes(userRole);
 
   // Auto-fetch photo from HRIMS if not already stored
   useEffect(() => {
@@ -451,6 +459,44 @@ const EmployeeDetailsCard = ({
       setEmailError('An error occurred while updating your email. Please try again.');
     } finally {
       setIsUpdatingEmail(false);
+    }
+  };
+
+  const handleIslandUpdate = async (newIsland: string) => {
+    if (newIsland === islandValue || isUpdatingIsland) return;
+    setIsUpdatingIsland(true);
+    try {
+      const response = await fetchWithCsrf(`/api/employees/${emp.id}/island`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ island: newIsland }),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        toast({
+          title: 'Error',
+          description: result.message || 'Failed to update island assignment.',
+          variant: 'destructive',
+        });
+        // Revert the select to the previous value
+        setIslandValue(islandValue);
+        return;
+      }
+      setIslandValue(newIsland);
+      toast({
+        title: 'Island Updated',
+        description: `Employee assigned to ${newIsland} successfully.`,
+      });
+    } catch (error) {
+      log.error({ err: error }, 'Island update error');
+      toast({
+        title: 'Error',
+        description: 'An error occurred while updating the island assignment.',
+        variant: 'destructive',
+      });
+      setIslandValue(islandValue);
+    } finally {
+      setIsUpdatingIsland(false);
     }
   };
 
@@ -720,6 +766,34 @@ const EmployeeDetailsCard = ({
                     : 'N/A'}
                 </p>
               </div>
+              <div>
+                <Label className="text-muted-foreground">Work Island:</Label>
+                {canAssignIsland ? (
+                  <Select
+                    value={islandValue}
+                    onValueChange={handleIslandUpdate}
+                    disabled={isUpdatingIsland}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Select island" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="UNGUJA">Unguja</SelectItem>
+                      <SelectItem value="PEMBA">Pemba</SelectItem>
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <p className="font-medium text-foreground">
+                    {islandValue === 'PEMBA' ? 'Pemba' : 'Unguja'}
+                  </p>
+                )}
+                {isUpdatingIsland && (
+                  <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    Updating...
+                  </p>
+                )}
+              </div>
             </CardContent>
           </Card>
         </section>
@@ -809,7 +883,7 @@ const EmployeeDetailsCard = ({
                 <p className="text-sm text-muted-foreground">
                   You can upload and manage employee certificates. Only PDF
                   files up to 1MB are allowed.
-                  {userRole === 'HRO' && (
+                  {isHroLike(userRole) && (
                     <span className="block mt-1 text-xs text-amber-600">
                       Note: HRO can only upload certificates for manually entered employees.
                     </span>
@@ -825,7 +899,7 @@ const EmployeeDetailsCard = ({
 
                 // For HRO, only show upload if employee is manually entered
                 const canUploadForThisEmployee = canUploadDocuments &&
-                  (userRole !== 'HRO' || isManuallyEntered);
+                  (!isHroLike(userRole) || isManuallyEntered);
 
                 return STANDARD_CERTIFICATE_TYPES.map((certType) => {
                   // Find existing certificate of this type
@@ -980,7 +1054,7 @@ export default function ProfilePage() {
   );
 
   const isInstitutionalViewer = useMemo(
-    () => role === ROLES.HRO || role === ROLES.HRRP,
+    () => isHroLike(role) || isHrrpLike(role),
     [role]
   );
 
@@ -1552,6 +1626,7 @@ export default function ProfilePage() {
                   <TableHead>Institution</TableHead>
                   <TableHead>Cadre</TableHead>
                   <TableHead>Workplace</TableHead>
+                  <TableHead>Island</TableHead>
                   <TableHead>Payroll Number</TableHead>
                   <TableHead>Status</TableHead>
                 </TableRow>
@@ -1574,6 +1649,11 @@ export default function ProfilePage() {
                       </TableCell>
                       <TableCell className="max-w-[150px] truncate">{emp.cadre || 'N/A'}</TableCell>
                       <TableCell className="max-w-[150px] truncate">{emp.currentWorkplace || 'N/A'}</TableCell>
+                      <TableCell>
+                        <Badge variant={emp.island === 'PEMBA' ? 'secondary' : 'outline'}>
+                          {emp.island === 'PEMBA' ? 'Pemba' : 'Unguja'}
+                        </Badge>
+                      </TableCell>
                       <TableCell>{emp.payrollNumber || 'N/A'}</TableCell>
                       <TableCell>
                         <span
@@ -1586,7 +1666,7 @@ export default function ProfilePage() {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center">
+                    <TableCell colSpan={9} className="text-center">
                       No employees found matching your filters.
                     </TableCell>
                   </TableRow>

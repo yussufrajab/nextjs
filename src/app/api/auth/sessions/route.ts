@@ -37,7 +37,7 @@ export const GET = wrapHandler(withRateLimit(
       count: sessions.length,
       maxSessions: 3,
     });
-}, { allowedRoles: ['ADMIN', 'HRO', 'HHRMD', 'HRMO', 'DO', 'CSCS', 'PO'] }),
+}, { allowedRoles: ['ADMIN', 'HRO', 'HHRMD', 'HRMO', 'DO', 'CSCS', 'PO', 'HRO_PEMBA'] }),
   'read'
 ), 'auth-sessions');
 

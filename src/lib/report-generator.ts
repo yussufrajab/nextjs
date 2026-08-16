@@ -15,7 +15,7 @@
 
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { shouldApplyInstitutionFilter, isCSCRole } from '@/lib/role-utils';
+import { shouldApplyInstitutionFilter, isCSCRole, isHroLike, isHrrpLike, pembaIslandWhere } from '@/lib/role-utils';
 
 export interface ReportOutput {
   data: any[];
@@ -726,8 +726,8 @@ export async function generateReport(
       );
     }
 
-    // Block complaint reports for HRO and HRRP roles
-    if (reportType === 'complaints' && (userRole === 'HRO' || userRole === 'HRRP')) {
+    // Block complaint reports for HRO-like and HRRP-like roles (incl. Pemba-scoped)
+    if (reportType === 'complaints' && (isHroLike(userRole) || isHrrpLike(userRole))) {
       return NextResponse.json(
         {
           success: false,
@@ -765,9 +765,11 @@ export async function generateReport(
     // SECURITY: Build institution filter — use auth.institutionId for non-CSC roles (ignore client param)
     const institutionFilter: any = {};
     if (shouldApplyInstitutionFilter(userRole, auth.institutionId)) {
-      // Non-CSC roles (HRO/HRRP): always filter by their own institution
+      // Non-CSC roles (HRO/HRRP and Pemba variants): filter by own institution
+      // and, for Pemba-scoped roles, by Pemba department.
       institutionFilter.Employee = {
         institutionId: auth.institutionId,
+        ...pembaIslandWhere(userRole),
       };
     } else if (institutionId && isCSCRole(userRole)) {
       // CSC roles can optionally filter by a specific institution

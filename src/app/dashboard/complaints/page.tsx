@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/hooks/use-auth';
 import { ROLES, EMPLOYEES } from '@/lib/constants';
+import { isHroLike } from '@/lib/role-utils';
 import React, { useState, useEffect } from 'react';
 import { standardizeComplaintFormatting } from '@/ai/wrapper';
 import { WorkflowSteps } from '@/components/shared/workflow-steps';
@@ -1798,7 +1799,7 @@ export default function ComplaintsPage() {
                       From: {complaint.employeeName}{' '}
                       {complaint.zanId ? `(ZanID: ${complaint.zanId})` : ''}
                     </p>
-                    {role !== ROLES.EMPLOYEE && role !== ROLES.HRO && (
+                    {role !== ROLES.EMPLOYEE && !isHroLike(role) && (
                       <p className="text-sm text-muted-foreground">
                         Institution: {complaint.institutionName || 'N/A'}
                       </p>
@@ -2016,7 +2017,7 @@ export default function ComplaintsPage() {
                       From: {complaint.employeeName}{' '}
                       {complaint.zanId ? `(ZanID: ${complaint.zanId})` : ''}
                     </p>
-                    {role !== ROLES.EMPLOYEE && role !== ROLES.HRO && (
+                    {role !== ROLES.EMPLOYEE && !isHroLike(role) && (
                       <p className="text-sm text-muted-foreground">
                         Institution: {complaint.institutionName || 'N/A'}
                       </p>

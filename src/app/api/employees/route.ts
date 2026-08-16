@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { shouldApplyInstitutionFilter, isCSCRole } from '@/lib/role-utils';
+import { shouldApplyInstitutionFilter, isCSCRole, isHroLike, isHrrpLike, isPembaScopedRole, isPembaEmployee, pembaIslandWhere } from '@/lib/role-utils';
 import { withAuth } from '@/lib/api-auth';
 import { withRateLimit } from '@/lib/rate-limiter';
 import { logger } from '@/lib/logger';
@@ -104,16 +104,21 @@ export const GET = wrapHandler(withRateLimit(withAuth(async (request, { auth }) 
             { status: 403 }
           );
         }
-      } else if (userRole === 'HRO' || userRole === 'HRRP') {
-        if (employee.institutionId !== userInstitutionId) {
-          // GAP-M6/M10: audit the cross-institution attempt with the target
-          // institution id and attempted object id.
+      } else if (isHroLike(userRole) || isHrrpLike(userRole)) {
+        // Institution-scoped access; pemba roles further restricted to Pemba dept.
+        const pembaBlocked =
+          isPembaScopedRole(userRole) &&
+          !isPembaEmployee(employee);
+        if (employee.institutionId !== userInstitutionId || pembaBlocked) {
+          // GAP-M6/M10: audit the cross-institution / out-of-scope attempt.
           await logUnauthorizedAccess({
             userId: auth.userId,
             username: auth.username,
             userRole,
             attemptedRoute: `/api/employees?id=${employeeId}`,
-            blockReason: 'Cross-institution access attempt (IDOR)',
+            blockReason: pembaBlocked
+              ? 'Pemba-scoped role accessing non-Pemba employee (IDOR)'
+              : 'Cross-institution access attempt (IDOR)',
             isAuthenticated: true,
             requestMethod: 'GET',
             ipAddress: getClientIp(request.headers),
@@ -202,6 +207,7 @@ export const GET = wrapHandler(withRateLimit(withAuth(async (request, { auth }) 
     // If no role provided, show all employees (default behavior)
     else if (shouldApplyInstitutionFilter(userRole, userInstitutionId)) {
       whereClause.institutionId = userInstitutionId;
+      Object.assign(whereClause, pembaIslandWhere(userRole));
       logger.info({ value: userRole }, 'Applying institution filter for role');
     } else if (isCSCRole(userRole)) {
       logger.info(`CSC role detected - showing ALL institutions data for role: ${userRole}`);

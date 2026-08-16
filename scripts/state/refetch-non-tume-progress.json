@@ -1,0 +1,169 @@
+{
+  "processed": [
+    "117047",
+    "210608",
+    "214707",
+    "267999",
+    "274697",
+    "412595",
+    "450632",
+    "468567",
+    "482458",
+    "503961",
+    "635325",
+    "667994",
+    "705834",
+    "732491",
+    "810427",
+    "821808",
+    "865265",
+    "910493",
+    "930240",
+    "947113"
+  ],
+  "succeeded": 2,
+  "failed": 0,
+  "notFound": 18,
+  "results": [
+    {
+      "payrollNumber": "117047",
+      "name": "Fadhil Khamis Yussuf",
+      "institution": "AFISI YA MWANASHERIA MKUU",
+      "workplace": null,
+      "status": "NO_WORKPLACE"
+    },
+    {
+      "payrollNumber": "210608",
+      "name": "Shufaa Said Ali",
+      "institution": "Hospitali ya Mnazi Mmoja",
+      "workplace": null,
+      "status": "NO_WORKPLACE"
+    },
+    {
+      "payrollNumber": "214707",
+      "name": "Juma Mkubwa Abdalla",
+      "institution": "WIZARA YA ARDHI NA MAENDELEO YA MAKAAZI ZANZIBAR",
+      "workplace": null,
+      "status": "NO_WORKPLACE"
+    },
+    {
+      "payrollNumber": "267999",
+      "name": "Amrani Kombo Yussuf",
+      "institution": "Ofisi ya Mkuu wa Mkoa wa Mjini Magharibi Unguja",
+      "workplace": null,
+      "status": "NO_WORKPLACE"
+    },
+    {
+      "payrollNumber": "274697",
+      "name": "Khamis Machano Khamis",
+      "institution": "Baraza la Manispaa Mjini Unguja",
+      "workplace": null,
+      "status": "NO_WORKPLACE"
+    },
+    {
+      "payrollNumber": "412595",
+      "name": "Shaaban Issa Moh'd",
+      "institution": "Hospitali ya Mnazi Mmoja",
+      "workplace": null,
+      "status": "NO_WORKPLACE"
+    },
+    {
+      "payrollNumber": "450632",
+      "name": "Jemima Celestine Coelho",
+      "institution": "Hospitali ya Mnazi Mmoja",
+      "workplace": null,
+      "status": "NO_WORKPLACE"
+    },
+    {
+      "payrollNumber": "468567",
+      "name": "Mussa Said Khamis",
+      "institution": "WIZARA YA UTALII NA MAMBO YA KALE",
+      "workplace": "Wizara ya Utalii na Mambo ya Kale",
+      "status": "UPDATED"
+    },
+    {
+      "payrollNumber": "482458",
+      "name": "Nassor Hakim Shaaban",
+      "institution": "Taasisi ya Utafiti wa Uvuvi (ZAFIRI)",
+      "workplace": null,
+      "status": "NO_WORKPLACE"
+    },
+    {
+      "payrollNumber": "503961",
+      "name": "Latifa Khamis Mzee",
+      "institution": "Tume ya Ushindani Halali wa Biashara",
+      "workplace": null,
+      "status": "NO_WORKPLACE"
+    },
+    {
+      "payrollNumber": "635325",
+      "name": "Mwalimu Mwinyichum Mwalimu",
+      "institution": "KAMISHENI YA ARDHI ZANZIBAR",
+      "workplace": null,
+      "status": "NO_WORKPLACE"
+    },
+    {
+      "payrollNumber": "667994",
+      "name": "Haji Issa Haji",
+      "institution": "Baraza la Manispaa Mjini Unguja",
+      "workplace": null,
+      "status": "NO_WORKPLACE"
+    },
+    {
+      "payrollNumber": "705834",
+      "name": "Seif Ali Maalim",
+      "institution": "WIZARA YA KILIMO UMWAGILIAJI MALIASILI NA MIFUGO",
+      "workplace": null,
+      "status": "NO_WORKPLACE"
+    },
+    {
+      "payrollNumber": "732491",
+      "name": "Ayoub Mohammed Mahmoud",
+      "institution": "Ofisi ya Mkuu wa Mkoa wa Kaskazini Unguja",
+      "workplace": null,
+      "status": "NO_WORKPLACE"
+    },
+    {
+      "payrollNumber": "810427",
+      "name": "Salma Ali Mzee",
+      "institution": "Hospitali ya Mnazi Mmoja",
+      "workplace": null,
+      "status": "NO_WORKPLACE"
+    },
+    {
+      "payrollNumber": "821808",
+      "name": "Salama Ahmada Hija",
+      "institution": "WIZARA YA UTALII NA MAMBO YA KALE",
+      "workplace": null,
+      "status": "NO_WORKPLACE"
+    },
+    {
+      "payrollNumber": "865265",
+      "name": "Mliwa Hassan Khamis",
+      "institution": "Baraza la Manispaa Magharibi A",
+      "workplace": null,
+      "status": "NO_WORKPLACE"
+    },
+    {
+      "payrollNumber": "910493",
+      "name": "Asia Abeid Daftari",
+      "institution": "Hospitali ya Mnazi Mmoja",
+      "workplace": null,
+      "status": "NO_WORKPLACE"
+    },
+    {
+      "payrollNumber": "930240",
+      "name": "Duchi Ame Silima",
+      "institution": "Tume ya Mipango",
+      "workplace": null,
+      "status": "NO_WORKPLACE"
+    },
+    {
+      "payrollNumber": "947113",
+      "name": "Asha Hassan Ali",
+      "institution": "OFISI YA RAIS - KATIBA SHERIA UTUMISHI NA UTAWALA BORA",
+      "workplace": "Ofisi ya Rais, Katiba, Sheria, Utumishi na Utawala Bora",
+      "status": "UPDATED"
+    }
+  ]
+}

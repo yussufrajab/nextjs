@@ -7,6 +7,7 @@ import { logger } from '@/lib/logger';
 import { withRateLimit } from '@/lib/rate-limiter';
 import { logFileAction, getClientIp } from '@/lib/audit-logger';
 import { wrapHandler } from '@/lib/error-handler';
+import { isHroLike, isHrrpLike, isPembaScopedRole, isPembaEmployee } from '@/lib/role-utils';
 
 // Document type mapping to database fields
 const DOCUMENT_FIELD_MAPPING = {
@@ -44,7 +45,7 @@ export const POST = wrapHandler(withRateLimit(withAuth(async (
   const documentType = formData.get('documentType') as string;
 
   // Check if user has permission to upload documents (HRO or CSC roles)
-  const allowedRoles = ['HRO', 'HHRMD', 'HRMO', 'DO', 'CSCS', 'PO', 'ADMIN'];
+  const allowedRoles = ['HRO', 'HHRMD', 'HRMO', 'DO', 'CSCS', 'PO', 'ADMIN', 'HRO_PEMBA'];
   if (!allowedRoles.includes(userRole)) {
     return NextResponse.json(
       { success: false, message: 'Insufficient permissions' },
@@ -63,10 +64,13 @@ export const POST = wrapHandler(withRateLimit(withAuth(async (
       { status: 404 }
     );
   }
-
-  // For HRO role, check if employee belongs to their institution
-  if (userRole === 'HRO') {
-    if (employee.institutionId !== userInstitutionId) {
+  // For HRO-like roles, check institution (and Pemba department for pemba-scoped)
+  if (isHroLike(userRole)) {
+    if (
+      employee.institutionId !== userInstitutionId ||
+      (isPembaScopedRole(userRole) &&
+        !isPembaEmployee(employee))
+    ) {
       return NextResponse.json(
         {
           success: false,
@@ -151,7 +155,7 @@ export const POST = wrapHandler(withRateLimit(withAuth(async (
       size: file.size,
     },
   });
-}, { allowedRoles: ['HRO', 'ADMIN'] }), 'write'), 'employees-documents');
+}, { allowedRoles: ['HRO', 'ADMIN', 'HRO_PEMBA'] }), 'write'), 'employees-documents');
 
 // GET endpoint to retrieve document URLs for an employee
 export const GET = wrapHandler(withRateLimit(withAuth(async (
@@ -180,6 +184,7 @@ export const GET = wrapHandler(withRateLimit(withAuth(async (
       jobContractUrl: true,
       birthCertificateUrl: true,
       institutionId: true,
+      department: true, island: true,
     },
   });
 
@@ -202,8 +207,12 @@ export const GET = wrapHandler(withRateLimit(withAuth(async (
         { status: 403 }
       );
     }
-  } else if (userRole === 'HRO' || userRole === 'HRRP') {
-    if (employee.institutionId !== userInstitutionId) {
+  } else if (isHroLike(userRole) || isHrrpLike(userRole)) {
+    if (
+      employee.institutionId !== userInstitutionId ||
+      (isPembaScopedRole(userRole) &&
+        !isPembaEmployee(employee))
+    ) {
       return NextResponse.json(
         { success: false, message: 'Access denied' },
         { status: 403 }

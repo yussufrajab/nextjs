@@ -3,6 +3,7 @@ import { downloadFile } from '@/lib/minio';
 import { db as prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { verifyAuth } from '@/lib/api-auth';
+import { isHroLike, isHrrpLike, isPembaScopedRole, isPembaEmployee } from '@/lib/role-utils';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limiter';
 import { logFileAction } from '@/lib/audit-logger';
 import { wrapHandler } from '@/lib/error-handler';
@@ -39,13 +40,19 @@ export const GET = wrapHandler(async (
 
   if (['ADMIN', 'HRMO', 'HHRMD', 'CSCS', 'DO', 'PO'].includes(roleUpper)) {
     // Central/commission roles — unrestricted access
-  } else if (roleUpper === 'HRO' || roleUpper === 'HRRP') {
-    // Institution-scoped access: employee must belong to the user's institution
+  } else if (isHroLike(auth.role) || isHrrpLike(auth.role)) {
+    // Institution-scoped access: employee must belong to the user's institution.
+    // Pemba-scoped roles are further restricted to Pemba-department employees.
     const employee = await prisma.employee.findUnique({
       where: { id: employeeId },
-      select: { institutionId: true },
+      select: { institutionId: true, department: true, island: true },
     });
-    if (!employee || employee.institutionId !== auth.institutionId) {
+    if (
+      !employee ||
+      employee.institutionId !== auth.institutionId ||
+      (isPembaScopedRole(auth.role) &&
+        !isPembaEmployee(employee))
+    ) {
       return NextResponse.json(
         { success: false, message: 'Access denied' },
         { status: 403 }

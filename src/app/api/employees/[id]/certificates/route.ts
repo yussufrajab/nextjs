@@ -8,6 +8,7 @@ import { withAuth } from '@/lib/api-auth';
 import { withRateLimit } from '@/lib/rate-limiter';
 import { logFileAction, getClientIp } from '@/lib/audit-logger';
 import { wrapHandler } from '@/lib/error-handler';
+import { isHroLike, isHrrpLike, isPembaScopedRole, isPembaEmployee } from '@/lib/role-utils';
 
 // Valid certificate types
 const VALID_CERTIFICATE_TYPES = [
@@ -64,6 +65,7 @@ export const POST = wrapHandler(withRateLimit(withAuth(async (
     select: {
       id: true,
       institutionId: true,
+      department: true, island: true,
       dataSource: true,
     },
   });
@@ -74,10 +76,13 @@ export const POST = wrapHandler(withRateLimit(withAuth(async (
       { status: 404 }
     );
   }
-
-  // For HRO role, check if employee belongs to their institution and is manually entered
-  if (userRole === 'HRO') {
-    if (employee.institutionId !== userInstitutionId) {
+  // For HRO-like roles, check institution (and Pemba department for pemba-scoped)
+  if (isHroLike(userRole)) {
+    if (
+      employee.institutionId !== userInstitutionId ||
+      (isPembaScopedRole(userRole) &&
+        !isPembaEmployee(employee))
+    ) {
       return NextResponse.json(
         {
           success: false,
@@ -200,7 +205,7 @@ export const POST = wrapHandler(withRateLimit(withAuth(async (
       size: file.size,
     },
   });
-}, { allowedRoles: ['HRO', 'ADMIN'] }), 'write'), 'employees-certificates');
+}, { allowedRoles: ['HRO', 'ADMIN', 'HRO_PEMBA'] }), 'write'), 'employees-certificates');
 
 // GET endpoint to retrieve certificates for an employee
 export const GET = wrapHandler(withRateLimit(withAuth(async (
@@ -217,14 +222,13 @@ export const GET = wrapHandler(withRateLimit(withAuth(async (
 
   const userRole = auth.role;
   const userInstitutionId = auth.institutionId;
-
-  // Fetch employee to check access permissions
   const employee = await prisma.employee.findUnique({
     where: { id: employeeId },
     select: {
       id: true,
       name: true,
       institutionId: true,
+      department: true, island: true,
       EmployeeCertificate: {
         select: {
           id: true,
@@ -255,8 +259,12 @@ export const GET = wrapHandler(withRateLimit(withAuth(async (
         { status: 403 }
       );
     }
-  } else if (userRole === 'HRO' || userRole === 'HRRP') {
-    if (employee.institutionId !== userInstitutionId) {
+  } else if (isHroLike(userRole) || isHrrpLike(userRole)) {
+    if (
+      employee.institutionId !== userInstitutionId ||
+      (isPembaScopedRole(userRole) &&
+        !isPembaEmployee(employee))
+    ) {
       return NextResponse.json(
         { success: false, message: 'Access denied' },
         { status: 403 }
@@ -318,6 +326,7 @@ export const DELETE = wrapHandler(withRateLimit(withAuth(async (
       Employee: {
         select: {
           institutionId: true,
+          department: true, island: true,
         },
       },
     },
@@ -329,10 +338,13 @@ export const DELETE = wrapHandler(withRateLimit(withAuth(async (
       { status: 404 }
     );
   }
-
-  // For HRO role, check if employee belongs to their institution
-  if (userRole === 'HRO') {
-    if (certificate.Employee.institutionId !== userInstitutionId) {
+  // For HRO-like roles, check institution (and Pemba department for pemba-scoped)
+  if (isHroLike(userRole)) {
+    if (
+      certificate.Employee.institutionId !== userInstitutionId ||
+      (isPembaScopedRole(userRole) &&
+        !isPembaEmployee(certificate.Employee))
+    ) {
       return NextResponse.json(
         {
           success: false,
@@ -353,4 +365,4 @@ export const DELETE = wrapHandler(withRateLimit(withAuth(async (
     success: true,
     message: 'Certificate deleted successfully',
   });
-}, { allowedRoles: ['HRO', 'HHRMD', 'HRMO', 'DO', 'CSCS', 'PO', 'ADMIN'] }), 'write'), 'employees-certificates');
+}, { allowedRoles: ['HRO', 'HHRMD', 'HRMO', 'DO', 'CSCS', 'PO', 'ADMIN', 'HRO_PEMBA'] }), 'write'), 'employees-certificates');

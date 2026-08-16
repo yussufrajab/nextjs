@@ -48,4 +48,4 @@ export const POST = wrapHandler(withRateLimit(withAuth(async (request) => {
     payrollNumberExists,
     zssfNumberExists,
   });
-}, { allowedRoles: ['HRO', 'Admin', 'HHRMD'] }), 'write'), 'employees-validate');
+}, { allowedRoles: ['HRO', 'Admin', 'HHRMD', 'HRO_PEMBA'] }), 'write'), 'employees-validate');

@@ -10,7 +10,14 @@ export const ROLES: Record<string, Role> = {
   HRRP: 'HRRP', // Human Resource Responsible Personnel
   PO: 'PO', // Planning Officer
   ADMIN: 'Admin',
+  HRO_PEMBA: 'HRO_PEMBA',
+  HRRP_PEMBA: 'HRRP_PEMBA',
 };
+// NOTE: MFA is now mandatory for ALL users (2026-08-16). This constant is kept
+// for documentation of the original privileged-role list; the login route no
+// longer reads it — it unconditionally requires MFA for every role.
+export const MFA_REQUIRED_ROLES = ['Admin', 'CSCS', 'HHRMD'] as const;
+
 
 export const INSTITUTIONS = [
   { id: 'inst_1', name: 'Ofisi ya Msajili wa Hazina' },
@@ -191,6 +198,31 @@ export const USERS: Omit<User, 'id'>[] = [
     role: ROLES.HRO as Role,
     institution: 'WIZARA YA AFYA',
     institutionId: '4',
+    active: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+
+  // Pemba-scoped HRO/HRRP (dev/QA only — same institution as an HRO with
+  // many Pemba-department employees so the scoping is observable)
+  {
+    username: 'hro_pemba_edu',
+    name: 'HRO Pemba (Elimu)',
+    password: 'password123',
+    role: ROLES.HRO_PEMBA as Role,
+    institution: 'WIZARA YA ELIMU NA MAFUNZO YA AMALI',
+    institutionId: '3',
+    active: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  {
+    username: 'hrrp_pemba_edu',
+    name: 'HRRP Pemba (Elimu)',
+    password: 'password123',
+    role: ROLES.HRRP_PEMBA as Role,
+    institution: 'WIZARA YA ELIMU NA MAFUNZO YA AMALI',
+    institutionId: '3',
     active: true,
     createdAt: new Date(),
     updatedAt: new Date(),

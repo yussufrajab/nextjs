@@ -17,6 +17,7 @@ import { EmployeeSearch } from '@/components/shared/employee-search';
 import { useAuth } from '@/hooks/use-auth';
 import { ROLES, EMPLOYEES } from '@/lib/constants';
 import { fetchWithCsrf } from '@/lib/fetch-with-csrf';
+import { isHroLike, isHrrpLike } from '@/lib/role-utils';
 import React, { useState, useEffect, useCallback } from 'react';
 import { WorkflowSteps } from '@/components/shared/workflow-steps';
 import type { WorkflowStep } from '@/components/shared/workflow-steps';
@@ -62,6 +63,7 @@ interface LWOPRequest {
   reviewStage: string;
   rejectionReason?: string | null;
   createdAt: string;
+  updatedAt?: string;
   startDate?: string;
   endDate?: string;
   duration: string;
@@ -365,10 +367,10 @@ export default function LwopPage() {
             role === ROLES.HHRMD ||
             role === ROLES.HRMO ||
             role === ROLES.CSCS ||
-            role === ROLES.HRRP
+            isHrrpLike(role)
           ) {
             return true;
-          } else if (role === ROLES.HRO) {
+          } else if (isHroLike(role)) {
             return req.submittedById === user.id;
           }
           return true;
@@ -666,10 +668,10 @@ export default function LwopPage() {
       submittedById: user.id,
       userRole: role,
       documents: documentsList,
-      status: role === ROLES.HRRP
+      status: isHrrpLike(role)
         ? 'Approved by HRRP - Awaiting Commission Review'
         : 'Pending HRRP Review',
-      reviewStage: role === ROLES.HRRP ? 'hrrp_review' : 'initial',
+      reviewStage: isHrrpLike(role) ? 'hrrp_review' : 'initial',
       startDate,
       endDate,
       duration: durationStr,
@@ -819,7 +821,7 @@ export default function LwopPage() {
       return;
 
     let rejectionStatus: string;
-    if (role === ROLES.HRRP) {
+    if (isHrrpLike(role)) {
       rejectionStatus = 'Rejected by HRRP - Awaiting HRO Correction';
     } else {
       // HHRMD or HRMO rejection
@@ -833,7 +835,7 @@ export default function LwopPage() {
       decisionDate: new Date().toISOString(),
     };
     // Only set reviewedById for HHRMD/HRMO rejections, not HRRP
-    if (role !== ROLES.HRRP) {
+    if (!isHrrpLike(role)) {
       payload.reviewedById = user?.id;
     }
     const success = await handleUpdateRequest(
@@ -920,7 +922,7 @@ export default function LwopPage() {
         title="Leave Without Pay (LWOP)"
         description="Manage LWOP requests."
       />
-      {role === ROLES.HRO && (
+      {isHroLike(role) && (
         <Card className="mb-6 shadow-lg">
           <CardHeader>
             <CardTitle>Submit LWOP Request</CardTitle>
@@ -1166,23 +1168,23 @@ export default function LwopPage() {
       {(role === ROLES.HHRMD ||
         role === ROLES.HRMO ||
         role === ROLES.CSCS ||
-        role === ROLES.HRRP ||
-        role === ROLES.HRO) && (
+        isHrrpLike(role) ||
+        isHroLike(role)) && (
         <Card className="shadow-lg">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle>
-                  {role === ROLES.HRO
+                  {isHroLike(role)
                     ? 'My LWOP Requests'
-                    : role === ROLES.HRRP
+                    : isHrrpLike(role)
                       ? 'Review LWOP Requests'
                       : 'Review LWOP Requests'}
                 </CardTitle>
                 <CardDescription>
-                  {role === ROLES.HRO
+                  {isHroLike(role)
                     ? 'View and manage your submitted LWOP requests.'
-                    : role === ROLES.HRRP
+                    : isHrrpLike(role)
                       ? 'Review HRO-submitted requests and forward approved ones to the Commission.'
                       : 'Review, approve, or reject pending LWOP requests.'}
                 </CardDescription>
@@ -1278,7 +1280,7 @@ export default function LwopPage() {
                     <p className="text-sm text-muted-foreground">
                       Reason: {request.reason}
                     </p>
-                    {role !== ROLES.HRO && (
+                    {!isHroLike(role) && (
                       <p className="text-sm text-muted-foreground">
                         Institution:{' '}
                         {(employeeData as any)?.Institution?.name ||
@@ -1295,6 +1297,11 @@ export default function LwopPage() {
                         : 'N/A'}{' '}
                       by {request.submittedBy?.name || 'N/A'}
                     </p>
+                    {request.updatedAt && (
+                      <p className="text-sm text-muted-foreground">
+                        Last Updated: {format(parseISO(request.updatedAt), 'PPP')}
+                      </p>
+                    )}
                     {request.hrrpReviewedBy && (
                       <p className="text-sm text-muted-foreground">
                         HRRP Reviewed by: {request.hrrpReviewedBy.name || 'N/A'} (
@@ -1364,7 +1371,7 @@ export default function LwopPage() {
                         View Details
                       </Button>
                       {/* HRRP Review Actions */}
-                      {role === ROLES.HRRP && request.status === 'Pending HRRP Review' && (
+                      {isHrrpLike(role) && request.status === 'Pending HRRP Review' && (
                         <>
                           <Button
                             size="sm"
@@ -1444,7 +1451,7 @@ export default function LwopPage() {
                         </>
                       )}
 
-                      {role === ROLES.HRO &&
+                      {isHroLike(role) &&
                         (request.status ===
                           'Rejected by HHRMD - Awaiting HRO Correction' ||
                           request.status ===
@@ -1637,6 +1644,16 @@ export default function LwopPage() {
                         by {selectedRequest.submittedBy?.name || 'N/A'}
                       </p>
                     </div>
+                    {selectedRequest.updatedAt && (
+                      <div className="grid grid-cols-3 items-center gap-x-4 gap-y-2">
+                        <Label className="text-right font-semibold">
+                          Last Updated:
+                        </Label>
+                        <p className="col-span-2">
+                          {format(parseISO(selectedRequest.updatedAt), 'PPP')}
+                        </p>
+                      </div>
+                    )}
                     {selectedRequest.hrrpReviewedBy && (
                       <div className="grid grid-cols-3 items-center gap-x-4 gap-y-2">
                         <Label className="text-right font-semibold">

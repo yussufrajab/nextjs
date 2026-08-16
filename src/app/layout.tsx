@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
+import { ChunkLoadRecovery } from '@/components/chunk-load-recovery';
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/store/auth-provider';
 
@@ -25,6 +26,7 @@ export default function RootLayout({
       <body className={`${inter.className} antialiased`}>
         <AuthProvider>
           {children}
+          <ChunkLoadRecovery />
           <Toaster />
         </AuthProvider>
       </body>

@@ -302,12 +302,17 @@ describe('employee-status-validation', () => {
       });
     });
 
-    describe('Confirmed Status (No Restrictions)', () => {
+    describe('Confirmed Status', () => {
       const status: EmployeeStatus = 'Confirmed';
 
-      it('should allow all request types', () => {
-        const allTypes: RequestType[] = [
-          'confirmation',
+      it('should reject confirmation request for already-confirmed employee', () => {
+        const result = validateEmployeeStatusForRequest(status, 'confirmation');
+        expect(result.isValid).toBe(false);
+        expect(result.message).toContain('already confirmed');
+      });
+
+      it('should allow all other request types', () => {
+        const allowedTypes: RequestType[] = [
           'lwop',
           'promotion',
           'cadre-change',
@@ -317,7 +322,7 @@ describe('employee-status-validation', () => {
           'termination',
         ];
 
-        allTypes.forEach((type) => {
+        allowedTypes.forEach((type) => {
           const result = validateEmployeeStatusForRequest(status, type);
           expect(result.isValid).toBe(true);
           expect(result.message).toBeUndefined();
@@ -419,15 +424,12 @@ describe('employee-status-validation', () => {
       expect(result).toHaveLength(7);
     });
 
-    it('should return restricted types for Dismissed', () => {
-      const result = getRestrictedRequestTypes('Dismissed');
-      expect(result).toHaveLength(7);
+    it('should return confirmation as restricted for Confirmed status', () => {
+      const result = getRestrictedRequestTypes('Confirmed');
+      expect(result).toContain('confirmation');
+      expect(result).toHaveLength(1);
     });
 
-    it('should return empty array for Confirmed status', () => {
-      const result = getRestrictedRequestTypes('Confirmed');
-      expect(result).toEqual([]);
-    });
 
     it('should return empty array for unknown status', () => {
       const result = getRestrictedRequestTypes('Unknown Status');
@@ -515,16 +517,11 @@ describe('employee-status-validation', () => {
 
       // On LWOP: Can do resignation, retirement, termination
       expect(isRequestTypeAllowed('On LWOP', 'resignation')).toBe(true);
-      expect(isRequestTypeAllowed('On LWOP', 'confirmation')).toBe(false);
-
-      // Retired: Can only do service extension
-      expect(isRequestTypeAllowed('Retired', 'service-extension')).toBe(true);
-      expect(isRequestTypeAllowed('Retired', 'confirmation')).toBe(false);
-
-      // Confirmed: Can do everything
-      expect(isRequestTypeAllowed('Confirmed', 'confirmation')).toBe(true);
+      // Confirmed: Can do everything except re-confirmation
+      expect(isRequestTypeAllowed('Confirmed', 'confirmation')).toBe(false);
       expect(isRequestTypeAllowed('Confirmed', 'promotion')).toBe(true);
       expect(isRequestTypeAllowed('Confirmed', 'retirement')).toBe(true);
+
     });
 
     it('should have consistent restrictions for final statuses', () => {

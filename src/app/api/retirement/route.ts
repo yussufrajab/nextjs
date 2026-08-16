@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { shouldApplyInstitutionFilter } from '@/lib/role-utils';
+import { shouldApplyInstitutionFilter, pembaIslandWhere } from '@/lib/role-utils';
+import { validateEmployeeStatusForRequest } from '@/lib/employee-status-validation';
 import { v4 as uuidv4 } from 'uuid';
 import {
   logRequestSubmission,
@@ -72,6 +73,7 @@ async function GETHandler(req: Request) {
       );
       whereClause.Employee = {
         institutionId: userInstitutionId,
+        ...pembaIslandWhere(userRole),
       };
     } else {
       logger.info(
@@ -123,7 +125,7 @@ async function GETHandler(req: Request) {
             select: { id: true, name: true, username: true },
           },
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { updatedAt: 'desc' },
         skip: (page - 1) * size,
         take: size,
       }),
@@ -191,7 +193,7 @@ async function POSTHandler(req: Request) {
     // SECURITY: Verify employee exists and check institution ownership
     const employee = await db.employee.findUnique({
       where: { id: body.employeeId },
-      select: { id: true, name: true, institutionId: true },
+      select: { id: true, name: true, status: true, institutionId: true },
     });
     if (!employee) {
       return NextResponse.json(
@@ -208,6 +210,21 @@ async function POSTHandler(req: Request) {
           { status: 403 }
         );
       }
+    }
+
+    // Validate employee status for retirement request
+    const statusValidation = validateEmployeeStatusForRequest(
+      employee.status,
+      'retirement'
+    );
+    if (!statusValidation.isValid) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: statusValidation.message,
+        },
+        { status: 403 }
+      );
     }
 
     // Determine initial status based on submitter role
@@ -536,6 +553,8 @@ async function PATCHHandler(req: Request) {
     if (isResubmission) {
       delete updateData.reviewedById;
     }
+
+    updateData.updatedAt = new Date();
 
     const updatedRequest = await db.retirementRequest.update({
       where: { id },

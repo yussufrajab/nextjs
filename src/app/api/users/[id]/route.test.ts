@@ -274,4 +274,29 @@ describe('PUT /api/users/[id] — privilege-escalation alerting (Req 26.2)', () 
     expect(res.status).toBe(200);
     expect(mockLogAuditEvent).not.toHaveBeenCalled();
   });
+
+  it('blocks self-role-change with a CRITICAL POTENTIAL_BREACH and no DB write', async () => {
+    // An admin attempts to change their OWN role. This is the canonical
+    // self-escalation attack — it must be blocked, logged as CRITICAL, and
+    // must NOT reach the DB update.
+    const { PUT } = (await import('./route')) as { PUT: any };
+    const res = await PUT(
+      putRequest('admin-1', { role: 'Admin' }),
+      authedContext({ userId: 'admin-1', role: 'Admin' })
+    );
+    expect(res.status).toBe(403);
+
+    // CRITICAL POTENTIAL_BREACH audit event emitted with the attempt details.
+    expect(mockLogAuditEvent).toHaveBeenCalledTimes(1);
+    const alert = mockLogAuditEvent.mock.calls[0][0];
+    expect(alert.eventType).toBe('POTENTIAL_BREACH');
+    expect(alert.severity).toBe('CRITICAL');
+    expect(alert.wasBlocked).toBe(true);
+    expect(alert.blockReason).toBe('SELF_ROLE_CHANGE_BLOCKED');
+    expect(alert.additionalData.selfRoleChange).toBe(true);
+    expect(alert.additionalData.attemptedNewRole).toBe('Admin');
+
+    // No DB mutation for the blocked attempt.
+    expect(mockDbUserUpdate).not.toHaveBeenCalled();
+  });
 });

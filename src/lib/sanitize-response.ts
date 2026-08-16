@@ -64,7 +64,7 @@ export function maskSessionToken(token: string): string {
 // ---------------------------------------------------------------------------
 
 /** Roles that can see full employee PII */
-const PRIVILEGED_EMPLOYEE_ROLES = ['ADMIN', 'HRO', 'HRRP', 'HHRMD', 'HRMO', 'CSCS', 'DO', 'PO'];
+const PRIVILEGED_EMPLOYEE_ROLES = ['ADMIN', 'HRO', 'HRRP', 'HHRMD', 'HRMO', 'CSCS', 'DO', 'PO', 'HRO_PEMBA', 'HRRP_PEMBA'];
 
 /** Masking functions for sensitive employee fields */
 const EMPLOYEE_FIELD_MASKS: Record<string, (val: string) => string> = {

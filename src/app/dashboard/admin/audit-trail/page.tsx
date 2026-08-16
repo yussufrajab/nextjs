@@ -528,6 +528,7 @@ if (categoryFilter && categoryFilter !== 'all')
                     <SelectItem value="COMPLAINT_SUBMITTED">Complaint Submitted</SelectItem>
                     <SelectItem value="COMPLAINT_UPDATED">Complaint Updated</SelectItem>
                     <SelectItem value="COMPLAINT_RESOLVED">Complaint Resolved</SelectItem>
+                    <SelectItem value="POTENTIAL_BREACH">Potential Breach</SelectItem>
                     <SelectItem value="PASSWORD_CHANGED">Password Changed</SelectItem>
                     <SelectItem value="ADMIN_PASSWORD_RESET">Admin Password Reset</SelectItem>
                     <SelectItem value="ACCOUNT_LOCKED">Account Locked</SelectItem>

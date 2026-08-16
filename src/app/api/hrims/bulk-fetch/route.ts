@@ -5,6 +5,7 @@ import { getHrimsApiConfig } from '@/lib/hrims-config';
 import { hrimsLogger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
 import { withAuth, requireReauth } from '@/lib/api-auth';
+import { deriveIsland } from '@/lib/island-utils';
 
 async function fetchFromHRIMS(
  requestId: string,
@@ -35,7 +36,8 @@ async function fetchFromHRIMS(
 
 async function saveEmployeeFromDetailedData(
  hrimsData: any,
- institutionId: string
+ institutionId: string,
+ institutionName?: string | null
 ) {
  try {
  const personalInfo = hrimsData.personalInfo;
@@ -46,6 +48,18 @@ async function saveEmployeeFromDetailedData(
  hrimsData.salaryInformation?.find((sal: any) => sal.isCurrent) ||
  hrimsData.salaryInformation?.[0];
 
+ // Workplace filter: HRIMS returns all employees appointed under a vote
+ // code, not just those currently working at the institution. Skip
+ // employees whose current workplace doesn't match.
+ const workplace = currentEmployment?.entityName ?? '';
+ if (
+ institutionName &&
+ workplace &&
+ workplace.trim().toLowerCase() !==
+ institutionName.trim().toLowerCase()
+ ) {
+ return null;
+ }
  // Find or create employee
  const existingEmployee = await db.employee.findUnique({
  where: { zanId: personalInfo.zanIdNumber },
@@ -108,6 +122,12 @@ async function saveEmployeeFromDetailedData(
  : null,
  status: personalInfo.isEmployeeConfirmed ? 'Confirmed' : 'On Probation',
  institutionId: institutionId,
+ island: deriveIsland(
+ currentEmployment?.subEntityName,
+ currentEmployment?.entityName,
+ currentEmployment?.subEntityName,
+ institutionName
+ ),
  employeeEntityId: personalInfo.zanIdNumber,
  };
 
@@ -127,7 +147,8 @@ async function saveEmployeeFromDetailedData(
 
 async function saveEmployeeFromListData(
  employeeBasicInfo: any,
- institutionId: string
+ institutionId: string,
+ institutionName?: string | null
 ) {
  try {
  // Skip employees without valid ZanID
@@ -207,6 +228,7 @@ async function saveEmployeeFromListData(
  : 'On Probation',
  institutionId: institutionId,
  employeeEntityId: employeeBasicInfo.zanIdNumber,
+ island: deriveIsland(null, null, null, institutionName),
  };
 
  hrimsLogger.info({
@@ -326,6 +348,7 @@ async function processEmployeeCertificates(
 async function processBulkFetch(
  institutionVoteNumber: string,
  institutionId: string,
+ institutionName: string,
  fetchMode: 'fast' | 'detailed' = 'fast',
  HRIMS_CONFIG: { BASE_URL: string; API_KEY: string; TOKEN: string }
 ) {
@@ -377,7 +400,8 @@ async function processBulkFetch(
  try {
  const employeeId = await saveEmployeeFromListData(
  employeeBasicInfo,
- institutionId
+ institutionId,
+ institutionName
  );
  if (employeeId) {
  totalEmployees++;
@@ -426,7 +450,8 @@ async function processBulkFetch(
  // Save employee to database with detailed info
  const employeeId = await saveEmployeeFromDetailedData(
  detailedResponse.data,
- institutionId
+ institutionId,
+ institutionName
  );
  totalEmployees++;
 
@@ -521,7 +546,7 @@ export const POST = wrapHandler(withAuth(async (req, { auth }) => {
 
  // Note: In a production environment, you would typically use a job queue system
  // like Bull, Agenda, or a background worker service for this kind of operation
- processBulkFetch(institutionVoteNumber, institution.id, 'fast', HRIMS_CONFIG)
+ processBulkFetch(institutionVoteNumber, institution.id, institution.name, 'fast', HRIMS_CONFIG)
  .then((result) => {
  hrimsLogger.info(result, `Bulk fetch completed for ${institution.name}:`);
  })

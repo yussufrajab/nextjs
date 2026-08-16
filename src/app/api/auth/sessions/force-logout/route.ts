@@ -43,4 +43,4 @@ export const POST = wrapHandler(withAuth(async (req: Request, { auth }) => {
       success: true,
       message: 'Session terminated successfully',
     });
-}, { allowedRoles: ['Admin', 'HRO', 'HRRP', 'HRMO', 'HHRMD', 'CSCS', 'PO', 'DO', 'EMPLOYEE'] }), 'auth-force-logout');
+}, { allowedRoles: ['Admin', 'HRO', 'HRRP', 'HRMO', 'HHRMD', 'CSCS', 'PO', 'DO', 'EMPLOYEE', 'HRO_PEMBA', 'HRRP_PEMBA'] }), 'auth-force-logout');

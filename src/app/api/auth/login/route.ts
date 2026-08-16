@@ -5,7 +5,6 @@ import { comparePassword } from '@/lib/password-hash';
 import { logLoginAttempt, getClientIp, logAuditEvent, AuditEventType, AuditEventCategory, AuditSeverity } from '@/lib/audit-logger';
 import { checkPasswordBreached } from '@/lib/hibp';
 import { createNotification } from '@/lib/notifications';
-import { completeLogin } from '@/lib/auth-helpers';
 import { createMfaToken, checkOtpRateLimit, maskEmail } from '@/lib/mfa-utils';
 import { sendMfaEmail } from '@/lib/email';
 import { withRateLimit, checkRateLimitSliding, buildUserRateLimitKey } from '@/lib/rate-limiter';
@@ -417,71 +416,74 @@ export const POST = wrapHandler(withRateLimit(async (request) => {
 
     authLogger.info({ username }, 'Login successful');
 
-    // --- MFA Gate ---
-    // If user has an email address, require MFA verification before creating a session
-    if (user.email) {
-      const rateLimitCheck = await checkOtpRateLimit(currentUser.id);
-      if (!rateLimitCheck.allowed) {
-        const response = NextResponse.json(
-          {
-            success: false,
-            message: `Too many verification requests. Please try again in ${rateLimitCheck.retryAfterSeconds} seconds.`,
-          },
-          { status: 429 }
-        );
-        response.cookies.set(PRE_SESSION_COOKIE_NAME, preSessionToken, preSessionCookieOptions);
-        return response;
-      }
+    // --- MFA Gate — MFA is mandatory for ALL users ---
+    // Every user must complete MFA before login is granted, regardless of
+    // role or email presence. If the user has no email on file, there is
+    // no channel to deliver the OTP / magic link, so login is blocked.
+    const mfaRequired = true;
 
-      const mfaTokenExpiryMinutes = Number(process.env.MFA_TOKEN_EXPIRY_MINUTES) || 10;
-      const { token: otpToken } = await createMfaToken(currentUser.id, 'OTP', user.email, ipAddress, userAgent);
-      const { token: magicLinkToken } = await createMfaToken(currentUser.id, 'MAGIC_LINK', user.email, ipAddress, userAgent);
-
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:9002';
-      const magicLinkUrl = `${appUrl}/mfa/magic-link-confirm?token=${magicLinkToken}`;
-
-      const emailResult = await sendMfaEmail(user.email, otpToken, magicLinkUrl, user.name, mfaTokenExpiryMinutes);
-
-      if (!emailResult.success) {
-        authLogger.error({ err: emailResult.error }, 'Failed to send MFA email');
-        const response = NextResponse.json(
-          { success: false, message: 'Failed to send verification email. Please try again.' },
-          { status: 500 }
-        );
-        response.cookies.set(PRE_SESSION_COOKIE_NAME, preSessionToken, preSessionCookieOptions);
-        return response;
-      }
-
-      const mfaResponse = NextResponse.json({
-        success: true,
-        code: 'MFA_REQUIRED',
-        data: {
-          userId: currentUser.id,
-          email: maskEmail(user.email),
+    if (mfaRequired && !user.email) {
+      // No email — cannot deliver MFA, block the login.
+      authLogger.warn(
+        { username, role: user.role },
+        'MFA required but no email on file — login blocked'
+      );
+      const response = NextResponse.json(
+        {
+          success: false,
+          message: 'Multi-factor authentication is required, but no email address is on file. Please contact an administrator to add an email to your account.',
+          errorCode: 'MFA_REQUIRED_NO_EMAIL',
         },
-        message: 'MFA verification required',
-      });
-      // Preserve pre-session cookie through MFA flow
-      mfaResponse.cookies.set(PRE_SESSION_COOKIE_NAME, preSessionToken, preSessionCookieOptions);
-      return mfaResponse;
+        { status: 403 }
+      );
+      response.cookies.set(PRE_SESSION_COOKIE_NAME, preSessionToken, preSessionCookieOptions);
+      return response;
     }
 
-    // No email on file — skip MFA and complete login directly
-    authLogger.info({ username }, 'No email on file, skipping MFA');
+    // MFA is required — send OTP + magic link
+    const rateLimitCheck = await checkOtpRateLimit(currentUser.id);
+    if (!rateLimitCheck.allowed) {
+      const response = NextResponse.json(
+        {
+          success: false,
+          message: `Too many verification requests. Please try again in ${rateLimitCheck.retryAfterSeconds} seconds.`,
+        },
+        { status: 429 }
+      );
+      response.cookies.set(PRE_SESSION_COOKIE_NAME, preSessionToken, preSessionCookieOptions);
+      return response;
+    }
 
-    // Read pre-session token for session fixation protection
-    const cookiePreSessionToken = (request as any).cookies.get(PRE_SESSION_COOKIE_NAME)?.value || null;
+    const mfaTokenExpiryMinutes = Number(process.env.MFA_TOKEN_EXPIRY_MINUTES) || 10;
+    const { token: otpToken } = await createMfaToken(currentUser.id, 'OTP', user.email!, ipAddress, userAgent);
+    const { token: magicLinkToken } = await createMfaToken(currentUser.id, 'MAGIC_LINK', user.email!, ipAddress, userAgent);
 
-    return completeLogin({
-      user: {
-        ...currentUser,
-        name: user.name,
-        Institution: user.Institution,
-        Employee: user.Employee,
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:9002';
+    const magicLinkUrl = `${appUrl}/mfa/magic-link-confirm?token=${magicLinkToken}`;
+
+    const emailResult = await sendMfaEmail(user.email!, otpToken, magicLinkUrl, user.name, mfaTokenExpiryMinutes);
+
+    if (!emailResult.success) {
+      authLogger.error({ err: emailResult.error }, 'Failed to send MFA email');
+      const response = NextResponse.json(
+        { success: false, message: 'Failed to send verification email. Please try again.' },
+        { status: 500 }
+      );
+      response.cookies.set(PRE_SESSION_COOKIE_NAME, preSessionToken, preSessionCookieOptions);
+      return response;
+    }
+
+    const mfaResponse = NextResponse.json({
+      success: true,
+      code: 'MFA_REQUIRED',
+      data: {
+        userId: currentUser.id,
+        email: maskEmail(user.email!),
       },
-      ipAddress,
-      userAgent,
-      deviceInfo,
-      preSessionToken: cookiePreSessionToken,
+      message: 'MFA verification required',
     });
+    // Preserve pre-session cookie through MFA flow
+    mfaResponse.cookies.set(PRE_SESSION_COOKIE_NAME, preSessionToken, preSessionCookieOptions);
+    return mfaResponse;
 }, 'auth'), 'auth-login');
+

@@ -261,3 +261,68 @@ describe('checkFileAccess — unknown role', () => {
     expect(result.reason).toBe('denied_unknown_role');
   });
 });
+
+describe('checkFileAccess — Pemba-scoped roles (HRO_PEMBA / HRRP_PEMBA)', () => {
+  // Regression: HRO_PEMBA / HRRP_PEMBA behave as institution-scoped HRO/HRRP
+  // for file access. Before the fix they fell through to denied_unknown_role
+  // because the branch only checked role === 'HRO' / 'HRRP'.
+
+  it('HRO_PEMBA same institution → allow employee-documents (institution_match)', async () => {
+    employeeFindUnique.mockResolvedValueOnce({ institutionId: 'inst-A' });
+    const { checkFileAccess } = await import('./file-access');
+    const result = await checkFileAccess(auth({ role: 'HRO_PEMBA' }), empDocKey('emp-1'));
+    expect(result.allowed).toBe(true);
+    expect(result.reason).toBe('institution_match');
+  });
+
+  it('HRO_PEMBA different institution → denied_institution_mismatch', async () => {
+    employeeFindUnique.mockResolvedValueOnce({ institutionId: 'inst-B' });
+    const { checkFileAccess } = await import('./file-access');
+    const result = await checkFileAccess(auth({ role: 'HRO_PEMBA' }), empDocKey('emp-1'));
+    expect(result.allowed).toBe(false);
+    expect(result.reason).toBe('denied_institution_mismatch');
+  });
+
+  it('HRRP_PEMBA same institution → allow employee-documents (institution_match)', async () => {
+    employeeFindUnique.mockResolvedValueOnce({ institutionId: 'inst-A' });
+    const { checkFileAccess } = await import('./file-access');
+    const result = await checkFileAccess(auth({ role: 'HRRP_PEMBA' }), empDocKey('emp-1'));
+    expect(result.allowed).toBe(true);
+    expect(result.reason).toBe('institution_match');
+  });
+
+  it('HRO_PEMBA same-institution uploader → allow generic upload', async () => {
+    fileHashFindUnique.mockResolvedValueOnce({ uploadedBy: 'u-other' });
+    userFindUnique.mockResolvedValueOnce({ institutionId: 'inst-A' });
+    const { checkFileAccess } = await import('./file-access');
+    const result = await checkFileAccess(auth({ role: 'HRO_PEMBA' }), 'retirement/1700000000_abc.pdf');
+    expect(result.allowed).toBe(true);
+    expect(result.reason).toBe('institution_match');
+  });
+
+  it('HRO_PEMBA different-institution uploader → denied_institution_mismatch', async () => {
+    fileHashFindUnique.mockResolvedValueOnce({ uploadedBy: 'u-other' });
+    userFindUnique.mockResolvedValueOnce({ institutionId: 'inst-B' });
+    const { checkFileAccess } = await import('./file-access');
+    const result = await checkFileAccess(auth({ role: 'HRO_PEMBA' }), 'retirement/1700000000_abc.pdf');
+    expect(result.allowed).toBe(false);
+    expect(result.reason).toBe('denied_institution_mismatch');
+  });
+
+  it('HRRP_PEMBA same-institution uploader → allow generic upload', async () => {
+    fileHashFindUnique.mockResolvedValueOnce({ uploadedBy: 'u-other' });
+    userFindUnique.mockResolvedValueOnce({ institutionId: 'inst-A' });
+    const { checkFileAccess } = await import('./file-access');
+    const result = await checkFileAccess(auth({ role: 'HRRP_PEMBA' }), 'retirement/1700000000_abc.pdf');
+    expect(result.allowed).toBe(true);
+    expect(result.reason).toBe('institution_match');
+  });
+
+  it('HRO_PEMBA with no FileHash row → denied_no_owner (fail-closed)', async () => {
+    fileHashFindUnique.mockResolvedValueOnce(null);
+    const { checkFileAccess } = await import('./file-access');
+    const result = await checkFileAccess(auth({ role: 'HRO_PEMBA' }), 'retirement/1700000000_abc.pdf');
+    expect(result.allowed).toBe(false);
+    expect(result.reason).toBe('denied_no_owner');
+  });
+});

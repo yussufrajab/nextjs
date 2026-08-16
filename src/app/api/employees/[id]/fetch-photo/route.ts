@@ -5,6 +5,7 @@ import { validateFileUpload } from '@/lib/file-validation';
 import { getHrimsApiConfig } from '@/lib/hrims-config';
 import { logger } from '@/lib/logger';
 import { verifyAuth } from '@/lib/api-auth';
+import { isHroLike, isHrrpLike, isPembaScopedRole, isPembaEmployee } from '@/lib/role-utils';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limiter';
 import { wrapHandler } from '@/lib/error-handler';
 
@@ -30,14 +31,18 @@ export const POST = wrapHandler(async (
   const roleUpper = auth.role.toUpperCase();
 
   if (['ADMIN', 'HRMO', 'HHRMD', 'CSCS', 'DO', 'PO'].includes(roleUpper)) {
-    // Central/commission roles — unrestricted access
-  } else if (roleUpper === 'HRO' || roleUpper === 'HRRP') {
-    // Institution-scoped access: employee must belong to the user's institution
+  } else if (isHroLike(auth.role) || isHrrpLike(auth.role)) {
+    // Institution-scoped access; pemba roles further restricted to Pemba dept.
     const empCheck = await prisma.employee.findUnique({
       where: { id: employeeId },
-      select: { institutionId: true },
+      select: { institutionId: true, department: true, island: true },
     });
-    if (!empCheck || empCheck.institutionId !== auth.institutionId) {
+    if (
+      !empCheck ||
+      empCheck.institutionId !== auth.institutionId ||
+      (isPembaScopedRole(auth.role) &&
+        !isPembaEmployee(empCheck))
+    ) {
       return NextResponse.json(
         { success: false, message: 'Access denied' },
         { status: 403 }

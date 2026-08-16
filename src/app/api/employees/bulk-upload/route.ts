@@ -7,6 +7,8 @@ import { withAuth, AuthContext } from '@/lib/api-auth';
 import { withRateLimit } from '@/lib/rate-limiter';
 import { logger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
+import { isHroLike, isPembaScopedRole } from '@/lib/role-utils';
+import { deriveIsland } from '@/lib/island-utils';
 import {
   getInstitutionOrgFieldValues,
   validateInstitutionOrgFields,
@@ -124,7 +126,7 @@ export const POST = wrapHandler(withRateLimit(withAuth(async (
   const username = auth.username;
 
   // Security check: Must be authenticated HRO or ADMIN
-  if (!['HRO', 'ADMIN'].includes(role)) {
+  if (!isHroLike(role) && role !== 'Admin') {
     return NextResponse.json(
       { success: false, error: 'Unauthorized' },
       { status: 403 }
@@ -614,7 +616,7 @@ export const POST = wrapHandler(withRateLimit(withAuth(async (
       invalidEmployees: invalidEmployees,
     },
   });
-}, { allowedRoles: ['HRO', 'ADMIN'] }), 'upload'), 'employees-bulk-upload');
+}, { allowedRoles: ['HRO', 'ADMIN', 'HRO_PEMBA'] }), 'upload'), 'employees-bulk-upload');
 
 // Endpoint to confirm and create employees after validation
 export const PUT = wrapHandler(withRateLimit(withAuth(async (
@@ -628,7 +630,7 @@ export const PUT = wrapHandler(withRateLimit(withAuth(async (
   const username = auth.username;
 
   // Security check: Must be authenticated HRO or ADMIN
-  if (!['HRO', 'ADMIN'].includes(role)) {
+  if (!isHroLike(role) && role !== 'Admin') {
     return NextResponse.json(
       { success: false, error: 'Unauthorized' },
       { status: 403 }
@@ -662,6 +664,25 @@ export const PUT = wrapHandler(withRateLimit(withAuth(async (
       { success: false, error: 'No valid employees to create' },
       { status: 400 }
     );
+  }
+
+  // Pemba-scoped officers (HRO_PEMBA) can only create employees whose work
+  // location is Pemba — mirrors the read-side scope. Uses deriveIsland on
+  // the input fields (the rows don't exist yet, so no island column).
+  if (isPembaScopedRole(role)) {
+    const nonPemba = employees.filter(
+      (emp: { department?: string | null; currentWorkplace?: string | null; currentReportingOffice?: string | null }) =>
+        deriveIsland(emp.department, emp.currentWorkplace, emp.currentReportingOffice) !== 'PEMBA'
+    );
+    if (nonPemba.length > 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Pemba-scoped officers can only add employees posted in Pemba. ${nonPemba.length} row(s) are not in a Pemba work location.`,
+        },
+        { status: 400 }
+      );
+    }
   }
 
   // Req 7.7: batchId links this create batch to the UPLOADED audit event
@@ -717,6 +738,7 @@ export const PUT = wrapHandler(withRateLimit(withAuth(async (
             status: emp.status || 'On Probation',
             institutionId: institutionId,
             dataSource: 'MANUAL_ENTRY',
+            island: deriveIsland(emp.department, emp.currentWorkplace, emp.currentReportingOffice),
           },
         });
 
@@ -780,4 +802,4 @@ export const PUT = wrapHandler(withRateLimit(withAuth(async (
       failedEmployees: [],
     },
   });
-}, { allowedRoles: ['HRO', 'ADMIN'] }), 'upload'), 'employees-bulk-upload');
+}, { allowedRoles: ['HRO', 'ADMIN', 'HRO_PEMBA'] }), 'upload'), 'employees-bulk-upload');
