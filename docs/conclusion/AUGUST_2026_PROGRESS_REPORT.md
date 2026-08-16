@@ -11,12 +11,11 @@
 
 ## Executive Summary
 
-This month's work focused on four major areas:
-
-1. **Security hardening** — a new automatic IP-banning system to block brute-force login attacks, plus comprehensive security auditing and roadmapping.
+1. **Security hardening** — a new automatic IP-banning system to block brute-force login attacks, comprehensive security auditing and roadmapping, and mandatory MFA enforcement for all users.
 2. **Data quality and cleanup** — a major investigation and fix for inflated employee counts caused by how the HRIMS government database returns data, followed by a full database cleanup across all 76 government institutions.
 3. **Pemba/Unguja island scoping** — analysis of employee distribution across Zanzibar's two islands, and new role-based access controls so Pemba-based officers only see Pemba employees.
 4. **User Acceptance Testing** — a comprehensive test document covering 190 test cases across all system modules, with 189 passing and 1 failing.
+5. **Mandatory MFA enforcement** — removed the conditional email-based MFA bypass so every user must complete MFA, regardless of role. Investigated and fixed an email-clearing bug that had silently removed MFA from 8 user accounts.
 
 ---
 
@@ -620,6 +619,124 @@ On August 15, multiple production configuration files were updated:
 - Ecosystem configuration (`ecosystem.config.js`) — PM2 process manager settings
 - Production environment variables (`.env.production`)
 
+
+## 7. Mandatory MFA for All Users (August 16)
+
+### What was the problem?
+
+The system had a two-tier MFA policy:
+
+1. **Role-based (mandatory):** Only Admin, CSCS, and HHRMD roles were always required to complete MFA. If a user in one of these roles had no email on file, login was blocked entirely with a `403 MFA_REQUIRED_NO_EMAIL` error.
+2. **Email-based (conditional):** All other roles (HRMO, DO, PO, HRO, HRO_PEMBA, HRRP, HRRP_PEMBA) only got MFA if they happened to have an email address on file. If they had no email, they logged in directly with just a password — **no MFA at all**.
+
+This meant that 7 of the 11 user roles could bypass MFA entirely simply by not having an email address. An attacker who compromised one of these accounts would face only a single password barrier, not the multi-factor protection required for privileged roles.
+
+### What was changed
+
+On August 16, the conditional email-based MFA bypass was removed. The login route (`src/app/api/auth/login/route.ts`) now unconditionally requires MFA for every user:
+
+| Before | After |
+|---|---|
+| `const mfaRequired = mfaRequiredByRole \|\| !!user.email;` | `const mfaRequired = true;` |
+| Non-privileged roles without email → login completes directly (no MFA) | Non-privileged roles without email → login blocked with `MFA_REQUIRED_NO_EMAIL` |
+| Dead code path: `completeLogin()` for no-MFA logins | Removed — unreachable |
+| `MFA_REQUIRED_ROLES` import in login route | Removed — no longer read |
+| `completeLogin` import in login route | Removed — no longer used |
+
+### Impact on each role
+
+| Role | Before | After |
+|---|---|---|
+| Admin | MFA required (no change) | MFA required (no change) |
+| CSCS | MFA required (no change) | MFA required (no change) |
+| HHRMD | MFA required (no change) | MFA required (no change) |
+| HRMO | MFA only if email on file | **MFA always required.** No email = login blocked. |
+| DO | MFA only if email on file | **MFA always required.** No email = login blocked. |
+| PO | MFA only if email on file | **MFA always required.** No email = login blocked. |
+| HRO | MFA only if email on file | **MFA always required.** No email = login blocked. |
+| HRO_PEMBA | MFA only if email on file | **MFA always required.** No email = login blocked. |
+| HRRP | MFA only if email on file | **MFA always required.** No email = login blocked. |
+| HRRP_PEMBA | MFA only if email on file | **MFA always required.** No email = login blocked. |
+| EMPLOYEE | MFA required (employee-login route already enforced this) | No change |
+
+### Investigation: Why asultan and bimkubwa lost MFA
+
+During testing, it was discovered that 6 UAT users (asultan, bimkubwa, mabdi, noah, mussi, mishak) had no email in the database despite having previously used MFA. An investigation was conducted:
+
+**Evidence from the MfaToken table:**
+
+| User | Email used for MFA | Verified MFA tokens | Last MFA verified | Last login (no MFA) |
+|---|---|---|---|---|
+| asultan | helpdesk@zanajira.go.tz | 16 | Aug 14, 10:52 | Aug 16, 06:02 |
+| bimkubwa | maombismz@zanajira.go.tz | 46 | Aug 14, 14:33 | Aug 16, 06:01 |
+| mabdi | aminanne@zanajira.go.tz | 34 | Aug 14, 07:45 | Aug 16, 05:42 |
+| noah | aminatano@zanajira.go.tz | 24 | Aug 14, 07:21 | Aug 15, 14:30 |
+| mussi | maimuna.ussi@zanajira.go.tz | 2 | Aug 14, 14:29 | Aug 15, 14:30 |
+| mishak | mishak@mock.local | 2 | Aug 14, 14:29 | Aug 15, 14:30 |
+
+All 6 users had emails and completed MFA on August 14. By August 15, their `User.email` column was empty. They logged in on Aug 15 and Aug 16 without MFA (no new MFA tokens created).
+
+**Root cause:** The user update route (`src/app/api/users/[id]/route.ts`) accepted an empty string for the email field via `.or(z.literal(''))` in its Zod schema. When an admin opened the user edit form, the frontend populated the email field with `user.email || ''` (empty string if no email). When the admin saved (even just changing the role), the empty string was sent to the server and silently cleared the email from the database.
+
+### Fixes applied
+
+1. **Mandatory MFA enforcement** — The login route now requires MFA for all users regardless of role or email presence. The dead `completeLogin()` direct-login path was removed.
+
+2. **Email clearing prevention** — Removed `.or(z.literal(''))` from the email field in the user update schema (`profileUpdateSchema`). Empty strings are now rejected with a validation error. An email can only be changed to a valid email address, never cleared to empty.
+
+3. **Email restoration** — Restored emails for all 8 affected users from their MfaToken records (the last email each user used for MFA):
+
+   | User | Restored Email |
+   |---|---|
+   | asultan | helpdesk@zanajira.go.tz |
+   | bimkubwa | maombismz@zanajira.go.tz |
+   | mabdi | aminanne@zanajira.go.tz |
+   | noah | aminatano@zanajira.go.tz |
+   | mussi | maimuna.ussi@zanajira.go.tz |
+   | mishak | mishak@mock.local |
+   | kmnyonge | kmnyonge@mock.local |
+   | abdillahomarnajim | aminanne@zanajira.go.tz |
+
+### Testing
+
+The MFA role test file was updated with new test cases:
+
+| Test | Before | After |
+|---|---|---|
+| HRO with no email | Asserted `completeLogin` called (no MFA) | Asserts 403 `MFA_REQUIRED_NO_EMAIL` |
+| HRRP_PEMBA with no email | Did not exist | New test: asserts 403 `MFA_REQUIRED_NO_EMAIL` |
+| HRO with email | Asserted `MFA_REQUIRED` | Same (still `MFA_REQUIRED`) |
+| DO with email | Did not exist | New test: asserts `MFA_REQUIRED` |
+| PO with email | Did not exist | New test: asserts `MFA_REQUIRED` |
+
+**Results:** 24/24 auth tests pass, 44/44 all auth tests pass, 77/77 proxy + route-permissions tests pass.
+
+### Current MFA status across all 206 users
+
+| Role | Total | With Email (MFA ready) | Without Email (blocked) |
+|---|---|---|---|
+| Admin | 3 | 3 | 0 |
+| CSCS | 1 | 1 | 0 |
+| HHRMD | 3 | 3 | 0 |
+| HRMO | 2 | 1 | 1 |
+| DO | 2 | 2 | 0 |
+| PO | 1 | 1 | 0 |
+| HRO | 22 | 22 | 0 |
+| HRO_PEMBA | 2 | 2 | 0 |
+| HRRP | 107 | 105 | 2 |
+| HRRP_PEMBA | 2 | 2 | 0 |
+| EMPLOYEE | 61 | 19 | 42 |
+| **Total** | **206** | **161** | **45** |
+
+**3 staff users still blocked** (need email added by admin):
+
+| Username | Role | Name | Institution |
+|---|---|---|---|
+| fautest | HRMO | Fauzia Majaribo | Tume ya Utumishi Serikalini |
+| fhali | HRRP | Farida Haji Ali | Ofisi ya Msajili wa Hazina |
+| mahfoudhhassan | HRRP | Mahfoudh Mohammed Hassan | Wizara ya Kilimo Umwagiliaji Maliasili na Mifugo |
+
+
 ---
 
 ## Summary of Artifacts Produced This Month
@@ -646,19 +763,20 @@ On August 15, multiple production configuration files were updated:
 | Refetch Scripts | Aug 8-9 | Data quality scripts for NULL workplace employees |
 | All-Institution Cleanup Script | Aug 11 | Automated cleanup across 76 institutions |
 | CHANGELOG.md | Aug 8 | Updated system changelog (382 commits documented) |
+| Mandatory MFA Enforcement | Aug 16 | Login route changed to require MFA for all users |
+| Email Clearing Prevention Fix | Aug 16 | User update schema fix preventing empty-string email clearing |
+| User Accounts Reference | Aug 16 | Complete reference of all 206 users with roles, emails, institutions, MFA status |
 
 ---
 
 ## What's Next (Recommended Priorities)
-
-Based on the security roadmap and UAT results:
-
-1. **Fix test 7.2** — Add employee status validation to the resignation route (the only failing UAT test).
-2. **Audit log tamper protection** — The highest-priority security gap: add hash chaining and database triggers so audit records cannot be modified or deleted without detection.
-3. **PII encryption at rest** — Currently, sensitive employee data (ZanID, ZSSF number, phone, address) is stored in plain text. The encryption code exists but is not wired in.
-4. **Complete Pemba role implementation** — The plan is written; implementation across 16 API routes and ~13 frontend pages remains.
-5. **HRIMS transaction integrity** — Wrap multi-row sync operations in database transactions so a mid-batch failure doesn't leave partial data.
-6. **Data classification** — Add classification levels (Public/Internal/Confidential/Restricted) to employees and complaints, with access controls based on clearance.
+1. **Add emails to 3 blocked staff users** — fautest (HRMO), fhali (HRRP), mahfoudhhassan (HRRP) are blocked from login because they have no email. An admin must add government email addresses to these accounts.
+2. **Fix test 7.2** — Add employee status validation to the resignation route (the only failing UAT test).
+3. **Audit log tamper protection** — The highest-priority security gap: add hash chaining and database triggers so audit records cannot be modified or deleted without detection.
+4. **PII encryption at rest** — Currently, sensitive employee data (ZanID, ZSSF number, phone, address) is stored in plain text. The encryption code exists but is not wired in.
+5. **Complete Pemba role implementation** — The plan is written; implementation across 16 API routes and ~13 frontend pages remains.
+6. **HRIMS transaction integrity** — Wrap multi-row sync operations in database transactions so a mid-batch failure doesn't leave partial data.
+7. **Data classification** — Add classification levels (Public/Internal/Confidential/Restricted) to employees and complaints, with access controls based on clearance.
 
 ---
 
