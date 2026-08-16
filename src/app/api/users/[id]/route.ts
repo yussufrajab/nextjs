@@ -23,11 +23,13 @@ import {
 const profileUpdateSchema = z.object({
   name: z.string().min(2).optional(),
   username: z.string().min(3).optional(),
+  // SECURITY: email must be a valid email address. Empty string is rejected
+  // to prevent accidental clearing of the MFA channel during profile updates.
+  // To remove an email, an admin must use a dedicated endpoint (not exposed).
   email: z
     .string()
     .email({ message: 'Please enter a valid email address.' })
-    .optional()
-    .or(z.literal('')),
+    .optional(),
   phoneNumber: z
     .string()
     .min(10, 'Phone number must be exactly 10 digits.')
