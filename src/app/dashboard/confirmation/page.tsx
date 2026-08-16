@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/use-auth';
 import { ROLES, EMPLOYEES } from '@/lib/constants';
+import { isHroLike, isHrrpLike } from '@/lib/role-utils';
 import { fetchWithCsrf } from '@/lib/fetch-with-csrf';
 import React, { useState, useEffect } from 'react';
 import { WorkflowSteps } from '@/components/shared/workflow-steps';
@@ -290,12 +291,12 @@ export default function ConfirmationPage() {
             role === ROLES.HHRMD ||
             role === ROLES.HRMO ||
             role === ROLES.CSCS ||
-            role === ROLES.HRRP
+            isHrrpLike(role)
           ) {
             // Show all requests for HHRMD/HRMO/CSCS/HRRP including completed ones for tracking
             // HRRP sees only their institution (filtered by backend)
             return true;
-          } else if (role === ROLES.HRO) {
+          } else if (isHroLike(role)) {
             return req.submittedById === user.id;
           }
           return true;
@@ -506,10 +507,10 @@ export default function ConfirmationPage() {
       userRole: role,
       documents: documentsList,
       // HRO submissions go to HRRP review first; HRRP submissions auto-approve
-      status: role === ROLES.HRRP
+      status: isHrrpLike(role)
         ? 'Approved by HRRP - Awaiting Commission Review'
         : 'Pending HRRP Review',
-      reviewStage: role === ROLES.HRRP ? 'hrrp_review' : 'initial',
+      reviewStage: isHrrpLike(role) ? 'hrrp_review' : 'initial',
     };
 
     try {
@@ -624,7 +625,7 @@ export default function ConfirmationPage() {
       return;
 
     let rejectionStatus: string;
-    if (role === ROLES.HRRP) {
+    if (isHrrpLike(role)) {
       rejectionStatus = 'Rejected by HRRP - Awaiting HRO Correction';
     } else {
       // HHRMD or HRMO commission rejection
@@ -638,7 +639,7 @@ export default function ConfirmationPage() {
       decisionDate: new Date().toISOString(),
     };
     // Only set reviewedById for commission rejections, not HRRP
-    if (role !== ROLES.HRRP) {
+    if (!isHrrpLike(role)) {
       payload.reviewedById = user?.id;
     }
     const success = await handleUpdateRequest(
@@ -873,7 +874,7 @@ export default function ConfirmationPage() {
         title="Employee Confirmation"
         description="Manage employee confirmation processes."
       />
-      {role === ROLES.HRO && (
+      {isHroLike(role) && (
         <Card className="mb-6 shadow-lg">
           <CardHeader>
             <CardTitle>Submit Confirmation Request</CardTitle>
@@ -1124,16 +1125,16 @@ export default function ConfirmationPage() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>
-                {role === ROLES.HRO
+                {isHroLike(role)
                   ? 'My Confirmation Requests'
-                  : role === ROLES.HRRP
+                  : isHrrpLike(role)
                     ? 'Review Confirmation Requests'
                     : 'Review Confirmation Requests'}
               </CardTitle>
               <CardDescription>
-                {role === ROLES.HRO
+                {isHroLike(role)
                   ? 'View and manage your submitted confirmation requests.'
-                  : role === ROLES.HRRP
+                  : isHrrpLike(role)
                     ? 'Review HRO-submitted requests and forward approved ones to the Commission.'
                     : 'Review, approve, or reject pending employee confirmation requests.'}
               </CardDescription>
@@ -1198,7 +1199,7 @@ export default function ConfirmationPage() {
                   <p className="text-sm text-muted-foreground">
                     Department: {employeeData?.department || 'N/A'}
                   </p>
-                  {role !== ROLES.HRO && (
+                  {!isHroLike(role) && (
                     <p className="text-sm text-muted-foreground">
                       Institution:{' '}
                       {(employeeData as any)?.Institution?.name ||
@@ -1291,7 +1292,7 @@ export default function ConfirmationPage() {
                       View Details
                     </Button>
                     {/* HRRP Review Actions */}
-                    {role === ROLES.HRRP && request.status === 'Pending HRRP Review' && (
+                    {isHrrpLike(role) && request.status === 'Pending HRRP Review' && (
                       <>
                         <Button
                           size="sm"
@@ -1371,7 +1372,7 @@ export default function ConfirmationPage() {
                       </>
                     )}
                     {/* HRO Correction Actions */}
-                    {role === ROLES.HRO &&
+                    {isHroLike(role) &&
                       (request.status === 'Rejected by HRMO - Awaiting HRO Correction' ||
                        request.status === 'Rejected by HHRMD - Awaiting HRO Correction' ||
                        request.status === 'Rejected by HRRP - Awaiting HRO Correction') && (

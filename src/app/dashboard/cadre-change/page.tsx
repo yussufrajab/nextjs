@@ -16,6 +16,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/hooks/use-auth';
 import { ROLES } from '@/lib/constants';
 import { fetchWithCsrf } from '@/lib/fetch-with-csrf';
+import { isHroLike, isHrrpLike } from '@/lib/role-utils';
 import React, { useState, useEffect, useCallback } from 'react';
 import { WorkflowSteps } from '@/components/shared/workflow-steps';
 import type { WorkflowStep } from '@/components/shared/workflow-steps';
@@ -575,7 +576,7 @@ export default function CadreChangePage() {
 
     // Determine the correct rejection status based on who is rejecting
     let rejectionStatus: string;
-    if (role === ROLES.HRRP) {
+    if (isHrrpLike(role)) {
       rejectionStatus = 'Rejected by HRRP - Awaiting HRO Correction';
     } else {
       rejectionStatus = `Rejected by ${role} - Awaiting HRO Correction`;
@@ -766,7 +767,7 @@ export default function CadreChangePage() {
         title="Change of Cadre"
         description="Process employee cadre changes."
       />
-      {role === ROLES.HRO && (
+      {isHroLike(role) && (
         <Card className="mb-6 shadow-lg">
           <CardHeader>
             <CardTitle>Submit Cadre Change Request</CardTitle>
@@ -1042,7 +1043,7 @@ export default function CadreChangePage() {
         </Card>
       )}
 
-      {role === ROLES.HRO &&
+      {isHroLike(role) &&
         Array.isArray(pendingRequests) &&
         pendingRequests.length > 0 && (
           <Card className="mb-6 shadow-lg">
@@ -1146,7 +1147,7 @@ export default function CadreChangePage() {
                     <p className="text-sm text-muted-foreground">
                       To Cadre: {request.newCadre}
                     </p>
-                    {role !== ROLES.HRO && (
+                    {!isHroLike(role) && (
                       <p className="text-sm text-muted-foreground">
                         Institution:{' '}
                         {(employeeData as any)?.Institution?.name ||
@@ -1220,7 +1221,7 @@ export default function CadreChangePage() {
                       >
                         View Details
                       </Button>
-                      {role === ROLES.HRO &&
+                      {isHroLike(role) &&
                         (request.status ===
                           'Rejected by HRMO - Awaiting HRO Correction' ||
                           request.status ===
@@ -1250,7 +1251,7 @@ export default function CadreChangePage() {
           </Card>
         )}
 
-      {(role === ROLES.HHRMD || role === ROLES.HRMO || role === ROLES.CSCS || role === ROLES.HRRP) && (
+      {(role === ROLES.HHRMD || role === ROLES.HRMO || role === ROLES.CSCS || isHrrpLike(role)) && (
         <Card className="shadow-lg">
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -1356,7 +1357,7 @@ export default function CadreChangePage() {
                     <p className="text-sm text-muted-foreground">
                       To Cadre: {request.newCadre}
                     </p>
-                    {role !== ROLES.HRO && (
+                    {!isHroLike(role) && (
                       <p className="text-sm text-muted-foreground">
                         Institution:{' '}
                         {(employeeData as any)?.Institution?.name ||
@@ -1461,7 +1462,7 @@ export default function CadreChangePage() {
                         </>
                       )}
                       {/* HRRP Review Actions */}
-                      {role === ROLES.HRRP && request.status === 'Pending HRRP Review' && (
+                      {isHrrpLike(role) && request.status === 'Pending HRRP Review' && (
                         <>
                           <Button
                             size="sm"

@@ -21,6 +21,7 @@ import {
 import { useAuth } from '@/hooks/use-auth';
 import { ROLES, EMPLOYEES } from '@/lib/constants';
 import { fetchWithCsrf } from '@/lib/fetch-with-csrf';
+import { isHroLike, isHrrpLike } from '@/lib/role-utils';
 import React, { useState, useEffect, useCallback } from 'react';
 import { WorkflowSteps } from '@/components/shared/workflow-steps';
 import type { WorkflowStep } from '@/components/shared/workflow-steps';
@@ -856,7 +857,7 @@ export default function RetirementPage() {
     if (!currentRequestToAction || !rejectionReasonInput.trim() || !user)
       return;
     let rejectionStatus: string;
-    if (role === ROLES.HRRP) {
+    if (isHrrpLike(role)) {
       rejectionStatus = 'Rejected by HRRP - Awaiting HRO Correction';
     } else {
       rejectionStatus = `Rejected by ${role} - Awaiting HRO Correction`;
@@ -1097,7 +1098,7 @@ export default function RetirementPage() {
         title="Retirement"
         description="Manage employee retirement processes."
       />
-      {role === ROLES.HRO && (
+      {isHroLike(role) && (
         <Card className="mb-6 shadow-lg">
           <CardHeader>
             <CardTitle>Submit Retirement Request</CardTitle>
@@ -1487,7 +1488,7 @@ export default function RetirementPage() {
         </Card>
       )}
 
-      {role === ROLES.HRO && pendingRequests.length > 0 && (
+      {isHroLike(role) && pendingRequests.length > 0 && (
         <Card className="mb-6 shadow-lg">
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -1577,7 +1578,7 @@ export default function RetirementPage() {
                 <p className="text-sm text-muted-foreground">
                   Type: {request.retirementType}
                 </p>
-                {role !== ROLES.HRO && (
+                {!isHroLike(role) && (
                   <p className="text-sm text-muted-foreground">
                     Institution:{' '}
                     {(employeeData as any)?.Institution?.name ||
@@ -1664,7 +1665,7 @@ export default function RetirementPage() {
                   >
                     View Details
                   </Button>
-                  {role === ROLES.HRO &&
+                  {isHroLike(role) &&
                     (request.status ===
                       'Rejected by HRMO - Awaiting HRO Correction' ||
                       request.status ===
@@ -1694,7 +1695,7 @@ export default function RetirementPage() {
         </Card>
       )}
 
-      {(role === ROLES.HHRMD || role === ROLES.HRMO || role === ROLES.CSCS || role === ROLES.HRRP) && (
+      {(role === ROLES.HHRMD || role === ROLES.HRMO || role === ROLES.CSCS || isHrrpLike(role)) && (
         <Card className="shadow-lg">
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -1789,7 +1790,7 @@ export default function RetirementPage() {
                   <p className="text-sm text-muted-foreground">
                     Type: {request.retirementType}
                   </p>
-                  {role !== ROLES.HRO && (
+                  {!isHroLike(role) && (
                     <p className="text-sm text-muted-foreground">
                       Institution:{' '}
                       {(employeeData as any)?.Institution?.name ||
@@ -1901,7 +1902,7 @@ export default function RetirementPage() {
                       </>
                     )}
                     {/* HRRP Review Actions */}
-                    {role === ROLES.HRRP && request.status === 'Pending HRRP Review' && (
+                    {isHrrpLike(role) && request.status === 'Pending HRRP Review' && (
                       <>
                         <Button
                           size="sm"
