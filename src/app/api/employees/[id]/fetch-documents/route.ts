@@ -13,6 +13,7 @@ import {
   HRIMS_EMPTY_CONTENT_ERROR_CODE,
   HRIMS_EMPTY_CONTENT_MESSAGE,
 } from '@/lib/hrims-documents';
+import { recordFileHash } from '@/lib/file-integrity';
 
 // Valid educational certificate types (excluding primary education)
 const VALID_CERTIFICATE_TYPES = [
@@ -200,6 +201,13 @@ async function storeDocumentInMinIO(
 
  // Upload to MinIO
  await uploadFile(buffer, filePath, 'application/pdf');
+
+ // Record the integrity hash so the download/preview routes can verify
+ // the file on read. Without this the routes fail closed with 410 Gone
+ // for sensitive (employee-documents/) keys.
+ await recordFileHash(filePath, buffer, null).catch((err) => {
+ logger.error({ err, objectKey: filePath }, 'Failed to record document integrity hash');
+ });
 
  // Return MinIO URL
  const url = `/api/files/employee-documents/${fileName}`;

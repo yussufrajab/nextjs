@@ -9,6 +9,7 @@
     "build": "next build --webpack",
     "start": "next start -p 9002",
     "worker": "tsx scripts/start-worker.ts",
+    "backfill:hashes": "tsx scripts/backfill-file-hashes.ts",
     "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
     "lint:fix": "eslint . --ext .ts,.tsx,.js,.jsx --fix",
     "typecheck": "tsc --noEmit",

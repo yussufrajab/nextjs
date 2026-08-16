@@ -9,6 +9,7 @@ import { withRateLimit } from '@/lib/rate-limiter';
 import { logFileAction, getClientIp } from '@/lib/audit-logger';
 import { wrapHandler } from '@/lib/error-handler';
 import { isHroLike, isHrrpLike, isPembaScopedRole, isPembaEmployee } from '@/lib/role-utils';
+import { recordFileHash } from '@/lib/file-integrity';
 
 // Valid certificate types
 const VALID_CERTIFICATE_TYPES = [
@@ -147,6 +148,15 @@ export const POST = wrapHandler(withRateLimit(withAuth(async (
 
   // Upload to MinIO
   const uploadResult = await uploadFile(buffer, objectKey, file.type);
+
+  // Record the integrity hash so future reads via /api/files/download and
+  // /api/files/preview can verify the file has not been tampered with.
+  // Certificate object keys are not sensitive-PII-keyed (no employee-documents/
+  // prefix), but recording the hash keeps the integrity guarantee consistent
+  // and lets the download route verify on read.
+  await recordFileHash(uploadResult.objectKey, buffer, auth.userId).catch((err) => {
+    logger.error({ err, objectKey: uploadResult.objectKey }, 'Failed to record certificate file integrity hash');
+  });
 
   // Check if certificate of this type already exists
   const existingCertificate = await prisma.employeeCertificate.findFirst({

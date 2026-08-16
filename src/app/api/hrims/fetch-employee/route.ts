@@ -8,6 +8,7 @@ import { wrapHandler } from '@/lib/error-handler';
 import { withAuth } from '@/lib/api-auth';
 import { logHrimsSync, getClientIp } from '@/lib/audit-logger';
 import { deriveIsland } from '@/lib/island-utils';
+import { recordFileHash } from '@/lib/file-integrity';
 
 interface HRIMSEmployeeResponse {
   success: boolean;
@@ -316,6 +317,13 @@ async function processDocuments(
         await uploadFile(buffer, filePath, 'application/pdf');
         hrimsLogger.info(` Uploaded ${docType.name} to MinIO: ${filePath}`);
 
+        // Record the integrity hash so the download/preview routes can verify
+        // the file on read. Without this the routes fail closed with 410 Gone
+        // for sensitive (employee-documents/) keys.
+        await recordFileHash(filePath, buffer, null).catch((err) => {
+          hrimsLogger.error({ err, objectKey: filePath }, 'Failed to record HRIMS document integrity hash');
+        });
+
         // Update employee record with MinIO URL
         const minioUrl = `/api/files/employee-documents/${fileName}`;
         await db.employee.update({
@@ -422,6 +430,13 @@ async function processPhoto(
 
     await uploadFile(photoBuffer, filePath, mimeType);
     hrimsLogger.info(` Photo uploaded to MinIO: ${filePath}`);
+
+    // Record the integrity hash so the download/preview routes can verify
+    // the photo on read. Without this the routes fail closed with 410 Gone
+    // for sensitive (employee-photos/) keys.
+    await recordFileHash(filePath, photoBuffer, null).catch((err) => {
+      hrimsLogger.error({ err, objectKey: filePath }, 'Failed to record HRIMS photo integrity hash');
+    });
 
     // Store MinIO URL in database
     const minioUrl = `/api/files/employee-photos/${fileName}`;

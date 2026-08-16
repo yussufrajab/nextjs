@@ -6,6 +6,7 @@ import { hrimsLogger } from '@/lib/logger';
 import { verifyAuth } from '@/lib/api-auth';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limiter';
 import { wrapHandler } from '@/lib/error-handler';
+import { recordFileHash } from '@/lib/file-integrity';
 
 // Configure route for long-running operations
 export const maxDuration = 300; // 5 minutes (increase if needed)
@@ -305,6 +306,13 @@ export const POST = wrapHandler(async (request: NextRequest) => {
             try {
               await uploadFile(photoBuffer, filePath, mimeType);
               hrimsLogger.info(` Photo uploaded to MinIO: ${filePath}`);
+
+              // Record the integrity hash so the download/preview routes can
+              // verify the photo on read. Without this the routes fail closed
+              // with 410 Gone for sensitive (employee-photos/) keys.
+              await recordFileHash(filePath, photoBuffer, null).catch((err) => {
+                hrimsLogger.error({ err, objectKey: filePath }, 'Failed to record HRIMS photo integrity hash');
+              });
             } catch (uploadError) {
               hrimsLogger.error(
                 { err: uploadError },

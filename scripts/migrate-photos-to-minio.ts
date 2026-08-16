@@ -16,6 +16,7 @@
 
 import { PrismaClient } from '@prisma/client';
 import { uploadFile } from '../src/lib/minio';
+import { recordFileHash } from '../src/lib/file-integrity';
 import { writeFileSync } from 'fs';
 import { mkdir } from 'fs/promises';
 
@@ -178,6 +179,10 @@ async function uploadPhotoToMinIO(
   for (let attempt = 1; attempt <= retryAttempts; attempt++) {
     try {
       await uploadFile(photoBuffer, filePath, mimeType);
+
+      // Record integrity hash so download/preview routes can verify the
+      // photo. Without this the routes fail closed with 410 Gone.
+      await recordFileHash(filePath, photoBuffer, null).catch(() => {});
 
       // Return the URL format that will be used to retrieve the photo
       return `/api/files/employee-photos/${fileName}`;

@@ -8,6 +8,7 @@ import { withRateLimit } from '@/lib/rate-limiter';
 import { logFileAction, getClientIp } from '@/lib/audit-logger';
 import { wrapHandler } from '@/lib/error-handler';
 import { isHroLike, isHrrpLike, isPembaScopedRole, isPembaEmployee } from '@/lib/role-utils';
+import { recordFileHash } from '@/lib/file-integrity';
 
 // Document type mapping to database fields
 const DOCUMENT_FIELD_MAPPING = {
@@ -116,6 +117,14 @@ export const POST = wrapHandler(withRateLimit(withAuth(async (
 
   // Upload to MinIO
   const uploadResult = await uploadFile(buffer, objectKey, file.type);
+
+  // Record the integrity hash so future reads via /api/files/download and
+  // /api/files/preview can verify the file has not been tampered with.
+  // Without this row the download/preview routes fail closed with 410 Gone
+  // for sensitive (employee-documents/) object keys.
+  await recordFileHash(uploadResult.objectKey, buffer, auth.userId).catch((err) => {
+    logger.error({ err, objectKey: uploadResult.objectKey }, 'Failed to record file integrity hash');
+  });
 
   // Update employee record with document URL
   const fieldName =
