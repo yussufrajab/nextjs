@@ -13,7 +13,7 @@
 
 1. **Security hardening** — a new automatic IP-banning system to block brute-force login attacks, comprehensive security auditing and roadmapping, and mandatory MFA enforcement for all users.
 2. **Data quality and cleanup** — a major investigation and fix for inflated employee counts caused by how the HRIMS government database returns data, followed by a full database cleanup across all 76 government institutions.
-3. **Pemba/Unguja island scoping** — analysis of employee distribution across Zanzibar's two islands, and new role-based access controls so Pemba-based officers only see Pemba employees.
+3. **Pemba/Unguja island scoping** — analysis of employee distribution across Zanzibar's two islands, new role-based access controls so Pemba-based officers only see Pemba employees, and **complete frontend integration** across all 13 dashboard pages (finished August 16).
 4. **User Acceptance Testing** — a comprehensive test document covering 190 test cases across all system modules, with 189 passing and 1 failing.
 5. **Mandatory MFA enforcement** — removed the conditional email-based MFA bypass so every user must complete MFA, regardless of role. Investigated and fixed an email-clearing bug that had silently removed MFA from 8 user accounts.
 
@@ -739,6 +739,62 @@ The MFA role test file was updated with new test cases:
 
 ---
 
+## 8. Pemba Role Frontend Completion (August 16)
+
+### What was the problem?
+
+The Pemba-scoped roles (`HRO_PEMBA`, `HRRP_PEMBA`) were fully implemented on the backend — all 16 API routes, the database schema (`island` column), route permissions, navigation, and the proxy were all updated. However, 4 of the 13 frontend dashboard pages still used exact-string role checks (`role === ROLES.HRO`, `role === ROLES.HRRP`) instead of the predicate-based checks (`isHroLike(role)`, `isHrrpLike(role)`).
+
+This meant that if a user with `HRO_PEMBA` or `HRRP_PEMBA` logged in and visited these pages, they would see a broken UI:
+- The "Submit Request" form would not appear (it checked `role === ROLES.HRO`, which doesn't match `HRO_PEMBA`)
+- The HRRP review buttons would not appear for `HRRP_PEMBA` users
+- Labels would show "Review Requests" instead of "My Requests" (wrong context for the submitting officer)
+- The resubmit button for rejected requests would not appear
+
+The backend correctly handled these roles — the API would accept submissions and reviews — but the frontend never showed the buttons to trigger them.
+
+### What was changed
+
+All 4 remaining pages were converted from exact-string checks to predicate-based checks:
+
+| Page | Replacements | Key sites converted |
+|---|---|---|
+| `confirmation/page.tsx` | 14 | Submit form visibility, HRRP review buttons, list labels ("My Requests" vs "Review Requests"), rejection status routing, resubmit button, institution display |
+| `promotion/page.tsx` | 11 | Submit form, client-side request filtering, status/reviewStage derivation, rejection branch, HRRP review actions, list labels |
+| `cadre-change/page.tsx` | 8 | Submit form, rejection status, review list visibility, HRRP review actions, institution display, resubmit button |
+| `retirement/page.tsx` | 8 | Submit form, rejection status, HRRP review actions, review list, institution display, resubmit button |
+
+Each page received the import `import { isHroLike, isHrrpLike } from '@/lib/role-utils';` and every occurrence of `role === ROLES.HRO` was replaced with `isHroLike(role)` and every `role === ROLES.HRRP` with `isHrrpLike(role)`. Negations (`role !== ROLES.HRO`) became `!isHroLike(role)`.
+
+A missing `fetchWithCsrf` import in cadre-change (accidentally removed during conversion) was also fixed.
+
+### Pemba implementation — now 100% complete
+
+| Area | Files | Status |
+|---|---|---|
+| Predicates | `role-utils.ts` | Done (Aug 15) |
+| Types & constants | `types.ts`, `constants.ts` | Done (Aug 15) |
+| Database schema | `island` column + migration + backfill | Done (Aug 9) |
+ | API data scope (16 routes) | `pembaIslandWhere()` in all list/metrics/reports handlers | Done (Aug 15) |
+| API allowedRoles | All `withAuth` arrays include `HRO_PEMBA`/`HRRP_PEMBA` | Done (Aug 15) |
+| API exact-string guards (S1-S10) | IDOR checks, PII sanitization, resubmission guards, HRRP attribution | Done (Aug 15) |
+| Reports complaints block | Complaints report blocked for Pemba roles | Done (Aug 15) |
+| Navigation (15 items) | `navigation.ts` includes Pemba variants | Done (Aug 15) |
+| Frontend pages (13 total) | dashboard + profile + lwop + resignation + service-extension + termination + reports + track-status + urgent-actions + recent-activities + complaints + **confirmation + promotion + cadre-change + retirement** | **Done (Aug 16)** |
+| Manual entry & bulk upload | Pemba write validation via `deriveIsland()` | Done (Aug 15) |
+| Route permissions + proxy | `route-permissions-config.ts` + `proxy.ts` | Done (Aug 15) |
+| Sidebar manual-entry check | `sidebar.tsx` uses `isHroLike(role)` | Done (Aug 15) |
+| Seed/UAT users | `bimkubwa`, `asultan`, `halima`, `kbsilima` | Done (Aug 15) |
+| Tests | `route-permissions.test.ts`, `proxy.test.ts` (regression tests for redirect loop) | Done (Aug 15) |
+
+### Verification
+
+- `tsc --noEmit` — clean (0 errors)
+- `grep` confirms zero remaining `role === ROLES.HRO` or `role === ROLES.HRRP` checks across all 13 dashboard pages
+- 92 tests pass (route-permissions 77 + auth/MFA 15)
+
+
+---
 ## Summary of Artifacts Produced This Month
 
 | Document / Artifact | Date | Purpose |
@@ -766,17 +822,17 @@ The MFA role test file was updated with new test cases:
 | Mandatory MFA Enforcement | Aug 16 | Login route changed to require MFA for all users |
 | Email Clearing Prevention Fix | Aug 16 | User update schema fix preventing empty-string email clearing |
 | User Accounts Reference | Aug 16 | Complete reference of all 206 users with roles, emails, institutions, MFA status |
+| Pemba Frontend Completion | Aug 16 | All 13 dashboard pages converted to predicate-based role checks |
 
 ---
-
 ## What's Next (Recommended Priorities)
+
 1. **Add emails to 3 blocked staff users** — fautest (HRMO), fhali (HRRP), mahfoudhhassan (HRRP) are blocked from login because they have no email. An admin must add government email addresses to these accounts.
 2. **Fix test 7.2** — Add employee status validation to the resignation route (the only failing UAT test).
 3. **Audit log tamper protection** — The highest-priority security gap: add hash chaining and database triggers so audit records cannot be modified or deleted without detection.
 4. **PII encryption at rest** — Currently, sensitive employee data (ZanID, ZSSF number, phone, address) is stored in plain text. The encryption code exists but is not wired in.
-5. **Complete Pemba role implementation** — The plan is written; implementation across 16 API routes and ~13 frontend pages remains.
-6. **HRIMS transaction integrity** — Wrap multi-row sync operations in database transactions so a mid-batch failure doesn't leave partial data.
-7. **Data classification** — Add classification levels (Public/Internal/Confidential/Restricted) to employees and complaints, with access controls based on clearance.
+5. **HRIMS transaction integrity** — Wrap multi-row sync operations in database transactions so a mid-batch failure doesn't leave partial data.
+6. **Data classification** — Add classification levels (Public/Internal/Confidential/Restricted) to employees and complaints, with access controls based on clearance.
 
 ---
 
