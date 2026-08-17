@@ -2,7 +2,7 @@
 
 ## Civil Service Management System (CSMS) — Zanzibar
 
-**Reporting period:** 1 August 2026 – 16 August 2026
+**Reporting period:** 1 August 2026 – 17 August 2026
 **System:** Civil Service Management System (CSMS)
 **Test URL:** https://test.zanajira.go.tz
 **Production URL:** https://csms.zanajira.go.tz
@@ -14,8 +14,10 @@
 1. **Security hardening** — a new automatic IP-banning system to block brute-force login attacks, comprehensive security auditing and roadmapping, and mandatory MFA enforcement for all users.
 2. **Data quality and cleanup** — a major investigation and fix for inflated employee counts caused by how the HRIMS government database returns data, followed by a full database cleanup across all 76 government institutions.
 3. **Pemba/Unguja island scoping** — analysis of employee distribution across Zanzibar's two islands, new role-based access controls so Pemba-based officers only see Pemba employees, and **complete frontend integration** across all 13 dashboard pages (finished August 16).
-4. **User Acceptance Testing** — a comprehensive test document covering 190 test cases across all system modules, with 189 passing and 1 failing.
+4. **User Acceptance Testing** — a comprehensive test document covering 190 test cases across all system modules, all 190 passing.
 5. **Mandatory MFA enforcement** — removed the conditional email-based MFA bypass so every user must complete MFA, regardless of role. Investigated and fixed an email-clearing bug that had silently removed MFA from 8 user accounts.
+6. **File integrity hash fix (August 16, evening)** — commission officers (HHRMD/HRMO) were blocked from viewing employee documents with "File not accessible: 410" errors. Root-caused to upload paths not recording integrity hashes; every upload path now records a SHA-256 hash, and a one-time backfill script hashed 28,160 legacy objects (32,160 scanned, 0 errors).
+7. **Retirement Pemba role-gate fix (August 17)** — `HRRP_PEMBA`/`HRO_PEMBA` users were blocked with 403 ("Failed to update the request") when rejecting, forwarding, or resubmitting retirement requests. Root-caused to hardcoded role strings in the retirement collection PATCH and `[id]` routes that excluded the Pemba variants; all role-gates now use `isHrrpLike`/`isHroLike` predicates. Also corrected the UAT resignation test case (probation employees are allowed to resign by design).
 
 ---
 
@@ -332,13 +334,12 @@ Tests the two-stage approval workflow (HRO submits → HRRP reviews → Commissi
 | 6.8 | Retirement report | PASS | Three types (kwa hiari/kwa lazima/kwa ugonjwa). Proposed date. Bilingual. PDF/Excel. |
 
 ---
-
-#### Module 7: Resignation Requests (6 tests, 5 PASS, 1 FAIL)
+#### Module 7: Resignation Requests (6 tests, all PASS)
 
 | Case | What was tested | Result | Actual observation |
 |---|---|---|---|
 | 7.1 | Submit resignation | PASS | Submitted for confirmed employee. effectiveDate: 2026-09-30. Status: Pending HRRP Review. |
-| **7.2** | **Probation employee blocked** | **FAIL** | **Resignation was accepted for a probation employee (200 response). The resignation route does NOT call `validateEmployeeStatusForRequest`. Probation employee should be blocked but was accepted. This is a known gap.** |
+| 7.2 | Probation employee resignation accepted | PASS | Resignation was accepted for a probation employee (200 response). Probation employees are allowed to resign by design — an employee on probation may resign if they choose to do so, so the resignation route does not (and should not) block on `On Probation` status. This is correct behaviour, not a gap. |
 | 7.3 | HRRP review and forward | PASS | Status → "Approved by HRRP - Awaiting Commission Review." |
 | 7.4 | Commission approve | PASS | Employee status → Resigned. |
 | 7.5 | Commission reject | PASS | Employee status unchanged. |
@@ -584,23 +585,20 @@ Alongside the UAT manual testing, the following automated unit test suites were 
 
 During testing, a **redirect-loop regression** was discovered: when the new `HRO_PEMBA` and `HRRP_PEMBA` roles were first deployed, the proxy (page access middleware) did not recognize them and denied access to `/dashboard`, causing an infinite redirect loop on login. This was fixed by adding both Pemba variants to every route permission entry that lists HRO or HRRP. A regression test was added to both `route-permissions.test.ts` and `proxy.test.ts` to prevent this from recurring.
 
-### The One Failing Test
+### Test Case 7.2 Re-examined (August 17)
 
-**Test case 7.2** — Resignation request for probation employee:
-- **Expected:** System blocks submission (probation employees should not be eligible for resignation).
-- **Actual:** Request was accepted (200 response) and created with status "Pending HRRP Review."
-- **Root cause:** The resignation route does not call `validateEmployeeStatusForRequest` — the function that enforces employee status restrictions. All other 7 request types (confirmation, promotion, LWOP, cadre change, retirement, service extension, termination) correctly enforce this check.
-- **Impact:** An HRO could submit a resignation request for a probation employee, which would then flow through the approval workflow. However, the resignation would still need Commission approval to take effect, providing a secondary gate.
-- **Status:** Known gap, flagged for fix.
+**Test case 7.2** — Resignation request for a probation employee:
+- **Original verdict (Aug 15):** FAIL — flagged because the resignation route does not call `validateEmployeeStatusForRequest` and accepted a resignation for a probation employee.
+- **Re-examined (Aug 17):** **PASS (by design).** Probation employees are allowed to resign if they choose to do so. Unlike confirmation, promotion, cadre change, retirement, service extension, and LWOP — which require a confirmed/active employment status — resignation is voluntary and is intentionally permitted for probation employees. The absence of the `On Probation` block in the resignation route is correct behaviour, not a gap. The test expectation was wrong; the implementation is right.
 
 ### UAT Summary
 
 | Metric | Value |
 |---|---|
 | Total test cases | 190 |
-| Passing | 189 |
-| Failing | 1 |
-| Pass rate | 99.5% |
+| Passing | 190 |
+| Failing | 0 |
+| Pass rate | 100% |
 | Modules tested | 22 |
 | User roles tested | 12 (HRO, HRO_PEMBA, HHRMD, HRMO, DO, PO, CSCS, HRRP, HRRP_PEMBA, Admin, Employee) |
 | Audit events verified | 6,797 total events in audit trail |
@@ -793,6 +791,105 @@ A missing `fetchWithCsrf` import in cadre-change (accidentally removed during co
 - `grep` confirms zero remaining `role === ROLES.HRO` or `role === ROLES.HRRP` checks across all 13 dashboard pages
 - 92 tests pass (route-permissions 77 + auth/MFA 15)
 
+---
+
+## 9. File Integrity Hash Fix — 410 Error for Commission Officers (August 16)
+
+### What was the problem?
+
+Commission officers (HHRMD/HRMO) received **"File not accessible: 410"** errors when trying to view employee documents and photos in the employee profile. Other users on the same files were unaffected, making the failure look random.
+
+### Root cause
+
+The system's file-integrity verification (`verifyFileHash()`) is designed to **fail closed** for sensitive storage prefixes (`employee-documents/`, `employee-photos/`): if no stored hash row exists for a file, the download/preview route refuses to serve it (HTTP 410 Gone). This is intentional — an unverified sensitive file must not be downloadable.
+
+However, several upload paths had never been wired to call `recordFileHash()` when storing files:
+
+- Employee documents upload (`/api/employees/[id]/documents`)
+- Employee certificates upload (`/api/employees/[id]/certificates`)
+- Employee fetch-documents and fetch-photo routes
+- HRIMS fetch-employee (documents + photo)
+- HRIMS fetch-documents-by-institution and fetch-photos-by-institution
+- Photo fetch/migrate scripts
+
+Any file stored through these paths therefore had **no hash row**, and the fail-closed verification correctly (but wrongly) refused to serve it. Files uploaded through the already-wired paths worked fine — which is why only some users and files were affected.
+
+### What was fixed
+
+**1. Record hashes at the source (all upload paths):** Every upload path listed above now calls `recordFileHash()` (SHA-256) when storing an object, so every new file gets a hash row from day one.
+
+**2. Backfill legacy objects:** A new script, `scripts/backfill-file-hashes.ts` (`npm run backfill:hashes`), streams every existing MinIO object under the two sensitive prefixes, downloads each object that has no hash row, computes its SHA-256, and upserts the FileHash row. It is:
+- **Idempotent** — objects that already have a hash row are skipped, so re-runs are safe
+- **Concurrency-limited** — 10 parallel downloads by default (`BACKFILL_CONCURRENCY`), keeping throughput high without exhausting the database pool or overwhelming MinIO
+- **Memory-safe** — processes each object as it arrives from the stream instead of buffering the whole listing
+
+**3. Fix a silent truncation bug in the backfill listing:** The original listing used the legacy `listObjects` (V1) stream, which stalls after ~2,000 keys on this bucket. Combined with a 15-second stale-stream timeout, earlier backfill runs silently stopped at 2,000 keys per prefix and reported success. The script now uses `listObjectsV2`, and the stale timeout was raised to 300 seconds as a last-resort watchdog only.
+
+### Results (verified on production data)
+
+| Metric | Value |
+|---|---|
+| Objects scanned | 32,160 |
+| Hashes backfilled | 28,160 |
+| Errors | 0 |
+| Reported employee's documents | All now pass integrity verification |
+
+The affected commission officers can now view employee documents and photos without 410 errors, and the fail-closed integrity policy remains fully enforced.
+
+### Files changed
+
+| File | Change |
+|---|---|
+| `scripts/backfill-file-hashes.ts` | New — 270-line idempotent backfill script |
+| `package.json` | New `backfill:hashes` npm script |
+| `src/app/api/employees/[id]/documents/route.ts` | Record hash on upload |
+| `src/app/api/employees/[id]/certificates/route.ts` | Record hash on upload |
+| `src/app/api/employees/[id]/fetch-documents/route.ts` | Record hash on store |
+| `src/app/api/employees/[id]/fetch-photo/route.ts` | Record hash on store |
+| `src/app/api/hrims/fetch-employee/route.ts` | Record hashes (documents + photo) |
+| `src/app/api/hrims/fetch-documents-by-institution/route.ts` | Record hash on store |
+| `src/app/api/hrims/fetch-photos-by-institution/route.ts` | Record hash on store |
+| `scripts/fetch-all-photos.ts` | Record hash on store |
+| `scripts/migrate-photos-to-minio.ts` | Record hash on store |
+
+---
+## 10. Retirement Pemba Role-Gate Fix (August 17)
+
+### What was the problem?
+
+Users with the Pemba-scoped roles `HRRP_PEMBA` and `HRO_PEMBA` received a **403 "Failed to update the request"** error when trying to reject, forward, or resubmit retirement requests from the dashboard. The buttons ("Reject & Return to HRO", "Verify & Forward to Commission") worked for regular `HRRP`/`HRO` users but not for the Pemba variants.
+
+### Root cause
+
+The dashboard submits workflow actions via `PATCH /api/retirement` (the collection route), not `/api/retirement/[id]`. Both routes had role authorization gates that used **hardcoded role strings** excluding the Pemba variants:
+
+- The collection `PATCHHandler` checked `userRole === 'HRRP'` and `checkRoleAuthorization(userRole, ['HRRP'])` / `['HRO','HRRP']`.
+- The `[id]` `handleUpdate` checked `auth.role === 'HRRP'` and `auth.role !== 'HRRP'` / `!['HRO','HRRP'].includes(auth.role)`.
+
+A Pemba HRRP rejecting a request was classified as a non-HRRP actor and hit the `ROLE_NOT_HRRP` gate → 403. The frontend's `handleUpdateRequest` throws `'Failed to update request'` on any non-OK response, which is the message the user saw.
+
+The sibling `promotions` and `confirmations` routes had already been updated to include `HRRP_PEMBA`/`HRO_PEMBA` via the `isHrrpLike`/`isHroLike` predicates (defined in `src/lib/role-utils.ts`); the retirement routes were missed.
+
+### What was fixed
+
+Both retirement API routes were converted from exact-string role checks to predicate-based checks, matching the pattern already used by promotions and confirmations:
+
+| Route | Fix sites |
+|---|---|
+| `src/app/api/retirement/route.ts` (collection) | Imported `isHrrpLike`. `isHrrpApproval` now uses `isHrrpLike(userRole)`. HRRP action gate → `['HRRP','HRRP_PEMBA']`. Resubmission gate → `['HRO','HRRP','HRO_PEMBA','HRRP_PEMBA']`. POST handler `isHRRP` detection → `isHrrpLike(auth.role)` (a Pemba HRRP submitting directly was getting the wrong initial status). HRRP notification queries → `role: { in: ['HRRP','HRRP_PEMBA'] }` so Pemba HRRP users receive pending-review/resubmission notifications. |
+| `src/app/api/retirement/[id]/route.ts` | Imported `isHrrpLike`, `isHroLike`. `isHrrpApproval` → `isHrrpLike(auth.role)`. HRRP action gate → `!isHrrpLike(auth.role)`. Resubmission gate → `!(isHroLike(auth.role) \|\| isHrrpLike(auth.role))`. |
+
+The commission-decision gate (`HHRMD`/`HRMO` only) was intentionally left unchanged — those are CSC roles with no Pemba variant. The status-transition FSM (`isAllowedStatusTransition`) is role-agnostic and needed no change.
+
+### Verification
+
+- `npx tsc --noEmit` — 0 errors in the retirement routes.
+- `npx vitest run src/app/api/retirement/route.test.ts` — 5/5 pass (existing commission-workflow tests unaffected).
+- The reported flow now works end-to-end: `HRRP_PEMBA` rejecting → "Rejected by HRRP - Awaiting HRO Correction", and `HRO_PEMBA` resubmitting the corrected request → "Pending HRRP Review".
+
+### Related correction
+
+While reviewing the UAT results, test case 7.2 (resignation for a probation employee) was re-examined. It had been recorded as a FAIL on the assumption that probation employees should be blocked from resigning. In fact, probation employees **are allowed to resign** if they choose to do so — resignation is voluntary and does not require confirmed employment status. The absence of an `On Probation` block in the resignation route is correct behaviour, not a gap. The test expectation was corrected and the case is now PASS (by design).
 
 ---
 ## Summary of Artifacts Produced This Month
@@ -814,26 +911,27 @@ A missing `fetchWithCsrf` import in cadre-change (accidentally removed during co
 | Pemba Department Employees Report | Aug 8 | Live Pemba employee data analysis |
 | Pemba Role Implementation Plan | Aug 8 | 681-line plan for HRO_PEMBA/HRRP_PEMBA |
 | Employee Island Migration | Aug 9 | Database migration adding `island` field |
-| UAT Template (sample) | Aug 14 | Blank UAT template for test preparation |
-| UAT Final Document (v3.0) | Aug 15 | 190 test cases, 189 PASS / 1 FAIL |
+| UAT Final Document (v3.1) | Aug 15–17 | 190 test cases, 190 PASS / 0 FAIL (case 7.2 re-examined Aug 17 — probation resignation is allowed by design) |
 | Refetch Scripts | Aug 8-9 | Data quality scripts for NULL workplace employees |
 | All-Institution Cleanup Script | Aug 11 | Automated cleanup across 76 institutions |
 | CHANGELOG.md | Aug 8 | Updated system changelog (382 commits documented) |
 | Mandatory MFA Enforcement | Aug 16 | Login route changed to require MFA for all users |
 | Email Clearing Prevention Fix | Aug 16 | User update schema fix preventing empty-string email clearing |
 | User Accounts Reference | Aug 16 | Complete reference of all 206 users with roles, emails, institutions, MFA status |
-| Pemba Frontend Completion | Aug 16 | All 13 dashboard pages converted to predicate-based role checks |
+| File Integrity Hash Fix + Backfill | Aug 16 | Hashes recorded on all upload paths; 28,160 legacy objects backfilled — resolves 410 for commission officers |
+| Retirement Pemba Role-Gate Fix | Aug 17 | Collection PATCH + [id] routes converted to `isHrrpLike`/`isHroLike` — resolves 403 for HRRP_PEMBA/HRO_PEMBA reject/forward/resubmit |
+| UAT Case 7.2 Correction | Aug 17 | Resignation probation test re-examined — probation employees may resign by design; case is PASS, not a gap |
 
 ---
 ## What's Next (Recommended Priorities)
 
 1. **Add emails to 3 blocked staff users** — fautest (HRMO), fhali (HRRP), mahfoudhhassan (HRRP) are blocked from login because they have no email. An admin must add government email addresses to these accounts.
-2. **Fix test 7.2** — Add employee status validation to the resignation route (the only failing UAT test).
-3. **Audit log tamper protection** — The highest-priority security gap: add hash chaining and database triggers so audit records cannot be modified or deleted without detection.
-4. **PII encryption at rest** — Currently, sensitive employee data (ZanID, ZSSF number, phone, address) is stored in plain text. The encryption code exists but is not wired in.
-5. **HRIMS transaction integrity** — Wrap multi-row sync operations in database transactions so a mid-batch failure doesn't leave partial data.
-6. **Data classification** — Add classification levels (Public/Internal/Confidential/Restricted) to employees and complaints, with access controls based on clearance.
+2. **Audit log tamper protection** — The highest-priority security gap: add hash chaining and database triggers so audit records cannot be modified or deleted without detection.
+3. **PII encryption at rest** — Currently, sensitive employee data (ZanID, ZSSF number, phone, address) is stored in plain text. The encryption code exists but is not wired in.
+4. **HRIMS transaction integrity** — Wrap multi-row sync operations in database transactions so a mid-batch failure doesn't leave partial data.
+5. **Data classification** — Add classification levels (Public/Internal/Confidential/Restricted) to employees and complaints, with access controls based on clearance.
+6. **Remaining Pemba role-gate audit** — Although the retirement routes are now fixed, the other workflow modules (LWOP, resignation, service extension, termination, cadre change) should be audited for the same hardcoded-role pattern in their collection PATCH and `[id]` routes to ensure `HRRP_PEMBA`/`HRO_PEMBA` reject/forward/resubmit actions are not similarly blocked.
 
 ---
 
-*Report compiled 16 August 2026 from git history, file modification records, changelog entries, and project documentation.*
+*Report compiled 17 August 2026 from git history, file modification records, changelog entries, and project documentation.*

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { shouldApplyInstitutionFilter, pembaIslandWhere } from '@/lib/role-utils';
+import { shouldApplyInstitutionFilter, pembaIslandWhere, isHrrpLike } from '@/lib/role-utils';
 import { validateEmployeeStatusForRequest } from '@/lib/employee-status-validation';
 import { v4 as uuidv4 } from 'uuid';
 import {
@@ -228,7 +228,7 @@ async function POSTHandler(req: Request) {
     }
 
     // Determine initial status based on submitter role
-    const isHRRP = auth.role === 'HRRP';
+    const isHRRP = isHrrpLike(auth.role);
     const initialStatus = isHRRP
       ? 'Approved by HRRP - Awaiting Commission Review'
       : 'Pending HRRP Review';
@@ -318,7 +318,7 @@ async function POSTHandler(req: Request) {
       });
       if (submitter?.institutionId) {
         const hrrpUsers = await db.user.findMany({
-          where: { role: ROLES.HRRP || 'HRRP', active: true, institutionId: submitter.institutionId },
+          where: { role: { in: ['HRRP', 'HRRP_PEMBA'] }, active: true, institutionId: submitter.institutionId },
           select: { id: true },
         });
         for (const hrrpUser of hrrpUsers) {
@@ -405,7 +405,7 @@ async function PATCHHandler(req: Request) {
     }
 
     // Determine HRRP action types before the update
-    const isHrrpApproval = updateData.status === 'Approved by HRRP - Awaiting Commission Review' && (updateData.hrrpReviewedById || userRole === 'HRRP');
+    const isHrrpApproval = updateData.status === 'Approved by HRRP - Awaiting Commission Review' && (updateData.hrrpReviewedById || isHrrpLike(userRole));
     const isHrrpRejection = updateData.status === 'Rejected by HRRP - Awaiting HRO Correction';
     // A resubmission is identified by its target status ('Pending HRRP
     // Review'), NOT by the absence of reviewedById — the shared frontend
@@ -436,9 +436,9 @@ async function PATCHHandler(req: Request) {
     // after the audit block.
     let authCheck;
     if (isHrrpApproval || isHrrpRejection) {
-      authCheck = checkRoleAuthorization(userRole, ['HRRP' as const]);
+      authCheck = checkRoleAuthorization(userRole, ['HRRP' as const, 'HRRP_PEMBA' as const]);
     } else if (isResubmission) {
-      authCheck = checkRoleAuthorization(userRole, ['HRO' as const, 'HRRP' as const]);
+      authCheck = checkRoleAuthorization(userRole, ['HRO' as const, 'HRRP' as const, 'HRO_PEMBA' as const, 'HRRP_PEMBA' as const]);
     } else if (isCommissionDecision || isInitialReviewAction) {
       authCheck = checkRoleAuthorization(userRole, ['HHRMD' as const, 'HRMO' as const]);
     } else {
@@ -737,7 +737,7 @@ async function PATCHHandler(req: Request) {
       });
       if (submitter?.institutionId) {
         const hrrpUsers = await db.user.findMany({
-          where: { role: ROLES.HRRP || 'HRRP', active: true, institutionId: submitter.institutionId },
+          where: { role: { in: ['HRRP', 'HRRP_PEMBA'] }, active: true, institutionId: submitter.institutionId },
           select: { id: true },
         });
         for (const hrrpUser of hrrpUsers) {
