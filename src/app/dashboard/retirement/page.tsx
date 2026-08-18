@@ -64,6 +64,7 @@ import { Pagination } from '@/components/shared/pagination';
 import { FileUpload } from '@/components/ui/file-upload';
 import { FilePreviewModal } from '@/components/ui/file-preview-modal';
 import { EmployeeSearch } from '@/components/shared/employee-search';
+import { validateEmployeeStatusForRequest } from '@/lib/employee-status-validation';
 
 interface RetirementRequest {
   id: string;
@@ -236,10 +237,13 @@ export default function RetirementPage() {
   // File preview modal state
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [previewObjectKey, setPreviewObjectKey] = useState<string | null>(null);
-
-  // Employee status validation
-  const isEmployeeRetired = employeeDetails?.status === 'Retired';
-  const cannotSubmitRetirement = isEmployeeRetired;
+  // Employee status validation — uses the shared validator so probation,
+  // LWOP, retired, resigned, terminated, and dismissed employees are all
+  // blocked at the frontend, mirroring cadre-change.
+  const [eligibilityError, setEligibilityError] = useState<string | null>(
+    null
+  );
+  const cannotSubmitRetirement = !!eligibilityError;
 
   // Helper function to get employee from request (handles both Employee and employee)
   const getEmployeeFromRequest = (request: RetirementRequest) => {
@@ -563,10 +567,28 @@ export default function RetirementPage() {
     setDelayDocumentFile('');
     setShowDelayFields(false);
     setHasPendingRetirement(false);
+    setEligibilityError(null);
   };
 
   const handleEmployeeFound = (employee: Employee) => {
     resetFormFields();
+
+    // Validate employee status using the shared validator — blocks
+    // probation, LWOP, retired, resigned, terminated, and dismissed
+    // employees immediately at lookup, before any form is filled.
+    const statusValidation = validateEmployeeStatusForRequest(
+      employee.status,
+      'retirement'
+    );
+    if (!statusValidation.isValid) {
+      setEligibilityError(statusValidation.message || null);
+      toast({
+        title: 'Employee Ineligible',
+        description: statusValidation.message,
+        variant: 'destructive',
+        duration: 7000,
+      });
+    }
 
     // Check for pending retirement request
     const pendingStatuses = [
@@ -627,7 +649,8 @@ export default function RetirementPage() {
       toast({
         title: 'Retirement Not Applicable',
         description:
-          'Cannot request retirement for employees who are already retired.',
+          eligibilityError ||
+          'This employee is not eligible for a retirement request.',
         variant: 'destructive',
         duration: 5000,
       });
@@ -1222,13 +1245,13 @@ export default function RetirementPage() {
                 </div>
 
                 {cannotSubmitRetirement && (
-                  <div className="flex items-center p-4 mt-2 text-sm text-destructive border border-destructive/50 rounded-md bg-destructive/10">
-                    <AlertTriangle className="h-5 w-5 mr-3 flex-shrink-0" />
-                    <span>
-                      Cannot request retirement for employees who are already
-                      retired.
-                    </span>
-                  </div>
+                  <Alert variant="destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTitle>Ineligibility Notice</AlertTitle>
+                    <AlertDescription>
+                      {eligibilityError}
+                    </AlertDescription>
+                  </Alert>
                 )}
 
                 {ageEligibilityError && (

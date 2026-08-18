@@ -6,6 +6,8 @@ import { randomBytes } from 'crypto';
 import { calculateTemporaryPasswordExpiry } from '@/lib/password-utils';
 import { hashPassword } from '@/lib/password-hash';
 import { createMfaToken, checkOtpRateLimit, maskEmail } from '@/lib/mfa-utils';
+import { isMfaEnabled } from '@/lib/mfa-policy';
+import { completeLogin } from '@/lib/auth-helpers';
 import { validateGovernmentEmail, setUserGovernmentEmail } from '@/lib/employee-email';
 import { sendMfaEmail } from '@/lib/email';
 import { logLoginAttempt, getClientIp } from '@/lib/audit-logger';
@@ -239,7 +241,31 @@ export const POST = wrapHandler(withRateLimit(async (request) => {
       );
     }
 
-    // --- MFA Gate ---
+    // --- MFA Gate (policy-driven) ---
+    // When the admin has disabled MFA enforcement, employees log in with
+    // their credentials alone — no OTP / magic link. Reads fail-open to
+    // "required" so a DB error never downgrades authentication.
+    const mfaRequired = await isMfaEnabled();
+    if (!mfaRequired) {
+      authLogger.info({ username: user.username }, 'MFA disabled by policy — employee password-only login');
+      const fullUser = await db.user.findUnique({
+        where: { id: user.id },
+        include: { Institution: true, Employee: true },
+      });
+      if (!fullUser) {
+        return NextResponse.json(
+          { success: false, message: 'Failed to load user account.' },
+          { status: 500 }
+        );
+      }
+      return completeLogin({
+        user: fullUser,
+        ipAddress,
+        userAgent,
+        deviceInfo,
+      });
+    }
+
     // Determine the email to use for MFA. If one is already stored on the
     // user record, reuse it (skip the prompt). Otherwise, if the client
     // supplied a government email at login, validate and persist it so it

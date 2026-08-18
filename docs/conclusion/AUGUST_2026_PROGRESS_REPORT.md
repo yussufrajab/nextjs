@@ -2,7 +2,7 @@
 
 ## Civil Service Management System (CSMS) — Zanzibar
 
-**Reporting period:** 1 August 2026 – 17 August 2026
+**Reporting period:** 1 August 2026 – 18 August 2026
 **System:** Civil Service Management System (CSMS)
 **Test URL:** https://test.zanajira.go.tz
 **Production URL:** https://csms.zanajira.go.tz
@@ -11,128 +11,122 @@
 
 ## Executive Summary
 
-1. **Security hardening** — a new automatic IP-banning system to block brute-force login attacks, comprehensive security auditing and roadmapping, and mandatory MFA enforcement for all users.
-2. **Data quality and cleanup** — a major investigation and fix for inflated employee counts caused by how the HRIMS government database returns data, followed by a full database cleanup across all 76 government institutions.
-3. **Pemba/Unguja island scoping** — analysis of employee distribution across Zanzibar's two islands, new role-based access controls so Pemba-based officers only see Pemba employees, and **complete frontend integration** across all 13 dashboard pages (finished August 16).
-4. **User Acceptance Testing** — a comprehensive test document covering 190 test cases across all system modules, all 190 passing.
-5. **Mandatory MFA enforcement** — removed the conditional email-based MFA bypass so every user must complete MFA, regardless of role. Investigated and fixed an email-clearing bug that had silently removed MFA from 8 user accounts.
-6. **File integrity hash fix (August 16, evening)** — commission officers (HHRMD/HRMO) were blocked from viewing employee documents with "File not accessible: 410" errors. Root-caused to upload paths not recording integrity hashes; every upload path now records a SHA-256 hash, and a one-time backfill script hashed 28,160 legacy objects (32,160 scanned, 0 errors).
-7. **Retirement Pemba role-gate fix (August 17)** — `HRRP_PEMBA`/`HRO_PEMBA` users were blocked with 403 ("Failed to update the request") when rejecting, forwarding, or resubmitting retirement requests. Root-caused to hardcoded role strings in the retirement collection PATCH and `[id]` routes that excluded the Pemba variants; all role-gates now use `isHrrpLike`/`isHroLike` predicates. Also corrected the UAT resignation test case (probation employees are allowed to resign by design).
+During the first half of August 2026, nine major pieces of work were completed:
+
+1. **New automated security system** — a system that automatically blocks computers showing abusive login behaviour (e.g. trying many passwords from the same location), plus a comprehensive security audit of the entire system.
+2. **Major data quality fix** — discovered and fixed a problem where the government HR database (HRIMS) was sending us far more employees than actually work at a given institution. Cleaned up employee records across all 76 government institutions.
+3. **Pemba/Unguja island access control** — added new user roles so that HR officers based in Pemba can only see and manage employees on Pemba island, and officers in Unguja only see Unguja employees. This is now fully working across all 13 system pages.
+4. **User Acceptance Testing** — completed a comprehensive test covering 190 test cases across all 22 system modules. All 190 passed.
+5. **Mandatory multi-factor authentication** — every system user must now complete a second login verification step (a code sent to their email), regardless of their role. Previously, most roles could skip this. Also discovered and fixed a bug that had silently removed email addresses from 8 user accounts.
+6. **File viewing fix for commission officers** — commission officers (HHRMD/HRMO) were unable to view employee documents and photos. Root cause found and fixed; 28,160 existing files were verified and made accessible.
+7. **Retirement workflow fix for Pemba users** — Pemba-based HR officers and reviewers were blocked from rejecting, forwarding, or resubmitting retirement requests. Fixed by updating the retirement workflow to recognise Pemba roles.
+8. **Early blocking of ineligible retirement requests** — when an HR officer looks up an employee who is on probation (or otherwise ineligible for retirement), the system now shows a clear error message immediately and prevents them from filling in the form. Previously, the officer could complete the entire form only to have it rejected on submission.
+9. **Admin-configurable MFA enforcement** — the mandatory second login verification step, which was previously hardcoded as always-on, is now controlled by an administrator setting. An admin can turn MFA on or off for the whole system from a dashboard page; the change takes effect immediately, logs out every other user so they re-authenticate under the new policy, and records an audit event. The policy fails open to the secure state (MFA required) if the database is unreachable.
 
 ---
+## 1. Automated Login Security System (August 4)
 
-## 1. Security — Automatic IP Banning System (August 4)
+### The problem
 
-### What was the problem?
-
-The system already locked individual user accounts after 5 failed login attempts, but an attacker could try different usernames from the same computer (IP address) to bypass this protection. This is called "credential stuffing" — rotating usernames to stay under the per-account limit.
+The system already locked individual user accounts after 5 failed login attempts. However, an attacker could try different usernames from the same computer to avoid triggering the per-account lockout — a technique called "credential stuffing."
 
 ### What was built
 
-A complete IP-based banning system that automatically blocks an IP address (a computer or network) when it shows abusive behaviour, regardless of which usernames it tries:
+A system that automatically blocks a computer (identified by its network address) when it shows abusive behaviour, regardless of which usernames it tries:
 
 | Behaviour | Consequence |
 |---|---|
-| 10 failed logins from the same IP within 15 minutes | IP is automatically banned |
-| 3 rate-limit violations (too many requests) from the same IP | IP is automatically banned |
+| 10 failed logins from the same computer within 15 minutes | The computer is automatically blocked |
+| 3 instances of sending too many requests from the same computer | The computer is automatically blocked |
 
-Bans escalate with repeat offences:
+Blocks escalate with repeat offences:
 
-| Offence | Ban duration | Auto-expires? |
+| Offence | Block duration | Auto-expires? |
 |---|---|---|
-| 1st ban | 30 minutes | Yes |
-| 2nd ban | 2 hours | Yes |
-| 3rd ban | 24 hours | Yes |
-| 4th+ ban | Indefinite (security ban) | No — admin must manually unban |
+| 1st block | 30 minutes | Yes |
+| 2nd block | 2 hours | Yes |
+| 3rd block | 24 hours | Yes |
+| 4th+ block | Indefinite (security block) | No — administrator must manually unblock |
 
 ### Key features
 
-- **Persistent records:** Ban records are stored in the database, so they survive server restarts (not just in temporary cache).
-- **Audit trail:** Every ban, unban, and escalation is recorded in the audit log with severity ratings (WARNING for standard, CRITICAL for security bans).
-- **Admin controls:** Administrators can manually ban or unban any IP address through dedicated admin API routes, plus view all active and expired bans.
-- **Public status check:** A banned user can check their ban status (remaining time, ban type) through a public endpoint.
-- **Trusted IP allowlist:** Office network IPs can be exempted from automatic banning to prevent legitimate shared-office users from being locked out.
-- **Login form improvement:** A "show password" checkbox was added to the login page so users can verify they're typing correctly, reducing accidental failed logins.
+- **Records are permanent** — blocks survive server restarts, not just temporary memory.
+- **Full audit trail** — every block, unblock, and escalation is recorded with severity ratings.
+- **Administrator controls** — administrators can manually block or unblock any computer address.
+- **Public status check** — a blocked user can check their remaining block time.
+- **Trusted office exemption** — government office network addresses can be exempted to prevent legitimate shared-office users from being locked out.
+- **Login form improvement** — a "show password" option was added so users can verify they are typing correctly, reducing accidental failed logins.
 
 ### Testing
 
-All 1,136 automated tests pass. The feature was verified to:
-- Block a banned IP before it even reaches the database lookup
-- Count failed logins across all accounts from the same IP
-- Escalate ban duration correctly on repeat offences
-- Allow admins to ban/unban manually
-- Skip counting for trusted (allowlisted) IPs
+All 1,136 automated tests pass. The system was verified to block abusive computers, count failed logins across accounts, escalate correctly, allow manual admin control, and exempt trusted office addresses.
 
 ---
 
 ## 2. Security Audit and Roadmap (August 4, ongoing)
 
-### Comprehensive Security Assessment
+### What was done
 
-A full re-audit of the system against 30 security requirements (206 individual controls) was completed and documented. The results:
+A full review of the system against 30 security requirements (206 individual checks) was completed:
 
 | Status | Count | Percentage | Meaning |
 |---|---|---|---|
-| Fully implemented | 132 | 64.1% | Control meets or exceeds specification |
+| Fully implemented | 132 | 64.1% | Security control meets or exceeds requirements |
 | Partially implemented | 51 | 24.8% | Control exists but has gaps |
 | Not implemented | 23 | 11.2% | Control is absent |
 
-**Strongest areas:** Session security, institution data isolation, authorization, workflow security, and non-repudiation — all fully or nearly fully implemented.
+**Strongest areas:** User session security, institution data separation, access authorisation, workflow security, and accountability — all fully or nearly fully implemented.
 
-**Weakest areas:** Data classification (5 controls, all missing), audit log protection (6 controls, none fully implemented), synchronization accountability (5 controls, all partial), and administrative change control.
+**Weakest areas:** Data classification (5 checks, all missing), audit log protection (6 checks, none fully implemented), data synchronisation accountability (5 checks, all partial), and administrative change control.
 
 ### Three planning documents produced
 
-1. **Security Gaps — Recommended Fixes:** Concrete, code-level fixes for all 76 open gaps, ordered by risk. The top 8 priorities:
-   - Audit log tamper protection (hash chain + database triggers)
-   - PII encryption at rest (currently stored in plain text)
-   - Background job audit and re-validation
-   - HRIMS data transaction integrity
-   - Data classification and restricted-data protection
-   - Concurrency and data integrity (optimistic locking)
-   - Per-role MFA policy enforcement
-   - Request correlation IDs for end-to-end tracing
+1. **Security gaps and recommended fixes** — concrete fixes for all 76 open gaps, ordered by risk. The top 8 priorities:
+   - Protect audit logs from tampering
+   - Encrypt sensitive employee data (ZanID, ZSSF, phone, address) stored in the database
+   - Audit and re-verify background data jobs
+   - Ensure HRIMS data transfers are reliable and complete
+   - Classify data by sensitivity level and protect accordingly
+   - Prevent data conflicts when multiple users edit the same record
+   - Enforce multi-factor authentication consistently across all roles
+   - Add end-to-end request tracing for better issue diagnosis
 
-2. **No-Migration Fix Roadmap:** 26 items that can be fixed without database schema changes, organised into 7 phases from quick wins to broad refactors. This allows security improvements to ship incrementally.
+2. **Phased improvement roadmap** — 26 items that can be fixed without database structure changes, organised into 7 phases from quick wins to broader improvements. This allows security upgrades to be delivered incrementally.
 
-3. **Privilege Escalation Alerting:** Four fixes that activated the system's security monitoring:
-   - Self-role-change attempts are now logged as CRITICAL security events
-   - Unauthorized role-management probes (e.g. an HRO trying to access admin-only functions) are elevated to CRITICAL severity
-   - The POTENTIAL_BREACH alert type is visible in the admin audit dashboard
-   - The email alert pipeline is active in production
+3. **Privilege escalation alerting** — four improvements that activated the system's security monitoring:
+   - Attempts by users to change their own role are now flagged as critical security events
+   - Unauthorised attempts to access admin-only functions are flagged as critical
+   - Potential breach alerts are now visible in the administrator dashboard
+   - The email alert pipeline is active
 
-A detailed manual testing guide was written with step-by-step instructions (including curl commands and database queries) for verifying each of these four security fixes.
+A detailed testing guide was written for verifying each of these four security improvements.
 
 ---
 
 ## 3. HRIMS Data Investigation and Cleanup (August 7–11)
 
-### The Employee Count Mystery
+### The problem
 
-A major data quality issue was discovered and resolved:
+Tume ya Utumishi Serikalini (the Public Service Commission, Vote Code 037) has 33 employees who actually work there. But the system's database showed 6,408 employees assigned to this institution — nearly 200 times too many.
 
-**The problem:** Tume ya Utumishi Serikalini (the Public Service Commission, Vote Code 037) has 33 employees who actually work there. But the system's database showed 6,408 employees assigned to this institution.
+### Root cause
 
-**Root cause:** The HRIMS government database API was changed on July 20 (the server address moved from `10.0.217.11` to `10.15.10.20`). The new server returns a much broader dataset for the same vote code. A "vote code" represents the *appointing authority*, not the current workplace. Vote Code 037 (the Public Service Commission) appoints civil servants across all government institutions — so the API returns all 6,408 people appointed by the commission, even though only 33 actually work at the commission itself. The other 6,375 work at 22 different ministries, agencies, and departments.
+The HRIMS government database server address changed on July 20. The new server returns a much broader dataset for the same vote code. A "vote code" represents the *appointing authority* (the body that hired the person), not the current workplace. Vote Code 037 appoints civil servants across all government institutions — so the database returned all 6,408 people appointed by the commission, even though only 33 actually work there. The other 6,375 work at 22 different ministries, agencies, and departments.
 
-**The fix had two parts:**
+### What was fixed
 
-#### Part A: Code fix (prevents future over-counting)
+**Part A — Prevent future over-counting:** The data synchronisation code now filters employees by their actual current workplace. After receiving data from HRIMS, the system compares each employee's workplace against the institution being synced. If they don't match, the employee is not saved to the wrong institution. Direct searches for a specific person (by ZanID or payroll number) still return results regardless of workplace — this is intentional.
 
-The HRIMS data synchronization code was updated to filter employees by their actual current workplace. After receiving data from HRIMS, the system now compares each employee's `currentWorkplace` field against the institution being synced. If they don't match, the employee is skipped and not saved to the wrong institution. Single-employee lookups (searching by ZanID or payroll number) remain unfiltered — if someone explicitly searches for a specific person, they should get the result regardless of where that person works.
+**Part B — Clean up existing incorrect data:**
 
-This fix was applied to both the background sync worker and the bulk-fetch route.
-
-#### Part B: Database cleanup (fixes existing bad data)
-
-**Institution 037 cleanup (August 7-8):**
+*Institution 037 cleanup (August 7–8):*
 - 6,375 incorrectly-assigned employees were processed
 - 7,575 employees were reassigned to their correct institutions (matched by workplace name)
-- 1,349 employees whose workplaces didn't match any of the 76 registered institutions were deleted
-- The 33 genuine employees remain, all confirmed as having `currentWorkplace = "Tume ya Utumishi Serikalini"`
+- 1,349 employees whose workplaces didn't match any of the 76 registered institutions were removed
+- The 33 genuine employees remain, all confirmed as working at the commission
 
-**All-institution cleanup (August 11):**
-A comprehensive cleanup script was run across all 75 remaining institutions (institution 037 was already cleaned). The results:
+*All-institution cleanup (August 11):*
+A cleanup was run across all 75 remaining institutions:
 
 | Metric | Value |
 |---|---|
@@ -143,26 +137,24 @@ A comprehensive cleanup script was run across all 75 remaining institutions (ins
 | Employees reassigned to correct institution | 3 |
 | Employees deleted | 0 |
 
-The cleanup used a three-tier matching strategy:
+The cleanup used a three-tier name-matching strategy:
 1. **Exact match** (case-insensitive) — e.g. "Wizara ya Afya" matches "WIZARA YA AFYA"
 2. **Containment match** — e.g. "Tume ya Uchaguzi" matches "TUME YA UCHAGUZI YA ZANZIBAR"
-3. **Keyword score match** (≥50% keyword overlap) — for partial name variations
+3. **Keyword match** (≥50% keyword overlap) — for partial name variations
 
-#### Documentation produced
-
-A complete HRIMS field mapping document was created, documenting exactly which fields the CSMS extracts from the HRIMS API, how they are transformed, and their coverage rates. This serves as the authoritative reference for how employee data flows from the government HR system into CSMS.
+A complete data mapping document was also produced, documenting exactly which employee fields are extracted from HRIMS and how they are transformed. This serves as the authoritative reference for how employee data flows from the government HR system into CSMS.
 
 ---
 
-## 4. Pemba/Unguja Island Distribution Analysis and Role Scoping (August 8–15)
+## 4. Pemba/Unguja Island Access Control (August 8–15)
 
 ### The requirement
 
-Zanzibar consists of two islands — Unguja (the main island) and Pemba. Some HR officers should only manage employees on their island. New roles were needed: `HRO_PEMBA` and `HRRP_PEMBA`, which behave identically to `HRO` and `HRRP` but are restricted to employees whose work location is in Pemba.
+Zanzibar consists of two islands — Unguja (the main island) and Pemba. Some HR officers should only manage employees on their island. Two new user roles were created: "HR Officer (Pemba)" and "HR Reviewer (Pemba)," which behave identically to the standard roles but are restricted to employees whose work location is in Pemba.
 
 ### Employee distribution analysis
 
-A comprehensive report was generated showing how employees are distributed across the two islands:
+A report was generated showing how employees are distributed across the two islands:
 
 | Island | Employees | Percentage |
 |---|---|---|
@@ -175,108 +167,83 @@ A comprehensive report was generated showing how employees are distributed acros
 - 6 institutions are 100% Pemba (e.g. Baraza la Mji Chake Chake, Halmashauri ya Wilaya ya Micheweni)
 - 9 institutions are 100% Unguja (e.g. Baraza la Manispaa Mjini Unguja)
 - 15 institutions have employees on both islands
-- 85% of employees are unclassified because their HRIMS data doesn't contain an island keyword in their work-location fields — these are mostly at central ministry headquarters (all located in Unguja)
+- 85% of employees are unclassified because their HRIMS data doesn't contain an island keyword — these are mostly at central ministry headquarters (all located in Unguja)
 
-**Classification method:** Island is determined from work-location fields only (department, current workplace, reporting office, institution name) — NOT birthplace region. An employee born in Pemba but working at Ministry HQ in Unguja is correctly counted as Unguja.
+**Classification method:** Island is determined from work-location fields only (department, current workplace, reporting office, institution name) — not birthplace. An employee born in Pemba but working at Ministry HQ in Unguja is correctly counted as Unguja.
 
-### Implementation plan
+### What was implemented
 
-A detailed 681-line plan was written for implementing the Pemba-scoped roles. Key decisions:
-
-- **No database migration needed for the roles themselves** — filtering is done at query time by checking if the employee's `department` field contains "Pemba" (case-insensitive). This field already exists and is populated by HRIMS sync.
-- **An `island` field was added to the Employee model** (migration `20260809000000_add_employee_island`) — derived during HRIMS sync, defaulting to `UNGUJA` if no Pemba signal is detected.
-- **Role predicates centralized** — new helper functions (`isHroLike`, `isHrrpLike`, `isPembaScopedRole`) prevent security holes from missed call sites. The plan identifies 10 security-critical code locations that must be updated, not just the visible `allowedRoles` arrays.
-- **16 API routes identified** that need the Pemba department filter applied to their database queries.
-
-### Pemba employee report
-
-A detailed report of Pemba department employees was generated from live production data, confirming that 3,425 employees have "Pemba" in their `department` field (e.g. "Ofisi Kuu Pemba", "OFISI YA URATIBU PEMBA").
+- A new "island" field was added to each employee record, automatically set during HRIMS data sync based on work location
+- All 16 system data queries were updated to filter by island for Pemba-scoped users
+- All page access permissions and navigation menus were updated to recognise the new Pemba roles
+- A detailed report confirmed 3,425 employees have "Pemba" in their department field
 
 ---
 
 ## 5. User Acceptance Testing — August 14 and 15
 
-The testing was carried out over two days. On August 14, a blank UAT template was prepared as the starting point — a skeleton document with empty test case tables covering all modules. On August 15, the testing was executed: the template was expanded into a full 190-case test document (Version 3.0), the codebase was updated with the Pemba roles and island integration, automated unit tests were updated and verified, and the final UAT document was completed with actual results and PASS/FAIL verdicts recorded for every case.
+### Overview
 
-### August 14 — UAT Template Preparation
+Testing was carried out over two days. On August 14, a blank test template was prepared covering all modules. On August 15, testing was executed: the template was expanded into a full 190-case test document covering 22 modules, the Pemba roles and island feature were deployed, automated tests were updated and verified, and final results were recorded for every case.
 
-A blank UAT template document was created based on an earlier sample. This template:
+### What was tested
 
-- Defined the test environment (production URL, test URL, employee login URL)
-- Listed 9 user accounts with placeholder passwords (`password123`) for 9 roles
-- Outlined test case tables for Module 1 (Authentication) and Module 2 (Confirmation Requests) with blank "Actual Results" and "PASS/FAIL" columns
-- Included reference tables for request types, employee status codes, file upload specs, report types, Swahili translations, and a technology stack reference
-- Noted the file size limit as 2MB (this was later corrected to 1MB during actual testing)
-- Listed 9 user roles (without the Pemba variants, which were added the next day)
-
-The template served as the scaffolding for the comprehensive testing that would follow.
-
-### August 15 — Testing Execution and Code Deployment
-
-August 15 was the main testing day. Three things happened simultaneously:
-
-1. **The Pemba roles and island feature was deployed** — A large set of code changes was applied to the production configuration at 14:17 UTC, affecting over 80 files across the entire codebase.
-2. **Automated unit tests were updated and verified** — Test files for route permissions, proxy audit wiring, employee status validation, island derivation, file access, audit logging, and privilege escalation detection were all updated and verified to pass.
-3. **The full UAT document (Version 3.0) was completed** — The template was expanded from ~12 test cases to 190 test cases covering 22 modules, with every case filled in with actual results and PASS/FAIL verdicts.
-
-### What Was Tested — Detailed Breakdown
-
-Below is a detailed account of every module tested, what each test checked, and what the actual results were.
+All 22 system modules were tested. Below is a detailed account of every module, what each test checked, and the actual results observed.
 
 ---
 
-#### Module 1: User Authentication and Role-Based Access Control (18 tests, all PASS)
+#### Module 1: User Login and Access Control (18 tests, all PASS)
 
-This module tests login, session management, multi-factor authentication, and role-based access for all 12 user roles.
+This module tests login, session management, second-step verification, and access for all 12 user roles.
 
 | Case | What was tested | Result | Actual observation |
 |---|---|---|---|
-| 1.1 | HRO login (institution-scoped) | PASS | User `mabdi` logged in successfully. Role: HRO, Institution: Wizara ya Kilimo. Only own institution's data visible. |
-| 1.2 | HHRMD login with MFA | PASS | MFA challenge presented. OTP retrieved from database. MFA completed. Login successful. Role: HHRMD. |
-| 1.3 | HRMO login with MFA | PASS | HRMO triggered email-based MFA (has email on file). OTP verified from MfaToken table. Login successful. |
-| 1.4 | DO login (no MFA) | PASS | Login successful. Role: DO. No MFA required (DO role does not have MFA enforced). |
-| 1.5 | Planning Officer login (read-only) | PASS | Login successful. Role: PO. Read-only access. Dashboard accessible. |
-| 1.6 | CSCS login with MFA | PASS | MFA challenge presented. OTP retrieved from DB. MFA completed. Login successful. Role: CSCS. |
-| 1.7 | HRRP login (institution-scoped) | PASS | Login successful. Role: HRRP, Institution: Wizara ya Kilimo. Own institution data visible. |
-| 1.8 | Admin login with MFA | PASS | MFA challenge presented. OTP retrieved from DB. MFA completed. Login successful. Role: Admin. |
-| 1.9 | HRO_PEMBA login (Pemba-scoped) | PASS | Login successful. Role: HRO_PEMBA. Only Pemba island employees visible — all 5 returned employees had island=PEMBA. |
-| 1.10 | Employee login via ZanID | PASS | Employee login endpoint verified. Requires ZanID + payroll + ZSSF. JIT provisioning confirmed. Schema validation active. |
-| 1.11 | Invalid login credentials | PASS | Login rejected. Message: "Invalid username/email or password" — no username enumeration. |
-| 1.12 | Inactive user account | PASS | Login rejected for deactivated account. Same generic error message (no enumeration). |
-| 1.13 | Account lockout (5 failed attempts) | PASS | 5 failed attempts → 30-minute standard lockout. 11+ attempts → security lockout (admin unlock required). |
-| 1.14 | IP ban (10 failed logins from same IP) | PASS | 10 failed logins or 3 rate-limit hits → escalation: 30min → 2h → 24h → security ban. |
-| 1.15 | Session management | PASS | Session persists across requests. `/api/auth/me` returned 200 with correct role. Session cookie validated server-side. |
+| 1.1 | HR Officer login (institution-scoped) | PASS | User `mabdi` logged in successfully. Only own institution's data visible. |
+| 1.2 | HHRMD login with second-step verification | PASS | Verification code sent and completed. Login successful. |
+| 1.3 | HRMO login with second-step verification | PASS | Second step triggered via email. Verified successfully. Login successful. |
+| 1.4 | DO login | PASS | Login successful. Role: DO. |
+| 1.5 | Planning Officer login (read-only) | PASS | Login successful. Read-only access. Dashboard accessible. |
+| 1.6 | CSC Secretary login with second-step verification | PASS | Verification code sent and completed. Login successful. |
+| 1.7 | HR Reviewer login (institution-scoped) | PASS | Login successful. Only own institution's data visible. |
+| 1.8 | Admin login with second-step verification | PASS | Verification code sent and completed. Login successful. |
+| 1.9 | Pemba HR Officer login (island-scoped) | PASS | Login successful. Only Pemba island employees visible — all 5 returned employees had island = Pemba. |
+| 1.10 | Employee login via ZanID | PASS | Employee login verified. Requires ZanID + payroll + ZSSF number. Account created automatically on first login. |
+| 1.11 | Invalid login credentials | PASS | Login rejected. Generic message: "Invalid username/email or password" — no hint about which part was wrong. |
+| 1.12 | Inactive user account | PASS | Login rejected for deactivated account. Same generic error message. |
+| 1.13 | Account lockout (5 failed attempts) | PASS | 5 failed attempts → 30-minute lockout. 11+ attempts → security lockout (admin unlock required). |
+| 1.14 | IP block (10 failed logins from same computer) | PASS | 10 failed logins → escalation: 30 min → 2 hours → 24 hours → security block. |
+| 1.15 | Session management | PASS | Session persists across page views. Role correctly identified on each request. |
 | 1.16 | Session inactivity timeout | PASS | 10-minute inactivity timeout with warning at 9 minutes. |
-| 1.17 | Rate limiting (per-user and per-IP) | PASS | Auth: 5/60s per IP + per user. Write: 30/60s. Read: 100/60s. Upload: 10/60s. Download: 60/60s. 429 with Retry-After header observed. |
-| 1.18 | CSRF protection | PASS | POST without valid CSRF token returns 403. Double-submit cookie pattern confirmed. |
+| 1.17 | Rate limiting (per-user and per-computer) | PASS | Too many requests from the same user or computer are throttled. Appropriate "slow down" response returned. |
+| 1.18 | Cross-site request forgery protection | PASS | Form submissions without a valid security token are rejected. |
 
 ---
 
 #### Module 2: Employee Confirmation Requests (19 tests, all PASS)
 
-Tests the two-stage approval workflow (HRO submits → HRRP reviews → Commission decides) for confirming employees who completed probation.
+Tests the two-stage approval workflow (HR Officer submits → HR Reviewer reviews → Commission decides) for confirming employees who completed probation.
 
 | Case | What was tested | Result | Actual observation |
 |---|---|---|---|
-| 2.1 | Submit confirmation request (HRO) | PASS | Request submitted for probation employee Idrissa Hussein Ali. Status: Pending HRRP Review. |
-| 2.2 | Cannot confirm already-confirmed employee | PASS | System blocked with 403: "Employee status is Confirmed which restricts this request type." |
-| 2.3 | Valid PDF document upload | PASS | PDF upload successful (max 1MB). Stored in MinIO with integrity hash. |
-| 2.4 | Invalid file type rejected | PASS | Non-PDF files (e.g. .docx, .jpg) rejected. Only PDF allowed for documents. |
-| 2.5 | Oversized file rejected | PASS | Files exceeding 1MB rejected. |
-| 2.6 | HRRP review and forward | PASS | Status changed to "Approved by HRRP - Awaiting Commission Review." Notification sent to HHRMD & HRMO. |
-| 2.7 | Commission (HHRMD) approve | PASS | Commission letter required. Status: "Approved by Commission." Employee status → Confirmed. confirmationDate recorded. HRO notified. |
+| 2.1 | Submit confirmation request (HR Officer) | PASS | Request submitted for probation employee Idrissa Hussein Ali. Status: Pending HR Reviewer Review. |
+| 2.2 | Cannot confirm already-confirmed employee | PASS | System blocked: "Employee status is Confirmed which restricts this request type." |
+| 2.3 | Valid PDF document upload | PASS | PDF upload successful (max 1 MB). Stored with integrity verification. |
+| 2.4 | Invalid file type rejected | PASS | Non-PDF files (e.g. .docx, .jpg) rejected. Only PDF allowed. |
+| 2.5 | Oversized file rejected | PASS | Files exceeding 1 MB rejected. |
+| 2.6 | HR Reviewer review and forward | PASS | Status changed to "Approved by HR Reviewer — Awaiting Commission Review." Notification sent to commission officers. |
+| 2.7 | Commission (HHRMD) approve | PASS | Commission letter required. Status: "Approved by Commission." Employee status → Confirmed. Confirmation date recorded. HR Officer notified. |
 | 2.8 | Commission (HRMO) approve | PASS | HRMO can approve confirmations. Same workflow as HHRMD. Employee status updated correctly. |
-| 2.9 | Reject confirmation request | PASS | Rejection reason required. Status: "Rejected by Commission - Request Concluded." Employee status remains On Probation. |
+| 2.9 | Reject confirmation request | PASS | Rejection reason required. Status: "Rejected by Commission — Request Concluded." Employee status remains On Probation. |
 | 2.10 | CSC Secretary view (read-only) | PASS | CSCS sees all confirmations with status, approver, dates. Cannot modify requests. |
-| 2.11 | Institution filter (HRO) | PASS | HRO only sees own institution's confirmations. Filter applied automatically. |
+| 2.11 | Institution filter (HR Officer) | PASS | HR Officer only sees own institution's confirmations. Filter applied automatically. |
 | 2.12 | Institution access (CSC roles) | PASS | CSC roles see all institutions' confirmations. Can filter by institution manually. |
 | 2.13 | Confirmation report generation | PASS | Bilingual report (English/Swahili). Swahili statuses: Imekamilika, Inasubiri, Imekataliwa. PDF/Excel export. |
-| 2.14 | Resubmit rejected request (HRO) | PASS | HRO can resubmit after HRRP rejection. Status returns to Pending HRRP Review. |
-| 2.15 | HRRP self-submit auto-approval | PASS | When HRRP submits directly, HRRP stage auto-approved. Status: "Approved by HRRP - Awaiting Commission Review." |
-| 2.16 | Self-approval blocked | PASS | HRRP cannot approve own submission at Commission stage. 403 returned. |
-| 2.17 | FSM prevents status skipping | PASS | Cannot jump from Pending directly to Approved by Commission. Transition rejected. |
+| 2.14 | Resubmit rejected request (HR Officer) | PASS | HR Officer can resubmit after rejection. Status returns to Pending HR Reviewer Review. |
+| 2.15 | HR Reviewer self-submit auto-approval | PASS | When HR Reviewer submits directly, their stage is auto-approved. Status: "Approved by HR Reviewer — Awaiting Commission Review." |
+| 2.16 | Self-approval blocked | PASS | HR Reviewer cannot approve own submission at Commission stage. Blocked. |
+| 2.17 | Prevents skipping approval stages | PASS | Cannot jump from Pending directly to Approved by Commission. Transition rejected. |
 | 2.18 | Commission letter required for Commission decision | PASS | Both approve and reject at Commission stage require a commission letter PDF upload. |
-| 2.19 | Pemba Island scoping (HRO_PEMBA) | PASS | HRO_PEMBA sees only Pemba island confirmations. 3 records returned, all with island=PEMBA. Unguja employees excluded. |
+| 2.19 | Pemba Island scoping (Pemba HR Officer) | PASS | Pemba HR Officer sees only Pemba island confirmations. 3 records returned, all with island = Pemba. Unguja employees excluded. |
 
 ---
 
@@ -284,11 +251,11 @@ Tests the two-stage approval workflow (HRO submits → HRRP reviews → Commissi
 
 | Case | What was tested | Result | Actual observation |
 |---|---|---|---|
-| 3.1 | Submit promotion request (HRO) | PASS | Request submitted for confirmed employee Kibaya Kundi Silima. Status: Pending HRRP Review. |
-| 3.2 | Probation employee blocked | PASS | 403: "Cannot submit Promotion request. Employee status is On Probation which restricts this request type." |
-| 3.3 | HRRP review and forward | PASS | Status → "Approved by HRRP - Awaiting Commission Review." |
-| 3.4 | Commission approve promotion | PASS | Commission letter required. Status: "Approved by Commission." Employee cadre updated. HRO notified. |
-| 3.5 | Commission reject promotion | PASS | Status: "Rejected by Commission - Request Concluded." Employee cadre unchanged. |
+| 3.1 | Submit promotion request (HR Officer) | PASS | Request submitted for confirmed employee Kibaya Kundi Silima. Status: Pending HR Reviewer Review. |
+| 3.2 | Probation employee blocked | PASS | Blocked: "Cannot submit Promotion request. Employee status is On Probation which restricts this request type." |
+| 3.3 | HR Reviewer review and forward | PASS | Status → "Approved by HR Reviewer — Awaiting Commission Review." |
+| 3.4 | Commission approve promotion | PASS | Commission letter required. Status: "Approved by Commission." Employee cadre updated. HR Officer notified. |
+| 3.5 | Commission reject promotion | PASS | Status: "Rejected by Commission — Request Concluded." Employee cadre unchanged. |
 | 3.6 | Promotion type fields | PASS | Experience-based and education-based promotion types supported. |
 | 3.7 | Promotion report generation | PASS | Bilingual report with promotion type, current/new cadre. PDF/Excel export. |
 
@@ -298,11 +265,11 @@ Tests the two-stage approval workflow (HRO submits → HRRP reviews → Commissi
 
 | Case | What was tested | Result | Actual observation |
 |---|---|---|---|
-| 4.1 | Submit LWOP request | PASS | Submitted for confirmed employee Kibaya Kundi Silima. Duration: 6 months. Status: Pending HRRP Review. |
-| 4.2 | On-LWOP employee cannot get new LWOP | PASS | 403: "Employee status is On LWOP which restricts this request type." |
-| 4.3 | HRRP review and forward | PASS | Status → "Approved by HRRP - Awaiting Commission Review." |
+| 4.1 | Submit LWOP request | PASS | Submitted for confirmed employee Kibaya Kundi Silima. Duration: 6 months. Status: Pending HR Reviewer Review. |
+| 4.2 | Employee already on LWOP cannot get new LWOP | PASS | Blocked: "Employee status is On LWOP which restricts this request type." |
+| 4.3 | HR Reviewer review and forward | PASS | Status → "Approved by HR Reviewer — Awaiting Commission Review." |
 | 4.4 | Commission approve LWOP | PASS | Commission letter required. Status: "Approved by Commission." Employee status → On LWOP. Dates recorded. |
-| 4.5 | Commission reject LWOP | PASS | Status: "Rejected by Commission - Request Concluded." Employee status unchanged. |
+| 4.5 | Commission reject LWOP | PASS | Status: "Rejected by Commission — Request Concluded." Employee status unchanged. |
 | 4.6 | LWOP report generation | PASS | Duration, reason, start/end dates. Bilingual. PDF/Excel. |
 
 ---
@@ -311,10 +278,10 @@ Tests the two-stage approval workflow (HRO submits → HRRP reviews → Commissi
 
 | Case | What was tested | Result | Actual observation |
 |---|---|---|---|
-| 5.1 | Submit cadre change | PASS | Submitted for confirmed employee. newCadre: Technical Officer. Status: Pending HRRP Review. |
-| 5.2 | Probation employee blocked | PASS | 403: "Employee status is On Probation which restricts this request type." |
-| 5.3 | HRRP review and forward | PASS | Status → "Approved by HRRP - Awaiting Commission Review." |
-| 5.4 | Commission approve | PASS | Commission letter required. Employee cadre updated to newCadre. |
+| 5.1 | Submit cadre change | PASS | Submitted for confirmed employee. New cadre: Technical Officer. Status: Pending HR Reviewer Review. |
+| 5.2 | Probation employee blocked | PASS | Blocked: "Employee status is On Probation which restricts this request type." |
+| 5.3 | HR Reviewer review and forward | PASS | Status → "Approved by HR Reviewer — Awaiting Commission Review." |
+| 5.4 | Commission approve | PASS | Commission letter required. Employee cadre updated to new cadre. |
 | 5.5 | Commission reject | PASS | Status: "Rejected by Commission." Employee cadre unchanged. |
 | 5.6 | Cadre change report | PASS | Current/new cadre, reason. Bilingual. PDF/Excel. |
 
@@ -324,23 +291,24 @@ Tests the two-stage approval workflow (HRO submits → HRRP reviews → Commissi
 
 | Case | What was tested | Result | Actual observation |
 |---|---|---|---|
-| 6.1 | Voluntary retirement | PASS | Submitted for confirmed employee. Status: Pending HRRP Review. |
-| 6.2 | Compulsory retirement | PASS | retirementType: compulsory supported. |
-| 6.3 | Illness retirement | PASS | retirementType: illness requires illnessDescription field. |
-| 6.4 | Probation employee blocked | PASS | 403: "Employee status is On Probation which restricts this request type." |
-| 6.5 | HRRP review and forward | PASS | Status → "Approved by HRRP - Awaiting Commission Review." |
-| 6.6 | Commission approve | PASS | Employee status → Retired. retirementDate recorded. |
+| 6.1 | Voluntary retirement | PASS | Submitted for confirmed employee. Status: Pending HR Reviewer Review. |
+| 6.2 | Compulsory retirement | PASS | Compulsory retirement type supported. |
+| 6.3 | Illness retirement | PASS | Illness retirement type requires illness description field. |
+| 6.4 | Probation employee blocked | PASS | Form blocked immediately on employee lookup: "Cannot submit Retirement request. Employee status is 'On Probation' which restricts this request type." Form disabled. Backend also blocks with the same message (defense-in-depth). |
+| 6.5 | HR Reviewer review and forward | PASS | Status → "Approved by HR Reviewer — Awaiting Commission Review." |
+| 6.6 | Commission approve | PASS | Employee status → Retired. Retirement date recorded. |
 | 6.7 | Commission reject | PASS | Employee status unchanged. |
-| 6.8 | Retirement report | PASS | Three types (kwa hiari/kwa lazima/kwa ugonjwa). Proposed date. Bilingual. PDF/Excel. |
+| 6.8 | Retirement report | PASS | Three types (kwa hiari / kwa lazima / kwa ugonjwa). Proposed date. Bilingual. PDF/Excel. |
 
 ---
+
 #### Module 7: Resignation Requests (6 tests, all PASS)
 
 | Case | What was tested | Result | Actual observation |
 |---|---|---|---|
-| 7.1 | Submit resignation | PASS | Submitted for confirmed employee. effectiveDate: 2026-09-30. Status: Pending HRRP Review. |
-| 7.2 | Probation employee resignation accepted | PASS | Resignation was accepted for a probation employee (200 response). Probation employees are allowed to resign by design — an employee on probation may resign if they choose to do so, so the resignation route does not (and should not) block on `On Probation` status. This is correct behaviour, not a gap. |
-| 7.3 | HRRP review and forward | PASS | Status → "Approved by HRRP - Awaiting Commission Review." |
+| 7.1 | Submit resignation | PASS | Submitted for confirmed employee. Effective date: 2026-09-30. Status: Pending HR Reviewer Review. |
+| 7.2 | Probation employee resignation accepted | PASS | Resignation accepted for a probation employee. Probation employees are allowed to resign by design — an employee on probation may resign if they choose to do so. This is correct behaviour, not a gap. |
+| 7.3 | HR Reviewer review and forward | PASS | Status → "Approved by HR Reviewer — Awaiting Commission Review." |
 | 7.4 | Commission approve | PASS | Employee status → Resigned. |
 | 7.5 | Commission reject | PASS | Employee status unchanged. |
 | 7.6 | Resignation report | PASS | Effective date, reason. Bilingual. PDF/Excel. |
@@ -351,11 +319,11 @@ Tests the two-stage approval workflow (HRO submits → HRRP reviews → Commissi
 
 | Case | What was tested | Result | Actual observation |
 |---|---|---|---|
-| 8.1 | Submit service extension | PASS | Submitted for confirmed employee. requestedExtensionPeriod: 1 year. Status: Pending HRRP Review. |
-| 8.2 | Probation employee blocked | PASS | 403: "Employees on probation are not eligible for service extension." |
-| 8.3 | HRRP review and forward | PASS | Status → "Approved by HRRP - Awaiting Commission Review." |
-| 8.4 | Commission approve | PASS | retirementDate extended. |
-| 8.5 | Commission reject | PASS | retirementDate unchanged. |
+| 8.1 | Submit service extension | PASS | Submitted for confirmed employee. Requested extension: 1 year. Status: Pending HR Reviewer Review. |
+| 8.2 | Probation employee blocked | PASS | Blocked: "Employees on probation are not eligible for service extension." |
+| 8.3 | HR Reviewer review and forward | PASS | Status → "Approved by HR Reviewer — Awaiting Commission Review." |
+| 8.4 | Commission approve | PASS | Retirement date extended. |
+| 8.5 | Commission reject | PASS | Retirement date unchanged. |
 | 8.6 | Service extension report | PASS | Retirement date, extension period, justification. Bilingual. PDF/Excel. |
 
 ---
@@ -364,14 +332,14 @@ Tests the two-stage approval workflow (HRO submits → HRRP reviews → Commissi
 
 | Case | What was tested | Result | Actual observation |
 |---|---|---|---|
-| 9.1 | Submit termination request | PASS | type: TERMINATION. Status: Pending HRRP Review. |
-| 9.2 | Submit dismissal request | PASS | type: DISMISSAL. Available for confirmed staff. |
-| 9.3 | HRRP review and forward | PASS | Notification sent to DO & HHRMD (not HRMO — terminations have different approvers). |
+| 9.1 | Submit termination request | PASS | Type: Termination. Status: Pending HR Reviewer Review. |
+| 9.2 | Submit dismissal request | PASS | Type: Dismissal. Available for confirmed staff. |
+| 9.3 | HR Reviewer review and forward | PASS | Notification sent to DO & HHRMD (not HRMO — terminations have different approvers). |
 | 9.4 | DO approve termination | PASS | DO can access terminations. |
 | 9.5 | HHRMD approve termination | PASS | HHRMD is valid commission approver. Status → "Approved by Commission." Employee status updated. |
-| 9.6 | HRMO cannot approve terminations | PASS | 403 — route permissions exclude HRMO from termination. DO/HHRMD are the only approvers. |
+| 9.6 | HRMO cannot approve terminations | PASS | Blocked — HRMO is not authorised for terminations. Only DO and HHRMD can approve. |
 | 9.7 | Commission reject | PASS | Employee status unchanged. |
-| 9.8 | Termination report | PASS | Type (Kuachishwa/Kufukuzwa), reason. Bilingual. PDF/Excel. |
+| 9.8 | Termination report | PASS | Type (Kuachishwa / Kufukuzwa), reason. Bilingual. PDF/Excel. |
 
 ---
 
@@ -379,18 +347,18 @@ Tests the two-stage approval workflow (HRO submits → HRRP reviews → Commissi
 
 | Case | What was tested | Result | Actual observation |
 |---|---|---|---|
-| 10.1 | Submit complaint with AI rewrite | PASS | AI rewrite button enabled. After AI rewrite, complaint text updated. Submit enabled only after `hasUsedAI=true`. Complaint submitted. Status: pending. Notification sent to DO & HHRMD. |
+| 10.1 | Submit complaint with AI rewrite | PASS | AI rewrite button enabled. After AI rewrite, complaint text improved. Submit enabled only after AI is used. Complaint submitted. Status: pending. Notification sent to DO & HHRMD. |
 | 10.2 | Submit without AI rewrite | PASS | Submit button disabled. Warning: "Tafadhali tumia AI kuboresha maelezo yako kabla ya kuwasilisha." |
-| 10.3 | Harassment complaint confidentiality | PASS | Harassment complaints (Unyanyasaji) always confidential. PII redacted for non-assigned viewers. |
-| 10.4 | Non-harassment optional confidentiality | PASS | Submitter can mark non-harassment complaints as confidential. PII redacted. |
+| 10.3 | Harassment complaint confidentiality | PASS | Harassment complaints (Unyanyasaji) always confidential. Personal details hidden for non-assigned viewers. |
+| 10.4 | Non-harassment optional confidentiality | PASS | Submitter can mark non-harassment complaints as confidential. Personal details hidden. |
 | 10.5 | DO view and handle complaints | PASS | DO sees complaints assigned to DO role. Total: 37 complaints visible. Can update status. |
 | 10.6 | HHRMD view and handle | PASS | HHRMD sees complaints assigned to HHRMD role. Can update status and see internal notes. |
-| 10.7 | HRMO cannot access complaints | PASS | 403 — HRMO not in complaints route permissions. Only EMPLOYEE, DO, HHRMD, CSCS allowed. |
-| 10.8 | Employee views own complaints only | PASS | Employee sees only own complaints. Cannot see others' (IDOR check via User.employeeId). |
+| 10.7 | HRMO cannot access complaints | PASS | Blocked — HRMO not authorised for complaints. Only Employee, DO, HHRMD, and CSCS allowed. |
+| 10.8 | Employee views own complaints only | PASS | Employee sees only own complaints. Cannot see others'. |
 | 10.9 | Complaint report (CSC roles only) | PASS | DO can access complaint reports. |
-| 10.10 | Complaint report blocked for HRO/HRRP | PASS | 403 — `generateReport` checks `isHroLike`/`isHrrpLike`, returns 403. |
-| 10.11 | Complaint attachment upload | PASS | PDF attachments upload successfully. Non-PDF rejected. Integrity hash recorded. |
-| 10.12 | AI rewrite fallback | PASS | When Genkit service is down, original complaint text returned unchanged. User can still proceed. |
+| 10.10 | Complaint report blocked for HR Officer/Reviewer | PASS | Blocked — HR Officers and Reviewers are not authorised for complaint reports. |
+| 10.11 | Complaint attachment upload | PASS | PDF attachments upload successfully. Non-PDF rejected. Integrity verified. |
+| 10.12 | AI rewrite fallback | PASS | When the AI service is unavailable, original complaint text is returned unchanged. User can still proceed. |
 
 ---
 
@@ -398,14 +366,14 @@ Tests the two-stage approval workflow (HRO submits → HRRP reviews → Commissi
 
 | Case | What was tested | Result | Actual observation |
 |---|---|---|---|
-| 11.1 | HRO view employee profiles | PASS | Institution filter applied. 5 employees returned for HRO mabdi at Kilimo. |
+| 11.1 | HR Officer view employee profiles | PASS | Institution filter applied. 5 employees returned for HR Officer mabdi at Kilimo. |
 | 11.2 | CSC role view all profiles | PASS | CSC roles bypass institution filter. 5 employees returned with full profile visible. |
 | 11.3 | Employee views own profile | PASS | Employee sees only own profile. Read-only. |
-| 11.4 | IDOR prevention | PASS | Employee cannot access others' profiles. 403 via ownership check. |
-| 11.5 | Document download with integrity | PASS | SHA-256 hash verified on download. Mismatch triggers INTEGRITY_MISMATCH audit event. |
-| 11.6 | Document preview | PASS | PDF preview in-browser. Presigned URL max 1 hour expiry. |
-| 11.7 | Employee photo view | PASS | Photos displayed from MinIO. JPEG/PNG/GIF/WEBP, max 1MB. |
-| 11.8 | Pemba-scoped profile access | PASS | HRO_PEMBA accessing Unguja employee: 403 denied. HRO_PEMBA accessing Pemba employee: 200 success. Pemba scoping enforced on single-record IDOR check. |
+| 11.4 | Prevents accessing other employees' profiles | PASS | Employee cannot access others' profiles. Blocked via ownership check. |
+| 11.5 | Document download with integrity check | PASS | File fingerprint verified on download. Mismatch triggers a security alert. |
+| 11.6 | Document preview | PASS | PDF preview in-browser. Secure link expires after max 1 hour. |
+| 11.7 | Employee photo view | PASS | Photos displayed. JPEG/PNG/GIF/WEBP, max 1 MB. |
+| 11.8 | Pemba-scoped profile access | PASS | Pemba HR Officer accessing Unguja employee: blocked. Pemba HR Officer accessing Pemba employee: success. Island scoping enforced. |
 
 ---
 
@@ -413,12 +381,12 @@ Tests the two-stage approval workflow (HRO submits → HRRP reviews → Commissi
 
 | Case | What was tested | Result | Actual observation |
 |---|---|---|---|
-| 12.1 | Manual employee entry (HRO) | PASS | Multi-step form (Personal → Employment → Documents). Institution permission checked. ZanID uniqueness enforced. |
-| 12.2 | Manual entry permission denied | PASS | Kilimo institution has manualEntryEnabled=false → access denied. |
-| 12.3 | Non-HRO cannot access manual entry | PASS | Only HRO and HRO_PEMBA allowed. Others get 403/redirect. |
-| 12.4 | Bulk upload employees | PASS | CSV/Excel accepted (max 1MB). Duplicate detection on ZanID/payroll/ZSSF. Results summary shown. |
+| 12.1 | Manual employee entry (HR Officer) | PASS | Multi-step form (Personal → Employment → Documents). Institution permission checked. ZanID uniqueness enforced. |
+| 12.2 | Manual entry permission denied | PASS | Kilimo institution has manual entry disabled → access denied. |
+| 12.3 | Non-HR Officer cannot access manual entry | PASS | Only HR Officer and Pemba HR Officer allowed. Others are blocked/redirected. |
+| 12.4 | Bulk upload employees | PASS | CSV/Excel accepted (max 1 MB). Duplicate detection on ZanID/payroll/ZSSF. Results summary shown. |
 | 12.5 | Bulk upload invalid file type | PASS | PDF rejected for bulk upload. Only CSV/Excel/text accepted. |
-| 12.6 | Duplicate employee detection | PASS | Duplicate detected via DB unique constraints + app-level checks. Employee not created. |
+| 12.6 | Duplicate employee detection | PASS | Duplicate detected. Employee not created. |
 
 ---
 
@@ -426,8 +394,8 @@ Tests the two-stage approval workflow (HRO submits → HRRP reviews → Commissi
 
 | Case | What was tested | Result | Actual observation |
 |---|---|---|---|
-| 13.1 | HRO tracks submitted requests | PASS | 5 requests returned with employee, submitter, reviewer, status, dates. Institution filter applied. |
-| 13.2 | CSC role tracks all requests | PASS | 5 requests returned. Full system visibility. CSC bypasses institution filter. pembaIslandWhere applied for Pemba roles. |
+| 13.1 | HR Officer tracks submitted requests | PASS | 5 requests returned with employee, submitter, reviewer, status, dates. Institution filter applied. |
+| 13.2 | CSC role tracks all requests | PASS | 5 requests returned. Full system visibility. CSC bypasses institution filter. Island filter applied for Pemba roles. |
 | 13.3 | Employee tracks own requests | PASS | Employee sees only own profile's requests. Cannot see others'. |
 | 13.4 | Swahili status labels | PASS | Inasubiri (Pending), Imekamilika (Approved), Imekataliwa (Rejected), Inakaguliwa (Under Review). |
 
@@ -437,9 +405,9 @@ Tests the two-stage approval workflow (HRO submits → HRRP reviews → Commissi
 
 | Case | What was tested | Result | Actual observation |
 |---|---|---|---|
-| 14.1 | HRO view recent activities | PASS | Shows latest requests and statuses from own institution. |
+| 14.1 | HR Officer view recent activities | PASS | Shows latest requests and statuses from own institution. |
 | 14.2 | CSC role view all activities | PASS | Shows activities across all institutions. |
-| 14.3 | Employee/PO/Admin cannot access | PASS | Not in route permissions for these roles. |
+| 14.3 | Employee/PO/Admin cannot access | PASS | Not authorised for these roles. |
 | 14.4 | Activity details | PASS | Each activity shows employee, request type, submitter, reviewer, status, date. |
 
 ---
@@ -452,9 +420,9 @@ Tests the two-stage approval workflow (HRO submits → HRRP reviews → Commissi
 | 15.2 | Generate promotion report | PASS | Includes both experience and education-based promotions. |
 | 15.3 | Generate all 9 report types | PASS | All 9 types accessible. Bilingual. PDF/Excel. |
 | 15.4 | Institution filtering in reports | PASS | Non-CSC roles see only own institution. CSC roles see all. |
-| 15.5 | Complaint report restricted to CSC | PASS | HRO/HRRP get 403 on complaint reports. |
-| 15.6 | Report export (server-side) | PASS | Server-side generation. Auth-scoped. Rate-limited. 7 REPORT_EXPORTED audit events found in audit.audit_log. |
-| 15.7 | Report export audit logged | PASS | REPORT_EXPORTED events include report type, format, institution, row count, user, IP. |
+| 15.5 | Complaint report restricted to CSC | PASS | HR Officer/Reviewer blocked from complaint reports. |
+| 15.6 | Report export (server-side) | PASS | Server-side generation. Auth-scoped. Rate-limited. 7 report-export events found in audit log. |
+| 15.7 | Report export audit logged | PASS | Export events include report type, format, institution, row count, user, computer address. |
 | 15.8 | PO read-only reports | PASS | PO can view reports but cannot submit/approve. |
 | 15.9 | Bilingual column headers | PASS | Swahili names: Ripoti ya Kuthibitishwa Kazini, Ripoti ya Kupandishwa Cheo, etc. |
 
@@ -464,13 +432,13 @@ Tests the two-stage approval workflow (HRO submits → HRRP reviews → Commissi
 
 | Case | What was tested | Result | Actual observation |
 |---|---|---|---|
-| 16.1 | Bulk fetch employees by vote code | PASS | Vote code fetch (RequestId 204) returns employees. Workplace filter applied. |
-| 16.2 | Bulk fetch by TIN number | PASS | TIN fetch (RequestId 205) returns same data structure as vote code. |
+| 16.1 | Bulk fetch employees by vote code | PASS | Vote code fetch returns employees. Workplace filter applied. |
+| 16.2 | Bulk fetch by TIN number | PASS | TIN fetch returns same data structure as vote code. |
 | 16.3 | Single employee fetch | PASS | Single-employee lookup by ZanID/payroll. Not workplace-filtered (explicit search). |
-| 16.4 | Sync employee documents | PASS | Document sync from HRIMS. Files stored in MinIO with integrity hash. |
+| 16.4 | Sync employee documents | PASS | Document sync from HRIMS. Files stored with integrity verification. |
 | 16.5 | Sync employee certificates | PASS | Certificate sync works alongside document sync. |
-| 16.6 | HRIMS settings management | PASS | Admin can update HRIMS API config. Reauth required. Audit logged. |
-| 16.7 | Island derivation during sync | PASS | Island derived from work-location fields via `deriveIsland()`. Checks department, workplace, reportingOffice, institutionName for Pemba keywords. |
+| 16.6 | HRIMS settings management | PASS | Admin can update HRIMS configuration. Re-authentication required. Audit logged. |
+| 16.7 | Island assignment during sync | PASS | Island automatically determined from work-location fields (department, workplace, reporting office, institution name). |
 
 ---
 
@@ -479,15 +447,15 @@ Tests the two-stage approval workflow (HRO submits → HRRP reviews → Commissi
 | Case | What was tested | Result | Actual observation |
 |---|---|---|---|
 | 17.1 | Create user (Admin) | PASS | Admin creates user with role, institution, username, password. Audit logged. |
-| 17.2 | Update user | PASS | Role/institution changes require reauth. Previous/new values audited. |
-| 17.3 | Deactivate user | PASS | User active=false. Cannot login. Existing sessions invalidated. |
-| 17.4 | Reset user password | PASS | New temp password generated. mustChangePassword=true. Self-reset blocked (adminId === userId → 403). |
-| 17.5 | Lock account (Admin) | PASS | isManuallyLocked=true. Security lockout. Admin unlock required. |
-| 17.6 | Unlock account (Admin) | PASS | failedLoginAttempts reset. isManuallyLocked=false. active=true. |
-| 17.7 | Create institution | PASS | Unique constraints enforced (name, TIN, voteNumber, email). |
-| 17.8 | Duplicate institution rejected | PASS | 409: "An institution with this name already exists." |
-| 17.9 | Privilege escalation detection | PASS | Role change to Admin/HHRMD/CSCS triggers CRITICAL alert. Burst at 3+/hour. |
-| 17.10 | HRO view users (institution-scoped) | PASS | HRO sees own institution users (5 returned for Kilimo). Admin sees all. |
+| 17.2 | Update user | PASS | Role/institution changes require re-authentication. Previous/new values audited. |
+| 17.3 | Deactivate user | PASS | User deactivated. Cannot login. Existing sessions invalidated. |
+| 17.4 | Reset user password | PASS | New temporary password generated. Must change on first login. Self-reset blocked. |
+| 17.5 | Lock account (Admin) | PASS | Security lockout applied. Admin unlock required. |
+| 17.6 | Unlock account (Admin) | PASS | Failed attempts reset. Account reactivated. |
+| 17.7 | Create institution | PASS | Unique constraints enforced (name, TIN, vote number, email). |
+| 17.8 | Duplicate institution rejected | PASS | "An institution with this name already exists." |
+| 17.9 | Privilege escalation detection | PASS | Role change to Admin/HHRMD/CSCS triggers critical alert. Burst at 3+ per hour. |
+| 17.10 | HR Officer view users (institution-scoped) | PASS | HR Officer sees own institution users (5 returned for Kilimo). Admin sees all. |
 | 17.11 | Bulk user operations | PASS | Bulk route available. Actions audited. |
 | 17.12 | Session cleanup | PASS | Expired sessions listed and cleaned up. Audit logged. |
 
@@ -498,14 +466,14 @@ Tests the two-stage approval workflow (HRO submits → HRRP reviews → Commissi
 | Case | What was tested | Result | Actual observation |
 |---|---|---|---|
 | 18.1 | Dashboard metrics (CSC role) | PASS | System-wide metrics: total employees, pending confirmations, promotions, LWOP, terminations, complaints, cadre changes, retirements, resignations, service extensions. |
-| 18.2 | Dashboard metrics (HRO) | PASS | Institution-scoped metrics only. Same KPI types but filtered to own institution. |
+| 18.2 | Dashboard metrics (HR Officer) | PASS | Institution-scoped metrics only. Same KPI types but filtered to own institution. |
 | 18.3 | Dashboard metrics (Employee) | PASS | Employee-specific view. Own complaints status. Own profile summary. |
-| 18.4 | In-app notification on submission | PASS | HRRP receives notification. Count: 1. |
-| 18.5 | In-app notification on approval | PASS | HRO receives notification of approval. Linked to request. |
-| 18.6 | Email notification on submission | PASS | Email sent to CSC reviewers via Nodemailer. Contains request type, employee name, request ID, dashboard path. |
+| 18.4 | In-app notification on submission | PASS | HR Reviewer receives notification. Count: 1. |
+| 18.5 | In-app notification on approval | PASS | HR Officer receives notification of approval. Linked to request. |
+| 18.6 | Email notification on submission | PASS | Email sent to CSC reviewers. Contains request type, employee name, request ID, dashboard path. |
 | 18.7 | Notification mark as read | PASS | Marked 1 notification as read. Only own notifications can be marked. |
-| 18.8 | Notification not sent to inactive user | PASS | Recipient existence and active status checked before insert. |
-| 18.9 | Notification sanitization | PASS | Control chars stripped. HTML escaped. Truncated to 500 chars. |
+| 18.8 | Notification not sent to inactive user | PASS | Recipient existence and active status checked before sending. |
+| 18.9 | Notification sanitization | PASS | Control characters stripped. HTML escaped. Truncated to 500 characters. |
 
 ---
 
@@ -513,17 +481,17 @@ Tests the two-stage approval workflow (HRO submits → HRRP reviews → Commissi
 
 | Case | What was tested | Result | Actual observation |
 |---|---|---|---|
-| 19.1 | View audit trail (Admin) | PASS | 6,797 total events visible. Filterable by type, severity, date. Events include logins, submissions, approvals, file ops, user management, IP bans, lockouts. |
-| 19.2 | Request submission audit | PASS | REQUEST_SUBMISSION event logged with request type, employee, submitter, IP, device info. |
-| 19.3 | Approval/rejection audit | PASS | REQUEST_APPROVAL / REQUEST_REJECTION logged with reviewer, review stage, IP, device info. |
-| 19.4 | File operations audit | PASS | FILE_UPLOADED / FILE_DOWNLOADED logged with filename, objectKey, user, IP. |
-| 19.5 | Report export audit | PASS | 7 REPORT_EXPORTED events found in audit.audit_log. Includes report type, format, institution, row count, user, IP. |
-| 19.6 | Privilege escalation burst alert | PASS | 3+ escalations in 1 hour → CRITICAL alert. Count and window recorded. |
-| 19.7 | Suspicious login alert | PASS | New device/location flagged. Session marked isSuspicious. Alert logged. |
-| 19.8 | File integrity mismatch alert | PASS | SHA-256 hash mismatch → INTEGRITY_MISMATCH event. File NOT served (fail-closed). |
-| 19.9 | IP ban audit | PASS | IP_BANNED / IP_BANNED_UPGRADED / ADMIN_IP_BAN / ADMIN_IP_UNBAN events logged. |
-| 19.10 | Account lockout audit | PASS | ACCOUNT_LOCKED / ACCOUNT_LOCKOUT_UPGRADED events logged. |
-| 19.11 | Admin IP ban/unban | PASS | ADMIN_IP_BAN logged as CRITICAL. ADMIN_IP_UNBAN logged as INFO. Admin ID recorded. |
+| 19.1 | View audit trail (Admin) | PASS | 6,797 total events visible. Filterable by type, severity, date. Events include logins, submissions, approvals, file ops, user management, IP blocks, lockouts. |
+| 19.2 | Request submission audit | PASS | Submission event logged with request type, employee, submitter, computer address, device info. |
+| 19.3 | Approval/rejection audit | PASS | Approval/rejection logged with reviewer, review stage, computer address, device info. |
+| 19.4 | File operations audit | PASS | File upload/download logged with filename, user, computer address. |
+| 19.5 | Report export audit | PASS | 7 report-export events found in audit log. Includes report type, format, institution, row count, user, computer address. |
+| 19.6 | Privilege escalation burst alert | PASS | 3+ escalations in 1 hour → critical alert. Count and time window recorded. |
+| 19.7 | Suspicious login alert | PASS | New device/location flagged. Session marked suspicious. Alert logged. |
+| 19.8 | File integrity mismatch alert | PASS | File fingerprint mismatch → security alert. File NOT served (fail-closed). |
+| 19.9 | IP block audit | PASS | IP-block events logged (automatic blocks, upgrades, admin blocks, admin unblocks). |
+| 19.10 | Account lockout audit | PASS | Account-lockout events logged (standard and upgraded). |
+| 19.11 | Admin IP block/unblock | PASS | Admin block logged as critical. Admin unblock logged as info. Admin ID recorded. |
 
 ---
 
@@ -531,16 +499,16 @@ Tests the two-stage approval workflow (HRO submits → HRRP reviews → Commissi
 
 | Case | What was tested | Result | Actual observation |
 |---|---|---|---|
-| 20.1 | Password complexity | PASS | 12+ chars, 4 classes (upper/lower/number/special). zxcvbn strength feedback. |
-| 20.2 | Password history (5) | PASS | Cannot reuse last 5 passwords. Argon2id hash verification. |
+| 20.1 | Password complexity | PASS | 12+ characters, 4 character types (upper/lower/number/special). Strength feedback provided. |
+| 20.2 | Password history (5) | PASS | Cannot reuse last 5 passwords. |
 | 20.3 | Password expiry (90 days) | PASS | 90-day expiry for standard users. 7-day grace period. |
 | 20.4 | Password expiry (60 days Admin) | PASS | Admin expires after 60 days, not 90. Same grace period. |
-| 20.5 | Temporary password (7 days) | PASS | Temp passwords expire after 7 days. mustChangePassword=true on first login. |
+| 20.5 | Temporary password (7 days) | PASS | Temporary passwords expire after 7 days. Must change on first login. |
 | 20.6 | Password change lockout | PASS | 5 failed change attempts → 30-minute lockout on password change. |
-| 20.7 | HIBP breach check | PASS | Have I Been Pwned k-anonymity model. Breached passwords rejected. |
-| 20.8 | Forgot password flow | PASS | Reset token sent to email (if user exists). SHA-256 hashed tokens. Link expires. New password must meet complexity + history checked. |
-| 20.9 | Change password (authenticated) | PASS | Current password verified via Argon2id. New password complexity checked. History checked. Old hash added to history. |
-| 20.10 | Must change password on first login | PASS | Redirected to change-password-required page. Must set new password before dashboard access. |
+| 20.7 | Known breached password check | PASS | Passwords found in known data breaches are rejected. |
+| 20.8 | Forgot password flow | PASS | Reset link sent to email. Secure tokens. Link expires. New password must meet complexity + history checked. |
+| 20.9 | Change password (authenticated) | PASS | Current password verified. New password complexity checked. History checked. |
+| 20.10 | Must change password on first login | PASS | Redirected to change-password page. Must set new password before dashboard access. |
 
 ---
 
@@ -549,11 +517,11 @@ Tests the two-stage approval workflow (HRO submits → HRRP reviews → Commissi
 | Case | What was tested | Result | Actual observation |
 |---|---|---|---|
 | 21.1 | CSC role views all institutions | PASS | Name, email, phone, employee count visible. Can click through to employees. |
-| 21.2 | HRRP views institutions | PASS | HRRP and HRRP_PEMBA allowed per route permissions. |
-| 21.3 | Admin creates institution | PASS | Unique constraints enforced. Audit logged. Reauth required. Admin-only. |
+| 21.2 | HR Reviewer views institutions | PASS | HR Reviewer and Pemba HR Reviewer allowed per access permissions. |
+| 21.3 | Admin creates institution | PASS | Unique constraints enforced. Audit logged. Re-authentication required. Admin-only. |
 | 21.4 | Admin updates institution | PASS | Changes saved. Audit logged. |
-| 21.5 | Toggle manual entry | PASS | manualEntryEnabled=true, start/end dates set. HRO can now add employees. Audit logged. |
-| 21.6 | Non-Admin cannot create | PASS | 403. Institution creation restricted to Admin. |
+| 21.5 | Toggle manual entry | PASS | Manual entry enabled, start/end dates set. HR Officer can now add employees. Audit logged. |
+| 21.6 | Non-Admin cannot create | PASS | Blocked. Institution creation restricted to Admin. |
 
 ---
 
@@ -561,35 +529,17 @@ Tests the two-stage approval workflow (HRO submits → HRRP reviews → Commissi
 
 | Case | What was tested | Result | Actual observation |
 |---|---|---|---|
-| 22.1 | HRO views urgent actions | PASS | Employees needing attention listed (probation expiring, retirement approaching). Institution-scoped. |
-| 22.2 | HRRP views urgent actions | PASS | Institution-scoped. HRRP has access. |
-| 22.3 | CSC roles blocked | PASS | Only HRO/HRRP (and Pemba variants) + CSCS allowed. Other CSC roles (HHRMD/HRMO/DO) not in navigation. |
+| 22.1 | HR Officer views urgent actions | PASS | Employees needing attention listed (probation expiring, retirement approaching). Institution-scoped. |
+| 22.2 | HR Reviewer views urgent actions | PASS | Institution-scoped. HR Reviewer has access. |
+| 22.3 | CSC roles blocked | PASS | Only HR Officer/Reviewer (and Pemba variants) + CSCS allowed. Other CSC roles not in navigation. |
 
 ---
 
-### Automated Unit Tests Updated on August 15
+### Key findings during testing
 
-Alongside the UAT manual testing, the following automated unit test suites were updated and verified to pass:
+**Redirect loop fixed:** When the new Pemba roles were first deployed, the system did not recognise them and denied access to the dashboard, causing an infinite redirect loop on login. This was fixed by adding both Pemba variants to every page access permission. Tests were added to prevent this from recurring.
 
-| Test File | What it Tests | Result |
-|---|---|---|
-| `route-permissions.test.ts` | Route access for all 12 roles including Pemba variants. Tests that HRO_PEMBA can reach every page HRO can, HRRP_PEMBA reaches every page HRRP can, both are denied admin-only and complaints pages, and that the dashboard allowedRoles include both Pemba variants. Includes a regression test for a redirect-loop bug where Pemba roles were initially denied dashboard access. | All PASS |
-| `proxy.test.ts` | Proxy audit wiring — verifies that UNAUTHORIZED_ACCESS and FORBIDDEN_ROUTE audit events are written for blocked requests, that no false-positive audit rows are created for granted access, and that HRO_PEMBA is granted access to `/dashboard` (regression test for the redirect-loop bug). | All PASS |
-| `employee-status-validation.test.ts` | Tests which HR request types are allowed/blocked for each employee status (On Probation, Confirmed, On LWOP, Retired, Resigned, Terminated, Dismissed, null/unknown). Covers the full status-request matrix, error messages, and edge cases. | All PASS |
-| `island-utils.test.ts` | Tests the `deriveIsland` function — that it returns UNGUJA by default, detects Pemba keywords (pemba, chake, wete, mkoani, micheweni, uratibu) in department/workplace/reportingOffice/institutionName, is case-insensitive, and that the first Pemba signal wins. | All PASS |
-| `users/[id]/route.test.ts` | Tests privilege-escalation detection (Req 26.2) — that role changes escalating to Admin/HHRMD/CSCS emit CRITICAL POTENTIAL_BREACH audit events, that bursts of 3+ routine-tier escalations per hour also trigger alerts, and that lateral/non-escalating changes do not. | All PASS |
-| `audit-logger.test.ts` | Tests audit logging functions across all domains (auth, workflow, admin, complaints, employees, files, IP bans). | All PASS |
-| `file-access.test.ts` | Tests file access authorization — role-based checks for employee documents, photos, generic uploads, and complaint attachments. Verifies that at-risk roles with unresolvable owners are DENIED (fail-closed). | All PASS |
-
-### Key Bug Found and Fixed During Testing (August 15)
-
-During testing, a **redirect-loop regression** was discovered: when the new `HRO_PEMBA` and `HRRP_PEMBA` roles were first deployed, the proxy (page access middleware) did not recognize them and denied access to `/dashboard`, causing an infinite redirect loop on login. This was fixed by adding both Pemba variants to every route permission entry that lists HRO or HRRP. A regression test was added to both `route-permissions.test.ts` and `proxy.test.ts` to prevent this from recurring.
-
-### Test Case 7.2 Re-examined (August 17)
-
-**Test case 7.2** — Resignation request for a probation employee:
-- **Original verdict (Aug 15):** FAIL — flagged because the resignation route does not call `validateEmployeeStatusForRequest` and accepted a resignation for a probation employee.
-- **Re-examined (Aug 17):** **PASS (by design).** Probation employees are allowed to resign if they choose to do so. Unlike confirmation, promotion, cadre change, retirement, service extension, and LWOP — which require a confirmed/active employment status — resignation is voluntary and is intentionally permitted for probation employees. The absence of the `On Probation` block in the resignation route is correct behaviour, not a gap. The test expectation was wrong; the implementation is right.
+**Test case 7.2 re-examined (August 17):** A resignation request for a probation employee was initially recorded as a FAIL, on the assumption that probation employees should be blocked from resigning. On re-examination, this was confirmed as correct behaviour — probation employees are allowed to resign if they choose to do so. Resignation is voluntary and does not require confirmed employment status. The test expectation was corrected; the case is now PASS.
 
 ### UAT Summary
 
@@ -600,118 +550,62 @@ During testing, a **redirect-loop regression** was discovered: when the new `HRO
 | Failing | 0 |
 | Pass rate | 100% |
 | Modules tested | 22 |
-| User roles tested | 12 (HRO, HRO_PEMBA, HHRMD, HRMO, DO, PO, CSCS, HRRP, HRRP_PEMBA, Admin, Employee) |
+| User roles tested | 12 |
 | Audit events verified | 6,797 total events in audit trail |
 | Report types tested | 9 (bilingual, PDF/Excel) |
 | Security features tested | MFA, password policy, account lockout, IP banning, session timeout, CSRF, rate limiting, privilege escalation, file integrity, IDOR prevention |
-| Test environment | Local development server (localhost:9002) |
+| Test environment | Local development server |
 | Test users | Wizara ya Kilimo (mabdi, bimkubwa, noah, asultan, mahfoudhhassan) + CSC roles (skhamis, fiddi, mussi, mishak, zhaji, ymrajab) |
 
 ---
 
-## 6. Production Configuration Updates (August 15)
+## 6. Production Deployment (August 15)
 
-On August 15, multiple production configuration files were updated:
-- Database schema (`prisma/schema.prisma`) — includes the new `island` field on Employee
-- Login route — updated with Pemba role support and IP ban integration
-- Ecosystem configuration (`ecosystem.config.js`) — PM2 process manager settings
-- Production environment variables (`.env.production`)
+On August 15, multiple production configuration files were updated to deploy the Pemba roles and island feature, including the database structure (new island field), login system (Pemba role support and IP ban integration), server process management, and production environment settings.
 
+---
 
-## 7. Mandatory MFA for All Users (August 16)
+## 7. Mandatory Multi-Factor Authentication (August 16)
 
-### What was the problem?
+### The problem
 
-The system had a two-tier MFA policy:
+The system had a two-tier security policy for login:
 
-1. **Role-based (mandatory):** Only Admin, CSCS, and HHRMD roles were always required to complete MFA. If a user in one of these roles had no email on file, login was blocked entirely with a `403 MFA_REQUIRED_NO_EMAIL` error.
-2. **Email-based (conditional):** All other roles (HRMO, DO, PO, HRO, HRO_PEMBA, HRRP, HRRP_PEMBA) only got MFA if they happened to have an email address on file. If they had no email, they logged in directly with just a password — **no MFA at all**.
+1. **Senior roles (mandatory):** Only Admin, CSC Secretary, and HHRMD were always required to complete a second verification step (a one-time code sent to their email).
+2. **Other roles (conditional):** All other roles only got this second step if they happened to have an email address on file. If they had no email, they logged in with just a password — no second verification at all.
 
-This meant that 7 of the 11 user roles could bypass MFA entirely simply by not having an email address. An attacker who compromised one of these accounts would face only a single password barrier, not the multi-factor protection required for privileged roles.
+This meant 7 of the 11 user roles could bypass the second verification step simply by not having an email address. An attacker who compromised one of these accounts would face only a single password barrier.
 
 ### What was changed
 
-On August 16, the conditional email-based MFA bypass was removed. The login route (`src/app/api/auth/login/route.ts`) now unconditionally requires MFA for every user:
-
-| Before | After |
-|---|---|
-| `const mfaRequired = mfaRequiredByRole \|\| !!user.email;` | `const mfaRequired = true;` |
-| Non-privileged roles without email → login completes directly (no MFA) | Non-privileged roles without email → login blocked with `MFA_REQUIRED_NO_EMAIL` |
-| Dead code path: `completeLogin()` for no-MFA logins | Removed — unreachable |
-| `MFA_REQUIRED_ROLES` import in login route | Removed — no longer read |
-| `completeLogin` import in login route | Removed — no longer used |
-
-### Impact on each role
+On August 16, the conditional bypass was removed. The login system now **unconditionally requires the second verification step for every user**, regardless of role. Users without an email address are now blocked from logging in until an administrator adds one.
 
 | Role | Before | After |
 |---|---|---|
-| Admin | MFA required (no change) | MFA required (no change) |
-| CSCS | MFA required (no change) | MFA required (no change) |
-| HHRMD | MFA required (no change) | MFA required (no change) |
-| HRMO | MFA only if email on file | **MFA always required.** No email = login blocked. |
-| DO | MFA only if email on file | **MFA always required.** No email = login blocked. |
-| PO | MFA only if email on file | **MFA always required.** No email = login blocked. |
-| HRO | MFA only if email on file | **MFA always required.** No email = login blocked. |
-| HRO_PEMBA | MFA only if email on file | **MFA always required.** No email = login blocked. |
-| HRRP | MFA only if email on file | **MFA always required.** No email = login blocked. |
-| HRRP_PEMBA | MFA only if email on file | **MFA always required.** No email = login blocked. |
-| EMPLOYEE | MFA required (employee-login route already enforced this) | No change |
+| Admin, CSCS, HHRMD | Second step required (no change) | No change |
+| HRMO, DO, PO | Second step only if email on file | **Second step always required.** No email = login blocked. |
+| HRO, HRO_PEMBA, HRRP, HRRP_PEMBA | Second step only if email on file | **Second step always required.** No email = login blocked. |
+| Employee | Second step already required | No change |
 
-### Investigation: Why asultan and bimkubwa lost MFA
+### Investigation: Why some users lost their second verification step
 
-During testing, it was discovered that 6 UAT users (asultan, bimkubwa, mabdi, noah, mussi, mishak) had no email in the database despite having previously used MFA. An investigation was conducted:
+During testing, it was discovered that 6 users had no email in the database despite having previously used the second verification step. Investigation revealed:
 
-**Evidence from the MfaToken table:**
+All 6 users had emails and completed the second step on August 14. By August 15, their email addresses were empty in the database, and they were logging in without the second step.
 
-| User | Email used for MFA | Verified MFA tokens | Last MFA verified | Last login (no MFA) |
-|---|---|---|---|---|
-| asultan | helpdesk@zanajira.go.tz | 16 | Aug 14, 10:52 | Aug 16, 06:02 |
-| bimkubwa | maombismz@zanajira.go.tz | 46 | Aug 14, 14:33 | Aug 16, 06:01 |
-| mabdi | aminanne@zanajira.go.tz | 34 | Aug 14, 07:45 | Aug 16, 05:42 |
-| noah | aminatano@zanajira.go.tz | 24 | Aug 14, 07:21 | Aug 15, 14:30 |
-| mussi | maimuna.ussi@zanajira.go.tz | 2 | Aug 14, 14:29 | Aug 15, 14:30 |
-| mishak | mishak@mock.local | 2 | Aug 14, 14:29 | Aug 15, 14:30 |
-
-All 6 users had emails and completed MFA on August 14. By August 15, their `User.email` column was empty. They logged in on Aug 15 and Aug 16 without MFA (no new MFA tokens created).
-
-**Root cause:** The user update route (`src/app/api/users/[id]/route.ts`) accepted an empty string for the email field via `.or(z.literal(''))` in its Zod schema. When an admin opened the user edit form, the frontend populated the email field with `user.email || ''` (empty string if no email). When the admin saved (even just changing the role), the empty string was sent to the server and silently cleared the email from the database.
+**Root cause:** When an administrator opened the user edit form, the email field showed empty for users without an email. When the administrator saved (even just changing the role), the empty value was sent to the server and silently cleared the email from the database.
 
 ### Fixes applied
 
-1. **Mandatory MFA enforcement** — The login route now requires MFA for all users regardless of role or email presence. The dead `completeLogin()` direct-login path was removed.
+1. **Mandatory second step** — all users must now complete it, regardless of role or email presence.
+2. **Email clearing prevention** — the system now rejects empty email values. An email can only be changed to a valid email address, never cleared to empty.
+3. **Email restoration** — emails were restored for all 8 affected users from their previous verification records.
 
-2. **Email clearing prevention** — Removed `.or(z.literal(''))` from the email field in the user update schema (`profileUpdateSchema`). Empty strings are now rejected with a validation error. An email can only be changed to a valid email address, never cleared to empty.
+> **Update (August 18):** The mandatory MFA requirement was subsequently made admin-configurable. See [section 12](#12-admin-configurable-mfa-enforcement-august-18) for the policy-driven MFA gate that allows an administrator to toggle MFA on or off system-wide.
 
-3. **Email restoration** — Restored emails for all 8 affected users from their MfaToken records (the last email each user used for MFA):
+### Current status across all 206 users
 
-   | User | Restored Email |
-   |---|---|
-   | asultan | helpdesk@zanajira.go.tz |
-   | bimkubwa | maombismz@zanajira.go.tz |
-   | mabdi | aminanne@zanajira.go.tz |
-   | noah | aminatano@zanajira.go.tz |
-   | mussi | maimuna.ussi@zanajira.go.tz |
-   | mishak | mishak@mock.local |
-   | kmnyonge | kmnyonge@mock.local |
-   | abdillahomarnajim | aminanne@zanajira.go.tz |
-
-### Testing
-
-The MFA role test file was updated with new test cases:
-
-| Test | Before | After |
-|---|---|---|
-| HRO with no email | Asserted `completeLogin` called (no MFA) | Asserts 403 `MFA_REQUIRED_NO_EMAIL` |
-| HRRP_PEMBA with no email | Did not exist | New test: asserts 403 `MFA_REQUIRED_NO_EMAIL` |
-| HRO with email | Asserted `MFA_REQUIRED` | Same (still `MFA_REQUIRED`) |
-| DO with email | Did not exist | New test: asserts `MFA_REQUIRED` |
-| PO with email | Did not exist | New test: asserts `MFA_REQUIRED` |
-
-**Results:** 24/24 auth tests pass, 44/44 all auth tests pass, 77/77 proxy + route-permissions tests pass.
-
-### Current MFA status across all 206 users
-
-| Role | Total | With Email (MFA ready) | Without Email (blocked) |
+| Role | Total users | With email (ready) | Without email (blocked) |
 |---|---|---|---|
 | Admin | 3 | 3 | 0 |
 | CSCS | 1 | 1 | 0 |
@@ -723,10 +617,10 @@ The MFA role test file was updated with new test cases:
 | HRO_PEMBA | 2 | 2 | 0 |
 | HRRP | 107 | 105 | 2 |
 | HRRP_PEMBA | 2 | 2 | 0 |
-| EMPLOYEE | 61 | 19 | 42 |
+| Employee | 61 | 19 | 42 |
 | **Total** | **206** | **161** | **45** |
 
-**3 staff users still blocked** (need email added by admin):
+**3 staff users still need an email added by an administrator:**
 
 | Username | Role | Name | Institution |
 |---|---|---|---|
@@ -734,204 +628,228 @@ The MFA role test file was updated with new test cases:
 | fhali | HRRP | Farida Haji Ali | Ofisi ya Msajili wa Hazina |
 | mahfoudhhassan | HRRP | Mahfoudh Mohammed Hassan | Wizara ya Kilimo Umwagiliaji Maliasili na Mifugo |
 
-
 ---
 
 ## 8. Pemba Role Frontend Completion (August 16)
 
-### What was the problem?
+### The problem
 
-The Pemba-scoped roles (`HRO_PEMBA`, `HRRP_PEMBA`) were fully implemented on the backend — all 16 API routes, the database schema (`island` column), route permissions, navigation, and the proxy were all updated. However, 4 of the 13 frontend dashboard pages still used exact-string role checks (`role === ROLES.HRO`, `role === ROLES.HRRP`) instead of the predicate-based checks (`isHroLike(role)`, `isHrrpLike(role)`).
+The Pemba-scoped roles were fully working on the backend — all data queries, database, access permissions, and navigation recognised them. However, 4 of the 13 system pages still used checks that did not recognise the Pemba variants.
 
-This meant that if a user with `HRO_PEMBA` or `HRRP_PEMBA` logged in and visited these pages, they would see a broken UI:
-- The "Submit Request" form would not appear (it checked `role === ROLES.HRO`, which doesn't match `HRO_PEMBA`)
-- The HRRP review buttons would not appear for `HRRP_PEMBA` users
-- Labels would show "Review Requests" instead of "My Requests" (wrong context for the submitting officer)
+This meant that if a Pemba-based officer logged in and visited these pages, they would see a broken interface:
+- The "Submit Request" form would not appear
+- The review buttons would not appear for Pemba reviewers
+- Labels would show the wrong context ("Review Requests" instead of "My Requests")
 - The resubmit button for rejected requests would not appear
 
-The backend correctly handled these roles — the API would accept submissions and reviews — but the frontend never showed the buttons to trigger them.
+The backend correctly handled these roles, but the pages never showed the buttons to trigger the actions.
 
 ### What was changed
 
-All 4 remaining pages were converted from exact-string checks to predicate-based checks:
+All 4 remaining pages were updated to recognise the Pemba roles:
 
-| Page | Replacements | Key sites converted |
-|---|---|---|
-| `confirmation/page.tsx` | 14 | Submit form visibility, HRRP review buttons, list labels ("My Requests" vs "Review Requests"), rejection status routing, resubmit button, institution display |
-| `promotion/page.tsx` | 11 | Submit form, client-side request filtering, status/reviewStage derivation, rejection branch, HRRP review actions, list labels |
-| `cadre-change/page.tsx` | 8 | Submit form, rejection status, review list visibility, HRRP review actions, institution display, resubmit button |
-| `retirement/page.tsx` | 8 | Submit form, rejection status, HRRP review actions, review list, institution display, resubmit button |
-
-Each page received the import `import { isHroLike, isHrrpLike } from '@/lib/role-utils';` and every occurrence of `role === ROLES.HRO` was replaced with `isHroLike(role)` and every `role === ROLES.HRRP` with `isHrrpLike(role)`. Negations (`role !== ROLES.HRO`) became `!isHroLike(role)`.
-
-A missing `fetchWithCsrf` import in cadre-change (accidentally removed during conversion) was also fixed.
+| Page | Key items fixed |
+|---|---|
+| Confirmation requests | Submit form, review buttons, list labels, resubmit button, institution display |
+| Promotion requests | Submit form, request filtering, review actions, list labels |
+| Cadre change requests | Submit form, review list, review actions, resubmit button |
+| Retirement requests | Submit form, review actions, review list, resubmit button |
 
 ### Pemba implementation — now 100% complete
 
-| Area | Files | Status |
-|---|---|---|
-| Predicates | `role-utils.ts` | Done (Aug 15) |
-| Types & constants | `types.ts`, `constants.ts` | Done (Aug 15) |
-| Database schema | `island` column + migration + backfill | Done (Aug 9) |
- | API data scope (16 routes) | `pembaIslandWhere()` in all list/metrics/reports handlers | Done (Aug 15) |
-| API allowedRoles | All `withAuth` arrays include `HRO_PEMBA`/`HRRP_PEMBA` | Done (Aug 15) |
-| API exact-string guards (S1-S10) | IDOR checks, PII sanitization, resubmission guards, HRRP attribution | Done (Aug 15) |
-| Reports complaints block | Complaints report blocked for Pemba roles | Done (Aug 15) |
-| Navigation (15 items) | `navigation.ts` includes Pemba variants | Done (Aug 15) |
-| Frontend pages (13 total) | dashboard + profile + lwop + resignation + service-extension + termination + reports + track-status + urgent-actions + recent-activities + complaints + **confirmation + promotion + cadre-change + retirement** | **Done (Aug 16)** |
-| Manual entry & bulk upload | Pemba write validation via `deriveIsland()` | Done (Aug 15) |
-| Route permissions + proxy | `route-permissions-config.ts` + `proxy.ts` | Done (Aug 15) |
-| Sidebar manual-entry check | `sidebar.tsx` uses `isHroLike(role)` | Done (Aug 15) |
-| Seed/UAT users | `bimkubwa`, `asultan`, `halima`, `kbsilima` | Done (Aug 15) |
-| Tests | `route-permissions.test.ts`, `proxy.test.ts` (regression tests for redirect loop) | Done (Aug 15) |
+| Area | Status |
+|---|---|
+| Role definitions and types | Done (Aug 15) |
+| Database structure (island field) | Done (Aug 9) |
+| All 16 data queries filtered by island | Done (Aug 15) |
+| Page access permissions | Done (Aug 15) |
+| Navigation menu | Done (Aug 15) |
+| All 13 system pages recognise Pemba roles | **Done (Aug 16)** |
+| Manual entry and bulk upload | Done (Aug 15) |
+| Test users created | Done (Aug 15) |
 
 ### Verification
 
-- `tsc --noEmit` — clean (0 errors)
-- `grep` confirms zero remaining `role === ROLES.HRO` or `role === ROLES.HRRP` checks across all 13 dashboard pages
-- 92 tests pass (route-permissions 77 + auth/MFA 15)
+- No remaining role-check issues found across all 13 pages
+- 92 tests pass (page permissions + authentication)
 
 ---
 
-## 9. File Integrity Hash Fix — 410 Error for Commission Officers (August 16)
+## 9. File Viewing Fix for Commission Officers (August 16)
 
-### What was the problem?
+### The problem
 
-Commission officers (HHRMD/HRMO) received **"File not accessible: 410"** errors when trying to view employee documents and photos in the employee profile. Other users on the same files were unaffected, making the failure look random.
+Commission officers (HHRMD/HRMO) received "File not accessible" errors when trying to view employee documents and photos in the employee profile. Other users viewing the same files were unaffected, making the failure appear random.
 
 ### Root cause
 
-The system's file-integrity verification (`verifyFileHash()`) is designed to **fail closed** for sensitive storage prefixes (`employee-documents/`, `employee-photos/`): if no stored hash row exists for a file, the download/preview route refuses to serve it (HTTP 410 Gone). This is intentional — an unverified sensitive file must not be downloadable.
-
-However, several upload paths had never been wired to call `recordFileHash()` when storing files:
-
-- Employee documents upload (`/api/employees/[id]/documents`)
-- Employee certificates upload (`/api/employees/[id]/certificates`)
-- Employee fetch-documents and fetch-photo routes
-- HRIMS fetch-employee (documents + photo)
-- HRIMS fetch-documents-by-institution and fetch-photos-by-institution
-- Photo fetch/migrate scripts
-
-Any file stored through these paths therefore had **no hash row**, and the fail-closed verification correctly (but wrongly) refused to serve it. Files uploaded through the already-wired paths worked fine — which is why only some users and files were affected.
+The system verifies file integrity before allowing download — if a file has no stored security fingerprint, the download is refused as a safety precaution. However, several file upload paths had never been set up to record these fingerprints. Any file stored through these paths therefore had no fingerprint, and the safety check correctly (but wrongly) refused to serve it.
 
 ### What was fixed
 
-**1. Record hashes at the source (all upload paths):** Every upload path listed above now calls `recordFileHash()` (SHA-256) when storing an object, so every new file gets a hash row from day one.
+1. **Record fingerprints at the source:** Every file upload path now records a security fingerprint when storing a file, so every new file is verifiable from day one.
+2. **Backfill existing files:** A script was run to verify and fingerprint all existing files that were missing fingerprints. It was designed to be safe to re-run (already-verified files are skipped).
+3. **Fix a silent truncation bug:** The original file-listing method stalled after approximately 2,000 files, causing earlier runs to silently stop and report success. This was fixed by using an updated listing method.
 
-**2. Backfill legacy objects:** A new script, `scripts/backfill-file-hashes.ts` (`npm run backfill:hashes`), streams every existing MinIO object under the two sensitive prefixes, downloads each object that has no hash row, computes its SHA-256, and upserts the FileHash row. It is:
-- **Idempotent** — objects that already have a hash row are skipped, so re-runs are safe
-- **Concurrency-limited** — 10 parallel downloads by default (`BACKFILL_CONCURRENCY`), keeping throughput high without exhausting the database pool or overwhelming MinIO
-- **Memory-safe** — processes each object as it arrives from the stream instead of buffering the whole listing
-
-**3. Fix a silent truncation bug in the backfill listing:** The original listing used the legacy `listObjects` (V1) stream, which stalls after ~2,000 keys on this bucket. Combined with a 15-second stale-stream timeout, earlier backfill runs silently stopped at 2,000 keys per prefix and reported success. The script now uses `listObjectsV2`, and the stale timeout was raised to 300 seconds as a last-resort watchdog only.
-
-### Results (verified on production data)
+### Results
 
 | Metric | Value |
 |---|---|
-| Objects scanned | 32,160 |
-| Hashes backfilled | 28,160 |
+| Files scanned | 32,160 |
+| Files fingerprinted | 28,160 |
 | Errors | 0 |
-| Reported employee's documents | All now pass integrity verification |
 
-The affected commission officers can now view employee documents and photos without 410 errors, and the fail-closed integrity policy remains fully enforced.
-
-### Files changed
-
-| File | Change |
-|---|---|
-| `scripts/backfill-file-hashes.ts` | New — 270-line idempotent backfill script |
-| `package.json` | New `backfill:hashes` npm script |
-| `src/app/api/employees/[id]/documents/route.ts` | Record hash on upload |
-| `src/app/api/employees/[id]/certificates/route.ts` | Record hash on upload |
-| `src/app/api/employees/[id]/fetch-documents/route.ts` | Record hash on store |
-| `src/app/api/employees/[id]/fetch-photo/route.ts` | Record hash on store |
-| `src/app/api/hrims/fetch-employee/route.ts` | Record hashes (documents + photo) |
-| `src/app/api/hrims/fetch-documents-by-institution/route.ts` | Record hash on store |
-| `src/app/api/hrims/fetch-photos-by-institution/route.ts` | Record hash on store |
-| `scripts/fetch-all-photos.ts` | Record hash on store |
-| `scripts/migrate-photos-to-minio.ts` | Record hash on store |
+The affected commission officers can now view employee documents and photos without errors, and the integrity verification policy remains fully enforced.
 
 ---
-## 10. Retirement Pemba Role-Gate Fix (August 17)
 
-### What was the problem?
+## 10. Retirement Workflow Fix for Pemba Users (August 17)
 
-Users with the Pemba-scoped roles `HRRP_PEMBA` and `HRO_PEMBA` received a **403 "Failed to update the request"** error when trying to reject, forward, or resubmit retirement requests from the dashboard. The buttons ("Reject & Return to HRO", "Verify & Forward to Commission") worked for regular `HRRP`/`HRO` users but not for the Pemba variants.
+### The problem
+
+Users with the Pemba-based roles ("HR Reviewer (Pemba)" and "HR Officer (Pemba)") received a "Failed to update the request" error when trying to reject, forward, or resubmit retirement requests. The buttons worked for regular HR users but not for the Pemba variants.
 
 ### Root cause
 
-The dashboard submits workflow actions via `PATCH /api/retirement` (the collection route), not `/api/retirement/[id]`. Both routes had role authorization gates that used **hardcoded role strings** excluding the Pemba variants:
-
-- The collection `PATCHHandler` checked `userRole === 'HRRP'` and `checkRoleAuthorization(userRole, ['HRRP'])` / `['HRO','HRRP']`.
-- The `[id]` `handleUpdate` checked `auth.role === 'HRRP'` and `auth.role !== 'HRRP'` / `!['HRO','HRRP'].includes(auth.role)`.
-
-A Pemba HRRP rejecting a request was classified as a non-HRRP actor and hit the `ROLE_NOT_HRRP` gate → 403. The frontend's `handleUpdateRequest` throws `'Failed to update request'` on any non-OK response, which is the message the user saw.
-
-The sibling `promotions` and `confirmations` routes had already been updated to include `HRRP_PEMBA`/`HRO_PEMBA` via the `isHrrpLike`/`isHroLike` predicates (defined in `src/lib/role-utils.ts`); the retirement routes were missed.
+The retirement workflow had permission checks that used exact role names (e.g. "HRRP") and did not include the Pemba variants (e.g. "HRRP_PEMBA"). A Pemba-based reviewer rejecting a request was classified as unauthorised and blocked. The promotion and confirmation workflows had already been updated to recognise Pemba roles; the retirement workflow was missed.
 
 ### What was fixed
 
-Both retirement API routes were converted from exact-string role checks to predicate-based checks, matching the pattern already used by promotions and confirmations:
-
-| Route | Fix sites |
-|---|---|
-| `src/app/api/retirement/route.ts` (collection) | Imported `isHrrpLike`. `isHrrpApproval` now uses `isHrrpLike(userRole)`. HRRP action gate → `['HRRP','HRRP_PEMBA']`. Resubmission gate → `['HRO','HRRP','HRO_PEMBA','HRRP_PEMBA']`. POST handler `isHRRP` detection → `isHrrpLike(auth.role)` (a Pemba HRRP submitting directly was getting the wrong initial status). HRRP notification queries → `role: { in: ['HRRP','HRRP_PEMBA'] }` so Pemba HRRP users receive pending-review/resubmission notifications. |
-| `src/app/api/retirement/[id]/route.ts` | Imported `isHrrpLike`, `isHroLike`. `isHrrpApproval` → `isHrrpLike(auth.role)`. HRRP action gate → `!isHrrpLike(auth.role)`. Resubmission gate → `!(isHroLike(auth.role) \|\| isHrrpLike(auth.role))`. |
-
-The commission-decision gate (`HHRMD`/`HRMO` only) was intentionally left unchanged — those are CSC roles with no Pemba variant. The status-transition FSM (`isAllowedStatusTransition`) is role-agnostic and needed no change.
+Both retirement workflow routes were updated to recognise Pemba roles, matching the pattern already used by promotions and confirmations. The commission-decision stage (handled only by HHRMD/HRMO, which have no Pemba variant) was intentionally left unchanged.
 
 ### Verification
 
-- `npx tsc --noEmit` — 0 errors in the retirement routes.
-- `npx vitest run src/app/api/retirement/route.test.ts` — 5/5 pass (existing commission-workflow tests unaffected).
-- The reported flow now works end-to-end: `HRRP_PEMBA` rejecting → "Rejected by HRRP - Awaiting HRO Correction", and `HRO_PEMBA` resubmitting the corrected request → "Pending HRRP Review".
+- No errors in the retirement routes
+- All existing retirement workflow tests pass
+- The reported flow now works end-to-end: a Pemba reviewer can reject a request, and a Pemba HR officer can resubmit a corrected request
 
 ### Related correction
 
-While reviewing the UAT results, test case 7.2 (resignation for a probation employee) was re-examined. It had been recorded as a FAIL on the assumption that probation employees should be blocked from resigning. In fact, probation employees **are allowed to resign** if they choose to do so — resignation is voluntary and does not require confirmed employment status. The absence of an `On Probation` block in the resignation route is correct behaviour, not a gap. The test expectation was corrected and the case is now PASS (by design).
+While reviewing the test results, test case 7.2 (resignation for a probation employee) was re-examined. Probation employees **are allowed to resign** if they choose to do so — resignation is voluntary and does not require confirmed employment status. This is correct behaviour, not a gap.
 
 ---
-## Summary of Artifacts Produced This Month
 
-| Document / Artifact | Date | Purpose |
+## 11. Early Blocking of Ineligible Retirement Requests (August 17)
+
+### The problem
+
+When an HR officer searched for a probation employee in the retirement module and entered a payroll number or ZanID, the system let them fill in the entire form (retirement type, proposed date, documents) and only blocked submission at the end with an error message: *"Cannot submit Retirement request. Employee status is 'On Probation' which restricts this request type."*
+
+The backend was correct — it properly blocked ineligible employees. But the frontend only checked for "Retired" status, leaving probation, LWOP, resigned, terminated, and dismissed employees unblocked until the form was submitted. This was inconsistent with the cadre change module, which validates eligibility immediately when an employee is looked up.
+
+### What was changed
+
+The retirement page now checks the employee's eligibility **immediately when they are looked up**, before any form field is filled:
+
+| Change | Before | After |
 |---|---|---|
-| IP Ban Design Specification | Aug 4 | Technical design for the IP banning feature |
+| Eligibility check | Only blocked "Retired" employees | Blocks probation, LWOP, resigned, terminated, and dismissed employees |
+| When the error appears | Only on submit (after filling the whole form) | Immediately on lookup (before any field is filled) |
+| Error message | Hardcoded "already retired" | Shows the specific reason from the shared eligibility checker |
+| Form state | Form was fillable until submit | Form is immediately disabled and dimmed |
+
+### How it works now
+
+When an HR officer searches for an employee on probation:
+1. The system checks eligibility immediately.
+2. A clear error message appears: *"Employee Ineligible — Cannot submit Retirement request. Employee status is 'On Probation' which restricts this request type."*
+3. The entire form is dimmed and all fields are disabled.
+4. The submit button is disabled.
+
+The backend check remains as a safety net. Both layers now use the same eligibility checker with the same message.
+
+## 12. Admin-Configurable MFA Enforcement (August 18)
+
+### The background
+
+On August 16, MFA was made mandatory for every user (section 7). That change hardcoded the requirement: the login code always forced the second verification step, with no way to turn it off. This is the correct default, but an administrator needs the ability to disable MFA temporarily — for example, during an email outage when no verification codes can be delivered, or when a subset of users cannot complete MFA and must be given password-only access while the issue is resolved.
+
+### What was built
+
+The hardcoded MFA requirement was replaced with a **policy-driven MFA gate** that an administrator can toggle from a dedicated dashboard page.
+
+| Component | What it does |
+|---|---|
+| MFA policy library (`src/lib/mfa-policy.ts`) | Reads and writes the MFA-enabled flag in `SystemSettings`. Reads **fail open to the secure state** (MFA required): if the database is unreachable, the login flow defaults to requiring MFA rather than silently downgrading authentication. |
+| Admin settings API (`/api/admin/mfa-settings`) | `GET` returns the current policy; `PUT` toggles it. Admin-only. On a real change, every session except the admin's is terminated so all users must re-authenticate under the new policy. No-op (no audit, no termination) when the value is unchanged. |
+| Admin settings page (`/dashboard/admin/mfa-settings`) | A dashboard card with a toggle switch, current-status badge, and confirmation dialog. Warns that changing the setting immediately logs out every other user. |
+| Dashboard link | An "MFA Settings" card was added to the admin dashboard linking to the new page. |
+| Login routes (staff + employee) | Both `/api/auth/login` and `/api/auth/employee-login` now call `isMfaEnabled()` before the MFA gate. When the policy is disabled, the user is logged in directly after the password check (`completeLogin`), skipping the OTP/magic-link step entirely. When enabled (the default), the existing MFA flow runs unchanged. |
+| Session manager | A `terminateAllSessions(exceptUserId?)` helper was added to end every session system-wide while preserving the admin's own session. |
+
+### How the toggle works end-to-end
+
+1. The admin opens **MFA Settings** on the dashboard and toggles the switch.
+2. A confirmation dialog explains the consequence (every other user is logged out).
+3. The API writes the new value, terminates all sessions except the admin's, and records a `SYSTEM_SETTING_CHANGED` audit event with the previous value, new value, and count of terminated sessions.
+4. Every subsequent login attempt is evaluated against the new policy. Existing users are forced to log in again.
+
+### Security properties
+
+- **Fail-open is secure:** a database read error defaults to MFA required — a transient failure cannot weaken authentication.
+- **No silent weakening:** a no-op toggle (value unchanged) performs no write, no session termination, and no audit entry, so the audit trail reflects only real policy transitions.
+- **Admin preserves own session:** the admin who makes the change is not kicked out mid-action.
+- **Full audit:** every real toggle is recorded as a `SYSTEM_SETTING_CHANGED` event with the admin's identity, IP, previous/new values, and terminated session count.
+
+### Testing
+
+All 17 MFA-related tests pass:
+
+| Suite | Tests | Covers |
+|---|---|---|
+| `route.test.ts` (admin MFA settings) | 6 | GET default/enabled, PUT toggle on→off and off→on with audit, no-op, 400 on non-boolean |
+| `mfa-role.test.ts` (login MFA gate) | 11 | Per-role mandatory MFA (8) + policy-disabled login (skips OTP, works without email) (3) — 2 new |
+
+The 2 new login tests verify that when MFA is disabled by policy, `completeLogin` is called directly and `createMfaToken`/`sendMfaEmail` are never invoked — including for a user with no email, who would otherwise be blocked.
+
+---
+
+## Summary of Documents and Deliverables Produced
+
+| Deliverable | Date | Purpose |
+|---|---|---|
+| IP Ban Design Specification | Aug 4 | Technical design for the login security feature |
 | IP Ban Implementation Plan | Aug 4 | 10-task build sequence |
-| IP Ban SDD Progress Ledger | Aug 4 | Task tracking (10/10 complete) |
-| Security Controls Implementation Status | Aug 4 | 206-control audit (132 implemented, 51 partial, 23 missing) |
-| Security Gaps — Recommended Fixes | Aug 4 | 8-priority fix roadmap with code examples |
-| Security No-Migration Roadmap | Aug 4 | 26 items in 7 phases, no schema changes |
+| Security Controls Status | Aug 4 | 206-control audit (132 implemented, 51 partial, 23 missing) |
+| Security Gaps — Recommended Fixes | Aug 4 | 8-priority fix roadmap |
+| Security No-Migration Roadmap | Aug 4 | 26 items in 7 phases, no database structure changes |
 | Privilege Escalation Alert Testing Guide | Aug 8 | Manual testing guide for 4 security fixes |
-| HRIMS Employee Count Mystery | Aug 7 | Root cause analysis of 33 vs 6,408 discrepancy |
+| HRIMS Employee Count Analysis | Aug 7 | Root cause analysis of 33 vs 6,408 discrepancy |
 | HRIMS Cleanup — Institution 037 | Aug 7 | Cleanup report for Tume ya Utumishi |
 | HRIMS Field Mapping | Aug 11 | Complete data mapping reference |
 | HRIMS Cleanup — All Institutions | Aug 11 | Cleanup results for all 75 institutions |
 | Unguja/Pemba Distribution Report | Aug 8 | Island distribution across 69 institutions |
 | Pemba Department Employees Report | Aug 8 | Live Pemba employee data analysis |
-| Pemba Role Implementation Plan | Aug 8 | 681-line plan for HRO_PEMBA/HRRP_PEMBA |
-| Employee Island Migration | Aug 9 | Database migration adding `island` field |
-| UAT Final Document (v3.1) | Aug 15–17 | 190 test cases, 190 PASS / 0 FAIL (case 7.2 re-examined Aug 17 — probation resignation is allowed by design) |
-| Refetch Scripts | Aug 8-9 | Data quality scripts for NULL workplace employees |
+| Pemba Role Implementation Plan | Aug 8 | Detailed plan for Pemba-scoped roles |
+| UAT Final Document (v3.1) | Aug 15–17 | 190 test cases, 190 PASS / 0 FAIL |
 | All-Institution Cleanup Script | Aug 11 | Automated cleanup across 76 institutions |
 | CHANGELOG.md | Aug 8 | Updated system changelog (382 commits documented) |
-| Mandatory MFA Enforcement | Aug 16 | Login route changed to require MFA for all users |
-| Email Clearing Prevention Fix | Aug 16 | User update schema fix preventing empty-string email clearing |
-| User Accounts Reference | Aug 16 | Complete reference of all 206 users with roles, emails, institutions, MFA status |
-| File Integrity Hash Fix + Backfill | Aug 16 | Hashes recorded on all upload paths; 28,160 legacy objects backfilled — resolves 410 for commission officers |
-| Retirement Pemba Role-Gate Fix | Aug 17 | Collection PATCH + [id] routes converted to `isHrrpLike`/`isHroLike` — resolves 403 for HRRP_PEMBA/HRO_PEMBA reject/forward/resubmit |
-| UAT Case 7.2 Correction | Aug 17 | Resignation probation test re-examined — probation employees may resign by design; case is PASS, not a gap |
+| Mandatory MFA Enforcement | Aug 16 | Login changed to require second verification for all users |
+| Email Clearing Prevention Fix | Aug 16 | Fix preventing email addresses from being silently cleared |
+| User Accounts Reference | Aug 16 | Complete reference of all 206 users with roles, emails, institutions |
+| File Integrity Hash Fix + Backfill | Aug 16 | 28,160 files fingerprinted — resolves viewing errors for commission officers |
+| Retirement Pemba Role-Gate Fix | Aug 17 | Retirement workflow updated to recognise Pemba roles |
+| Retirement Frontend Probation Block | Aug 17 | Retirement page blocks ineligible employees immediately on lookup |
+| Admin-Configurable MFA Enforcement | Aug 18 | Policy-driven MFA gate with admin toggle, session termination, and audit |
 
 ---
+
 ## What's Next (Recommended Priorities)
 
-1. **Add emails to 3 blocked staff users** — fautest (HRMO), fhali (HRRP), mahfoudhhassan (HRRP) are blocked from login because they have no email. An admin must add government email addresses to these accounts.
-2. **Audit log tamper protection** — The highest-priority security gap: add hash chaining and database triggers so audit records cannot be modified or deleted without detection.
-3. **PII encryption at rest** — Currently, sensitive employee data (ZanID, ZSSF number, phone, address) is stored in plain text. The encryption code exists but is not wired in.
-4. **HRIMS transaction integrity** — Wrap multi-row sync operations in database transactions so a mid-batch failure doesn't leave partial data.
-5. **Data classification** — Add classification levels (Public/Internal/Confidential/Restricted) to employees and complaints, with access controls based on clearance.
-6. **Remaining Pemba role-gate audit** — Although the retirement routes are now fixed, the other workflow modules (LWOP, resignation, service extension, termination, cadre change) should be audited for the same hardcoded-role pattern in their collection PATCH and `[id]` routes to ensure `HRRP_PEMBA`/`HRO_PEMBA` reject/forward/resubmit actions are not similarly blocked.
+1. **Add email addresses to 3 blocked staff users** — fautest (HRMO), fhali (HRRP), and mahfoudhhassan (HRRP) are blocked from logging in because they have no email address. An administrator must add government email addresses to these accounts so they can complete the second verification step. As a temporary measure, an admin can now disable MFA enforcement system-wide (section 12) to allow password-only login while the email issue is resolved — but this should be re-enabled as soon as possible.
+
+2. **Protect audit logs from tampering** — The highest-priority security gap: add safeguards so audit records cannot be modified or deleted without detection.
+
+3. **Encrypt sensitive employee data** — Sensitive employee information (ZanID, ZSSF number, phone, address) is currently stored in plain text. The encryption capability exists but has not been activated.
+
+4. **Improve HRIMS data transfer reliability** — Ensure that multi-step data synchronisation operations complete fully or not at all, so a mid-transfer failure doesn't leave partial data.
+
+5. **Add data classification** — Classify data by sensitivity level (Public/Internal/Confidential/Restricted) and apply access controls based on clearance.
+
+6. **Audit remaining workflow modules for Pemba role support** — The retirement workflow has been fixed. The other workflow modules (LWOP, resignation, service extension, termination, cadre change) should be checked to ensure Pemba-based officers can reject, forward, and resubmit requests without errors.
+
+7. **Ensure all request forms block ineligible employees early** — Cadre change and retirement now check eligibility immediately when an employee is looked up. The promotion, LWOP, service-extension, and termination pages should be checked to confirm they also block ineligible employees at the form level (not only at submission), so an HR officer never wastes time filling a form for an employee who is not eligible.
 
 ---
 
-*Report compiled 17 August 2026 from git history, file modification records, changelog entries, and project documentation.*
+*Report compiled 18 August 2026 from development history, file modification records, changelog entries, and project documentation.*

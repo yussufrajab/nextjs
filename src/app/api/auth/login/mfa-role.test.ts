@@ -14,7 +14,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
 
 // --- Mocks ---------------------------------------------------------------
-
+const mockCompleteLogin = vi.fn();
+const mockIsMfaEnabled = vi.fn();
 const mockCheckRateLimitSliding = vi.fn();
 const mockUserFindFirst = vi.fn();
 const mockUserFindUnique = vi.fn();
@@ -24,7 +25,6 @@ const mockGetPasswordExpirationStatus = vi.fn();
 const mockCreateMfaToken = vi.fn();
 const mockCheckOtpRateLimit = vi.fn();
 const mockSendMfaEmail = vi.fn();
-const mockCompleteLogin = vi.fn();
 
 vi.mock('@/lib/rate-limiter', () => ({
   withRateLimit: (handler: unknown) => handler,
@@ -86,6 +86,9 @@ vi.mock('@/lib/mfa-utils', () => ({
   createMfaToken: (...a: unknown[]) => mockCreateMfaToken(...a),
   checkOtpRateLimit: (...a: unknown[]) => mockCheckOtpRateLimit(...a),
   maskEmail: (e: string) => e,
+}));
+vi.mock('@/lib/mfa-policy', () => ({
+  isMfaEnabled: (...a: unknown[]) => mockIsMfaEnabled(...a),
 }));
 vi.mock('@/lib/email', () => ({ sendMfaEmail: (...a: unknown[]) => mockSendMfaEmail(...a) }));
 vi.mock('@/lib/account-lockout-utils', () => ({
@@ -160,9 +163,10 @@ beforeEach(() => {
   mockComparePassword.mockResolvedValue(true);
   mockCheckPasswordBreached.mockResolvedValue(false);
   mockCheckOtpRateLimit.mockResolvedValue({ allowed: true, retryAfterSeconds: 0 });
+  mockCompleteLogin.mockResolvedValue(new Response(null, { status: 200 }));
+  mockIsMfaEnabled.mockResolvedValue(true);
   mockCreateMfaToken.mockResolvedValue({ token: 'otp-token' });
   mockSendMfaEmail.mockResolvedValue({ success: true });
-  mockCompleteLogin.mockResolvedValue(new Response(null, { status: 200 }));
   mockGetPasswordExpirationStatus.mockReturnValue({
     isExpired: false,
     isInGracePeriod: false,
@@ -298,4 +302,36 @@ describe('POST /api/auth/login — per-role MFA gate (Req 1.1)', () => {
     expect(mockCompleteLogin).not.toHaveBeenCalled();
   });
 
+});
+
+describe('POST /api/auth/login — MFA disabled by admin policy', () => {
+  it('grants login directly (completeLogin) when MFA is disabled, skipping OTP', async () => {
+    mockIsMfaEnabled.mockResolvedValue(false);
+    const adminUser = makeUser({ role: 'Admin', email: 'admin@example.gov' });
+    // findFirst (credential lookup) + findUnique (refresh + re-fetch for login)
+    mockUserFindFirst.mockResolvedValueOnce(adminUser);
+    mockUserFindUnique.mockResolvedValue(adminUser);
+
+    const { POST } = await import('./route');
+    const res = await POST(buildRequest({ username: 'admin1', password: 'pw' }));
+
+    expect(res.status).toBe(200);
+    expect(mockCompleteLogin).toHaveBeenCalledTimes(1);
+    expect(mockCreateMfaToken).not.toHaveBeenCalled();
+    expect(mockSendMfaEmail).not.toHaveBeenCalled();
+  });
+
+  it('grants login without email when MFA is disabled (no MFA_REQUIRED_NO_EMAIL)', async () => {
+    mockIsMfaEnabled.mockResolvedValue(false);
+    const hroUser = makeUser({ role: 'HRO', email: null });
+    mockUserFindFirst.mockResolvedValueOnce(hroUser);
+    mockUserFindUnique.mockResolvedValue(hroUser);
+
+    const { POST } = await import('./route');
+    const res = await POST(buildRequest({ username: 'hro1', password: 'pw' }));
+
+    expect(res.status).toBe(200);
+    expect(mockCompleteLogin).toHaveBeenCalledTimes(1);
+    expect(mockCreateMfaToken).not.toHaveBeenCalled();
+  });
 });
