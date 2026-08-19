@@ -423,7 +423,7 @@ async function PATCHHandler(req: Request) {
     } else if (isResubmission) {
       authCheck = checkRoleAuthorization(userRole, ['HRO' as const, 'HRRP' as const, 'HRO_PEMBA' as const, 'HRRP_PEMBA' as const]);
     } else if (isCommissionDecision || isInitialReviewAction) {
-      authCheck = checkRoleAuthorization(userRole, ['HHRMD' as const, 'HRMO' as const]);
+      authCheck = checkRoleAuthorization(userRole, ['HHRMD' as const, 'DO' as const]);
     } else {
       authCheck = { authorized: false, message: 'Invalid update action' };
     }

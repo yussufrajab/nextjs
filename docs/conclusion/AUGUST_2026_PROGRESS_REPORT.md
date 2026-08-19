@@ -2,7 +2,7 @@
 
 ## Civil Service Management System (CSMS) — Zanzibar
 
-**Reporting period:** 1 August 2026 – 18 August 2026
+**Reporting period:** 1 August 2026 – 19 August 2026
 **System:** Civil Service Management System (CSMS)
 **Test URL:** https://test.zanajira.go.tz
 **Production URL:** https://csms.zanajira.go.tz
@@ -11,7 +11,7 @@
 
 ## Executive Summary
 
-During the first half of August 2026, nine major pieces of work were completed:
+During the first three weeks of August 2026, ten major pieces of work were completed:
 
 1. **New automated security system** — a system that automatically blocks computers showing abusive login behaviour (e.g. trying many passwords from the same location), plus a comprehensive security audit of the entire system.
 2. **Major data quality fix** — discovered and fixed a problem where the government HR database (HRIMS) was sending us far more employees than actually work at a given institution. Cleaned up employee records across all 76 government institutions.
@@ -22,6 +22,7 @@ During the first half of August 2026, nine major pieces of work were completed:
 7. **Retirement workflow fix for Pemba users** — Pemba-based HR officers and reviewers were blocked from rejecting, forwarding, or resubmitting retirement requests. Fixed by updating the retirement workflow to recognise Pemba roles.
 8. **Early blocking of ineligible retirement requests** — when an HR officer looks up an employee who is on probation (or otherwise ineligible for retirement), the system now shows a clear error message immediately and prevents them from filling in the form. Previously, the officer could complete the entire form only to have it rejected on submission.
 9. **Admin-configurable MFA enforcement** — the mandatory second login verification step, which was previously hardcoded as always-on, is now controlled by an administrator setting. An admin can turn MFA on or off for the whole system from a dashboard page; the change takes effect immediately, logs out every other user so they re-authenticate under the new policy, and records an audit event. The policy fails open to the secure state (MFA required) if the database is unreachable.
+10. **Termination workflow DO authorization fix** — when a Discipline Officer (DO) attempted to verify and forward a termination/dismissal request to the Commission, the server returned a 403 error and the request was not forwarded. The backend authorization gate was corrected to recognise the DO role (and exclude HRMO, which does not handle termination/dismissal), matching the frontend which already exposed the action to DO users.
 
 ---
 ## 1. Automated Login Security System (August 4)
@@ -802,6 +803,46 @@ All 17 MFA-related tests pass:
 
 The 2 new login tests verify that when MFA is disabled by policy, `completeLogin` is called directly and `createMfaToken`/`sendMfaEmail` are never invoked — including for a user with no email, who would otherwise be blocked.
 
+
+## 13. Termination Workflow DO Authorization Fix (August 19)
+
+### The problem
+
+When a Discipline Officer (DO) — for example, the user "Mussi" — clicked "Verify & Forward to Commission" on a termination/dismissal request, the request was not forwarded. The browser console showed a `403` error from `/api/termination`. The console also showed Content Security Policy (CSP) `style-src` warnings, but those were report-only notices with no functional impact — the 403 was the actual failure.
+
+### Root cause
+
+The role model for the commission-stage workflow is:
+
+- **DO** — handles termination/dismissal and complaints only
+- **HRMO** — handles all other HR workflows (promotion, resignation, retirement, service extension, etc.), not termination/dismissal
+- **HHRMD** — the director at the Commission, covers both the DO and HRMO domains
+
+The termination dashboard frontend already correctly exposed the "Verify & Forward to Commission" and "Commission Decision" buttons to the DO and HHRMD roles (and not to HRMO). But the backend authorization gate had two mistakes:
+
+1. **The collection PATCH route** (`/api/termination`, the route the dashboard calls) restricted the commission-stage actions to `['HHRMD', 'HRMO']` — it omitted `'DO'` and wrongly included `'HRMO'`. A DO forwarding a request was classified as unauthorised and blocked with 403.
+2. **The subroute** (`/api/termination/[id]`, which the dashboard does not call for workflow actions but which had the same logic) had the same omission for commission decisions.
+
+### What was fixed
+
+Both backend routes were corrected to authorise `['HHRMD', 'DO']` for termination/dismissal commission-stage actions (forward-to-Commission and commission decision), removing `HRMO`. This matches the frontend gating and the confirmed role model.
+
+### Verification
+
+All 9 termination PATCH tests pass:
+
+| Test | Result |
+|---|---|
+| DO forwards to Commission | 200 ✓ |
+| DO records a commission decision | 200 ✓ |
+| HHRMD records a commission decision | 200 ✓ |
+| HRMO records a termination commission decision | 403 ✓ (correctly blocked) |
+| HRMO forwards a termination request | 403 ✓ (correctly blocked) |
+| HRO records a commission decision | 403 ✓ |
+| HRRP records a commission decision | 403 ✓ |
+
+Type check (`tsc --noEmit`) is clean. The complaints module was verified to already use the correct `DO || HHRMD` gating, so no change was needed there.
+
 ---
 
 ## Summary of Documents and Deliverables Produced
@@ -831,6 +872,7 @@ The 2 new login tests verify that when MFA is disabled by policy, `completeLogin
 | Retirement Pemba Role-Gate Fix | Aug 17 | Retirement workflow updated to recognise Pemba roles |
 | Retirement Frontend Probation Block | Aug 17 | Retirement page blocks ineligible employees immediately on lookup |
 | Admin-Configurable MFA Enforcement | Aug 18 | Policy-driven MFA gate with admin toggle, session termination, and audit |
+| Termination DO Authorization Fix | Aug 19 | Backend corrected to allow DO (and exclude HRMO) for termination commission-stage actions |
 
 ---
 
@@ -849,7 +891,8 @@ The 2 new login tests verify that when MFA is disabled by policy, `completeLogin
 6. **Audit remaining workflow modules for Pemba role support** — The retirement workflow has been fixed. The other workflow modules (LWOP, resignation, service extension, termination, cadre change) should be checked to ensure Pemba-based officers can reject, forward, and resubmit requests without errors.
 
 7. **Ensure all request forms block ineligible employees early** — Cadre change and retirement now check eligibility immediately when an employee is looked up. The promotion, LWOP, service-extension, and termination pages should be checked to confirm they also block ineligible employees at the form level (not only at submission), so an HR officer never wastes time filling a form for an employee who is not eligible.
+8. **Audit remaining workflow modules for DO/HRMO role correctness** — The termination backend was corrected to authorise DO (not HRMO) for commission-stage actions, matching the role split: DO handles termination/dismissal and complaints; HRMO handles all other HR workflows; HHRMD covers both. The other workflow modules (promotion, resignation, retirement, service extension, cadre change, LWOP) should be verified to confirm their backend authorization lists correctly include HRMO (and not DO) for their commission-stage actions, so the same mismatch cannot surface elsewhere.
 
 ---
 
-*Report compiled 18 August 2026 from development history, file modification records, changelog entries, and project documentation.*
+*Report compiled 19 August 2026 from development history, file modification records, changelog entries, and project documentation.*

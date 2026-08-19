@@ -187,7 +187,7 @@ async function handleUpdate(
           deviceInfo,
         });
       }
-      if (isCommissionDecision && !['HHRMD', 'HRMO'].includes(auth.role)) {
+      if (isCommissionDecision && !['HHRMD', 'DO'].includes(auth.role)) {
         return denyWorkflowAccess({
           auth,
           routeBase: 'termination',
@@ -195,7 +195,7 @@ async function handleUpdate(
           requestType: 'Termination',
           employeeId: existingRequest.employeeId,
           blockReason: 'ROLE_NOT_COMMISSION',
-          message: 'Only HHRMD or HRMO can make commission decisions',
+          message: 'Only HHRMD or DO can make commission decisions for termination/dismissal',
           requestMethod: req.method,
           ipAddress,
           deviceInfo,
