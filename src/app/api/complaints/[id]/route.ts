@@ -437,6 +437,7 @@ export const GET = wrapHandler(async (
           Employee: {
             select: {
               zanId: true,
+              payrollNumber: true,
               department: true,
               cadre: true,
             },
@@ -488,6 +489,7 @@ export const GET = wrapHandler(async (
     employeeId: complaint.User_Complaint_complainantIdToUser?.employeeId ?? null,
     employeeName: complaint.User_Complaint_complainantIdToUser?.name ?? null,
     zanId: complaint.User_Complaint_complainantIdToUser?.Employee?.zanId ?? null,
+    payrollNumber: complaint.User_Complaint_complainantIdToUser?.Employee?.payrollNumber ?? null,
     department: complaint.User_Complaint_complainantIdToUser?.Employee?.department ?? null,
     cadre: complaint.User_Complaint_complainantIdToUser?.Employee?.cadre ?? null,
     institutionName: complaint.User_Complaint_complainantIdToUser?.Institution?.name ?? null,

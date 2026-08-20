@@ -47,6 +47,7 @@ import {
   Phone,
   Users,
   FileText,
+  Search,
   RefreshCw,
   Mail,
 } from 'lucide-react';
@@ -114,6 +115,7 @@ interface SubmittedComplaint {
   employeeId?: string | null;
   employeeName: string;
   zanId?: string | null;
+  payrollNumber?: string | null;
   department?: string | null;
   cadre?: string | null;
   complaintType: string;
@@ -213,6 +215,7 @@ export default function ComplaintsPage() {
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [complaintSearchQuery, setComplaintSearchQuery] = useState('');
   const [selectedComplaint, setSelectedComplaint] =
     useState<SubmittedComplaint | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
@@ -1087,13 +1090,28 @@ export default function ComplaintsPage() {
     }
   };
 
+  // Client-side search by ZAN ID or employee name (complaints carry zanId
+  // directly; payroll number is not a field on SubmittedComplaint).
+  const complaintSearch = complaintSearchQuery.trim().toLowerCase();
+  const matchesComplaintSearch = (c: SubmittedComplaint): boolean => {
+    if (!complaintSearch) return true;
+    const zanId = c.zanId ?? '';
+    const name = c.employeeName ?? '';
+    return (
+      zanId.toLowerCase().includes(complaintSearch) ||
+      name.toLowerCase().includes(complaintSearch)
+    );
+  };
+
   // Both DO and HHRMD should see all complaints assigned to either role
-  const allOfficerComplaints = complaints.filter(
-    (c) =>
-      (role === ROLES.DO || role === ROLES.HHRMD || role === ROLES.CSCS) &&
-      (c.assignedOfficerRole === ROLES.DO ||
-        c.assignedOfficerRole === ROLES.HHRMD)
-  );
+  const allOfficerComplaints = complaints
+    .filter(
+      (c) =>
+        (role === ROLES.DO || role === ROLES.HHRMD || role === ROLES.CSCS) &&
+        (c.assignedOfficerRole === ROLES.DO ||
+          c.assignedOfficerRole === ROLES.HHRMD)
+    )
+    .filter(matchesComplaintSearch);
 
   // Separate active and completed complaints for better organization
   const activeComplaints = allOfficerComplaints.filter(
@@ -1114,9 +1132,9 @@ export default function ComplaintsPage() {
       'Closed - Commission Decision (Rejected)',
     ].includes(c.status)
   );
-  const employeeSubmittedComplaints = complaints.filter(
-    (c) => c.employeeId === user?.employeeId
-  );
+  const employeeSubmittedComplaints = complaints
+    .filter((c) => c.employeeId === user?.employeeId)
+    .filter(matchesComplaintSearch);
 
   return (
     <div>
@@ -1150,6 +1168,15 @@ export default function ComplaintsPage() {
                 </Button>
               </div>
               <div className="flex flex-wrap gap-2 mt-3">
+                <div className="relative w-full sm:w-72 mb-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by ZAN ID or Employee Name..."
+                    value={complaintSearchQuery}
+                    onChange={(e) => setComplaintSearchQuery(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
                 {[
                   { value: 'all', label: 'All' },
                   { value: 'pending', label: 'Pending' },
@@ -1720,6 +1747,15 @@ export default function ComplaintsPage() {
                 </Button>
               </div>
               <div className="flex flex-wrap gap-2 mt-3">
+                <div className="relative w-full sm:w-72 mb-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by ZAN ID or Employee Name..."
+                    value={complaintSearchQuery}
+                    onChange={(e) => setComplaintSearchQuery(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
                 {[
                   { value: 'all', label: 'All' },
                   { value: 'pending', label: 'Pending' },
@@ -1798,6 +1834,9 @@ export default function ComplaintsPage() {
                     <p className="text-sm text-muted-foreground">
                       From: {complaint.employeeName}{' '}
                       {complaint.zanId ? `(ZanID: ${complaint.zanId})` : ''}
+                      {complaint.payrollNumber
+                        ? ` (Payroll: ${complaint.payrollNumber})`
+                        : ''}
                     </p>
                     {role !== ROLES.EMPLOYEE && !isHroLike(role) && (
                       <p className="text-sm text-muted-foreground">
@@ -2016,6 +2055,9 @@ export default function ComplaintsPage() {
                     <p className="text-sm text-muted-foreground">
                       From: {complaint.employeeName}{' '}
                       {complaint.zanId ? `(ZanID: ${complaint.zanId})` : ''}
+                      {complaint.payrollNumber
+                        ? ` (Payroll: ${complaint.payrollNumber})`
+                        : ''}
                     </p>
                     {role !== ROLES.EMPLOYEE && !isHroLike(role) && (
                       <p className="text-sm text-muted-foreground">
@@ -2062,8 +2104,11 @@ export default function ComplaintsPage() {
               </DialogTitle>
               <DialogDescription>
                 Kutoka: <strong>{selectedComplaint.employeeName}</strong> (
-                {selectedComplaint.zanId || 'Hakijulikani'}) | Aina:{' '}
-                {selectedComplaint.complaintType}
+                {selectedComplaint.zanId || 'Hakijulikani'})
+                {selectedComplaint.payrollNumber
+                  ? ` | Payroll: ${selectedComplaint.payrollNumber}`
+                  : ''}{' '}
+                | Aina: {' '}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4 text-sm max-h-[70vh] overflow-y-auto">

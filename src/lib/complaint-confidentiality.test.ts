@@ -35,10 +35,10 @@ describe('canSeeComplainantIdentity', () => {
     expect(canSeeComplainantIdentity(ROLES.DO, 'do-1', baseCtx({ assignedOfficerRole: ROLES.DO }))).toBe(true);
   });
 
-  it('co-reviewer officer (HHRMD) viewing a DO-assigned complaint is redacted', () => {
+  it('co-reviewer officer (HHRMD) viewing a DO-assigned complaint sees identity — DO/HHRMD are the handling pool', () => {
     expect(
       canSeeComplainantIdentity(ROLES.HHRMD, 'hhrmd-1', baseCtx({ assignedOfficerRole: ROLES.DO }))
-    ).toBe(false);
+    ).toBe(true);
   });
 
   it('HHRMD viewing their own assigned complaint sees identity', () => {

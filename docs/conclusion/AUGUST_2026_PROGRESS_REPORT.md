@@ -2,7 +2,7 @@
 
 ## Civil Service Management System (CSMS) — Zanzibar
 
-**Reporting period:** 1 August 2026 – 19 August 2026
+**Reporting period:** 1 August 2026 – 20 August 2026
 **System:** Civil Service Management System (CSMS)
 **Test URL:** https://test.zanajira.go.tz
 **Production URL:** https://csms.zanajira.go.tz
@@ -11,7 +11,7 @@
 
 ## Executive Summary
 
-During the first three weeks of August 2026, ten major pieces of work were completed:
+During the first three weeks of August 2026, fifteen major pieces of work were completed:
 
 1. **New automated security system** — a system that automatically blocks computers showing abusive login behaviour (e.g. trying many passwords from the same location), plus a comprehensive security audit of the entire system.
 2. **Major data quality fix** — discovered and fixed a problem where the government HR database (HRIMS) was sending us far more employees than actually work at a given institution. Cleaned up employee records across all 76 government institutions.
@@ -23,7 +23,11 @@ During the first three weeks of August 2026, ten major pieces of work were compl
 8. **Early blocking of ineligible retirement requests** — when an HR officer looks up an employee who is on probation (or otherwise ineligible for retirement), the system now shows a clear error message immediately and prevents them from filling in the form. Previously, the officer could complete the entire form only to have it rejected on submission.
 9. **Admin-configurable MFA enforcement** — the mandatory second login verification step, which was previously hardcoded as always-on, is now controlled by an administrator setting. An admin can turn MFA on or off for the whole system from a dashboard page; the change takes effect immediately, logs out every other user so they re-authenticate under the new policy, and records an audit event. The policy fails open to the secure state (MFA required) if the database is unreachable.
 10. **Termination workflow DO authorization fix** — when a Discipline Officer (DO) attempted to verify and forward a termination/dismissal request to the Commission, the server returned a 403 error and the request was not forwarded. The backend authorization gate was corrected to recognise the DO role (and exclude HRMO, which does not handle termination/dismissal), matching the frontend which already exposed the action to DO users.
-
+11. **Admin password reset from the user edit form** — administrators previously had to open a separate "reset password" endpoint to set a user's password. The user edit form now accepts an optional password field: when left blank, the existing password is untouched; when filled, it is validated, hashed, and installed as a temporary password the user must change on first login. The change emits a dedicated `ADMIN_PASSWORD_RESET` audit event, terminates the target's active sessions, and blocks an admin from setting their own password through this path. The admin dashboard form was updated to make the password field optional with the same complexity feedback.
+12. **Complaint co-reviewer identity access** — a commission director (HHRMD) reviewing a complaint assigned to a Discipline Officer (DO) was previously shown a redacted complainant identity (masked name, ZanID, phone). Because DO and HHRMD are the joint complaint-handling pool, either role now sees the full complainant identity for any complaint assigned to DO or HHRMD. Payroll number was also added to the complaint PII fields so it is now surfaced and redacted consistently alongside ZanID and phone.
+13. **Manual-entry document upload reflect fix** — after an HR Officer uploaded a document through the manual employee-entry wizard, the document card stayed "Not Available" because the component did not track the returned file URL. The documents step now captures each uploaded document's URL and displays it immediately, so the card reflects the successful upload without a page reload.
+14. **Request-list search across all workflow pages** — all nine request-management pages (confirmation, promotion, LWOP, cadre change, retirement, resignation, service extension, termination, and complaints) previously listed pending requests with no way to locate a specific employee. A client-side search box was added to every page, filtering the list by ZanID or payroll number (complaints also search by employee name). Service-extension also fixed a latent bug where the second request list ignored pagination.
+15. **Nested-layout file access fix** — the file-access security gate extracted the owning employee ID from object keys assuming only the flat layout (`employee-documents/<id>_<type>.<ext>`). Files stored through the manual-upload path use a nested layout (`employee-documents/<id>/<timestamp>_<random>_<type>_<name>`), so an HR Officer in the same institution was wrongly denied access to those files. The key parser now recognises both layouts and extracts the owner ID correctly.
 ---
 ## 1. Automated Login Security System (August 4)
 
@@ -845,6 +849,172 @@ Type check (`tsc --noEmit`) is clean. The complaints module was verified to alre
 
 ---
 
+## 14. Admin Password Reset from User Edit Form (August 20)
+
+### The problem
+
+To set a user's password, an administrator had to open a separate "reset password" page and generate a random temporary password. There was no way to set a specific password directly from the user edit form, which is the page an admin already uses to change a user's role, institution, name, email, and active status. This forced a context switch and left the admin with a random password they had to communicate separately.
+
+### What was changed
+
+The user edit API (`PUT /api/users/[id]`) and the admin dashboard user form were updated to accept an **optional** password field:
+
+| Scenario | Behaviour |
+|---|---|
+| Password field left blank | The existing password is untouched. No hash is written, no temporary-password flags are set, and the response includes `passwordChanged: false`. |
+| Password field filled | The password is validated against the same complexity and common-password rules as the dedicated reset endpoint, hashed, and installed as a **new temporary password** the target user must change on first login. The response includes `passwordChanged: true`. |
+| Admin sets own password | Blocked with 403. An admin must use `/api/auth/change-password` for their own account, which verifies the current password and enforces password history. |
+| Weak password supplied | Rejected with 400. No database write. |
+
+When a password is set, the change:
+- Requires step-up re-authentication (same as role/institution changes).
+- Emits a dedicated `ADMIN_PASSWORD_RESET` audit event (severity WARNING) with the admin's identity, IP, target user, and a `wasGenerated: false` flag — so password changes through this path are individually attributable in the audit trail, not buried in a generic `USER_UPDATED` row.
+- Terminates all of the target user's active sessions, forcing a fresh login under the new password.
+- Clears the target's failed-password-change counter and lockout, resets password expiry, and records the change timestamp.
+
+The admin dashboard form (`/dashboard/admin/users`) was updated so the password field is optional on both the create and edit forms, with the same complexity feedback. When an edit changes the password, a toast notification reports it.
+
+### How it mirrors the dedicated reset endpoint
+
+The password set through this path is identical to one set through `/api/admin/reset-password`: same validation, same hashing, same temporary-password flags, same session termination, and the same audit event type. The only difference is that the admin chooses the password rather than receiving a generated one.
+
+### Verification
+
+All 4 new password-change tests pass (plus the 8 pre-existing privilege-escalation tests in the same file):
+
+| Test | Result |
+|---|---|
+| No password supplied → password untouched, `passwordChanged: false`, no audit event | PASS ✓ |
+| Valid password supplied → hashed, temporary flags set, `passwordChanged: true`, `ADMIN_PASSWORD_RESET` audit event emitted, sessions terminated | PASS ✓ |
+| Weak password supplied → 400, no database write | PASS ✓ |
+| Admin sets own password → 403, no database write | PASS ✓ |
+
+---
+
+## 15. Complaint Co-Reviewer Identity Access (August 20)
+
+### The problem
+
+The complaint-handling pool is DO and HHRMD. A complaint is assigned to either a DO or an HHRMD, but the other role often needs to act as a co-reviewer. Previously, the confidentiality gate compared the viewer's role against the complaint's `assignedOfficerRole` with an exact match: an HHRMD viewing a DO-assigned complaint (or vice versa) was classified as a non-owner and shown a redacted complainant identity — masked name, no ZanID, no phone number. The co-reviewer could see the complaint existed but not who filed it, which blocked effective joint handling.
+
+### What was changed
+
+The `canSeeComplainantIdentity` function was updated to treat DO and HHRMD as a **joint handling pool**: either role sees the full complainant identity for any complaint assigned to DO or HHRMD, not just an exact role match. A co-reviewer is no longer redacted.
+
+| Viewer role | Complaint assigned to | Before | After |
+|---|---|---|---|
+| DO | DO | Full identity | No change |
+| HHRMD | HHRMD | Full identity | No change |
+| HHRMD | DO | **Redacted** | **Full identity** |
+| DO | HHRMD | **Redacted** | **Full identity** |
+| HRMO / HRO / HRRP / PO / non-owning Employee | any | Redacted | No change |
+| Admin / CSCS (escalation tier) | DO or HHRMD, non-confidential | Full identity | No change |
+| Admin / CSCS | confidential | Redacted (whistleblower protection) | No change |
+
+Payroll number was also added to the complaint PII field list (`COMPLAINANT_PII_FIELDS`), so it is now:
+- **Surfaced** in the complaint list and detail API responses (previously it was fetched but not included in the output).
+- **Redacted** consistently alongside ZanID and phone when a viewer is not entitled to see the complainant identity.
+
+### Files changed
+
+| File | Change |
+|---|---|
+| `src/lib/complaint-confidentiality.ts` | DO/HHRMD pool logic; `payrollNumber` added to PII fields and redaction |
+| `src/lib/complaint-privacy.ts` | `payrollNumber` added to `redactComplainantPii` |
+| `src/app/api/complaints/route.ts` | `payrollNumber` included in list response |
+| `src/app/api/complaints/[id]/route.ts` | `payrollNumber` included in detail response |
+
+### Verification
+
+All complaint tests pass (13 across the confidentiality, privacy, and route test files). The co-reviewer test was updated from "redacted" to "full identity" and passes.
+
+---
+
+## 16. Manual-Entry Document Upload Reflect Fix (August 20)
+
+### The problem
+
+When an HR Officer used the manual employee-entry wizard and uploaded a document (e.g. an Ardhi Hali or confirmation letter) in the documents step, the server stored the file successfully and returned its URL — but the document card in the form stayed showing "Not Available". The component did not capture the returned URL, so the only way to see the uploaded file was to reload the page. The officer had no immediate confirmation the upload worked.
+
+### What was changed
+
+The `DocumentsStep` component (`src/components/manual-entry/documents-step.tsx`) now:
+- Tracks each document's uploaded URL in component state (`documentUrls`), keyed by document type.
+- On a successful upload, stores the returned URL and passes it to the `DocumentUpload` card as `currentUrl`, so the card immediately reflects the uploaded file (shows the file and a "View" link instead of "Not Available").
+- Resets the URL state when the component mounts, so stale URLs from a previous entry do not leak.
+
+No backend change was needed — the server already returned the URL; the component was simply ignoring it.
+
+### Verification
+
+Type check (`tsc --noEmit`) is clean. The documents step compiles and the upload-success callback is wired to the card state.
+
+---
+
+## 17. Request-List Search Across All Workflow Pages (August 20)
+
+### The problem
+
+Each of the nine request-management pages listed pending/all requests in a table with no way to locate a specific employee. An HR Officer or reviewer looking for a particular person had to scroll through the entire list, which can be long for central institutions. The complaints page had the same issue.
+
+### What was changed
+
+A client-side search input was added to every request-management page:
+
+| Page | Search filters by |
+|---|---|
+| Confirmation requests | ZanID, payroll number |
+| Promotion requests | ZanID, payroll number |
+| LWOP requests | ZanID, payroll number |
+| Cadre change requests | ZanID, payroll number |
+| Retirement requests | ZanID, payroll number |
+| Resignation requests | ZanID, payroll number |
+| Service extension requests | ZanID, payroll number |
+| Termination/dismissal requests | ZanID, payroll number |
+| Complaints | ZanID, employee name |
+
+The search is client-side: it filters the already-fetched list, so there is no new API call and no server load. The search box is placed above the request list with a magnifying-glass icon and a placeholder indicating the searchable fields.
+
+### Related bug fixed
+
+The service-extension page had a latent bug where the second (reviewer) request list rendered the unfiltered `pendingRequests` array directly instead of the paginated `paginatedRequests` array, so pagination was ignored on that list. This was corrected as part of the search work.
+
+### Verification
+
+Type check (`tsc --noEmit`) is clean. All nine pages compile with the search state and filtering logic.
+
+---
+
+## 18. Nested-Layout File Access Fix (August 20)
+
+### The problem
+
+The file-access security gate (`src/lib/file-access.ts`) extracts the owning employee ID from the object key to decide whether a requester may download the file. It assumed only one storage layout:
+
+- **Flat:** `employee-documents/<id>_<docType>.<ext>` and `employee-photos/<id>.<ext>` — used by the HRIMS/fetch upload paths.
+
+But files uploaded through the manual-entry path use a **nested** layout:
+
+- `employee-documents/<id>/<timestamp>_<random>_<docType>_<name>`
+
+For a nested key, the old parser extracted everything after `employee-documents/` up to the first `_` as the "employee ID" — which was actually the `<id>/<timestamp>` segment, not a valid employee ID. The institution match then failed, and an HR Officer in the same institution was wrongly denied access to a document they should have been able to view.
+
+### What was changed
+
+The `parseEmployeeIdFromKey` function now recognises both layouts:
+
+| Layout | Key shape | How the owner ID is extracted |
+|---|---|---|
+| Flat (HRIMS/fetch) | `employee-documents/<id>_<docType>.<ext>` | First segment up to `_` |
+| Nested (manual upload) | `employee-documents/<id>/<timestamp>_<random>_<docType>_<name>` | First `/`-delimited segment after the prefix |
+| Photos | `employee-photos/<id>.<ext>` | First segment up to the last `.` (unchanged) |
+
+Employee IDs are UUIDs (no underscores), so the first `/`-delimited segment is the owner ID for the nested layout. The function returns `null` for any other shape.
+
+### Verification
+
+All file-access tests pass (16), including a new test that verifies an HRO in the same institution is allowed access for the nested (manual-upload) key layout.
+
 ## Summary of Documents and Deliverables Produced
 
 | Deliverable | Date | Purpose |
@@ -873,12 +1043,17 @@ Type check (`tsc --noEmit`) is clean. The complaints module was verified to alre
 | Retirement Frontend Probation Block | Aug 17 | Retirement page blocks ineligible employees immediately on lookup |
 | Admin-Configurable MFA Enforcement | Aug 18 | Policy-driven MFA gate with admin toggle, session termination, and audit |
 | Termination DO Authorization Fix | Aug 19 | Backend corrected to allow DO (and exclude HRMO) for termination commission-stage actions |
+| Admin Password Reset from Edit Form | Aug 20 | Optional password field on user edit, with validation, audit, and session termination |
+| Complaint Co-Reviewer Identity | Aug 20 | DO/HHRMD pool sees full complainant identity; payroll number added to PII |
+| Manual-Entry Document Reflect Fix | Aug 20 | Document cards reflect uploaded file URL immediately |
+| Request-List Search | Aug 20 | Client-side ZanID/payroll/name search on all 9 request pages |
+| Nested-Layout File Access Fix | Aug 20 | File-access gate recognises nested manual-upload key layout |
 
 ---
 
 ## What's Next (Recommended Priorities)
 
-1. **Add email addresses to 3 blocked staff users** — fautest (HRMO), fhali (HRRP), and mahfoudhhassan (HRRP) are blocked from logging in because they have no email address. An administrator must add government email addresses to these accounts so they can complete the second verification step. As a temporary measure, an admin can now disable MFA enforcement system-wide (section 12) to allow password-only login while the email issue is resolved — but this should be re-enabled as soon as possible.
+1. **Add email addresses to 3 blocked staff users** — fautest (HRMO), fhali (HRRP), and mahfoudhhassan (HRRP) are blocked from logging in because they have no email address. An administrator must add government email addresses to these accounts so they can complete the second verification step. As a temporary measure, an admin can now disable MFA enforcement system-wide (section 12) to allow password-only login while the email issue is resolved — but this should be re-enabled as soon as possible. If an admin needs to set a specific password for these (or any) users during the workaround, the user edit form now supports an optional password field (section 14), so there is no need to use the separate reset-password endpoint.
 
 2. **Protect audit logs from tampering** — The highest-priority security gap: add safeguards so audit records cannot be modified or deleted without detection.
 
@@ -895,4 +1070,4 @@ Type check (`tsc --noEmit`) is clean. The complaints module was verified to alre
 
 ---
 
-*Report compiled 19 August 2026 from development history, file modification records, changelog entries, and project documentation.*
+*Report compiled 20 August 2026 from development history, file modification records, changelog entries, and project documentation.*

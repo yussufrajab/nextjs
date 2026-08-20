@@ -140,7 +140,7 @@ describe('GET /api/complaints/[id] — involved-party visibility (Req 9.2 + 9.6)
     expect(body.zanId).toBe('2214582327');
   });
 
-  it('masks PII for a co-reviewer (HHRMD on a DO-assigned complaint)', async () => {
+  it('returns full identity for a co-reviewer (HHRMD on a DO-assigned complaint) — DO/HHRMD are the handling pool', async () => {
     mockVerifyAuth.mockResolvedValue(authCtx('HHRMD', 'hhrmd-1'));
     mockComplaintFindUnique.mockResolvedValue(complaintRow({ assignedOfficerRole: 'DO' }));
 
@@ -148,13 +148,11 @@ describe('GET /api/complaints/[id] — involved-party visibility (Req 9.2 + 9.6)
     const res = await GET(getRequest('c1'), PARAMS as any);
     const body = await res.json();
 
-    // HHRMD is a handler role → allowed in (not 403), but identity is masked.
+    // HHRMD is a handler role → allowed in, and now sees full identity.
     expect(res.status).toBe(200);
-    expect(body.complainantIdentityRedacted).toBe(true);
-    expect(body.employeeName).toBe('A. J.');
-    expect(body.zanId).toBe('***2327');
-    expect(body.complainantPhoneNumber).toBe('***3456');
-    expect(body.employeeId).toBeNull();
+    expect(body.complainantIdentityRedacted).toBe(false);
+    expect(body.employeeName).toBe('Ali Juma');
+    expect(body.zanId).toBe('2214582327');
     expect(body.complainantId).toBeUndefined();
   });
 

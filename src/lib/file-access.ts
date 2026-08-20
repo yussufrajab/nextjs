@@ -196,14 +196,31 @@ async function resolveCommissionLetterAccess(
 }
 
 /**
- * Extract the owning employeeId from `employee-documents/<id>_...` and
- * `employee-photos/<id>.<ext>` keys. Returns null for any other shape.
+ * Extract the owning employeeId from an employee-owned object key.
+ *
+ * Two storage layouts coexist:
+ *   - Flat (HRIMS/fetch paths): `employee-documents/<id>_<docType>.<ext>`
+ *     and `employee-photos/<id>.<ext>` — the id is the prefix before the
+ *     first `_` / last `.`.
+ *   - Nested (manual upload, /api/employees/[id]/documents):
+ *     `employee-documents/<id>/<timestamp>_<random>_<docType>_<name>` — the
+ *     id is the first path segment after the prefix.
+ *
+ * Employee IDs are UUIDs (no underscores), so the first `/`-delimited
+ * segment is the owner id for the nested layout. Returns null for any
+ * other shape.
  */
 function parseEmployeeIdFromKey(objectKey: string): string | null {
   if (objectKey.startsWith('employee-documents/')) {
-    const filename = objectKey.slice('employee-documents/'.length);
-    if (!filename) return null;
-    const id = filename.substring(0, filename.indexOf('_'));
+    const rest = objectKey.slice('employee-documents/'.length);
+    if (!rest) return null;
+    // Nested layout: `employee-documents/<id>/<...>` — first segment.
+    if (rest.includes('/')) {
+      const id = rest.substring(0, rest.indexOf('/'));
+      return id || null;
+    }
+    // Flat layout: `employee-documents/<id>_...`
+    const id = rest.substring(0, rest.indexOf('_'));
     return id || null;
   }
   if (objectKey.startsWith('employee-photos/')) {

@@ -201,6 +201,7 @@ export default function ServiceExtensionPage() {
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [requestSearchQuery, setRequestSearchQuery] = useState('');
 
   const [isCorrectionModalOpen, setIsCorrectionModalOpen] = useState(false);
   const [requestToCorrect, setRequestToCorrect] =
@@ -841,7 +842,20 @@ export default function ServiceExtensionPage() {
     }
   };
 
-  const paginatedRequests = pendingRequests || [];
+  const searchQuery = requestSearchQuery.trim().toLowerCase();
+  const baseRequests = pendingRequests || [];
+  const filteredBySearch = searchQuery
+    ? baseRequests.filter((request) => {
+        const emp = request.Employee;
+        const zanId = emp?.zanId ?? '';
+        const payroll = emp?.payrollNumber ?? '';
+        return (
+          zanId.toLowerCase().includes(searchQuery) ||
+          payroll.toLowerCase().includes(searchQuery)
+        );
+      })
+    : baseRequests;
+  const paginatedRequests = filteredBySearch;
 
   // Manual refresh function
   return (
@@ -1154,6 +1168,15 @@ export default function ServiceExtensionPage() {
               </Button>
             </div>
             <div className="flex flex-wrap gap-2 mt-3">
+              <div className="relative w-full sm:w-72 mb-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by ZAN ID or Payroll Number..."
+                  value={requestSearchQuery}
+                  onChange={(e) => setRequestSearchQuery(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
               {[
                 { value: 'all', label: 'All' },
                 { value: 'pending', label: 'Pending' },
@@ -1179,8 +1202,8 @@ export default function ServiceExtensionPage() {
               <div className="flex justify-center items-center h-40">
                 <Loader2 className="h-8 w-8 animate-spin" />
               </div>
-            ) : pendingRequests.length > 0 ? (
-              pendingRequests.map((request) => (
+            ) : paginatedRequests.length > 0 ? (
+              paginatedRequests.map((request) => (
                 <div
                   key={request.id}
                   className="mb-4 border p-4 rounded-md space-y-2 shadow-sm bg-background hover:shadow-md transition-shadow"
@@ -1350,6 +1373,15 @@ export default function ServiceExtensionPage() {
               </Button>
             </div>
             <div className="flex flex-wrap gap-2 mt-3">
+              <div className="relative w-full sm:w-72 mb-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by ZAN ID or Payroll Number..."
+                  value={requestSearchQuery}
+                  onChange={(e) => setRequestSearchQuery(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
               {[
                 { value: 'all', label: 'All' },
                 { value: 'pending', label: 'Pending' },

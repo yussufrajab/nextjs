@@ -202,6 +202,7 @@ export default function CadreChangePage() {
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [requestSearchQuery, setRequestSearchQuery] = useState('');
 
   // Handle file preview
   const handlePreviewFile = (objectKey: string) => {
@@ -759,7 +760,20 @@ export default function CadreChangePage() {
     }
   };
 
-  const paginatedRequests = pendingRequests || [];
+  const searchQuery = requestSearchQuery.trim().toLowerCase();
+  const baseRequests = pendingRequests || [];
+  const filteredBySearch = searchQuery
+    ? baseRequests.filter((request) => {
+        const emp = getEmployeeFromRequest?.(request) ?? request.Employee ?? request.employee;
+        const zanId = emp?.zanId ?? '';
+        const payroll = emp?.payrollNumber ?? '';
+        return (
+          zanId.toLowerCase().includes(searchQuery) ||
+          payroll.toLowerCase().includes(searchQuery)
+        );
+      })
+    : baseRequests;
+  const paginatedRequests = filteredBySearch;
 
   return (
     <div>
@@ -1070,6 +1084,15 @@ export default function CadreChangePage() {
                 </Button>
               </div>
               <div className="flex flex-wrap gap-2 mt-3">
+                <div className="relative w-full sm:w-72 mb-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by ZAN ID or Payroll Number..."
+                    value={requestSearchQuery}
+                    onChange={(e) => setRequestSearchQuery(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
                 {[
                   { value: 'all', label: 'All' },
                   { value: 'pending', label: 'Pending' },
@@ -1275,6 +1298,15 @@ export default function CadreChangePage() {
               </Button>
             </div>
             <div className="flex flex-wrap gap-2 mt-3">
+              <div className="relative w-full sm:w-72 mb-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by ZAN ID or Payroll Number..."
+                  value={requestSearchQuery}
+                  onChange={(e) => setRequestSearchQuery(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
               {[
                 { value: 'all', label: 'All' },
                 { value: 'pending', label: 'Pending' },

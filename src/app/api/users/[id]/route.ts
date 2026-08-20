@@ -18,6 +18,13 @@ import {
   isHighPrivilegeRole,
   detectEscalationBurst,
 } from '@/lib/role-privilege';
+import {
+  validatePasswordComplexity,
+  isCommonPassword,
+  calculateTemporaryPasswordExpiry,
+  PASSWORD_MIN_LENGTH,
+} from '@/lib/password-utils';
+import { hashPassword } from '@/lib/password-hash';
 
 // Safe fields that any admin can update on another user's profile.
 const profileUpdateSchema = z.object({
@@ -40,13 +47,18 @@ const profileUpdateSchema = z.object({
 
 // SECURITY: This endpoint is Admin-only (enforced by withAuth below).
 // Sensitive fields like role, institutionId, and active are included here
-// because admins legitimately need to manage them. Password is deliberately
-// excluded -- admins must use the dedicated /reset-password endpoint instead.
-// Self-role-change is blocked in the handler to prevent escalation/demotion.
+// because admins legitimately need to manage them. Password is OPTIONAL on
+// edits -- when omitted, the user's password is left untouched; when supplied,
+// it is validated, hashed, and installed as a new temporary password the user
+// must change on next login (mirroring /api/admin/reset-password). Self
+// password-set is blocked -- an admin must use /api/auth/change-password for
+// their own account. Self-role-change is blocked below to prevent
+// escalation/demotion.
 const adminUpdateSchema = profileUpdateSchema.extend({
   role: z.string().optional(),
   institutionId: z.string().optional(),
   active: z.boolean().optional(),
+  password: z.string().optional(),
 });
 
 export const PUT = wrapHandler(withAuth(async (
@@ -59,10 +71,15 @@ export const PUT = wrapHandler(withAuth(async (
     const body = await req.json();
     const validatedData = adminUpdateSchema.parse(body);
 
-    // Step-up re-authentication: changing a user's role or institution is a
-    // Tier-1 sensitive action (privilege escalation / cross-institution
-    // movement). Profile-only edits do not require re-auth.
-    if (validatedData.role !== undefined || validatedData.institutionId !== undefined) {
+    // Step-up re-authentication: changing a user's role or institution, or
+    // setting a new password, is a Tier-1 sensitive action (privilege
+    // escalation / cross-institution movement / account takeover). Profile-only
+    // edits do not require re-auth.
+    if (
+      validatedData.role !== undefined ||
+      validatedData.institutionId !== undefined ||
+      validatedData.password !== undefined
+    ) {
       const denied = requireReauth(req, 'users.role-change', auth);
       if (denied) return denied;
     }
@@ -100,8 +117,76 @@ export const PUT = wrapHandler(withAuth(async (
       );
     }
 
-    // If activating a user, clear all lockout fields
+    // ------------------------------------------------------------------
+    // Optional password change (admin edits user).
+    //
+    // The password field is OPTIONAL: when omitted or empty, the user's
+    // existing password is left untouched. When supplied, it is validated
+    // against the same complexity / common-password rules as the dedicated
+    // reset-password endpoint, hashed, and installed as a NEW temporary
+    // password the target must change on next login. This mirrors
+    // /api/admin/reset-password so the security posture is identical
+    // regardless of which admin path sets the password.
+    // ------------------------------------------------------------------
     const updateData: any = { ...validatedData };
+    let passwordChanged = false;
+    if (validatedData.password !== undefined && validatedData.password !== '') {
+      // SECURITY: block self password-set through this admin path. An admin
+      // must use /api/auth/change-password for their own account, which
+      // verifies the current password and enforces password history.
+      if (id === auth.userId) {
+        return NextResponse.json(
+          {
+            success: false,
+            message:
+              'Cannot set your own password through this admin path. Use the change-password endpoint.',
+          },
+          { status: 403 }
+        );
+      }
+
+      const newPlain = validatedData.password;
+
+      if (!validatePasswordComplexity(newPlain)) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: `Password must be at least ${PASSWORD_MIN_LENGTH} characters and contain an uppercase letter, lowercase letter, number, and special character.`,
+          },
+          { status: 400 }
+        );
+      }
+
+      if (isCommonPassword(newPlain)) {
+        return NextResponse.json(
+          {
+            success: false,
+            message:
+              'This password is too common and easily guessable. Please choose a stronger password.',
+          },
+          { status: 400 }
+        );
+      }
+
+      const hashedPassword = await hashPassword(newPlain);
+      updateData.password = hashedPassword;
+      updateData.isTemporaryPassword = true;
+      updateData.temporaryPasswordExpiry = calculateTemporaryPasswordExpiry();
+      updateData.mustChangePassword = true;
+      updateData.failedPasswordChangeAttempts = 0;
+      updateData.passwordChangeLockoutUntil = null;
+      updateData.passwordExpiresAt = null;
+      updateData.lastExpirationWarningLevel = 0;
+      updateData.gracePeriodStartedAt = null;
+      updateData.lastPasswordChange = new Date();
+      passwordChanged = true;
+    } else {
+      // Never persist a plaintext/empty password field — strip it so the
+      // Prisma update leaves the existing hash untouched.
+      delete updateData.password;
+    }
+
+    // If activating a user, clear all lockout fields
     if (validatedData.active === true) {
       updateData.isManuallyLocked = false;
       updateData.lockedBy = null;
@@ -193,6 +278,7 @@ export const PUT = wrapHandler(withAuth(async (
         previousInstitutionId: previousUser?.institutionId,
         newInstitutionId: validatedData.institutionId ?? previousUser?.institutionId,
         institutionChanged,
+        passwordChanged,
       },
     }).catch(() => {});
 
@@ -242,6 +328,32 @@ export const PUT = wrapHandler(withAuth(async (
         }).catch(() => {});
       }
     }
+    // SECURITY: when the admin set a new password, emit a dedicated
+    // ADMIN_PASSWORD_RESET audit event (mirroring /api/admin/reset-password)
+    // so password changes through this path are individually attributable in
+    // the audit trail, not buried inside a generic USER_UPDATED row.
+    if (passwordChanged) {
+      await logAuditEvent({
+        eventType: AuditEventType.ADMIN_PASSWORD_RESET,
+        eventCategory: AuditEventCategory.SECURITY,
+        severity: AuditSeverity.WARNING,
+        userId: auth.userId,
+        username: auth.username,
+        userRole: auth.role,
+        ipAddress: getClientIp(req.headers),
+        deviceInfo: JSON.parse(req.headers.get('x-device-info') || 'null'),
+        attemptedRoute: `/api/users/${id}`,
+        requestMethod: 'PUT',
+        isAuthenticated: true,
+        wasBlocked: false,
+        blockReason: null,
+        additionalData: {
+          targetUserId: updatedUser.id,
+          targetUsername: updatedUser.username,
+          wasGenerated: false,
+        },
+      }).catch(() => {});
+    }
 
     // SECURITY (Req 2.5): invalidate the target user's sessions when their
     // role or institution actually changes, so a demoted/transferred user
@@ -251,15 +363,15 @@ export const PUT = wrapHandler(withAuth(async (
     // ALL of the target's sessions and force a fresh re-authentication that
     // picks up the new role/institution. Mirrors the password-change flow in
     // src/app/api/auth/change-password/route.ts.
-    if (roleChanged || institutionChanged) {
+    if (roleChanged || institutionChanged || passwordChanged) {
       const terminated = await terminateAllUserSessions(id);
       authLogger.info(
-        { targetUserId: id, terminated, roleChanged, institutionChanged },
-        'Terminated all sessions for user after role/institution change'
+        { targetUserId: id, terminated, roleChanged, institutionChanged, passwordChanged },
+        'Terminated all sessions for user after role/institution/password change'
       );
     }
 
-    return NextResponse.json(response);
+    return NextResponse.json({ ...response, passwordChanged });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return new NextResponse(JSON.stringify(error.errors), { status: 400 });

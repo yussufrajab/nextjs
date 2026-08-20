@@ -18,6 +18,7 @@ function baseRow(overrides: Record<string, any> = {}) {
     employeeId: 'emp-1',
     employeeName: 'Ali Juma',
     zanId: '2214582327',
+    payrollNumber: '536151',
     complainantPhoneNumber: '0777123456',
     nextOfKinPhoneNumber: '0788765432',
     assignedOfficerRole: ROLES.DO,
@@ -88,14 +89,14 @@ describe('viewerSeesFullComplainantIdentity', () => {
     ).toBe(true);
   });
 
-  it('co-reviewer (HHRMD on DO-assigned) is masked', () => {
+  it('co-reviewer (HHRMD on DO-assigned) sees full identity — DO/HHRMD are the complaint-handling pool', () => {
     expect(
       viewerSeesFullComplainantIdentity(baseRow({ assignedOfficerRole: ROLES.DO }), {
         viewerRole: ROLES.HHRMD,
         viewerUserId: 'hhrmd-1',
         assignedOfficerId: null,
       })
-    ).toBe(false);
+    ).toBe(true);
   });
 
   it('Admin/CSCS see full identity for non-confidential complaints', () => {
@@ -160,18 +161,16 @@ describe('redactComplainantPii', () => {
     expect((out as any).complainantId).toBeUndefined();
   });
 
-  it('masks PII for a co-reviewer (HHRMD on DO-assigned, non-confidential)', () => {
+  it('returns full identity for a co-reviewer (HHRMD on DO-assigned) — DO/HHRMD are the handling pool', () => {
     const out = redactComplainantPii(baseRow({ assignedOfficerRole: ROLES.DO }), {
       viewerRole: ROLES.HHRMD,
       viewerUserId: 'hhrmd-1',
       assignedOfficerId: null,
     });
-    expect(out.complainantIdentityRedacted).toBe(true);
-    expect(out.employeeId).toBeNull();
-    expect(out.employeeName).toBe('A. J.');
-    expect(out.zanId).toBe('***2327');
-    expect(out.complainantPhoneNumber).toBe('***3456');
-    expect(out.nextOfKinPhoneNumber).toBe('***5432');
+    expect(out.complainantIdentityRedacted).toBe(false);
+    expect(out.employeeName).toBe('Ali Juma');
+    expect(out.zanId).toBe('2214582327');
+    expect(out.payrollNumber).toBe('536151');
     expect((out as any).complainantId).toBeUndefined();
   });
 
@@ -184,9 +183,9 @@ describe('redactComplainantPii', () => {
     expect(out.complainantIdentityRedacted).toBe(true);
     expect(out.employeeName).toBe('A. J.');
     expect(out.zanId).toBe('***2327');
+    expect(out.payrollNumber).toBe('***6151');
     expect(out.employeeId).toBeNull();
   });
-
   it('masks PII for Admin on a confidential complaint', () => {
     const out = redactComplainantPii(baseRow({ confidential: true }), {
       viewerRole: ROLES.ADMIN,
@@ -195,6 +194,7 @@ describe('redactComplainantPii', () => {
     });
     expect(out.complainantIdentityRedacted).toBe(true);
     expect(out.zanId).toBe('***2327');
+    expect(out.payrollNumber).toBe('***6151');
   });
 
   it('preserves non-PII fields (subject, status, assignedOfficerRole) under masking', () => {
