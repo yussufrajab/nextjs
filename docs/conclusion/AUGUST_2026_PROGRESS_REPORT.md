@@ -11,7 +11,7 @@
 
 ## Executive Summary
 
-During the first three weeks of August 2026, fifteen major pieces of work were completed:
+During the first three weeks of August 2026, sixteen major pieces of work were completed:
 
 1. **New automated security system** — a system that automatically blocks computers showing abusive login behaviour (e.g. trying many passwords from the same location), plus a comprehensive security audit of the entire system.
 2. **Major data quality fix** — discovered and fixed a problem where the government HR database (HRIMS) was sending us far more employees than actually work at a given institution. Cleaned up employee records across all 76 government institutions.
@@ -28,6 +28,7 @@ During the first three weeks of August 2026, fifteen major pieces of work were c
 13. **Manual-entry document upload reflect fix** — after an HR Officer uploaded a document through the manual employee-entry wizard, the document card stayed "Not Available" because the component did not track the returned file URL. The documents step now captures each uploaded document's URL and displays it immediately, so the card reflects the successful upload without a page reload.
 14. **Request-list search across all workflow pages** — all nine request-management pages (confirmation, promotion, LWOP, cadre change, retirement, resignation, service extension, termination, and complaints) previously listed pending requests with no way to locate a specific employee. A client-side search box was added to every page, filtering the list by ZanID or payroll number (complaints also search by employee name). Service-extension also fixed a latent bug where the second request list ignored pagination.
 15. **Nested-layout file access fix** — the file-access security gate extracted the owning employee ID from object keys assuming only the flat layout (`employee-documents/<id>_<type>.<ext>`). Files stored through the manual-upload path use a nested layout (`employee-documents/<id>/<timestamp>_<random>_<type>_<name>`), so an HR Officer in the same institution was wrongly denied access to those files. The key parser now recognises both layouts and extracts the owner ID correctly.
+16. **Dashboard role scoping for DO and HRMO** — the main dashboard showed every HR request type to every dashboard user, so a Discipline Officer (DO) saw cards for confirmations, promotions, LWOP, retirements, etc. — pages she cannot access (the proxy blocks them, so clicking a card showed "Access Denied"), and the HRMO saw termination and complaints cards she cannot open. The dashboard stat cards and the metrics API were both gated per role: DO now sees only Total Employees, Pending Terminations, and Open Complaints; HRMO sees every other HR card but no Termination and no Complaints. The metrics API no longer computes or fetches out-of-scope data for either role, so the dashboard reflects each officer's own work and statistics only.
 ---
 ## 1. Automated Login Security System (August 4)
 
@@ -1015,6 +1016,44 @@ Employee IDs are UUIDs (no underscores), so the first `/`-delimited segment is t
 
 All file-access tests pass (16), including a new test that verifies an HRO in the same institution is allowed access for the nested (manual-upload) key layout.
 
+## 19. Dashboard Role Scoping for DO and HRMO (August 20)
+
+### The problem
+
+The main dashboard showed the same set of HR request stat cards to every dashboard user, regardless of their role's remit. A Discipline Officer (DO), who is responsible only for terminations/dismissals and complaints, saw cards for Pending Confirmations, Pending Promotions, Employees on LWOP, Pending Cadre Changes, Pending Retirements, Pending Resignations, and Pending Service Extensions — none of which she can open (the proxy route permissions block her from those pages, so clicking any of them showed an "Access Denied" toast). Symmetrically, an HRMO — who handles every HR workflow *except* termination/dismissal and complaints — saw the Pending Terminations and Open Complaints cards, which she also cannot open.
+
+The metrics API (`/api/dashboard/metrics`) had the same blind spot: it computed counts and fetched recent activities for every request type for every role, so out-of-scope data was returned to the dashboard even though the cards linking to it were dead ends.
+
+The sidebar navigation and the proxy route permissions were already correct: DO only sees Termination/Dismissal and Complaints in the sidebar; HRMO sees everything except those two. Only the dashboard cards and the metrics API were inconsistent.
+
+### What was changed
+
+**Metrics API** (`src/app/api/dashboard/metrics/route.ts`):
+
+Two role-specific gates were added to the count queries and the recent-activities fetches:
+
+| Role | Gate | Effect |
+|---|---|---|
+| DO | `isDisciplineOnly = userRole === 'DO'` | Confirmation, promotion, LWOP, cadre-change, retirement, resignation, and service-extension counts resolve to `0` (skipped, no DB query) and their activity fetches return `[]`. Termination/dismissal (separation) and complaints remain visible. |
+| HRMO | `canSeeTerminations = userRole !== 'HRMO'` | Separation (termination/dismissal) count resolves to `0` and its activity fetch returns `[]`. Complaints were already suppressed for HRMO via the existing `canSeeComplaints` flag (which excludes HRMO). All other request types remain visible. |
+
+**Dashboard page** (`src/app/dashboard/page.tsx`):
+
+| Role | Cards shown | Cards hidden |
+|---|---|---|
+| DO | Total Employees, Pending Terminations, Open Complaints | Confirmations, Promotions, LWOP, Cadre Changes, Retirements, Resignations, Service Extensions, Urgent Actions |
+| HRMO | Total Employees, Pending Confirmations, Pending Promotions, Employees on LWOP, Pending Cadre Changes, Pending Retirements, Pending Resignations, Pending Service Extensions | Pending Terminations, Open Complaints |
+
+Each non-discipline card is wrapped in `{!isDisciplineOnly && (...)}` for DO; the Termination card is wrapped in `{canSeeTerminations && (...)}` for HRMO; and the Open Complaints card is gated by a `canSeeComplaints` flag mirroring the proxy/API logic, so HRMO (and other non-complaint roles) render `null` instead of a dead-link card.
+
+### Net effect
+
+Each officer's dashboard now reflects only her own work and statistics. No out-of-scope counts are computed, no out-of-scope recent activities are fetched, and no dead-link stat cards are shown. The proxy and sidebar — which were already correct — now match the dashboard and metrics API.
+
+### Verification
+
+Type check (`tsc --noEmit`) is clean across the whole project. The two changed files compile with the new gating flags and no errors.
+
 ## Summary of Documents and Deliverables Produced
 
 | Deliverable | Date | Purpose |
@@ -1049,6 +1088,7 @@ All file-access tests pass (16), including a new test that verifies an HRO in th
 | Request-List Search | Aug 20 | Client-side ZanID/payroll/name search on all 9 request pages |
 | Nested-Layout File Access Fix | Aug 20 | File-access gate recognises nested manual-upload key layout |
 
+| Dashboard Role Scoping (DO/HRMO) | Aug 20 | Dashboard stat cards and metrics API gated per role — DO sees only terminations/complaints; HRMO sees all except terminations/complaints |
 ---
 
 ## What's Next (Recommended Priorities)
@@ -1070,4 +1110,4 @@ All file-access tests pass (16), including a new test that verifies an HRO in th
 
 ---
 
-*Report compiled 20 August 2026 from development history, file modification records, changelog entries, and project documentation.*
+*Report compiled 21 August 2026 from development history, file modification records, changelog entries, and project documentation.*
