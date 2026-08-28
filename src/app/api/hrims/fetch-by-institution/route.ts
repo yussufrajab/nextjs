@@ -70,7 +70,7 @@ export const POST = wrapHandler(withAuth(async (req, { auth }) => {
  );
  }
  requestId = '205';
- identifier = tinNumber;
+ identifier = tinNumber.replace(/[-\s]/g, '');
  identifierLabel = 'TIN';
  } else {
  if (!voteNumber) {

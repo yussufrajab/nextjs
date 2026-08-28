@@ -96,6 +96,17 @@ export default function FetchDataPage() {
   const [isFetching, setIsFetching] = useState(false);
   const [isEmployeeDialogOpen, setIsEmployeeDialogOpen] = useState(false);
   const [fetchResults, setFetchResults] = useState<EmployeeFetchResult[]>([]);
+  const [fetchSummary, setFetchSummary] = useState<{
+    institutionName: string;
+    employeeCount: number;
+    skippedCount: number;
+    outOfScopeCount: number;
+    totalFetched: number;
+    pagesFetched: number;
+    fetchTime: string;
+    saveTime: string;
+    totalTime: string;
+  } | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [identifierType, setIdentifierType] = useState<'votecode' | 'tin'>(
@@ -274,6 +285,7 @@ export default function FetchDataPage() {
     setIsFetching(true);
     setProgress(null);
     setFetchResults([]);
+    setFetchSummary(null);
 
     try {
       // Step 1: Create the background job
@@ -361,9 +373,30 @@ export default function FetchDataPage() {
             }
           } else if (eventType === 'complete') {
             const result = data.result;
+            setFetchSummary({
+              institutionName: result.institutionName,
+              employeeCount: result.employeeCount,
+              skippedCount: result.skippedCount,
+              outOfScopeCount: result.outOfScopeCount || 0,
+              totalFetched: result.totalFetched,
+              pagesFetched: result.pagesFetched,
+              fetchTime: result.fetchTime,
+              saveTime: result.saveTime,
+              totalTime: result.totalTime,
+            });
+            const descParts = [
+              `Fetched ${result.totalFetched} from HRIMS`,
+              `Stored: ${result.employeeCount}`,
+            ];
+            if (result.outOfScopeCount > 0) {
+              descParts.push(`Out of scope: ${result.outOfScopeCount}`);
+            }
+            if (result.skippedCount > result.outOfScopeCount) {
+              descParts.push(`Skipped: ${result.skippedCount}`);
+            }
             toast({
-              title: 'Fetch Successful',
-              description: `Fetched ${result.employeeCount} employees from ${selectedInstitution.name}. Pages: ${result.pagesFetched}, Total: ${result.totalFetched}${result.skippedCount > 0 ? `, Skipped: ${result.skippedCount}` : ''}.`,
+              title: 'Fetch Complete',
+              description: descParts.join(' | '),
             });
 
             if (result.employeeCount > 0) {
@@ -401,7 +434,6 @@ export default function FetchDataPage() {
         <PageHeader title="Fetch Data from HRIMS" description="Loading..." />
         <Card>
           <CardContent className="flex items-center justify-center h-64">
-            <Loader2 className="h-8 w-8 animate-spin" />
           </CardContent>
         </Card>
       </div>
@@ -412,7 +444,7 @@ export default function FetchDataPage() {
     <div>
       <PageHeader
         title="Fetch Data from HRIMS"
-        description="Fetch employee data from the external HRIMS system and store it in the local database."
+        description="Fetch employee data from HRIMS and distribute to institutions based on current workplace. Employees whose workplace does not match any institution are skipped."
       />
 
       {/* Institution Selection */}
@@ -507,6 +539,9 @@ export default function FetchDataPage() {
               <div className="space-y-1">
                 <p>Vote Number: {selectedInstitution.voteNumber || 'N/A'}</p>
                 <p>TIN Number: {selectedInstitution.tinNumber || 'N/A'}</p>
+                <p className="text-muted-foreground text-xs mt-1">
+                  Employees will be distributed to institutions based on their current workplace. Out-of-scope employees are skipped.
+                </p>
               </div>
             </CardDescription>
           </CardHeader>
@@ -547,8 +582,8 @@ export default function FetchDataPage() {
                 </div>
               </RadioGroup>
               <p className="text-xs text-gray-600 mt-2">
-                Choose which identifier to use when fetching employees from
-                HRIMS for this institution.
+                Choose which identifier to use when fetching from HRIMS. Fetched employees will be
+                distributed to their correct institution based on current workplace — not just this institution.
               </p>
             </div>
 
@@ -613,7 +648,7 @@ export default function FetchDataPage() {
                 {isFetching ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : null}
-                Fetch by {identifierType === 'votecode' ? 'Vote Code' : 'TIN'}
+                Fetch & Distribute by {identifierType === 'votecode' ? 'Vote Code' : 'TIN'}
               </Button>
             </div>
 
@@ -731,6 +766,56 @@ export default function FetchDataPage() {
                   <p className="text-xs text-green-600 mt-3 italic">
                     This is a preview of the first few employees. Check the
                     success notification for the total count.
+                  </p>
+                )}
+              </div>
+            )}
+
+            {fetchSummary && !isFetching && (
+              <div className="border rounded-lg p-4 bg-blue-50 mt-4">
+                <h4 className="font-medium text-blue-800 mb-3 flex items-center gap-2">
+                  <Database className="h-4 w-4" />
+                  Fetch Summary — {fetchSummary.institutionName}
+                </h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="bg-white rounded-lg p-3 border">
+                    <p className="text-xs text-muted-foreground">Total Fetched</p>
+                    <p className="text-xl font-bold text-blue-700">{fetchSummary.totalFetched}</p>
+                  </div>
+                  <div className="bg-white rounded-lg p-3 border">
+                    <p className="text-xs text-muted-foreground">Stored (New)</p>
+                    <p className="text-xl font-bold text-green-600">{fetchSummary.employeeCount}</p>
+                  </div>
+                  <div className="bg-white rounded-lg p-3 border">
+                    <p className="text-xs text-muted-foreground">Out of Scope</p>
+                    <p className="text-xl font-bold text-orange-600">{fetchSummary.outOfScopeCount}</p>
+                  </div>
+                  <div className="bg-white rounded-lg p-3 border">
+                    <p className="text-xs text-muted-foreground">Skipped / Deduped</p>
+                    <p className="text-xl font-bold text-gray-600">{fetchSummary.skippedCount}</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
+                  <div className="bg-white rounded-lg p-3 border">
+                    <p className="text-xs text-muted-foreground">Pages Fetched</p>
+                    <p className="text-sm font-semibold">{fetchSummary.pagesFetched}</p>
+                  </div>
+                  <div className="bg-white rounded-lg p-3 border">
+                    <p className="text-xs text-muted-foreground">Fetch Time</p>
+                    <p className="text-sm font-semibold">{fetchSummary.fetchTime}s</p>
+                  </div>
+                  <div className="bg-white rounded-lg p-3 border">
+                    <p className="text-xs text-muted-foreground">Save Time</p>
+                    <p className="text-sm font-semibold">{fetchSummary.saveTime}s</p>
+                  </div>
+                  <div className="bg-white rounded-lg p-3 border">
+                    <p className="text-xs text-muted-foreground">Total Time</p>
+                    <p className="text-sm font-semibold">{fetchSummary.totalTime}s</p>
+                  </div>
+                </div>
+                {fetchSummary.outOfScopeCount > 0 && (
+                  <p className="text-xs text-muted-foreground mt-3">
+                    Out-of-scope employees were not stored — their current workplace does not match any institution in the database.
                   </p>
                 )}
               </div>

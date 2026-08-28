@@ -120,7 +120,7 @@ model Employee {
   placeOfBirth            String?
   region                  String?
   countryOfBirth          String?
-  zanId                   String                    @unique
+  zanId                   String?                   @unique
   phoneNumber             String?
   email                   String?
   contactAddress          String?

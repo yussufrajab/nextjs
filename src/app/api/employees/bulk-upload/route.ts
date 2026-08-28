@@ -568,7 +568,7 @@ export const POST = wrapHandler(withRateLimit(withAuth(async (
     });
     if (fuzzyDup.duplicate && fuzzyDup.existing) {
       emp.errors.push(
-        `Likely duplicate of existing employee in database (ZanID ${fuzzyDup.existing.zanId}, name "${fuzzyDup.existing.name}", ${(fuzzyDup.similarity * 100).toFixed(0)}% name match, same date of birth)`
+        `Likely duplicate of existing employee in database (ZanID ${fuzzyDup.existing.zanId || 'N/A'}, name "${fuzzyDup.existing.name}", ${(fuzzyDup.similarity * 100).toFixed(0)}% name match, same date of birth)`
       );
     }
 

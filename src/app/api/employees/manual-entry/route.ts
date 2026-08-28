@@ -367,7 +367,7 @@ export const POST = wrapHandler(
     return NextResponse.json(
       {
         success: false,
-        error: `A likely duplicate employee already exists in your institution (ZanID ${fuzzyDup.existing.zanId}, name "${fuzzyDup.existing.name}", ${(fuzzyDup.similarity * 100).toFixed(0)}% name match, same date of birth). Verify the existing record before creating a new one.`,
+        error: `A likely duplicate employee already exists in your institution (ZanID ${fuzzyDup.existing.zanId || 'N/A'}, name "${fuzzyDup.existing.name}", ${(fuzzyDup.similarity * 100).toFixed(0)}% name match, same date of birth). Verify the existing record before creating a new one.`,
       },
       { status: 409 }
     );
@@ -418,7 +418,7 @@ export const POST = wrapHandler(
     action: 'CREATED',
     employeeId: employee.id,
     employeeName: employee.name,
-    employeeZanId: employee.zanId,
+    employeeZanId: employee.zanId ?? undefined,
     performedById: userId,
     performedByUsername: username || 'HRO',
     performedByRole: role,

@@ -120,10 +120,20 @@ async function saveEmployeeToDatabase(hrimsData: any, institutionId: string, ins
       hrimsData.salaryInformation?.[0];
     const highestEducation = hrimsData.educationHistories?.[0];
 
+    // Determine the unique identifier: prefer zanId, fall back to payrollNumber
+    const zanId = personalInfo.zanIdNumber || null;
+    const payrollNumber = personalInfo.payrollNumber || null;
+    const hasZanId = zanId && zanId.trim() !== '';
+    const hasPayroll = payrollNumber && payrollNumber.trim() !== '';
+
+    if (!hasZanId && !hasPayroll) {
+      throw new Error('Employee has neither ZanID nor Payroll Number');
+    }
+
     // Find or create employee
-    const existingEmployee = await db.employee.findUnique({
-      where: { zanId: personalInfo.zanIdNumber },
-    });
+    const existingEmployee = hasZanId
+      ? await db.employee.findUnique({ where: { zanId } })
+      : await db.employee.findUnique({ where: { payrollNumber } });
 
     const employeeId = existingEmployee?.id || uuidv4();
 
@@ -152,14 +162,14 @@ async function saveEmployeeToDatabase(hrimsData: any, institutionId: string, ins
       placeOfBirth: personalInfo.placeOfBirth,
       region: personalInfo.regionName,
       countryOfBirth: personalInfo.birthCountryName,
-      zanId: personalInfo.zanIdNumber,
+      zanId,
       phoneNumber: personalInfo.primaryPhone || personalInfo.workPhone,
       contactAddress:
         [personalInfo.houseNumber, personalInfo.street, personalInfo.city]
           .filter((part) => part && part.trim())
           .join(', ') || null,
       zssfNumber: personalInfo.zssfNumber,
-      payrollNumber: personalInfo.payrollNumber || '',
+      payrollNumber,
       cadre: currentEmployment?.titleName,
       salaryScale: currentSalary?.salaryScaleName,
       ministry: currentEmployment?.entityName,
@@ -190,9 +200,11 @@ async function saveEmployeeToDatabase(hrimsData: any, institutionId: string, ins
         : null,
       status: personalInfo.isEmployeeConfirmed ? 'Confirmed' : 'On Probation',
       institutionId: institutionId,
-      // Store additional HRIMS-specific data
-      employeeEntityId: personalInfo.zanIdNumber, // Use ZanID as entity ID
+      // Use ZanID as entity ID, fall back to payroll number
+      employeeEntityId: zanId || payrollNumber,
     };
+
+    void highestEducation;
 
     hrimsLogger.info({
       zanId: dbEmployeeData.zanId,
@@ -201,12 +213,20 @@ async function saveEmployeeToDatabase(hrimsData: any, institutionId: string, ins
       cadre: dbEmployeeData.cadre,
     }, 'Saving employee data:');
 
-    // Save/update employee
-    await db.employee.upsert({
-      where: { zanId: personalInfo.zanIdNumber },
-      update: dbEmployeeData,
-      create: dbEmployeeData,
-    });
+    // Save/update employee — use the correct unique key for upsert
+    if (hasZanId) {
+      await db.employee.upsert({
+        where: { zanId },
+        update: dbEmployeeData,
+        create: dbEmployeeData,
+      });
+    } else {
+      await db.employee.upsert({
+        where: { payrollNumber },
+        update: dbEmployeeData,
+        create: dbEmployeeData,
+      });
+    }
 
     return employeeId;
   } catch (error) {
