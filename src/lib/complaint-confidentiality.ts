@@ -17,6 +17,7 @@ export const COMPLAINANT_PII_FIELDS = [
   'employeeId',
   'employeeName',
   'zanId',
+  'payrollNumber',
   'complainantPhoneNumber',
   'nextOfKinPhoneNumber',
 ] as const;
@@ -89,15 +90,21 @@ export function canSeeComplainantIdentity(
   if (userId === complaint.complainantId) return true;
 
   const normalizedRole = String(role).toUpperCase();
-
-  // Owning officer: exact assigned-role match only.
+  // Owning officer: DO and HHRMD are the complaint-handling pool. Either
+  // role sees full identity for any complaint assigned to DO or HHRMD (not
+  // just an exact role match), so a co-reviewer can act on a complaint
+  // assigned to the other role without the name/ZAN ID being masked.
   if (
     normalizedRole === String(ROLES.DO).toUpperCase() ||
     normalizedRole === String(ROLES.HHRMD).toUpperCase()
   ) {
+    const DO = String(ROLES.DO).toUpperCase();
+    const HHRMD = String(ROLES.HHRMD).toUpperCase();
+    const pool: Record<string, true> = { [DO]: true, [HHRMD]: true };
     return (
       !!complaint.assignedOfficerRole &&
-      normalizedRole === String(complaint.assignedOfficerRole).toUpperCase()
+      !!pool[normalizedRole] &&
+      !!pool[String(complaint.assignedOfficerRole).toUpperCase()]
     );
   }
 
@@ -123,6 +130,7 @@ export function redactComplainantIdentity<T extends Record<string, any>>(
     employeeId: null,
     employeeName: REDACTED_COMPLAINANT_NAME,
     zanId: null,
+    payrollNumber: null,
     complainantPhoneNumber: null,
     nextOfKinPhoneNumber: null,
     complainantIdentityRedacted: true,

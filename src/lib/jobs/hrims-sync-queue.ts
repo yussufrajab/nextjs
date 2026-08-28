@@ -105,9 +105,27 @@ export async function addHRIMSSyncJob(data: HRIMSSyncJobData): Promise<string> {
   //
   // NOTE: BullMQ rejects custom job IDs that contain a colon ("Custom Id cannot
   // contain :"), so the segments are joined with hyphens, not colons.
-  const job = await queue.add('hrims-sync', data, {
-    jobId: `hrims-sync-${data.institutionId}-${data.identifierType}-${data.identifier}`,
-  });
+  const jobId = `hrims-sync-${data.institutionId}-${data.identifierType}-${data.identifier}`;
+
+  // If a job with this ID already exists but has already finished (completed
+  // or failed), remove it so the new enqueue actually gets processed. Without
+  // this, BullMQ silently drops the duplicate and the worker never runs — the
+  // caller sees the stale result from the previous (possibly old-code) job.
+  // Active/waiting/delayed jobs are left alone so double-click dedup still
+  // works.
+  const existing = await queue.getJob(jobId);
+  if (existing) {
+    const state = await existing.getState();
+    if (state === 'completed' || state === 'failed') {
+      await existing.remove();
+      workerLogger.info(
+        { jobId, prevState: state },
+        'Removed previous finished job to allow re-fetch'
+      );
+    }
+  }
+
+  const job = await queue.add('hrims-sync', data, { jobId });
 
   workerLogger.info(
     { jobId: job.id, institutionId: data.institutionId, institutionName: data.institutionName },

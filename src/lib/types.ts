@@ -8,6 +8,8 @@ export type Role =
   | 'HRRP'
   | 'PO'
   | 'Admin'
+  | 'HRO_PEMBA'
+  | 'HRRP_PEMBA'
   | null;
 
 export interface User {
@@ -122,6 +124,8 @@ export interface Employee {
   jobContractUrl?: string | null;
   birthCertificateUrl?: string | null;
   certificates?: EmployeeCertificate[];
+  island?: 'PEMBA' | 'UNGUJA';
+  dataSource?: string | null;
 }
 
 export type RequestType =

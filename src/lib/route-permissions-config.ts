@@ -13,6 +13,12 @@ export interface RoutePermission {
  *
  * Both the Next.js proxy (src/proxy.ts) and route-permissions.ts import from
  * this file. When adding or changing permissions, update ONLY this file.
+ *
+ * Pemba-scoped roles (`HRO_PEMBA`, `HRRP_PEMBA`) behave like `HRO`/`HRRP` for
+ * page-level access: they are added to every route that lists the matching
+ * base role. The island-level data scoping is enforced in the API route
+ * handlers (see `pembaIslandWhere` in role-utils.ts), not here — this
+ * list only gates which pages the role may load.
  */
 export const ROUTE_PERMISSIONS: RoutePermission[] = [
   // Admin-only routes
@@ -25,49 +31,49 @@ export const ROUTE_PERMISSIONS: RoutePermission[] = [
   // HR Officer routes - HHRMD and HRMO can approve, HRO can submit
   {
     pattern: '/dashboard/urgent-actions',
-    allowedRoles: [ROLES.HRO, ROLES.HRRP, ROLES.CSCS],
+    allowedRoles: [ROLES.HRO, ROLES.HRRP, ROLES.CSCS, ROLES.HRO_PEMBA, ROLES.HRRP_PEMBA],
     description: 'Urgent actions page',
   },
   {
     pattern: '/dashboard/confirmation',
-    allowedRoles: [ROLES.HRO, ROLES.HHRMD, ROLES.HRMO, ROLES.CSCS, ROLES.HRRP],
+    allowedRoles: [ROLES.HRO, ROLES.HHRMD, ROLES.HRMO, ROLES.CSCS, ROLES.HRRP, ROLES.HRO_PEMBA, ROLES.HRRP_PEMBA],
     description: 'Employee confirmation - HRO submits to HRRP, HRRP approves and forwards to Commission (HHRMD/HRMO)',
   },
   {
     pattern: '/dashboard/lwop',
-    allowedRoles: [ROLES.HRO, ROLES.HHRMD, ROLES.HRMO, ROLES.CSCS, ROLES.HRRP],
+    allowedRoles: [ROLES.HRO, ROLES.HHRMD, ROLES.HRMO, ROLES.CSCS, ROLES.HRRP, ROLES.HRO_PEMBA, ROLES.HRRP_PEMBA],
     description: 'Leave without pay - HRO submits to HRRP, HRRP approves and forwards to Commission (HHRMD/HRMO)',
   },
   {
     pattern: '/dashboard/promotion',
-    allowedRoles: [ROLES.HRO, ROLES.HHRMD, ROLES.HRMO, ROLES.CSCS, ROLES.HRRP],
+    allowedRoles: [ROLES.HRO, ROLES.HHRMD, ROLES.HRMO, ROLES.CSCS, ROLES.HRRP, ROLES.HRO_PEMBA, ROLES.HRRP_PEMBA],
     description: 'Promotions - HRO submits to HRRP, HRRP approves and forwards to Commission (HHRMD/HRMO)',
   },
   {
     pattern: '/dashboard/cadre-change',
-    allowedRoles: [ROLES.HRO, ROLES.HHRMD, ROLES.HRMO, ROLES.CSCS, ROLES.HRRP],
+    allowedRoles: [ROLES.HRO, ROLES.HHRMD, ROLES.HRMO, ROLES.CSCS, ROLES.HRRP, ROLES.HRO_PEMBA, ROLES.HRRP_PEMBA],
     description: 'Change of cadre - HRO submits to HRRP, HRRP approves and forwards to Commission (HHRMD/HRMO)',
   },
   {
     pattern: '/dashboard/retirement',
-    allowedRoles: [ROLES.HRO, ROLES.HHRMD, ROLES.HRMO, ROLES.CSCS, ROLES.HRRP],
+    allowedRoles: [ROLES.HRO, ROLES.HHRMD, ROLES.HRMO, ROLES.CSCS, ROLES.HRRP, ROLES.HRO_PEMBA, ROLES.HRRP_PEMBA],
     description: 'Retirement - HRO submits to HRRP, HRRP approves and forwards to Commission (HHRMD/HRMO)',
   },
   {
     pattern: '/dashboard/resignation',
-    allowedRoles: [ROLES.HRO, ROLES.HHRMD, ROLES.HRMO, ROLES.CSCS, ROLES.HRRP],
+    allowedRoles: [ROLES.HRO, ROLES.HHRMD, ROLES.HRMO, ROLES.CSCS, ROLES.HRRP, ROLES.HRO_PEMBA, ROLES.HRRP_PEMBA],
     description: 'Resignation - HRO submits to HRRP, HRRP approves and forwards to Commission (HHRMD/HRMO)',
   },
   {
     pattern: '/dashboard/service-extension',
-    allowedRoles: [ROLES.HRO, ROLES.HHRMD, ROLES.HRMO, ROLES.CSCS, ROLES.HRRP],
+    allowedRoles: [ROLES.HRO, ROLES.HHRMD, ROLES.HRMO, ROLES.CSCS, ROLES.HRRP, ROLES.HRO_PEMBA, ROLES.HRRP_PEMBA],
     description: 'Service extension - HRO submits to HRRP, HRRP approves and forwards to Commission (HHRMD/HRMO)',
   },
 
   // Disciplinary actions - HHRMD and DO only, NOT HRMO
   {
     pattern: '/dashboard/termination',
-    allowedRoles: [ROLES.HRO, ROLES.DO, ROLES.HHRMD, ROLES.CSCS, ROLES.HRRP],
+    allowedRoles: [ROLES.HRO, ROLES.DO, ROLES.HHRMD, ROLES.CSCS, ROLES.HRRP, ROLES.HRO_PEMBA, ROLES.HRRP_PEMBA],
     description: 'Termination - HRO submits to HRRP, HRRP approves and forwards to Commission (DO/HHRMD)',
   },
   // Complaints - EMPLOYEE submits, DO/HHRMD handle
@@ -80,14 +86,14 @@ export const ROUTE_PERMISSIONS: RoutePermission[] = [
   // Institution management
   {
     pattern: '/dashboard/institutions',
-    allowedRoles: [ROLES.HHRMD, ROLES.CSCS, ROLES.DO, ROLES.HRMO, ROLES.HRRP],
+    allowedRoles: [ROLES.HHRMD, ROLES.CSCS, ROLES.DO, ROLES.HRMO, ROLES.HRRP, ROLES.HRRP_PEMBA],
     description: 'Institutions',
   },
 
-  // Manual employee entry - HRO only
+  // Manual employee entry - HRO only (and the Pemba-scoped HRO variant)
   {
     pattern: '/dashboard/add-employee',
-    allowedRoles: [ROLES.HRO],
+    allowedRoles: [ROLES.HRO, ROLES.HRO_PEMBA],
     description: 'Manual employee entry',
   },
 
@@ -103,6 +109,8 @@ export const ROUTE_PERMISSIONS: RoutePermission[] = [
       ROLES.CSCS,
       ROLES.HRRP,
       ROLES.PO,
+      ROLES.HRO_PEMBA,
+      ROLES.HRRP_PEMBA,
     ],
     description: 'Employee profiles',
   },
@@ -119,6 +127,8 @@ export const ROUTE_PERMISSIONS: RoutePermission[] = [
       ROLES.HRRP,
       ROLES.EMPLOYEE,
       ROLES.PO,
+      ROLES.HRO_PEMBA,
+      ROLES.HRRP_PEMBA,
     ],
     description: 'Track status of submitted requests',
   },
@@ -131,6 +141,8 @@ export const ROUTE_PERMISSIONS: RoutePermission[] = [
       ROLES.DO,
       ROLES.CSCS,
       ROLES.HRRP,
+      ROLES.HRO_PEMBA,
+      ROLES.HRRP_PEMBA,
     ],
     description: 'Recent activities overview',
   },
@@ -144,6 +156,8 @@ export const ROUTE_PERMISSIONS: RoutePermission[] = [
       ROLES.CSCS,
       ROLES.HRRP,
       ROLES.PO,
+      ROLES.HRO_PEMBA,
+      ROLES.HRRP_PEMBA,
     ],
     description: 'System-wide reports and analytics - PO has read-only access',
   },
@@ -161,6 +175,8 @@ export const ROUTE_PERMISSIONS: RoutePermission[] = [
       ROLES.HRRP,
       ROLES.PO,
       ROLES.ADMIN as Role,
+      ROLES.HRO_PEMBA,
+      ROLES.HRRP_PEMBA,
     ],
     description: 'Dashboard home',
   },

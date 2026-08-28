@@ -121,6 +121,8 @@ type Role =
   | 'HRRP'
   | 'PO'
   | 'Admin'
+  | 'HRO_PEMBA'
+  | 'HRRP_PEMBA'
   | null;
 
 interface RoutePermission {
@@ -145,44 +147,44 @@ const ROUTE_PERMISSIONS: RoutePermission[] = [
   // HR Officer routes
   {
     pattern: '/dashboard/urgent-actions',
-    allowedRoles: ['HRO', 'HRRP', 'CSCS'],
+    allowedRoles: ['HRO', 'HRRP', 'CSCS', 'HRO_PEMBA', 'HRRP_PEMBA'],
   },
   {
     pattern: '/dashboard/confirmation',
-    allowedRoles: ['HRO', 'HHRMD', 'HRMO', 'CSCS', 'HRRP'],
+    allowedRoles: ['HRO', 'HHRMD', 'HRMO', 'CSCS', 'HRRP', 'HRO_PEMBA', 'HRRP_PEMBA'],
   },
   {
     pattern: '/dashboard/lwop',
-    allowedRoles: ['HRO', 'HHRMD', 'HRMO', 'CSCS', 'HRRP'],
+    allowedRoles: ['HRO', 'HHRMD', 'HRMO', 'CSCS', 'HRRP', 'HRO_PEMBA', 'HRRP_PEMBA'],
   },
   {
     pattern: '/dashboard/promotion',
-    allowedRoles: ['HRO', 'HHRMD', 'HRMO', 'CSCS', 'HRRP'],
+    allowedRoles: ['HRO', 'HHRMD', 'HRMO', 'CSCS', 'HRRP', 'HRO_PEMBA', 'HRRP_PEMBA'],
   },
   {
     pattern: '/dashboard/cadre-change',
-    allowedRoles: ['HRO', 'HHRMD', 'HRMO', 'CSCS', 'HRRP'],
+    allowedRoles: ['HRO', 'HHRMD', 'HRMO', 'CSCS', 'HRRP', 'HRO_PEMBA', 'HRRP_PEMBA'],
   },
   {
     pattern: '/dashboard/retirement',
-    allowedRoles: ['HRO', 'HHRMD', 'HRMO', 'CSCS', 'HRRP'],
+    allowedRoles: ['HRO', 'HHRMD', 'HRMO', 'CSCS', 'HRRP', 'HRO_PEMBA', 'HRRP_PEMBA'],
   },
   {
     pattern: '/dashboard/resignation',
-    allowedRoles: ['HRO', 'HHRMD', 'HRMO', 'CSCS', 'HRRP'],
+    allowedRoles: ['HRO', 'HHRMD', 'HRMO', 'CSCS', 'HRRP', 'HRO_PEMBA', 'HRRP_PEMBA'],
   },
   {
     pattern: '/dashboard/service-extension',
-    allowedRoles: ['HRO', 'HHRMD', 'HRMO', 'CSCS', 'HRRP'],
+    allowedRoles: ['HRO', 'HHRMD', 'HRMO', 'CSCS', 'HRRP', 'HRO_PEMBA', 'HRRP_PEMBA'],
   },
   // Disciplinary actions
   {
     pattern: '/dashboard/termination',
-    allowedRoles: ['HRO', 'DO', 'HHRMD', 'CSCS', 'HRRP'],
+    allowedRoles: ['HRO', 'DO', 'HHRMD', 'CSCS', 'HRRP', 'HRO_PEMBA', 'HRRP_PEMBA'],
   },
   {
     pattern: '/dashboard/dismissal',
-    allowedRoles: ['HRO', 'DO', 'HHRMD', 'CSCS'],
+    allowedRoles: ['HRO', 'DO', 'HHRMD', 'CSCS', 'HRO_PEMBA'],
   },
   // Complaints
   {
@@ -192,35 +194,35 @@ const ROUTE_PERMISSIONS: RoutePermission[] = [
   // Institution management
   {
     pattern: '/dashboard/institutions',
-    allowedRoles: ['HHRMD', 'CSCS', 'DO', 'HRMO', 'HRRP'],
+    allowedRoles: ['HHRMD', 'CSCS', 'DO', 'HRMO', 'HRRP', 'HRRP_PEMBA'],
   },
   // Manual employee entry
   {
     pattern: '/dashboard/add-employee',
-    allowedRoles: ['HRO'],
+    allowedRoles: ['HRO', 'HRO_PEMBA'],
   },
   // Profile access
   {
     pattern: '/dashboard/profile',
-    allowedRoles: ['HRO', 'EMPLOYEE', 'HHRMD', 'HRMO', 'DO', 'CSCS', 'HRRP', 'PO'],
+    allowedRoles: ['HRO', 'EMPLOYEE', 'HHRMD', 'HRMO', 'DO', 'CSCS', 'HRRP', 'PO', 'HRO_PEMBA', 'HRRP_PEMBA'],
   },
   // Tracking and reports
   {
     pattern: '/dashboard/track-status',
-    allowedRoles: ['HRO', 'HHRMD', 'HRMO', 'DO', 'CSCS', 'HRRP', 'EMPLOYEE', 'PO'],
+    allowedRoles: ['HRO', 'HHRMD', 'HRMO', 'DO', 'CSCS', 'HRRP', 'EMPLOYEE', 'PO', 'HRO_PEMBA', 'HRRP_PEMBA'],
   },
   {
     pattern: '/dashboard/recent-activities',
-    allowedRoles: ['HRO', 'HHRMD', 'HRMO', 'DO', 'CSCS', 'HRRP'],
+    allowedRoles: ['HRO', 'HHRMD', 'HRMO', 'DO', 'CSCS', 'HRRP', 'HRO_PEMBA', 'HRRP_PEMBA'],
   },
   {
     pattern: '/dashboard/reports',
-    allowedRoles: ['HRO', 'HHRMD', 'HRMO', 'DO', 'CSCS', 'HRRP', 'PO'],
+    allowedRoles: ['HRO', 'HHRMD', 'HRMO', 'DO', 'CSCS', 'HRRP', 'PO', 'HRO_PEMBA', 'HRRP_PEMBA'],
   },
   // Dashboard home
   {
     pattern: '/dashboard',
-    allowedRoles: ['HRO', 'HHRMD', 'HRMO', 'DO', 'EMPLOYEE', 'CSCS', 'HRRP', 'PO', 'Admin' as Role],
+    allowedRoles: ['HRO', 'HHRMD', 'HRMO', 'DO', 'EMPLOYEE', 'CSCS', 'HRRP', 'PO', 'Admin' as Role, 'HRO_PEMBA', 'HRRP_PEMBA'],
   },
 ];
 

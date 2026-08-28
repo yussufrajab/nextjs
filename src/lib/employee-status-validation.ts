@@ -23,6 +23,11 @@ export type EmployeeStatus =
 
 // Define restricted request types for each employee status
 const statusRestrictions: Record<string, RequestType[]> = {
+  // A confirmed employee has already passed probation — re-confirming is
+  // not a valid business action. All other request types remain allowed.
+  Confirmed: [
+    'confirmation',
+  ],
   'On Probation': [
     'lwop',
     'promotion',
@@ -93,10 +98,20 @@ export function validateEmployeeStatusForRequest(
   // Get restricted request types for this employee status
   const restrictedRequests = statusRestrictions[employeeStatus] || [];
 
-  // Check if this request type is restricted for the employee's current status
   if (restrictedRequests.includes(requestType)) {
     const statusDisplayName = employeeStatus;
     const requestDisplayName = getRequestDisplayName(requestType);
+
+    // Specific message for confirming an already-confirmed employee
+    if (
+      employeeStatus === 'Confirmed' &&
+      requestType === 'confirmation'
+    ) {
+      return {
+        isValid: false,
+        message: 'Employee is already confirmed. Confirmation requests can only be submitted for employees on probation.',
+      };
+    }
 
     // Special messages for specific status and request type combinations
     if (

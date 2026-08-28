@@ -32,6 +32,7 @@ import { Loader2, FileDown } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { ROLES } from '@/lib/constants';
+import { isHroLike, isHrrpLike } from '@/lib/role-utils';
 import { Pagination } from '@/components/shared/pagination';
 import type { Institution } from '@/app/dashboard/admin/institutions/page';
 import { apiClient } from '@/lib/api-client';
@@ -112,7 +113,7 @@ export default function ReportsPage() {
 
   // Filter report types based on role - exclude complaints for HRO and HRRP
   const availableReportTypes = useMemo(() => {
-    if (role === ROLES.HRO || role === ROLES.HRRP) {
+    if (isHroLike(role) || isHrrpLike(role)) {
       return REPORT_TYPES.filter((rt) => rt.value !== 'complaints');
     }
     return REPORT_TYPES;
@@ -146,7 +147,7 @@ export default function ReportsPage() {
 
   // Auto-set institution filter for HRO and HRRP roles
   useEffect(() => {
-    if ((role === ROLES.HRO || role === ROLES.HRRP) && user?.institutionId) {
+    if ((isHroLike(role) || isHrrpLike(role)) && user?.institutionId) {
       setInstitutionFilter(user.institutionId);
     }
   }, [role, user?.institutionId]);
@@ -183,7 +184,7 @@ export default function ReportsPage() {
         institutionFilter !== ALL_INSTITUTIONS_FILTER_VALUE
       ) {
         params.append('institutionId', institutionFilter);
-      } else if ((role === ROLES.HRO || role === ROLES.HRRP) && user?.institutionId) {
+      } else if ((isHroLike(role) || isHrrpLike(role)) && user?.institutionId) {
         params.append('institutionId', user.institutionId);
       }
 
@@ -506,13 +507,13 @@ export default function ReportsPage() {
               </Select>
             </div>
 
-            {(isHigherLevelUser || role === ROLES.HRO || role === ROLES.HRRP) && (
+            {(isHigherLevelUser || isHroLike(role) || isHrrpLike(role)) && (
               <div className="space-y-1 lg:col-span-2">
                 <Label htmlFor="institutionFilter">Taasisi / Wizara</Label>
                 <Select
                   value={institutionFilter || (user?.institutionId || '')}
                   onValueChange={setInstitutionFilter}
-                  disabled={isGenerating || role === ROLES.HRO || role === ROLES.HRRP}
+                  disabled={isGenerating || isHroLike(role) || isHrrpLike(role)}
                 >
                   <SelectTrigger id="institutionFilter">
                     <SelectValue placeholder="Chagua taasisi (si lazima)" />

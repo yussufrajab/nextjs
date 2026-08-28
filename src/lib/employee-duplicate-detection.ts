@@ -133,7 +133,7 @@ export function dobDayBounds(
 export interface ExistingEmployeeRef {
   id: string;
   name: string;
-  zanId: string;
+  zanId: string | null;
 }
 
 export interface FuzzyDuplicateResult {

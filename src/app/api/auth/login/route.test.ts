@@ -15,6 +15,11 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
+import {
+  recordFailedLoginFromIp,
+  autoUnbanExpiredIps,
+  isIpBanned,
+} from '@/lib/ip-ban-utils';
 
 // --- Mocks ---------------------------------------------------------------
 
@@ -78,6 +83,18 @@ vi.mock('@/lib/mfa-utils', () => ({
 }));
 vi.mock('@/lib/email', () => ({ sendMfaEmail: vi.fn() }));
 
+// IP ban gate (Task 6): mock the auto-ban helpers so the gate runs without
+// hitting the real IpBan table. The gate calls autoUnbanExpiredIps + isIpBanned
+// before the per-user rate limit; pass-through mocks keep these tests focused
+// on the per-user rate limit only.
+vi.mock('@/lib/ip-ban-utils', () => ({
+  isIpBanned: vi.fn().mockResolvedValue(false),
+  getIpBanStatus: vi.fn().mockResolvedValue({ isBanned: false, remainingMinutes: 0 }),
+  recordFailedLoginFromIp: vi.fn().mockResolvedValue(undefined),
+  autoUnbanExpiredIps: vi.fn().mockResolvedValue(0),
+  isTrustedIp: vi.fn().mockReturnValue(false),
+}));
+
 beforeEach(() => {
   mockCheckRateLimitSliding.mockReset();
   mockUserFindFirst.mockReset();
@@ -87,6 +104,12 @@ beforeEach(() => {
   mockBuildUserRateLimitKey.mockImplementation(
     (u: string) => `ratelimit:user:${(u ?? '').trim().toLowerCase()}:auth`
   );
+  // Re-establish promise returns for the IP-ban gate mocks — vitest 4.0.16
+  // can drop mockResolvedValue implementations; the route calls `.catch` on
+  // recordFailedLoginFromIp, which throws TypeError if it returns undefined.
+  (recordFailedLoginFromIp as any).mockResolvedValue(undefined);
+  (autoUnbanExpiredIps as any).mockResolvedValue(0);
+  (isIpBanned as any).mockResolvedValue(false);
 });
 
 function buildRequest(body: unknown) {

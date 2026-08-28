@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { shouldApplyInstitutionFilter } from '@/lib/role-utils';
+import { shouldApplyInstitutionFilter, pembaIslandWhere } from '@/lib/role-utils';
 import { withAuth } from '@/lib/api-auth';
 import { logger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
@@ -19,6 +19,7 @@ export const GET = wrapHandler(withAuth(
     if (shouldApplyInstitutionFilter(userRole, userInstitutionId)) {
       whereClause.Employee = {
         institutionId: userInstitutionId,
+        ...pembaIslandWhere(userRole),
       };
       logger.info(
         { userRole },
@@ -50,11 +51,11 @@ export const GET = wrapHandler(withAuth(
             select: { id: true, name: true, username: true },
           },
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { updatedAt: 'desc' },
       })
       .catch(() => []);
 
     return NextResponse.json({ success: true, data: requests });
   },
-  { allowedRoles: ['HRO', 'HHRMD', 'HRMO', 'CSCS', 'HRRP'] }
+  { allowedRoles: ['HRO', 'HHRMD', 'HRMO', 'CSCS', 'HRRP', 'HRO_PEMBA', 'HRRP_PEMBA'] }
 ), 'confirmation-requests');

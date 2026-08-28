@@ -25,6 +25,7 @@ import { LogOut, Settings } from 'lucide-react';
 import { getNavItemsForRole } from '@/lib/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { APP_NAME } from '@/lib/constants';
+import { isHroLike } from '@/lib/role-utils';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { clientLogger } from '@/lib/logger-client';
@@ -43,7 +44,7 @@ export function AppSidebar() {
       log.info({ role, userId: user?.id, username: user?.username, institutionId: user?.institutionId }, 'Checking manual entry permission');
 
       // Only check for HRO users with an institutionId
-      if (role !== 'HRO' || !user?.institutionId) {
+      if (!isHroLike(role) || !user?.institutionId) {
         log.info('Not HRO or no institutionId, setting permission to false');
         setHasManualEntryPermission(false);
         return;
@@ -86,7 +87,7 @@ export function AppSidebar() {
     log.info({ role, hasManualEntryPermission, totalItems: items.length, itemTitles: items.map(item => item.title) }, 'Computing navItems');
 
     // Filter out "Add Employee" if HRO doesn't have manual entry permission
-    if (role === 'HRO' && !hasManualEntryPermission) {
+    if (isHroLike(role) && !hasManualEntryPermission) {
       const filtered = items.filter((item) => item.href !== '/dashboard/add-employee?nocache=1');
       log.info({ before: items.length, after: filtered.length }, 'Filtering out Add Employee');
       return filtered;

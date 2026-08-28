@@ -525,6 +525,29 @@ export async function cleanupExpiredSessions(): Promise<number> {
 }
 
 /**
+ * Terminate every session in the system, optionally preserving the sessions
+ * of a single user (e.g. the admin applying a global policy change). Used when
+ * MFA enforcement is toggled so every other user must re-authenticate under
+ * the new policy without kicking out the admin who made the change.
+ *
+ * @param exceptUserId - User whose sessions should be preserved.
+ * @returns Number of sessions deleted.
+ */
+export async function terminateAllSessions(exceptUserId?: string): Promise<number> {
+  try {
+    const where = exceptUserId ? { userId: { not: exceptUserId } } : {};
+    const result = await db.session.deleteMany({ where });
+    sessionLogger.info(
+      { count: result.count, exceptUserId: exceptUserId ?? null },
+      'Terminated sessions system-wide'
+    );
+    return result.count;
+  } catch (error) {
+    sessionLogger.error({ err: error }, 'Failed to terminate all sessions');
+    return 0;
+  }
+}
+/**
  * Get session count for a user
  *
  * @param userId - User ID

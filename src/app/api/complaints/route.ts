@@ -158,6 +158,7 @@ export const GET = wrapHandler(withAuth(async (req: Request, { auth }) => {
         Employee: {
           select: {
             zanId: true,
+            payrollNumber: true,
             department: true,
             cadre: true,
           },
@@ -232,6 +233,7 @@ export const GET = wrapHandler(withAuth(async (req: Request, { auth }) => {
       employeeId: c.User_Complaint_complainantIdToUser.employeeId,
       employeeName: c.User_Complaint_complainantIdToUser.name,
       zanId: c.User_Complaint_complainantIdToUser.Employee?.zanId,
+      payrollNumber: c.User_Complaint_complainantIdToUser.Employee?.payrollNumber,
       department: c.User_Complaint_complainantIdToUser.Employee?.department,
       cadre: c.User_Complaint_complainantIdToUser.Employee?.cadre,
       institutionName: c.User_Complaint_complainantIdToUser.Institution?.name,

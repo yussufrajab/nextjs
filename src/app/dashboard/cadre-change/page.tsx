@@ -16,6 +16,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/hooks/use-auth';
 import { ROLES } from '@/lib/constants';
 import { fetchWithCsrf } from '@/lib/fetch-with-csrf';
+import { isHroLike, isHrrpLike } from '@/lib/role-utils';
 import React, { useState, useEffect, useCallback } from 'react';
 import { WorkflowSteps } from '@/components/shared/workflow-steps';
 import type { WorkflowStep } from '@/components/shared/workflow-steps';
@@ -67,6 +68,7 @@ interface CadreChangeRequest {
   commissionLetterKey?: string | null;
   hrrpReviewedAt?: string | null;
   createdAt: string;
+  updatedAt?: string;
 
   originalCadre?: string | null;
   newCadre: string;
@@ -200,6 +202,7 @@ export default function CadreChangePage() {
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [requestSearchQuery, setRequestSearchQuery] = useState('');
 
   // Handle file preview
   const handlePreviewFile = (objectKey: string) => {
@@ -574,7 +577,7 @@ export default function CadreChangePage() {
 
     // Determine the correct rejection status based on who is rejecting
     let rejectionStatus: string;
-    if (role === ROLES.HRRP) {
+    if (isHrrpLike(role)) {
       rejectionStatus = 'Rejected by HRRP - Awaiting HRO Correction';
     } else {
       rejectionStatus = `Rejected by ${role} - Awaiting HRO Correction`;
@@ -757,7 +760,20 @@ export default function CadreChangePage() {
     }
   };
 
-  const paginatedRequests = pendingRequests || [];
+  const searchQuery = requestSearchQuery.trim().toLowerCase();
+  const baseRequests = pendingRequests || [];
+  const filteredBySearch = searchQuery
+    ? baseRequests.filter((request) => {
+        const emp = getEmployeeFromRequest?.(request) ?? request.Employee ?? request.employee;
+        const zanId = emp?.zanId ?? '';
+        const payroll = emp?.payrollNumber ?? '';
+        return (
+          zanId.toLowerCase().includes(searchQuery) ||
+          payroll.toLowerCase().includes(searchQuery)
+        );
+      })
+    : baseRequests;
+  const paginatedRequests = filteredBySearch;
 
   return (
     <div>
@@ -765,7 +781,7 @@ export default function CadreChangePage() {
         title="Change of Cadre"
         description="Process employee cadre changes."
       />
-      {role === ROLES.HRO && (
+      {isHroLike(role) && (
         <Card className="mb-6 shadow-lg">
           <CardHeader>
             <CardTitle>Submit Cadre Change Request</CardTitle>
@@ -1041,7 +1057,7 @@ export default function CadreChangePage() {
         </Card>
       )}
 
-      {role === ROLES.HRO &&
+      {isHroLike(role) &&
         Array.isArray(pendingRequests) &&
         pendingRequests.length > 0 && (
           <Card className="mb-6 shadow-lg">
@@ -1068,6 +1084,15 @@ export default function CadreChangePage() {
                 </Button>
               </div>
               <div className="flex flex-wrap gap-2 mt-3">
+                <div className="relative w-full sm:w-72 mb-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by ZAN ID or Payroll Number..."
+                    value={requestSearchQuery}
+                    onChange={(e) => setRequestSearchQuery(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
                 {[
                   { value: 'all', label: 'All' },
                   { value: 'pending', label: 'Pending' },
@@ -1145,7 +1170,7 @@ export default function CadreChangePage() {
                     <p className="text-sm text-muted-foreground">
                       To Cadre: {request.newCadre}
                     </p>
-                    {role !== ROLES.HRO && (
+                    {!isHroLike(role) && (
                       <p className="text-sm text-muted-foreground">
                         Institution:{' '}
                         {(employeeData as any)?.Institution?.name ||
@@ -1162,6 +1187,11 @@ export default function CadreChangePage() {
                         : 'N/A'}{' '}
                       by {request.submittedBy?.name || 'N/A'}
                     </p>
+                    {request.updatedAt && (
+                      <p className="text-sm text-muted-foreground">
+                        Last Updated: {format(parseISO(request.updatedAt), 'PPP')}
+                      </p>
+                    )}
                     {request.hrrpReviewedBy && (
                       <p className="text-sm text-muted-foreground">
                         HRRP Reviewed by: {request.hrrpReviewedBy.name || 'N/A'} (
@@ -1214,7 +1244,7 @@ export default function CadreChangePage() {
                       >
                         View Details
                       </Button>
-                      {role === ROLES.HRO &&
+                      {isHroLike(role) &&
                         (request.status ===
                           'Rejected by HRMO - Awaiting HRO Correction' ||
                           request.status ===
@@ -1244,7 +1274,7 @@ export default function CadreChangePage() {
           </Card>
         )}
 
-      {(role === ROLES.HHRMD || role === ROLES.HRMO || role === ROLES.CSCS || role === ROLES.HRRP) && (
+      {(role === ROLES.HHRMD || role === ROLES.HRMO || role === ROLES.CSCS || isHrrpLike(role)) && (
         <Card className="shadow-lg">
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -1268,6 +1298,15 @@ export default function CadreChangePage() {
               </Button>
             </div>
             <div className="flex flex-wrap gap-2 mt-3">
+              <div className="relative w-full sm:w-72 mb-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by ZAN ID or Payroll Number..."
+                  value={requestSearchQuery}
+                  onChange={(e) => setRequestSearchQuery(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
               {[
                 { value: 'all', label: 'All' },
                 { value: 'pending', label: 'Pending' },
@@ -1350,7 +1389,7 @@ export default function CadreChangePage() {
                     <p className="text-sm text-muted-foreground">
                       To Cadre: {request.newCadre}
                     </p>
-                    {role !== ROLES.HRO && (
+                    {!isHroLike(role) && (
                       <p className="text-sm text-muted-foreground">
                         Institution:{' '}
                         {(employeeData as any)?.Institution?.name ||
@@ -1367,6 +1406,11 @@ export default function CadreChangePage() {
                         : 'N/A'}{' '}
                       by {request.submittedBy?.name || 'N/A'}
                     </p>
+                    {request.updatedAt && (
+                      <p className="text-sm text-muted-foreground">
+                        Last Updated: {format(parseISO(request.updatedAt), 'PPP')}
+                      </p>
+                    )}
                     {request.hrrpReviewedBy && (
                       <p className="text-sm text-muted-foreground">
                         HRRP Reviewed by: {request.hrrpReviewedBy.name || 'N/A'} (
@@ -1450,7 +1494,7 @@ export default function CadreChangePage() {
                         </>
                       )}
                       {/* HRRP Review Actions */}
-                      {role === ROLES.HRRP && request.status === 'Pending HRRP Review' && (
+                      {isHrrpLike(role) && request.status === 'Pending HRRP Review' && (
                         <>
                           <Button
                             size="sm"
@@ -1489,17 +1533,6 @@ export default function CadreChangePage() {
                               }
                             >
                               Rejected by Commission
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="border-red-500 text-red-600 hover:bg-red-50"
-                              title="Reject and return this request to the HRO for correction (non-terminal)"
-                              onClick={() =>
-                                handleInitialAction(request.id, 'reject')
-                              }
-                            >
-                              Reject &amp; Return to HRO
                             </Button>
                           </>
                         )}

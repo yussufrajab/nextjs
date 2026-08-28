@@ -17,6 +17,7 @@ const mockLogUserAction = vi.fn();
 const mockLogAuditEvent = vi.fn();
 const mockTerminateAllUserSessions = vi.fn();
 const mockDetectEscalationBurst = vi.fn();
+const mockHashPassword = vi.fn();
 
 vi.mock('@/lib/db', () => ({
   db: {
@@ -31,9 +32,9 @@ vi.mock('@/lib/audit-logger', () => ({
   getClientIp: (headers: Headers) => headers.get('x-forwarded-for') || null,
   logUserAction: (...a: any[]) => mockLogUserAction(...a),
   logAuditEvent: (...a: any[]) => mockLogAuditEvent(...a),
-  AuditEventType: { POTENTIAL_BREACH: 'POTENTIAL_BREACH' },
+  AuditEventType: { POTENTIAL_BREACH: 'POTENTIAL_BREACH', ADMIN_PASSWORD_RESET: 'ADMIN_PASSWORD_RESET' },
   AuditEventCategory: { SECURITY: 'SECURITY' },
-  AuditSeverity: { CRITICAL: 'CRITICAL', INFO: 'INFO' },
+  AuditSeverity: { CRITICAL: 'CRITICAL', INFO: 'INFO', WARNING: 'WARNING' },
 }));
 
 vi.mock('@/lib/api-auth', () => ({
@@ -66,9 +67,16 @@ vi.mock('@/lib/error-handler', () => ({
   wrapHandler: (h: any) => h,
 }));
 
-vi.mock('@/lib/logger', () => ({
-  authLogger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
+vi.mock('@/lib/password-utils', () => ({
+  validatePasswordComplexity: (pwd: string) => pwd && pwd.length >= 12,
+  isCommonPassword: () => false,
+  calculateTemporaryPasswordExpiry: () => new Date(),
+  PASSWORD_MIN_LENGTH: 12,
 }));
+vi.mock('@/lib/password-hash', () => ({
+  hashPassword: (...a: any[]) => mockHashPassword(...a),
+}));
+
 
 function putRequest(id: string, body: any): NextRequest {
   return new NextRequest(`http://localhost:9002/api/users/${id}`, {
@@ -273,5 +281,122 @@ describe('PUT /api/users/[id] — privilege-escalation alerting (Req 26.2)', () 
     const res = await PUT(putRequest('u2', { institutionId: 'inst-9' }), authedContext());
     expect(res.status).toBe(200);
     expect(mockLogAuditEvent).not.toHaveBeenCalled();
+  });
+
+  it('blocks self-role-change with a CRITICAL POTENTIAL_BREACH and no DB write', async () => {
+    // An admin attempts to change their OWN role. This is the canonical
+    // self-escalation attack — it must be blocked, logged as CRITICAL, and
+    // must NOT reach the DB update.
+    const { PUT } = (await import('./route')) as { PUT: any };
+    const res = await PUT(
+      putRequest('admin-1', { role: 'Admin' }),
+      authedContext({ userId: 'admin-1', role: 'Admin' })
+    );
+    expect(res.status).toBe(403);
+
+    // CRITICAL POTENTIAL_BREACH audit event emitted with the attempt details.
+    expect(mockLogAuditEvent).toHaveBeenCalledTimes(1);
+    const alert = mockLogAuditEvent.mock.calls[0][0];
+    expect(alert.eventType).toBe('POTENTIAL_BREACH');
+    expect(alert.severity).toBe('CRITICAL');
+    expect(alert.wasBlocked).toBe(true);
+    expect(alert.blockReason).toBe('SELF_ROLE_CHANGE_BLOCKED');
+    expect(alert.additionalData.selfRoleChange).toBe(true);
+    expect(alert.additionalData.attemptedNewRole).toBe('Admin');
+
+    // No DB mutation for the blocked attempt.
+    expect(mockDbUserUpdate).not.toHaveBeenCalled();
+  });
+});
+
+describe('PUT /api/users/[id] — optional password change', () => {
+  beforeEach(() => {
+    mockDbUserFindUnique.mockReset();
+    mockDbUserUpdate.mockReset();
+    mockLogUserAction.mockReset();
+    mockLogAuditEvent.mockReset();
+    mockTerminateAllUserSessions.mockReset();
+    mockDetectEscalationBurst.mockReset();
+    mockHashPassword.mockReset();
+    mockHashPassword.mockResolvedValue('hashed-pw');
+    mockLogUserAction.mockResolvedValue(undefined);
+    mockLogAuditEvent.mockResolvedValue(undefined);
+    mockTerminateAllUserSessions.mockResolvedValue(1);
+    mockDetectEscalationBurst.mockResolvedValue(NON_BURST);
+    mockDbUserFindUnique.mockResolvedValue({
+      id: 'u2', role: 'HRO', institutionId: 'inst-2', username: 'target',
+    });
+    mockDbUserUpdate.mockResolvedValue({
+      id: 'u2', name: 'Target', username: 'target', email: null, phoneNumber: null,
+      role: 'HRO', active: true, Institution: { name: 'Commission' },
+    });
+  });
+
+  it('leaves the password untouched when no password is supplied', async () => {
+    const { PUT } = (await import('./route')) as { PUT: any };
+    const res = await PUT(putRequest('u2', { name: 'Target Renamed' }), authedContext());
+    expect(res.status).toBe(200);
+
+    const updateArg = mockDbUserUpdate.mock.calls[0][0];
+    // No password hash written, no temporary-password flags set.
+    expect(updateArg.data.password).toBeUndefined();
+    expect(updateArg.data.isTemporaryPassword).toBeUndefined();
+    expect(updateArg.data.mustChangePassword).toBeUndefined();
+
+    const body = await res.json();
+    expect(body.passwordChanged).toBe(false);
+    // No ADMIN_PASSWORD_RESET audit event.
+    const resetEvents = mockLogAuditEvent.mock.calls
+      .map((c) => c[0])
+      .filter((e) => e.eventType === 'ADMIN_PASSWORD_RESET');
+    expect(resetEvents).toHaveLength(0);
+  });
+
+  it('hashes and installs a temporary password when a valid password is supplied', async () => {
+    const { PUT } = (await import('./route')) as { PUT: any };
+    const res = await PUT(
+      putRequest('u2', { name: 'Target', password: 'StrongNewPass1!2024' }),
+      authedContext()
+    );
+    expect(res.status).toBe(200);
+
+    const updateArg = mockDbUserUpdate.mock.calls[0][0];
+    expect(updateArg.data.password).toBe('hashed-pw');
+    expect(updateArg.data.isTemporaryPassword).toBe(true);
+    expect(updateArg.data.mustChangePassword).toBe(true);
+    expect(updateArg.data.temporaryPasswordExpiry).toBeInstanceOf(Date);
+    expect(updateArg.data.passwordExpiresAt).toBeNull();
+
+    const body = await res.json();
+    expect(body.passwordChanged).toBe(true);
+
+    // ADMIN_PASSWORD_RESET audit event emitted.
+    const resetEvents = mockLogAuditEvent.mock.calls
+      .map((c) => c[0])
+      .filter((e) => e.eventType === 'ADMIN_PASSWORD_RESET');
+    expect(resetEvents).toHaveLength(1);
+    expect(resetEvents[0].additionalData.targetUserId).toBe('u2');
+
+    // Sessions terminated for the target after a password change.
+    expect(mockTerminateAllUserSessions).toHaveBeenCalledWith('u2');
+  });
+  it('rejects a weak password with 400 and does not update', async () => {
+    const { PUT } = (await import('./route')) as { PUT: any };
+    const res = await PUT(
+      putRequest('u2', { name: 'Target', password: 'weak' }),
+      authedContext()
+    );
+    expect(res.status).toBe(400);
+    expect(mockDbUserUpdate).not.toHaveBeenCalled();
+  });
+
+  it('blocks an admin from setting their own password through this path', async () => {
+    const { PUT } = (await import('./route')) as { PUT: any };
+    const res = await PUT(
+      putRequest('admin-1', { name: 'Admin', password: 'StrongNewPass1!2024' }),
+      authedContext({ userId: 'admin-1' })
+    );
+    expect(res.status).toBe(403);
+    expect(mockDbUserUpdate).not.toHaveBeenCalled();
   });
 });

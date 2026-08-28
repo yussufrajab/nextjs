@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { shouldApplyInstitutionFilter } from '@/lib/role-utils';
+import { shouldApplyInstitutionFilter, pembaIslandWhere } from '@/lib/role-utils';
 import { logger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
 import { withAuth } from '@/lib/api-auth';
@@ -19,6 +19,7 @@ async function GETHandler(req: Request, { auth }: { auth: any }) {
       );
       whereClause.Employee = {
         institutionId: userInstitutionId,
+        ...pembaIslandWhere(userRole),
       };
     } else {
       logger.info(
@@ -45,7 +46,7 @@ async function GETHandler(req: Request, { auth }: { auth: any }) {
             select: { id: true, name: true, username: true },
           },
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { updatedAt: 'desc' },
       })
       .catch(() => []);
 

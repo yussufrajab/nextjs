@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { shouldApplyInstitutionFilter } from '@/lib/role-utils';
+import { shouldApplyInstitutionFilter, isHrrpLike, pembaIslandWhere } from '@/lib/role-utils';
 import { isAllowedStatusTransition } from '@/lib/request-workflow';
 import { validateEmployeeStatusForRequest } from '@/lib/employee-status-validation';
 import { v4 as uuidv4 } from 'uuid';
@@ -72,6 +72,7 @@ export const GET = wrapHandler(async (req: Request) => {
     );
     whereClause.Employee = {
       institutionId: userInstitutionId,
+      ...pembaIslandWhere(userRole),
     };
   } else {
     logger.info(
@@ -124,7 +125,7 @@ export const GET = wrapHandler(async (req: Request) => {
           select: { id: true, name: true, username: true },
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { updatedAt: 'desc' },
       skip: (page - 1) * size,
       take: size,
     }),
@@ -166,6 +167,8 @@ export const POST = wrapHandler(async (req: Request) => {
   const authCheck = checkRoleAuthorization(auth.role, [
     'HRO' as const,
     'HRRP' as const,
+    'HRO_PEMBA' as const,
+    'HRRP_PEMBA' as const,
   ]);
   if (!authCheck.authorized) {
     return NextResponse.json(
@@ -229,7 +232,7 @@ export const POST = wrapHandler(async (req: Request) => {
     );
   }
 
-  const isHRRP = auth.role === 'HRRP';
+  const isHRRP = isHrrpLike(auth.role);
   const initialStatus = isHRRP
     ? 'Approved by HRRP - Awaiting Commission Review'
     : 'Pending HRRP Review';
@@ -332,7 +335,7 @@ export const POST = wrapHandler(async (req: Request) => {
     requestId: confirmationRequest.id,
     employeeId: confirmationRequest.employeeId,
     employeeName: confirmationRequest.Employee?.name,
-    employeeZanId: confirmationRequest.Employee?.zanId,
+    employeeZanId: confirmationRequest.Employee?.zanId ?? undefined,
     submittedById: auth.userId,
     submittedByUsername: submittedByUser?.username || 'Unknown',
     submittedByRole: submittedByUser?.role || 'Unknown',
@@ -399,7 +402,7 @@ export const PATCH = wrapHandler(async (req: Request) => {
   // Authorization: Different roles can perform different update actions
   const isHrrpApproval =
     updateData.status === 'Approved by HRRP - Awaiting Commission Review' &&
-    (updateData.hrrpReviewedById || userRole === 'HRRP');
+    (updateData.hrrpReviewedById || isHrrpLike(userRole));
   const isHrrpRejection =
     updateData.status === 'Rejected by HRRP - Awaiting HRO Correction';
   const isHrrpAction = isHrrpApproval || isHrrpRejection;
@@ -423,13 +426,13 @@ export const PATCH = wrapHandler(async (req: Request) => {
   let authCheck;
   if (isHrrpAction) {
     // HRRP approve/reject action - only HRRP role
-    authCheck = checkRoleAuthorization(userRole, ['HRRP' as const]);
+    authCheck = checkRoleAuthorization(userRole, ['HRRP' as const, 'HRRP_PEMBA' as const]);
   } else if (isCommissionDecision || isInitialReviewAction) {
     // Commission decision or initial review - only HHRMD/HRMO
     authCheck = checkRoleAuthorization(userRole, ['HHRMD' as const, 'HRMO' as const]);
   } else if (isResubmission) {
     // HRO resubmit after rejection - HRO and HRRP
-    authCheck = checkRoleAuthorization(userRole, ['HRO' as const, 'HRRP' as const]);
+    authCheck = checkRoleAuthorization(userRole, ['HRO' as const, 'HRRP' as const, 'HRO_PEMBA' as const, 'HRRP_PEMBA' as const]);
   } else {
     authCheck = { authorized: false, message: 'Invalid update action' };
   }
@@ -528,6 +531,8 @@ export const PATCH = wrapHandler(async (req: Request) => {
   if (updateData.hrrpReviewedById !== undefined) {
     updateData.hrrpReviewedById = auth.userId;
   }
+  updateData.updatedAt = new Date();
+
 
   const updatedRequest = await db.confirmationRequest.update({
     where: { id },
@@ -613,7 +618,7 @@ export const PATCH = wrapHandler(async (req: Request) => {
           requestId: id,
           employeeId: updatedRequest.employeeId,
           employeeName: updatedRequest.Employee?.name,
-          employeeZanId: updatedRequest.Employee?.zanId,
+          employeeZanId: updatedRequest.Employee?.zanId ?? undefined,
           approvedById: auditReviewerId,
           approvedByUsername: reviewer.username,
           approvedByRole: reviewer.role || 'Unknown',
@@ -630,7 +635,7 @@ export const PATCH = wrapHandler(async (req: Request) => {
           requestId: id,
           employeeId: updatedRequest.employeeId,
           employeeName: updatedRequest.Employee?.name,
-          employeeZanId: updatedRequest.Employee?.zanId,
+          employeeZanId: updatedRequest.Employee?.zanId ?? undefined,
           rejectedById: auditReviewerId,
           rejectedByUsername: reviewer.username,
           rejectedByRole: reviewer.role || 'Unknown',

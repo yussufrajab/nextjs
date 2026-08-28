@@ -26,6 +26,8 @@ const EXTERNAL_EMPLOYEES_ALLOWED_ROLES = [
   'CSCS',
   'PO',
   'Admin',
+  'HRO_PEMBA',
+  'HRRP_PEMBA',
 ];
 
 export const POST = wrapHandler(

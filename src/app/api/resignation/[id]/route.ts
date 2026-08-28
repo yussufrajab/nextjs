@@ -14,7 +14,7 @@ import { sendRequestStatusUpdateEmail } from '@/lib/email';
 import { logger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
 import { verifyAuth } from '@/lib/api-auth';
-import { shouldApplyInstitutionFilter } from '@/lib/role-utils';
+import { shouldApplyInstitutionFilter, isHroLike, isHrrpLike, isPembaScopedRole } from '@/lib/role-utils';
 import { denyWorkflowAccess } from '@/lib/workflow-access';
 
 const VALID_STATUSES = [
@@ -141,7 +141,7 @@ async function handleUpdate(
     if (validatedData.status) {
       const isHrrpApproval =
         validatedData.status === 'Approved by HRRP - Awaiting Commission Review' &&
-        (validatedData.hrrpReviewedById || auth.role === 'HRRP');
+        (validatedData.hrrpReviewedById || isHrrpLike(auth.role));
       const isHrrpRejection =
         validatedData.status === 'Rejected by HRRP - Awaiting HRO Correction';
       const isHrrpAction = isHrrpApproval || isHrrpRejection;
@@ -203,7 +203,7 @@ async function handleUpdate(
           deviceInfo,
         });
       }
-      if (isResubmission && !['HRO', 'HRRP'].includes(auth.role)) {
+      if (isResubmission && !isHroLike(auth.role) && !isHrrpLike(auth.role)) {
         return denyWorkflowAccess({
           auth,
           routeBase: 'resignation',
@@ -301,7 +301,7 @@ async function handleUpdate(
               requestId: id,
               employeeId: updatedRequest.employeeId,
               employeeName: updatedRequest.Employee?.name,
-              employeeZanId: updatedRequest.Employee?.zanId,
+              employeeZanId: updatedRequest.Employee?.zanId ?? undefined,
               approvedById: validatedData.reviewedById,
               approvedByUsername: reviewer.username,
               approvedByRole: reviewer.role || 'Unknown',
@@ -325,7 +325,7 @@ async function handleUpdate(
                 requestId: id,
                 employeeId: updatedRequest.employeeId,
                 employeeName: updatedRequest.Employee?.name,
-                employeeZanId: updatedRequest.Employee?.zanId,
+                employeeZanId: updatedRequest.Employee?.zanId ?? undefined,
                 forwardedById: auth.userId,
                 forwardedByUsername: auth.username,
                 forwardedByRole: auth.role,
@@ -341,7 +341,7 @@ async function handleUpdate(
               requestId: id,
               employeeId: updatedRequest.employeeId,
               employeeName: updatedRequest.Employee?.name,
-              employeeZanId: updatedRequest.Employee?.zanId,
+              employeeZanId: updatedRequest.Employee?.zanId ?? undefined,
               rejectedById: validatedData.reviewedById,
               rejectedByUsername: reviewer.username,
               rejectedByRole: reviewer.role || 'Unknown',
@@ -486,7 +486,7 @@ export const DELETE = wrapHandler(async (
     requestId: id,
     employeeId: existingRequest.employeeId,
     employeeName: existingRequest.Employee?.name,
-    employeeZanId: existingRequest.Employee?.zanId,
+    employeeZanId: existingRequest.Employee?.zanId ?? undefined,
     withdrawnById: auth.userId,
     withdrawnByUsername: auth.username,
     withdrawnByRole: auth.role,

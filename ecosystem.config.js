@@ -48,6 +48,8 @@ module.exports = {
       env: {
         NODE_ENV: 'production',
         PORT: '9002',
+        HRIMS_ALLOW_INSECURE_HTTP: 'true',
+        HRIMS_ALLOWED_HOSTS: '10.15.10.20',
       },
       error_file: './logs/worker-error.log',
       out_file: './logs/worker-out.log',
@@ -90,11 +92,12 @@ module.exports = {
       autorestart: true,
       watch: false,
       max_memory_restart: '1G',
-      instances: 1,
       exec_mode: 'fork',
       env: {
         NODE_ENV: 'production',
         PORT: '9002',
+        HRIMS_ALLOW_INSECURE_HTTP: 'true',
+        HRIMS_ALLOWED_HOSTS: '10.15.10.20',
       },
       error_file: './logs/production-error.log',
       out_file: './logs/production-out.log',

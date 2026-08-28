@@ -5,8 +5,10 @@ import { validateFileUpload } from '@/lib/file-validation';
 import { getHrimsApiConfig } from '@/lib/hrims-config';
 import { logger } from '@/lib/logger';
 import { verifyAuth } from '@/lib/api-auth';
+import { isHroLike, isHrrpLike, isPembaScopedRole, isPembaEmployee } from '@/lib/role-utils';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limiter';
 import { wrapHandler } from '@/lib/error-handler';
+import { recordFileHash } from '@/lib/file-integrity';
 
 export const POST = wrapHandler(async (
   request: NextRequest,
@@ -30,14 +32,18 @@ export const POST = wrapHandler(async (
   const roleUpper = auth.role.toUpperCase();
 
   if (['ADMIN', 'HRMO', 'HHRMD', 'CSCS', 'DO', 'PO'].includes(roleUpper)) {
-    // Central/commission roles — unrestricted access
-  } else if (roleUpper === 'HRO' || roleUpper === 'HRRP') {
-    // Institution-scoped access: employee must belong to the user's institution
+  } else if (isHroLike(auth.role) || isHrrpLike(auth.role)) {
+    // Institution-scoped access; pemba roles further restricted to Pemba dept.
     const empCheck = await prisma.employee.findUnique({
       where: { id: employeeId },
-      select: { institutionId: true },
+      select: { institutionId: true, department: true, island: true },
     });
-    if (!empCheck || empCheck.institutionId !== auth.institutionId) {
+    if (
+      !empCheck ||
+      empCheck.institutionId !== auth.institutionId ||
+      (isPembaScopedRole(auth.role) &&
+        !isPembaEmployee(empCheck))
+    ) {
       return NextResponse.json(
         { success: false, message: 'Access denied' },
         { status: 403 }
@@ -237,6 +243,13 @@ export const POST = wrapHandler(async (
   try {
     await uploadFile(photoBuffer, filePath, mimeType);
     logger.info(` Photo uploaded to MinIO: ${filePath}`);
+
+    // Record the integrity hash so the download/preview routes can verify
+    // the photo on read. Without this the routes fail closed with 410 Gone
+    // for sensitive (employee-photos/) keys.
+    await recordFileHash(filePath, photoBuffer, null).catch((err) => {
+      logger.error({ err, objectKey: filePath }, 'Failed to record photo integrity hash');
+    });
   } catch (uploadError) {
     logger.error({ value: uploadError }, ' Failed to upload to MinIO');
     return NextResponse.json(

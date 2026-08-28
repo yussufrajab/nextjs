@@ -7,6 +7,8 @@ import { hrimsLogger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
 import { withAuth } from '@/lib/api-auth';
 import { logHrimsSync, getClientIp } from '@/lib/audit-logger';
+import { deriveIsland } from '@/lib/island-utils';
+import { recordFileHash } from '@/lib/file-integrity';
 
 interface HRIMSEmployeeResponse {
   success: boolean;
@@ -107,7 +109,7 @@ async function fetchFromHRIMS(
   return response.json();
 }
 
-async function saveEmployeeToDatabase(hrimsData: any, institutionId: string) {
+async function saveEmployeeToDatabase(hrimsData: any, institutionId: string, institutionName?: string | null) {
   try {
     const personalInfo = hrimsData.personalInfo;
     const currentEmployment =
@@ -118,10 +120,20 @@ async function saveEmployeeToDatabase(hrimsData: any, institutionId: string) {
       hrimsData.salaryInformation?.[0];
     const highestEducation = hrimsData.educationHistories?.[0];
 
+    // Determine the unique identifier: prefer zanId, fall back to payrollNumber
+    const zanId = personalInfo.zanIdNumber || null;
+    const payrollNumber = personalInfo.payrollNumber || null;
+    const hasZanId = zanId && zanId.trim() !== '';
+    const hasPayroll = payrollNumber && payrollNumber.trim() !== '';
+
+    if (!hasZanId && !hasPayroll) {
+      throw new Error('Employee has neither ZanID nor Payroll Number');
+    }
+
     // Find or create employee
-    const existingEmployee = await db.employee.findUnique({
-      where: { zanId: personalInfo.zanIdNumber },
-    });
+    const existingEmployee = hasZanId
+      ? await db.employee.findUnique({ where: { zanId } })
+      : await db.employee.findUnique({ where: { payrollNumber } });
 
     const employeeId = existingEmployee?.id || uuidv4();
 
@@ -150,14 +162,14 @@ async function saveEmployeeToDatabase(hrimsData: any, institutionId: string) {
       placeOfBirth: personalInfo.placeOfBirth,
       region: personalInfo.regionName,
       countryOfBirth: personalInfo.birthCountryName,
-      zanId: personalInfo.zanIdNumber,
+      zanId,
       phoneNumber: personalInfo.primaryPhone || personalInfo.workPhone,
       contactAddress:
         [personalInfo.houseNumber, personalInfo.street, personalInfo.city]
           .filter((part) => part && part.trim())
           .join(', ') || null,
       zssfNumber: personalInfo.zssfNumber,
-      payrollNumber: personalInfo.payrollNumber || '',
+      payrollNumber,
       cadre: currentEmployment?.titleName,
       salaryScale: currentSalary?.salaryScaleName,
       ministry: currentEmployment?.entityName,
@@ -167,7 +179,15 @@ async function saveEmployeeToDatabase(hrimsData: any, institutionId: string) {
       recentTitleDate: currentEmployment?.fromDate
         ? new Date(currentEmployment.fromDate)
         : null,
-      currentReportingOffice: currentEmployment?.subEntityName,
+      // Work-location island: derived from the work-location fields above +
+      // the institution name. Defaults to UNGUJA when no Pemba signal is
+      // present (see src/lib/island-utils.ts).
+      island: deriveIsland(
+        currentEmployment?.subEntityName,
+        currentEmployment?.entityName,
+        currentEmployment?.subEntityName,
+        institutionName
+      ),
       currentWorkplace: currentEmployment?.entityName,
       employmentDate: personalInfo.employmentDate
         ? new Date(personalInfo.employmentDate)
@@ -180,9 +200,11 @@ async function saveEmployeeToDatabase(hrimsData: any, institutionId: string) {
         : null,
       status: personalInfo.isEmployeeConfirmed ? 'Confirmed' : 'On Probation',
       institutionId: institutionId,
-      // Store additional HRIMS-specific data
-      employeeEntityId: personalInfo.zanIdNumber, // Use ZanID as entity ID
+      // Use ZanID as entity ID, fall back to payroll number
+      employeeEntityId: zanId || payrollNumber,
     };
+
+    void highestEducation;
 
     hrimsLogger.info({
       zanId: dbEmployeeData.zanId,
@@ -191,12 +213,20 @@ async function saveEmployeeToDatabase(hrimsData: any, institutionId: string) {
       cadre: dbEmployeeData.cadre,
     }, 'Saving employee data:');
 
-    // Save/update employee
-    await db.employee.upsert({
-      where: { zanId: personalInfo.zanIdNumber },
-      update: dbEmployeeData,
-      create: dbEmployeeData,
-    });
+    // Save/update employee — use the correct unique key for upsert
+    if (hasZanId) {
+      await db.employee.upsert({
+        where: { zanId },
+        update: dbEmployeeData,
+        create: dbEmployeeData,
+      });
+    } else {
+      await db.employee.upsert({
+        where: { payrollNumber },
+        update: dbEmployeeData,
+        create: dbEmployeeData,
+      });
+    }
 
     return employeeId;
   } catch (error) {
@@ -307,6 +337,13 @@ async function processDocuments(
         await uploadFile(buffer, filePath, 'application/pdf');
         hrimsLogger.info(` Uploaded ${docType.name} to MinIO: ${filePath}`);
 
+        // Record the integrity hash so the download/preview routes can verify
+        // the file on read. Without this the routes fail closed with 410 Gone
+        // for sensitive (employee-documents/) keys.
+        await recordFileHash(filePath, buffer, null).catch((err) => {
+          hrimsLogger.error({ err, objectKey: filePath }, 'Failed to record HRIMS document integrity hash');
+        });
+
         // Update employee record with MinIO URL
         const minioUrl = `/api/files/employee-documents/${fileName}`;
         await db.employee.update({
@@ -413,6 +450,13 @@ async function processPhoto(
 
     await uploadFile(photoBuffer, filePath, mimeType);
     hrimsLogger.info(` Photo uploaded to MinIO: ${filePath}`);
+
+    // Record the integrity hash so the download/preview routes can verify
+    // the photo on read. Without this the routes fail closed with 410 Gone
+    // for sensitive (employee-photos/) keys.
+    await recordFileHash(filePath, photoBuffer, null).catch((err) => {
+      hrimsLogger.error({ err, objectKey: filePath }, 'Failed to record HRIMS photo integrity hash');
+    });
 
     // Store MinIO URL in database
     const minioUrl = `/api/files/employee-photos/${fileName}`;
@@ -551,7 +595,8 @@ export const POST = wrapHandler(withAuth(async (req, { auth }) => {
   hrimsLogger.info('Saving employee to database...');
   const employeeId = await saveEmployeeToDatabase(
     employeeResponse.data,
-    institution.id
+    institution.id,
+    institution.name
   );
 
   const personalInfo = employeeResponse.data.personalInfo;

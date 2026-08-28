@@ -238,7 +238,7 @@ describe('PATCH /api/termination — Commission workflow (parity with promotion)
     expect(res.status).toBe(403);
   });
 
-  it('allows an HRMO to record a commission decision (positive case for the auth gate)', async () => {
+  it('allows an HHRMD to record a commission decision (positive case for the auth gate)', async () => {
     const { PATCH } = await import('./route');
     const res = await PATCH(
       authedRequest({
@@ -254,5 +254,94 @@ describe('PATCH /api/termination — Commission workflow (parity with promotion)
       }),
     );
     expect(res.status).toBe(200);
+  });
+
+  it('allows a DO to forward a request to the Commission (parity with frontend gating)', async () => {
+    // Regression: the frontend exposes "Verify & Forward to Commission" to
+    // the DO role, but the backend auth list omitted 'DO', returning 403.
+    // This test pins the fix: a DO forwarding to the Commission now succeeds.
+    mockUserFindUnique.mockResolvedValue({ ...HHRMD_USER, id: 'do-1', role: 'DO' });
+    const { PATCH } = await import('./route');
+    const res = await PATCH(
+      authedRequest({
+        id: 'req-1',
+        userRole: 'DO',
+        userId: 'do-1',
+        status: 'Request Received – Awaiting Commission Decision',
+        reviewStage: 'commission_review',
+        decisionDate: new Date().toISOString(),
+        reviewedById: 'do-1',
+      }),
+    );
+    expect(res.status).toBe(200);
+    const body = await res.clone().json();
+    expect(body.success).toBe(true);
+
+    const updateArgs = mockSeparationUpdate.mock.calls[0][0];
+    expect(updateArgs.data.status).toBe('Request Received – Awaiting Commission Decision');
+    expect(updateArgs.data.reviewStage).toBe('commission_review');
+  });
+
+  it('allows a DO to record a commission decision', async () => {
+    mockUserFindUnique.mockResolvedValue({ ...HHRMD_USER, id: 'do-1', role: 'DO' });
+    mockSeparationUpdate.mockResolvedValue({
+      id: 'req-1',
+      employeeId: 'emp-1',
+      type: 'TERMINATION',
+      submittedById: 'hro-1',
+      status: 'Approved by Commission',
+      reviewStage: 'completed',
+      Employee: { id: 'emp-1', name: 'Emp', zanId: 'Z1', institutionId: 'inst-1', status: 'Confirmed' },
+    });
+    const { PATCH } = await import('./route');
+    const res = await PATCH(
+      authedRequest({
+        id: 'req-1',
+        userRole: 'DO',
+        userId: 'do-1',
+        status: 'Approved by Commission',
+        reviewStage: 'completed',
+        commissionDecisionDate: new Date().toISOString(),
+        reviewedById: 'do-1',
+        commissionLetterKey: 'termination/commission-letters/letter.pdf',
+      }),
+    );
+    expect(res.status).toBe(200);
+  });
+
+  it('blocks an HRMO from recording a termination commission decision (DO domain, not HRMO)', async () => {
+    // Per the role model: DO handles termination/dismissal (and complaints),
+    // HRMO handles all other HR workflows. HRMO must NOT act on termination.
+    mockUserFindUnique.mockResolvedValue({ ...HHRMD_USER, id: 'hrmo-1', role: 'HRMO' });
+    const { PATCH } = await import('./route');
+    const res = await PATCH(
+      authedRequest({
+        id: 'req-1',
+        userRole: 'HRMO',
+        userId: 'hrmo-1',
+        status: 'Approved by Commission',
+        reviewStage: 'completed',
+        reviewedById: 'hrmo-1',
+        commissionLetterKey: 'termination/commission-letters/letter.pdf',
+      }),
+    );
+    expect(res.status).toBe(403);
+  });
+
+  it('blocks an HRMO from forwarding a termination request to the Commission', async () => {
+    mockUserFindUnique.mockResolvedValue({ ...HHRMD_USER, id: 'hrmo-1', role: 'HRMO' });
+    const { PATCH } = await import('./route');
+    const res = await PATCH(
+      authedRequest({
+        id: 'req-1',
+        userRole: 'HRMO',
+        userId: 'hrmo-1',
+        status: 'Request Received – Awaiting Commission Decision',
+        reviewStage: 'commission_review',
+        decisionDate: new Date().toISOString(),
+        reviewedById: 'hrmo-1',
+      }),
+    );
+    expect(res.status).toBe(403);
   });
 });

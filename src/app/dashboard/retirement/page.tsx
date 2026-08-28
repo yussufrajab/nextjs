@@ -21,6 +21,7 @@ import {
 import { useAuth } from '@/hooks/use-auth';
 import { ROLES, EMPLOYEES } from '@/lib/constants';
 import { fetchWithCsrf } from '@/lib/fetch-with-csrf';
+import { isHroLike, isHrrpLike } from '@/lib/role-utils';
 import React, { useState, useEffect, useCallback } from 'react';
 import { WorkflowSteps } from '@/components/shared/workflow-steps';
 import type { WorkflowStep } from '@/components/shared/workflow-steps';
@@ -63,6 +64,7 @@ import { Pagination } from '@/components/shared/pagination';
 import { FileUpload } from '@/components/ui/file-upload';
 import { FilePreviewModal } from '@/components/ui/file-preview-modal';
 import { EmployeeSearch } from '@/components/shared/employee-search';
+import { validateEmployeeStatusForRequest } from '@/lib/employee-status-validation';
 
 interface RetirementRequest {
   id: string;
@@ -84,6 +86,7 @@ interface RetirementRequest {
   commissionLetterKey?: string | null;
   hrrpReviewedAt?: string | null;
   createdAt: string;
+  updatedAt?: string;
 
   retirementType: string;
   illnessDescription?: string | null;
@@ -230,14 +233,18 @@ export default function RetirementPage() {
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [requestSearchQuery, setRequestSearchQuery] = useState('');
 
   // File preview modal state
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [previewObjectKey, setPreviewObjectKey] = useState<string | null>(null);
-
-  // Employee status validation
-  const isEmployeeRetired = employeeDetails?.status === 'Retired';
-  const cannotSubmitRetirement = isEmployeeRetired;
+  // Employee status validation — uses the shared validator so probation,
+  // LWOP, retired, resigned, terminated, and dismissed employees are all
+  // blocked at the frontend, mirroring cadre-change.
+  const [eligibilityError, setEligibilityError] = useState<string | null>(
+    null
+  );
+  const cannotSubmitRetirement = !!eligibilityError;
 
   // Helper function to get employee from request (handles both Employee and employee)
   const getEmployeeFromRequest = (request: RetirementRequest) => {
@@ -561,10 +568,28 @@ export default function RetirementPage() {
     setDelayDocumentFile('');
     setShowDelayFields(false);
     setHasPendingRetirement(false);
+    setEligibilityError(null);
   };
 
   const handleEmployeeFound = (employee: Employee) => {
     resetFormFields();
+
+    // Validate employee status using the shared validator — blocks
+    // probation, LWOP, retired, resigned, terminated, and dismissed
+    // employees immediately at lookup, before any form is filled.
+    const statusValidation = validateEmployeeStatusForRequest(
+      employee.status,
+      'retirement'
+    );
+    if (!statusValidation.isValid) {
+      setEligibilityError(statusValidation.message || null);
+      toast({
+        title: 'Employee Ineligible',
+        description: statusValidation.message,
+        variant: 'destructive',
+        duration: 7000,
+      });
+    }
 
     // Check for pending retirement request
     const pendingStatuses = [
@@ -625,7 +650,8 @@ export default function RetirementPage() {
       toast({
         title: 'Retirement Not Applicable',
         description:
-          'Cannot request retirement for employees who are already retired.',
+          eligibilityError ||
+          'This employee is not eligible for a retirement request.',
         variant: 'destructive',
         duration: 5000,
       });
@@ -855,7 +881,7 @@ export default function RetirementPage() {
     if (!currentRequestToAction || !rejectionReasonInput.trim() || !user)
       return;
     let rejectionStatus: string;
-    if (role === ROLES.HRRP) {
+    if (isHrrpLike(role)) {
       rejectionStatus = 'Rejected by HRRP - Awaiting HRO Correction';
     } else {
       rejectionStatus = `Rejected by ${role} - Awaiting HRO Correction`;
@@ -1088,7 +1114,20 @@ export default function RetirementPage() {
     }
   };
 
-  const paginatedRequests = pendingRequests || [];
+  const searchQuery = requestSearchQuery.trim().toLowerCase();
+  const baseRequests = pendingRequests || [];
+  const filteredBySearch = searchQuery
+    ? baseRequests.filter((request) => {
+        const emp = getEmployeeFromRequest(request);
+        const zanId = emp?.zanId ?? '';
+        const payroll = emp?.payrollNumber ?? '';
+        return (
+          zanId.toLowerCase().includes(searchQuery) ||
+          payroll.toLowerCase().includes(searchQuery)
+        );
+      })
+    : baseRequests;
+  const paginatedRequests = filteredBySearch;
 
   return (
     <div>
@@ -1096,7 +1135,7 @@ export default function RetirementPage() {
         title="Retirement"
         description="Manage employee retirement processes."
       />
-      {role === ROLES.HRO && (
+      {isHroLike(role) && (
         <Card className="mb-6 shadow-lg">
           <CardHeader>
             <CardTitle>Submit Retirement Request</CardTitle>
@@ -1220,13 +1259,13 @@ export default function RetirementPage() {
                 </div>
 
                 {cannotSubmitRetirement && (
-                  <div className="flex items-center p-4 mt-2 text-sm text-destructive border border-destructive/50 rounded-md bg-destructive/10">
-                    <AlertTriangle className="h-5 w-5 mr-3 flex-shrink-0" />
-                    <span>
-                      Cannot request retirement for employees who are already
-                      retired.
-                    </span>
-                  </div>
+                  <Alert variant="destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTitle>Ineligibility Notice</AlertTitle>
+                    <AlertDescription>
+                      {eligibilityError}
+                    </AlertDescription>
+                  </Alert>
                 )}
 
                 {ageEligibilityError && (
@@ -1486,7 +1525,7 @@ export default function RetirementPage() {
         </Card>
       )}
 
-      {role === ROLES.HRO && pendingRequests.length > 0 && (
+      {isHroLike(role) && pendingRequests.length > 0 && (
         <Card className="mb-6 shadow-lg">
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -1510,6 +1549,15 @@ export default function RetirementPage() {
               </Button>
             </div>
             <div className="flex flex-wrap gap-2 mt-3">
+              <div className="relative w-full sm:w-72 mb-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by ZAN ID or Payroll Number..."
+                  value={requestSearchQuery}
+                  onChange={(e) => setRequestSearchQuery(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
               {[
                 { value: 'all', label: 'All' },
                 { value: 'pending', label: 'Pending' },
@@ -1576,7 +1624,7 @@ export default function RetirementPage() {
                 <p className="text-sm text-muted-foreground">
                   Type: {request.retirementType}
                 </p>
-                {role !== ROLES.HRO && (
+                {!isHroLike(role) && (
                   <p className="text-sm text-muted-foreground">
                     Institution:{' '}
                     {(employeeData as any)?.Institution?.name ||
@@ -1606,6 +1654,11 @@ export default function RetirementPage() {
                     : 'N/A'}{' '}
                   by {request.submittedBy?.name || 'N/A'}
                 </p>
+                    {request.updatedAt && (
+                      <p className="text-sm text-muted-foreground">
+                        Last Updated: {format(parseISO(request.updatedAt), 'PPP')}
+                      </p>
+                    )}
                 {request.hrrpReviewedBy && (
                   <p className="text-sm text-muted-foreground">
                     HRRP Reviewed by: {request.hrrpReviewedBy.name || 'N/A'} (
@@ -1658,7 +1711,7 @@ export default function RetirementPage() {
                   >
                     View Details
                   </Button>
-                  {role === ROLES.HRO &&
+                  {isHroLike(role) &&
                     (request.status ===
                       'Rejected by HRMO - Awaiting HRO Correction' ||
                       request.status ===
@@ -1688,7 +1741,7 @@ export default function RetirementPage() {
         </Card>
       )}
 
-      {(role === ROLES.HHRMD || role === ROLES.HRMO || role === ROLES.CSCS || role === ROLES.HRRP) && (
+      {(role === ROLES.HHRMD || role === ROLES.HRMO || role === ROLES.CSCS || isHrrpLike(role)) && (
         <Card className="shadow-lg">
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -1712,6 +1765,15 @@ export default function RetirementPage() {
               </Button>
             </div>
             <div className="flex flex-wrap gap-2 mt-3">
+              <div className="relative w-full sm:w-72 mb-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by ZAN ID or Payroll Number..."
+                  value={requestSearchQuery}
+                  onChange={(e) => setRequestSearchQuery(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
               {[
                 { value: 'all', label: 'All' },
                 { value: 'pending', label: 'Pending' },
@@ -1783,7 +1845,7 @@ export default function RetirementPage() {
                   <p className="text-sm text-muted-foreground">
                     Type: {request.retirementType}
                   </p>
-                  {role !== ROLES.HRO && (
+                  {!isHroLike(role) && (
                     <p className="text-sm text-muted-foreground">
                       Institution:{' '}
                       {(employeeData as any)?.Institution?.name ||
@@ -1813,6 +1875,11 @@ export default function RetirementPage() {
                       : 'N/A'}{' '}
                     by {request.submittedBy?.name || 'N/A'}
                   </p>
+                    {request.updatedAt && (
+                      <p className="text-sm text-muted-foreground">
+                        Last Updated: {format(parseISO(request.updatedAt), 'PPP')}
+                      </p>
+                    )}
                   <div className="flex items-center space-x-2">
                     <p className="text-sm">
                       <span className="font-medium">Status:</span>
@@ -1890,7 +1957,7 @@ export default function RetirementPage() {
                       </>
                     )}
                     {/* HRRP Review Actions */}
-                    {role === ROLES.HRRP && request.status === 'Pending HRRP Review' && (
+                    {isHrrpLike(role) && request.status === 'Pending HRRP Review' && (
                       <>
                         <Button
                           size="sm"
@@ -1929,17 +1996,6 @@ export default function RetirementPage() {
                             }
                           >
                             Rejected by Commission
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="border-red-500 text-red-600 hover:bg-red-50"
-                            title="Reject and return this request to the HRO for correction (non-terminal)"
-                            onClick={() =>
-                              handleInitialAction(request.id, 'reject')
-                            }
-                          >
-                            Reject &amp; Return to HRO
                           </Button>
                         </>
                       )}
@@ -2119,6 +2175,16 @@ export default function RetirementPage() {
                     by {selectedRequest.submittedBy?.name || 'N/A'}
                   </p>
                 </div>
+                    {selectedRequest.updatedAt && (
+                      <div className="grid grid-cols-3 items-center gap-x-4 gap-y-2">
+                        <Label className="text-right font-semibold">
+                          Last Updated:
+                        </Label>
+                        <p className="col-span-2">
+                          {format(parseISO(selectedRequest.updatedAt), 'PPP')}
+                        </p>
+                      </div>
+                    )}
                 {selectedRequest.hrrpReviewedBy && (
                   <div className="grid grid-cols-3 items-center gap-x-4 gap-y-2">
                     <Label className="text-right font-semibold">

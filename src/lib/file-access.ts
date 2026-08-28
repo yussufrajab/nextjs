@@ -42,6 +42,7 @@ import { db } from '@/lib/db';
 import type { AuthContext } from '@/lib/api-auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { logUnauthorizedAccess, getClientIp, safeAuditLog } from '@/lib/audit-logger';
+import { isHroLike, isHrrpLike } from '@/lib/role-utils';
 
 /** Roles with unrestricted file access (central/commission + officers). */
 const UNRESTRICTED_ROLES = new Set(['ADMIN', 'HRMO', 'HHRMD', 'CSCS', 'DO', 'PO']);
@@ -82,8 +83,19 @@ export async function checkFileAccess(
   if (objectKey === 'templates/' || objectKey.startsWith('templates/')) {
     return { allowed: true, reason: 'template' };
   }
+  // 3. Commission letters — uploaded by HRMO/HHRMD (unrestricted roles)
+  // for the HRO to view. The object key pattern is
+  // `{module}/commission-letters/...`. The letter is stored on the
+  // request row as `commissionLetterKey`; authorize by matching the
+  // request's employee institution to the caller's institution.
+  if (isHroLike(roleUpper) || isHrrpLike(roleUpper)) {
+    const commissionAccess = await resolveCommissionLetterAccess(auth, roleUpper, objectKey);
+    if (commissionAccess !== null) {
+      return commissionAccess;
+    }
+  }
 
-  // 3. Employee-owned object keys — institution / ownership scoping.
+  // 4. Employee-owned object keys — institution / ownership scoping.
   const employeeOwner = parseEmployeeIdFromKey(objectKey);
   if (employeeOwner !== null) {
     return resolveEmployeeAccess(auth, roleUpper, employeeOwner);
@@ -133,14 +145,82 @@ async function resolveComplaintAttachmentAccess(
 }
 
 /**
- * Extract the owning employeeId from `employee-documents/<id>_...` and
- * `employee-photos/<id>.<ext>` keys. Returns null for any other shape.
+ * If `objectKey` is a commission letter (key pattern
+ * `{module}/commission-letters/...`), authorize an HRO/HRRP to read it
+ * when the request's employee belongs to the caller's institution.
+ * Returns null when the key is not a commission letter (fall through).
+ */
+async function resolveCommissionLetterAccess(
+  auth: AuthContext,
+  _roleUpper: string,
+  objectKey: string
+): Promise<FileAccessResult | null> {
+  if (!objectKey.includes('/commission-letters/')) {
+    return null;
+  }
+
+  // Commission letters are stored on the request row as `commissionLetterKey`.
+  // Check all workflow request tables for a matching key + institution scope.
+  const tables = [
+    db.confirmationRequest,
+    db.promotionRequest,
+    db.cadreChangeRequest,
+    db.retirementRequest,
+    db.lwopRequest,
+    db.resignationRequest,
+    db.separationRequest,
+    db.serviceExtensionRequest,
+  ] as const;
+
+  for (const table of tables) {
+    const req = await (table as any)
+      .findFirst({
+        where: { commissionLetterKey: objectKey },
+        select: { Employee: { select: { institutionId: true } } },
+      })
+      .catch(() => null);
+
+    if (req?.Employee?.institutionId) {
+      if (req.Employee.institutionId === auth.institutionId) {
+        return { allowed: true, reason: 'institution_match' };
+      }
+      return {
+        allowed: false,
+        reason: 'denied_institution_mismatch',
+        ownerInstitutionId: req.Employee.institutionId,
+      };
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Extract the owning employeeId from an employee-owned object key.
+ *
+ * Two storage layouts coexist:
+ *   - Flat (HRIMS/fetch paths): `employee-documents/<id>_<docType>.<ext>`
+ *     and `employee-photos/<id>.<ext>` — the id is the prefix before the
+ *     first `_` / last `.`.
+ *   - Nested (manual upload, /api/employees/[id]/documents):
+ *     `employee-documents/<id>/<timestamp>_<random>_<docType>_<name>` — the
+ *     id is the first path segment after the prefix.
+ *
+ * Employee IDs are UUIDs (no underscores), so the first `/`-delimited
+ * segment is the owner id for the nested layout. Returns null for any
+ * other shape.
  */
 function parseEmployeeIdFromKey(objectKey: string): string | null {
   if (objectKey.startsWith('employee-documents/')) {
-    const filename = objectKey.slice('employee-documents/'.length);
-    if (!filename) return null;
-    const id = filename.substring(0, filename.indexOf('_'));
+    const rest = objectKey.slice('employee-documents/'.length);
+    if (!rest) return null;
+    // Nested layout: `employee-documents/<id>/<...>` — first segment.
+    if (rest.includes('/')) {
+      const id = rest.substring(0, rest.indexOf('/'));
+      return id || null;
+    }
+    // Flat layout: `employee-documents/<id>_...`
+    const id = rest.substring(0, rest.indexOf('_'));
     return id || null;
   }
   if (objectKey.startsWith('employee-photos/')) {
@@ -157,7 +237,7 @@ async function resolveEmployeeAccess(
   roleUpper: string,
   employeeId: string
 ): Promise<FileAccessResult> {
-  if (roleUpper === 'HRO' || roleUpper === 'HRRP') {
+  if (isHroLike(roleUpper) || isHrrpLike(roleUpper)) {
     const employee = await db.employee
       .findUnique({ where: { id: employeeId }, select: { institutionId: true } })
       .catch(() => null);
@@ -201,7 +281,7 @@ async function resolveGenericUploadAccess(
   // For at-risk roles, require a resolvable owner; an unknown owner is
   // denied (fail-closed) so the generic routes can't be used to probe
   // arbitrary legacy keys.
-  if (roleUpper === 'HRO' || roleUpper === 'HRRP') {
+  if (isHroLike(roleUpper) || isHrrpLike(roleUpper)) {
     const hash = await db.fileHash
       .findUnique({ where: { objectKey }, select: { uploadedBy: true } })
       .catch(() => null);

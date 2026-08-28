@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { shouldApplyInstitutionFilter } from '@/lib/role-utils';
+import { shouldApplyInstitutionFilter, isHrrpLike, pembaIslandWhere } from '@/lib/role-utils';
 import { validateEmployeeStatusForRequest } from '@/lib/employee-status-validation';
 import { v4 as uuidv4 } from 'uuid';
 import {
@@ -73,6 +73,7 @@ async function GETHandler(req: Request) {
       );
       whereClause.Employee = {
         institutionId: userInstitutionId,
+        ...pembaIslandWhere(userRole),
       };
     } else {
       logger.info(
@@ -124,7 +125,7 @@ async function GETHandler(req: Request) {
             select: { id: true, name: true, username: true },
           },
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { updatedAt: 'desc' },
         skip: (page - 1) * size,
         take: size,
       }),
@@ -223,7 +224,7 @@ async function POSTHandler(req: Request) {
     }
 
     // Determine initial status based on submitter role
-    const isHRRP = auth.role === 'HRRP';
+    const isHRRP = isHrrpLike(auth.role);
     const initialStatus = isHRRP
       ? 'Approved by HRRP - Awaiting Commission Review'
       : 'Pending HRRP Review';
@@ -327,7 +328,7 @@ async function POSTHandler(req: Request) {
       requestId: resignationRequest.id,
       employeeId: resignationRequest.employeeId,
       employeeName: resignationRequest.Employee?.name,
-      employeeZanId: resignationRequest.Employee?.zanId,
+      employeeZanId: resignationRequest.Employee?.zanId ?? undefined,
       submittedById: auth.userId,
       submittedByUsername: submittedByUser?.username || 'Unknown',
       submittedByRole: submittedByUser?.role || 'Unknown',
@@ -384,7 +385,7 @@ async function PATCHHandler(req: Request) {
     }
 
     // Determine HRRP action types before the update
-    const isHrrpApproval = updateData.status === 'Approved by HRRP - Awaiting Commission Review' && (updateData.hrrpReviewedById || userRole === 'HRRP');
+    const isHrrpApproval = updateData.status === 'Approved by HRRP - Awaiting Commission Review' && (updateData.hrrpReviewedById || isHrrpLike(userRole));
     const isHrrpRejection = updateData.status === 'Rejected by HRRP - Awaiting HRO Correction';
     // A resubmission is identified by its target status ('Pending HRRP
     // Review'), NOT by the absence of reviewedById — the shared frontend
@@ -415,9 +416,9 @@ async function PATCHHandler(req: Request) {
     // after the audit block.
     let authCheck;
     if (isHrrpApproval || isHrrpRejection) {
-      authCheck = checkRoleAuthorization(userRole, ['HRRP' as const]);
+      authCheck = checkRoleAuthorization(userRole, ['HRRP' as const, 'HRRP_PEMBA' as const]);
     } else if (isResubmission) {
-      authCheck = checkRoleAuthorization(userRole, ['HRO' as const, 'HRRP' as const]);
+      authCheck = checkRoleAuthorization(userRole, ['HRO' as const, 'HRRP' as const, 'HRO_PEMBA' as const, 'HRRP_PEMBA' as const]);
     } else if (isCommissionDecision || isInitialReviewAction) {
       authCheck = checkRoleAuthorization(userRole, ['HHRMD' as const, 'HRMO' as const]);
     } else {
@@ -532,6 +533,8 @@ async function PATCHHandler(req: Request) {
     if (isResubmission) {
       delete updateData.reviewedById;
     }
+    updateData.updatedAt = new Date();
+
 
     const updatedRequest = await db.resignationRequest.update({
       where: { id },
@@ -610,7 +613,7 @@ async function PATCHHandler(req: Request) {
             requestId: id,
             employeeId: updatedRequest.employeeId,
             employeeName: updatedRequest.Employee?.name,
-            employeeZanId: updatedRequest.Employee?.zanId,
+            employeeZanId: updatedRequest.Employee?.zanId ?? undefined,
             approvedById: auditReviewerId,
             approvedByUsername: reviewer.username,
             approvedByRole: reviewer.role || 'Unknown',
@@ -628,7 +631,7 @@ async function PATCHHandler(req: Request) {
             requestId: id,
             employeeId: updatedRequest.employeeId,
             employeeName: updatedRequest.Employee?.name,
-            employeeZanId: updatedRequest.Employee?.zanId,
+            employeeZanId: updatedRequest.Employee?.zanId ?? undefined,
             rejectedById: auditReviewerId,
             rejectedByUsername: reviewer.username,
             rejectedByRole: reviewer.role || 'Unknown',

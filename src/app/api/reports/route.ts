@@ -96,6 +96,6 @@ export const GET = wrapHandler(
       },
     });
   }, {
-    allowedRoles: ['Admin', 'HRO', 'HHRMD', 'HRMO', 'DO', 'CSCS', 'HRRP', 'PO'],
+    allowedRoles: ['Admin', 'HRO', 'HHRMD', 'HRMO', 'DO', 'CSCS', 'HRRP', 'PO', 'HRO_PEMBA', 'HRRP_PEMBA'],
   })
 );

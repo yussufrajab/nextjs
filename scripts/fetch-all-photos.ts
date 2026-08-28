@@ -19,16 +19,33 @@
 
 import { PrismaClient } from '@prisma/client';
 import { uploadFile } from '../src/lib/minio';
+import { recordFileHash } from '../src/lib/file-integrity';
 
 const prisma = new PrismaClient();
 
-// HRIMS API Configuration
+// HRIMS API Configuration — loaded from SystemSettings at runtime.
+// Falls back to the legacy hardcoded values only if the DB has nothing.
 const HRIMS_CONFIG = {
   BASE_URL: 'http://10.0.217.11:8135/api',
   API_KEY: '0ea1e3f5-ea57-410b-a199-246fa288b851',
   TOKEN:
     'CfDJ8M6SKjORsSdBliudb_vdU_DEea8FKIcQckiBxdvt4EJgtcP0ba_3REOpGvWYeOF46fvqw8heVnqFnXTwOmD5Wg5Qg3yNJlwyGDHVhqbgyKxB31Bjh2pI6C2qAYnLMovU4XLlQFVu7cTpIqtgItNZpM4',
 };
+
+async function loadHrimsConfig(): Promise<void> {
+  const [host, port, apiKey, token] = await Promise.all([
+    prisma.systemSettings.findUnique({ where: { key: 'hrims_host' } }),
+    prisma.systemSettings.findUnique({ where: { key: 'hrims_port' } }),
+    prisma.systemSettings.findUnique({ where: { key: 'hrims_api_key' } }),
+    prisma.systemSettings.findUnique({ where: { key: 'hrims_token' } }),
+  ]);
+  if (host?.value && port?.value) {
+    HRIMS_CONFIG.BASE_URL = `http://${host.value}:${port.value}/api`;
+  }
+  if (apiKey?.value) HRIMS_CONFIG.API_KEY = apiKey.value;
+  if (token?.value) HRIMS_CONFIG.TOKEN = token.value;
+  console.log(`📡 HRIMS endpoint: ${HRIMS_CONFIG.BASE_URL}`);
+}
 
 interface PhotoFetchResult {
   employeeName: string;
@@ -193,6 +210,7 @@ async function fetchPhotoFromHRIMS(
 }
 
 async function main() {
+  await loadHrimsConfig();
   console.log('🚀 Starting Automated Photo Fetch Script\n');
 
   const options = parseArguments();
@@ -362,9 +380,12 @@ async function main() {
             // Upload to MinIO
             const fileName = `${employee.id}.${extension}`;
             const filePath = `employee-photos/${fileName}`;
-
             try {
               await uploadFile(photoData.buffer, filePath, photoData.mimeType);
+
+              // Record integrity hash so download/preview routes can verify
+              // the photo. Without this the routes fail closed with 410 Gone.
+              await recordFileHash(filePath, photoData.buffer, null).catch(() => {});
 
               // Store MinIO URL in database
               const minioUrl = `/api/files/employee-photos/${fileName}`;

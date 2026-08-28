@@ -113,6 +113,7 @@ export function redactComplainantPii<T extends Record<string, any>>(
     employeeId: null,
     employeeName: toInitials(complaint.employeeName),
     zanId: maskTrailing(complaint.zanId),
+    payrollNumber: maskTrailing(complaint.payrollNumber),
     complainantPhoneNumber: maskTrailing(complaint.complainantPhoneNumber),
     nextOfKinPhoneNumber: maskTrailing(complaint.nextOfKinPhoneNumber),
     complainantIdentityRedacted: true,

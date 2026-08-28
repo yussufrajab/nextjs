@@ -17,6 +17,7 @@ import {
 import { db } from '../db';
 import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
+import { matchWorkplace, type InstitutionLight } from '@/lib/workplace-match';
 
 async function fetchFromHRIMS(
   requestId: string,
@@ -52,22 +53,35 @@ async function fetchFromHRIMS(
   } catch (error) {
     if (axios.isAxiosError(error)) {
       if (error.code === 'ECONNABORTED') {
-        throw new Error('Request timeout - institution data too large');
+        throw new Error(
+          `HRIMS request timed out after 15 minutes for this institution. The data set may be too large. Try reducing the page size or use a different identifier (Vote Code vs TIN).`
+        );
       }
-      throw new Error(error.message);
+      const detail = error.response
+        ? ` (HTTP ${error.response.status}: ${error.response.statusText})`
+        : ` (${error.message})`;
+      throw new Error(
+        `Could not connect to HRIMS API${detail}. Check that the HRIMS service is reachable and credentials are configured correctly.`
+      );
     }
     throw error;
   }
 }
 
+
 async function saveEmployeeFromDetailedData(
   hrimsData: any,
-  institutionId: string
+  allInstitutions: InstitutionLight[],
+  fallbackInstitutionId: string,
+  fallbackInstitutionName: string
 ) {
   try {
     const personalInfo = hrimsData.personalInfo;
 
-    if (!personalInfo?.zanIdNumber || personalInfo.zanIdNumber.trim() === '') {
+    if (
+      (!personalInfo?.zanIdNumber || personalInfo.zanIdNumber.trim() === '') &&
+      (!personalInfo?.payrollNumber || personalInfo.payrollNumber.trim() === '')
+    ) {
       return null;
     }
 
@@ -82,8 +96,35 @@ async function saveEmployeeFromDetailedData(
         (edu: any) => edu.isEmploymentHighest
       ) || hrimsData.educationHistories?.[0];
 
+    // ── Workplace distribution ─────────────────────────────────────────
+    // Match the employee's current workplace against ALL institutions in
+    // the database. The employee is stored at the matched institution.
+    // If no match is found, the employee is skipped (out of scope).
+    const workplace = currentEmployment?.entityName ?? '';
+    let institutionId = fallbackInstitutionId;
+    let institutionName = fallbackInstitutionName;
+
+    if (workplace) {
+      const match = matchWorkplace(workplace, allInstitutions);
+      if (match) {
+        institutionId = match.institution.id;
+        institutionName = match.institution.name;
+      } else {
+        workerLogger.debug(
+          { zanId: personalInfo.zanIdNumber, workplace },
+          'Skipping employee — workplace does not match any institution'
+        );
+        return null;
+      }
+    }
+
+    const lookupKey =
+      personalInfo.zanIdNumber && personalInfo.zanIdNumber.trim() !== ''
+        ? { zanId: personalInfo.zanIdNumber }
+        : { payrollNumber: personalInfo.payrollNumber };
+
     const existingEmployee = await db.employee.findUnique({
-      where: { zanId: personalInfo.zanIdNumber },
+      where: lookupKey,
     });
 
     const employeeId = existingEmployee?.id || uuidv4();
@@ -164,7 +205,7 @@ async function saveEmployeeFromDetailedData(
         personalInfo.birthRegionName ||
         personalInfo.regionName,
       countryOfBirth: personalInfo.birthCountryName,
-      zanId: personalInfo.zanIdNumber,
+      zanId: personalInfo.zanIdNumber || null,
       phoneNumber: personalInfo.primaryPhone || personalInfo.workPhone,
       contactAddress: contactAddress,
       zssfNumber: personalInfo.zssfNumber,
@@ -191,14 +232,14 @@ async function saveEmployeeFromDetailedData(
       retirementDate: retirementDate,
       status: status,
       institutionId: institutionId,
-      employeeEntityId: personalInfo.zanIdNumber,
+      employeeEntityId: personalInfo.zanIdNumber || personalInfo.payrollNumber,
     };
 
     const { institutionId: instId, ...employeeDataWithoutInstId } =
       dbEmployeeData;
 
     await db.employee.upsert({
-      where: { zanId: personalInfo.zanIdNumber },
+      where: lookupKey,
       // SECURITY/DATA-INTEGRITY: Do NOT overwrite institutionId on update.
       // zanId is globally unique, so an employee exists exactly once. If the
       // same ZAN ID surfaces in more than one institution's HRIMS feed (or you
@@ -302,9 +343,11 @@ async function processHRIMSSyncJob(job: Job<HRIMSSyncJobData>): Promise<any> {
         );
 
         if (currentPage === 0) {
+          const hrimsMsg = employeeListResponse.message
+            ? ` HRIMS returned: "${employeeListResponse.message}"`
+            : '';
           throw new Error(
-            employeeListResponse.message ||
-              `No employees found for ${identifierLabel}: ${identifier}`
+            `HRIMS API returned error code ${employeeListResponse.code} for ${identifierLabel} ${identifier}.${hrimsMsg} Verify the ${identifierLabel.toLowerCase()} is correct and that HRIMS credentials are valid.`
           );
         }
 
@@ -387,8 +430,21 @@ async function processHRIMSSyncJob(job: Job<HRIMSSyncJobData>): Promise<any> {
   const fetchTime = ((Date.now() - startTime) / 1000).toFixed(1);
 
   if (allEmployees.length === 0) {
-    throw new Error(`No employees found for ${identifierLabel}: ${identifier}`);
+    throw new Error(
+      `HRIMS returned 0 employees for ${identifierLabel} ${identifier} (${institutionName}). The ${identifierLabel.toLowerCase()} exists in HRIMS but has no employee records associated with it. Check that the correct ${identifierLabel.toLowerCase()} is being used for this institution.`
+    );
   }
+
+  // Load all institutions for workplace distribution matching
+  const allInstitutionsRaw = await db.institution.findMany({
+    select: { id: true, name: true, voteNumber: true },
+  });
+  const allInstitutions: InstitutionLight[] = allInstitutionsRaw.map((i) => ({
+    id: i.id,
+    name: i.name,
+    voteNumber: i.voteNumber,
+  }));
+  workerLogger.info({ institutionCount: allInstitutions.length }, 'Loaded institutions for workplace distribution');
 
   // Save employees
   workerLogger.info({ totalEmployees: allEmployees.length }, 'Saving employees to database');
@@ -402,12 +458,15 @@ async function processHRIMSSyncJob(job: Job<HRIMSSyncJobData>): Promise<any> {
 
   const savedEmployees = [];
   let skippedCount = 0;
+  let outOfScopeCount = 0;
 
   for (let i = 0; i < allEmployees.length; i++) {
     try {
       const employeeData = await saveEmployeeFromDetailedData(
         allEmployees[i],
-        institutionId
+        allInstitutions,
+        institutionId,
+        institutionName
       );
       if (employeeData) {
         savedEmployees.push(employeeData);
@@ -431,6 +490,7 @@ async function processHRIMSSyncJob(job: Job<HRIMSSyncJobData>): Promise<any> {
         }
       } else {
         skippedCount++;
+        outOfScopeCount++;
       }
 
       await new Promise((resolve) => setTimeout(resolve, 10));
@@ -447,7 +507,7 @@ async function processHRIMSSyncJob(job: Job<HRIMSSyncJobData>): Promise<any> {
   const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
 
   workerLogger.info(
-    { saved: savedEmployees.length, skipped: skippedCount, totalTimeSec: totalTime },
+    { saved: savedEmployees.length, skipped: skippedCount, outOfScope: outOfScopeCount, totalTimeSec: totalTime },
     'HRIMS sync processing complete'
   );
 
@@ -456,6 +516,7 @@ async function processHRIMSSyncJob(job: Job<HRIMSSyncJobData>): Promise<any> {
     institutionName,
     employeeCount: savedEmployees.length,
     skippedCount,
+    outOfScopeCount,
     totalFetched: allEmployees.length,
     pagesFetched: currentPage + (hasMoreData ? 0 : 1),
     fetchTime,

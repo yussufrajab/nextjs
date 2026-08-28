@@ -71,6 +71,17 @@ model Complaint {
   @@index([createdAt(sort: Desc)])
 }
 
+/// Work-location island for an employee. Derived from HRIMS work-location
+/// fields during sync (see src/lib/island-utils.ts). Defaults to UNGUJA —
+/// every employee is assumed Unguja unless a Pemba signal is present
+/// (institution/workplace explicitly says Pemba, is a Pemba-only
+/// institution like Chake/Wete/Mkoani/Micheweni, is "Ofisi Kuu Pemba",
+/// or is an "Uratibu" coordination office).
+enum Island {
+  PEMBA
+  UNGUJA
+}
+
 model ConfirmationRequest {
   id                                           String    @id
   status                                       String
@@ -109,7 +120,7 @@ model Employee {
   placeOfBirth            String?
   region                  String?
   countryOfBirth          String?
-  zanId                   String                    @unique
+  zanId                   String?                   @unique
   phoneNumber             String?
   email                   String?
   contactAddress          String?
@@ -134,6 +145,7 @@ model Employee {
   birthCertificateUrl     String?
   institutionId           String
   dataSource              String                    @default("HRIMS")
+  island                  Island                    @default(UNGUJA)
   CadreChangeRequest      CadreChangeRequest[]
   ConfirmationRequest     ConfirmationRequest[]
   Institution             Institution               @relation(fields: [institutionId], references: [id])
@@ -152,6 +164,7 @@ model Employee {
   @@index([status, institutionId])
   @@index([institutionId])
   @@index([dataSource])
+  @@index([island])
 }
 
 model EmployeeCertificate {
@@ -547,4 +560,23 @@ model PasswordResetToken {
   @@index([userId])
   @@index([tokenHash])
   @@index([expiresAt])
+}
+
+model IpBan {
+  id                String    @id @default(cuid())
+  ipAddress         String    @unique
+  banCount          Int       @default(0)
+  banType           String?
+  bannedUntil       DateTime?
+  banReason         String?
+  isManuallyBanned  Boolean   @default(false)
+  bannedBy          String?
+  bannedAt          DateTime?
+  banNotes          String?
+  isActive          Boolean   @default(true)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([ipAddress, isActive])
+  @@index([bannedUntil])
 }

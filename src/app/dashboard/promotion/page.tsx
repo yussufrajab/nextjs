@@ -36,6 +36,7 @@ import { FilePreviewModal } from '@/components/ui/file-preview-modal';
 import { EmployeeSearch } from '@/components/shared/employee-search';
 import { useAuth } from '@/hooks/use-auth';
 import { ROLES } from '@/lib/constants';
+import { isHroLike, isHrrpLike } from '@/lib/role-utils';
 import { fetchWithCsrf } from '@/lib/fetch-with-csrf';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { WorkflowSteps } from '@/components/shared/workflow-steps';
@@ -86,6 +87,7 @@ interface PromotionRequest {
   commissionLetterKey?: string | null;
   hrrpReviewedAt?: string | null;
   createdAt: string;
+  updatedAt?: string;
 
   proposedCadre: string;
   finalCadre?: string | null;
@@ -174,6 +176,7 @@ export default function PromotionPage() {
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [requestSearchQuery, setRequestSearchQuery] = useState('');
 
   const [employeeDetails, setEmployeeDetails] = useState<Employee | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -407,7 +410,7 @@ export default function PromotionPage() {
         }
 
         // Client-side filtering for HRO: only show own submissions
-        const filteredRequests = role === ROLES.HRO
+        const filteredRequests = isHroLike(role)
           ? requests.filter((req: PromotionRequest) => req.submittedById === user.id)
           : requests;
 
@@ -565,10 +568,10 @@ export default function PromotionPage() {
       submittedById: user.id,
       userRole: role,
       // HRO submissions go to HRRP review first; HRRP submissions auto-approve
-      status: role === ROLES.HRRP
+      status: isHrrpLike(role)
         ? 'Approved by HRRP - Awaiting Commission Review'
         : 'Pending HRRP Review',
-      reviewStage: role === ROLES.HRRP ? 'hrrp_review' : 'initial',
+      reviewStage: isHrrpLike(role) ? 'hrrp_review' : 'initial',
       proposedCadre,
       promotionType:
         promotionRequestType === 'experience'
@@ -777,7 +780,7 @@ export default function PromotionPage() {
         commissionDecisionReason: rejectionReasonInput,
       };
       actionDescription = 'Promotion request rejected by Commission';
-    } else if (role === ROLES.HRRP) {
+    } else if (isHrrpLike(role)) {
       payload = {
         status: 'Rejected by HRRP - Awaiting HRO Correction',
         rejectionReason: rejectionReasonInput,
@@ -1077,7 +1080,20 @@ export default function PromotionPage() {
     setCorrectedProposedCadre('');
   };
 
-  const paginatedRequests = pendingRequests || [];
+  const searchQuery = requestSearchQuery.trim().toLowerCase();
+  const baseRequests = pendingRequests || [];
+  const filteredBySearch = searchQuery
+    ? baseRequests.filter((request) => {
+        const emp = (request as PromotionRequest & { employee?: typeof request.Employee }).employee ?? request.Employee;
+        const zanId = emp?.zanId ?? '';
+        const payroll = emp?.payrollNumber ?? '';
+        return (
+          zanId.toLowerCase().includes(searchQuery) ||
+          payroll.toLowerCase().includes(searchQuery)
+        );
+      })
+    : baseRequests;
+  const paginatedRequests = filteredBySearch;
 
   return (
     <React.Fragment>
@@ -1148,7 +1164,7 @@ export default function PromotionPage() {
         </Card>
       )}
 
-      {role === ROLES.HRO && (
+      {isHroLike(role) && (
         <Card className="mb-6 shadow-lg">
           <CardHeader>
             <CardTitle>Submit Promotion Request</CardTitle>
@@ -1585,16 +1601,16 @@ export default function PromotionPage() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>
-                {role === ROLES.HRO
+                {isHroLike(role)
                   ? 'My Promotion Requests'
-                  : role === ROLES.HRRP
+                  : isHrrpLike(role)
                     ? 'Review Promotion Requests'
                     : 'Review Promotion Requests'}
               </CardTitle>
               <CardDescription>
-                {role === ROLES.HRO
+                {isHroLike(role)
                   ? 'View and manage your submitted promotion requests.'
-                  : role === ROLES.HRRP
+                  : isHrrpLike(role)
                     ? 'Review HRO-submitted requests and forward approved ones to the Commission.'
                     : 'Review, approve, or reject pending promotion requests.'}{' '}
                 {pendingRequests.length} request(s) found.
@@ -1614,6 +1630,15 @@ export default function PromotionPage() {
             </Button>
           </div>
           <div className="flex flex-wrap gap-2 mt-3">
+            <div className="relative w-full sm:w-72 mb-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by ZAN ID or Payroll Number..."
+                value={requestSearchQuery}
+                onChange={(e) => setRequestSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
             {[
               { value: 'all', label: 'All' },
               { value: 'pending', label: 'Pending' },
@@ -1697,7 +1722,7 @@ export default function PromotionPage() {
                 <p className="text-sm text-muted-foreground">
                   Type: {request.promotionType}
                 </p>
-                {role !== ROLES.HRO && (
+                {!isHroLike(role) && (
                   <p className="text-sm text-muted-foreground">
                     Institution:{' '}
                     {request.Employee?.Institution?.name || 'N/A'}
@@ -1710,6 +1735,11 @@ export default function PromotionPage() {
                     : 'N/A'}{' '}
                   by {request.submittedBy?.name || 'N/A'}
                 </p>
+                    {request.updatedAt && (
+                      <p className="text-sm text-muted-foreground">
+                        Last Updated: {format(parseISO(request.updatedAt), 'PPP')}
+                      </p>
+                    )}
                 {request.reviewedBy && (
                   <p className="text-sm text-muted-foreground">
                     Reviewed by: {request.reviewedBy.name || 'N/A'} (
@@ -1784,7 +1814,7 @@ export default function PromotionPage() {
                     View Details
                   </Button>
                   {/* HRRP Review Actions */}
-                  {role === ROLES.HRRP && request.status === 'Pending HRRP Review' && (
+                  {isHrrpLike(role) && request.status === 'Pending HRRP Review' && (
                     <>
                       <Button
                         size="sm"
@@ -1850,20 +1880,9 @@ export default function PromotionPage() {
                         >
                           Rejected by Commission
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="border-red-500 text-red-600 hover:bg-red-50"
-                          title="Reject and return this request to the HRO for correction (non-terminal)"
-                          onClick={() =>
-                            handleInitialAction(request.id, 'reject')
-                          }
-                        >
-                          Reject &amp; Return to HRO
-                        </Button>
                       </>
                     )}
-                  {role === ROLES.HRO &&
+                  {isHroLike(role) &&
                     (request.status ===
                       'Rejected by HRMO - Awaiting HRO Correction' ||
                       request.status ===

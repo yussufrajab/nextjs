@@ -6,6 +6,8 @@ import { logEmployeeAction, getClientIp } from '@/lib/audit-logger';
 import { logger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
 import { withAuth } from '@/lib/api-auth';
+import { isPembaScopedRole } from '@/lib/role-utils';
+import { deriveIsland } from '@/lib/island-utils';
 import {
   getInstitutionOrgFieldValues,
   validateInstitutionOrgFields,
@@ -76,6 +78,19 @@ export const POST = wrapHandler(
       {
         success: false,
         error: 'Name, Gender, ZanID, Date of Birth, ZSSF Number, and Payroll Number are required'
+      },
+      { status: 400 }
+    );
+  }
+
+  // Pemba-scoped officers (HRO_PEMBA) can only add employees whose work
+  // location is Pemba — mirrors the read-side scope so they can't create
+  // Unguja employees they could then not see or manage. Uses deriveIsland
+  if (isPembaScopedRole(role) && deriveIsland(department, currentWorkplace, currentReportingOffice) !== 'PEMBA') {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Pemba-scoped officers can only add employees posted in Pemba.',
       },
       { status: 400 }
     );
@@ -238,6 +253,7 @@ export const POST = wrapHandler(
     where: { id: institutionId },
     select: {
       manualEntryEnabled: true,
+      name: true,
       manualEntryStartDate: true,
       manualEntryEndDate: true,
     },
@@ -351,7 +367,7 @@ export const POST = wrapHandler(
     return NextResponse.json(
       {
         success: false,
-        error: `A likely duplicate employee already exists in your institution (ZanID ${fuzzyDup.existing.zanId}, name "${fuzzyDup.existing.name}", ${(fuzzyDup.similarity * 100).toFixed(0)}% name match, same date of birth). Verify the existing record before creating a new one.`,
+        error: `A likely duplicate employee already exists in your institution (ZanID ${fuzzyDup.existing.zanId || 'N/A'}, name "${fuzzyDup.existing.name}", ${(fuzzyDup.similarity * 100).toFixed(0)}% name match, same date of birth). Verify the existing record before creating a new one.`,
       },
       { status: 409 }
     );
@@ -386,7 +402,7 @@ export const POST = wrapHandler(
       retirementDate: retirementDate ? new Date(retirementDate) : null,
       status: status || 'On Probation',
       institutionId: institutionId, // FORCE to user's institution
-      dataSource: 'MANUAL_ENTRY',
+      island: deriveIsland(department, currentWorkplace, currentReportingOffice, institution?.name),
     },
   });
 
@@ -402,7 +418,7 @@ export const POST = wrapHandler(
     action: 'CREATED',
     employeeId: employee.id,
     employeeName: employee.name,
-    employeeZanId: employee.zanId,
+    employeeZanId: employee.zanId ?? undefined,
     performedById: userId,
     performedByUsername: username || 'HRO',
     performedByRole: role,
@@ -418,6 +434,6 @@ export const POST = wrapHandler(
     },
     { status: 201 }
   );
-  }, { allowedRoles: ['HRO'] }),
+  }, { allowedRoles: ['HRO', 'HRO_PEMBA'] }),
   'employees-manual-entry'
 );

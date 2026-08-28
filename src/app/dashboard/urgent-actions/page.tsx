@@ -3,6 +3,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { ROLES } from '@/lib/constants';
+import { isHroLike, isHrrpLike } from '@/lib/role-utils';
 import { PageHeader } from '@/components/shared/page-header';
 import {
   Card,
@@ -51,7 +52,7 @@ export default function UrgentActionsPage() {
   const [totalPagesProbation, setTotalPagesProbation] = useState(1);
   const [totalPagesRetirement, setTotalPagesRetirement] = useState(1);
 
-  const isAuthorized = role === ROLES.HRO || role === ROLES.HRRP;
+  const isAuthorized = isHroLike(role) || isHrrpLike(role);
 
   useEffect(() => {
     if (!isAuthorized || !user?.institutionId) {

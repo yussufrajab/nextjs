@@ -402,9 +402,10 @@ describe('route-permissions', () => {
       expect(roles).toContain(ROLES.HRMO);
       expect(roles).toContain(ROLES.CSCS);
       expect(roles).toContain(ROLES.HRRP);
-      expect(roles.length).toBe(5);
+      expect(roles).toContain(ROLES.HRO_PEMBA);
+      expect(roles).toContain(ROLES.HRRP_PEMBA);
+      expect(roles.length).toBe(7);
     });
-
     it('should return allowed roles for termination route', () => {
       const roles = getAllowedRolesForRoute('/dashboard/termination');
       expect(roles).toContain(ROLES.HRO);
@@ -412,8 +413,10 @@ describe('route-permissions', () => {
       expect(roles).toContain(ROLES.HHRMD);
       expect(roles).toContain(ROLES.CSCS);
       expect(roles).toContain(ROLES.HRRP);
+      expect(roles).toContain(ROLES.HRO_PEMBA);
+      expect(roles).toContain(ROLES.HRRP_PEMBA);
       expect(roles).not.toContain(ROLES.HRMO); // HRMO NOT allowed
-      expect(roles.length).toBe(5);
+      expect(roles.length).toBe(7);
     });
 
     it('should return allowed roles for complaints route', () => {
@@ -526,3 +529,94 @@ describe('route-permissions', () => {
     });
   });
 });
+
+
+  // =============================================================================
+  // Pemba-scoped roles (HRO_PEMBA / HRRP_PEMBA)
+  // These behave like HRO / HRRP for page-level access; department-level data
+  // scoping is enforced in the API handlers, not here. These tests guard
+  // against the redirect-loop regression where the proxy denied the pemba
+  // roles access to /dashboard (and every other page HRO/HRRP can reach).
+  // =============================================================================
+  describe('Pemba-scoped roles (HRO_PEMBA / HRRP_PEMBA)', () => {
+    it('HRO_PEMBA can access the dashboard home (regression: redirect loop)', () => {
+      expect(canAccessRoute('/dashboard', ROLES.HRO_PEMBA)).toBe(true);
+    });
+
+    it('HRRP_PEMBA can access the dashboard home (regression: redirect loop)', () => {
+      expect(canAccessRoute('/dashboard', ROLES.HRRP_PEMBA)).toBe(true);
+    });
+
+    it('HRO_PEMBA reaches every page HRO reaches', () => {
+      const hroPages = [
+        '/dashboard/urgent-actions',
+        '/dashboard/confirmation',
+        '/dashboard/lwop',
+        '/dashboard/promotion',
+        '/dashboard/cadre-change',
+        '/dashboard/retirement',
+        '/dashboard/resignation',
+        '/dashboard/service-extension',
+        '/dashboard/termination',
+        '/dashboard/add-employee',
+        '/dashboard/profile',
+        '/dashboard/track-status',
+        '/dashboard/recent-activities',
+        '/dashboard/reports',
+      ];
+      for (const page of hroPages) {
+        expect(canAccessRoute(page, ROLES.HRO_PEMBA)).toBe(true);
+      }
+    });
+
+    it('HRRP_PEMBA reaches every page HRRP reaches', () => {
+      const hrrpPages = [
+        '/dashboard/urgent-actions',
+        '/dashboard/confirmation',
+        '/dashboard/lwop',
+        '/dashboard/promotion',
+        '/dashboard/cadre-change',
+        '/dashboard/retirement',
+        '/dashboard/resignation',
+        '/dashboard/service-extension',
+        '/dashboard/termination',
+        '/dashboard/institutions',
+        '/dashboard/profile',
+        '/dashboard/track-status',
+        '/dashboard/recent-activities',
+        '/dashboard/reports',
+      ];
+      for (const page of hrrpPages) {
+        expect(canAccessRoute(page, ROLES.HRRP_PEMBA)).toBe(true);
+      }
+    });
+
+    it('HRO_PEMBA is denied admin-only routes (not a commission role)', () => {
+      expect(canAccessRoute('/dashboard/admin', ROLES.HRO_PEMBA)).toBe(false);
+      expect(canAccessRoute('/dashboard/admin/users', ROLES.HRO_PEMBA)).toBe(
+        false
+      );
+    });
+
+    it('HRRP_PEMBA is denied admin-only routes (not a commission role)', () => {
+      expect(canAccessRoute('/dashboard/admin', ROLES.HRRP_PEMBA)).toBe(false);
+    });
+
+    it('HRO_PEMBA is denied complaints (complaints are EMPLOYEE/DO/HHRMD/CSCS only)', () => {
+      expect(canAccessRoute('/dashboard/complaints', ROLES.HRO_PEMBA)).toBe(
+        false
+      );
+    });
+
+    it('HRRP_PEMBA is denied complaints', () => {
+      expect(canAccessRoute('/dashboard/complaints', ROLES.HRRP_PEMBA)).toBe(
+        false
+      );
+    });
+
+    it('dashboard home allowedRoles includes both pemba variants', () => {
+      const roles = getAllowedRolesForRoute('/dashboard');
+      expect(roles).toContain(ROLES.HRO_PEMBA);
+      expect(roles).toContain(ROLES.HRRP_PEMBA);
+    });
+  });

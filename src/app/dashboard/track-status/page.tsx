@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/use-auth';
 import { ROLES, INSTITUTIONS } from '@/lib/constants';
+import { isHroLike, isHrrpLike } from '@/lib/role-utils';
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Loader2,
@@ -128,9 +129,9 @@ export default function TrackStatusPage() {
   const [isExporting, setIsExporting] = useState(false);
 
   const isTableView =
-    role === ROLES.HRO ||
+    isHroLike(role) ||
     role === ROLES.CSCS ||
-    role === ROLES.HRRP ||
+    isHrrpLike(role) ||
     role === ROLES.HHRMD ||
     role === ROLES.HRMO ||
     role === ROLES.DO;
@@ -205,7 +206,7 @@ export default function TrackStatusPage() {
     if (isTableView) {
       const params = new URLSearchParams();
       params.set('limit', '100'); // Always get 100 latest requests
-      if ((role === ROLES.HRO || role === ROLES.HRRP) && user?.institutionName) {
+      if ((isHroLike(role) || isHrrpLike(role)) && user?.institutionName) {
         params.append('institutionName', user.institutionName);
         setInstitutionFilter(user.institutionName);
       }
@@ -265,7 +266,7 @@ export default function TrackStatusPage() {
       params.set('limit', '100');
     }
 
-    if ((role === ROLES.HRO || role === ROLES.HRRP) && user?.institutionName) {
+    if ((isHroLike(role) || isHrrpLike(role)) && user?.institutionName) {
       params.set('institutionName', user.institutionName);
     }
 
@@ -401,7 +402,7 @@ export default function TrackStatusPage() {
             </CardTitle>
             <CardDescription>
               {isTableView
-                ? role === ROLES.HRO || role === ROLES.HRRP
+                ? isHroLike(role) || isHrrpLike(role)
                   ? 'View the 100 latest requests submitted within your institution. Use filters to refine the list.'
                   : 'View and filter the 100 latest submitted requests. Click on a request to see details.'
                 : "Enter an employee's ZanID to view the status of their submitted requests."}
@@ -457,7 +458,7 @@ export default function TrackStatusPage() {
                   <Select
                     value={institutionFilter}
                     onValueChange={setInstitutionFilter}
-                    disabled={isSearching || role === ROLES.HRO || role === ROLES.HRRP}
+                    disabled={isSearching || isHroLike(role) || isHrrpLike(role)}
                   >
                     <SelectTrigger id="institutionFilter">
                       <SelectValue placeholder="Filter by Institution" />

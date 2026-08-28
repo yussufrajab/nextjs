@@ -4,8 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { DocumentUpload } from '@/components/employee/document-upload';
 import { useAuth } from '@/hooks/use-auth';
+import { apiClient } from '@/lib/api-client';
 
 interface DocumentsStepProps {
   employeeId: string;
@@ -16,6 +18,48 @@ interface DocumentsStepProps {
 export function DocumentsStep({ employeeId, employeeName, onComplete }: DocumentsStepProps) {
   const router = useRouter();
   const { user, role } = useAuth();
+
+  // Track each document's URL so the DocumentUpload cards reflect the
+  // uploaded file immediately (the server stores it, but without this state
+  // the card stays "Not Available" after a successful upload).
+  const [documentUrls, setDocumentUrls] = useState<
+    Record<string, string | null>
+  >({
+    'ardhil-hali': null,
+    'confirmation-letter': null,
+    'job-contract': null,
+    'birth-certificate': null,
+  });
+
+  // Seed from the server in case the user re-enters this step for an employee
+  // that already has documents stored (e.g. uploaded earlier then navigated
+  // back). The POST upload route writes the URL to the employee row, and the
+  // GET documents route reads those fields back.
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await apiClient.get<{
+          documents: Record<string, string | null>;
+        }>(`/api/employees/${employeeId}/documents`);
+        if (mounted && res.success && res.data?.documents) {
+          setDocumentUrls(res.data.documents);
+        }
+      } catch {
+        // Non-fatal: the cards simply stay "Not Available" until an upload.
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [employeeId]);
+
+  const handleDocumentUploadSuccess = (
+    documentType: string,
+    documentUrl: string
+  ) => {
+    setDocumentUrls((prev) => ({ ...prev, [documentType]: documentUrl }));
+  };
 
   const handleViewProfile = () => {
     router.push(`/dashboard/profile?id=${employeeId}`);
@@ -55,33 +99,49 @@ export function DocumentsStep({ employeeId, employeeName, onComplete }: Document
             employeeId={employeeId}
             documentType="ardhil-hali"
             documentTitle="Ardhil Hali"
+            currentUrl={documentUrls['ardhil-hali'] || undefined}
             canUpload={true}
             userRole={role || undefined}
             userInstitutionId={user?.institutionId || undefined}
+            onUploadSuccess={(url) =>
+              handleDocumentUploadSuccess('ardhil-hali', url)
+            }
           />
           <DocumentUpload
             employeeId={employeeId}
             documentType="confirmation-letter"
             documentTitle="Confirmation Letter"
+            currentUrl={documentUrls['confirmation-letter'] || undefined}
             canUpload={true}
             userRole={role || undefined}
             userInstitutionId={user?.institutionId || undefined}
+            onUploadSuccess={(url) =>
+              handleDocumentUploadSuccess('confirmation-letter', url)
+            }
           />
           <DocumentUpload
             employeeId={employeeId}
             documentType="job-contract"
             documentTitle="Job Contract"
+            currentUrl={documentUrls['job-contract'] || undefined}
             canUpload={true}
             userRole={role || undefined}
             userInstitutionId={user?.institutionId || undefined}
+            onUploadSuccess={(url) =>
+              handleDocumentUploadSuccess('job-contract', url)
+            }
           />
           <DocumentUpload
             employeeId={employeeId}
             documentType="birth-certificate"
             documentTitle="Birth Certificate"
+            currentUrl={documentUrls['birth-certificate'] || undefined}
             canUpload={true}
             userRole={role || undefined}
             userInstitutionId={user?.institutionId || undefined}
+            onUploadSuccess={(url) =>
+              handleDocumentUploadSuccess('birth-certificate', url)
+            }
           />
         </CardContent>
       </Card>

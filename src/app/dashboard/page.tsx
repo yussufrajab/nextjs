@@ -19,6 +19,7 @@ import {
   Activity,
   Building,
   Download,
+  Lock,
   Settings,
   Trash2,
 } from 'lucide-react';
@@ -44,6 +45,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/use-auth';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ROLES } from '@/lib/constants';
+import { isHroLike, isHrrpLike } from '@/lib/role-utils';
 import { toast } from '@/hooks/use-toast';
 import { apiClient } from '@/lib/api-client';
 import { clientLogger } from '@/lib/logger-client';
@@ -250,7 +252,7 @@ export default function DashboardPage() {
     };
 
     const fetchUrgentCount = async () => {
-      if (role === ROLES.HRO || role === ROLES.HRRP) {
+      if (isHroLike(role) || isHrrpLike(role)) {
         if (!user.institutionId) return;
         try {
           // ===== OPTIMIZATION: Use countOnly parameter for faster loading =====
@@ -383,6 +385,21 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
           </Link>
+          <Link href="/dashboard/admin/mfa-settings">
+            <Card className="hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  MFA Settings
+                </CardTitle>
+                <Lock className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <p className="text-xs text-muted-foreground">
+                  Enable or disable multi-factor authentication for all users
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
         </div>
       </div>
     );
@@ -404,7 +421,18 @@ export default function DashboardPage() {
 
   const institutionName = getInstitutionName();
   const shouldShowInstitution = !!institutionName;
-
+  // DO (Disciplinary Officer) is responsible only for
+  // terminations/dismissals and complaints; hide every other HR request card.
+  const isDisciplineOnly = role === ROLES.DO;
+  // HRMO handles all HR processes EXCEPT terminations/dismissals and
+  // complaints (DO's remit). Hide the Termination card for her; complaints
+  // are already routed only to non-HRMO roles below.
+  const canSeeTerminations = role !== ROLES.HRMO;
+  // Complaints page is only accessible to DO, HHRMD, CSCS (and EMPLOYEE,
+  // who is redirected). Mirror the proxy/metrics gating so roles like
+  // HRMO don't get a complaints card they can't open.
+  const canSeeComplaints =
+    !isHroLike(role) && !isHrrpLike(role) && role !== ROLES.HRMO && role !== ROLES.PO;
   return (
     <div className="flex-1 space-y-4">
       <PageHeader
@@ -415,12 +443,12 @@ export default function DashboardPage() {
       />
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-        {role === ROLES.HRO ||
-        role === ROLES.HHRMD ||
-        role === ROLES.HRMO ||
-        role === ROLES.CSCS ||
-        role === ROLES.DO ||
-        role === ROLES.PO ? (
+        {(isHroLike(role) ||
+          role === ROLES.HHRMD ||
+          role === ROLES.HRMO ||
+          role === ROLES.CSCS ||
+          role === ROLES.DO ||
+          role === ROLES.PO) ? (
           <Link href="/dashboard/profile">
             <Card className="hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -455,135 +483,151 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         )}
-        <Link href="/dashboard/confirmation">
-          <Card className="hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Pending Confirmations
-              </CardTitle>
-              <UserCheck className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {stats?.pendingConfirmations ?? '...'}
-              </div>
-              <p className="text-xs text-muted-foreground">Updated just now</p>
-            </CardContent>
-          </Card>
-        </Link>
-        <Link href="/dashboard/promotion">
-          <Card className="hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Pending Promotions
-              </CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {stats?.pendingPromotions ?? '...'}
-              </div>
-              <p className="text-xs text-muted-foreground">Updated just now</p>
-            </CardContent>
-          </Card>
-        </Link>
-        <Link href="/dashboard/lwop">
-          <Card className="hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Employees on LWOP
-              </CardTitle>
-              <CalendarOff className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {stats?.employeesOnLwop ?? '...'}
-              </div>
-              <p className="text-xs text-muted-foreground">Updated just now</p>
-            </CardContent>
-          </Card>
-        </Link>
-        <Link href="/dashboard/termination">
-          <Card className="hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Pending Terminations
-              </CardTitle>
-              <ShieldAlert className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {stats?.pendingTerminations ?? '...'}
-              </div>
-              <p className="text-xs text-muted-foreground">Updated just now</p>
-            </CardContent>
-          </Card>
-        </Link>
-        <Link href="/dashboard/cadre-change">
-          <Card className="hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Pending Cadre Changes
-              </CardTitle>
-              <Replace className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {stats?.pendingCadreChanges ?? '...'}
-              </div>
-              <p className="text-xs text-muted-foreground">Updated just now</p>
-            </CardContent>
-          </Card>
-        </Link>
-        <Link href="/dashboard/retirement">
-          <Card className="hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Pending Retirements
-              </CardTitle>
-              <UserMinus className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {stats?.pendingRetirements ?? '...'}
-              </div>
-              <p className="text-xs text-muted-foreground">Updated just now</p>
-            </CardContent>
-          </Card>
-        </Link>
-        <Link href="/dashboard/resignation">
-          <Card className="hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Pending Resignations
-              </CardTitle>
-              <UserX className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {stats?.pendingResignations ?? '...'}
-              </div>
-              <p className="text-xs text-muted-foreground">Updated just now</p>
-            </CardContent>
-          </Card>
-        </Link>
-        <Link href="/dashboard/service-extension">
-          <Card className="hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Pending Service Extensions
-              </CardTitle>
-              <CalendarPlus className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {stats?.pendingServiceExtensions ?? '...'}
-              </div>
-              <p className="text-xs text-muted-foreground">Updated just now</p>
-            </CardContent>
-          </Card>
-        </Link>
-        {role === ROLES.HRO || role === ROLES.HRRP ? (
+        {!isDisciplineOnly && (
+          <Link href="/dashboard/confirmation">
+            <Card className="hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Pending Confirmations
+                </CardTitle>
+                <UserCheck className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {stats?.pendingConfirmations ?? '...'}
+                </div>
+                <p className="text-xs text-muted-foreground">Updated just now</p>
+              </CardContent>
+            </Card>
+          </Link>
+        )}
+        {!isDisciplineOnly && (
+          <Link href="/dashboard/promotion">
+            <Card className="hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Pending Promotions
+                </CardTitle>
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {stats?.pendingPromotions ?? '...'}
+                </div>
+                <p className="text-xs text-muted-foreground">Updated just now</p>
+              </CardContent>
+            </Card>
+          </Link>
+        )}
+        {!isDisciplineOnly && (
+          <Link href="/dashboard/lwop">
+            <Card className="hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Employees on LWOP
+                </CardTitle>
+                <CalendarOff className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {stats?.employeesOnLwop ?? '...'}
+                </div>
+                <p className="text-xs text-muted-foreground">Updated just now</p>
+              </CardContent>
+            </Card>
+          </Link>
+        )}
+        {canSeeTerminations && (
+          <Link href="/dashboard/termination">
+            <Card className="hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Pending Terminations
+                </CardTitle>
+                <ShieldAlert className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {stats?.pendingTerminations ?? '...'}
+                </div>
+                <p className="text-xs text-muted-foreground">Updated just now</p>
+              </CardContent>
+            </Card>
+          </Link>
+        )}
+        {!isDisciplineOnly && (
+          <Link href="/dashboard/cadre-change">
+            <Card className="hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Pending Cadre Changes
+                </CardTitle>
+                <Replace className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {stats?.pendingCadreChanges ?? '...'}
+                </div>
+                <p className="text-xs text-muted-foreground">Updated just now</p>
+              </CardContent>
+            </Card>
+          </Link>
+        )}
+        {!isDisciplineOnly && (
+          <Link href="/dashboard/retirement">
+            <Card className="hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Pending Retirements
+                </CardTitle>
+                <UserMinus className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {stats?.pendingRetirements ?? '...'}
+                </div>
+                <p className="text-xs text-muted-foreground">Updated just now</p>
+              </CardContent>
+            </Card>
+          </Link>
+        )}
+        {!isDisciplineOnly && (
+          <Link href="/dashboard/resignation">
+            <Card className="hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Pending Resignations
+                </CardTitle>
+                <UserX className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {stats?.pendingResignations ?? '...'}
+                </div>
+                <p className="text-xs text-muted-foreground">Updated just now</p>
+              </CardContent>
+            </Card>
+          </Link>
+        )}
+        {!isDisciplineOnly && (
+          <Link href="/dashboard/service-extension">
+            <Card className="hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Pending Service Extensions
+                </CardTitle>
+                <CalendarPlus className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {stats?.pendingServiceExtensions ?? '...'}
+                </div>
+                <p className="text-xs text-muted-foreground">Updated just now</p>
+              </CardContent>
+            </Card>
+          </Link>
+        )}
+        {isHroLike(role) || isHrrpLike(role) ? (
           <Link href="/dashboard/urgent-actions">
             <Card className="hover:bg-accent hover:text-accent-foreground transition-colors">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -602,7 +646,7 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
           </Link>
-        ) : (
+        ) : canSeeComplaints ? (
           <Link href="/dashboard/complaints">
             <Card className="hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -621,7 +665,7 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
           </Link>
-        )}
+        ) : null}
       </div>
 
       {/* Recent Activities - Hidden for Admin role */}

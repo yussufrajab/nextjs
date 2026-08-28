@@ -81,7 +81,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { apiClient } from '@/lib/api-client';
+import { apiClient, type ApiResponse } from '@/lib/api-client';
 import { PasswordStrengthMeter } from '@/components/auth/password-strength-meter';
 import {
   validatePasswordComplexity,
@@ -107,16 +107,18 @@ const userSchema = z.object({
   institutionId: z.string().min(1, 'Institution is required.'),
   password: z
     .string()
-    .min(8, 'Password must be at least 8 characters.')
-    .refine((pwd) => validatePasswordComplexity(pwd), {
+    .optional()
+    .refine((pwd) => !pwd || pwd.length >= 8, {
+      message: 'Password must be at least 8 characters.',
+    })
+    .refine((pwd) => !pwd || validatePasswordComplexity(pwd), {
       message:
         'Password must contain an uppercase letter, lowercase letter, number, and special character.',
     })
-    .refine((pwd) => !isCommonPassword(pwd), {
+    .refine((pwd) => !pwd || !isCommonPassword(pwd), {
       message:
         'This password is too common and easily guessable. Please choose a stronger password.',
-    })
-    .optional(),
+    }),
 });
 
 const userEditSchema = z.object({
@@ -134,20 +136,20 @@ const userEditSchema = z.object({
     .min(10, 'Phone number must be exactly 10 digits.')
     .max(10, 'Phone number must be exactly 10 digits.')
     .regex(/^\d{10}$/, 'Phone number must contain only digits.'),
-  role: z.string().min(1, 'Role is required'),
-  institutionId: z.string().min(1, 'Institution is required.'),
   password: z
     .string()
-    .min(8, 'Password must be at least 8 characters.')
-    .refine((pwd) => validatePasswordComplexity(pwd), {
+    .optional()
+    .refine((pwd) => !pwd || pwd.length >= 8, {
+      message: 'Password must be at least 8 characters.',
+    })
+    .refine((pwd) => !pwd || validatePasswordComplexity(pwd), {
       message:
         'Password must contain an uppercase letter, lowercase letter, number, and special character.',
     })
-    .refine((pwd) => !isCommonPassword(pwd), {
+    .refine((pwd) => !pwd || !isCommonPassword(pwd), {
       message:
         'This password is too common and easily guessable. Please choose a stronger password.',
-    })
-    .optional(),
+    }),
 });
 
 type UserFormValues = z.infer<typeof userSchema>;
@@ -364,9 +366,16 @@ export default function UserManagementPage() {
         throw new Error(response.message || 'An error occurred');
       }
 
+      // The PUT handler returns passwordChanged at the top level of the JSON
+      // body (alongside the user fields); ApiResponse<T> does not model it, so
+      // narrow via a typed view of the runtime payload.
+      const resBody = response as ApiResponse<User> & { passwordChanged?: boolean };
+      const passwordChanged = editingUser && resBody.passwordChanged === true;
       toast({
         title: `User ${editingUser ? 'Updated' : 'Created'}`,
-        description: `The user has been ${editingUser ? 'updated' : 'added'} successfully.`,
+        description: passwordChanged
+          ? `The user has been updated successfully. A new temporary password was set — the user must change it on next login.`
+          : `The user has been ${editingUser ? 'updated' : 'added'} successfully.`,
       });
       await fetchUsers();
       closeDialog();

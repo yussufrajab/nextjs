@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { shouldApplyInstitutionFilter, pembaIslandWhere } from '@/lib/role-utils';
 import { logger } from '@/lib/logger';
 import { wrapHandler } from '@/lib/error-handler';
 import { verifyAuth } from '@/lib/api-auth';
-import { shouldApplyInstitutionFilter } from '@/lib/role-utils';
 
 const employeeSelect = {
   id: true,
@@ -108,6 +108,7 @@ export const GET = wrapHandler(async (req: Request) => {
       institutionFilter = {
         Employee: {
           institutionId: auth.institutionId,
+          ...pembaIslandWhere(auth.role),
         },
       };
     } else if (institutionName) {
@@ -140,7 +141,7 @@ export const GET = wrapHandler(async (req: Request) => {
         (model as any).findMany({
           where: whereClause,
           include: requestInclude(submittedRelation, reviewedRelation),
-          orderBy: { createdAt: 'desc' },
+          orderBy: { updatedAt: 'desc' },
           take: limit,
           skip,
         })

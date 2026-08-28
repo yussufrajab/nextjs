@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { shouldApplyInstitutionFilter } from '@/lib/role-utils';
+import { shouldApplyInstitutionFilter, isPembaScopedRole, isPembaEmployee, pembaIslandWhere } from '@/lib/role-utils';
 import { withAuth } from '@/lib/api-auth';
 import { withRateLimit } from '@/lib/rate-limiter';
 import { logger } from '@/lib/logger';
@@ -49,6 +49,7 @@ export const GET = wrapHandler(withRateLimit(withAuth(async (request, { auth }) 
   // Add institution filtering first if required
   if (shouldFilter) {
     whereClause.institutionId = userInstitutionId;
+    Object.assign(whereClause, pembaIslandWhere(userRole));
   }
 
   // Add search criteria
@@ -125,12 +126,14 @@ export const GET = wrapHandler(withRateLimit(withAuth(async (request, { auth }) 
   logger.info(`Found ${employees.length} employees matching search criteria`);
 
   // Critical security validation: For HRO and institution-restricted roles,
-  // ensure ALL returned employees belong to the user's institution
   if (shouldFilter) {
     // Double-check that all employees belong to the user's institution
-    const unauthorizedEmployees = employees.filter(
-      (emp) => emp.institutionId !== userInstitutionId
-    );
+    // (and, for Pemba-scoped roles, that their department is Pemba).
+    const isPemba = isPembaScopedRole(userRole);
+    const inScope = (emp: { institutionId: string; department: string | null; island?: string | null }) =>
+      emp.institutionId === userInstitutionId &&
+      (!isPemba || isPembaEmployee(emp));
+    const unauthorizedEmployees = employees.filter((emp) => !inScope(emp));
 
     if (unauthorizedEmployees.length > 0) {
       logger.warn(
@@ -141,7 +144,7 @@ export const GET = wrapHandler(withRateLimit(withAuth(async (request, { auth }) 
             institutionId: emp.institutionId,
           })),
         },
-        `Security violation detected: User ${userRole} from institution ${userInstitutionId} attempted to access employees from other institutions`
+        `Security violation detected: User ${userRole} from institution ${userInstitutionId} attempted to access out-of-scope employees`
       );
 
       return NextResponse.json(
@@ -154,9 +157,7 @@ export const GET = wrapHandler(withRateLimit(withAuth(async (request, { auth }) 
       );
     }
 
-    const filteredEmployees = employees.filter(
-      (emp) => emp.institutionId === userInstitutionId
-    );
+    const filteredEmployees = employees.filter(inScope);
     logger.info(
       `After institution validation: ${filteredEmployees.length} employees from institution ${userInstitutionId}`
     );
@@ -190,4 +191,4 @@ export const GET = wrapHandler(withRateLimit(withAuth(async (request, { auth }) 
     success: true,
     data: mappedEmployees,
   });
-}, { allowedRoles: ['ADMIN', 'HRO', 'HRRP', 'HRMO', 'HHRMD', 'DO', 'CSCS', 'EMPLOYEE'] }), 'read'), 'employees-search');
+}, { allowedRoles: ['ADMIN', 'HRO', 'HRRP', 'HRMO', 'HHRMD', 'DO', 'CSCS', 'EMPLOYEE', 'HRO_PEMBA', 'HRRP_PEMBA'] }), 'read'), 'employees-search');

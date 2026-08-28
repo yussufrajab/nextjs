@@ -5,8 +5,9 @@ import { comparePassword } from '@/lib/password-hash';
 import { logLoginAttempt, getClientIp, logAuditEvent, AuditEventType, AuditEventCategory, AuditSeverity } from '@/lib/audit-logger';
 import { checkPasswordBreached } from '@/lib/hibp';
 import { createNotification } from '@/lib/notifications';
-import { completeLogin } from '@/lib/auth-helpers';
 import { createMfaToken, checkOtpRateLimit, maskEmail } from '@/lib/mfa-utils';
+import { isMfaEnabled } from '@/lib/mfa-policy';
+import { completeLogin } from '@/lib/auth-helpers';
 import { sendMfaEmail } from '@/lib/email';
 import { withRateLimit, checkRateLimitSliding, buildUserRateLimitKey } from '@/lib/rate-limiter';
 import { authLogger } from '@/lib/logger';
@@ -42,6 +43,37 @@ export const POST = wrapHandler(withRateLimit(async (request) => {
     const isProduction = process.env.NODE_ENV === 'production';
     const preSessionToken = generatePreSessionToken();
     const preSessionCookieOptions = getPreSessionCookieOptions(isProduction);
+
+    // --- IP ban gate (auto-ban on abuse) ---
+    // Banned IPs are blocked before the DB user lookup. The hard gate reads
+    // Postgres (IpBan), so it survives a Redis outage — only the ephemeral
+    // counters live in Redis. See src/lib/ip-ban-utils.ts.
+    const {
+      isIpBanned: checkIpBanned,
+      getIpBanStatus,
+      recordFailedLoginFromIp,
+      autoUnbanExpiredIps,
+    } = await import('@/lib/ip-ban-utils');
+    await autoUnbanExpiredIps();
+
+    if (await checkIpBanned(ipAddress)) {
+      const status = await getIpBanStatus(ipAddress);
+      const isSecurity = status.banType === 'security';
+      const message = isSecurity
+        ? 'Access denied'
+        : `Too many attempts from this address. Please try again in ${status.remainingMinutes} minutes.`;
+      const ipResponse = NextResponse.json(
+        {
+          success: false,
+          message,
+          errorCode: 'IP_BLOCKED',
+          retryAfter: status.remainingMinutes,
+        },
+        { status: 403 }
+      );
+      ipResponse.cookies.set(PRE_SESSION_COOKIE_NAME, preSessionToken, preSessionCookieOptions);
+      return ipResponse;
+    }
 
     // Per-user sliding rate limit (Req 1.8): throttle brute-force against a
     // single account regardless of source IP. The per-IP `withRateLimit`
@@ -98,6 +130,9 @@ export const POST = wrapHandler(withRateLimit(async (request) => {
         deviceInfo,
         failureReason: 'User not found',
       });
+
+      // Feed the per-IP failed-login counter (may auto-ban on repeated abuse).
+      await recordFailedLoginFromIp(ipAddress).catch(() => {});
 
       const response = NextResponse.json(
         { success: false, message: 'Invalid username/email or password' },
@@ -173,6 +208,9 @@ export const POST = wrapHandler(withRateLimit(async (request) => {
         deviceInfo
       );
 
+      // Feed the per-IP failed-login counter (may auto-ban on repeated abuse).
+      await recordFailedLoginFromIp(ipAddress).catch(() => {});
+
       await logLoginAttempt({
         success: false,
         username: user.username,
@@ -235,6 +273,9 @@ export const POST = wrapHandler(withRateLimit(async (request) => {
         userAgent,
         deviceInfo
       );
+
+      // Feed the per-IP failed-login counter (may auto-ban on repeated abuse).
+      await recordFailedLoginFromIp(ipAddress).catch(() => {});
 
       // Log failed login attempt
       await logLoginAttempt({
@@ -376,72 +417,100 @@ export const POST = wrapHandler(withRateLimit(async (request) => {
     }
 
     authLogger.info({ username }, 'Login successful');
-
-    // --- MFA Gate ---
-    // If user has an email address, require MFA verification before creating a session
-    if (user.email) {
-      const rateLimitCheck = await checkOtpRateLimit(currentUser.id);
-      if (!rateLimitCheck.allowed) {
-        const response = NextResponse.json(
-          {
-            success: false,
-            message: `Too many verification requests. Please try again in ${rateLimitCheck.retryAfterSeconds} seconds.`,
-          },
-          { status: 429 }
-        );
-        response.cookies.set(PRE_SESSION_COOKIE_NAME, preSessionToken, preSessionCookieOptions);
-        return response;
-      }
-
-      const mfaTokenExpiryMinutes = Number(process.env.MFA_TOKEN_EXPIRY_MINUTES) || 10;
-      const { token: otpToken } = await createMfaToken(currentUser.id, 'OTP', user.email, ipAddress, userAgent);
-      const { token: magicLinkToken } = await createMfaToken(currentUser.id, 'MAGIC_LINK', user.email, ipAddress, userAgent);
-
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:9002';
-      const magicLinkUrl = `${appUrl}/mfa/magic-link-confirm?token=${magicLinkToken}`;
-
-      const emailResult = await sendMfaEmail(user.email, otpToken, magicLinkUrl, user.name, mfaTokenExpiryMinutes);
-
-      if (!emailResult.success) {
-        authLogger.error({ err: emailResult.error }, 'Failed to send MFA email');
-        const response = NextResponse.json(
-          { success: false, message: 'Failed to send verification email. Please try again.' },
-          { status: 500 }
-        );
-        response.cookies.set(PRE_SESSION_COOKIE_NAME, preSessionToken, preSessionCookieOptions);
-        return response;
-      }
-
-      const mfaResponse = NextResponse.json({
-        success: true,
-        code: 'MFA_REQUIRED',
-        data: {
-          userId: currentUser.id,
-          email: maskEmail(user.email),
-        },
-        message: 'MFA verification required',
+    // --- MFA Gate — policy-driven ---
+    // When the admin has MFA enforcement enabled (the default), every user
+    // must complete MFA before login is granted. When disabled, users log
+    // in with username + password only. Reads fail-open to "required" so a
+    // transient DB error never downgrades authentication.
+    const mfaRequired = await isMfaEnabled();
+    if (!mfaRequired) {
+      // MFA disabled by admin — grant login directly after password check.
+      authLogger.info({ username, role: user.role }, 'MFA disabled by policy — password-only login');
+      // completeLogin expects Institution/Employee includes; re-fetch the
+      // full record so the session payload has everything it needs.
+      const fullUser = await db.user.findUnique({
+        where: { id: currentUser.id },
+        include: { Institution: true, Employee: true },
       });
-      // Preserve pre-session cookie through MFA flow
-      mfaResponse.cookies.set(PRE_SESSION_COOKIE_NAME, preSessionToken, preSessionCookieOptions);
-      return mfaResponse;
+      if (!fullUser) {
+        const response = NextResponse.json(
+          { success: false, message: 'User not found' },
+          { status: 401 }
+        );
+        response.cookies.set(PRE_SESSION_COOKIE_NAME, preSessionToken, preSessionCookieOptions);
+        return response;
+      }
+      return completeLogin({
+        user: fullUser,
+        ipAddress,
+        userAgent,
+        deviceInfo,
+        preSessionToken,
+      });
     }
 
-    // No email on file — skip MFA and complete login directly
-    authLogger.info({ username }, 'No email on file, skipping MFA');
+    if (!user.email) {
+      // No email — cannot deliver MFA, block the login.
+      authLogger.warn(
+        { username, role: user.role },
+        'MFA required but no email on file — login blocked'
+      );
+      const response = NextResponse.json(
+        {
+          success: false,
+          message: 'Multi-factor authentication is required, but no email address is on file. Please contact an administrator to add an email to your account.',
+          errorCode: 'MFA_REQUIRED_NO_EMAIL',
+        },
+        { status: 403 }
+      );
+      response.cookies.set(PRE_SESSION_COOKIE_NAME, preSessionToken, preSessionCookieOptions);
+      return response;
+    }
 
-    // Read pre-session token for session fixation protection
-    const cookiePreSessionToken = (request as any).cookies.get(PRE_SESSION_COOKIE_NAME)?.value || null;
+    // MFA is required — send OTP + magic link
+    const rateLimitCheck = await checkOtpRateLimit(currentUser.id);
+    if (!rateLimitCheck.allowed) {
+      const response = NextResponse.json(
+        {
+          success: false,
+          message: `Too many verification requests. Please try again in ${rateLimitCheck.retryAfterSeconds} seconds.`,
+        },
+        { status: 429 }
+      );
+      response.cookies.set(PRE_SESSION_COOKIE_NAME, preSessionToken, preSessionCookieOptions);
+      return response;
+    }
 
-    return completeLogin({
-      user: {
-        ...currentUser,
-        name: user.name,
-        Institution: user.Institution,
-        Employee: user.Employee,
+    const mfaTokenExpiryMinutes = Number(process.env.MFA_TOKEN_EXPIRY_MINUTES) || 10;
+    const { token: otpToken } = await createMfaToken(currentUser.id, 'OTP', user.email, ipAddress, userAgent);
+    const { token: magicLinkToken } = await createMfaToken(currentUser.id, 'MAGIC_LINK', user.email, ipAddress, userAgent);
+
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:9002';
+    const magicLinkUrl = `${appUrl}/mfa/magic-link-confirm?token=${magicLinkToken}`;
+
+    const emailResult = await sendMfaEmail(user.email, otpToken, magicLinkUrl, user.name, mfaTokenExpiryMinutes);
+
+    if (!emailResult.success) {
+      authLogger.error({ err: emailResult.error }, 'Failed to send MFA email');
+      const response = NextResponse.json(
+        { success: false, message: 'Failed to send verification email. Please try again.' },
+        { status: 500 }
+      );
+      response.cookies.set(PRE_SESSION_COOKIE_NAME, preSessionToken, preSessionCookieOptions);
+      return response;
+    }
+
+    const mfaResponse = NextResponse.json({
+      success: true,
+      code: 'MFA_REQUIRED',
+      data: {
+        userId: currentUser.id,
+        email: maskEmail(user.email),
       },
-      ipAddress,
-      userAgent,
-      deviceInfo,
-      preSessionToken: cookiePreSessionToken,
+      message: 'MFA verification required',
     });
+    // Preserve pre-session cookie through MFA flow
+    mfaResponse.cookies.set(PRE_SESSION_COOKIE_NAME, preSessionToken, preSessionCookieOptions);
+    return mfaResponse;
 }, 'auth'), 'auth-login');
+
